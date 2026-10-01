@@ -19,7 +19,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F12 | Room layout editor (owner) + room layers (tenant: fans, AC, windows, washroom) | **Idea** · spec in progress | Ideas | Hostelzy team draws layouts; changes free within 48 h. Waiting on Q15–Q17 |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
 | F14 | Multi-hostel + "Add hostel" tool + owner invite QR | **Idea** | Ideas | Needed before onboarding 20 hostels |
-| F16 | AC / non-AC room types, pricing grid and filter | **Spec ready** | Design | Touches F03, F04, F12. No position-based pricing |
+| F16 | AC / non-AC room types, pricing grid and filter | **Design ready** | Design | Boards 1–6 in the AC / Non-AC Rooms canvas (2026-10-02). Touches F03, F04, F12. No position-based pricing |
 | F15 | Play Store launch: signing, privacy policy, account deletion, closed test | **Idea** | Ideas | Needs Play account + domain |
 
 ## Suggested order
@@ -48,5 +48,6 @@ F02 → F16 → F03 + F04 → F05 → F06 → F08 → F07 → F09 → F10 → F1
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
 - Enquiries & Residents mockups (F05, F06): https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B
+- AC / Non-AC rooms mockups (F16): https://claude.ai/artifact/1orwCNMz68vVRrMhfqtpKV
 - Plan summary page: https://claude.ai/artifact/P8dsEAYo1GtvDyEc6SZN6y
 - Architecture page: https://claude.ai/artifact/3mqzfR9Dec8azyaExbgcFP
