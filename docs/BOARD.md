@@ -6,7 +6,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | ID | Feature | Stage | Owner chat | Notes |
 |---|---|---|---|---|
 | F01 | Core app from the Claude Design handoff (20 screens, 3 roles) | **Shipped** | Build | On `main`, APK `apk-1` |
-| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Spec ready** · no design needed | Build | Copy/data change across tenant, resident, owner screens |
+| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Built** · no design needed | Build | PR #1 on `feature/f02-advance-model`, 10/10 tests pass. Waiting for founder to check and merge |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design ready** | Design | Mockups 1, 2, 4 in the Deals canvas. Waiting on open questions 1–3 |
 | F04 | Book with the advance, deal locked, HZ code | **Design ready** | Design | Mockup 3 in the Deals canvas. Waiting on open question 4 |
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
@@ -30,8 +30,8 @@ F02 → F16 → F03 + F04 → F05 → F06 → F08 → F07 → F09 → F10 → F1
 2. Is the 6-deal menu right? Any local deals to add? (F03)
 3. Max 3 deals per owner? (F03)
 4. Keep the free 1-hour hold next to "Pay advance"? Drop the ₹299 paid hold? (F04)
-5. Notice period 15 or 30 days? Fee due on the joining date or the 1st? (F02)
-6. Electricity and food included in the fee, or extra? (F02)
+5. ~~Notice period, fee due day?~~ **Answered 2026-10-01: 30 days, due on joining date.** (F02)
+6. ~~Electricity and food?~~ **Answered 2026-10-01: electricity extra, food included.** (F02)
 7. Owner pricing: A flat monthly plan, or B per matched join? (F10)
 8. Matching window: 30 or 60 days? (F06)
 9. Strikes: 3, or ban on the 2nd? (F07)

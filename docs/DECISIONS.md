@@ -49,6 +49,10 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
 - Tenants can filter by **AC / non-AC** (Explore chips, search sheet, bed picker).
 - In the room layout (F12), a room marked AC must have an AC unit placed.
 
+**Money terms (F02, founder answers 2026-10-01)**
+- Notice period **30 days**. Monthly fee is due on the **joining date** (not the 1st).
+- **Electricity is extra**; **food is included** in the fee where the hostel serves meals.
+
 **Room layouts (F12)**
 - The **Hostelzy team draws every room layout** (admin editor on a laptop). Owners don't draw; they
   approve layouts, mark items working / not working, and request changes in the app.
