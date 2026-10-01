@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#dcdad9;font-family:Archivo,system-ui,sans-serif;color:#201e1d}a{color:#ae1800}a:hover{color:#ec3013}</style>
+</helmet>
+<div style="padding:48px 48px 80px;display:grid;gap:56px">
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;border-bottom:2px solid rgba(32,30,29,.4);padding-bottom:32px;max-width:1400px">
+    <div>
+      <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#605d5d">Hostelzy · mobile app v1 · all screens</div>
+      <div style="font-weight:800;font-size:56px;line-height:.96;letter-spacing:-.035em;margin-top:8px">One app. Three roles. Every bed visible.</div>
+      <a href="HostelzyApp.dc.html" style="display:inline-block;margin-top:16px;font-weight:600">Open the clickable prototype →</a>
+    </div>
+    <div style="display:grid;gap:10px;font-size:14px;line-height:1.5;align-content:end">
+      <div><b>System:</b> Modernist. Archivo, one red, no rounded corners, 2px rules. The grid does the organising.</div>
+      <div><b>Roles:</b> picked once after OTP: tenant, resident, owner. Each gets four tabs and a red action in the middle: Search, Pay rent, Add booking.</div>
+      <div><b>Beds:</b> the same five states everywhere. Free (outline), free soon (dashed), on hold (hatched), taken (grey), selected (red).</div>
+      <div><b>Holds:</b> free for 1 hour (owner confirms), ₹299 for 48 hours, or a ₹2,000 token to book outright. Owner contact always goes through WhatsApp.</div>
+    </div>
+  </div>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">01 · Start</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Welcome</span><dc-import name="HostelzyApp" start="welcome" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Phone</span><dc-import name="HostelzyApp" start="phone" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">OTP</span><dc-import name="HostelzyApp" start="otp" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Pick a role</span><dc-import name="HostelzyApp" start="role" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">02 · Tenant: find and hold a bed</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Explore</span><dc-import name="HostelzyApp" start="explore" role="tenant" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Search sheet</span><dc-import name="HostelzyApp" start="explore" role="tenant" sheet="search" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Map</span><dc-import name="HostelzyApp" start="map" role="tenant" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Hostel detail</span><dc-import name="HostelzyApp" start="detail" role="tenant" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Ask on WhatsApp</span><dc-import name="HostelzyApp" start="detail" role="tenant" sheet="wa" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">03 · Bed picker: three ways to choose</div>
+    <div style="font-size:14px;color:#605d5d;max-width:70ch;margin-top:-10px">All three are in the prototype behind the Plan / List / Building switch, so we can test which one tenants actually use.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">A · Floor plan of one room</span><dc-import name="HostelzyApp" start="picker" role="tenant" mode="plan" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">B · List of every open bed</span><dc-import name="HostelzyApp" start="picker" role="tenant" mode="list" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">C · Building cross-section</span><dc-import name="HostelzyApp" start="picker" role="tenant" mode="building" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Hold options</span><dc-import name="HostelzyApp" start="picker" role="tenant" sheet="hold" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Hold status</span><dc-import name="HostelzyApp" start="hold" role="tenant" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">04 · Resident: my stay</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Home</span><dc-import name="HostelzyApp" start="rHome" role="resident" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Pay rent</span><dc-import name="HostelzyApp" start="rPay" role="resident" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Food</span><dc-import name="HostelzyApp" start="food" role="resident" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Complaints</span><dc-import name="HostelzyApp" start="help" role="resident" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Give notice</span><dc-import name="HostelzyApp" start="move" role="resident" move-tab="vacate" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Swap bed</span><dc-import name="HostelzyApp" start="move" role="resident" move-tab="swap" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">05 · Owner: run the hostel</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Today + hold requests</span><dc-import name="HostelzyApp" start="oToday" role="owner" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Live bed map</span><dc-import name="HostelzyApp" start="oBeds" role="owner" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Bed actions</span><dc-import name="HostelzyApp" start="oBeds" role="owner" sheet="bed" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Add booking</span><dc-import name="HostelzyApp" start="oToday" role="owner" sheet="add" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Rent collection</span><dc-import name="HostelzyApp" start="oRent" role="owner" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Complaints queue</span><dc-import name="HostelzyApp" start="oMore" role="owner" more-tab="complaints" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Edit menu</span><dc-import name="HostelzyApp" start="oMore" role="owner" more-tab="menu" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Edit rules</span><dc-import name="HostelzyApp" start="oMore" role="owner" more-tab="rules" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:20px">
+    <div style="font-weight:800;font-size:28px">06 · Dark theme</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Explore</span><dc-import name="HostelzyApp" start="explore" role="tenant" theme="dark" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Bed picker</span><dc-import name="HostelzyApp" start="picker" role="tenant" theme="dark" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Resident home</span><dc-import name="HostelzyApp" start="rHome" role="resident" theme="dark" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+      <div style="display:grid;gap:8px"><span style="font-size:12px;font-weight:600;color:#605d5d">Owner today</span><dc-import name="HostelzyApp" start="oToday" role="owner" theme="dark" bare="{{ true }}" hint-size="410px,864px"></dc-import></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+</body>
+</html>

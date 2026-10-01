@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#dcdad9;font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#ae1800}a:hover{color:#ec3013}
+[data-hz]{--bg:#f3f2f2;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--ac:#ec3013;--ai:#f8f4f4;--ab:#ffe0d9;--ad:#ae1800;--dv:rgba(32,30,29,.4);--hl:rgba(32,30,29,.16);--tk:#bab6b6;--page:#dcdad9;--gn:#1f7a3d;--gb:#dcefe0}
+[data-hz][data-theme="dark"]{--bg:#161514;--sf:#24221f;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ai:#161514;--ab:#4d170e;--ad:#ff9783;--dv:rgba(240,238,238,.36);--hl:rgba(240,238,238,.14);--tk:#4a4646;--page:#0c0b0b;--gn:#5fcf86;--gb:#133a22}
+[data-hz]{line-height:1.4}[data-hz] *{box-sizing:border-box}[data-hz] [data-scroll]{scrollbar-width:none}
+[data-hz] button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+[data-hz] input,[data-hz] textarea{font:inherit;color:inherit;outline:none}
+[data-hz] :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+[data-hz] [data-scroll]::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div data-hz="" data-theme="{{ theme }}" style="display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:{{ pad }};background:{{ pageBg }};color:var(--tx);font-family:Archivo,system-ui,sans-serif">
+
+<sc-if value="{{ notBare }}" hint-placeholder-val="{{ false }}">
+<div style="width:240px;flex:none;display:flex;flex-direction:column;gap:20px;padding-top:12px">
+  <div style="display:grid;gap:6px">
+    <div style="font-weight:800;font-size:26px;letter-spacing:-.02em">hostelzy</div>
+    <div style="font-size:13px;color:var(--mu);line-height:1.45">Mobile prototype. Everything is clickable. Use the list below to jump straight to any screen.</div>
+    <a href="Hostelzy Overview.dc.html" style="font-size:13px;font-weight:600">Open all screens →</a>
+  </div>
+  <div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)">
+    <sc-for list="{{ themeSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:8px 10px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for>
+  </div>
+  <sc-for list="{{ jumpGroups }}" as="g">
+    <div style="display:grid;border-top:2px solid var(--dv)">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);padding:10px 0 6px">{{ g.title }}</div>
+      <sc-for list="{{ g.items }}" as="j"><button onClick="{{ j.go }}" style="padding:5px 0;font-size:13px;font-weight:{{ j.fw }};color:{{ j.fg }}">{{ j.label }}</button></sc-for>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<div ref="{{ phoneRef }}" style="width:410px;height:864px;flex:none;border:10px solid #111;border-radius:52px;overflow:hidden;position:relative;background:var(--bg);display:flex;flex-direction:column;box-shadow:0 12px 32px rgba(0,0,0,.22)">
+  <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-weight:600;font-size:14px;background:{{ sbBg }};color:{{ sbFg }}">
+    <span>9:41</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:12px">5G<span style="width:22px;height:11px;border:1.5px solid currentColor;padding:1.5px;display:flex"><span style="flex:1;background:currentColor"></span></span></span>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;position:relative">
+
+<!-- WELCOME -->
+<sc-if value="{{ on.welcome }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:flex;flex-direction:column;background:var(--ac);color:var(--ai)">
+  <div style="padding:12px 20px 0;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800;font-size:20px;letter-spacing:-.02em">hostelzy</span><span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase">Hyderabad</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:20px 20px 28px">
+    <div style="font-weight:800;font-size:58px;line-height:.94;letter-spacing:-.04em;text-wrap:balance">See the bed before you see the building.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ai);border-bottom:2px solid var(--ai)">
+    <div style="padding:12px 14px;display:grid;gap:2px"><span style="font-size:12px;font-weight:600">01</span><span style="font-weight:800;font-size:15px">Floor</span></div>
+    <div style="padding:12px 14px;display:grid;gap:2px;border-left:2px solid var(--ai)"><span style="font-size:12px;font-weight:600">02</span><span style="font-weight:800;font-size:15px">Room</span></div>
+    <div style="padding:12px 14px;display:grid;gap:2px;border-left:2px solid var(--ai)"><span style="font-size:12px;font-weight:600">03</span><span style="font-weight:800;font-size:15px">Your bed</span></div>
+  </div>
+  <div style="padding:20px 20px 28px;display:grid;gap:12px">
+    <button onClick="{{ toPhone }}" style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 18px;background:var(--ai);color:var(--ac);font-weight:800;font-size:16px">Get started<span style="font-size:20px;display:flex">{{ ic.arrow }}</span></button>
+    <div style="font-size:14px;font-weight:600">For tenants, residents and hostel owners.</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- PHONE -->
+<sc-if value="{{ on.phone }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 28px">
+  <button onClick="{{ back }}" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+  <div style="margin-top:28px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Step 1 of 2</div>
+  <div style="font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.025em;margin-top:6px">Your mobile number</div>
+  <div style="font-size:15px;color:var(--mu);margin-top:10px">We send a 6-digit code. No passwords.</div>
+  <div style="display:grid;grid-template-columns:72px 1fr;border:2px solid var(--tx);margin-top:28px;height:60px">
+    <div style="display:flex;align-items:center;padding:0 14px;font-weight:800;font-size:20px;border-right:2px solid var(--tx)">+91</div>
+    <input value="{{ phone }}" onChange="{{ onPhone }}" inputmode="numeric" placeholder="98480 12345" style="border:0;background:transparent;padding:0 14px;font-weight:800;font-size:22px;letter-spacing:.04em;width:100%"></input>
+  </div>
+  <div style="flex:1"></div>
+  <button onClick="{{ toOtp }}" style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 18px;background:var(--ac);color:var(--ai);font-weight:800;font-size:16px;opacity:{{ phoneOp }}">Send code<span style="font-size:20px;display:flex">{{ ic.arrow }}</span></button>
+  <button onClick="{{ demoPhone }}" style="margin-top:12px;font-size:13px;color:var(--ad);font-weight:600">Fill a demo number</button>
+</div>
+</sc-if>
+
+<!-- OTP -->
+<sc-if value="{{ on.otp }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 28px">
+  <button onClick="{{ back }}" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+  <div style="margin-top:28px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Step 2 of 2</div>
+  <div style="font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.025em;margin-top:6px">Enter the code</div>
+  <div style="font-size:15px;color:var(--mu);margin-top:10px">Sent to +91 {{ phoneF }}</div>
+  <div style="position:relative;margin-top:28px">
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+      <sc-for list="{{ otpCells }}" as="c" hint-placeholder-count="6"><div style="height:64px;border:{{ c.bd }};display:grid;place-items:center;font-weight:800;font-size:28px">{{ c.d }}</div></sc-for>
+    </div>
+    <input value="{{ otp }}" onChange="{{ onOtp }}" inputmode="numeric" style="position:absolute;inset:0;opacity:0;width:100%;border:0"></input>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:13px"><button onClick="{{ demoOtp }}" style="color:var(--ad);font-weight:600">Paste code from SMS</button><span style="color:var(--mu)">Resend in 0:24</span></div>
+  <div style="flex:1"></div>
+  <button onClick="{{ toRole }}" style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 18px;background:var(--ac);color:var(--ai);font-weight:800;font-size:16px;opacity:{{ otpOp }}">Verify<span style="font-size:20px;display:flex">{{ ic.arrow }}</span></button>
+</div>
+</sc-if>
+
+<!-- ROLE -->
+<sc-if value="{{ on.role }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+  <div style="padding:20px 20px 24px;border-bottom:2px solid var(--tx)">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Welcome</div>
+    <div style="font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.025em;margin-top:6px">How will you use Hostelzy?</div>
+  </div>
+  <sc-for list="{{ roles }}" as="r" hint-placeholder-count="3">
+    <button onClick="{{ r.pick }}" style="display:grid;grid-template-columns:36px minmax(0,1fr) 24px;gap:12px;align-items:start;padding:22px 20px;border-bottom:2px solid var(--dv);width:100%">
+      <span style="font-weight:800;font-size:14px;color:var(--ad);padding-top:5px">{{ r.num }}</span>
+      <span style="display:grid;gap:4px"><span style="font-weight:800;font-size:22px;letter-spacing:-.015em">{{ r.title }}</span><span style="font-size:14px;color:var(--mu);line-height:1.4">{{ r.sub }}</span></span>
+      <span style="font-size:22px;display:flex;padding-top:4px">{{ ic.arrow }}</span>
+    </button>
+  </sc-for>
+  <div style="flex:1"></div>
+  <div style="padding:20px;font-size:12px;color:var(--mu)">You can switch later from your profile.</div>
+</div>
+</sc-if>
+
+<!-- EXPLORE -->
+<sc-if value="{{ on.explore }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 14px;display:grid;gap:14px">
+    <div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">{{ exploreSub }}</div>
+      <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Beds near {{ lm }}</div>
+    </div>
+    <button onClick="{{ openSearch }}" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;height:50px;padding:0 14px;border:2px solid var(--tx);width:100%">
+      <span style="font-size:18px;display:flex">{{ ic.search }}</span>
+      <span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ searchSummary }}</span>
+      <span style="font-size:12px;font-weight:600;color:var(--ad)">Edit</span>
+    </button>
+  </div>
+  <div data-scroll="" style="display:flex;gap:6px;overflow-x:auto;padding:0 16px 14px">
+    <sc-for list="{{ quickChips }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.act }}" style="flex:none;white-space:nowrap;padding:8px 12px;font-size:13px;font-weight:600;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button></sc-for>
+  </div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ results }}" as="h" hint-placeholder-count="4">
+      <button onClick="{{ h.open }}" style="display:grid;grid-template-columns:108px minmax(0,1fr);gap:14px;padding:14px 16px;border-bottom:1px solid var(--hl);width:100%">
+        <div style="height:118px;background:repeating-linear-gradient(135deg,var(--sf) 0 6px,var(--bg) 6px 12px);border:1px solid var(--hl);display:flex;align-items:flex-end;padding:6px;font:10px 'JetBrains Mono',monospace;color:var(--mu)">facade</div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3"><span style="color:var(--ad);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.kicker }}</span><span style="flex:none;display:flex;gap:3px;align-items:center;color:var(--tx)">{{ ic.star }}{{ h.rating }}</span></div>
+          <div style="font-weight:800;font-size:17px;line-height:1.15">{{ h.name }}</div>
+          <div style="font-size:13px;color:var(--mu)">{{ h.min }} min to {{ h.lm }} · {{ h.feat }}</div>
+          <div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:auto;padding-top:6px"><sc-for list="{{ h.dots }}" as="d"><i style="width:6px;height:9px;background:{{ d.bg }};border:{{ d.bd }}"></i></sc-for></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px"><span style="font-size:12px;font-weight:600">{{ h.free }} beds free</span><span><b style="font-size:17px;font-weight:800">{{ h.fromF }}</b><span style="font-size:12px;color:var(--mu)">/mo</span></span></div>
+        </div>
+      </button>
+    </sc-for>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:32px 16px;display:grid;gap:10px"><div style="font-weight:800;font-size:20px">Nothing matches yet.</div><div style="font-size:14px;color:var(--mu)">Try a higher budget or any room type.</div><button onClick="{{ clearFilters }}" style="justify-self:start;padding:10px 14px;border:2px solid var(--tx);font-weight:800;font-size:14px">Clear filters</button></div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- MAP -->
+<sc-if value="{{ on.map }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;position:relative;overflow:hidden;background-color:var(--sf);background-image:linear-gradient(var(--hl) 1px,transparent 1px),linear-gradient(90deg,var(--hl) 1px,transparent 1px);background-size:34px 34px">
+  <div style="position:absolute;left:-20%;top:44%;width:140%;height:14px;background:var(--bg);transform:rotate(-14deg)"></div>
+  <div style="position:absolute;left:58%;top:-10%;width:12px;height:120%;background:var(--bg);transform:rotate(18deg)"></div>
+  <div style="position:absolute;left:-10%;top:76%;width:120%;height:8px;background:var(--bg);transform:rotate(6deg)"></div>
+  <div style="position:absolute;right:10px;bottom:206px;font:10px 'JetBrains Mono',monospace;color:var(--mu)">map tiles</div>
+  <sc-for list="{{ mapLms }}" as="l"><div style="position:absolute;left:{{ l.x }};top:{{ l.y }};transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu)"><span style="width:8px;height:8px;background:{{ l.dot }}"></span>{{ l.label }}</div></sc-for>
+  <sc-for list="{{ pins }}" as="p"><button onClick="{{ p.pick }}" style="position:absolute;left:{{ p.x }};top:{{ p.y }};transform:translate(-50%,-100%);padding:5px 8px;font-weight:800;font-size:13px;background:{{ p.bg }};color:{{ p.fg }};border:2px solid {{ p.bd }};z-index:{{ p.z }}">{{ p.price }}</button></sc-for>
+  <div style="position:absolute;top:10px;left:12px;right:12px;display:grid;gap:8px">
+    <button onClick="{{ openSearch }}" style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;height:46px;padding:0 14px;background:var(--bg);border:2px solid var(--tx)"><span style="font-size:18px;display:flex">{{ ic.search }}</span><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ searchSummary }}</span></button>
+  </div>
+  <div style="position:absolute;left:12px;right:12px;bottom:12px;background:var(--bg);border:2px solid var(--tx);display:grid;grid-template-columns:84px minmax(0,1fr);gap:12px;padding:12px">
+    <div style="height:84px;background:repeating-linear-gradient(135deg,var(--sf) 0 6px,var(--bg) 6px 12px);border:1px solid var(--hl)"></div>
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--ad)">{{ mh.kicker }}</div>
+      <div style="font-weight:800;font-size:16px;line-height:1.15">{{ mh.name }}</div>
+      <div style="font-size:12px;color:var(--mu)">{{ mh.free }} beds free · {{ mh.min }} min to {{ lm }}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto"><b style="font-size:16px">{{ mh.fromF }}<span style="font-size:12px;font-weight:400;color:var(--mu)">/mo</span></b><button onClick="{{ mh.open }}" style="display:flex;gap:8px;align-items:center;padding:7px 10px;background:var(--ac);color:var(--ai);font-weight:800;font-size:13px">View<span style="display:flex">{{ ic.arrow }}</span></button></div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- HOLDS LIST -->
+<sc-if value="{{ on.holds }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 18px;border-bottom:2px solid var(--tx)">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Beds you're holding</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Holds</div>
+  </div>
+  <sc-for list="{{ holdList }}" as="h">
+    <button onClick="{{ h.open }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px;border-bottom:1px solid var(--hl);width:100%">
+      <div style="display:grid;gap:3px"><span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--ad)">{{ h.status }}</span><span style="font-weight:800;font-size:18px">Bed {{ h.bed }}</span><span style="font-size:13px;color:var(--mu)">{{ h.sub }}</span></div>
+      <div style="text-align:right"><div style="font-weight:800;font-size:22px;font-variant-numeric:tabular-nums">{{ h.left }}</div><div style="font-size:11px;color:var(--mu)">{{ h.leftSub }}</div></div>
+    </button>
+  </sc-for>
+  <sc-if value="{{ noHolds }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:32px 16px;display:grid;gap:10px"><div style="font-weight:800;font-size:22px;line-height:1.1">No holds yet.</div><div style="font-size:14px;color:var(--mu);line-height:1.45">Pick a bed in any hostel and hold it free for an hour while you go and see it.</div><button onClick="{{ toExplore }}" style="justify-self:start;margin-top:6px;display:flex;gap:10px;align-items:center;padding:12px 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:14px">Find a bed<span style="display:flex">{{ ic.arrow }}</span></button></div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- ME -->
+<sc-if value="{{ on.me }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 20px;border-bottom:2px solid var(--tx);display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center">
+    <div style="width:64px;height:64px;background:var(--ac);color:var(--ai);display:grid;place-items:center;font-weight:800;font-size:24px">{{ me.ini }}</div>
+    <div><div style="font-weight:800;font-size:24px;line-height:1.05">{{ me.name }}</div><div style="font-size:13px;color:var(--mu);margin-top:3px">+91 {{ me.phone }} · {{ me.roleLabel }}</div></div>
+  </div>
+  <div style="padding:16px;border-bottom:1px solid var(--hl);display:grid;gap:10px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Appearance</div>
+    <div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ themeSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:11px 12px;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  </div>
+  <sc-for list="{{ me.rows }}" as="r">
+    <button onClick="{{ r.go }}" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:16px;border-bottom:1px solid var(--hl);font-size:15px;font-weight:600;color:{{ r.fg }}">{{ r.label }}<span style="display:flex;font-size:18px;color:var(--mu)">{{ ic.chev }}</span></button>
+  </sc-for>
+  <div style="padding:16px;font-size:12px;color:var(--mu)">Hostelzy 1.0 · Made in Hyderabad</div>
+</div>
+</sc-if>
+
+<!-- DETAIL -->
+<sc-if value="{{ on.detail }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div data-scroll="" style="flex:1;overflow:auto">
+    <div style="position:relative;height:232px;background:repeating-linear-gradient(135deg,var(--sf) 0 8px,var(--bg) 8px 16px);border-bottom:2px solid var(--tx)">
+      <button onClick="{{ back }}" style="position:absolute;top:10px;left:12px;width:40px;height:40px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+      <button onClick="{{ d.toggleSave }}" style="position:absolute;top:10px;right:12px;height:40px;padding:0 12px;display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--dv);font-size:13px;font-weight:600;color:{{ d.saveFg }}"><span style="display:flex;font-size:16px">{{ ic.heart }}</span>{{ d.saveLabel }}</button>
+      <div style="position:absolute;left:14px;bottom:10px;font:11px 'JetBrains Mono',monospace;color:var(--mu)">hostel photos · 1 / 12</div>
+    </div>
+    <div style="padding:16px;display:grid;gap:6px;border-bottom:2px solid var(--dv)">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--ad)">{{ d.kicker }}</div>
+      <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em">{{ d.name }}</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mu);margin-top:4px"><span style="display:flex;gap:4px;align-items:center;color:var(--tx);font-weight:600">{{ ic.star }}{{ d.rating }} · {{ d.reviews }} stayed</span><span>{{ d.min }} min to {{ lm }}</span><span>{{ d.instantLine }}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hl);border-bottom:2px solid var(--dv)">
+      <sc-for list="{{ d.tags }}" as="t" hint-placeholder-count="4"><div style="background:var(--bg);padding:14px 16px;font-size:14px;font-weight:600">{{ t }}</div></sc-for>
+    </div>
+    <div style="padding:16px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Rent by room type</div>
+    <sc-for list="{{ d.types }}" as="t" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--hl)"><div><div style="font-weight:800;font-size:16px">{{ t.label }}</div><div style="font-size:13px;color:var(--mu)">{{ t.sub }}</div></div><div style="font-weight:800;font-size:17px">{{ t.price }}<span style="font-size:12px;font-weight:400;color:var(--mu)">/mo</span></div></div>
+    </sc-for>
+    <div style="padding:20px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);border-top:1px solid var(--hl);margin-top:14px">House rules</div>
+    <sc-for list="{{ d.rules }}" as="r" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:9px 16px;font-size:14px"><span style="color:var(--mu)">{{ r.k }}</span><span style="font-weight:600">{{ r.v }}</span></div>
+    </sc-for>
+    <div style="margin:16px;padding:14px;border:2px solid var(--tx);display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center">
+      <div style="width:44px;height:44px;background:var(--sf);display:grid;place-items:center;font-weight:800">{{ d.ownerIni }}</div>
+      <div><div style="font-weight:800;font-size:15px">{{ d.owner }}, owner</div><div style="font-size:12px;color:var(--mu)">Usually replies in ~{{ d.reply }} min</div></div>
+      <button onClick="{{ d.ask }}" style="grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;height:44px;padding:0 14px;border:2px solid var(--tx);font-weight:800;font-size:14px">Ask on WhatsApp<span style="display:flex;font-size:18px">{{ ic.msg }}</span></button>
+    </div>
+  </div>
+  <div style="border-top:2px solid var(--tx);padding:12px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--bg)">
+    <div><div style="font-weight:800;font-size:18px">From {{ d.fromF }}<span style="font-size:12px;font-weight:400;color:var(--mu)">/mo</span></div><div style="font-size:12px;color:var(--mu)">{{ d.free }} beds free right now</div></div>
+    <button onClick="{{ openPicker }}" style="height:50px;padding:0 18px;display:flex;gap:12px;align-items:center;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Pick a bed<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button>
+  </div>
+</div>
+</sc-if>
+
+<!-- PICKER -->
+<sc-if value="{{ on.picker }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px">
+    <button onClick="{{ back }}" style="width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+    <div style="min-width:0"><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.name }}</div><div style="font-weight:800;font-size:22px;line-height:1.1">Pick a bed</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);margin:0 16px;border:2px solid var(--tx)">
+    <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.pick }}" style="display:flex;align-items:center;gap:6px;padding:10px;font-size:13px;font-weight:600;background:{{ m.bg }};color:{{ m.fg }};border-left:{{ m.bl }}"><span style="display:flex;font-size:15px">{{ m.icon }}</span>{{ m.label }}</button></sc-for>
+  </div>
+  <div data-scroll="" style="flex:1;overflow:auto;margin-top:12px;border-top:2px solid var(--dv)">
+
+    <sc-if value="{{ mode.plan }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr)">
+        <sc-for list="{{ floors }}" as="f" hint-placeholder-count="3"><button onClick="{{ f.pick }}" style="padding:12px 16px;display:grid;gap:2px;box-shadow:{{ f.bar }};color:{{ f.fg }}"><span style="font-weight:800;font-size:15px">{{ f.label }}</span><span style="font-size:12px">{{ f.sub }}</span></button></sc-for>
+      </div>
+      <div data-scroll="" style="display:flex;gap:8px;overflow-x:auto;padding:14px 16px">
+        <sc-for list="{{ roomTiles }}" as="r" hint-placeholder-count="4"><button onClick="{{ r.pick }}" style="flex:none;width:86px;padding:10px;border:{{ r.bd }};opacity:{{ r.op }};display:grid;gap:2px"><span style="font-weight:800;font-size:19px">{{ r.n }}</span><span style="font-size:12px;color:var(--mu)">{{ r.sub }}</span><span style="font-size:12px;font-weight:600">{{ r.free }}</span></button></sc-for>
+      </div>
+      <div style="padding:0 16px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div style="font-weight:800;font-size:20px;white-space:nowrap;flex:none">Room {{ room.n }}</div><div style="font-size:12px;color:var(--mu);text-align:right">{{ room.desc }}</div></div>
+        <div style="position:relative;border:2px solid var(--tx);padding:36px 14px 38px">
+          <div style="position:absolute;top:-2px;left:22%;width:56%;height:6px;background:var(--tx)"></div>
+          <div style="position:absolute;top:10px;left:22%;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Window</div>
+          <div style="position:absolute;bottom:-2px;right:20px;width:64px;height:2px;background:var(--bg)"></div>
+          <div style="position:absolute;bottom:10px;right:20px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Door</div>
+          <sc-if value="{{ room.attached }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:10px;left:14px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Attached bath ↙</div></sc-if>
+          <div style="display:grid;grid-template-columns:{{ room.cols }};gap:10px">
+            <sc-for list="{{ planBeds }}" as="b" hint-placeholder-count="3">
+              <button onClick="{{ b.pick }}" style="min-height:118px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:10px;background:{{ b.bg }};border:{{ b.bd }};color:{{ b.fg }};cursor:{{ b.cur }}">
+                <span style="display:flex;justify-content:space-between;align-items:flex-start;width:100%"><span style="font-weight:800;font-size:28px;line-height:1">{{ b.letter }}</span><span style="width:16px;height:24px;border:1.5px solid currentColor;opacity:.55"></span></span>
+                <span style="display:grid;gap:4px"><span style="font-size:12px;line-height:1.25">{{ b.spot }}</span><span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3">{{ b.tag }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px">
+          <sc-for list="{{ legend }}" as="l"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)"><i style="width:12px;height:12px;background:{{ l.bg }};border:{{ l.bd }}"></i>{{ l.label }}</span></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mode.list }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:12px 16px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);border-bottom:1px solid var(--hl)">{{ listCount }} beds you can take · cheapest first</div>
+      <sc-for list="{{ listBeds }}" as="b" hint-placeholder-count="5">
+        <button onClick="{{ b.pick }}" style="display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid var(--hl);background:{{ b.rowBg }};box-shadow:{{ b.bar }}">
+          <div style="height:60px;background:repeating-linear-gradient(135deg,var(--sf) 0 5px,var(--bg) 5px 10px);border:1px solid var(--hl);display:flex;align-items:flex-end;padding:4px;font:9px 'JetBrains Mono',monospace;color:var(--mu)">bed</div>
+          <div style="display:grid;gap:2px;min-width:0"><span style="font-weight:800;font-size:16px">Bed {{ b.id }}</span><span style="font-size:12px;color:var(--mu)">Floor {{ b.floor }} · {{ b.share }} sharing · {{ b.bath }} bath</span><span style="font-size:12px;font-weight:600">{{ b.spot }} · {{ b.avail }}</span></div>
+          <div style="text-align:right"><div style="font-weight:800;font-size:16px">{{ b.rentF }}</div><div style="font-size:11px;color:var(--mu)">per month</div></div>
+        </button>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ mode.building }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:14px 16px 16px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Cross-section · tap any free bed</div>
+        <div style="margin-top:10px;height:14px;border:2px solid var(--tx);border-bottom:0;margin-inline:10%;background:var(--sf)"></div>
+        <div style="border:2px solid var(--tx);border-bottom:0">
+          <sc-for list="{{ bldg }}" as="fl" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:40px minmax(0,1fr);border-bottom:2px solid var(--tx)">
+              <div style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border-right:2px solid var(--tx)">{{ fl.label }}</div>
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr))">
+                <sc-for list="{{ fl.rooms }}" as="r">
+                  <div style="padding:8px 6px;border-left:{{ r.bl }};display:grid;gap:6px;align-content:start;background:{{ r.bg }}">
+                    <span style="font-size:11px;font-weight:600;color:var(--mu)">{{ r.n }}</span>
+                    <span style="display:flex;gap:3px;flex-wrap:wrap"><sc-for list="{{ r.beds }}" as="b"><button onClick="{{ b.pick }}" style="width:16px;height:26px;background:{{ b.bg }};border:{{ b.bd }};cursor:{{ b.cur }}"></button></sc-for></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:grid;grid-template-columns:40px minmax(0,1fr);border-bottom:2px solid var(--tx)"><div style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border-right:2px solid var(--tx);padding:10px 0">G</div><div style="padding:10px;font-size:12px;color:var(--mu)">Reception · dining hall · bike parking</div></div>
+        </div>
+        <div style="height:8px;background:var(--tx);margin-inline:-6px"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px">
+          <sc-for list="{{ legend }}" as="l"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)"><i style="width:12px;height:12px;background:{{ l.bg }};border:{{ l.bd }}"></i>{{ l.label }}</span></sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+  <div style="border-top:2px solid var(--tx);padding:12px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--bg)">
+    <div style="min-width:0"><div style="font-weight:800;font-size:17px">{{ sel.title }}</div><div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sel.sub }}</div></div>
+    <button onClick="{{ openHold }}" style="height:50px;padding:0 18px;display:flex;gap:12px;align-items:center;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px;opacity:{{ sel.op }}">Hold bed<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button>
+  </div>
+</div>
+</sc-if>
+
+<!-- HOLD DETAIL -->
+<sc-if value="{{ on.hold }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px;border-bottom:2px solid var(--tx)">
+    <button onClick="{{ back }}" style="width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+    <div style="min-width:0"><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">{{ hd.hostel }}</div><div style="font-weight:800;font-size:22px;line-height:1.1">Bed {{ hd.bed }}</div></div>
+  </div>
+  <div data-scroll="" style="flex:1;overflow:auto">
+    <div style="padding:20px 16px;background:{{ hd.bg }};color:{{ hd.fg }};border-bottom:2px solid var(--tx)">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase">{{ hd.label }}</div>
+      <div style="font-weight:800;font-size:64px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:6px">{{ hd.big }}</div>
+      <div style="font-size:14px;margin-top:8px;line-height:1.4">{{ hd.sub }}</div>
+    </div>
+    <sc-for list="{{ hd.rows }}" as="r"><div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:11px 16px;border-bottom:1px solid var(--hl);font-size:14px"><span style="color:var(--mu)">{{ r.k }}</span><span style="font-weight:600">{{ r.v }}</span></div></sc-for>
+    <div style="padding:18px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">What happens next</div>
+    <div style="padding:0 16px;display:grid">
+      <sc-for list="{{ hd.steps }}" as="st"><div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:8px 0"><span style="width:14px;height:14px;margin-top:3px;background:{{ st.bg }};border:{{ st.bd }}"></span><span style="display:grid;gap:1px"><span style="font-weight:800;font-size:15px">{{ st.t }}</span><span style="font-size:13px;color:var(--mu)">{{ st.d }}</span></span></div></sc-for>
+    </div>
+    <div style="padding:16px;display:grid;gap:8px">
+      <sc-if value="{{ hd.canMoveIn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ moveIn }}" style="display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">I've moved in · open My stay<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button></sc-if>
+      <button onClick="{{ hd.wa }}" style="display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 16px;background:var(--tx);color:var(--bg);font-weight:800;font-size:15px">WhatsApp {{ hd.owner }}<span style="display:flex;font-size:18px">{{ ic.msg }}</span></button>
+      <button onClick="{{ directions }}" style="display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 16px;border:2px solid var(--tx);font-weight:800;font-size:15px">Directions<span style="display:flex;font-size:18px">{{ ic.pin }}</span></button>
+      <sc-if value="{{ hd.canCancel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ cancelHold }}" style="padding:12px 0;font-weight:600;font-size:14px;color:var(--ad)">Release this hold</button></sc-if>
+      <sc-if value="{{ hd.canSim }}" hint-placeholder-val="{{ false }}"><button onClick="{{ simConfirm }}" style="padding:10px 12px;border:1px dashed var(--dv);font-size:12px;color:var(--mu)">Demo: simulate the owner confirming</button></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- RESIDENT HOME -->
+<sc-if value="{{ on.rHome }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Anjani Residency · Room 204 · Bed B</div>
+    <div style="font-weight:800;font-size:32px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Morning, Rahul</div>
+  </div>
+  <div style="margin:0 16px;border:2px solid var(--tx);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;padding:16px;background:{{ rent.bg }}">
+    <div><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">October rent</div><div style="font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:1.05;margin-top:4px">{{ rent.totalF }}</div><div style="font-size:13px;font-weight:600;color:{{ rent.noteFg }};margin-top:2px">{{ rent.note }}</div></div>
+    <button onClick="{{ rent.act }}" style="height:44px;padding:0 14px;display:flex;gap:10px;align-items:center;background:{{ rent.btnBg }};color:{{ rent.btnFg }};border:2px solid {{ rent.btnBd }};font-weight:800;font-size:14px">{{ rent.btn }}<span style="display:flex">{{ ic.arrow }}</span></button>
+  </div>
+  <div style="padding:22px 16px 6px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);white-space:nowrap">Today's food · Thursday</span><button onClick="{{ toFood }}" style="font-size:12px;font-weight:600;color:var(--ad)">Full week</button></div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ todayMeals }}" as="m" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-bottom:1px solid var(--hl);opacity:{{ m.op }}">
+        <span style="font-size:12px;color:var(--mu);padding-top:2px">{{ m.time }}</span>
+        <span style="display:grid;gap:2px"><span style="font-weight:800;font-size:15px">{{ m.name }}</span><span style="font-size:13px;color:var(--mu)">{{ m.items }}</span></span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;padding:3px 7px;background:{{ m.tagBg }};color:{{ m.tagFg }}">{{ m.tag }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="padding:22px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Room 204 board</div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ board }}" as="n" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--hl);font-size:14px;line-height:1.4">
+        <span>{{ n.t }}</span>
+        <sc-if value="{{ n.hasA }}"><button onClick="{{ n.act }}" style="padding:6px 10px;border:2px solid var(--tx);font-weight:800;font-size:12px">{{ n.a }}</button></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hl);margin:22px 0 0;border-top:2px solid var(--dv);border-bottom:1px solid var(--hl)">
+    <sc-for list="{{ quick }}" as="q" hint-placeholder-count="4"><button onClick="{{ q.go }}" style="background:var(--bg);padding:16px;display:grid;gap:18px;justify-items:start"><span style="display:flex;font-size:22px;color:var(--ad)">{{ q.icon }}</span><span style="font-weight:800;font-size:15px">{{ q.label }}</span></button></sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- RESIDENT PAY -->
+<sc-if value="{{ on.rPay }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 18px;border-bottom:2px solid var(--tx)">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Bed 204-B · Anjani Residency</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Pay rent</div>
+  </div>
+  <sc-if value="{{ rent.unpaid }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <sc-for list="{{ rent.lines }}" as="l"><div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--hl);font-size:14px"><span style="color:var(--mu)">{{ l.k }}</span><span style="font-weight:600">{{ l.v }}</span></div></sc-for>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px;border-bottom:2px solid var(--tx)"><span style="font-weight:800;font-size:16px">Total for October</span><span style="font-weight:800;font-size:26px">{{ rent.totalF }}</span></div>
+      <div style="padding:18px 16px 8px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Pay with</div>
+      <div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;border:2px solid var(--tx)"><sc-for list="{{ payMethods }}" as="o"><button onClick="{{ o.pick }}" style="padding:12px;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+      <div style="padding:16px"><button onClick="{{ payRent }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;height:56px;padding:0 18px;background:var(--ac);color:var(--ai);font-weight:800;font-size:16px">Pay {{ rent.totalF }} by {{ payM }}<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button><div style="font-size:12px;color:var(--mu);margin-top:8px">Due 5 Oct. The owner gets a receipt on WhatsApp.</div></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ rent.paid }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:24px 16px;background:var(--gn);color:var(--ai);border-bottom:2px solid var(--tx)">
+      <div style="width:44px;height:44px;border:2px solid var(--ai);display:grid;place-items:center;font-size:24px">{{ ic.check }}</div>
+      <div style="font-weight:800;font-size:40px;letter-spacing:-.03em;margin-top:16px;line-height:1">{{ rent.totalF }} paid</div>
+      <div style="font-size:14px;font-weight:600;margin-top:8px">October 2026 · Receipt HZ-2610-0482</div>
+    </div>
+  </sc-if>
+  <div style="padding:20px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Deposit</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:2px solid var(--dv);border-bottom:1px solid var(--hl);font-size:14px"><span><b>₹15,200</b> <span style="color:var(--mu)">held since 14 Mar</span></span><span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;padding:3px 7px;background:var(--sf)">Refundable</span></div>
+  <div style="padding:20px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">History</div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ rent.history }}" as="h"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 16px;border-bottom:1px solid var(--hl);font-size:14px"><span><b>{{ h.m }}</b><br><span style="font-size:12px;font-weight:600;color:var(--gn)">{{ h.d }}</span></span><span style="font-weight:600">{{ h.a }}</span></div></sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- FOOD -->
+<sc-if value="{{ on.food }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">This week · Anjani Residency</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Food</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin:0 16px 14px;border:2px solid var(--tx)"><sc-for list="{{ foodSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 12px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  <sc-if value="{{ fv.week }}" hint-placeholder-val="{{ false }}">
+      <div data-scroll="" style="overflow-x:auto;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)">
+        <div style="min-width:640px">
+          <div style="display:grid;grid-template-columns:68px repeat(3,minmax(0,1fr));border-bottom:2px solid var(--tx)">
+            <div style="position:sticky;left:0;background:var(--bg);border-right:1px solid var(--hl);padding:10px 8px 10px 16px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Day</div>
+            <sc-for list="{{ mealHeads }}" as="m"><div style="padding:10px 12px;border-left:1px solid var(--hl);display:grid;gap:1px"><span style="font-weight:800;font-size:14px">{{ m.name }}</span><span style="font-size:11px;color:var(--mu)">{{ m.time }}</span></div></sc-for>
+          </div>
+          <sc-for list="{{ weekRows }}" as="w" hint-placeholder-count="7">
+            <button onClick="{{ w.pick }}" style="display:grid;grid-template-columns:68px repeat(3,minmax(0,1fr));width:100%;border-bottom:1px solid var(--hl);background:{{ w.bg }}">
+              <span style="position:sticky;left:0;background:{{ w.bg2 }};border-right:1px solid var(--hl);padding:10px 8px 10px 16px;display:grid;gap:1px;align-content:start"><span style="font-weight:800;font-size:14px;color:{{ w.dfg }}">{{ w.d }}</span><span style="font-size:11px;color:var(--mu)">{{ w.date }}</span></span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.b }}</span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.l }}</span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.n }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="padding:10px 16px;font-size:12px;color:var(--mu)">Today is highlighted. Swipe sideways for dinner. Tap a day to open it.</div>
+  </sc-if>
+  <sc-if value="{{ fv.day }}" hint-placeholder-val="{{ true }}">
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)">
+    <sc-for list="{{ days }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.pick }}" style="padding:10px 0 9px 8px;display:grid;gap:1px;background:{{ d.bg }};color:{{ d.fg }};border-left:{{ d.bl }};box-shadow:{{ d.bar }}"><span style="font-size:11px;font-weight:600">{{ d.d }}</span><span style="font-weight:800;font-size:18px">{{ d.date }}</span></button></sc-for>
+  </div>
+  <sc-for list="{{ dayMeals }}" as="m" hint-placeholder-count="3">
+    <div style="padding:18px 16px;border-bottom:1px solid var(--hl);display:grid;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800;font-size:20px">{{ m.name }}</span><span style="font-size:13px;color:var(--mu)">{{ m.time }}</span></div>
+      <div style="font-size:15px;line-height:1.45">{{ m.items }}</div>
+    </div>
+  </sc-for>
+  <sc-if value="{{ showRate }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 16px;display:grid;gap:10px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">How was breakfast?</div>
+      <div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ rateSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:11px 12px;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+      <div style="font-size:12px;color:var(--mu)">Shared with the kitchen without your name.</div>
+    </div>
+  </sc-if>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- HELP -->
+<sc-if value="{{ on.help }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px;border-bottom:2px solid var(--tx)">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Something wrong in your room?</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Help</div>
+  </div>
+  <div style="padding:16px;display:grid;gap:12px;border-bottom:2px solid var(--dv)">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Raise a complaint</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ cats }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.act }}" style="padding:8px 12px;font-size:13px;font-weight:600;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button></sc-for></div>
+    <textarea value="{{ cText }}" onChange="{{ onCText }}" rows="3" placeholder="What's wrong? Bathroom, floor, since when." style="width:100%;padding:12px;border:2px solid var(--tx);background:var(--bg);font-size:15px;resize:none"></textarea>
+    <button onClick="{{ submitComplaint }}" style="display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Send to warden<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button>
+    <div style="font-size:12px;color:var(--mu)">Not fixed in 72 hours? Hostelzy steps in.</div>
+  </div>
+  <div style="padding:18px 16px 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Your complaints</div>
+  <sc-for list="{{ myComplaints }}" as="c" hint-placeholder-count="2">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--hl);display:grid;gap:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-weight:800;font-size:15px">{{ c.cat }}</span><span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;padding:3px 7px;background:{{ c.tagBg }};color:{{ c.tagFg }}">{{ c.status }}</span></div>
+      <div style="font-size:14px">{{ c.text }}</div>
+      <div style="font-size:12px;color:var(--mu)">{{ c.date }} · {{ c.note }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<!-- MOVE: VACATE / SWAP -->
+<sc-if value="{{ on.move }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px">
+    <button onClick="{{ back }}" style="width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid var(--dv);font-size:20px">{{ ic.back }}</button>
+    <div><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Bed 204-B</div><div style="font-weight:800;font-size:22px;line-height:1.1">Move out or swap</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin:0 16px;border:2px solid var(--tx)"><sc-for list="{{ moveSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:11px 12px;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  <div data-scroll="" style="flex:1;overflow:auto;margin-top:14px;border-top:2px solid var(--dv)">
+    <sc-if value="{{ mv.vacate }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ mv.noNotice }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:16px;display:grid;gap:12px">
+          <div style="font-size:14px;line-height:1.45">Notice period is <b>30 days</b>. The earliest you can leave is <b>31 Oct</b>.</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);margin-top:6px">Last day</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--tx)"><sc-for list="{{ vDates }}" as="o"><button onClick="{{ o.pick }}" style="padding:12px;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);margin-top:6px">Reason</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ vReasons }}" as="c"><button onClick="{{ c.act }}" style="padding:8px 12px;font-size:13px;font-weight:600;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button></sc-for></div>
+        </div>
+        <div style="padding:6px 16px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Deposit refund</div>
+        <sc-for list="{{ refund }}" as="l"><div style="display:flex;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--hl);font-size:14px"><span style="color:var(--mu)">{{ l.k }}</span><span style="font-weight:{{ l.w }}">{{ l.v }}</span></div></sc-for>
+        <div style="padding:16px"><button onClick="{{ giveNotice }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;height:54px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Give notice for {{ vDate }}<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button></div>
+      </sc-if>
+      <sc-if value="{{ notice }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 16px;display:grid;gap:8px;border-bottom:2px solid var(--tx)"><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--ad)">Notice given</div><div style="font-weight:800;font-size:28px;line-height:1.05">Your last day is {{ vDate }}.</div><div style="font-size:14px;color:var(--mu)">Srinivas has been told. Your bed goes back on Hostelzy as "free soon".</div></div>
+        <div style="padding:8px 16px;display:grid">
+          <sc-for list="{{ noticeSteps }}" as="st"><div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:8px 0"><span style="width:14px;height:14px;margin-top:3px;background:{{ st.bg }};border:{{ st.bd }}"></span><span style="display:grid;gap:1px"><span style="font-weight:800;font-size:15px">{{ st.t }}</span><span style="font-size:13px;color:var(--mu)">{{ st.d }}</span></span></div></sc-for>
+        </div>
+        <div style="padding:8px 16px"><button onClick="{{ withdrawNotice }}" style="font-weight:600;font-size:14px;color:var(--ad)">Withdraw notice</button></div>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ mv.swap }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:14px 16px;font-size:14px;line-height:1.45;border-bottom:1px solid var(--hl)">Free beds in Anjani Residency. Rent changes from next month.</div>
+      <sc-for list="{{ swapBeds }}" as="b">
+        <button onClick="{{ b.pick }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:13px 16px;border-bottom:1px solid var(--hl);background:{{ b.bg }};box-shadow:{{ b.bar }}">
+          <span style="display:grid;gap:2px"><span style="font-weight:800;font-size:16px">Bed {{ b.id }}</span><span style="font-size:12px;color:var(--mu)">{{ b.sub }}</span></span>
+          <span style="font-weight:800;font-size:14px">{{ b.diff }}</span>
+        </button>
+      </sc-for>
+      <div style="padding:16px"><button onClick="{{ sendSwap }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;height:54px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px;opacity:{{ swapOp }}">{{ swapCta }}<span style="display:flex;font-size:18px">{{ ic.swap }}</span></button></div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- OWNER TODAY -->
+<sc-if value="{{ on.oToday }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+    <div><div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Anjani Residency · Thu 1 Oct</div><div style="font-weight:800;font-size:32px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Today</div></div>
+    <button onClick="{{ toMe }}" style="width:40px;height:40px;background:var(--ac);color:var(--ai);display:grid;place-items:center;font-weight:800;font-size:14px">SR</button>
+  </div>
+  <div style="padding:16px;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px"><span style="font-weight:800;font-size:64px;line-height:.9;letter-spacing:-.04em">{{ occ.pct }}</span><span style="font-size:13px;color:var(--mu);text-align:right;padding-bottom:4px">{{ occ.line }}</span></div>
+    <div style="display:flex;height:14px;margin-top:14px;border:2px solid var(--tx)">
+      <span style="width:{{ occ.wB }};background:var(--tx)"></span><span style="width:{{ occ.wH }};background:repeating-linear-gradient(135deg,var(--tx) 0 2px,transparent 2px 5px)"></span><span style="width:{{ occ.wS }};background:var(--ab)"></span>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--mu)"><span>■ Taken</span><span>▨ On hold</span><span style="color:var(--ad)">■ Freeing up</span><span>□ Free</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hl);border-bottom:2px solid var(--dv)">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4"><button onClick="{{ k.go }}" style="background:var(--bg);padding:14px 16px;display:grid;gap:2px"><span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--mu)">{{ k.label }}</span><span style="font-weight:800;font-size:28px;letter-spacing:-.02em;color:{{ k.fg }}">{{ k.v }}</span><span style="font-size:12px;color:var(--mu)">{{ k.sub }}</span></button></sc-for>
+  </div>
+  <div style="padding:20px 16px 6px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Hold requests</span></div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ reqs }}" as="r" hint-placeholder-count="2">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--hl);display:grid;gap:8px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start">
+          <span style="display:grid;gap:2px"><span style="font-weight:800;font-size:16px">{{ r.name }}</span><span style="font-size:13px;color:var(--mu)">Bed {{ r.bed }} · {{ r.type }}</span><span style="font-size:13px">“{{ r.note }}”</span></span>
+          <span style="text-align:right"><span style="display:block;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;color:var(--ad)">{{ r.left }}</span><span style="font-size:11px;color:var(--mu)">to reply</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onClick="{{ r.accept }}" style="height:42px;padding:0 12px;background:var(--ac);color:var(--ai);font-weight:800;font-size:14px">Confirm hold</button><button onClick="{{ r.decline }}" style="height:42px;padding:0 12px;border:2px solid var(--tx);font-weight:800;font-size:14px">Decline</button></div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ noReqs }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 16px;font-size:14px;color:var(--mu)">No one waiting. New requests show up here and on WhatsApp.</div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- OWNER BEDS -->
+<sc-if value="{{ on.oBeds }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">{{ occ.counts }}</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Bed map</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin:0 16px 14px;border:2px solid var(--tx)"><sc-for list="{{ obvSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 12px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  <sc-if value="{{ obv.plan }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--tx)">
+      <sc-for list="{{ obFloorTabs }}" as="f" hint-placeholder-count="3"><button onClick="{{ f.pick }}" style="padding:12px 16px;display:grid;gap:2px;box-shadow:{{ f.bar }};color:{{ f.fg }}"><span style="font-weight:800;font-size:15px">{{ f.label }}</span><span style="font-size:12px">{{ f.sub }}</span></button></sc-for>
+    </div>
+    <div style="padding:14px 16px 4px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);margin-bottom:8px;white-space:nowrap;gap:8px"><span>Windows · street</span><span>Floor {{ obFloor }}</span></div>
+      <div style="height:6px;background:var(--tx);margin:0 18%"></div>
+      <div style="border:2px solid var(--tx)">
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <sc-for list="{{ obPlan.top }}" as="r" hint-placeholder-count="2">
+            <div style="padding:10px;border-left:{{ r.bl }};display:grid;gap:8px;align-content:start;min-height:156px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px"><span style="font-weight:800;font-size:16px;white-space:nowrap">{{ r.n }}</span><span style="font-size:11px;color:var(--mu);white-space:nowrap">{{ r.sub }}</span></div>
+              <div style="display:grid;grid-template-columns:{{ r.cols }};gap:6px">
+                <sc-for list="{{ r.beds }}" as="b"><button onClick="{{ b.pick }}" style="min-height:52px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;background:{{ b.bg }};border:{{ b.bd }};color:{{ b.fg }}"><span style="font-weight:800;font-size:15px;line-height:1">{{ b.letter }}</span><span style="font-size:10px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ b.ini }}</span></button></sc-for>
+              </div>
+              <div style="font-size:11px;color:var(--mu)">{{ r.foot }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:52px minmax(0,1fr) 52px;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx);height:46px">
+          <div style="border-right:2px solid var(--tx);background:repeating-linear-gradient(90deg,var(--tk) 0 2px,transparent 2px 7px)"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)"><span style="white-space:nowrap">← Stairs</span><span style="white-space:nowrap">Corridor</span></div>
+          <div style="border-left:2px solid var(--tx);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--mu)">WC</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <sc-for list="{{ obPlan.bot }}" as="r" hint-placeholder-count="2">
+            <div style="padding:10px;border-left:{{ r.bl }};display:grid;gap:8px;align-content:start;min-height:156px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px"><span style="font-weight:800;font-size:16px;white-space:nowrap">{{ r.n }}</span><span style="font-size:11px;color:var(--mu);white-space:nowrap">{{ r.sub }}</span></div>
+              <div style="display:grid;grid-template-columns:{{ r.cols }};gap:6px">
+                <sc-for list="{{ r.beds }}" as="b"><button onClick="{{ b.pick }}" style="min-height:52px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;background:{{ b.bg }};border:{{ b.bd }};color:{{ b.fg }}"><span style="font-weight:800;font-size:15px;line-height:1">{{ b.letter }}</span><span style="font-size:10px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ b.ini }}</span></button></sc-for>
+              </div>
+              <div style="font-size:11px;color:var(--mu)">{{ r.foot }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu);margin-top:6px;white-space:nowrap;gap:8px"><span>Courtyard</span><span>Tap a bed to manage</span></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ obv.grid }}" hint-placeholder-val="{{ false }}">
+  <sc-for list="{{ obFloors }}" as="fl" hint-placeholder-count="3">
+    <div style="border-top:2px solid var(--tx)">
+      <div style="display:flex;justify-content:space-between;padding:10px 16px 0;font-size:12px"><span style="font-weight:800;font-size:15px">{{ fl.label }}</span><span style="color:var(--mu)">{{ fl.sub }}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hl);margin-top:10px;border-top:1px solid var(--hl)">
+        <sc-for list="{{ fl.rooms }}" as="r">
+          <div style="background:var(--bg);padding:10px 16px 14px;display:grid;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="font-weight:800;font-size:14px">{{ r.n }}</span><span style="color:var(--mu)">{{ r.sub }}</span></div>
+            <div style="display:flex;gap:5px"><sc-for list="{{ r.beds }}" as="b"><button onClick="{{ b.pick }}" style="width:34px;height:46px;display:grid;place-items:center;font-weight:800;font-size:13px;background:{{ b.bg }};border:{{ b.bd }};color:{{ b.fg }}">{{ b.letter }}</button></sc-for></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+  </sc-if>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;padding:14px 16px;border-top:2px solid var(--tx)">
+    <sc-for list="{{ legendO }}" as="l"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)"><i style="width:12px;height:12px;background:{{ l.bg }};border:{{ l.bd }}"></i>{{ l.label }}</span></sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- OWNER RENT -->
+<sc-if value="{{ on.oRent }}" hint-placeholder-val="{{ false }}">
+<div data-scroll="" style="flex:1;overflow:auto">
+  <div style="padding:12px 16px 16px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">October 2026</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Rent</div>
+  </div>
+  <div style="padding:16px;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx);display:grid;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><span><span style="display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Collected</span><span style="font-weight:800;font-size:34px;letter-spacing:-.02em;color:var(--gn)">{{ rentO.collected }}</span></span><span style="text-align:right"><span style="display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Pending</span><span style="font-weight:800;font-size:22px;color:var(--ad)">{{ rentO.pending }}</span></span></div>
+    <div style="height:10px;border:2px solid var(--tx);display:flex"><span style="width:{{ rentO.w }};background:var(--gn)"></span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);margin:14px 16px;border:2px solid var(--tx)"><sc-for list="{{ rentSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:9px 8px;font-size:12px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  <div style="border-top:2px solid var(--dv)">
+    <sc-for list="{{ rentRows }}" as="r" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--hl)">
+        <span style="display:grid;gap:2px"><span style="font-weight:800;font-size:15px">{{ r.name }}</span><span style="font-size:12px;color:var(--mu)">Bed {{ r.bed }} · {{ r.amtF }} · {{ r.note }}</span></span>
+        <span style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;padding:3px 7px;background:{{ r.tagBg }};color:{{ r.tagFg }}">{{ r.status }}</span>
+          <sc-if value="{{ r.canRemind }}"><button onClick="{{ r.remind }}" title="Remind on WhatsApp" style="width:34px;height:34px;display:grid;place-items:center;border:2px solid var(--tx);font-size:16px">{{ ic.bell }}</button></sc-if>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- OWNER MANAGE -->
+<sc-if value="{{ on.oMore }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="padding:12px 16px 14px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Anjani Residency</div>
+    <div style="font-weight:800;font-size:30px;line-height:1.02;letter-spacing:-.025em;margin-top:4px">Manage</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);margin:0 16px;border:2px solid var(--tx)"><sc-for list="{{ moreSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+  <div data-scroll="" style="flex:1;overflow:auto;margin-top:14px;border-top:2px solid var(--dv)">
+    <sc-if value="{{ mt.complaints }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ allComplaints }}" as="c" hint-placeholder-count="4">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--hl);display:grid;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-weight:800;font-size:15px">{{ c.cat }} <span style="font-weight:400;font-size:12px;color:var(--mu)">· {{ c.by }} · {{ c.date }}</span></span><span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;padding:3px 7px;background:{{ c.tagBg }};color:{{ c.tagFg }}">{{ c.status }}</span></div>
+          <div style="font-size:14px">{{ c.text }}</div>
+          <sc-if value="{{ c.canNext }}"><button onClick="{{ c.advance }}" style="justify-self:start;margin-top:2px;padding:7px 12px;border:2px solid var(--tx);font-weight:800;font-size:13px">{{ c.next }}</button></sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ mt.menu }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;margin:0 16px 14px;border:2px solid var(--tx)"><sc-for list="{{ mvSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 12px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+      <sc-if value="{{ mvv.week }}" hint-placeholder-val="{{ false }}">
+      <div data-scroll="" style="overflow-x:auto;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)">
+        <div style="min-width:640px">
+          <div style="display:grid;grid-template-columns:68px repeat(3,minmax(0,1fr));border-bottom:2px solid var(--tx)">
+            <div style="position:sticky;left:0;background:var(--bg);border-right:1px solid var(--hl);padding:10px 8px 10px 16px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Day</div>
+            <sc-for list="{{ mealHeads }}" as="m"><div style="padding:10px 12px;border-left:1px solid var(--hl);display:grid;gap:1px"><span style="font-weight:800;font-size:14px">{{ m.name }}</span><span style="font-size:11px;color:var(--mu)">{{ m.time }}</span></div></sc-for>
+          </div>
+          <sc-for list="{{ weekRowsO }}" as="w" hint-placeholder-count="7">
+            <button onClick="{{ w.pick }}" style="display:grid;grid-template-columns:68px repeat(3,minmax(0,1fr));width:100%;border-bottom:1px solid var(--hl);background:{{ w.bg }}">
+              <span style="position:sticky;left:0;background:{{ w.bg2 }};border-right:1px solid var(--hl);padding:10px 8px 10px 16px;display:grid;gap:1px;align-content:start"><span style="font-weight:800;font-size:14px;color:{{ w.dfg }}">{{ w.d }}</span><span style="font-size:11px;color:var(--mu)">{{ w.date }}</span></span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.b }}</span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.l }}</span>
+              <span style="padding:10px 12px;border-left:1px solid var(--hl);font-size:13px;line-height:1.35">{{ w.n }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="padding:10px 16px;font-size:12px;color:var(--mu)">Tap a day to edit it.</div>
+      </sc-if>
+      <sc-if value="{{ mvv.day }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--tx)">
+        <sc-for list="{{ mDays }}" as="d"><button onClick="{{ d.pick }}" style="padding:10px 0 9px 8px;font-size:12px;font-weight:600;background:{{ d.bg }};color:{{ d.fg }};border-left:{{ d.bl }}">{{ d.d }}</button></sc-for>
+      </div>
+      <div style="padding:16px;display:grid;gap:16px">
+        <sc-for list="{{ menuFields }}" as="f">
+          <label style="display:grid;gap:6px"><span style="display:flex;justify-content:space-between;font-size:12px"><b style="font-size:14px">{{ f.label }}</b><span style="color:var(--mu)">{{ f.time }}</span></span><input value="{{ f.value }}" onChange="{{ f.onChange }}" style="height:46px;padding:0 12px;border:2px solid var(--tx);background:var(--bg);font-size:15px;width:100%"></input></label>
+        </sc-for>
+        <div style="font-size:12px;color:var(--mu)">Residents see changes right away in their Food tab.</div>
+      </div>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ mt.rules }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:16px;display:grid;gap:14px">
+        <sc-for list="{{ ruleFields }}" as="f">
+          <label style="display:grid;gap:6px"><b style="font-size:14px">{{ f.k }}</b><input value="{{ f.v }}" onChange="{{ f.onChange }}" style="height:46px;padding:0 12px;border:2px solid var(--tx);background:var(--bg);font-size:15px;width:100%"></input></label>
+        </sc-for>
+        <button onClick="{{ saveRules }}" style="display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Save rules<span style="display:flex;font-size:18px">{{ ic.check }}</span></button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+  </div>
+
+  <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ false }}">
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:2px solid var(--tx);background:var(--bg);height:64px;flex:none">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <button onClick="{{ t.go }}" style="display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;padding:0 12px;font-size:11px;font-weight:600;color:{{ t.fg }};background:{{ t.bg }};box-shadow:{{ t.bar }}"><span style="font-size:20px;display:flex">{{ t.icon }}</span>{{ t.label }}</button>
+    </sc-for>
+  </div>
+  </sc-if>
+  <div style="height:24px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ hiBg }}"><span style="width:124px;height:4px;border-radius:2px;background:{{ sbFg }};opacity:.8"></span></div>
+
+  <!-- SHEETS -->
+  <sc-if value="{{ anySheet }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;background:rgba(20,18,17,.55)">
+    <div onClick="{{ closeSheet }}" style="flex:1;min-height:60px"></div>
+    <div data-scroll="" style="background:var(--bg);border-top:2px solid var(--tx);max-height:88%;overflow:auto;padding-bottom:28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:2px solid var(--dv)">
+        <span style="font-weight:800;font-size:20px">{{ sheetTitle }}</span>
+        <button onClick="{{ closeSheet }}" style="width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--dv);font-size:18px">{{ ic.x }}</button>
+      </div>
+
+      <sc-if value="{{ sh.search }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px;display:grid;gap:18px">
+          <div style="display:grid;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Near</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><sc-for list="{{ lmChips }}" as="c"><button onClick="{{ c.act }}" style="padding:11px 12px;font-size:14px;font-weight:600;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button></sc-for></div></div>
+          <div style="display:grid;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Who is it for</span><div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ gSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 8px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div></div>
+          <div style="display:grid;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Sharing</span><div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ sSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 8px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div></div>
+          <div style="display:grid;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--mu)">Monthly budget</span><div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ bSeg }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px 8px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div></div>
+          <button onClick="{{ toggleFood }}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--hl);border-bottom:1px solid var(--hl);font-size:15px;font-weight:600">Food included<span style="width:44px;height:24px;border:2px solid var(--tx);display:flex;justify-content:{{ foodJ }};padding:2px;background:{{ foodBg }}"><span style="width:16px;height:16px;background:{{ foodKnob }}"></span></span></button>
+          <button onClick="{{ applySearch }}" style="display:flex;justify-content:space-between;align-items:center;height:54px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Show {{ resultCount }} hostels<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sh.hold }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:14px 16px 4px;font-size:13px;color:var(--mu)">{{ hs.sub }}</div>
+        <div style="padding:8px 16px;display:grid;gap:8px">
+          <sc-for list="{{ hs.opts }}" as="o" hint-placeholder-count="3">
+            <button onClick="{{ o.pick }}" style="display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border:{{ o.bd }};background:{{ o.bg }};width:100%">
+              <span style="width:18px;height:18px;border:2px solid var(--tx);margin-top:2px;display:grid;place-items:center"><span style="width:8px;height:8px;background:{{ o.dot }}"></span></span>
+              <span style="display:grid;gap:3px"><span style="font-weight:800;font-size:16px">{{ o.title }}</span><span style="font-size:13px;color:var(--mu);line-height:1.35">{{ o.sub }}</span></span>
+              <span style="font-weight:800;font-size:18px">{{ o.amt }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="padding:6px 16px 14px;font-size:12px;color:var(--mu);line-height:1.45">{{ hs.note }}</div>
+        <div style="padding:0 16px"><button onClick="{{ placeHold }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;height:56px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:16px">{{ hs.cta }}<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button></div>
+      </sc-if>
+
+      <sc-if value="{{ sh.wa }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px;display:grid;gap:12px">
+          <div style="font-size:13px;color:var(--mu)">To <b style="color:var(--tx)">{{ wa.to }}</b>. We fill in the message so you don't have to.</div>
+          <div style="padding:14px;background:var(--sf);font-size:15px;line-height:1.45;border-left:0">{{ wa.msg }}</div>
+          <button onClick="{{ openWa }}" style="display:flex;justify-content:space-between;align-items:center;height:54px;padding:0 16px;background:var(--tx);color:var(--bg);font-weight:800;font-size:15px">Open WhatsApp<span style="display:flex;font-size:18px">{{ ic.msg }}</span></button>
+          <button onClick="{{ copyWa }}" style="display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 16px;border:2px solid var(--tx);font-weight:800;font-size:15px">Copy message<span style="display:flex;font-size:18px">{{ ic.check }}</span></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sh.add }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px;display:grid;gap:14px">
+          <label style="display:grid;gap:6px"><b style="font-size:13px">Tenant name</b><input value="{{ add.name }}" onChange="{{ onAddName }}" placeholder="Full name" style="height:46px;padding:0 12px;border:2px solid var(--tx);background:var(--bg);font-size:15px;width:100%"></input></label>
+          <label style="display:grid;gap:6px"><b style="font-size:13px">WhatsApp number</b><input value="{{ add.phone }}" onChange="{{ onAddPhone }}" inputmode="numeric" placeholder="10 digits" style="height:46px;padding:0 12px;border:2px solid var(--tx);background:var(--bg);font-size:15px;width:100%"></input></label>
+          <div style="display:grid;gap:6px"><b style="font-size:13px">Bed</b><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ addBeds }}" as="c"><button onClick="{{ c.act }}" style="padding:8px 10px;font-size:13px;font-weight:600;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button></sc-for></div></div>
+          <div style="display:grid;gap:6px"><b style="font-size:13px">Moving in</b><div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--tx)"><sc-for list="{{ addDates }}" as="o"><button onClick="{{ o.pick }}" style="padding:10px;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;padding:10px 0;border-top:1px solid var(--hl)"><span style="color:var(--mu)">Monthly rent</span><b>{{ addRent }}</b></div>
+          <button onClick="{{ saveBooking }}" style="display:flex;justify-content:space-between;align-items:center;height:54px;padding:0 16px;background:var(--ac);color:var(--ai);font-weight:800;font-size:15px">Add booking<span style="display:flex;font-size:18px">{{ ic.check }}</span></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sh.bed }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <sc-for list="{{ ob.rows }}" as="r"><div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:11px 16px;border-bottom:1px solid var(--hl);font-size:14px"><span style="color:var(--mu)">{{ r.k }}</span><span style="font-weight:600">{{ r.v }}</span></div></sc-for>
+          <div style="padding:16px;display:grid;gap:8px">
+            <sc-for list="{{ ob.actions }}" as="a"><button onClick="{{ a.act }}" style="display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 16px;font-weight:800;font-size:15px;background:{{ a.bg }};color:{{ a.fg }};border:2px solid {{ a.bd }}">{{ a.label }}<span style="display:flex;font-size:18px">{{ ic.arrow }}</span></button></sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:16px;right:16px;bottom:100px;z-index:30;background:var(--tx);color:var(--bg);padding:13px 14px;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 12px 32px rgba(0,0,0,.25)">{{ toast }}</div>
+  </sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;start&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;welcome&quot;,&quot;phone&quot;,&quot;otp&quot;,&quot;role&quot;,&quot;explore&quot;,&quot;map&quot;,&quot;holds&quot;,&quot;me&quot;,&quot;detail&quot;,&quot;picker&quot;,&quot;hold&quot;,&quot;rHome&quot;,&quot;rPay&quot;,&quot;food&quot;,&quot;help&quot;,&quot;move&quot;,&quot;oToday&quot;,&quot;oBeds&quot;,&quot;oRent&quot;,&quot;oMore&quot;],&quot;default&quot;:&quot;welcome&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Start state&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tenant&quot;,&quot;resident&quot;,&quot;owner&quot;],&quot;default&quot;:&quot;tenant&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Start state&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;plan&quot;,&quot;list&quot;,&quot;building&quot;],&quot;default&quot;:&quot;plan&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Start state&quot;},&quot;sheet&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;moveTab&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;moreTab&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;bare&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const HOSTELS=[
+{id:'anjani',name:'Anjani Residency',gender:'Men',area:'Madhapur',from:7600,rating:4.4,reviews:212,food:true,ac:true,instant:false,owner:'Srinivas',reply:12,mins:{'Hitec City':6,'Gachibowli':14,'Ameerpet':24,'JNTU':20},x:40,y:42,tags:['3 meals a day','AC rooms','Power backup','Washing machine']},
+{id:'saisri',name:'Sai Sri Ladies Hostel',gender:'Women',area:'Kondapur',from:8200,rating:4.7,reviews:340,food:true,ac:false,instant:true,owner:'Padmavathi',reply:5,mins:{'Hitec City':8,'Gachibowli':10,'Ameerpet':28,'JNTU':18},x:55,y:28,tags:['Biometric entry','Warden on site','3 meals a day','CCTV in corridors']},
+{id:'nest42',name:'Nest 42 Co-living',gender:'Co-living',area:'Gachibowli',from:10800,rating:4.2,reviews:96,food:false,ac:true,instant:true,owner:'Kavya',reply:3,mins:{'Hitec City':14,'Gachibowli':5,'Ameerpet':32,'JNTU':26},x:24,y:62,tags:['AC rooms','Gym','Daily housekeeping','Workspace']},
+{id:'greenview',name:"Greenview Men's PG",gender:'Men',area:'Kondapur',from:6400,rating:4.1,reviews:158,food:true,ac:false,instant:false,owner:'Ramesh',reply:20,mins:{'Hitec City':11,'Gachibowli':9,'Ameerpet':30,'JNTU':14},x:46,y:56,tags:['2 meals a day','Hot water 24h','Bike parking','Weekly laundry']},
+{id:'orchid',name:"Orchid Women's PG",gender:'Women',area:'KPHB',from:6900,rating:4.5,reviews:187,food:true,ac:false,instant:false,owner:'Lalitha',reply:9,mins:{'Hitec City':20,'Gachibowli':25,'Ameerpet':16,'JNTU':6},x:70,y:18,tags:['3 meals a day','Near metro','CCTV at gate','Study room']},
+{id:'lakshmi',name:'Lakshmi Students PG',gender:'Men',area:'Ameerpet',from:5400,rating:4.0,reviews:410,food:true,ac:false,instant:false,owner:'Venkat',reply:15,mins:{'Hitec City':26,'Gachibowli':34,'Ameerpet':4,'JNTU':15},x:80,y:66,tags:['Near coaching centres','3 meals a day','Study room','Wi-Fi 100 Mbps']}];
+const LM=['Hitec City','Gachibowli','Ameerpet','JNTU'];
+const LMXY={'Hitec City':[50,36],'Gachibowli':[16,72],'Ameerpet':[86,76],'JNTU':[78,8]};
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const SPOT={2:['By the window','By the door'],3:['By the window','Middle','By the door'],4:['Window, lower bunk','Window, upper bunk','Door, lower bunk','Door, upper bunk']};
+const SOON=['8 Oct','12 Oct','15 Oct','20 Oct'];
+function mkRooms(h,i){let s=i*977+131;const rnd=()=>{s=(s*9301+49297)%233280;return s/233280};const sh=[2,3,4,3];const out=[];
+ for(let f=1;f<=3;f++)for(let r=1;r<=4;r++){const share=sh[(r+f)%4],n=f*100+r;const beds=[];
+  for(let k=0;k<share;k++){const x=rnd();beds.push({id:n+'-'+'ABCD'[k],letter:'ABCD'[k],room:n,floor:f,spot:SPOT[share][k],state:x<.34?'free':x<.44?'held':x<.54?'soon':'booked',soon:SOON[Math.floor(x*40)%4]})}
+  out.push({n,floor:f,share,rent:h.from+(4-share)*1100+(f===3?300:0),bath:r%2?'Attached':'Shared',beds})}
+ return out}
+const setB=(R,id,st)=>R.forEach(r=>r.beds.forEach(b=>{if(b.id===id)b.state=st}));
+function fixAnjani(A){['204-A','204-B','204-C','101-A','102-B','203-A','301-B','302-B'].forEach(id=>setB(A,id,'booked'));['204-D','201-C','202-A','103-B'].forEach(id=>setB(A,id,'free'));setB(A,'203-B','soon');setB(A,'102-C','held');setB(A,'301-A','held')}
+const RESIDENTS=[{name:'Rahul Varma',bed:'204-B',amt:8020,status:'Due',note:'Due 5 Oct'},{name:'Arjun Reddy',bed:'204-A',amt:8020,status:'Paid',note:'Paid 29 Sep'},{name:'Sai Kiran',bed:'204-C',amt:8020,status:'Paid',note:'Paid 30 Sep'},{name:'Mohammed Faiz',bed:'101-A',amt:7600,status:'Overdue',note:'12 days late'},{name:'Teja Naidu',bed:'102-B',amt:8700,status:'Paid',note:'Paid 1 Oct'},{name:'Pranav Shetty',bed:'203-A',amt:8700,status:'Overdue',note:'4 days late'},{name:'Nikhil Goud',bed:'301-B',amt:10100,status:'Due',note:'Due 5 Oct'},{name:'Harsha Vardhan',bed:'302-B',amt:9000,status:'Paid',note:'Paid 28 Sep'}];
+const REQS=[{id:'k1',name:'Karthik M',bed:'102-C',type:'Free hold',secs:2460,note:'Can I visit at 6 pm today?'},{id:'v1',name:'Vamsi Reddy',bed:'301-A',type:'Free hold',secs:3180,note:'Joining Infosys on 12 Oct.'}];
+const COMPLAINTS=[{id:1,by:'Rahul V · 204',cat:'Geyser',text:'No hot water in bathroom 2 since Monday.',status:'In progress',date:'28 Sep',note:'Plumber booked for Tuesday',mine:true},{id:2,by:'Rahul V · 204',cat:'WiFi',text:'Drops every night after 11 pm.',status:'Resolved',date:'20 Sep',note:'Router replaced',mine:true},{id:3,by:'Teja N · 102',cat:'Cleaning',text:'Room not swept for three days.',status:'Open',date:'30 Sep',note:''},{id:4,by:'Faiz M · 101',cat:'Water',text:'Low pressure on floor 1 in the mornings.',status:'Open',date:'1 Oct',note:''}];
+const MENU=[{b:'Idli, sambar, coconut chutney',l:'Rice, dal, bendakaya fry, curd',n:'Chapati, paneer butter masala'},{b:'Upma, banana',l:'Rice, sambar, cabbage poriyal',n:'Egg curry, rice, rasam'},{b:'Poori, aloo curry',l:'Veg biryani, raita',n:'Chapati, dal tadka, salad'},{b:'Pesarattu, ginger chutney',l:'Rice, tomato pappu, aloo fry, curd',n:'Chicken curry or paneer, chapati'},{b:'Dosa, peanut chutney',l:'Rice, rasam, beans fry',n:'Veg fried rice, gobi manchurian'},{b:'Pongal, vada',l:'Lemon rice, curd rice, papad',n:'Chapati, chana masala'},{b:'Aloo paratha, curd',l:'Chicken biryani or veg biryani',n:'Khichdi, pickle'}];
+const MEALS=[['b','Breakfast','7:30 – 9:30'],['l','Lunch','12:30 – 2:00'],['n','Dinner','8:00 – 10:00']];
+const DAYS=[['Mon','28'],['Tue','29'],['Wed','30'],['Thu','1'],['Fri','2'],['Sat','3'],['Sun','4']];
+const RULES=[{k:'Gate closes',v:'10:30 pm'},{k:'Visitors',v:'Common area only, till 8 pm'},{k:'Notice period',v:'30 days'},{k:'Security deposit',v:"2 months' rent"},{k:'Quiet hours',v:'11 pm – 6 am'}];
+const HOME={tenant:'explore',resident:'rHome',owner:'oToday'};
+const OPTS={free:{title:'Free hold',sub:'Held for 1 hour. The owner confirms before it is yours.',amt:'₹0',note:'If the owner does not confirm within the hour, the bed is released. You pay nothing.',cta:'Place free hold'},paid:{title:'Paid hold',sub:'Guaranteed for 48 hours. Visit when it suits you.',amt:'₹299',note:'₹299 comes off your first month\'s rent. Refunded in full if the owner cancels.',cta:'Pay ₹299 and hold'},token:{title:'Book now',sub:'Pay a token advance. The bed is yours right away.',amt:'₹2,000',note:'The token is adjusted in your first rent. Full refund if you cancel within 24 hours.',cta:'Pay ₹2,000 and book'}};
+const IC={search:[['circle',{cx:11,cy:11,r:8}],['path',{d:'m21 21-4.3-4.3'}]],pin:[['path',{d:'M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0'}],['circle',{cx:12,cy:10,r:3}]],home:[['path',{d:'M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8'}],['path',{d:'M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'}]],user:[['path',{d:'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'}],['circle',{cx:12,cy:7,r:4}]],heart:[['path',{d:'M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z'}]],bed:[['path',{d:'M2 4v16'}],['path',{d:'M2 8h18a2 2 0 0 1 2 2v10'}],['path',{d:'M2 17h20'}],['path',{d:'M6 8v9'}]],wallet:[['path',{d:'M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1'}],['path',{d:'M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4'}]],utensils:[['path',{d:'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'}],['path',{d:'M7 2v20'}],['path',{d:'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'}]],wrench:[['path',{d:'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9l-3.8 3.8z'}]],plus:[['path',{d:'M5 12h14'}],['path',{d:'M12 5v14'}]],back:[['path',{d:'m15 18-6-6 6-6'}]],chev:[['path',{d:'m9 18 6-6-6-6'}]],arrow:[['path',{d:'M5 12h14'}],['path',{d:'m12 5 7 7-7 7'}]],x:[['path',{d:'M18 6 6 18'}],['path',{d:'m6 6 12 12'}]],check:[['path',{d:'M20 6 9 17l-5-5'}]],msg:[['path',{d:'M7.9 20A9 9 0 1 0 4 16.1L2 22Z'}]],clock:[['circle',{cx:12,cy:12,r:10}],['path',{d:'M12 6v6l4 2'}]],grid:[['rect',{x:3,y:3,width:7,height:7}],['rect',{x:14,y:3,width:7,height:7}],['rect',{x:14,y:14,width:7,height:7}],['rect',{x:3,y:14,width:7,height:7}]],list:[['path',{d:'M8 6h13'}],['path',{d:'M8 12h13'}],['path',{d:'M8 18h13'}],['path',{d:'M3 6h.01'}],['path',{d:'M3 12h.01'}],['path',{d:'M3 18h.01'}]],building:[['rect',{x:4,y:2,width:16,height:20}],['path',{d:'M9 22v-4h6v4'}],['path',{d:'M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01'}]],star:[['path',{d:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',fill:'currentColor',stroke:'none'}]],bell:[['path',{d:'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'}],['path',{d:'M10.3 21a1.9 1.9 0 0 0 3.4 0'}]],logout:[['path',{d:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'}],['path',{d:'m16 17 5-5-5-5'}],['path',{d:'M21 12H9'}]],chart:[['path',{d:'M3 3v18h18'}],['path',{d:'M18 17V9'}],['path',{d:'M13 17V5'}],['path',{d:'M8 17v-3'}]],inbox:[['path',{d:'M22 12h-6l-2 3h-4l-2-3H2'}],['path',{d:'M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z'}]],swap:[['path',{d:'m17 2 4 4-4 4'}],['path',{d:'M3 11v-1a4 4 0 0 1 4-4h14'}],['path',{d:'m7 22-4-4 4-4'}],['path',{d:'M21 13v1a4 4 0 0 1-4 4H3'}]]};
+const ic={};Object.keys(IC).forEach(k=>{ic[k]=React.createElement('svg',{width:'1em',height:'1em',viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'square',strokeLinejoin:'miter',style:{display:'block',flex:'none'}},IC[k].map((e,i)=>React.createElement(e[0],Object.assign({key:i},e[1]))))});
+const cd=t=>{t=Math.max(0,Math.floor(t));const h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60;return (h?h+':'+String(m).padStart(2,'0'):String(m))+':'+String(x).padStart(2,'0')};
+const HATCH='repeating-linear-gradient(135deg,var(--tk) 0 3px,transparent 3px 7px)';
+const BEDST={free:{bg:'var(--bg)',bd:'2px solid var(--tx)',fg:'var(--tx)',tag:'Free'},soon:{bg:'var(--bg)',bd:'2px dashed var(--tx)',fg:'var(--tx)',tag:'Free soon'},held:{bg:HATCH,bd:'2px solid var(--tk)',fg:'var(--mu)',tag:'On hold'},booked:{bg:'var(--tk)',bd:'2px solid var(--tk)',fg:'var(--tx)',tag:'Taken'},sel:{bg:'var(--ac)',bd:'2px solid var(--ac)',fg:'var(--ai)',tag:'Selected'},mine:{bg:'var(--ab)',bd:'2px solid var(--ac)',fg:'var(--ad)',tag:'Your hold'}};
+const look=(b,sel)=>{const k=b.id===sel?'sel':b.mine?'mine':b.state;const L=BEDST[k];return Object.assign({},L,{tag:k==='soon'?'From '+b.soon:L.tag,can:(b.state==='free'||b.state==='soon')&&!b.mine})};
+const segOf=(opts,cur,fn)=>opts.map((o,i)=>{const v=Array.isArray(o)?o[0]:o,l=Array.isArray(o)?o[1]:o,on=v===cur;return {label:l,pick:()=>fn(v),bg:on?'var(--tx)':'transparent',fg:on?'var(--bg)':'var(--tx)',bl:i?'1px solid var(--hl)':'0'}});
+const chip=(label,on,act)=>({label,act,bg:on?'var(--tx)':'transparent',fg:on?'var(--bg)':'var(--tx)',bd:on?'var(--tx)':'var(--dv)'});
+const tagOf=st=>st==='Paid'||st==='Resolved'?{tagBg:'var(--gb)',tagFg:'var(--gn)'}:st==='Overdue'||st==='Open'?{tagBg:'var(--ac)',tagFg:'var(--ai)'}:{tagBg:'var(--ab)',tagFg:'var(--ad)'};
+
+class Component extends DCLogic {
+  phoneRef=React.createRef();
+  state=this.init();
+  init(){
+    const p=this.props||{};const rooms={};HOSTELS.forEach((h,i)=>rooms[h.id]=mkRooms(h,i));fixAnjani(rooms.anjani);
+    const now=Date.now();
+    const st={screen:p.start||'welcome',role:p.role||'tenant',theme:p.theme||'light',hist:[],phone:'',otp:'',rooms,hid:'anjani',floor:2,room:null,bed:null,mode:p.mode||'plan',holdOpt:'free',sheet:p.sheet||null,holds:[],holdId:null,now,toast:null,lm:'Hitec City',fG:'Any',fS:'Any',fB:'Any',fFood:false,mapSel:'anjani',paid:false,payM:'UPI',day:3,rated:null,complaints:COMPLAINTS.map(c=>Object.assign({},c)),cCat:'WiFi',cText:'',moveTab:p.moveTab||'vacate',vDate:'31 Oct',vReason:'New job',notice:false,swapBed:null,swapSent:false,reqs:REQS.map(r=>Object.assign({start:now},r)),residents:RESIDENTS.map(r=>Object.assign({},r)),rentF:'All',moreTab:p.moreTab||'complaints',menu:MENU.map(m=>Object.assign({},m)),mDay:3,rules:RULES.map(r=>Object.assign({},r)),add:{name:'',phone:'',bed:null,date:'Today'},obed:null,saved:{},wa:null,obView:'plan',obFloor:2,foodView:p.foodView||'day',mView:p.mView||'day'};
+    this.prep(st);return st;
+  }
+  prep(st){
+    if(st.screen==='picker'||st.sheet==='hold'){const R=st.rooms[st.hid];const r=R.find(r=>r.floor===2&&r.beds.some(b=>b.state==='free'))||R[0];st.floor=r.floor;st.room=r.n;if(st.sheet==='hold'){const b=r.beds.find(b=>b.state==='free');st.bed=b&&b.id}}
+    if(st.screen==='hold'&&!st.holds.length){const R=st.rooms.anjani;const b=R.find(r=>r.n===202).beds[0];b.state='held';b.mine=true;st.holds=[{id:'h0',hid:'anjani',bed:b.id,room:202,opt:'free',start:Date.now()-17*60000,status:'waiting'}];st.holdId='h0'}
+    if(st.sheet==='bed'&&!st.obed)st.obed='204-B';
+    if(st.sheet==='wa'&&!st.wa)st.wa={to:'Srinivas',msg:'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?'};
+  }
+  componentDidMount(){this.iv=setInterval(()=>{if(['hold','holds','oToday'].includes(this.state.screen))this.setState({now:Date.now()})},1000)}
+  componentWillUnmount(){clearInterval(this.iv);clearTimeout(this.tt)}
+  componentDidUpdate(pp,ps){if(pp.theme!==this.props.theme&&this.props.theme)this.setState({theme:this.props.theme});if(ps.screen!==this.state.screen||ps.mode!==this.state.mode||ps.moreTab!==this.state.moreTab){const el=this.phoneRef.current;if(el)el.querySelectorAll('[data-scroll]').forEach(n=>n.scrollTop=0)}}
+  toastMsg(m){clearTimeout(this.tt);this.setState({toast:m});this.tt=setTimeout(()=>this.setState({toast:null}),2600)}
+  go(screen,extra){this.setState(s=>Object.assign({screen,hist:[...s.hist,s.screen],sheet:null},extra||{}))}
+  tab(screen,extra){this.setState(Object.assign({screen,hist:[],sheet:null},extra||{}))}
+  back(){this.setState(s=>{const h=s.hist.slice();const prev=h.pop()||HOME[s.role];return {screen:prev,hist:h,sheet:null}})}
+  jump(screen,role,extra){const st=Object.assign({},this.state,{screen,role,hist:[],sheet:null,toast:null},extra||{});this.prep(st);this.setState(st)}
+  openWA(to,msg){this.setState({sheet:'wa',wa:{to,msg}})}
+  freeOf(id){let f=0,t=0;this.state.rooms[id].forEach(r=>r.beds.forEach(b=>{t++;if(b.state==='free'&&!b.mine)f++}));return {f,t}}
+  findBed(hid,id){for(const r of this.state.rooms[hid])for(const b of r.beds)if(b.id===id)return {b,r};return {}}
+  openPicker(){const R=this.state.rooms[this.state.hid];const r=R.find(r=>r.floor===2&&r.beds.some(b=>b.state==='free'))||R.find(r=>r.beds.some(b=>b.state==='free'))||R[0];this.go('picker',{floor:r.floor,room:r.n,bed:null})}
+  pickBed(b){if((b.state!=='free'&&b.state!=='soon')||b.mine)return this.toastMsg(b.state==='held'?'Someone is holding this bed right now.':'This bed is taken.');this.setState(s=>({bed:s.bed===b.id?null:b.id,room:b.room,floor:b.floor}))}
+  placeHold(){const s=this.state;const {b}=this.findBed(s.hid,s.bed);if(!b)return;const opt=s.holdOpt;b.state=opt==='token'?'booked':'held';b.mine=true;const id='h'+Date.now();const h={id,hid:s.hid,bed:b.id,room:b.room,opt,start:Date.now(),status:opt==='free'?'waiting':opt==='paid'?'held':'booked'};this.setState({holds:[...s.holds,h],holdId:id,sheet:null,bed:null,screen:'hold',hist:[...s.hist,s.screen]});this.toastMsg(opt==='free'?'Hold placed. '+HOSTELS.find(x=>x.id===s.hid).owner+' has been told on WhatsApp.':opt==='paid'?'Paid ₹299. The bed is held for 48 hours.':'Paid ₹2,000. The bed is yours.')}
+  setHold(id,patch){this.setState(s=>({holds:s.holds.map(h=>h.id===id?Object.assign({},h,patch):h)}))}
+
+  renderVals(){
+    const s=this.state,role=s.role;
+    const on={};['welcome','phone','otp','role','explore','map','holds','me','detail','picker','hold','rHome','rPay','food','help','move','oToday','oBeds','oRent','oMore'].forEach(k=>on[k]=s.screen===k);
+    const sh={};['search','hold','wa','add','bed'].forEach(k=>sh[k]=s.sheet===k);
+    const showTabs=['explore','map','holds','me','rHome','rPay','food','help','oToday','oBeds','oRent','oMore'].includes(s.screen);
+    const set=o=>this.setState(o);
+    // tabs
+    const TABS={tenant:[['explore','Explore','home'],['map','Map','pin'],['*','Search','search'],['holds','Holds','clock'],['me','Me','user']],resident:[['rHome','Home','home'],['food','Food','utensils'],['rPay','Pay rent','wallet',1],['help','Help','wrench'],['me','Me','user']],owner:[['oToday','Today','chart'],['oBeds','Beds','bed'],['*','Booking','plus'],['oRent','Rent','wallet'],['oMore','Manage','inbox']]};
+    const tabs=TABS[role].map((t,i)=>{const center=i===2,act=s.screen===t[0];return {label:t[1],icon:ic[t[2]],bg:center?'var(--ac)':'transparent',fg:center?'var(--ai)':act?'var(--tx)':'var(--mu)',bar:!center&&act?'inset 0 3px 0 var(--ac)':'none',go:()=>{if(t[0]!=='*')return this.tab(t[0]);if(role==='tenant')set({sheet:'search'});else set({sheet:'add',add:{name:'',phone:'',bed:null,date:'Today'}})}}});
+    // explore
+    const lim={'Any':1e9,'6k':6000,'8k':8000,'10k':10000}[s.fB];
+    const filt=HOSTELS.filter(h=>(s.fG==='Any'||h.gender===s.fG)&&(!s.fFood||h.food)&&h.from<=lim&&(s.fS==='Any'||s.rooms[h.id].some(r=>r.share===+s.fS&&r.beds.some(b=>b.state==='free')))).sort((a,b)=>a.mins[s.lm]-b.mins[s.lm]);
+    const hostelCard=h=>{const c=this.freeOf(h.id);const dots=[];s.rooms[h.id].forEach(r=>r.beds.forEach(b=>dots.push(b.state==='free'&&!b.mine?{bg:'var(--tx)',bd:'0'}:b.state==='soon'?{bg:'transparent',bd:'1px dashed var(--tx)'}:{bg:'var(--tk)',bd:'0'})));return Object.assign({},h,{min:h.mins[s.lm],lm:s.lm,free:c.f,fromF:fmt(h.from),feat:[h.food?'Food':'No food',h.ac?'AC':null].filter(Boolean).join(' · '),dots,kicker:h.gender+' · '+h.area,open:()=>this.go('detail',{hid:h.id})})};
+    const results=filt.map(hostelCard);
+    const totalFree=results.reduce((a,h)=>a+h.free,0);
+    const budgetLabel={'Any':'Any budget','6k':'Under ₹6,000','8k':'Under ₹8,000','10k':'Under ₹10,000'}[s.fB];
+    const searchSummary=[s.lm,s.fG==='Any'?'Anyone':s.fG,s.fS==='Any'?null:s.fS+' sharing',budgetLabel,s.fFood?'Food':null].filter(Boolean).join(' · ');
+    const quickChips=[chip('All',s.fG==='Any',()=>set({fG:'Any'})),chip('Women',s.fG==='Women',()=>set({fG:'Women'})),chip('Men',s.fG==='Men',()=>set({fG:'Men'})),chip('Co-living',s.fG==='Co-living',()=>set({fG:'Co-living'})),chip('Food included',s.fFood,()=>set({fFood:!s.fFood})),chip('Under ₹8,000',s.fB==='8k',()=>set({fB:s.fB==='8k'?'Any':'8k'}))];
+    // map
+    const pins=HOSTELS.map(h=>{const sel=h.id===s.mapSel,vis=filt.includes(h);return {x:h.x+'%',y:h.y+'%',price:'₹'+(h.from/1000).toFixed(1)+'k',bg:sel?'var(--ac)':'var(--bg)',fg:sel?'var(--ai)':vis?'var(--tx)':'var(--mu)',bd:sel?'var(--ac)':vis?'var(--tx)':'var(--tk)',z:sel?3:1,pick:()=>set({mapSel:h.id})}});
+    const mapLms=LM.map(l=>({label:l,x:LMXY[l][0]+'%',y:LMXY[l][1]+'%',dot:l===s.lm?'var(--ac)':'var(--tx)'}));
+    const mh=hostelCard(HOSTELS.find(h=>h.id===s.mapSel));
+    // detail
+    const H=HOSTELS.find(x=>x.id===s.hid);const R=s.rooms[H.id];const hc=this.freeOf(H.id);
+    const d=Object.assign({},H,{kicker:H.gender+' · '+H.area+', Hyderabad',free:hc.f,fromF:fmt(H.from),min:H.mins[s.lm],instantLine:H.instant?'Instant booking':'Owner confirms holds',ownerIni:H.owner[0],
+      types:[2,3,4].map(n=>{const rs=R.filter(r=>r.share===n);const fr=rs.reduce((a,r)=>a+r.beds.filter(b=>b.state==='free'&&!b.mine).length,0);return {label:n+' sharing',sub:rs.length+' rooms · '+(fr?fr+' beds free':'Full right now'),price:fmt(Math.min(...rs.map(r=>r.rent)))}}),
+      rules:[['Gate closes',H.gender==='Women'?'9:30 pm':'10:30 pm'],['Visitors','Common area, till 8 pm'],['Notice period','30 days'],['Deposit',"2 months' rent"],['Food',H.food?'Included, veg and non-veg':'Not included, shared kitchen']].map(r=>({k:r[0],v:r[1]})),
+      saveLabel:s.saved[H.id]?'Saved':'Save',saveFg:s.saved[H.id]?'var(--ad)':'var(--tx)',toggleSave:()=>{set({saved:Object.assign({},s.saved,{[H.id]:!s.saved[H.id]})});this.toastMsg(s.saved[H.id]?'Removed from saved':'Saved. We\'ll tell you if a bed frees up.')},
+      ask:()=>this.openWA(H.owner,`Hi ${H.owner}, I found ${H.name} on Hostelzy. Can I come and see the rooms this evening?`)});
+    // picker
+    const room=R.find(r=>r.n===s.room)||R[0];
+    const floors=[1,2,3].map(f=>{const fr=R.filter(r=>r.floor===f).reduce((a,r)=>a+r.beds.filter(b=>b.state==='free'&&!b.mine).length,0);const o=f===s.floor;return {label:'Floor '+f,sub:fr+' free',bar:o?'inset 0 -3px 0 var(--ac)':'inset 0 -1px 0 var(--hl)',fg:o?'var(--tx)':'var(--mu)',pick:()=>{const r=R.find(r=>r.floor===f&&r.beds.some(b=>b.state==='free'))||R.find(r=>r.floor===f);set({floor:f,room:r.n,bed:null})}}});
+    const roomTiles=R.filter(r=>r.floor===s.floor).map(r=>{const fr=r.beds.filter(b=>(b.state==='free'||b.state==='soon')&&!b.mine).length;return {n:r.n,sub:r.share+' sharing',free:fr?fr+' open':'Full',bd:r.n===room.n?'2px solid var(--ac)':'2px solid var(--hl)',op:fr?1:.5,pick:()=>set({room:r.n,bed:null})}});
+    const planBeds=room.beds.map(b=>{const L=look(b,s.bed);return {letter:b.letter,spot:b.spot,tag:L.tag,bg:L.bg,bd:L.bd,fg:L.fg,cur:L.can?'pointer':'not-allowed',pick:()=>this.pickBed(b)}});
+    const roomV={n:room.n,desc:room.share+' sharing · '+room.bath+' bath · '+fmt(room.rent),attached:room.bath==='Attached',cols:room.share===3?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))'};
+    const lb=[];R.forEach(r=>r.beds.forEach(b=>{if((b.state==='free'||b.state==='soon')&&!b.mine)lb.push({b,r})}));lb.sort((x,y)=>x.r.rent-y.r.rent);
+    const listBeds=lb.map(({b,r})=>{const o=b.id===s.bed;return {id:b.id,floor:r.floor,share:r.share,bath:r.bath,spot:b.spot,avail:b.state==='soon'?'Free from '+b.soon:'Free now',rentF:fmt(r.rent),rowBg:o?'var(--ab)':'transparent',bar:o?'inset 4px 0 0 var(--ac)':'none',pick:()=>this.pickBed(b)}});
+    const bldg=[3,2,1].map(f=>({label:'F'+f,rooms:R.filter(r=>r.floor===f).map((r,i)=>({n:r.n,bl:i?'1px solid var(--hl)':'0',bg:r.n===room.n&&s.bed?'var(--sf)':'transparent',beds:r.beds.map(b=>{const L=look(b,s.bed);return {bg:L.bg,bd:L.bd,cur:L.can?'pointer':'not-allowed',pick:()=>this.pickBed(b)}})}))}));
+    const sb=s.bed&&this.findBed(s.hid,s.bed);
+    const sel=sb&&sb.b?{title:'Bed '+sb.b.id,sub:sb.b.spot+' · '+sb.r.share+' sharing · '+fmt(sb.r.rent)+'/mo',op:1}:{title:'No bed picked',sub:'Tap a free bed to hold it',op:.4};
+    const legend=[['Free','free'],['Free soon','soon'],['On hold','held'],['Taken','booked'],['Selected','sel']].map(l=>({label:l[0],bg:BEDST[l[1]].bg,bd:BEDST[l[1]].bd}));
+    const legendO=[['Free','free'],['Free soon','soon'],['On hold','held'],['Taken','booked']].map(l=>({label:l[0],bg:BEDST[l[1]].bg,bd:BEDST[l[1]].bd}));
+    const modes=[['plan','Plan','grid'],['list','List','list'],['building','Building','building']].map((m,i)=>{const o=s.mode===m[0];return {label:m[1],icon:ic[m[2]],bg:o?'var(--tx)':'transparent',fg:o?'var(--bg)':'var(--tx)',bl:i?'1px solid var(--hl)':'0',pick:()=>set({mode:m[0]})}});
+    // hold sheet
+    const O=OPTS[s.holdOpt];
+    const hs={sub:sb&&sb.b?H.name+' · Room '+sb.r.n+' · '+fmt(sb.r.rent)+'/mo':'',note:O.note,cta:O.cta,opts:Object.keys(OPTS).map(k=>{const o=k===s.holdOpt;return Object.assign({},OPTS[k],{bd:o?'2px solid var(--ac)':'2px solid var(--hl)',bg:o?'var(--ab)':'transparent',dot:o?'var(--ac)':'transparent',pick:()=>set({holdOpt:k})})})};
+    // hold detail
+    const hold=s.holds.find(h=>h.id===s.holdId)||s.holds[s.holds.length-1];
+    let hd={hostel:'',bed:'',label:'',big:'',sub:'',rows:[],steps:[],bg:'var(--sf)',fg:'var(--tx)',owner:'',wa:()=>{}};
+    const holdInfo=h=>{const hh=HOSTELS.find(x=>x.id===h.hid);const {r}=this.findBed(h.hid,h.bed);const secs=h.opt==='paid'?172800:3600;const left=secs-(s.now-h.start)/1000;return {hh,r,left}};
+    if(hold){const {hh,r,left}=holdInfo(hold);const st=hold.status;
+      const M={waiting:['Waiting for '+hh.owner,cd(left),'left for '+hh.owner+' to confirm. Usually replies in ~'+hh.reply+' min.','var(--sf)','var(--tx)'],confirmed:['Confirmed by '+hh.owner,cd(left),'Go and see it before the timer ends to keep the bed.','var(--gn)','var(--ai)'],held:['Held for you',cd(left),'Guaranteed. ₹299 comes off your first rent.','var(--gn)','var(--ai)'],booked:['Booked','Yours.','Move in from 5 Oct. The ₹2,000 token is adjusted in your first rent.','var(--gn)','var(--ai)'],released:['Released','—','The hold ended. You paid nothing.','var(--sf)','var(--tx)']}[st];
+      const done=st!=='waiting'&&st!=='released';
+      hd={hostel:hh.name,bed:hold.bed,label:M[0],big:M[1],sub:M[2],bg:M[3],fg:M[4],owner:hh.owner,
+        rows:[{k:'Room',v:r.n+' · '+r.share+' sharing · Floor '+r.floor},{k:'Rent',v:fmt(r.rent)+' a month'},{k:'Hold type',v:OPTS[hold.opt].title},{k:'Paid now',v:OPTS[hold.opt].amt}],
+        steps:[{t:'Hold placed',d:'Bed taken off the market for everyone else',bg:'var(--tx)',bd:'2px solid var(--tx)'},{t:hold.opt==='free'?'Owner confirms':'Bed reserved',d:hold.opt==='free'?(done?'Confirmed on WhatsApp':'Usually within '+hh.reply+' minutes'):'Done',bg:done?'var(--tx)':'var(--ac)',bd:done?'2px solid var(--tx)':'2px solid var(--ac)'},{t:'Visit and move in',d:'Pay the deposit at move-in. 2 months\' rent.',bg:done?'var(--ac)':'transparent',bd:done?'2px solid var(--ac)':'2px solid var(--tk)'}],
+        canSim:st==='waiting',canCancel:st==='waiting'||st==='confirmed'||st==='held',canMoveIn:st==='confirmed'||st==='booked'||st==='held',
+        wa:()=>this.openWA(hh.owner,`Hi ${hh.owner}, I've held bed ${hold.bed} at ${hh.name} on Hostelzy. Can I come and see it today at 6 pm?`)}}
+    const holdList=s.holds.slice().reverse().map(h=>{const {hh,r,left}=holdInfo(h);const lab={waiting:'Waiting for owner',confirmed:'Confirmed',held:'Held · paid',booked:'Booked',released:'Released'}[h.status];const timed=['waiting','confirmed','held'].includes(h.status);return {bed:h.bed,status:lab,sub:hh.name+' · '+fmt(r.rent)+'/mo',left:timed?cd(left):h.status==='booked'?'5 Oct':'—',leftSub:timed?'left':h.status==='booked'?'move-in':'',open:()=>this.go('hold',{holdId:h.id})}});
+    // me
+    const isOwner=role==='owner';
+    const me={name:isOwner?'Srinivas Rao':'Rahul Varma',ini:isOwner?'SR':'RV',phone:s.phone?s.phone.replace(/(\d{5})(\d{0,5})/,'$1 $2'):'98480 12345',roleLabel:{tenant:'Looking for a bed',resident:'Resident',owner:'Owner, Anjani Residency'}[role],
+      rows:[{label:'Saved hostels',go:()=>this.toastMsg(Object.values(s.saved).filter(Boolean).length+' saved'),fg:'var(--tx)'},{label:'Notifications',go:()=>this.toastMsg('Notifications go to WhatsApp and here.'),fg:'var(--tx)'},{label:'Switch role',go:()=>this.tab('role'),fg:'var(--tx)'},{label:'Log out',go:()=>this.setState({screen:'welcome',hist:[],phone:'',otp:''}),fg:'var(--ad)'}]};
+    const themeSeg=segOf([['light','Light'],['dark','Dark']],s.theme,v=>set({theme:v}));
+    // resident
+    const A=s.rooms.anjani;
+    const rent={totalF:'₹8,020',unpaid:!s.paid,paid:s.paid,note:s.paid?'Paid today. Thank you.':'Due 5 Oct · 4 days left',noteFg:s.paid?'var(--gn)':'var(--ad)',bg:s.paid?'var(--gb)':'transparent',btn:s.paid?'Receipt':'Pay',btnBg:s.paid?'transparent':'var(--ac)',btnFg:s.paid?'var(--tx)':'var(--ai)',btnBd:s.paid?'var(--tx)':'var(--ac)',act:()=>this.tab('rPay'),
+      lines:[{k:'Rent, bed 204-B',v:'₹7,600'},{k:'Electricity, September share',v:'₹420'},{k:'Late fee',v:'₹0'}],
+      history:[].concat(s.paid?[{m:'October 2026',a:'₹8,020',d:'Paid 1 Oct by '+s.payM}]:[],[{m:'September 2026',a:'₹8,040',d:'Paid 3 Sep by UPI'},{m:'August 2026',a:'₹7,980',d:'Paid 4 Aug by UPI'},{m:'July 2026',a:'₹8,110',d:'Paid 2 Jul by Card'}])};
+    const tm=s.menu[3];
+    const todayMeals=MEALS.map((m,i)=>({name:m[1],time:m[2],items:tm[m[0]],tag:['Done','Next','Later'][i],op:i===0?.55:1,tagBg:i===1?'var(--ac)':'var(--sf)',tagFg:i===1?'var(--ai)':'var(--tx)'}));
+    const board=[{t:'Arjun and Sai leave 8:40 am for Mindspace. Auto share, ₹40 each.',a:'Join',hasA:true,act:()=>this.toastMsg('Joined. Meet at the gate at 8:40.')},{t:'September electricity for room 204: ₹1,260, split 3 ways.',hasA:false},{t:'Water tank cleaning on Saturday, 10 am to 1 pm.',hasA:false}];
+    const quick=[{label:'Swap bed',icon:ic.swap,go:()=>this.go('move',{moveTab:'swap'})},{label:'Give notice',icon:ic.logout,go:()=>this.go('move',{moveTab:'vacate'})},{label:'Raise complaint',icon:ic.wrench,go:()=>this.tab('help')},{label:'Message warden',icon:ic.msg,go:()=>this.openWA('Ravi, warden','Hi Ravi, this is Rahul from room 204.')}];
+    const payMethods=segOf(['UPI','Card','Net banking'],s.payM,v=>set({payM:v}));
+    const days=DAYS.map((x,i)=>{const o=i===s.day;return {d:x[0],date:x[1],bg:o?'var(--tx)':'transparent',fg:o?'var(--bg)':'var(--tx)',bl:i?'1px solid var(--hl)':'0',bar:i===3?'inset 0 -4px 0 var(--ac)':'none',pick:()=>set({day:i})}});
+    const dm=s.menu[s.day];const dayMeals=MEALS.map(m=>({name:m[1],time:m[2],items:dm[m[0]]}));
+    const wk=(onPick)=>s.menu.map((m,i)=>({d:DAYS[i][0],date:DAYS[i][1]+(i<3?' Sep':' Oct'),b:m.b,l:m.l,n:m.n,bg:i===3?'var(--ab)':'transparent',bg2:i===3?'var(--ab)':'var(--bg)',dfg:i===3?'var(--ad)':'var(--tx)',pick:()=>onPick(i)}));
+    const weekRows=wk(i=>set({day:i,foodView:'day'})),weekRowsO=wk(i=>set({mDay:i,mView:'day'}));
+    const mealHeads=MEALS.map(m=>({name:m[1],time:m[2]}));
+    const foodSeg=segOf([['day','By day'],['week','Whole week']],s.foodView,v=>set({foodView:v}));
+    const mvSeg=segOf([['day','Edit by day'],['week','Week table']],s.mView,v=>set({mView:v}));
+    const rateSeg=segOf(['Good','Okay','Poor'],s.rated,v=>{set({rated:v});this.toastMsg('Thanks. Shared with the kitchen.')});
+    const cats=['WiFi','Water','Electricity','Cleaning','Food','Geyser','Other'].map(c=>chip(c,c===s.cCat,()=>set({cCat:c})));
+    const myComplaints=s.complaints.filter(c=>c.mine).slice().reverse().map(c=>Object.assign({},c,tagOf(c.status),{note:c.note||'Sent to Srinivas'}));
+    const moveSeg=segOf([['vacate','Give notice'],['swap','Swap bed']],s.moveTab,v=>set({moveTab:v}));
+    const vDates=segOf(['31 Oct','15 Nov','30 Nov'],s.vDate,v=>set({vDate:v}));
+    const vReasons=['New job','Moving home','Found another place','Other'].map(r=>chip(r,r===s.vReason,()=>set({vReason:r})));
+    const refund=[{k:'Deposit held',v:'₹15,200',w:600},{k:'Deductions',v:'₹0 so far, after inspection',w:600},{k:'Estimated refund',v:'₹15,200 within 7 days',w:800}];
+    const noticeSteps=[{t:'Notice given',d:'Today, 1 Oct',bg:'var(--tx)',bd:'2px solid var(--tx)'},{t:'Room check with the warden',d:'On '+s.vDate+', 10 am',bg:'transparent',bd:'2px solid var(--tk)'},{t:'Deposit back to your UPI',d:'Within 7 days of leaving',bg:'transparent',bd:'2px solid var(--tk)'}];
+    const swapBeds=[];A.forEach(r=>r.beds.forEach(b=>{if(b.state==='free'&&r.n!==204&&!b.mine&&swapBeds.length<6){const diff=r.rent-7600;const o=b.id===s.swapBed;swapBeds.push({id:b.id,sub:'Floor '+r.floor+' · '+r.share+' sharing · '+b.spot,diff:diff===0?'Same rent':(diff>0?'+':'−')+fmt(Math.abs(diff)),bg:o?'var(--ab)':'transparent',bar:o?'inset 4px 0 0 var(--ac)':'none',pick:()=>set({swapBed:b.id})})}}));
+    // owner
+    let cnt={t:0,booked:0,held:0,soon:0,free:0};A.forEach(r=>r.beds.forEach(b=>{cnt.t++;cnt[b.state]++}));
+    const pc=x=>(x/cnt.t*100).toFixed(1)+'%';
+    const occ={pct:Math.round(cnt.booked/cnt.t*100)+'%',line:cnt.booked+' of '+cnt.t+' beds taken',wB:pc(cnt.booked),wH:pc(cnt.held),wS:pc(cnt.soon),counts:cnt.free+' free · '+cnt.held+' on hold · '+cnt.soon+' soon · '+cnt.booked+' taken'};
+    const tenantReqs=s.holds.filter(h=>h.hid==='anjani'&&h.status==='waiting').map(h=>({id:h.id,name:'Rahul Varma',bed:h.bed,type:'Free hold',secs:3600,start:h.start,note:'Placed from the Hostelzy app',hold:h.id}));
+    const allReqs=tenantReqs.concat(s.reqs);
+    const reqs=allReqs.map(r=>({name:r.name,bed:r.bed,type:r.type,note:r.note,left:cd(r.secs-(s.now-r.start)/1000),
+      accept:()=>{if(r.hold)this.setHold(r.hold,{status:'confirmed'});else set({reqs:s.reqs.filter(x=>x.id!==r.id)});this.toastMsg('Confirmed. '+r.name.split(' ')[0]+' gets a WhatsApp message.')},
+      decline:()=>{const {b}=this.findBed('anjani',r.bed);if(b){b.state='free';b.mine=false}if(r.hold)this.setHold(r.hold,{status:'released'});else set({reqs:s.reqs.filter(x=>x.id!==r.id)});this.toastMsg('Declined. Bed '+r.bed+' is free again.')}}));
+    const residents=s.residents;const collected=residents.filter(r=>r.status==='Paid').reduce((a,r)=>a+r.amt,0),expected=residents.reduce((a,r)=>a+r.amt,0);
+    const openC=s.complaints.filter(c=>c.status!=='Resolved').length;
+    const kpis=[{label:'Free beds',v:cnt.free,sub:cnt.soon+' freeing up soon',fg:'var(--tx)',go:()=>this.tab('oBeds')},{label:'Hold requests',v:allReqs.length,sub:'Need your reply',fg:allReqs.length?'var(--ad)':'var(--tx)',go:()=>{}},{label:'Rent pending',v:fmt(expected-collected),sub:residents.filter(r=>r.status==='Overdue').length+' overdue',fg:'var(--tx)',go:()=>this.tab('oRent')},{label:'Complaints',v:openC,sub:'Open or in progress',fg:'var(--tx)',go:()=>this.tab('oMore',{moreTab:'complaints'})}];
+    const obFloors=[1,2,3].map(f=>{const rs=A.filter(r=>r.floor===f);const fr=rs.reduce((a,r)=>a+r.beds.filter(b=>b.state==='free').length,0);return {label:'Floor '+f,sub:fr+' free',rooms:rs.map(r=>({n:'Room '+r.n,sub:r.share+' sharing · '+fmt(r.rent),beds:r.beds.map(b=>{const L=BEDST[b.state];return {letter:b.letter,bg:L.bg,bd:L.bd,fg:L.fg,pick:()=>set({sheet:'bed',obed:b.id})}})}))}});
+    const obvSeg=segOf([['plan','Floor plan'],['grid','All floors']],s.obView,v=>set({obView:v}));
+    const obFloorTabs=[1,2,3].map(f=>{const fr=A.filter(r=>r.floor===f).reduce((a,r)=>a+r.beds.filter(b=>b.state==='free').length,0);const o=f===s.obFloor;return {label:'Floor '+f,sub:fr+' free',bar:o?'inset 0 -3px 0 var(--ac)':'inset 0 -1px 0 var(--hl)',fg:o?'var(--tx)':'var(--mu)',pick:()=>set({obFloor:f})}});
+    const ini=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const planRoom=(r,i)=>({n:r.n,sub:r.share+' sharing',bl:i?'2px solid var(--tx)':'0',cols:r.share===3?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))',foot:r.bath+' bath · '+fmt(r.rent),beds:r.beds.map(b=>{const L=BEDST[b.state];const res=s.residents.find(x=>x.bed===b.id);return {letter:b.letter,ini:res?ini(res.name):{free:'Free',soon:b.soon,held:'Hold',booked:'Taken'}[b.state],bg:L.bg,bd:L.bd,fg:L.fg,pick:()=>set({sheet:'bed',obed:b.id})}})});
+    const fr=A.filter(r=>r.floor===s.obFloor);
+    const obPlan={top:fr.slice(0,2).map(planRoom),bot:fr.slice(2,4).map(planRoom)};
+    let ob={rows:[],actions:[]};
+    if(s.obed){const {b,r}=this.findBed('anjani',s.obed);if(b){const res=residents.find(x=>x.bed===b.id);const stl={free:'Free',soon:'Free from '+b.soon,held:'On hold',booked:'Taken'}[b.state];
+      const done=m=>{set({sheet:null});this.toastMsg(m)};
+      const A1=(label,act,p)=>({label,act,bg:p?'var(--ac)':'transparent',fg:p?'var(--ai)':'var(--tx)',bd:p?'var(--ac)':'var(--tx)'});
+      ob={rows:[{k:'Room',v:r.n+' · Floor '+r.floor+' · '+r.share+' sharing'},{k:'Position',v:b.spot},{k:'Rent',v:fmt(r.rent)+' a month'},{k:'Status',v:stl},{k:'Resident',v:res?res.name+' · rent '+res.status.toLowerCase():b.state==='booked'?'Offline tenant':'None'}],
+        actions:b.state==='booked'?[A1('Mark as leaving 31 Oct',()=>{b.state='soon';b.soon='31 Oct';done('Bed '+b.id+' is listed as free from 31 Oct.')},1),A1('Message resident',()=>this.openWA(res?res.name:'Resident','Hi, this is Srinivas from Anjani Residency.'))]:b.state==='held'?[A1('Release hold',()=>{b.state='free';b.mine=false;done('Bed '+b.id+' is free again.')},1)]:[A1('Add booking for this bed',()=>set({sheet:'add',add:Object.assign({},s.add,{bed:b.id})}),1),A1('Hold for a walk-in',()=>{b.state='held';done('Bed '+b.id+' held for 1 hour.')})]}}}
+    const freeA=[];A.forEach(r=>r.beds.forEach(b=>{if(b.state==='free'||b.state==='soon')freeA.push({b,r})}));
+    const addBeds=freeA.slice(0,12).map(({b})=>chip(b.id,b.id===s.add.bed,()=>set({add:Object.assign({},s.add,{bed:b.id})})));
+    const addSel=s.add.bed&&this.findBed('anjani',s.add.bed);
+    const addDates=segOf(['Today','Tomorrow','5 Oct'],s.add.date,v=>set({add:Object.assign({},s.add,{date:v})}));
+    const rentRows=residents.filter(r=>s.rentF==='All'||r.status===s.rentF).map(r=>Object.assign({},r,tagOf(r.status),{amtF:fmt(r.amt),canRemind:r.status!=='Paid',remind:()=>this.toastMsg('Reminder sent to '+r.name.split(' ')[0]+' on WhatsApp.')}));
+    const rentSeg=segOf(['All','Due','Overdue','Paid'],s.rentF,v=>set({rentF:v}));
+    const moreSeg=segOf([['complaints','Complaints'],['menu','Menu'],['rules','Rules']],s.moreTab,v=>set({moreTab:v}));
+    const NEXT={'Open':'Start work','In progress':'Mark resolved'};const NXS={'Open':'In progress','In progress':'Resolved'};
+    const allComplaints=s.complaints.slice().sort((a,b)=>(a.status==='Resolved')-(b.status==='Resolved')).map(c=>Object.assign({},c,tagOf(c.status),{canNext:!!NEXT[c.status],next:NEXT[c.status],advance:()=>{set({complaints:s.complaints.map(x=>x.id===c.id?Object.assign({},x,{status:NXS[c.status],note:NXS[c.status]==='Resolved'?'Fixed by the owner':'Owner is on it'}):x)});this.toastMsg(c.by.split(' ')[0]+' has been updated.')}}));
+    const mDays=DAYS.map((x,i)=>{const o=i===s.mDay;return {d:x[0],bg:o?'var(--tx)':'transparent',fg:o?'var(--bg)':'var(--tx)',bl:i?'1px solid var(--hl)':'0',pick:()=>set({mDay:i})}});
+    const menuFields=MEALS.map(m=>({label:m[1],time:m[2],value:s.menu[s.mDay][m[0]],onChange:e=>{const menu=s.menu.slice();menu[s.mDay]=Object.assign({},menu[s.mDay],{[m[0]]:e.target.value});set({menu})}}));
+    const ruleFields=s.rules.map((r,i)=>({k:r.k,v:r.v,onChange:e=>{const rules=s.rules.slice();rules[i]=Object.assign({},r,{v:e.target.value});set({rules})}}));
+    // jump panel
+    const J=[['Start',[['welcome','Welcome','tenant'],['phone','Phone number','tenant'],['otp','OTP','tenant'],['role','Pick a role','tenant']]],['Tenant',[['explore','Explore','tenant'],['map','Map','tenant'],['detail','Hostel detail','tenant'],['picker','Bed picker','tenant'],['hold','Hold status','tenant'],['holds','Holds','tenant']]],['Resident',[['rHome','Home','resident'],['rPay','Pay rent','resident'],['food','Food','resident'],['help','Complaints','resident'],['move','Vacate / swap','resident']]],['Owner',[['oToday','Today','owner'],['oBeds','Bed map','owner'],['oRent','Rent','owner'],['oMore','Manage','owner']]]];
+    const jumpGroups=J.map(g=>({title:g[0],items:g[1].map(j=>{const o=s.screen===j[0]&&(s.role===j[2]||['welcome','phone','otp','role'].includes(j[0]));return {label:j[1],fw:o?800:400,fg:o?'var(--ad)':'var(--tx)',go:()=>this.jump(j[0],j[2])}})}));
+    const sheetTitle={search:'Search',hold:sb&&sb.b?'Hold bed '+sb.b.id:'Hold',wa:'Continue on WhatsApp',add:'Add a booking',bed:'Bed '+(s.obed||'')}[s.sheet]||'';
+    const bare=!!this.props.bare;
+    return {
+      ic,on,sh,theme:s.theme,pad:bare?'0':'32px 20px',pageBg:bare?'transparent':'var(--page)',notBare:!bare,phoneRef:this.phoneRef,
+      sbBg:on.welcome?'var(--ac)':'var(--bg)',sbFg:on.welcome?'var(--ai)':'var(--tx)',hiBg:on.welcome?'var(--ac)':'var(--bg)',
+      showTabs,tabs,themeSeg,jumpGroups,
+      back:()=>this.back(),
+      toPhone:()=>this.go('phone'),phone:s.phone,onPhone:e=>set({phone:e.target.value.replace(/\D/g,'').slice(0,10)}),phoneOp:s.phone.length===10?1:.4,demoPhone:()=>set({phone:'9848012345'}),
+      toOtp:()=>{if(s.phone.length===10)this.go('otp');else this.toastMsg('Enter all 10 digits.')},phoneF:s.phone.replace(/(\d{5})(\d{0,5})/,'$1 $2'),
+      otp:s.otp,onOtp:e=>set({otp:e.target.value.replace(/\D/g,'').slice(0,6)}),otpCells:[0,1,2,3,4,5].map(i=>({d:s.otp[i]||'',bd:i===s.otp.length?'2px solid var(--ac)':'2px solid var(--tx)'})),otpOp:s.otp.length===6?1:.4,demoOtp:()=>set({otp:'482913'}),
+      toRole:()=>{if(s.otp.length===6)this.go('role');else this.toastMsg('Enter the 6-digit code.')},
+      roles:[['tenant','01','I need a bed','Search PGs and hostels, pick the exact bed, hold it.'],['resident','02','I live in a Hostelzy PG','Pay rent, see the menu, raise complaints.'],['owner','03','I run a hostel','Bed map, hold requests, rent and complaints.']].map(r=>({num:r[1],title:r[2],sub:r[3],pick:()=>this.setState({role:r[0],screen:HOME[r[0]],hist:[]})})),
+      lm:s.lm,exploreSub:results.length+' hostels · '+totalFree+' beds free now',searchSummary,quickChips,results,noResults:!results.length,clearFilters:()=>set({fG:'Any',fS:'Any',fB:'Any',fFood:false}),openSearch:()=>set({sheet:'search'}),
+      pins,mapLms,mh,
+      holdList,noHolds:!s.holds.length,toExplore:()=>this.tab('explore'),
+      me,d,openPicker:()=>this.openPicker(),
+      modes,mode:{plan:s.mode==='plan',list:s.mode==='list',building:s.mode==='building'},floors,roomTiles,room:roomV,planBeds,legend,legendO,listBeds,listCount:listBeds.length,bldg,sel,
+      openHold:()=>{if(!s.bed)return this.toastMsg('Pick a free bed first.');set({sheet:'hold'})},
+      hs,placeHold:()=>this.placeHold(),
+      hd,simConfirm:()=>{this.setHold(hold.id,{status:'confirmed'});this.toastMsg(hd.owner+' confirmed on WhatsApp.')},cancelHold:()=>{const {b}=this.findBed(hold.hid,hold.bed);if(b){b.state='free';b.mine=false}this.setHold(hold.id,{status:'released'});this.toastMsg('Hold released.')},directions:()=>this.toastMsg('Opening Maps…'),moveIn:()=>{this.setState({role:'resident',screen:'rHome',hist:[]});this.toastMsg('Welcome home. This is your stay now.')},
+      rent,todayMeals,board,quick,toFood:()=>this.tab('food'),payMethods,payM:s.payM,payRent:()=>{set({paid:true,residents:s.residents.map(r=>r.bed==='204-B'?Object.assign({},r,{status:'Paid',note:'Paid 1 Oct'}):r)});this.toastMsg('Paid ₹8,020. Receipt sent on WhatsApp.')},
+      days,dayMeals,weekRows,weekRowsO,mealHeads,foodSeg,mvSeg,fv:{day:s.foodView==='day',week:s.foodView==='week'},mvv:{day:s.mView==='day',week:s.mView==='week'},showRate:s.day===3,rateSeg,
+      cats,cText:s.cText,onCText:e=>set({cText:e.target.value}),myComplaints,submitComplaint:()=>{if(!s.cText.trim())return this.toastMsg('Tell us what is wrong first.');set({complaints:[...s.complaints,{id:Date.now(),by:'Rahul V · 204',cat:s.cCat,text:s.cText.trim(),status:'Open',date:'1 Oct',note:'Sent to Srinivas',mine:true}],cText:''});this.toastMsg('Sent. Srinivas has 72 hours to fix it.')},
+      moveSeg,mv:{vacate:s.moveTab==='vacate',swap:s.moveTab==='swap',noNotice:!s.notice},vDates,vDate:s.vDate,vReasons,refund,notice:s.notice,noticeSteps,giveNotice:()=>{set({notice:true});this.toastMsg('Notice sent to Srinivas.')},withdrawNotice:()=>set({notice:false}),
+      swapBeds,swapOp:s.swapBed&&!s.swapSent?1:.4,swapCta:s.swapSent?'Request sent for '+s.swapBed:s.swapBed?'Ask to move to '+s.swapBed:'Pick a bed to move to',sendSwap:()=>{if(!s.swapBed||s.swapSent)return;set({swapSent:true});this.toastMsg('Swap request sent to Srinivas.')},
+      occ,kpis,reqs,obvSeg,obv:{plan:s.obView==='plan',grid:s.obView==='grid'},obFloorTabs,obPlan,obFloor:s.obFloor,noReqs:!reqs.length,toMe:()=>this.go('me'),obFloors,ob,
+      rentO:{collected:fmt(collected),pending:fmt(expected-collected),w:(collected/expected*100).toFixed(1)+'%'},rentSeg,rentRows,
+      moreSeg,mt:{complaints:s.moreTab==='complaints',menu:s.moreTab==='menu',rules:s.moreTab==='rules'},allComplaints,mDays,menuFields,ruleFields,saveRules:()=>this.toastMsg('Rules saved. Residents and new tenants see them now.'),
+      anySheet:!!s.sheet,sheetTitle,closeSheet:()=>set({sheet:null}),
+      lmChips:LM.map(l=>chip(l,l===s.lm,()=>set({lm:l}))),gSeg:segOf([['Any','Any'],['Women','Women'],['Men','Men'],['Co-living','Co-ed']],s.fG,v=>set({fG:v})),sSeg:segOf([['Any','Any'],['2','2'],['3','3'],['4','4']],s.fS,v=>set({fS:v})),bSeg:segOf([['Any','Any'],['6k','<6k'],['8k','<8k'],['10k','<10k']],s.fB,v=>set({fB:v})),
+      toggleFood:()=>set({fFood:!s.fFood}),foodJ:s.fFood?'flex-end':'flex-start',foodBg:s.fFood?'var(--ac)':'transparent',foodKnob:s.fFood?'var(--ai)':'var(--tx)',resultCount:results.length,applySearch:()=>{if(s.screen!=='explore'&&s.screen!=='map')this.tab('explore');else set({sheet:null})},
+      wa:s.wa||{to:'',msg:''},openWa:()=>{set({sheet:null});this.toastMsg('Opening WhatsApp with '+(s.wa?s.wa.to:'')+'…')},copyWa:()=>{try{navigator.clipboard.writeText(s.wa.msg)}catch(e){}set({sheet:null});this.toastMsg('Message copied.')},
+      add:s.add,onAddName:e=>set({add:Object.assign({},s.add,{name:e.target.value})}),onAddPhone:e=>set({add:Object.assign({},s.add,{phone:e.target.value.replace(/\D/g,'').slice(0,10)})}),addBeds,addDates,addRent:addSel&&addSel.r?fmt(addSel.r.rent):'Pick a bed',
+      saveBooking:()=>{if(!s.add.name.trim()||!addSel||!addSel.b)return this.toastMsg('Add a name and pick a bed.');addSel.b.state='booked';set({sheet:null,residents:[...s.residents,{name:s.add.name.trim(),bed:addSel.b.id,amt:addSel.r.rent,status:'Due',note:'Moves in '+s.add.date}],add:{name:'',phone:'',bed:null,date:'Today'}});this.toastMsg('Booked bed '+addSel.b.id+'. Welcome message sent on WhatsApp.')},
+      hasToast:!!s.toast,toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

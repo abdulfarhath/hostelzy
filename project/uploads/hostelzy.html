@@ -1,0 +1,1209 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}</style>
+<title>Hostelzy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F3F6F4; --surface:#FFFFFF; --sunken:#E8EFEA; --ink:#141F19; --muted:#5A6A61; --line:#D5DED8; --line-strong:#B5C2BA;
+  --accent:#1E7A5A; --accent-ink:#FFFFFF; --accent-soft:#DCEFE5; --accent-deep:#145A41;
+  --held:#B5741B; --held-soft:#FAE9CE; --booked:#A6B2AB; --booked-soft:#E3E8E5; --vacate:#2B69AE; --vacate-soft:#DAE7F6; --danger:#B3413A; --danger-soft:#F6DDDB; --good:#1E7A5A;
+  --wa:#25D366; --wa-ink:#0B3D22; --wa-out:#DCF8C6; --wa-out-line:#C6EBB0;
+  --shadow:0 10px 28px -14px rgba(20,31,25,.28);
+  --r:12px; --r-sm:7px;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1411; --surface:#161E19; --sunken:#0A0F0C; --ink:#EAF0EC; --muted:#93A399; --line:#27322B; --line-strong:#3A4840;
+    --accent:#3FB182; --accent-ink:#06170F; --accent-soft:#163526; --accent-deep:#6FD3A8;
+    --held:#E0A24A; --held-soft:#392A12; --booked:#5E6A64; --booked-soft:#222A26; --vacate:#6FA6E8; --vacate-soft:#15273B; --danger:#E27069; --danger-soft:#3A1B19; --good:#3FB182;
+    --wa:#25D366; --wa-ink:#06170F; --wa-out:#1F3A2A; --wa-out-line:#2C5239;
+    --shadow:0 10px 28px -14px rgba(0,0,0,.65);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1411; --surface:#161E19; --sunken:#0A0F0C; --ink:#EAF0EC; --muted:#93A399; --line:#27322B; --line-strong:#3A4840;
+  --accent:#3FB182; --accent-ink:#06170F; --accent-soft:#163526; --accent-deep:#6FD3A8;
+  --held:#E0A24A; --held-soft:#392A12; --booked:#5E6A64; --booked-soft:#222A26; --vacate:#6FA6E8; --vacate-soft:#15273B; --danger:#E27069; --danger-soft:#3A1B19; --good:#3FB182;
+  --wa:#25D366; --wa-ink:#06170F; --wa-out:#1F3A2A; --wa-out-line:#2C5239;
+  --shadow:0 10px 28px -14px rgba(0,0,0,.65);
+}
+*{box-sizing:border-box}
+.hgrid > *,.grid2 > *,.grid3 > *,.picker > *,.roomview > *,.results > *,.hero > *,.stack > *,.hhead > *,.ohead > *,.searchbar .main > *{min-width:0}
+input,select{min-width:0}
+.tabs,.seg{max-width:100%}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);margin:0;line-height:1.12;text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:clamp(30px,4.6vw,48px);font-weight:800}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16.5px;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px 11px;width:100%}
+input[type=range]{padding:0;border:0;background:transparent}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--accent)}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible,.bed:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent-deep)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:11.5px}
+.label{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:16px}
+.stack{display:grid;gap:12px}
+.stack.tight{gap:6px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--r-sm);font-weight:600;border:1px solid var(--line-strong);background:var(--surface);white-space:nowrap;transition:transform .12s ease,background .12s ease;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--sunken)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(.92);background:var(--accent)}
+.btn.wa{background:var(--wa);color:var(--wa-ink);border-color:var(--wa)}
+.btn.wa:hover{filter:brightness(.95);background:var(--wa)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.btn.xs{padding:3px 8px;font-size:12px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.pill.free,.pill.good,.pill.paid{background:var(--accent-soft);color:var(--accent-deep)}
+.pill.held,.pill.due,.pill.warn{background:var(--held-soft);color:var(--held)}
+.pill.booked{background:var(--booked-soft);color:var(--muted)}
+.pill.vacate,.pill.info{background:var(--vacate-soft);color:var(--vacate)}
+.pill.overdue,.pill.bad{background:var(--danger-soft);color:var(--danger)}
+.pill.ink{background:var(--ink);color:var(--bg)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel > .head{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.panel > .body{padding:16px}
+.panel.soft{background:var(--sunken);border-color:transparent}
+hr.rule{border:0;border-top:1px solid var(--line);margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;background:var(--sunken);color:var(--muted);vertical-align:middle;margin-left:6px;letter-spacing:.02em}
+.fx{font-size:10.5px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);border-radius:4px;padding:1px 5px;vertical-align:middle;margin-left:6px;letter-spacing:.03em;white-space:nowrap}
+.score{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font-family:var(--display);font-weight:800;font-size:15px;background:var(--accent-soft);color:var(--accent-deep)}
+.score.mid{background:var(--held-soft);color:var(--held)}
+.score.low{background:var(--danger-soft);color:var(--danger)}
+.bar{height:8px;border-radius:4px;background:var(--sunken);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.bar i.warn{background:var(--held)}.bar i.bad{background:var(--danger)}.bar i.info{background:var(--vacate)}
+.stars{color:var(--held);letter-spacing:.05em}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;flex-wrap:wrap;padding-block:6px}
+.topbar .row{min-width:0;max-width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.topbar .row > *{flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em}
+.brand .mark{width:28px;height:28px;border-radius:7px;background:var(--accent);display:grid;place-items:center}
+.brand .mark svg{width:18px;height:18px}
+.seg{display:inline-flex;background:var(--sunken);border-radius:999px;padding:3px;gap:2px;overflow-x:auto;max-width:100%}
+.seg button{padding:6px 13px;border-radius:999px;font-weight:600;font-size:13.5px;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.view{display:none}
+.view.on{display:block}
+main{padding-block:24px 72px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto;scrollbar-width:thin}
+.tabs button{padding:9px 12px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-size:14px}
+.tabs button.on{color:var(--ink);border-color:var(--accent)}
+.tabpane{display:none}.tabpane.on{display:block}
+.crumb{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13.5px;margin-bottom:12px;flex-wrap:wrap}
+.crumb button{color:var(--accent-deep);font-weight:600}
+
+/* home */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.hero p.lede{max-width:50ch;font-size:16.5px;color:var(--muted);margin-top:12px}
+.searchbar{margin-top:22px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);padding:8px;box-shadow:var(--shadow)}
+.searchbar .main{display:grid;grid-template-columns:1fr auto;gap:8px}
+.searchbar .main input{border:0;background:transparent;padding:12px 14px;font-size:16px}
+.searchbar .sub{display:flex;gap:6px;flex-wrap:wrap;padding:8px 8px 4px;border-top:1px solid var(--line);margin-top:8px;align-items:center}
+.searchbar .sub select{width:auto;border:0;background:var(--sunken);padding:5px 10px;font-size:13px;border-radius:999px}
+.landmarks{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.landmarks .tiny{margin-right:4px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);margin-top:22px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.flow > div{padding:14px 16px;border-right:1px solid var(--line);position:relative}
+.flow > div:last-child{border-right:0}
+.flow > div::after{content:"";position:absolute;right:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-right:1px solid var(--line);border-top:1px solid var(--line);transform:translateY(-50%) rotate(45deg);z-index:1}
+.flow > div:last-child::after{display:none}
+.flow b{display:block;font-family:var(--display);font-size:15px}
+.flow span{color:var(--muted);font-size:13px}
+.trust{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:13.5px}
+.trust b{color:var(--ink);font-family:var(--display);font-size:16px;margin-right:4px}
+.hero-art{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.hero-art .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.hero-art .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.hero-art .live i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* results */
+.results{margin-top:32px;display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start}
+.filters{position:sticky;top:76px;max-height:calc(100vh - 90px);overflow:auto}
+.filters .group{padding:12px 14px;border-bottom:1px solid var(--line)}
+.filters .group:last-child{border-bottom:0}
+.chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;border:1px solid var(--line-strong);font-size:13px;margin:3px 3px 0 0;background:var(--surface)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.link{border-style:dashed;color:var(--accent-deep)}
+.hcard{display:grid;grid-template-columns:160px 1fr auto;gap:16px;padding:14px;cursor:pointer;transition:background .12s;position:relative}
+.hcard:hover{background:var(--sunken)}
+.hcard + .hcard{border-top:1px solid var(--line)}
+.hcard .thumb{height:116px;border-radius:var(--r-sm);overflow:hidden;position:relative}
+.hcard .thumb svg{width:100%;height:100%;display:block}
+.hcard .price{text-align:right;display:grid;align-content:start;gap:2px}
+.hcard .price b{font-family:var(--display);font-size:21px;display:block}
+.hcard .price s{color:var(--muted);font-size:13px}
+.hcard .cmp{position:absolute;left:14px;top:14px;background:var(--surface);border-radius:5px;padding:3px 6px;font-size:12px;display:flex;gap:5px;align-items:center;border:1px solid var(--line)}
+.availbar{display:flex;gap:2px;margin-top:8px}
+.availbar i{height:6px;flex:1;border-radius:2px;background:var(--booked-soft)}
+.availbar i.f{background:var(--accent)}
+.availbar i.v{background:var(--vacate)}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.mapbox{position:relative;background:var(--sunken);border-radius:var(--r-sm);overflow:hidden;aspect-ratio:16/8;max-width:100%}
+.mapbox svg{width:100%;height:100%;display:block}
+.mapbox .pin{position:absolute;transform:translate(-50%,-100%);background:var(--surface);border:1.5px solid var(--accent);color:var(--accent-deep);border-radius:999px;padding:3px 9px;font-size:12.5px;font-weight:700;box-shadow:var(--shadow);white-space:nowrap}
+.mapbox .pin::after{content:"";position:absolute;left:50%;bottom:-6px;width:8px;height:8px;background:var(--surface);border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);transform:translateX(-50%) rotate(45deg)}
+.mapbox .lm{position:absolute;transform:translate(-50%,-50%);font-size:11px;color:var(--muted);background:var(--bg);padding:1px 6px;border-radius:4px}
+.cmpbar{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px 10px 18px;border-radius:999px;display:none;gap:12px;align-items:center;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.cmpbar.on{display:flex}
+.cmpbar .btn{border-color:transparent}
+.cmptable{width:100%;border-collapse:collapse;font-size:14px}
+.cmptable th,.cmptable td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.cmptable th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cmptable td:first-child{color:var(--muted);width:150px}
+
+/* hostel */
+.hhead{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start}
+.hhead .meta{margin-top:6px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+.gallery{margin-top:18px;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:150px 150px;gap:8px}
+.gallery > div{border-radius:var(--r-sm);overflow:hidden}
+.gallery > div:first-child{grid-row:span 2}
+.gallery svg{width:100%;height:100%;display:block}
+.hgrid{margin-top:22px;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.pricetable > div{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.pricetable > div:last-child{border-bottom:0}
+.pricetable .app b{font-family:var(--display);font-size:19px;color:var(--accent-deep)}
+.pricetable s{color:var(--muted);font-size:13px}
+.side{position:sticky;top:76px}
+.side .big{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.02em}
+.calc{display:grid;gap:6px;font-size:14px}
+.calc div{display:flex;justify-content:space-between}
+.calc .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:700;font-size:16px}
+.picker{display:grid;grid-template-columns:150px 1fr;gap:16px}
+.floors button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:var(--r-sm);font-weight:600;color:var(--muted)}
+.floors button.on{background:var(--accent-soft);color:var(--accent-deep)}
+.floors button span{display:block;font-weight:400;font-size:12.5px}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.roomtile{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:8px 10px;text-align:left;background:var(--surface)}
+.roomtile.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.roomtile b{font-family:var(--display);display:block}
+.roomtile span{font-size:12px;color:var(--muted);display:block}
+.roomtile.full{opacity:.55}
+.roomview{margin-top:14px;display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+.roomplan{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-height:250px;position:relative}
+.roomplan .door{position:absolute;bottom:0;left:38%;width:56px;height:5px;background:var(--line-strong);border-radius:3px 3px 0 0}
+.roomplan .door::after{content:"door";position:absolute;top:-16px;left:14px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.roomplan .win{position:absolute;top:0;right:22%;width:70px;height:5px;background:var(--vacate);opacity:.55;border-radius:0 0 3px 3px}
+.roomplan .win::after{content:"window";position:absolute;top:6px;left:14px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.roomplan .bath{position:absolute;left:0;top:30%;width:5px;height:60px;background:var(--line-strong);border-radius:0 3px 3px 0}
+.roomplan .bath::after{content:"bath";position:absolute;left:7px;top:14px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;writing-mode:vertical-rl}
+.bedgrid{display:grid;gap:12px;padding:20px 8px 14px 22px}
+.bed{position:relative;border-radius:8px;border:2px solid var(--accent);background:var(--surface);min-height:76px;padding:7px 24px 7px 9px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;transition:transform .12s,box-shadow .12s}
+.bed::before{content:"";position:absolute;top:7px;right:7px;width:11px;height:22px;border-radius:3px;background:var(--accent-soft);border:1px solid var(--accent)}
+.bed:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.bed b{font-family:var(--display);font-size:13px;white-space:nowrap}
+.bed small{font-size:11px;line-height:1.3;color:var(--muted)}
+.bed .bp{font-size:11px;font-weight:600;color:var(--accent-deep)}
+.bed.booked{border-color:var(--booked);background:var(--booked-soft);cursor:not-allowed;color:var(--muted)}
+.bed.booked::before{background:var(--booked);border-color:var(--booked)}
+.bed.booked:hover{transform:none;box-shadow:none}
+.bed.held{border-color:var(--held);background:var(--held-soft)}
+.bed.held::before{background:var(--held);border-color:var(--held)}
+.bed.vacate{border-style:dashed;border-color:var(--vacate);background:var(--vacate-soft)}
+.bed.vacate::before{background:var(--vacate);border-color:var(--vacate)}
+.bed.sel{outline:3px solid var(--ink);outline-offset:2px}
+.bed.mine{outline:3px solid var(--vacate);outline-offset:2px}
+.bunk{display:grid;gap:4px}
+.bunk .bed{min-height:56px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:2px solid var(--accent);vertical-align:-2px;margin-right:5px;background:var(--surface)}
+.legend i.b{border-color:var(--booked);background:var(--booked-soft)}
+.legend i.h{border-color:var(--held);background:var(--held-soft)}
+.legend i.v{border-color:var(--vacate);background:var(--vacate-soft);border-style:dashed}
+.beddetail{display:grid;gap:12px;align-content:start}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.photos div{height:90px;border-radius:var(--r-sm);overflow:hidden}
+.photos svg{width:100%;height:100%;display:block}
+.mates{display:grid;gap:6px}
+.mate{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:13.5px}
+.mate .av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent-deep);display:grid;place-items:center;font-weight:700;font-family:var(--display)}
+.menu{display:grid;grid-template-columns:64px repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;font-size:13.5px}
+.menu > div{background:var(--surface);padding:8px 10px}
+.menu .h{background:var(--sunken);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.menu .d{font-weight:700;font-family:var(--display);background:var(--sunken)}
+.menu .rt{display:block;font-size:11px;color:var(--held)}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:14px}
+.rules div{display:flex;gap:8px}
+.rules span{color:var(--muted);min-width:110px}
+.review{padding:10px 0;border-bottom:1px solid var(--line)}
+.review:last-child{border-bottom:0}
+.subr{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
+.datarow{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.datarow:last-child{border-bottom:0}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,18,14,.55);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:12px}
+.scrim.on{display:flex}
+@media (min-width:700px){.scrim{align-items:center}}
+.modal{background:var(--surface);border-radius:14px;width:min(600px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow)}
+.modal.wide{width:min(900px,100%)}
+.modal .head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal .body{padding:18px}
+.opt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 13px;border:1px solid var(--line-strong);border-radius:var(--r-sm);cursor:pointer;margin-bottom:8px}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{display:block}.opt span{font-size:13px;color:var(--muted)}
+.opt .amt{font-family:var(--display);font-size:18px;font-weight:700;white-space:nowrap}
+.slots{display:flex;gap:6px;flex-wrap:wrap}
+.slots button{padding:6px 10px;border:1px solid var(--line-strong);border-radius:var(--r-sm);font-size:13px}
+.slots button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.timeline{display:grid;margin:8px 0}
+.timeline > div{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:6px 0;position:relative}
+.timeline > div::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface);margin:5px 0 0 3px}
+.timeline > div.done::before{background:var(--accent);border-color:var(--accent)}
+.timeline > div.now::before{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.timeline > div + div::after{content:"";position:absolute;left:8px;top:-10px;height:14px;border-left:2px solid var(--line)}
+.countdown{font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.phone{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);font-weight:600;font-size:17px;letter-spacing:.02em}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.check{display:grid;gap:6px}
+.check label{display:flex;gap:9px;align-items:center;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r-sm)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .full{grid-column:1/-1}
+.form label{display:grid;gap:5px;font-size:13px;font-weight:600}
+
+/* resident / parent */
+.appbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.appbar button{padding:12px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);text-align:center;font-weight:600;font-size:13px}
+.appbar button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-deep)}
+.ticket{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ticket:last-child{border-bottom:0}
+.sos{background:var(--danger);color:#fff;border-color:var(--danger)}
+.sos:hover{background:var(--danger);filter:brightness(.9)}
+.perk{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+.perk:last-child{border-bottom:0}
+
+/* owner */
+.ohead{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+.kpi{padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.kpi b{display:block;font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:2px;line-height:1.1}
+.kpi.warn{border-color:var(--held)}
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);font-weight:600}
+.table td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.table tr:last-child td{border-bottom:0}
+.table tbody tr:hover td{background:var(--sunken)}
+.tscroll{overflow-x:auto}
+.bedmap{display:grid;gap:14px}
+.bedmap .floor{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:start}
+.bedmap .floor > b{font-family:var(--display);padding-top:6px}
+.bedmap .roomrow{display:flex;gap:8px;flex-wrap:wrap}
+.mroom{border:1px solid var(--line);border-radius:var(--r-sm);padding:6px 8px;background:var(--surface);min-width:100px;text-align:left}
+.mroom b{font-size:12.5px;display:block;margin-bottom:5px}
+.mroom .dots{display:flex;gap:3px}
+.mroom .dots i{width:14px;height:20px;border-radius:3px;background:var(--accent-soft);border:1.5px solid var(--accent)}
+.mroom .dots i.booked{background:var(--booked);border-color:var(--booked)}
+.mroom .dots i.held{background:var(--held-soft);border-color:var(--held)}
+.mroom .dots i.vacate{background:var(--vacate-soft);border-color:var(--vacate);border-style:dashed}
+.mroom:hover{border-color:var(--accent)}
+.tpl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tpl button{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:10px;text-align:left;background:var(--surface)}
+.tpl button.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.tpl b{display:block;font-family:var(--display)}
+.tpl span{font-size:12px;color:var(--muted)}
+.drop{border:2px dashed var(--line-strong);border-radius:var(--r);padding:16px;text-align:center;color:var(--muted);font-size:14px}
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.plan > div{border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.plan > div.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.plan .amt{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.plan ul{margin:10px 0 14px;padding-left:18px;font-size:13.5px;color:var(--muted)}
+.wamode{display:grid;gap:8px;background:var(--sunken);border-radius:var(--r);padding:14px}
+.bubble{background:var(--surface);border-radius:12px;padding:9px 12px;font-size:13.5px;max-width:80%;border:1px solid var(--line)}
+.bubble.out{margin-left:auto;background:var(--wa-out);border-color:var(--wa-out-line)}
+.bubble small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.heat{display:grid;grid-template-columns:90px repeat(4,1fr);gap:4px;font-size:12px;align-items:center}
+.heat .c{height:34px;border-radius:5px;display:grid;place-items:center;font-weight:600;color:var(--ink)}
+.heat .hd{font-weight:600;color:var(--muted);text-align:center}
+.spark{display:flex;align-items:flex-end;gap:3px;height:60px}
+.spark i{flex:1;background:var(--accent-soft);border-top:3px solid var(--accent);border-radius:3px 3px 0 0;min-width:6px}
+.spark i.f{background:var(--vacate-soft);border-color:var(--vacate);opacity:.8}
+.nudge{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--held);background:var(--held-soft);border-radius:var(--r-sm);font-size:14px}
+.nudge.info{border-color:var(--vacate);background:var(--vacate-soft)}
+.nudge.good{border-color:var(--accent);background:var(--accent-soft)}
+.dragbox{position:relative;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);height:240px;overflow:hidden;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:24px 24px}
+.dbed{position:absolute;width:48px;height:84px;border:2px solid var(--accent);border-radius:6px;background:var(--surface);cursor:grab;display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--display);user-select:none;touch-action:none}
+.dbed::before{content:"";position:absolute;top:5px;left:6px;right:6px;height:14px;border-radius:3px;background:var(--accent-soft);border:1px solid var(--accent)}
+.qr{width:96px;height:96px;background:
+ repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px),
+ repeating-linear-gradient(0deg,var(--ink) 0 6px,transparent 6px 12px);background-blend-mode:multiply;border:6px solid var(--surface);outline:1px solid var(--line);border-radius:6px;opacity:.85}
+.chain{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chain > button{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.chain > button.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.chain b{display:block;font-family:var(--display)}
+
+/* HQ */
+.hq-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}
+.queue{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.queue:last-child{border-bottom:0}
+.index{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.index button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);font-size:13.5px}
+.index button b{display:block;font-family:var(--display);font-size:22px;line-height:1;margin-bottom:3px}
+.rentidx{display:grid;grid-template-columns:1fr auto auto auto;gap:8px 14px;font-size:14px;align-items:center}
+.rentidx .h{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.playbook{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.playbook > div{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.playbook b{font-family:var(--display);display:block;font-size:15px;margin-bottom:4px}
+.playbook ul{margin:0;padding-left:16px;font-size:13px;color:var(--muted)}
+
+/* feature index overlay */
+.fidx{display:grid;gap:6px}
+.fidx > div{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:13.5px}
+.fidx b{font-family:var(--display);font-size:16px}
+.fidx .st{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px}
+.fidx .st.w{background:var(--accent-soft);color:var(--accent-deep)}
+.fidx .st.d{background:var(--vacate-soft);color:var(--vacate)}
+.fidx .st.s{background:var(--sunken);color:var(--muted)}
+.fidx .area{font-size:11.5px;color:var(--muted)}
+.fnav{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;box-shadow:var(--shadow)}
+.lang{font-size:12.5px;display:inline-flex;gap:2px;background:var(--sunken);border-radius:999px;padding:2px}
+.lang button{padding:3px 9px;border-radius:999px;font-weight:600;color:var(--muted)}
+.lang button.on{background:var(--surface);color:var(--ink)}
+
+@media (max-width:960px){
+  .hero,.results,.hgrid,.roomview,.hhead,.grid2,.grid3,.picker,.chain,.index,.playbook{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .flow > div::after{display:none}
+  .filters,.side{position:static;max-height:none}
+  .kpis{grid-template-columns:1fr 1fr}
+  .hq-kpis{grid-template-columns:1fr 1fr}
+  .floors{display:flex;gap:6px;overflow-x:auto}
+  .floors button{width:auto;white-space:nowrap}
+  .plan,.tpl{grid-template-columns:1fr}
+  .form{grid-template-columns:1fr}
+  .hcard{grid-template-columns:110px 1fr}
+  .hcard .price{grid-column:2;text-align:left}
+  .gallery{grid-template-columns:1fr 1fr;grid-template-rows:140px 100px}
+  .gallery > div:first-child{grid-column:span 2;grid-row:auto}
+  .rules{grid-template-columns:1fr}
+  .appbar{grid-template-columns:1fr 1fr}
+  .heat{grid-template-columns:70px repeat(4,1fr)}
+  .fnav{right:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body>
+
+<div class="topbar"><div class="wrap">
+  <button class="brand" onclick="mode('tenant')"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9"/><path d="M3 14h18"/><path d="M6 10h5v4H6z" fill="#fff" stroke="none"/></svg></span>Hostelzy</button>
+  <div class="row" style="gap:8px">
+    <div class="lang" id="lang"><button class="on" onclick="setLang('en')">EN</button><button onclick="setLang('te')">తెలుగు</button><button onclick="setLang('hi')">हिंदी</button></div>
+    <div class="seg" role="tablist">
+      <button id="seg-tenant" class="on" onclick="mode('tenant')">Find a bed</button>
+      <button id="seg-stay" onclick="mode('stay')">My stay</button>
+      <button id="seg-owner" onclick="mode('owner')">Owner</button>
+      <button id="seg-hq" onclick="mode('hq')">Hostelzy HQ</button>
+    </div>
+  </div>
+</div></div>
+
+<main class="wrap">
+
+<!-- ================= HOME ================= -->
+<section id="v-home" class="view on">
+  <div class="hero">
+    <div>
+      <h1 data-i="hero">Pick the exact bed. Not just the hostel.</h1>
+      <p class="lede" data-i="lede">Every floor, room and bed of PGs near your office or college, live. Hold the one you want and talk to the owner on WhatsApp.</p>
+      <form class="searchbar" onsubmit="event.preventDefault();doSearch()">
+        <div class="main"><input id="q" value="girls PG under 10k near Mindspace, AC, no curfew" placeholder="Try: boys PG under 9k near Hitec City with food" aria-label="Search"><button class="btn primary" type="submit" data-i="show">Show beds</button></div>
+        <div class="sub"><span class="tiny muted">Or set them:</span>
+          <select id="q-gender"><option>Boys</option><option>Girls</option><option>Co-living</option></select>
+          <select id="q-budget"><option value="99999">Any budget</option><option value="8000">Under ₹8,000</option><option value="10000">Under ₹10,000</option><option value="13000">Under ₹13,000</option></select>
+          <select id="q-near"><option>Hitec City</option><option>Mindspace</option><option>DLF Cyber City</option><option>Ameerpet</option><option>JNTU</option></select>
+          <select id="q-stay"><option>Monthly</option><option>1 to 4 weeks</option><option>Trial night</option></select>
+          <span class="tiny muted" id="q-parsed"></span></div>
+      </form>
+      <div class="landmarks"><span class="tiny muted">Popular:</span><button class="chip link" onclick="landmark('Mindspace')">PG near Mindspace</button><button class="chip link" onclick="landmark('DLF Cyber City')">PG near DLF Cyber City</button><button class="chip link" onclick="landmark('JNTU')">Hostels near JNTU</button><button class="chip link" onclick="landmark('Ameerpet')">PG near Ameerpet</button></div>
+      <div class="flow">
+        <div><b data-i="f1">Search</b><span>Area, gender, budget</span></div>
+        <div><b data-i="f2">Pick a bed</b><span>Floor, room, then the bed</span></div>
+        <div><b data-i="f3">Hold it</b><span>Free for 1 hour, ₹299 a day</span></div>
+        <div><b data-i="f4">Visit and move in</b><span>Owner calls you on WhatsApp</span></div>
+      </div>
+      <div class="trust"><span><b class="num">1,240</b> beds live in Hyderabad</span><span><b class="num">38</b> hostels inspected by our team</span><span><b>Zero</b> brokerage</span><span><b>Bed-map guarantee</b> hold fee back plus ₹200 if the bed wasn't free</span></div>
+    </div>
+    <div class="hero-art">
+      <div class="cap"><b>Room 204, Anjani Boys PG</b><span class="live"><i></i>live</span></div>
+      <div class="roomplan" style="min-height:220px"><div class="win"></div><div class="door"></div><div class="bedgrid" id="hero-grid" style="grid-template-columns:1fr 1fr 1fr"></div></div>
+      <div class="legend"><span><i></i>Free</span><span><i class="h"></i>On hold</span><span><i class="b"></i>Taken</span><span><i class="v"></i>Free from a date</span></div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <aside class="panel filters">
+      <div class="group"><div class="label">Sharing</div><div id="f-share"></div></div>
+      <div class="group"><div class="label">Must have</div><div id="f-amen"></div></div>
+      <div class="group"><div class="label">Availability</div><div id="f-avail"></div></div>
+      <div class="group"><div class="label">Commute to <span id="f-lm-name">Hitec City</span></div><input type="range" id="f-walk" min="5" max="30" value="30" oninput="renderHome()"><div class="small muted">Up to <b id="f-walk-v" class="num">30</b> min</div></div>
+      <div class="group"><div class="label">Verification</div><div id="f-ver"></div></div>
+      <div class="group"><div class="label">Roommate fit</div><div class="small muted" style="margin-bottom:6px">Your preferences: veg, early sleeper, non-smoker</div><label class="small row" style="gap:6px"><input type="checkbox" id="f-fit" onchange="renderHome()">Only rooms where current tenants match</label></div>
+      <div class="group"><button class="btn sm block" onclick="toast('Alert saved. We will WhatsApp you when a matching bed opens.')">Alert me when a bed opens</button></div>
+    </aside>
+    <div class="panel">
+      <div class="head"><h2 id="res-title">Hostels near Hitec City</h2><div class="row"><span class="small muted" id="res-count"></span><select id="sort" onchange="renderHome()" style="width:auto;padding:5px 8px;font-size:13px"><option value="rec">Recommended</option><option value="price">Lowest rent</option><option value="walk">Closest</option><option value="free">Most beds free</option><option value="resp">Fastest owner</option></select><div class="seg"><button class="on" id="vw-list" onclick="setView('list')">List</button><button id="vw-map" onclick="setView('map')">Map</button></div></div></div>
+      <div id="res-map" hidden style="padding:12px"></div>
+      <div id="res-list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOSTEL ================= -->
+<section id="v-hostel" class="view"></section>
+
+<!-- ================= MY STAY (resident app) ================= -->
+<section id="v-stay" class="view"></section>
+
+<!-- ================= PARENT VIEW ================= -->
+<section id="v-parent" class="view"></section>
+
+<!-- ================= OWNER: CONTACT ================= -->
+<section id="v-contact" class="view">
+  <div class="crumb"><button onclick="go('owner')">Owner dashboard</button><span>/</span><span>List your hostel</span></div>
+  <div class="hgrid">
+    <div class="stack">
+      <h1>Fill your empty beds from your phone.</h1>
+      <p class="muted" style="max-width:56ch">Tell us about your hostel. A Hostelzy captain visits, photographs every room and builds your bed map within 3 working days. Bookings arrive on WhatsApp from day one.</p>
+      <div class="panel"><div class="body">
+        <form class="form" onsubmit="event.preventDefault();toast('Thanks! Your Hyderabad captain will call within one working day.')">
+          <label>Hostel name<input id="c-name" placeholder="e.g. Sri Sai Boys PG" required></label>
+          <label>Your name<input id="c-owner" placeholder="Owner or manager" required></label>
+          <label>WhatsApp number<input id="c-phone" placeholder="+91" inputmode="tel" required></label>
+          <label>Type<select id="c-type"><option>Boys PG</option><option>Girls PG</option><option>Co-living</option><option>Student hostel</option></select></label>
+          <label class="full">Location<input id="c-loc" placeholder="Area and landmark, e.g. Madhapur, near Image Hospital" required></label>
+          <label>Floors<input id="c-floors" type="number" min="1" value="3"></label>
+          <label>Total beds (roughly)<input id="c-beds" type="number" min="1" value="40"></label>
+          <label>Referred by another owner?<input id="c-ref" placeholder="Their hostel name (they get a free month)"></label>
+          <label>Preferred language<select id="c-lang"><option>Telugu</option><option>Hindi</option><option>English</option></select></label>
+          <label class="full">Anything else<textarea id="c-notes" rows="3" placeholder="Food included? AC rooms? Current occupancy?"></textarea></label>
+          <div class="full row between"><span class="small muted">No fee to list. Free photoshoot included.</span><button class="btn primary" type="submit">Request a visit</button></div>
+        </form>
+      </div></div>
+    </div>
+    <div class="side stack">
+      <div class="panel"><div class="body stack">
+        <h3>What happens next</h3>
+        <div class="timeline">
+          <div class="done"><span></span><div><b>You send this form</b><div class="small muted">Takes two minutes</div></div></div>
+          <div class="now"><span></span><div><b>Your captain calls and fixes a visit</b><div class="small muted">Within one working day</div></div></div>
+          <div><span></span><div><b>Free photoshoot and room mapping</b><div class="small muted">You just walk us through</div></div></div>
+          <div><span></span><div><b>Hygiene checklist and verified badge</b><div class="small muted">Water, kitchen, bathrooms, safety</div></div></div>
+          <div><span></span><div><b>Your hostel goes live</b><div class="small muted">Bookings arrive on WhatsApp</div></div></div>
+        </div>
+      </div></div>
+      <div class="panel soft"><div class="body stack tight">
+        <h3>Photo guidance</h3>
+        <p class="small muted">Good photos fill beds 3x faster. Our captain shoots every room in daylight, bathroom included, no filters. You can also upload your own from the Rooms tab.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OWNER: DASHBOARD ================= -->
+<section id="v-owner" class="view">
+  <div class="ohead">
+    <div><div class="label">Owner dashboard</div><div class="row" style="gap:10px"><h1 style="font-size:30px" id="o-name">Anjani Boys PG</h1><span class="pill good">Inspected</span><span class="pill info">Listing score 82</span></div><p class="muted small" id="o-sub">Madhapur, Hyderabad · 3 floors · 42 beds · replies in 12 min</p></div>
+    <div class="row"><button class="btn" onclick="go('contact')">List another hostel</button><button class="btn primary" onclick="otab('rooms')">Add a room</button></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="stack" id="o-nudges" style="margin-top:12px"></div>
+  <div class="tabs" id="otabs" style="margin-top:18px">
+    <button class="on" data-ot="bookings" onclick="otab('bookings')">Bookings</button>
+    <button data-ot="map" onclick="otab('map')">Bed map</button>
+    <button data-ot="rent" onclick="otab('rent')">Rent</button>
+    <button data-ot="tenants" onclick="otab('tenants')">Tenants</button>
+    <button data-ot="menu" onclick="otab('menu')">Food</button>
+    <button data-ot="rooms" onclick="otab('rooms')">Rooms</button>
+    <button data-ot="ops" onclick="otab('ops')">Staff and complaints</button>
+    <button data-ot="money" onclick="otab('money')">Expenses</button>
+    <button data-ot="insights" onclick="otab('insights')">Insights</button>
+    <button data-ot="grow" onclick="otab('grow')">Grow</button>
+    <button data-ot="wa" onclick="otab('wa')">WhatsApp mode</button>
+    <button data-ot="chain" onclick="otab('chain')">My hostels</button>
+    <button data-ot="plan" onclick="otab('plan')">Plan</button>
+  </div>
+  <div class="tabpane on" id="ot-bookings"></div>
+  <div class="tabpane" id="ot-map"></div>
+  <div class="tabpane" id="ot-rent"></div>
+  <div class="tabpane" id="ot-tenants"></div>
+  <div class="tabpane" id="ot-menu"></div>
+  <div class="tabpane" id="ot-rooms"></div>
+  <div class="tabpane" id="ot-ops"></div>
+  <div class="tabpane" id="ot-money"></div>
+  <div class="tabpane" id="ot-insights"></div>
+  <div class="tabpane" id="ot-grow"></div>
+  <div class="tabpane" id="ot-wa"></div>
+  <div class="tabpane" id="ot-chain"></div>
+  <div class="tabpane" id="ot-plan"></div>
+</section>
+
+<!-- ================= HQ ================= -->
+<section id="v-hq" class="view"></section>
+
+</main>
+
+<button class="btn primary fnav" onclick="featureIndex()">All 125 features</button>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
+  <div class="modal" role="dialog" aria-modal="true" id="modal"></div>
+</div>
+<div class="cmpbar" id="cmpbar"><span id="cmp-txt">0 selected</span><button class="btn sm" onclick="openCompare()">Compare</button><button class="btn sm" onclick="CMP.clear();renderHome()">Clear</button></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ================= DATA ================= */
+const AMEN=['Food included','AC','WiFi','Laundry','Power backup','No curfew','Parent stay allowed','Short stays'];
+const HOSTELS=[
+ {id:1,name:'Anjani Boys PG',area:'Madhapur',lm:{'Hitec City':8,'Mindspace':10,'DLF Cyber City':18,'Ameerpet':25,'JNTU':22},gender:'Boys',rating:4.4,reviews:61,price:{1:14500,2:10500,3:8500,4:7200},amen:['Food included','WiFi','Power backup','Laundry','Parent stay allowed','Short stays'],floors:3,roomsPerFloor:5,seed:11,phone:'98480 21XXX',owner:'Anjani Kumar',ver:3,resp:12,instant:true,safety:82,wifi:74,power:2,water:'Good',x:38,y:52},
+ {id:2,name:'Sri Lakshmi Girls Hostel',area:'Kondapur',lm:{'Hitec City':12,'Mindspace':14,'DLF Cyber City':10,'Ameerpet':30,'JNTU':18},gender:'Girls',rating:4.6,reviews:88,price:{1:15500,2:11500,3:9200},amen:['Food included','AC','WiFi','Laundry','No curfew','Parent stay allowed'],floors:4,roomsPerFloor:4,seed:23,phone:'99490 88XXX',owner:'Lakshmi Devi',ver:3,resp:9,instant:true,safety:91,wifi:110,power:1,water:'Good',x:22,y:38},
+ {id:3,name:'Cyber Nest Co-living',area:'Gachibowli',lm:{'Hitec City':15,'Mindspace':12,'DLF Cyber City':6,'Ameerpet':35,'JNTU':28},gender:'Co-living',rating:4.2,reviews:40,price:{1:17000,2:12500,3:9800},amen:['AC','WiFi','Power backup','No curfew','Short stays'],floors:2,roomsPerFloor:6,seed:37,phone:'90000 12XXX',owner:'Priyanka R',ver:2,resp:45,instant:false,safety:70,wifi:150,power:0,water:'RO',x:14,y:70},
+ {id:4,name:'Vijaya Residency',area:'Hitec City',lm:{'Hitec City':4,'Mindspace':6,'DLF Cyber City':14,'Ameerpet':22,'JNTU':20},gender:'Boys',rating:4.1,reviews:120,price:{2:11000,3:9000,4:7500},amen:['Food included','WiFi','Laundry'],floors:3,roomsPerFloor:6,seed:41,phone:'97030 55XXX',owner:'Vijaya Bhaskar',ver:3,resp:20,instant:false,safety:76,wifi:42,power:4,water:'Tanker',x:55,y:45},
+ {id:5,name:'Green Leaf Ladies PG',area:'Madhapur',lm:{'Hitec City':9,'Mindspace':7,'DLF Cyber City':20,'Ameerpet':24,'JNTU':26},gender:'Girls',rating:4.3,reviews:52,price:{2:10800,3:8900,4:7400},amen:['Food included','WiFi','Power backup','Parent stay allowed'],floors:2,roomsPerFloor:5,seed:53,phone:'98660 34XXX',owner:'Sunitha M',ver:1,resp:120,instant:false,safety:79,wifi:60,power:3,water:'Good',x:46,y:62},
+ {id:6,name:'Balaji Gents Hostel',area:'Ameerpet',lm:{'Hitec City':28,'Mindspace':30,'DLF Cyber City':38,'Ameerpet':3,'JNTU':15},gender:'Boys',rating:3.9,reviews:33,price:{3:7000,4:6000,6:5200},amen:['Food included','WiFi','Short stays'],floors:3,roomsPerFloor:6,seed:67,phone:'98850 77XXX',owner:'Balaji Rao',ver:2,resp:30,instant:true,safety:64,wifi:25,power:6,water:'Tanker',x:80,y:30},
+];
+const MENU={Mon:['Idli, sambar','Rice, dal, aloo fry','Chapati, veg kurma'],Tue:['Upma, chutney','Rice, rasam, cabbage','Rice, egg curry'],Wed:['Poha','Rice, sambar, beans','Chapati, paneer'],Thu:['Dosa','Veg biryani, raita','Rice, dal, bhindi'],Fri:['Puri, curry','Rice, chicken curry','Chapati, dal fry'],Sat:['Vada, chutney','Rice, tomato dal','Fried rice, manchurian'],Sun:['Idli, vada','Chicken biryani','Rice, sambar, papad']};
+const MENU_RT={Mon:[4.1,3.8,4.0],Tue:[3.6,3.9,4.2],Wed:[3.9,3.7,4.4],Thu:[4.5,4.6,3.8],Fri:[4.0,4.7,3.9],Sat:[3.8,3.5,4.1],Sun:[4.2,4.8,3.7]};
+const NAMES=['Rahul Verma','Sai Teja','Arjun Nair','Kiran Reddy','Mohammed Irfan','Deepak Joshi','Nikhil S','Varun Rao','Abhishek','Harsha V','Suresh K','Rohit Meena','Aditya P','Manoj T','Praveen G','Vamsi K','Sandeep','Akash D','Naveen R','Farhan'];
+const JOBS=['SDE, Infosys','Analyst, Deloitte','QA, TCS','Intern, Amazon','Designer, Zomato','M.Tech, IIIT','CA article','Support, Wipro','SDE, Microsoft','B.Tech, JNTU'];
+const SHARES={1:'Single',2:'2-sharing',3:'3-sharing',4:'4-sharing',6:'6-sharing bunk'};
+const VER=['Self-declared','Docs verified','Inspected'];
+function rng(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function buildRooms(h){
+  const r=rng(h.seed),rooms=[];const types=Object.keys(h.price).map(Number);
+  for(let f=0;f<h.floors;f++)for(let i=1;i<=h.roomsPerFloor;i++){
+    const share=types[Math.floor(r()*types.length)];const n=(f+1)*100+i;const beds=[];const L='ABCDEF';
+    for(let b=0;b<share;b++){
+      const x=r();let st='free',e={};
+      if(x<0.62)st='booked';else if(x<0.72){st='vacate';e.from=['4 Oct','12 Oct','15 Oct','1 Nov'][Math.floor(r()*4)];e.listedBy=r()<0.5}else if(x<0.78)st='held';
+      if(st!=='free'){e.name=NAMES[Math.floor(r()*NAMES.length)];e.job=JOBS[Math.floor(r()*JOBS.length)];e.veg=r()<0.6;e.early=r()<0.5;e.smoke=r()<0.2;e.paid=r()<0.7?'paid':(r()<0.5?'due':'overdue');e.rel=Math.floor(80+r()*20)}
+      if(st==='held')e.heldAt=(1+Math.floor(r()*11))+':'+String(Math.floor(r()*6))+'0 pm';
+      const lower=share===6?b%2===0:true,win=b===0;
+      beds.push({id:n+'-'+L[b],letter:L[b],state:st,window:win,lower,extra:(win?300:0)+(lower&&share===6?500:0),...e});
+    }
+    rooms.push({n,floor:f,share,ac:r()<0.35,beds,rent:h.price[share]});
+  }
+  return rooms;
+}
+HOSTELS.forEach(h=>{h.rooms=buildRooms(h)});
+function stats(h){let free=0,vac=0,tot=0;h.rooms.forEach(r=>r.beds.forEach(b=>{tot++;if(b.state==='free')free++;if(b.state==='vacate')vac++}));return{free,vac,tot}}
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const disc=n=>Math.round(n*0.95/50)*50;
+function art(seed,label){
+  const r=rng(seed*7+3);const h1=140+Math.floor(r()*30),h2=h1+20;
+  return `<svg viewBox="0 0 300 200" preserveAspectRatio="none" role="img" aria-label="${label}"><defs><linearGradient id="g${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${h1} 22% 88%)"/><stop offset="1" stop-color="hsl(${h2} 18% 74%)"/></linearGradient></defs><rect width="300" height="200" fill="url(#g${seed})"/><rect x="0" y="130" width="300" height="70" fill="hsl(${h1} 14% 62%)"/><rect x="${30+r()*40}" y="88" width="90" height="46" rx="4" fill="hsl(${h1} 20% 96%)"/><rect x="${30+r()*40}" y="82" width="90" height="10" rx="3" fill="hsl(${h1} 30% 80%)"/><rect x="${170+r()*30}" y="88" width="90" height="46" rx="4" fill="hsl(${h1} 20% 96%)"/><rect x="${170+r()*30}" y="82" width="90" height="10" rx="3" fill="hsl(${h1} 30% 80%)"/><rect x="120" y="30" width="60" height="44" fill="hsl(${h2} 40% 90%)" stroke="hsl(${h1} 15% 60%)"/><text x="10" y="190" font-size="11" font-family="system-ui" fill="hsl(${h1} 15% 35%)">${label}</text></svg>`;
+}
+const stars=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
+
+/* ================= i18n (tenant-facing strings) ================= */
+const I18N={en:{hero:'Pick the exact bed. Not just the hostel.',lede:'Every floor, room and bed of PGs near your office or college, live. Hold the one you want and talk to the owner on WhatsApp.',show:'Show beds',f1:'Search',f2:'Pick a bed',f3:'Hold it',f4:'Visit and move in',hold:'Hold this bed'},
+ te:{hero:'హాస్టల్ కాదు, సరిగ్గా ఏ బెడ్ కావాలో ఎంచుకోండి.',lede:'మీ ఆఫీస్ లేదా కాలేజీ దగ్గర ఉన్న PGల ప్రతి ఫ్లోర్, రూమ్, బెడ్ లైవ్‌గా చూడండి. కావలసిన బెడ్ హోల్డ్ చేసి యజమానితో WhatsAppలో మాట్లాడండి.',show:'బెడ్స్ చూపించు',f1:'వెతకండి',f2:'బెడ్ ఎంచుకోండి',f3:'హోల్డ్ చేయండి',f4:'చూసి చేరండి',hold:'ఈ బెడ్ హోల్డ్ చేయండి'},
+ hi:{hero:'सिर्फ हॉस्टल नहीं, अपना बेड चुनिए.',lede:'ऑफिस या कॉलेज के पास हर PG का हर फ्लोर, कमरा और बेड लाइव देखें. पसंद का बेड होल्ड करें और मालिक से WhatsApp पर बात करें.',show:'बेड दिखाएं',f1:'खोजें',f2:'बेड चुनें',f3:'होल्ड करें',f4:'देखें और शिफ्ट हों',hold:'यह बेड होल्ड करें'}};
+let LANG='en';
+function setLang(l){LANG=l;document.querySelectorAll('#lang button').forEach((b,i)=>b.classList.toggle('on',['en','te','hi'][i]===l));document.querySelectorAll('[data-i]').forEach(el=>{const k=el.dataset.i;if(I18N[l][k])el.textContent=I18N[l][k]});if(H)renderSide()}
+const T=k=>I18N[LANG][k]||I18N.en[k];
+
+/* ================= NAV ================= */
+let curMode='tenant',H=null;
+function go(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));document.getElementById('v-'+v).classList.add('on');window.scrollTo({top:0});}
+function mode(m){curMode=m;['tenant','stay','owner','hq'].forEach(x=>document.getElementById('seg-'+x).classList.toggle('on',x===m));
+  if(m==='tenant')go('home');if(m==='stay'){renderStay();go('stay')}if(m==='owner'){renderOwner();go('owner')}if(m==='hq'){renderHQ();go('hq')}}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3000)}
+function openModal(html,wide){const m=document.getElementById('modal');m.className='modal'+(wide?' wide':'');m.innerHTML=html;document.getElementById('scrim').classList.add('on')}
+function closeModal(){document.getElementById('scrim').classList.remove('on');clearInterval(holdTimer);clearInterval(slaTimer)}
+function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied')).catch(()=>toast(t))}
+function tabs(scope,attr,prefix,t){document.querySelectorAll(scope+' .tabs button').forEach(b=>b.classList.toggle('on',b.dataset[attr]===t));document.querySelectorAll(scope+' > .tabpane, '+scope+' .tabpane').forEach(p=>{if(p.id.startsWith(prefix))p.classList.toggle('on',p.id===prefix+t)})}
+
+/* ================= HOME ================= */
+const F={share:new Set(),amen:new Set(),avail:'any',ver:new Set()};
+let LM='Hitec City',VIEW='list';const CMP=new Set();
+function chips(el,items,set,single){el.innerHTML=items.map(i=>`<button class="chip ${single?(F.avail===i.v?'on':''):(set.has(i)?'on':'')}" data-v="${single?i.v:i}">${single?i.l:i}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;if(single)F.avail=v;else set.has(v)?set.delete(v):set.add(v);renderHome()})}
+function parseQuery(){
+  const q=document.getElementById('q').value.toLowerCase();const out=[];
+  if(/girl|ladies|women/.test(q)){document.getElementById('q-gender').value='Girls';out.push('Girls')}else if(/boy|gents|men/.test(q)){document.getElementById('q-gender').value='Boys';out.push('Boys')}else if(/co-?living|unisex/.test(q)){document.getElementById('q-gender').value='Co-living';out.push('Co-living')}
+  const m=q.match(/(?:under|below|<)\s*₹?\s*(\d+)\s*(k)?/);if(m){let v=+m[1]*(m[2]?1000:1);const opts=[8000,10000,13000];const pick=opts.find(o=>o>=v)||99999;document.getElementById('q-budget').value=pick;out.push('under '+fmt(v))}
+  for(const l of ['Mindspace','DLF Cyber City','Hitec City','Ameerpet','JNTU'])if(q.includes(l.toLowerCase())){document.getElementById('q-near').value=l;out.push('near '+l);break}
+  F.amen.clear();if(/\bac\b/.test(q)){F.amen.add('AC');out.push('AC')}if(/no curfew/.test(q)){F.amen.add('No curfew');out.push('no curfew')}if(/food|mess/.test(q)){F.amen.add('Food included');out.push('food')}
+  if(/trial/.test(q))document.getElementById('q-stay').value='Trial night';else if(/week|short/.test(q))document.getElementById('q-stay').value='1 to 4 weeks';
+  document.getElementById('q-parsed').textContent=out.length?'Understood: '+out.join(', '):'';
+}
+function landmark(l){document.getElementById('q-near').value=l;document.getElementById('q').value='PG near '+l;doSearch()}
+function setView(v){VIEW=v;document.getElementById('vw-list').classList.toggle('on',v==='list');document.getElementById('vw-map').classList.toggle('on',v==='map');renderHome()}
+function fitOK(h){return h.rooms.some(r=>r.beds.some(b=>b.state==='free')&&r.beds.filter(b=>b.state!=='free').every(b=>b.veg&&!b.smoke))}
+function renderHome(){
+  chips(document.getElementById('f-share'),['Single','2-sharing','3-sharing','4-sharing','6-sharing bunk'],F.share);
+  chips(document.getElementById('f-amen'),AMEN,F.amen);
+  chips(document.getElementById('f-avail'),[{v:'any',l:'Any'},{v:'now',l:'Free bed now'},{v:'soon',l:'Free within a month'},{v:'instant',l:'Instant book'}],null,true);
+  chips(document.getElementById('f-ver'),['Inspected','Docs verified'],F.ver);
+  LM=document.getElementById('q-near').value;document.getElementById('f-lm-name').textContent=LM;
+  const walk=+document.getElementById('f-walk').value;document.getElementById('f-walk-v').textContent=walk;
+  const g=document.getElementById('q-gender').value,bud=+document.getElementById('q-budget').value,stay=document.getElementById('q-stay').value,fit=document.getElementById('f-fit').checked;
+  let list=HOSTELS.filter(h=>{
+    if(g!=='Co-living'&&h.gender!==g&&h.gender!=='Co-living')return false;
+    if(Math.min(...Object.values(h.price))>bud)return false;
+    if([...F.amen].some(a=>!h.amen.includes(a)))return false;
+    if(F.share.size&&![...F.share].some(s=>Object.keys(h.price).map(k=>SHARES[k]).includes(s)))return false;
+    if(h.lm[LM]>walk)return false;
+    if(F.ver.size&&![...F.ver].some(v=>VER[h.ver-1]===v))return false;
+    if(stay!=='Monthly'&&!h.amen.includes('Short stays'))return false;
+    if(fit&&!fitOK(h))return false;
+    const s=stats(h);if(F.avail==='now'&&!s.free)return false;if(F.avail==='soon'&&!(s.free+s.vac))return false;if(F.avail==='instant'&&!h.instant)return false;return true;
+  });
+  const sort=document.getElementById('sort').value;
+  list.sort((a,b)=>sort==='price'?Math.min(...Object.values(a.price))-Math.min(...Object.values(b.price)):sort==='walk'?a.lm[LM]-b.lm[LM]:sort==='free'?stats(b).free-stats(a).free:sort==='resp'?a.resp-b.resp:(b.ver*10+b.rating)-(a.ver*10+a.rating));
+  document.getElementById('res-title').textContent='Hostels near '+LM;
+  document.getElementById('res-count').textContent=list.length+' of '+HOSTELS.length+' hostels';
+  const listEl=document.getElementById('res-list'),mapEl=document.getElementById('res-map');
+  mapEl.hidden=VIEW!=='map';
+  if(VIEW==='map'){mapEl.innerHTML=`<div class="mapbox"><svg viewBox="0 0 100 50" preserveAspectRatio="none"><path d="M0 30 C 20 28, 35 40, 55 35 S 85 20, 100 25" stroke="var(--line-strong)" stroke-width="1.2" fill="none"/><path d="M30 0 C 32 15, 28 30, 40 50" stroke="var(--line-strong)" stroke-width=".8" fill="none"/><path d="M60 0 C 58 20, 70 30, 65 50" stroke="var(--line-strong)" stroke-width=".8" fill="none"/><path d="M0 12 L100 8" stroke="var(--line)" stroke-width=".5"/></svg>
+    <span class="lm" style="left:60%;top:42%">Hitec City</span><span class="lm" style="left:35%;top:30%">Mindspace</span><span class="lm" style="left:12%;top:84%">DLF Cyber City</span><span class="lm" style="left:85%;top:15%">Ameerpet</span>
+    ${list.map(h=>`<button class="pin" style="left:${h.x}%;top:${h.y}%" onclick="openHostel(${h.id})">${stats(h).free} beds · ${fmt(disc(Math.min(...Object.values(h.price))))}</button>`).join('')}</div><p class="small muted" style="margin-top:8px">Pins show beds free now and the lowest app rent. Tap one to open the hostel.</p>`}
+  listEl.innerHTML=list.length?list.map(h=>{const s=stats(h);const lo=Math.min(...Object.values(h.price));
+    const bar=Array.from({length:20},(_,i)=>{const p=i/20;return `<i class="${p<s.free/s.tot?'f':(p<(s.free+s.vac)/s.tot?'v':'')}"></i>`}).join('');
+    return `<div class="hcard" onclick="openHostel(${h.id})">
+      <div class="thumb">${art(h.seed,'')}<label class="cmp" onclick="event.stopPropagation()"><input type="checkbox" ${CMP.has(h.id)?'checked':''} onchange="toggleCmp(${h.id},this.checked)">Compare</label></div>
+      <div><div class="row" style="gap:8px"><h3>${h.name}</h3><span class="pill ${h.ver===3?'good':h.ver===2?'info':''}">${VER[h.ver-1]}</span>${h.instant?'<span class="pill ink">Instant book</span>':''}</div>
+        <div class="small muted">${h.gender} · ${h.area} · <b class="num">${h.lm[LM]} min</b> to ${LM} · replies in ${h.resp} min</div>
+        <div class="small" style="margin-top:4px">${Object.keys(h.price).map(k=>SHARES[k]).join(' · ')}${h.amen.includes('Food included')?' · Food':''}${h.amen.includes('AC')?' · AC':''}</div>
+        <div class="availbar">${bar}</div>
+        <div class="small muted" style="margin-top:4px"><b class="num" style="color:var(--accent-deep)">${s.free} beds free now</b>${s.vac?` · ${s.vac} freeing up soon`:''} · ${s.tot} total</div>
+        <div class="badges"><span class="pill">Safety ${h.safety}</span><span class="pill">WiFi ${h.wifi} Mbps measured</span><span class="pill num">★ ${h.rating} (${h.reviews})</span></div></div>
+      <div class="price"><s class="num">${fmt(lo)}</s><b class="num">${fmt(disc(lo))}</b><span class="small muted">per month via app</span></div></div>`}).join('')
+   :`<div class="body muted">No hostels match. Loosen a filter, widen the budget or extend the commute range.</div>`;
+  document.getElementById('cmpbar').classList.toggle('on',CMP.size>0);document.getElementById('cmp-txt').textContent=CMP.size+' selected';
+}
+function toggleCmp(id,on){on?CMP.add(id):CMP.delete(id);if(CMP.size>3){CMP.delete(id);toast('Compare up to 3');renderHome();return}document.getElementById('cmpbar').classList.toggle('on',CMP.size>0);document.getElementById('cmp-txt').textContent=CMP.size+' selected'}
+function doSearch(){parseQuery();renderHome();document.getElementById('results').scrollIntoView({behavior:'smooth'})}
+['q-gender','q-budget','q-near','q-stay'].forEach(id=>document.getElementById(id).onchange=renderHome);
+function openCompare(){const hs=[...CMP].map(id=>HOSTELS.find(h=>h.id===id));if(hs.length<2){toast('Pick at least two');return}
+  const row=(l,f)=>`<tr><td>${l}</td>${hs.map(h=>`<td>${f(h)}</td>`).join('')}</tr>`;
+  openModal(`<div class="head"><h3>Compare</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body tscroll"><table class="cmptable"><thead><tr><th></th>${hs.map(h=>`<th>${h.name}</th>`).join('')}</tr></thead><tbody>
+  ${row('Lowest rent via app',h=>'<b class="num">'+fmt(disc(Math.min(...Object.values(h.price))))+'</b>')}${row('Beds free now',h=>stats(h).free)}${row('To '+LM,h=>h.lm[LM]+' min')}${row('Food',h=>h.amen.includes('Food included')?'Included':'No')}${row('AC',h=>h.amen.includes('AC')?'Yes':'No')}${row('Curfew',h=>h.amen.includes('No curfew')?'None':'11:30 pm')}${row('Verification',h=>VER[h.ver-1])}${row('Safety score',h=>h.safety)}${row('WiFi measured',h=>h.wifi+' Mbps')}${row('Power cuts last month',h=>h.power)}${row('Owner replies in',h=>h.resp+' min')}${row('Rating',h=>'★ '+h.rating+' ('+h.reviews+')')}
+  </tbody></table><div class="row" style="margin-top:12px">${hs.map(h=>`<button class="btn sm" onclick="closeModal();openHostel(${h.id})">Open ${h.name.split(' ')[0]}</button>`).join('')}</div></div>`,true)}
+
+/* ================= BED GRID ================= */
+function bedHTML(b,room,h,sel,clickable=true){
+  const isSel=sel&&(sel===b.id||(sel instanceof Set&&sel.has(b.id)));
+  const cls=['bed',b.state,isSel?'sel':'',b.mine?'mine':''].join(' ');
+  const line=b.state==='booked'?'Taken':b.state==='held'?'On hold':b.state==='vacate'?'Free from '+b.from:'Free now';
+  const attr=(b.lower?'':'Upper bunk · ')+(b.window?'Window':'Wall');
+  return `<button class="${cls}" ${b.state==='booked'&&!b.mine?'disabled':''} ${clickable?`onclick="pickBed(${room.n},'${b.id}',event)"`:''} aria-label="Bed ${b.id}, ${line}"><b>Bed ${b.letter}</b><small>${line}<br>${attr}</small>${room.rent&&b.extra?`<span class="bp num">+${fmt(b.extra)}</span>`:''}</button>`;
+}
+function gridHTML(room,h,sel,clickable){
+  const cols=room.share<=2?room.share:room.share===3?3:room.share===4?2:3;
+  if(room.share===6){const pairs=[];for(let i=0;i<6;i+=2)pairs.push(`<div class="bunk">${bedHTML(room.beds[i+1],room,h,sel,clickable)}${bedHTML(room.beds[i],room,h,sel,clickable)}</div>`);return {cols,html:pairs.join('')}}
+  return {cols,html:room.beds.map(b=>bedHTML(b,room,h,sel,clickable)).join('')};
+}
+(function heroGrid(){const room=HOSTELS[0].rooms.find(r=>r.n===204);const st=['free','held','booked'];room.beds.forEach((b,i)=>{b.state=st[i%3]||'free';if(b.state!=='free'){b.name=b.name||'Kiran';b.paid=b.paid||'paid'}});
+  const g=gridHTML(room,null,null,false);const el=document.getElementById('hero-grid');el.style.gridTemplateColumns=`repeat(${g.cols},1fr)`;el.innerHTML=g.html;})();
+
+/* ================= HOSTEL PAGE ================= */
+let floorSel=0,roomSel=null,bedSel=new Set(),buddy=false;
+function openHostel(id){H=HOSTELS.find(h=>h.id===id);floorSel=0;roomSel=H.rooms.find(r=>r.floor===0&&r.beds.some(b=>b.state!=='booked'))||H.rooms[0];bedSel=new Set();buddy=false;renderHostel();go('hostel')}
+function renderHostel(){
+  const h=H,s=stats(h);
+  const v=document.getElementById('v-hostel');
+  v.innerHTML=`
+  <div class="crumb"><button onclick="go('home')">Hostels near ${LM}</button><span>/</span><span>${h.name}</span></div>
+  <div class="hhead">
+    <div><div class="row" style="gap:8px"><h1 style="font-size:30px">${h.name}</h1><span class="pill ${h.ver===3?'good':h.ver===2?'info':''}">${VER[h.ver-1]}</span>${h.instant?'<span class="pill ink">Instant book</span>':''}</div>
+      <div class="meta"><span>${h.gender}</span><span>${h.area}, Hyderabad</span><span class="num">${h.lm[LM]} min to ${LM}</span><span class="num">★ ${h.rating} (${h.reviews} stayed)</span><span>Owner replies in ${h.resp} min</span></div></div>
+    <div class="row"><button class="btn" onclick="toast('Saved to your shortlist')">Save</button><button class="btn" onclick="offerModal()">Make an offer</button><button class="btn wa" onclick="toast('Opening WhatsApp with '+H.owner)">Ask on WhatsApp</button></div>
+  </div>
+  <div class="gallery">${[0,1,2,3,4].map(i=>`<div>${art(h.seed+i,i===0?'Common area':i===1?'Kitchen':'Room '+(101+i*3))}</div>`).join('')}</div>
+  <div class="hgrid">
+    <div class="stack">
+      <div class="panel"><div class="head"><h3>Pick your bed</h3><div class="row"><span class="small muted num">${s.free} free now · ${s.vac} freeing up soon · ${s.tot} beds</span><label class="small row" style="gap:5px"><input type="checkbox" ${buddy?'checked':''} onchange="buddy=this.checked;bedSel=new Set();renderHostel()">Booking with friends</label></div></div>
+        <div class="body"><div class="picker">
+          <div class="floors">${Array.from({length:h.floors},(_,f)=>{const fr=h.rooms.filter(r=>r.floor===f);const free=fr.reduce((a,r)=>a+r.beds.filter(b=>b.state==='free').length,0);return `<button class="${floorSel===f?'on':''}" onclick="floorSel=${f};roomSel=null;bedSel=new Set();renderHostel()">${floorName(f)}<span class="num">${free} free</span></button>`}).join('')}</div>
+          <div>
+            <div class="rooms">${h.rooms.filter(r=>r.floor===floorSel).map(r=>{const free=r.beds.filter(b=>b.state==='free').length,vac=r.beds.filter(b=>b.state==='vacate').length;return `<button class="roomtile ${roomSel&&roomSel.n===r.n?'on':''} ${!free&&!vac?'full':''}" onclick="roomSel=H.rooms.find(x=>x.n===${r.n});bedSel=new Set();renderHostel()"><b>${r.n}</b><span>${SHARES[r.share]}${r.ac?' · AC':''}</span><span class="num" style="color:${free?'var(--accent-deep)':'var(--muted)'}">${free?free+' free':vac?'free '+r.beds.find(b=>b.state==='vacate').from:'full · waitlist'}</span></button>`}).join('')}</div>
+            ${roomSel?roomView(roomSel):'<p class="muted small" style="margin-top:12px">Choose a room to see its beds.</p>'}
+          </div>
+        </div></div></div>
+
+      <div class="panel" id="htabs"><div class="tabs" style="margin:0;padding:0 8px"><button class="on" data-t="price" onclick="htab('price')">Rent and move-in cost</button><button data-t="menu" onclick="htab('menu')">Food menu</button><button data-t="live" onclick="htab('live')">WiFi, water, power</button><button data-t="safety" onclick="htab('safety')">Safety</button><button data-t="rules" onclick="htab('rules')">House rules</button><button data-t="reviews" onclick="htab('reviews')">Reviews</button></div>
+        <div class="body">
+          <div class="tabpane on" id="ht-price"><div class="grid2">
+            <div><div class="label" style="margin-bottom:6px">Rent per bed</div><div class="pricetable">${Object.entries(h.price).map(([k,p])=>`<div><div><b>${SHARES[k]}</b><div class="small muted">${h.amen.includes('Food included')?'Food included':'No food'}</div></div><s class="num">${fmt(p)} walk-in</s><div class="app num"><b>${fmt(disc(p))}</b><div class="small muted">/ month via Hostelzy</div></div></div>`).join('')}</div>
+              <p class="small muted" style="margin-top:10px">Window-side and lower bunks carry a small extra, shown on each bed. ${h.amen.includes('Short stays')?'Short stays of 1 to 4 weeks at ₹'+Math.round(Math.min(...Object.values(h.price))/30*1.3).toLocaleString('en-IN')+' a night.':'Monthly stays only.'}</p></div>
+            <div><div class="label" style="margin-bottom:6px">What you pay to move in</div><div id="calc"></div></div>
+          </div></div>
+          <div class="tabpane" id="ht-menu">${h.amen.includes('Food included')?menuHTML(false,true)+'<p class="small muted" style="margin-top:8px">Ratings are from residents, per meal, last 4 weeks. Veg and non-veg served separately.</p>':'<p class="muted">This hostel does not include food. Kitchen access available. Tiffin partners from ₹2,400 a month via Hostelzy perks.</p>'}</div>
+          <div class="tabpane" id="ht-live"><div class="datarow"><b>WiFi</b><div class="bar"><i style="width:${Math.min(100,h.wifi/1.5)}%"></i></div><span class="num small">${h.wifi} Mbps, 31 speed tests</span></div><div class="datarow"><b>Power cuts</b><div class="bar"><i class="${h.power>3?'bad':h.power>1?'warn':''}" style="width:${h.power*12}%"></i></div><span class="num small">${h.power} logged last month</span></div><div class="datarow"><b>Water</b><div class="small">${h.water==='Good'?'Municipal, no shortage reported':h.water==='RO'?'RO drinking water, tanker for use':'Tanker supply, low pressure mornings'}</div><span class="pill ${h.water==='Good'?'good':'warn'}">${h.water}</span></div><div class="datarow"><b>Noise</b><div class="small">Main road side rooms: moderate after 10 pm</div><span class="pill">Residents' log</span></div><p class="small muted" style="margin-top:8px">Submitted by residents through the My stay app. Not edited by the owner.</p></div>
+          <div class="tabpane" id="ht-safety"><div class="row" style="gap:14px;margin-bottom:10px"><span class="score ${h.safety>80?'':h.safety>65?'mid':'low'}">${h.safety}</span><div><b>Safety score</b><div class="small muted">Scored by our inspector, updated quarterly</div></div></div><div class="rules"><div><span>CCTV</span>Entrance, corridors, common areas</div><div><span>Warden</span>On site, 24 hours</div><div><span>Street lighting</span>Lit till main road (120 m)</div><div><span>Entry</span>Biometric gate, visitor log</div><div><span>Women-only floor</span>${h.gender==='Girls'?'Whole building':h.gender==='Co-living'?'2nd floor':'Not applicable'}</div><div><span>Nearest hospital</span>Image Hospital, 1.2 km</div></div></div>
+          <div class="tabpane" id="ht-rules"><div class="rules">
+            <div><span>Curfew</span>${h.amen.includes('No curfew')?'None':'11:30 pm on weekdays'}</div><div><span>Visitors</span>Common area only, till 8 pm</div>
+            <div><span>Parent stay</span>${h.amen.includes('Parent stay allowed')?'Guest bed ₹300 a night, 2 nights max':'Not allowed'}</div><div><span>Notice period</span>30 days</div>
+            <div><span>Lock-in</span>None</div><div><span>Deposit</span>One month, held by Hostelzy, refunded in 7 days</div>
+            <div><span>Electricity</span>Meter rate, split per bed</div><div><span>Amenities</span>${h.amen.join(', ')}</div>
+          </div></div>
+          <div class="tabpane" id="ht-reviews">
+            <div class="panel soft" style="margin-bottom:10px"><div class="body small"><b>What residents say</b> <span class="tag">summary</span><br>Food is consistently rated well, especially Thursday and Sunday biryani. WiFi holds up for work-from-home. Water pressure on the top floor and morning bathroom queues come up repeatedly. Owner is responsive and deposits come back on time.</div></div>
+            <div class="review"><div class="row between"><b>Karthik, stayed 8 months</b><span class="stars small">${stars(5)}</span></div><p class="small">Food is home-style, WiFi held up through WFH days. Water pressure on the 3rd floor is weak in the mornings.</p><div class="subr"><span>Food 5</span><span>WiFi 4</span><span>Cleanliness 4</span><span>Warden 5</span></div></div>
+            <div class="review"><div class="row between"><b>Imran, stayed 1 year</b><span class="stars small">${stars(4)}</span></div><p class="small">Owner picks up the phone, which is rare. Deposit came back in 5 days through the app.</p><div class="subr"><span>Food 4</span><span>WiFi 4</span><span>Cleanliness 3</span><span>Warden 4</span></div></div>
+            <p class="small muted">Only people who moved in through Hostelzy can review. Reviews are checked for retaliation and fakes by our moderation team.</p>
+          </div>
+        </div></div>
+    </div>
+    <aside class="side panel"><div class="body stack" id="side"></div></aside>
+  </div>`;
+  renderCalc();renderSide();
+}
+function floorName(f){return f===0?'Ground':f+(f===1?'st':f===2?'nd':'rd')+' floor'}
+function roomView(room){
+  const g=gridHTML(room,H,bedSel,true);
+  const sel=[...bedSel].map(id=>room.beds.find(x=>x.id===id)).filter(Boolean);const b=sel[0];
+  const mates=room.beds.filter(x=>x.state!=='free'&&!bedSel.has(x.id));
+  return `<div class="roomview">
+    <div><div class="row between" style="margin-bottom:6px"><b>Room ${room.n} · ${SHARES[room.share]}${room.ac?' · AC':''}</b><span class="small muted num">${fmt(disc(room.rent))}/mo per bed</span></div>
+      <div class="roomplan"><div class="win"></div><div class="door"></div><div class="bath"></div><div class="bedgrid" style="grid-template-columns:repeat(${g.cols},1fr)">${g.html}</div></div>
+      <div class="legend"><span><i></i>Free</span><span><i class="h"></i>On hold</span><span><i class="b"></i>Taken</span><span><i class="v"></i>Free from a date</span></div>
+      ${buddy?'<p class="small muted" style="margin-top:6px">Tap up to '+room.beds.filter(x=>x.state==='free').length+' free beds to hold them together.</p>':''}</div>
+    <div class="beddetail">${b?`
+      <div><b>${sel.length>1?sel.length+' beds: '+sel.map(x=>x.letter).join(', '):'Bed '+b.id}</b><div class="small muted">${b.state==='vacate'?'Free from '+b.from+'. '+(b.listedBy?'Listed early by the outgoing tenant.':'Current tenant has given notice.'):b.state==='held'?'Someone is holding this bed. Join the waitlist and we tell you if it frees up.':'Free now, can move in this week.'}</div></div>
+      <div class="photos"><div>${art(H.seed+room.n,'Room '+room.n)}</div><div>${art(H.seed+room.n+1,'Bathroom, room '+room.n)}</div></div>
+      <dl class="kv"><dt>Position</dt><dd>${(b.lower?'':'Upper bunk, ')+(b.window?'window side':'wall side')}${b.extra?' (+'+fmt(b.extra)+')':''}</dd><dt>Rent</dt><dd class="num">${fmt(disc(room.rent)+b.extra)} via app, ${fmt(room.rent+b.extra)} walk-in</dd><dt>Deposit</dt><dd class="num">${fmt(room.rent)}, held by Hostelzy</dd></dl>
+      ${mates.length?`<div><div class="label" style="margin-bottom:5px">Who you'd share with</div><div class="mates">${mates.map(m=>`<div class="mate"><span class="av">${m.name[0]}</span><div>${m.job}<div class="tiny muted">${m.veg?'Veg':'Non-veg'} · ${m.early?'early sleeper':'night owl'} · ${m.smoke?'smokes':'non-smoker'}</div></div><span class="pill ${m.veg&&!m.smoke?'good':''}">${m.veg&&!m.smoke?'Fits you':'Partial fit'}</span></div>`).join('')}</div><p class="tiny muted" style="margin-top:4px">Shared with consent, names hidden until you move in.</p></div>`:'<p class="small muted">Room is empty right now. You would be the first in.</p>'}
+      ${b.state==='held'?`<button class="btn block" onclick="toast('You are on the waitlist for bed ${b.id}. We WhatsApp you if it frees up.')">Join waitlist</button>`:`<button class="btn primary block" onclick="holdModal()">${sel.length>1?'Hold '+sel.length+' beds together':T('hold')}</button>`}
+    `:`<div class="muted small" style="padding-top:8px">Tap a bed to see photos of this room, who you would share with, and hold it.</div>
+      <div class="photos"><div>${art(H.seed+room.n,'Room '+room.n)}</div><div>${art(H.seed+room.n+1,'Bathroom, room '+room.n)}</div></div>
+      ${room.beds.every(x=>x.state!=='free')?`<button class="btn block" onclick="toast('Waitlisted for room ${room.n}. Next vacate notice pings you first.')">Join waitlist for this room</button>`:''}`}</div>
+  </div>`;
+}
+function pickBed(n,id,ev){roomSel=H.rooms.find(r=>r.n===n);const b=roomSel.beds.find(x=>x.id===id);
+  if(buddy&&b.state==='free'){bedSel.has(id)?bedSel.delete(id):bedSel.add(id)}else bedSel=new Set([id]);renderHostel();}
+function htab(t){tabs('#htabs','t','ht-',t)}
+function menuHTML(edit,rated){return `<div class="menu"><div class="h"></div><div class="h">Breakfast</div><div class="h">Lunch</div><div class="h">Dinner</div>${Object.entries(MENU).map(([d,m])=>`<div class="d">${d}</div>${m.map((x,i)=>`<div ${edit?'contenteditable="true"':''}>${x}${rated?`<span class="rt num">★ ${MENU_RT[d][i]}</span>`:''}</div>`).join('')}`).join('')}</div>`}
+function renderCalc(){const room=roomSel||H.rooms[0];const b=[...bedSel][0]?room.beds.find(x=>x.id===[...bedSel][0]):null;const rent=disc(room.rent)+(b?b.extra:0);const food=H.amen.includes('Food included')?0:2400;
+  document.getElementById('calc').innerHTML=`<div class="calc"><div><span>First month rent${b?' (bed '+b.id+')':''}</span><b class="num">${fmt(rent)}</b></div><div><span>Deposit (held by Hostelzy)</span><b class="num">${fmt(room.rent)}</b></div><div><span>Food</span><b class="num">${food?fmt(food):'Included'}</b></div><div><span>Electricity, estimate</span><b class="num">${fmt(room.ac?900:350)}</b></div><div><span>Hostelzy fee</span><b class="num">₹0</b></div><div class="tot"><span>Move-in total</span><span class="num">${fmt(rent+room.rent+food+(room.ac?900:350))}</span></div><div class="small" style="color:var(--accent-deep)"><span>You save vs walk-in, per month</span><b class="num">${fmt(room.rent-disc(room.rent))}</b></div></div>`}
+function renderSide(){
+  const h=H,room=roomSel,sel=[...bedSel].map(id=>room&&room.beds.find(x=>x.id===id)).filter(Boolean),b=sel[0];
+  document.getElementById('side').innerHTML=b?`
+    <div class="label">Your pick</div><div class="big">${sel.length>1?sel.length+' beds':'Bed '+b.id}</div><div class="muted small">Room ${room.n}, ${SHARES[room.share]}${room.ac?', AC':''}${sel.length>1?' · '+sel.map(x=>x.letter).join(', '):''}</div>
+    <dl class="kv"><dt>Rent</dt><dd class="num">${fmt((disc(room.rent)+b.extra)*sel.length)} / month</dd><dt>You save</dt><dd class="num" style="color:var(--accent-deep)">${fmt((room.rent-disc(room.rent))*sel.length)} every month</dd><dt>Move in</dt><dd>${b.state==='vacate'?b.from:'This week'}</dd></dl>
+    <hr class="rule">
+    ${b.state==='held'?`<button class="btn block" onclick="toast('Waitlisted for bed ${b.id}')">Join waitlist</button>`:`<button class="btn primary block" onclick="holdModal()">${T('hold')}</button>`}
+    ${h.instant?'<p class="small" style="color:var(--accent-deep)">Instant book: owner pre-approved this room. No waiting for a call.</p>':'<p class="small muted">Free for 1 hour. The owner gets your number and calls you. If nobody calls within the hour, the hold lapses and we tell you.</p>'}`
+  :`<div class="label">From</div><div class="big num">${fmt(disc(Math.min(...Object.values(h.price))))}</div><div class="muted small">per month via Hostelzy, ${fmt(Math.min(...Object.values(h.price)))} walk-in</div>
+    <hr class="rule">
+    <div class="small"><b>Owner</b> ${h.owner}<br><span class="muted">Replies in ${h.resp} min on average</span></div>
+    <div class="small"><b>Bed-map guarantee</b><br><span class="muted">If the bed you held wasn't actually free, hold fee back plus ₹200 credit.</span></div>
+    <p class="small muted">Pick a floor, room and bed on the left to hold it.</p>`;
+}
+function offerModal(){const room=roomSel||H.rooms[0];openModal(`<div class="head"><h3>Make an offer</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p class="small muted">Owner's app rate for ${SHARES[room.share]} is ${fmt(disc(room.rent))}. Offer what you can pay; the owner accepts or declines on WhatsApp within a few hours.</p><label class="small" style="font-weight:600">Your offer per month<input id="off" type="number" value="${disc(room.rent)-500}" class="num"></label><label class="small" style="font-weight:600">Why<input id="offw" placeholder="e.g. 12-month stay, paying quarterly"></label><button class="btn primary block" onclick="closeModal();toast('Offer sent to '+H.owner+'. You will hear back on WhatsApp.')">Send offer</button></div>`)}
+
+/* ================= HOLD FLOW ================= */
+let holdOpt='free',holdTimer=null,slaTimer=null,visitSlot='Tomorrow 6 pm',visitMode='In person',plus=false;
+function holdModal(){
+  const room=roomSel,sel=[...bedSel].map(id=>room.beds.find(x=>x.id===id)),b=sel[0];
+  openModal(`<div class="head"><h3>Hold ${sel.length>1?sel.length+' beds in room '+room.n:'bed '+b.id}</h3><button class="btn sm" onclick="closeModal()">Close</button></div>
+  <div class="body">
+    <p class="small muted" style="margin-bottom:12px">A hold takes the bed off the market for everyone else. ${H.instant?'This room is instant-book, so your hold is confirmed the moment you place it.':'The owner calls you, you visit, and confirm.'}</p>
+    ${[['free','Free 1-hour hold','Enough time for the owner to call you back','Free'],['day1','1-day hold','Visit tomorrow at your convenience',plus?'Free with Plus':'₹299'],['day2','2-day hold','For weekend visits',plus?'Free with Plus':'₹499'],['trial','Trial night','Sleep one night, then decide. Adjusted against rent if you stay','₹299']].map(([v,t,d,a])=>`<label class="opt ${holdOpt===v?'on':''}"><input type="radio" name="hold" value="${v}" ${holdOpt===v?'checked':''} onchange="holdOpt='${v}';holdModal()"><div><b>${t}</b><span>${d}</span></div><span class="amt num">${a}</span></label>`).join('')}
+    <div class="panel soft" style="margin:10px 0"><div class="body" style="padding:10px 12px"><label class="row small" style="gap:8px"><input type="checkbox" ${plus?'checked':''} onchange="plus=this.checked;holdModal()"><span><b>Hostelzy Plus, ₹99/month</b><br><span class="muted">No hold fees, first on every waitlist, extra ₹200 off first month</span></span></label></div></div>
+    <div class="label" style="margin:6px 0">Visit</div>
+    <div class="row" style="margin-bottom:6px">${['In person','Video walkthrough'].map(m=>`<button class="chip ${visitMode===m?'on':''}" onclick="visitMode='${m}';holdModal()">${m}</button>`).join('')}</div>
+    <div class="slots">${['Today 7 pm','Tomorrow 10 am','Tomorrow 6 pm','Sat 11 am','Sun 4 pm'].map(s=>`<button class="${visitSlot===s?'on':''}" onclick="visitSlot='${s}';holdModal()">${s}</button>`).join('')}</div>
+    <div class="form" style="margin-top:14px"><label>Your name<input id="h-name" value="Rahul Verma"></label><label>WhatsApp number<input id="h-phone" value="98XXX XXXXX" inputmode="tel"></label><label>Moving in<select id="h-when"><option>This week</option><option>Next week</option><option>1 Oct</option><option>Not sure yet</option></select></label><label>Referral code<input id="h-ref" placeholder="Friend's code, ₹500 off first month"></label></div>
+    <button class="btn primary block" style="margin-top:14px" onclick="confirmHold()">${holdOpt==='free'||plus&&holdOpt!=='trial'?'Hold now':'Pay and hold'}</button>
+    <p class="tiny muted" style="margin-top:8px;text-align:center">${holdOpt==='free'?'No payment. Hold lapses automatically after 1 hour. Two no-shows on free holds pause free holds for 30 days.':'Full refund if you cancel 6 hours before the visit, or if the bed turns out not to be available.'}</p>
+  </div>`);
+}
+function confirmHold(){
+  const room=roomSel,sel=[...bedSel].map(id=>room.beds.find(x=>x.id===id)),b=sel[0];const name=document.getElementById('h-name').value,when=document.getElementById('h-when').value;
+  sel.forEach(x=>{x.state=H.instant?'booked':'held';x.name=name;x.job='New tenant';x.heldAt='just now';x.paid='due';x.hold=holdOpt;x.visit=visitSlot;x.mine=true});
+  const secs=holdOpt==='free'?3600:holdOpt==='day1'?86400:holdOpt==='day2'?172800:86400;let left=secs,sla=60*60;
+  const draw=()=>{const f=t=>{const hh=Math.floor(t/3600),mm=Math.floor(t%3600/60),ss=t%60;return (hh?hh+':':'')+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')};const cd=document.getElementById('cd');if(cd)cd.textContent=f(left);const sl=document.getElementById('sla');if(sl)sl.textContent=f(sla)};
+  openModal(`<div class="head"><h3>${H.instant?'Booked. See you at '+H.name.split(' ')[0]+'.':'Bed '+(sel.length>1?'s '+sel.map(x=>x.letter).join(', ')+' are':b.id+' is')+' yours to visit'}</h3><button class="btn sm" onclick="closeModal();renderHostel()">Done</button></div>
+  <div class="body stack">
+    <div class="row between"><div><div class="label">Hold ends in</div><div class="countdown" id="cd"></div></div><span class="pill ${H.instant?'good':'held'}">${H.instant?'Confirmed':'On hold'}</span></div>
+    ${H.instant?'':`<div class="nudge info"><span>⏱</span><div>Owner has <b class="num" id="sla"></b> to call you. If not, the hold is released and we ping the next hostel on your shortlist.</div><button class="btn xs" onclick="simulateNoReply()">Simulate no reply</button></div>`}
+    <div class="timeline">
+      <div class="done"><span></span><div><b>Bed held</b><div class="small muted">${H.name}, room ${room.n}${holdOpt==='trial'?' · trial night':''}</div></div></div>
+      <div class="${H.instant?'done':'now'}"><span></span><div><b>${H.owner} has your number</b><div class="small muted">${H.instant?'Pre-approved by owner':'Owners usually call within '+H.resp+' minutes'}</div></div></div>
+      <div><span></span><div><b>${visitMode} visit, ${visitSlot}</b><div class="small muted">Reschedule any time from My stay</div></div></div>
+      <div><span></span><div><b>Confirm and pay deposit</b><div class="small muted">${fmt(room.rent)} held in Hostelzy escrow, released to owner after you move in</div></div></div>
+      <div><span></span><div><b>Sign agreement and move in</b><div class="small muted">Pre-filled from this hold, e-signed on your phone. Photo handover checklist at move-in.</div></div></div>
+    </div>
+    <div class="label">Owner's number</div>
+    <div class="phone"><span class="num">+91 ${H.phone}</span><button class="btn sm" onclick="copyText('+91 ${H.phone}')">Copy</button></div>
+    <a class="btn wa block" href="https://wa.me/919848021000?text=${encodeURIComponent('Hi, I held bed '+b.id+' at '+H.name+' on Hostelzy. Visiting '+visitSlot+'.')}" target="_blank" rel="noopener">Message ${H.owner.split(' ')[0]} on WhatsApp</a>
+    <div class="row between"><button class="btn sm" onclick="toast('Hold transferred. Your friend gets a WhatsApp link to take over bed ${b.id}.')">Transfer hold to a friend</button><button class="btn sm" onclick="toast('Hold cancelled. Refund, if any, in 2 to 3 days.');closeModal();sel.forEach(x=>{x.state='free';x.mine=false});renderHostel()">Cancel hold</button></div>
+    <p class="tiny muted">Bed-map guarantee: if this bed was not actually free when you arrive, your hold fee is refunded and you get ₹200 credit. Track everything under My stay.</p>
+  </div>`);
+  draw();clearInterval(holdTimer);holdTimer=setInterval(()=>{left=Math.max(0,left-1);sla=Math.max(0,sla-1);draw()},1000);
+  STAY.active=true;STAY.hostel=H;STAY.room=room;STAY.beds=sel;STAY.phase=H.instant?'booked':'held';
+  renderOwner();
+}
+function simulateNoReply(){closeModal();STAY.beds.forEach(x=>{x.state='free';x.mine=false});STAY.active=false;renderHostel();
+  const alt=HOSTELS.find(x=>x.id!==H.id&&x.gender===H.gender)||HOSTELS[1];
+  openModal(`<div class="head"><h3>Hold released</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p>${H.owner} did not respond within the hour, so we released your hold and lowered this listing in search. Nothing was charged.</p><div class="panel soft"><div class="body"><b>Next on your shortlist</b><div class="small muted">${alt.name}, ${alt.lm[LM]} min to ${LM}, replies in ${alt.resp} min</div><button class="btn primary sm" style="margin-top:8px" onclick="closeModal();openHostel(${alt.id})">Open ${alt.name.split(' ')[0]}</button></div></div></div>`)}
+
+/* ================= MY STAY (resident app) ================= */
+const STAY={active:false,phase:'resident',tab:'home',parent:false};
+function stab(t){STAY.tab=t;renderStay()}
+function renderStay(){
+  const v=document.getElementById('v-stay');const h=STAY.hostel||HOSTELS[0];const room=STAY.room||h.rooms.find(r=>r.n===204);const bed=STAY.beds&&STAY.beds[0]||room.beds[0];
+  const phase=STAY.active?STAY.phase:'resident';
+  const t=STAY.tab;
+  const nav=`<div class="appbar">${[['home','Home'],['rent','Rent and bills'],['help','Complaints'],['more','More']].map(([k,l])=>`<button class="${t===k?'on':''}" onclick="stab('${k}')">${l}</button>`).join('')}</div>`;
+  let body='';
+  if(t==='home')body=`
+    <div class="grid2">
+      <div class="stack">
+        <div class="panel"><div class="body stack tight"><div class="label">${phase==='resident'?'Your bed':phase==='booked'?'Booked, moving in':'On hold'}</div><div class="row between"><div><div class="big" style="font-family:var(--display);font-size:26px;font-weight:800">Bed ${bed.id}</div><div class="small muted">${h.name}, ${SHARES[room.share]}, ${floorName(room.floor)}</div></div><span class="pill ${phase==='held'?'held':'good'}">${phase==='held'?'Hold active':phase==='booked'?'Move-in 1 Oct':'Since 14 Mar'}</span></div>
+          ${phase!=='resident'?`<div class="timeline"><div class="done"><span></span><div><b>Bed held</b></div></div><div class="${phase==='booked'?'done':'now'}"><span></span><div><b>Owner confirmed</b></div></div><div class="${phase==='booked'?'now':''}"><span></span><div><b>Visit: ${bed.visit||'Tomorrow 6 pm'}</b> <button class="btn xs" onclick="toast('Pick a new slot on WhatsApp or here')">Reschedule</button></div></div><div><span></span><div><b>Deposit to escrow</b></div></div><div><span></span><div><b>Move-in handover</b></div></div></div>`:`<div class="row" style="margin-top:6px"><button class="btn sm" onclick="handoverModal()">Move-in handover photos</button><button class="btn sm" onclick="toast('Agreement PDF opened. E-signed 14 Mar.')">Agreement</button></div>`}
+        </div></div>
+        <div class="panel"><div class="head"><h3>Today's food</h3><span class="small muted">Thursday</span></div><div class="body stack tight">${['Breakfast','Lunch','Dinner'].map((m,i)=>`<div class="row between"><span>${m}: ${MENU.Thu[i]}</span><span class="row" style="gap:4px"><span class="stars small">${stars(MENU_RT.Thu[i])}</span><button class="btn xs" onclick="toast('Thanks, rated '+'${m}'.toLowerCase())">Rate</button></span></div>`).join('')}</div></div>
+        <div class="panel"><div class="head"><h3>Room ${room.n} board</h3></div><div class="body stack tight small">
+          <div class="row between"><span>Sai and Arjun leaving 8:40 am to Mindspace, auto share</span><button class="btn xs" onclick="toast('Joined. Meet at the gate 8:40.')">Join</button></div>
+          <div class="row between"><span>Electricity Sept: ₹1,260 for room, your share ₹420</span><span class="pill">Split 3 ways</span></div>
+          <div class="row between"><span>Water cut Sat 10 am to 1 pm, tank cleaning</span><span class="pill info">Owner notice</span></div>
+        </div></div>
+      </div>
+      <div class="stack">
+        <div class="panel"><div class="head"><h3>Quick actions</h3></div><div class="body stack tight">
+          <button class="btn block" onclick="stab('rent')">Pay rent for October</button>
+          <button class="btn block" onclick="swapModal()">Ask for a room or bed swap</button>
+          <button class="btn block" onclick="vacateModal()">Give vacate notice</button>
+          <button class="btn block" onclick="toast('Guest bed requested for 2 nights, ₹600. Owner confirms on WhatsApp.')">Book a parent guest bed</button>
+          <button class="btn block sos" onclick="sosModal()">SOS</button>
+        </div></div>
+        <div class="panel soft"><div class="body stack tight small"><b>Parent view</b><div class="muted">Your parent can see rent status, the hostel's verification and the warden's number. Nothing else.</div><button class="btn sm" onclick="renderParent();go('parent')">Open parent view</button><button class="btn sm" onclick="toast('Invite sent to +91 94XXX XXXXX')">Invite a parent</button></div></div>
+      </div>
+    </div>`;
+  if(t==='rent')body=`
+    <div class="grid2">
+      <div class="panel"><div class="head"><h3>October</h3><span class="pill due">Due 5 Oct</span></div><div class="body stack">
+        <div class="calc"><div><span>Rent, bed ${bed.id}</span><b class="num">${fmt(disc(room.rent)+(bed.extra||0))}</b></div><div><span>Electricity, your share</span><b class="num">₹420</b></div><div><span>Extra: guest bed 2 nights</span><b class="num">₹600</b></div><div class="tot"><span>Total</span><span class="num">${fmt(disc(room.rent)+(bed.extra||0)+1020)}</span></div></div>
+        <div class="row">${['UPI','Card','Net banking'].map((m,i)=>`<button class="chip ${i===0?'on':''}">${m}</button>`).join('')}</div>
+        <button class="btn primary block" onclick="toast('Paid. Receipt sent to you and the owner on WhatsApp.')">Pay ${fmt(disc(room.rent)+(bed.extra||0)+1020)}</button>
+        <p class="tiny muted">Autopay on the 3rd is available. Your on-time streak is 6 months, which counts toward your tenant reliability score.</p>
+      </div></div>
+      <div class="stack">
+        <div class="panel"><div class="head"><h3>Deposit</h3><span class="pill good">In escrow</span></div><div class="body small"><div class="calc"><div><span>Paid 14 Mar</span><b class="num">${fmt(room.rent)}</b></div><div><span>Held by</span><b>Hostelzy, released to you on vacate minus agreed deductions</b></div></div></div></div>
+        <div class="panel"><div class="head"><h3>Receipts and history</h3></div><div class="body stack tight small">${['Sep 2026','Aug 2026','Jul 2026','Jun 2026'].map(m=>`<div class="row between"><span>${m} rent, ${fmt(disc(room.rent))}</span><span class="row" style="gap:6px"><span class="pill paid">Paid</span><button class="btn xs" onclick="toast('Receipt downloaded')">Receipt</button></span></div>`).join('')}</div></div>
+        <div class="panel soft"><div class="body small"><b>Your renting history</b><div class="muted">2 stays through Hostelzy, both deposits returned, 100% on time. Shared with the next owner only if you choose.</div></div></div>
+      </div>
+    </div>`;
+  if(t==='help')body=`
+    <div class="grid2">
+      <div class="panel"><div class="head"><h3>Raise a complaint</h3></div><div class="body stack">
+        <div class="row">${['WiFi','Water','Electricity','Cleaning','Food','Geyser','Other'].map((c,i)=>`<button class="chip ${i===0?'on':''}">${c}</button>`).join('')}</div>
+        <textarea rows="3" placeholder="What is wrong? Add a photo if it helps."></textarea>
+        <input type="file" accept="image/*" style="width:auto">
+        <button class="btn primary" onclick="toast('Complaint sent. Owner and warden notified on WhatsApp.')">Send to owner</button>
+        <p class="tiny muted">Unresolved for 72 hours? Escalate to Hostelzy and we mediate.</p>
+      </div></div>
+      <div class="panel"><div class="head"><h3>Open tickets</h3></div><div class="body">
+        <div class="ticket"><div><b>Geyser not heating, bathroom 2</b><div class="small muted">Raised 26 Sep · plumber booked for Tue</div></div><span class="pill warn">In progress</span></div>
+        <div class="ticket"><div><b>WiFi drops after 11 pm</b><div class="small muted">Raised 20 Sep · router replaced</div></div><span class="pill good">Resolved</span></div>
+        <div class="ticket"><div><b>Deposit deduction dispute, previous PG</b><div class="small muted">Hostelzy mediation · owner agreed to refund ₹2,000</div></div><span class="pill good">Closed</span></div>
+      </div></div>
+    </div>`;
+  if(t==='more')body=`
+    <div class="grid3">
+      <div class="panel"><div class="head"><h3>Perks near ${h.area}</h3></div><div class="body">
+        <div class="perk"><div>Amma's Tiffins, 200 m<div class="small muted">Monthly tiffin, dinner</div></div><span class="pill good">₹2,200, 15% off</span></div>
+        <div class="perk"><div>UClean laundry<div class="small muted">Pickup Tue and Fri</div></div><span class="pill good">₹399/month</span></div>
+        <div class="perk"><div>Sri Balaji Kirana<div class="small muted">Free delivery above ₹300</div></div><span class="pill good">5% off</span></div>
+        <div class="perk"><div>Cult gym, Madhapur<div class="small muted">Resident pass</div></div><span class="pill good">₹999, first month</span></div>
+      </div></div>
+      <div class="stack">
+        <div class="panel"><div class="head"><h3>Refer a friend</h3></div><div class="body stack tight small"><div class="phone"><span>RAHUL500</span><button class="btn sm" onclick="copyText('RAHUL500')">Copy</button></div><div class="muted">They get ₹500 off the first month, you get ₹500 off next rent when they move in.</div></div></div>
+        <div class="panel"><div class="head"><h3>Hostelzy Plus</h3><span class="pill">₹99/month</span></div><div class="body small stack tight"><div>No hold fees, first on waitlists, ₹200 extra off when you move.</div><button class="btn sm" onclick="toast('Plus activated')">Join Plus</button></div></div>
+      </div>
+      <div class="stack">
+        <div class="panel"><div class="head"><h3>Emergency</h3></div><div class="body small stack tight"><div class="row between"><span>Warden, Ravi</span><b class="num">98XXX 11111</b></div><div class="row between"><span>Image Hospital, 1.2 km</span><b class="num">040 2XXX XXXX</b></div><div class="row between"><span>Your contact, Amma</span><b class="num">94XXX XXXXX</b></div><button class="btn sos block" onclick="sosModal()">SOS: alert all three</button></div></div>
+        <div class="panel"><div class="head"><h3>Submit live data</h3></div><div class="body small stack tight"><div class="row between"><span>WiFi speed test</span><button class="btn xs" onclick="toast('68 Mbps recorded, thanks')">Run</button></div><div class="row between"><span>Log a power cut</span><button class="btn xs" onclick="toast('Logged: power cut now')">Log</button></div><div class="row between"><span>Rate water this week</span><button class="btn xs" onclick="toast('Recorded')">Rate</button></div></div></div>
+        <div class="panel"><div class="head"><h3>Bed history</h3></div><div class="body small stack tight"><div><b>${h.name}</b>, bed ${bed.id}<div class="muted">Mar 2026 to now</div></div><div><b>Balaji Gents Hostel</b>, bed 302-C<div class="muted">Jul 2025 to Feb 2026 · deposit returned in 6 days</div></div></div></div>
+      </div>
+    </div>`;
+  v.innerHTML=`<div class="row between" style="margin-bottom:14px"><div><div class="label">My stay</div><h1 style="font-size:28px">Hi Rahul</h1></div><span class="small muted">${h.name} · warden Ravi, 98XXX 11111</span></div>${nav}<div style="margin-top:14px">${body}</div>`;
+}
+function swapModal(){const room=STAY.room||HOSTELS[0].rooms[3];openModal(`<div class="head"><h3>Swap request</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p class="small muted">Ask to move when a bed you prefer frees up. Owner approves in one tap.</p><div class="check"><label><input type="radio" name="sw" checked>Lower bunk or window bed in my room</label><label><input type="radio" name="sw">A 2-sharing room, same floor</label><label><input type="radio" name="sw">Single room, any floor (+${fmt(6000)}/month)</label><label><input type="radio" name="sw">Quieter room, away from the road</label></div><button class="btn primary block" onclick="closeModal();toast('Swap request sent. You are first in line for a matching bed.')">Send request</button></div>`)}
+function vacateModal(){openModal(`<div class="head"><h3>Give vacate notice</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><label class="small" style="font-weight:600">Leaving on<input type="date" value="2026-10-31"></label><div class="panel soft"><div class="body small stack tight"><div class="row between"><span>Notice period</span><b>30 days, ends 31 Oct</b></div><div class="row between"><span>Deposit refund</span><b>Auto-released 7 Nov, minus agreed deductions</b></div><div class="row between"><span>List my bed early</span><label class="row" style="gap:6px"><input type="checkbox" checked>Yes, ₹500 credit if it fills before I leave</label></div></div></div><button class="btn primary block" onclick="closeModal();toast('Notice given. Your bed shows as free from 31 Oct and the waitlist is notified.')">Confirm notice</button></div>`)}
+function sosModal(){openModal(`<div class="head"><h3 style="color:var(--danger)">SOS</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p>Alerts the warden, your emergency contact and Hostelzy support with your hostel and room. Calls are placed by you, from your phone.</p><div class="row"><button class="btn sos" onclick="closeModal();toast('Alert sent to warden, Amma and Hostelzy support')">Send alert now</button><button class="btn" onclick="closeModal()">Not now</button></div></div>`)}
+function handoverModal(){openModal(`<div class="head"><h3>Move-in handover</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p class="small muted">Photos taken at move-in, signed by you and the warden. Used when deposit deductions are discussed.</p><div class="photos"><div>${art(90,'Bed and mattress')}</div><div>${art(91,'Locker')}</div><div>${art(92,'Bathroom')}</div><div>${art(93,'Fan, light, plug points')}</div></div><div class="check"><label><input type="checkbox" checked disabled>Mattress: no stains</label><label><input type="checkbox" checked disabled>Locker key handed over</label><label><input type="checkbox" checked disabled>Fan and light working</label><label><input type="checkbox" checked disabled>Signed by Rahul and warden Ravi, 14 Mar</label></div></div>`)}
+
+/* ================= PARENT VIEW ================= */
+function renderParent(){const h=STAY.hostel||HOSTELS[0];document.getElementById('v-parent').innerHTML=`
+  <div class="crumb"><button onclick="go('stay')">Back to Rahul's view</button></div>
+  <div class="row between" style="margin-bottom:14px"><div><div class="label">Parent view, read only</div><h1 style="font-size:28px">Rahul's stay</h1></div><span class="pill good">Hostel inspected by Hostelzy</span></div>
+  <div class="grid3">
+    <div class="panel"><div class="head"><h3>Rent</h3></div><div class="body stack tight small"><div class="row between"><span>September</span><span class="pill paid">Paid on 3 Sep</span></div><div class="row between"><span>October</span><span class="pill due">Due 5 Oct</span></div><div class="row between"><span>Deposit</span><span class="pill good">Safe in escrow</span></div><button class="btn sm" onclick="toast('Paid on Rahul\\'s behalf. Receipt sent to both of you.')">Pay October for Rahul</button></div></div>
+    <div class="panel"><div class="head"><h3>The hostel</h3></div><div class="body stack tight small"><b>${h.name}</b><div>${h.area}, Hyderabad</div><div>Safety score <b>${h.safety}</b> · CCTV, biometric gate, warden on site</div><div>Last inspected: Aug 2026</div><div>Food: included, veg and non-veg</div></div></div>
+    <div class="panel"><div class="head"><h3>People to call</h3></div><div class="body stack tight small"><div class="row between"><span>Warden, Ravi</span><b class="num">98XXX 11111</b></div><div class="row between"><span>Owner, ${h.owner}</span><b class="num">${h.phone}</b></div><div class="row between"><span>Hostelzy support</span><b class="num">1800 XXX XXXX</b></div><div class="muted" style="margin-top:6px">Available in Telugu, Hindi and English. Rahul's location, messages and visitors are never shared here.</div></div></div>
+  </div>`}
+/* ================= OWNER ================= */
+let OH=HOSTELS[0];
+function otab(t){tabs('#v-owner','ot','ot-',t);go('owner');if(t==='rooms')renderBuilder()}
+function findBed(id){for(const r of OH.rooms){const b=r.beds.find(x=>x.id===id);if(b)return{b,r}}}
+function renderOwner(){
+  const h=OH;let occ=0,held=0,free=0,due=0,dueAmt=0,tot=0,vac=0;const holds=[],rent=[],tenants=[];
+  h.rooms.forEach(r=>r.beds.forEach(b=>{tot++;
+    if(b.state==='booked'||b.state==='vacate'){occ++;rent.push({b,r});tenants.push({b,r});if(b.paid!=='paid'){due++;dueAmt+=r.rent}}
+    if(b.state==='vacate')vac++;if(b.state==='held'){held++;holds.push({b,r})}if(b.state==='free')free++;
+  }));
+  document.getElementById('o-name').textContent=h.name;document.getElementById('o-sub').textContent=`${h.area}, Hyderabad · ${h.floors} floors · ${tot} beds · replies in ${h.resp} min`;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><span class="label">Occupied</span><b class="num">${occ} <span style="font-size:15px;color:var(--muted);font-weight:500">/ ${tot}</span></b><span class="small muted">${Math.round(occ/tot*100)}%, area average 88%</span></div>
+    <div class="kpi"><span class="label">Free beds</span><b class="num">${free}</b><span class="small muted">costing about ${fmt(free*8500)} a month</span></div>
+    <div class="kpi ${held?'warn':''}"><span class="label">Holds to call back</span><b class="num">${held}</b><span class="small muted">${held?'oldest waiting 40 min':'all answered'}</span></div>
+    <div class="kpi ${due?'warn':''}"><span class="label">Rent pending</span><b class="num">${fmt(dueAmt)}</b><span class="small muted">${due} tenants</span></div>`;
+  document.getElementById('o-nudges').innerHTML=`
+    <div class="nudge"><span>₹</span><div>Your 3-sharing at ${fmt(h.price[3])} is 12% above the Madhapur average. ${free} beds have been empty 40+ days. Dropping to ${fmt(h.price[3]-500)} would put you in the top 3 results.</div><button class="btn xs" onclick="toast('Price updated to '+fmt(OH.price[3]-500)+' and pushed to 214 waitlisted tenants')">Apply</button></div>
+    ${vac?`<div class="nudge info"><span>↻</span><div>${vac} tenants have given notice. Their beds are already listed as "free from date" and ${vac*7} waitlisted tenants were pinged.</div><button class="btn xs" onclick="otab('map')">See</button></div>`:''}`;
+
+  /* bookings */
+  document.getElementById('ot-bookings').innerHTML=`<div class="panel"><div class="head"><h3>Holds and offers from Hostelzy</h3><div class="row"><label class="small row" style="gap:6px"><input type="checkbox" ${h.instant?'checked':''} onchange="OH.instant=this.checked;toast(this.checked?'Instant book on: holds confirm without a call':'Instant book off');renderOwner()">Instant book for all free beds</label><span class="small muted">Call within the hour or the hold lapses</span></div></div>
+    <div class="tscroll"><table class="table"><thead><tr><th>Bed</th><th>Tenant</th><th>Time left</th><th>Hold</th><th>Visit</th><th></th></tr></thead><tbody>${holds.length?holds.map(({b,r})=>`<tr><td><b>${b.id}</b><div class="small muted">${SHARES[r.share]} · ${fmt(r.rent)}</div></td><td>${b.name||'Tenant'}<div class="small muted">98XXX XXXXX · ${b.job||'IT professional'}${b.rel?' · reliability '+b.rel:''}</div></td><td class="num small">${b.heldAt==='just now'?'59 min':Math.floor(10+Math.random()*40)+' min'}</td><td><span class="pill held">${b.hold==='day1'?'1 day, ₹299':b.hold==='trial'?'Trial night':'Free 1 hr'}</span></td><td class="small">${b.visit||'Tomorrow 6 pm'}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn sm primary" onclick="toast('Calling ${b.name||'tenant'}')">Call</button><button class="btn sm" onclick="setBed('${b.id}','booked')">Confirm</button><button class="btn sm" onclick="setBed('${b.id}','free')">Release</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No holds right now. New holds appear here and on WhatsApp.</td></tr>'}</tbody></table></div></div>
+    <div class="panel" style="margin-top:14px"><div class="head"><h3>Offers from tenants</h3></div><div class="body"><div class="ticket"><div><b>Sai Teja offers ${fmt(disc(h.price[3])-500)} for 3-sharing</b><div class="small muted">"12-month stay, paying quarterly." Your app rate: ${fmt(disc(h.price[3]))}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn sm primary" onclick="toast('Accepted. Sai is asked to hold a bed at the agreed rate.')">Accept</button><button class="btn sm" onclick="toast('Declined politely on WhatsApp')">Decline</button></div></div></div></div>`;
+
+  /* bed map */
+  document.getElementById('ot-map').innerHTML=`<div class="panel"><div class="head"><h3>Who is where</h3><div class="row"><div class="legend" style="margin:0"><span><i></i>Free</span><span><i class="h"></i>Held</span><span><i class="b"></i>Occupied</span><span><i class="v"></i>Vacating</span></div><button class="btn sm" onclick="bulkModal()">Bulk-create rooms</button><button class="btn sm" onclick="bedPriceModal()">Bed-level pricing</button></div></div>
+    <div class="body bedmap">${Array.from({length:h.floors},(_,f)=>`<div class="floor"><b>${floorName(f)}</b><div class="roomrow">${h.rooms.filter(r=>r.floor===f).map(r=>`<button class="mroom" onclick="roomModal(${r.n})"><b>${r.n} <span class="muted" style="font-weight:400">${SHARES[r.share].replace('-sharing','')}${r.ac?' AC':''}</span></b><div class="dots">${r.beds.map(b=>`<i class="${b.state}" title="${b.id}: ${b.state}${b.name?' · '+b.name:''}"></i>`).join('')}</div></button>`).join('')}</div></div>`).join('')}</div>
+    <div class="body small muted" style="border-top:1px solid var(--line)">Tap a room to mark a bed free, take it off the market, or record a vacate notice. Vacate notices relist the bed automatically as "free from date" and ping the waitlist.</div></div>`;
+
+  /* rent */
+  const sorted=rent.slice().sort((a,b)=>(a.b.paid==='overdue'?0:a.b.paid==='due'?1:2)-(b.b.paid==='overdue'?0:b.b.paid==='due'?1:2));
+  const collected=rent.filter(x=>x.b.paid==='paid').reduce((a,x)=>a+x.r.rent,0);
+  document.getElementById('ot-rent').innerHTML=`
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="panel"><div class="body"><span class="label">Collected, September</span><b style="display:block;font-family:var(--display);font-size:26px" class="num">${fmt(collected)}</b><div class="bar"><i style="width:${Math.round(collected/(collected+dueAmt)*100)}%"></i></div><span class="small muted num">${fmt(dueAmt)} pending from ${due}</span></div></div>
+      <div class="panel"><div class="body"><span class="label">Deposits in escrow</span><b style="display:block;font-family:var(--display);font-size:26px" class="num">${fmt(occ*8500)}</b><span class="small muted">Held by Hostelzy, released on vacate minus agreed deductions</span></div></div>
+      <div class="panel soft"><div class="body"><span class="label">Rent advance</span><b style="display:block;font-family:var(--display);font-size:26px" class="num">${fmt(Math.round(collected*0.6/1000)*1000)}</b><span class="small muted">Available today against October collections, 1.5% flat</span><br><button class="btn sm" style="margin-top:6px" onclick="toast('Advance requested. Credited to your bank in 24 hours.')">Request advance</button></div></div>
+    </div>
+    <div class="panel"><div class="head"><h3>September rent</h3><div class="row"><button class="btn sm" onclick="meterModal()">Log electricity meter</button><button class="btn sm wa" onclick="toast('Reminder sent to every overdue tenant on WhatsApp with UPI link')">Remind all overdue</button></div></div>
+    <div class="tscroll"><table class="table"><thead><tr><th>Bed</th><th>Tenant</th><th>Rent</th><th>Electricity</th><th>Status</th><th></th></tr></thead><tbody>${sorted.slice(0,16).map(({b,r})=>`<tr><td><b>${b.id}</b></td><td>${b.name}${b.state==='vacate'?`<div class="small" style="color:var(--vacate)">Vacating ${b.from}</div>`:''}</td><td class="num">${fmt(r.rent+(b.extra||0))}</td><td class="num small">${fmt(Math.round((r.ac?900:350)))} <span class="muted">/ ${r.share}</span></td><td><span class="pill ${b.paid}">${b.paid==='paid'?'Paid via UPI':b.paid==='due'?'Due 5 Sep':'Overdue'}</span></td><td>${b.paid==='paid'?`<button class="btn xs" onclick="toast('Receipt resent')">Receipt</button>`:`<div class="row" style="flex-wrap:nowrap"><button class="btn sm" onclick="markPaid('${b.id}')">Mark paid</button><button class="btn sm wa" onclick="toast('Reminder sent to ${b.name} on WhatsApp')">Remind</button></div>`}</td></tr>`).join('')}</tbody></table></div>
+    <div class="body small muted" style="border-top:1px solid var(--line)">Each bed pays separately; you see one room. Rent paid in-app lands in your account next morning with a receipt to both sides.</div></div>`;
+
+  /* tenants */
+  document.getElementById('ot-tenants').innerHTML=`
+    <div class="row" style="margin-bottom:12px"><button class="btn sm" onclick="checkinModal()">Check-in QR and visitor log</button><button class="btn sm" onclick="toast('Broadcast sent to all ${occ} residents on WhatsApp')">Broadcast a message</button></div>
+    <div class="panel"><div class="head"><h3>Residents</h3><span class="small muted">${occ} people</span></div>
+    <div class="tscroll"><table class="table"><thead><tr><th>Bed</th><th>Tenant</th><th>KYC</th><th>Agreement</th><th>Police form</th><th>Reliability</th><th></th></tr></thead><tbody>${tenants.slice(0,14).map(({b,r},i)=>`<tr><td><b>${b.id}</b></td><td>${b.name}<div class="small muted">${b.job}</div></td><td><span class="pill ${i%5===3?'warn':'good'}">${i%5===3?'Pending':'Aadhaar ok'}</span></td><td><span class="pill ${i%7===5?'warn':'good'}">${i%7===5?'Unsigned':'E-signed'}</span></td><td>${i%7===5?`<button class="btn xs" onclick="toast('Form pre-filled from KYC. Print and submit at Madhapur PS.')">Generate</button>`:'<span class="pill good">Filed</span>'}</td><td class="num">${b.rel}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn xs" onclick="toast('Move-in handover photos for ${b.id} opened')">Handover</button><button class="btn xs" onclick="toast('Vacate notice recorded for ${b.id}, bed relisted')">Vacate</button></div></td></tr>`).join('')}</tbody></table></div>
+    <div class="body small muted" style="border-top:1px solid var(--line)">Reliability is rent punctuality across Hostelzy stays, shared with the tenant's consent. It never includes anything personal.</div></div>`;
+
+  /* menu */
+  document.getElementById('ot-menu').innerHTML=`<div class="grid2"><div class="panel"><div class="head"><h3>Weekly menu</h3><div class="row"><button class="btn sm" onclick="toast('Photo of your whiteboard read. 21 dishes recognised, 2 to confirm.')">Upload whiteboard photo</button></div></div>
+    <div class="body">${menuHTML(true,true)}<div class="row" style="margin-top:12px"><button class="btn primary" onclick="toast('Menu saved and updated on your listing')">Save menu</button><span class="small muted">Tap a cell to edit. Ratings come from residents.</span></div></div></div>
+    <div class="stack"><div class="panel"><div class="head"><h3>Mess headcount</h3><span class="small muted">From the bed map</span></div><div class="body stack tight small"><div class="row between"><span>Tonight's dinner</span><b class="num">${occ-3} eating, 3 opted out</b></div><div class="row between"><span>Veg / non-veg</span><b class="num">${Math.round((occ-3)*0.6)} / ${occ-3-Math.round((occ-3)*0.6)}</b></div><div class="row between"><span>Per-head cost this month</span><b class="num">₹2,640</b></div><button class="btn sm" onclick="toast('Headcount sent to cook Lakshmamma on WhatsApp')">Send to cook</button></div></div>
+    <div class="panel soft"><div class="body small"><b>Lowest rated this month</b><div class="muted">Saturday lunch (3.5). Residents mention "too oily". Thursday and Sunday biryani carry your food score.</div></div></div></div></div>`;
+
+  /* rooms */
+  document.getElementById('ot-rooms').innerHTML=`<div class="grid2">
+    <div class="panel"><div class="head"><h3>Add a room</h3></div><div class="body stack">
+      <div class="form"><label>Floor<select id="b-floor">${Array.from({length:h.floors},(_,f)=>`<option ${f===1?'selected':''}>${floorName(f)}</option>`).join('')}</select></label><label>Room number<input id="b-num" value="${Math.max(...h.rooms.map(r=>r.n))+1}"></label><label>Rent per bed<input id="b-rent" type="number" value="8500" class="num"></label><label>AC<select id="b-ac"><option>No</option><option>Yes</option></select></label></div>
+      <div class="label">Pick the layout that matches</div><div class="tpl" id="b-tpl"></div>
+      <div class="label">Or arrange beds yourself</div><div class="dragbox" id="dragbox"></div><p class="tiny muted">Drag beds to match the room. Window is at the top, door at the bottom.</p>
+      <div class="drop"><b>Still not right?</b><br>Draw the room on paper, photograph it, and upload. Our model turns the sketch into a bed grid in seconds; a captain confirms it within 24 hours.<br><input type="file" id="b-file" accept="image/*" style="margin-top:10px;width:auto" onchange="sketchModal()"></div>
+      <div class="row"><button class="btn primary" onclick="addRoom()">Add room</button><button class="btn" onclick="bulkModal()">Bulk-create a floor</button><button class="btn" onclick="toast('Photo guide opened: daylight, bathroom included, no filters, 4 shots per room')">Photo guide</button></div>
+    </div></div>
+    <div class="panel"><div class="head"><h3>Preview</h3><span class="small muted" id="b-cap"></span></div><div class="body"><div class="roomplan"><div class="win"></div><div class="door"></div><div class="bath"></div><div class="bedgrid" id="b-preview"></div></div><p class="small muted" style="margin-top:10px">Tenants see this exact layout and tap a bed to hold it.</p></div></div>
+  </div>`;
+
+  /* ops */
+  document.getElementById('ot-ops').innerHTML=`<div class="grid3">
+    <div class="panel"><div class="head"><h3>Staff</h3><button class="btn xs" onclick="toast('Invite sent on WhatsApp')">Add</button></div><div class="body stack tight small">
+      <div class="row between"><div><b>Ravi</b>, warden<div class="muted">Warden app: check-ins, complaints, rent paid</div></div><span class="pill good">Active</span></div>
+      <div class="row between"><div><b>Lakshmamma</b>, cook<div class="muted">Gets headcount daily · ₹14,000/month</div></div><span class="pill good">Salary paid</span></div>
+      <div class="row between"><div><b>Suresh</b>, cleaner<div class="muted">₹8,000/month · attendance 24/26</div></div><span class="pill warn">Salary due</span></div>
+    </div></div>
+    <div class="panel"><div class="head"><h3>Complaints</h3><span class="pill warn">2 open</span></div><div class="body">
+      <div class="ticket"><div><b>Geyser, bathroom 2</b><div class="small muted">Rahul, 204-A · 2 days</div></div><button class="btn xs" onclick="toast('Marked resolved, Rahul notified')">Resolve</button></div>
+      <div class="ticket"><div><b>Water pressure, 3rd floor</b><div class="small muted">3 residents · 5 days</div></div><button class="btn xs" onclick="toast('Plumber from vendor directory booked for Tue')">Book plumber</button></div>
+      <div class="ticket"><div><b>WiFi drops</b><div class="small muted">Resolved 22 Sep</div></div><span class="pill good">Closed</span></div>
+    </div></div>
+    <div class="stack"><div class="panel"><div class="head"><h3>Broadcast</h3></div><div class="body stack tight"><textarea rows="2" placeholder="Water cut Saturday 10 am to 1 pm, tank cleaning."></textarea><div class="row"><button class="btn sm wa" onclick="toast('Sent to all ${occ} residents on WhatsApp')">Send to all residents</button><span class="tiny muted">Telugu and Hindi versions attached automatically</span></div></div></div>
+    <div class="panel"><div class="head"><h3>Vendors near Madhapur</h3></div><div class="body stack tight small"><div class="row between"><span>Srinivas, plumber · ★ 4.7 by 12 owners</span><button class="btn xs" onclick="toast('Booked')">Book</button></div><div class="row between"><span>Ahmed, electrician · ★ 4.5 by 9 owners</span><button class="btn xs" onclick="toast('Booked')">Book</button></div><div class="row between"><span>Sai Mess Contractors · ₹2,400/head</span><button class="btn xs" onclick="toast('Quote requested')">Quote</button></div><div class="row between"><span>Kumar, RO service · ★ 4.8</span><button class="btn xs" onclick="toast('Booked')">Book</button></div></div></div></div>
+  </div>`;
+
+  /* expenses */
+  document.getElementById('ot-money').innerHTML=`<div class="grid2">
+    <div class="panel"><div class="head"><h3>September P&L</h3><button class="btn xs" onclick="toast('Statement exported for your accountant')">Export</button></div><div class="body"><div class="calc"><div><span>Rent collected</span><b class="num">${fmt(collected)}</b></div><div><span>Hold and lead fees from Hostelzy</span><b class="num">₹0 (Pro plan)</b></div><div><span>Food (${occ} heads × ₹2,640)</span><b class="num">-${fmt(occ*2640)}</b></div><div><span>Staff salaries</span><b class="num">-₹30,000</b></div><div><span>Electricity (own meter)</span><b class="num">-₹18,400</b></div><div><span>Water tankers</span><b class="num">-₹6,000</b></div><div><span>Repairs</span><b class="num">-₹4,200</b></div><div><span>Hostelzy Pro</span><b class="num">-${fmt(tot*50)}</b></div><div class="tot"><span>Net</span><span class="num">${fmt(collected-occ*2640-30000-18400-6000-4200-tot*50)}</span></div></div></div></div>
+    <div class="stack"><div class="panel"><div class="head"><h3>Add an expense</h3></div><div class="body form"><label>Category<select><option>Food</option><option>Staff</option><option>Electricity</option><option>Water</option><option>Repairs</option><option>Other</option></select></label><label>Amount<input type="number" placeholder="₹" class="num"></label><label class="full">Note<input placeholder="e.g. Geyser replacement, bathroom 2"></label><div class="full"><button class="btn primary sm" onclick="toast('Expense recorded')">Add</button></div></div></div>
+    <div class="panel soft"><div class="body small"><b>Deposit ledger</b><div class="muted">${occ} deposits in escrow. 2 refunds due in October (204-C on 12 Oct, 301-A on 15 Oct). Deductions need a photo against the move-in handover.</div></div></div></div>
+  </div>`;
+
+  /* insights */
+  const heat=[['Single',[2,1,0,0]],['2-sharing',[6,8,4,3]],['3-sharing',[9,12,7,5]],['4-sharing',[4,6,9,8]]];
+  document.getElementById('ot-insights').innerHTML=`<div class="grid2">
+    <div class="stack">
+      <div class="panel"><div class="head"><h3>Last 30 days</h3></div><div class="body"><div class="grid3"><div><span class="label">Listing views</span><b style="display:block;font-family:var(--display);font-size:24px" class="num">1,842</b></div><div><span class="label">Holds</span><b style="display:block;font-family:var(--display);font-size:24px" class="num">37</b></div><div><span class="label">Moved in</span><b style="display:block;font-family:var(--display);font-size:24px" class="num">11</b></div></div><p class="small muted" style="margin-top:8px">30% of holds convert. Area average 24%. Your reply time (${h.resp} min) is your biggest advantage.</p></div></div>
+      <div class="panel"><div class="head"><h3>Demand near Madhapur</h3><span class="small muted">Holds per week by rent band</span></div><div class="body"><div class="heat"><div></div><div class="hd">&lt;₹8k</div><div class="hd">₹8-10k</div><div class="hd">₹10-12k</div><div class="hd">&gt;₹12k</div>${heat.map(([n,v])=>`<div class="small">${n}</div>${v.map(x=>`<div class="c" style="background:color-mix(in srgb,var(--accent) ${x*8}%,var(--sunken))">${x}</div>`).join('')}`).join('')}</div><p class="small muted" style="margin-top:8px">3-sharing under ₹10k is where tenants hold fastest. You have ${h.rooms.filter(r=>r.share===3).length} such rooms.</p></div></div>
+    </div>
+    <div class="stack">
+      <div class="panel"><div class="head"><h3>Occupancy forecast</h3><span class="small muted">Next 8 weeks</span></div><div class="body"><div class="spark">${[86,86,84,81,79,83,90,92].map((x,i)=>`<i class="${i>3?'f':''}" style="height:${x}%" title="${x}%"></i>`).join('')}</div><div class="row between small muted" style="margin-top:6px"><span>This week 86%</span><span>Dip mid-Oct (3 notices)</span><span>Nov intake 92%</span></div><p class="small muted" style="margin-top:8px">Shaded weeks are forecast from notice periods, college intake and hiring cycles.</p></div></div>
+      <div class="panel"><div class="head"><h3>Listing quality</h3><span class="score">82</span></div><div class="body stack tight small"><div class="row between"><span>Photos: 4 rooms missing bathroom shot</span><span class="pill warn">-8</span></div><div class="row between"><span>Menu updated this week</span><span class="pill good">+5</span></div><div class="row between"><span>Reply time ${h.resp} min</span><span class="pill good">+10</span></div><div class="row between"><span>Reviews: 61, 4.4 average</span><span class="pill good">+8</span></div><p class="muted">Score decides your search rank alongside price and availability.</p></div></div>
+      <div class="panel soft"><div class="body small"><b>Suggested rent</b><div class="muted">3-sharing: ${fmt(h.price[3]-500)} (you: ${fmt(h.price[3])}). 2-sharing: ${fmt(h.price[2]+300)} (you: ${fmt(h.price[2])}, demand is strong). Based on 22 nearby hostels and your amenities.</div></div></div>
+    </div>
+  </div>`;
+
+  /* grow */
+  document.getElementById('ot-grow').innerHTML=`<div class="grid3">
+    <div class="panel"><div class="head"><h3>Guaranteed-fill offer</h3></div><div class="body stack tight small"><p>Drop 3-sharing by ₹500 for October and we push it to <b class="num">214</b> tenants waitlisted near Madhapur. If fewer than 3 beds fill in 14 days, the month's Pro fee is waived.</p><button class="btn primary sm" onclick="toast('Offer live. Pushed to 214 tenants on WhatsApp.')">Run the offer</button></div></div>
+    <div class="panel"><div class="head"><h3>Syndication</h3></div><div class="body stack tight small"><label class="row between"><span>Stayzz</span><input type="checkbox" checked></label><label class="row between"><span>Magicpin</span><input type="checkbox" checked></label><label class="row between"><span>Google Business Profile</span><input type="checkbox"></label><label class="row between"><span>NoBroker (bed counts only)</span><input type="checkbox"></label><p class="muted">Bed counts sync everywhere; holds still come to you through Hostelzy.</p></div></div>
+    <div class="stack"><div class="panel"><div class="head"><h3>Refer an owner</h3></div><div class="body stack tight small"><div class="phone"><span>ANJANI-PG</span><button class="btn sm" onclick="copyText('ANJANI-PG')">Copy</button></div><div class="muted">They list, you both get a free month of Pro. 2 owners referred so far.</div></div></div>
+    <div class="panel"><div class="head"><h3>Partnerships</h3></div><div class="body stack tight small"><div class="row between"><span>Infosys, Oct intake: 40 freshers near Hitec City</span><button class="btn xs" onclick="toast('You are in the shortlist sent to Infosys HR')">Opt in</button></div><div class="row between"><span>IIIT Hyderabad, Jan batch</span><button class="btn xs" onclick="toast('Opted in')">Opt in</button></div></div></div></div>
+  </div>`;
+
+  /* wa */
+  document.getElementById('ot-wa').innerHTML=`<div class="hgrid">
+    <div class="panel"><div class="head"><h3>Run the hostel without opening the app</h3><span class="pill good">On</span></div><div class="body stack">
+      <p class="muted">Every booking, rent due and vacate notice arrives on WhatsApp in ${h.owner.split(' ')[0]}'s language. Reply with a word and Hostelzy updates the bed map.</p>
+      <div class="wamode">
+        <div class="bubble">New hold on <b>Bed 204-B</b> (3-sharing, ₹8,500).<br>Tenant: Rahul Verma, SDE at Infosys, joining 5 Oct. Visit: tomorrow 6 pm.<br>Call: 98XXX XXXXX<br>Reply <b>OK</b> to confirm or <b>NO</b> to release.<small>Hostelzy · 8:14 pm</small></div>
+        <div class="bubble out">OK<small>You · 8:21 pm</small></div>
+        <div class="bubble">Confirmed. 204-B is booked for Rahul from 5 Oct. Agreement link sent to him. Reply <b>PAID 204B</b> once the deposit reaches escrow.<small>Hostelzy · 8:21 pm</small></div>
+        <div class="bubble">Rent reminder sent to 6 overdue tenants with UPI links. 2 have paid since. Reply <b>PAID</b> + bed for cash payments.<small>Hostelzy · today, 9:00 am</small></div>
+        <div class="bubble out">VACATE 301A 30OCT<small>You · 9:12 am</small></div>
+        <div class="bubble">Done. 301-A shows "free from 30 Oct". 7 waitlisted tenants notified.<small>Hostelzy · 9:12 am</small></div>
+      </div>
+    </div></div>
+    <div class="side panel"><div class="body stack"><h3>Commands</h3><dl class="kv"><dt>OK / NO</dt><dd>Confirm or release a hold</dd><dt>PAID 204B</dt><dd>Mark rent paid for a bed</dd><dt>VACATE 301A 30OCT</dt><dd>Mark a bed free from a date</dd><dt>FULL 204</dt><dd>Take a room off the market</dd><dt>PRICE 3SH 8000</dt><dd>Change a rent</dd><dt>MENU</dt><dd>Link to edit the menu</dd><dt>ALL water cut sat</dt><dd>Broadcast to residents</dd></dl><div class="label">Language</div><div class="row">${['Telugu','Hindi','English'].map((l,i)=>`<button class="chip ${i===0?'on':''}">${l}</button>`).join('')}</div></div></div>
+  </div>`;
+
+  /* chain */
+  document.getElementById('ot-chain').innerHTML=`<div class="chain">${HOSTELS.slice(0,3).map(x=>{const s=stats(x);return `<button class="${x.id===OH.id?'on':''}" onclick="OH=HOSTELS.find(h=>h.id===${x.id});renderOwner();otab('bookings');toast('Switched to '+OH.name)"><b>${x.name}</b><div class="small muted">${x.area} · ${s.tot} beds · ${Math.round((s.tot-s.free-s.vac)/s.tot*100)}% occupied</div><div class="small num" style="color:var(--accent-deep)">${s.free} free · ${x.rooms.reduce((a,r)=>a+r.beds.filter(b=>b.state==='held').length,0)} holds</div></button>`}).join('')}</div>
+    <p class="small muted" style="margin-top:12px">One login for every branch. Managers see only their own hostel; you see all three. Add a branch from "List another hostel".</p>`;
+
+  /* plan */
+  document.getElementById('ot-plan').innerHTML=`<div class="panel"><div class="head"><h3>Your plan</h3><span class="small muted">Priced per bed, billed monthly, cancel anytime</span></div><div class="body"><div class="plan">
+    <div><div class="label">Starter</div><div class="amt">Free</div><ul><li>Listing with bed map, holds, WhatsApp handoff</li><li>WhatsApp mode</li><li>₹500 per bed filled</li></ul><button class="btn block" onclick="toast('Switched to Starter')">Choose Starter</button></div>
+    <div><div class="label">Standard</div><div class="amt">₹25<span style="font-size:14px;font-weight:500;color:var(--muted)"> / bed / month</span></div><ul><li>Everything in Starter</li><li>Rent tracker, reminders, tenants, complaints</li><li>₹250 per bed filled</li><li>Priority in search</li></ul><button class="btn block" onclick="toast('Standard: ${fmt(tot*25)} a month for ${tot} beds')">Choose Standard</button></div>
+    <div class="on"><div class="label">Pro, current</div><div class="amt">₹50<span style="font-size:14px;font-weight:500;color:var(--muted)"> / bed / month</span></div><ul><li>Everything in Standard</li><li>Rent collected in-app, escrow, receipts, agreements</li><li>No per-bed fill fee</li><li>Quarterly hygiene inspection badge, rent advance</li></ul><button class="btn primary block" disabled>Current plan, ${fmt(tot*50)}/month</button></div>
+  </div><p class="small muted" style="margin-top:12px">Payments through Razorpay-style gateway; hold fees settle to Hostelzy, rent settles to you next morning.</p></div></div>`;
+  if(document.getElementById('ot-rooms').classList.contains('on'))renderBuilder();
+}
+function setBed(id,st){const {b}=findBed(id);b.state=st;if(st==='booked'){b.paid='due';toast('Bed '+id+' confirmed. Agreement sent to tenant.')}else{delete b.name;b.mine=false;toast('Bed '+id+' released and back on the market')}renderOwner()}
+function markPaid(id){const {b}=findBed(id);b.paid='paid';toast('Receipt sent to '+b.name);renderOwner()}
+function roomModal(n){const r=OH.rooms.find(x=>x.n===n);openModal(`<div class="head"><h3>Room ${n} · ${SHARES[r.share]}</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack">
+  ${r.beds.map(b=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div><b>${b.id}</b> <span class="pill ${b.state}">${b.state==='vacate'?'Vacating '+b.from:b.state}</span><div class="small muted">${b.name||'Empty'}${b.job?' · '+b.job:''}</div></div><div class="row" style="flex-wrap:nowrap">${b.state==='free'?`<button class="btn xs" onclick="closeModal();setBedState('${b.id}','booked')">Walk-in tenant</button><button class="btn xs" onclick="closeModal();setBedState('${b.id}','off')">Off market</button>`:b.state==='held'?`<button class="btn xs" onclick="closeModal();setBed('${b.id}','booked')">Confirm</button>`:`<button class="btn xs" onclick="closeModal();setBedState('${b.id}','vacate')">Vacate notice</button><button class="btn xs" onclick="closeModal();setBedState('${b.id}','free')">Moved out</button>`}</div></div>`).join('')}
+  <div class="row"><button class="btn sm" onclick="closeModal();toast('Room ${n} taken off the market')">Take room off market</button><button class="btn sm" onclick="closeModal();toast('Photos for room ${n} opened')">Photos</button></div></div>`)}
+function setBedState(id,st){const {b}=findBed(id);if(st==='off'){b.state='booked';b.name='Off market';b.job='Owner use';b.paid='paid';toast('Bed '+id+' hidden from tenants')}else if(st==='booked'){b.state='booked';b.name='Walk-in tenant';b.job='Added by you';b.paid='due';toast('Walk-in recorded on '+id)}else if(st==='vacate'){b.state='vacate';b.from='31 Oct';toast('Bed '+id+' relisted as free from 31 Oct. Waitlist pinged.')}else{b.state='free';delete b.name;toast('Bed '+id+' is free and live')}renderOwner()}
+function bulkModal(){openModal(`<div class="head"><h3>Bulk-create rooms</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><div class="form"><label>Floor<select id="bk-f">${Array.from({length:OH.floors+1},(_,f)=>`<option ${f===OH.floors?'selected':''}>${floorName(f)}</option>`).join('')}</select></label><label>Rooms<input id="bk-r" value="${(OH.floors+1)*100+1}-${(OH.floors+1)*100+6}"></label><label>Sharing<select id="bk-s"><option value="3">3-sharing</option><option value="2">2-sharing</option><option value="4">4-sharing</option><option value="6">6-sharing bunk</option></select></label><label>Rent per bed<input id="bk-p" type="number" value="8500"></label></div><button class="btn primary block" onclick="bulkCreate()">Create rooms</button></div>`)}
+function bulkCreate(){const f=document.getElementById('bk-f').selectedIndex,[a,b]=document.getElementById('bk-r').value.split('-').map(Number),sh=+document.getElementById('bk-s').value,p=+document.getElementById('bk-p').value;let c=0;
+  for(let n=a;n<=(b||a);n++){if(OH.rooms.some(r=>r.n===n))continue;OH.rooms.push({n,floor:f,share:sh,ac:false,rent:p,beds:Array.from({length:sh},(_,i)=>({id:n+'-'+'ABCDEF'[i],letter:'ABCDEF'[i],state:'free',window:i===0,lower:sh===6?i%2===0:true,extra:i===0?300:0}))});c++}
+  if(f>=OH.floors)OH.floors=f+1;OH.rooms.sort((x,y)=>x.n-y.n);closeModal();renderOwner();toast(c+' rooms created and live')}
+function bedPriceModal(){openModal(`<div class="head"><h3>Bed-level pricing</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p class="small muted">Extras on top of the room rent. Tenants see them on each bed while picking.</p><div class="form"><label>Window side<input type="number" value="300" class="num"></label><label>Lower bunk<input type="number" value="500" class="num"></label><label>Near bathroom<input type="number" value="-200" class="num"></label><label>Corner bed<input type="number" value="0" class="num"></label></div><button class="btn primary block" onclick="closeModal();toast('Bed pricing saved')">Save</button></div>`)}
+function meterModal(){openModal(`<div class="head"><h3>Electricity meter</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><div class="form"><label>Floor<select><option>Ground</option><option>1st floor</option><option>2nd floor</option></select></label><label>Reading<input type="number" value="48213" class="num"></label><label class="full">Photo of the meter<input type="file" accept="image/*" style="width:auto"></label></div><div class="panel soft"><div class="body small">Last reading 47,020 on 1 Sep. Units used 1,193 × ₹8 = <b class="num">₹9,544</b>, split across 14 beds on this floor = <b class="num">₹682</b> each, added to October bills.</div></div><button class="btn primary block" onclick="closeModal();toast('Reading saved. Electricity added to each bed\\'s October bill.')">Save and split</button></div>`)}
+function checkinModal(){openModal(`<div class="head"><h3>Gate check-in</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><div class="row" style="gap:16px"><div class="qr"></div><div class="small"><b>Print this at the gate.</b><div class="muted">Residents scan to check in and out. Visitors scan and enter their name and whom they are visiting. The log is kept for 90 days.</div></div></div><div class="label">Visitor log, today</div><div class="ticket"><div>Priya, visiting Sai Teja (203-A)<div class="small muted">In 5:40 pm · common area</div></div><span class="pill info">Inside</span></div><div class="ticket"><div>Courier, for 301-B<div class="small muted">In 2:10 pm · out 2:14 pm</div></div><span class="pill">Left</span></div><div class="ticket"><div>Mr Verma, parent of Rahul (204-A)<div class="small muted">Guest bed booked 2 nights</div></div><span class="pill good">Guest</span></div></div>`)}
+function sketchModal(){openModal(`<div class="head"><h3>Sketch read</h3><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body stack"><p class="small muted">We found 4 beds, a window on the top wall and the door at the bottom. A captain will confirm within 24 hours; until then the room is live with this layout.</p><div class="roomplan"><div class="win"></div><div class="door"></div><div class="bedgrid" style="grid-template-columns:1fr 1fr">${['A','B','C','D'].map(l=>`<div class="bed"><b>Bed ${l}</b><small>Free now<br>${l==='A'?'Window':'Wall'}</small></div>`).join('')}</div></div><div class="row"><button class="btn primary" onclick="closeModal();tplSel=4;renderBuilder();toast('Layout applied to the preview')">Looks right</button><button class="btn" onclick="closeModal();toast('Sent to a captain for manual mapping')">Not quite, send to a captain</button></div></div>`)}
+const TPL=[{k:1,t:'Single',d:'1 bed, private'},{k:2,t:'2-sharing',d:'2 flat beds'},{k:3,t:'3-sharing',d:'3 flat beds'},{k:4,t:'4-sharing',d:'2 by 2'},{k:6,t:'6-sharing bunk',d:'3 bunk pairs'}];
+let tplSel=3;
+function renderBuilder(){
+  const tplEl=document.getElementById('b-tpl');if(!tplEl)return;
+  tplEl.innerHTML=TPL.map(t=>`<button class="${tplSel===t.k?'on':''}" onclick="tplSel=${t.k};renderBuilder()"><b>${t.t}</b><span>${t.d}</span></button>`).join('');
+  const n=document.getElementById('b-num').value;
+  const room={n,share:tplSel,rent:+document.getElementById('b-rent').value,beds:Array.from({length:tplSel},(_,i)=>({id:n+'-'+'ABCDEF'[i],letter:'ABCDEF'[i],state:'free',window:i===0,lower:tplSel===6?i%2===0:true,extra:i===0?300:0}))};
+  const g=gridHTML(room,null,null,false);const el=document.getElementById('b-preview');el.style.gridTemplateColumns=`repeat(${g.cols},1fr)`;el.innerHTML=g.html;
+  document.getElementById('b-cap').textContent=`Room ${n} · ${SHARES[tplSel]} · ${fmt(room.rent)} per bed`;
+  const box=document.getElementById('dragbox');box.innerHTML='';
+  for(let i=0;i<tplSel;i++){const d=document.createElement('div');d.className='dbed';d.textContent='ABCDEF'[i];d.style.left=(20+i*70)+'px';d.style.top=(i%2?120:24)+'px';box.appendChild(d);
+    d.onpointerdown=e=>{d.setPointerCapture(e.pointerId);const ox=e.clientX-d.offsetLeft,oy=e.clientY-d.offsetTop;d.onpointermove=ev=>{d.style.left=Math.max(0,Math.min(box.clientWidth-50,ev.clientX-ox))+'px';d.style.top=Math.max(0,Math.min(box.clientHeight-86,ev.clientY-oy))+'px'};d.onpointerup=()=>{d.onpointermove=null}}}
+  ['b-num','b-rent'].forEach(id=>document.getElementById(id).oninput=renderBuilder);
+}
+function addRoom(){const f=document.getElementById('b-floor').selectedIndex;const n=+document.getElementById('b-num').value;
+  if(OH.rooms.some(r=>r.n===n)){toast('Room '+n+' already exists on your map');return}
+  OH.rooms.push({n,floor:f,share:tplSel,ac:document.getElementById('b-ac').value==='Yes',rent:+document.getElementById('b-rent').value,beds:Array.from({length:tplSel},(_,i)=>({id:n+'-'+'ABCDEF'[i],letter:'ABCDEF'[i],state:'free',window:i===0,lower:tplSel===6?i%2===0:true,extra:i===0?300:0}))});
+  OH.rooms.sort((a,b)=>a.n-b.n);renderOwner();document.getElementById('b-num').value=n+1;renderBuilder();toast('Room '+n+' added. It is live for tenants now.')}
+
+/* ================= HQ ================= */
+function renderHQ(){
+  document.getElementById('v-hq').innerHTML=`
+  <div class="ohead"><div><div class="label">Hostelzy HQ · Hyderabad</div><h1 style="font-size:30px">Operations</h1><p class="muted small">Hitec City cluster, launched Aug 2026 · 38 hostels live · 1,240 beds</p></div><div class="row"><button class="btn" onclick="hqtab('playbook')">Launch next cluster</button></div></div>
+  <div class="hq-kpis">
+    <div class="kpi"><span class="label">Beds live</span><b class="num">1,240</b><span class="small muted">target 2,000 for cluster</span></div>
+    <div class="kpi"><span class="label">Map accuracy</span><b class="num">97.2%</b><span class="small muted">7 guarantee payouts this month</span></div>
+    <div class="kpi"><span class="label">Holds this month</span><b class="num">412</b><span class="small muted">31% moved in</span></div>
+    <div class="kpi"><span class="label">Rent through platform</span><b class="num">₹68L</b><span class="small muted">of ₹1.1 Cr in cluster</span></div>
+    <div class="kpi warn"><span class="label">Open disputes</span><b class="num">4</b><span class="small muted">2 past 72 hours</span></div>
+  </div>
+  <div class="tabs" id="hqtabs" style="margin-top:18px"><button class="on" data-h="verify" onclick="hqtab('verify')">Verification</button><button data-h="trust" onclick="hqtab('trust')">Disputes and moderation</button><button data-h="index" onclick="hqtab('index')">Rent index</button><button data-h="captains" onclick="hqtab('captains')">Captains</button><button data-h="partners" onclick="hqtab('partners')">Partners and API</button><button data-h="playbook" onclick="hqtab('playbook')">City playbook</button></div>
+  <div class="tabpane on" id="hqt-verify"><div class="grid2">
+    <div class="panel"><div class="head"><h3>Inspection queue</h3><span class="pill warn">6 waiting</span></div><div class="body">
+      ${[['Sri Sai Boys PG','Madhapur · new listing, captain Ramesh','Visit Tue'],['Cyber Nest Co-living','Gachibowli · docs verified, wants Inspected badge','Visit Wed'],['Green Leaf Ladies PG','Madhapur · quarterly re-inspection due','Overdue 4 days'],['Balaji Gents Hostel','Ameerpet · hygiene checklist failed kitchen, re-check','Visit Thu']].map(([n,d,s])=>`<div class="queue"><div><b>${n}</b><div class="small muted">${d}</div></div><span class="pill ${s.startsWith('Overdue')?'bad':'info'}">${s}</span><button class="btn xs" onclick="toast('Checklist opened for ${n}')">Checklist</button></div>`).join('')}
+    </div></div>
+    <div class="stack">
+      <div class="panel"><div class="head"><h3>Hostelzy hygiene standard</h3></div><div class="body check small"><label><input type="checkbox" checked>Drinking water tested, RO or municipal</label><label><input type="checkbox" checked>Kitchen: covered storage, gas safety, cook hygiene</label><label><input type="checkbox" checked>Bathrooms: 1 per 4 residents, geyser working</label><label><input type="checkbox">Fire: extinguisher per floor, exits clear</label><label><input type="checkbox" checked>CCTV at entrance, warden on site</label><label><input type="checkbox" checked>Mattresses replaced within 3 years</label></div></div>
+      <div class="panel"><div class="head"><h3>Mystery stays</h3></div><div class="body small stack tight"><div class="row between"><span>Anjani Boys PG · stayed 18 Sep</span><span class="pill good">Matched listing</span></div><div class="row between"><span>Vijaya Residency · stayed 12 Sep</span><span class="pill warn">WiFi 42 vs 100 claimed, fixed</span></div><div class="row between"><span>Balaji Gents · stayed 3 Sep</span><span class="pill bad">Bed 302-C not free as shown</span></div></div></div>
+      <div class="panel"><div class="head"><h3>Fake-listing checks</h3></div><div class="body small stack tight"><div class="row between"><span>Duplicate address, "Royal PG" and "Royal Boys PG"</span><button class="btn xs" onclick="toast('Merged')">Merge</button></div><div class="row between"><span>Photos match a listing in Pune</span><button class="btn xs" onclick="toast('Listing paused, owner asked for originals')">Pause</button></div><div class="row between"><span>₹3,500 3-sharing in Hitec City, 60% below area</span><button class="btn xs" onclick="toast('Captain assigned to verify')">Verify</button></div></div></div>
+    </div>
+  </div></div>
+  <div class="tabpane" id="hqt-trust"><div class="grid2">
+    <div class="panel"><div class="head"><h3>Disputes</h3></div><div class="body">
+      ${[['Deposit deduction ₹4,000, Green Leaf vs Meghana','No handover photos on file. Proposed: refund ₹2,500.','Mediation'],['No-show on paid hold, Vijaya vs Kiran','Tenant says owner never called. Call log shows no call.','Refund + rank penalty'],['Food quality, Balaji Gents, 5 residents','Menu not matching listing 3 days a week.','Owner warned'],['Eviction notice 3 days, Cyber Nest vs Farhan','Agreement says 30 days.','Escalated']].map(([t,d,s])=>`<div class="queue"><div><b>${t}</b><div class="small muted">${d}</div></div><span class="pill ${s==='Escalated'?'bad':'warn'}">${s}</span><button class="btn xs" onclick="toast('Case opened')">Open</button></div>`).join('')}
+    </div></div>
+    <div class="panel"><div class="head"><h3>Review moderation</h3></div><div class="body">
+      ${[['"Worst PG ever" from a number that never held a bed here','Not a verified stayer','Reject'],['5-star review, 3 identical texts from the same device','Suspected owner self-review','Reject'],['Review mentions warden by name with allegation','Hold for owner response','Hold'],['Owner replied to a 2-star review with tenant\'s phone number','Reply removed, owner warned','Done']].map(([t,d,s])=>`<div class="queue"><div><b>${t}</b><div class="small muted">${d}</div></div><span class="pill">${s}</span><button class="btn xs" onclick="toast('Actioned')">Go</button></div>`).join('')}
+      <p class="small muted" style="margin-top:8px">Retaliation rule: an owner cannot end a stay within 60 days of a review without Hostelzy review.</p>
+    </div></div>
+  </div></div>
+  <div class="tabpane" id="hqt-index"><div class="grid2">
+    <div class="panel"><div class="head"><h3>Hyderabad PG rent index, September</h3><button class="btn xs" onclick="toast('Public page updated: hostelzy.in/rent-index/hyderabad')">Publish</button></div><div class="body"><div class="rentidx"><div class="h">Locality</div><div class="h">2-sharing</div><div class="h">3-sharing</div><div class="h">Change</div>
+      ${[['Hitec City',11200,9100,'+2.1%'],['Madhapur',10600,8600,'+1.4%'],['Gachibowli',12400,9800,'+3.0%'],['Kondapur',11300,9000,'+0.8%'],['Ameerpet',7800,6600,'-0.5%']].map(([l,a,b,c])=>`<div>${l}</div><div class="num">${fmt(a)}</div><div class="num">${fmt(b)}</div><div class="num ${c.startsWith('-')?'':''}">${c}</div>`).join('')}</div><p class="small muted" style="margin-top:10px">From 38 live listings and 412 holds. Published monthly; owners benchmark against it, press quotes it, and it ranks for "PG rent Hyderabad".</p></div></div>
+    <div class="panel"><div class="head"><h3>SEO landing pages</h3></div><div class="body stack tight small">${['PG near Mindspace','PG near DLF Cyber City','Hostels near JNTU','Girls PG in Madhapur','PG near Ameerpet with food'].map(p=>`<div class="row between"><span>${p}</span><span class="row" style="gap:6px"><span class="pill good">Live</span><span class="muted num">${Math.floor(400+Math.random()*900)} visits</span></span></div>`).join('')}<p class="muted">Each page shows live bed counts, the rent index for that locality and the top 10 hostels by listing score.</p></div></div>
+  </div></div>
+  <div class="tabpane" id="hqt-captains"><div class="grid2">
+    <div class="panel"><div class="head"><h3>Field captains, Hyderabad</h3><button class="btn xs" onclick="toast('Captain invite sent')">Add</button></div><div class="tscroll"><table class="table"><thead><tr><th>Captain</th><th>Zone</th><th>Hostels onboarded</th><th>Rooms mapped</th><th>Earned this month</th></tr></thead><tbody>${[['Ramesh','Madhapur',14,182,'₹28,400'],['Divya','Kondapur, Gachibowli',11,140,'₹22,100'],['Sameer','Hitec City',9,121,'₹18,900'],['Anjali','Ameerpet',4,52,'₹8,600']].map(r=>`<tr>${r.map((c,i)=>`<td class="${i>1?'num':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="body small muted" style="border-top:1px solid var(--line)">Commission: ₹1,500 per hostel live, ₹100 per room mapped, ₹500 per inspection. Captains use the same app as owners with a mapping mode.</div></div>
+    <div class="panel"><div class="head"><h3>Cluster health, Hitec City</h3></div><div class="body stack tight small"><div><div class="row between"><span>Supply density (target 50 hostels)</span><b class="num">38</b></div><div class="bar"><i style="width:76%"></i></div></div><div><div class="row between"><span>Map accuracy (target 98%)</span><b class="num">97.2%</b></div><div class="bar"><i style="width:97%"></i></div></div><div><div class="row between"><span>Owner reply under 30 min</span><b class="num">71%</b></div><div class="bar"><i class="warn" style="width:71%"></i></div></div><div><div class="row between"><span>Rent through platform</span><b class="num">62%</b></div><div class="bar"><i class="info" style="width:62%"></i></div></div><p class="muted">Cluster is "saturated" at 50 hostels, 98% accuracy, 80% fast replies. Then the playbook moves to Gachibowli.</p></div></div>
+  </div></div>
+  <div class="tabpane" id="hqt-partners"><div class="grid2">
+    <div class="panel"><div class="head"><h3>Colleges and companies</h3></div><div class="body">${[['Infosys, Hyderabad DC','40 freshers, Oct 6','12 hostels opted in, 46 beds pre-blocked'],['IIIT Hyderabad','Jan batch, 120 students','Girls hostels near Gachibowli requested'],['Deloitte USI','Rolling, 10 a month','Wants invoice-based billing'],['JNTU placement cell','Referral partnership','₹200 per student credit']].map(([n,d,s])=>`<div class="queue"><div><b>${n}</b><div class="small muted">${d} · ${s}</div></div><span class="pill good">Active</span><button class="btn xs" onclick="toast('Batch view opened')">Open</button></div>`).join('')}</div></div>
+    <div class="panel"><div class="head"><h3>Availability API and syndication</h3></div><div class="body stack tight small"><div class="phone" style="font-size:13px;font-weight:500"><span>GET /v1/beds?near=Mindspace&gender=girls&max=10000</span><button class="btn xs" onclick="copyText('GET /v1/beds?near=Mindspace')">Copy</button></div><div class="muted">Returns live bed counts and app rent per hostel. Holds always come back to Hostelzy. Keys issued to: Stayzz, Magicpin, Infosys HR portal, IIIT hostel office.</div><div class="row between"><span>Calls this month</span><b class="num">48,210</b></div><div class="row between"><span>Holds attributed to partners</span><b class="num">61</b></div></div></div>
+  </div></div>
+  <div class="tabpane" id="hqt-playbook"><div class="panel"><div class="head"><h3>Cluster launch playbook, 30 days</h3><span class="small muted">Next: Gachibowli, then Whitefield (Bangalore)</span></div><div class="body"><div class="playbook">
+    <div><b>Week 1: captains</b><ul><li>Hire 4 captains from the area</li><li>Walk every street, list all PGs (target 120)</li><li>Owner WhatsApp group in Telugu</li></ul></div>
+    <div><b>Week 2: supply</b><ul><li>Onboard 25 hostels, free photoshoot</li><li>Map every room, hygiene checklist</li><li>Set app discounts with owners</li></ul></div>
+    <div><b>Week 3: demand</b><ul><li>SEO pages live for 5 landmarks</li><li>Referral drive in 3 tech parks</li><li>HR partnerships: 2 companies</li></ul></div>
+    <div><b>Week 4: accuracy</b><ul><li>WhatsApp mode for every owner</li><li>Mystery stays in 10 hostels</li><li>Saturate: 50 hostels, 98% accuracy</li></ul></div>
+  </div></div></div></div>`;
+}
+function hqtab(t){tabs('#v-hq','h','hqt-',t);go('hq')}
+
+/* ================= FEATURE INDEX ================= */
+const FEATURES=[
+[1,'Search bar on dashboard','Find a bed','w',()=>mode('tenant')],[2,'How-it-works flowchart','Find a bed','w',()=>mode('tenant')],[3,'Compressed trust strip','Find a bed','w',()=>mode('tenant')],[4,'No featured stays, live results instead','Find a bed','w',()=>mode('tenant')],[5,'Filters: gender, sharing, AC, food, budget, curfew','Find a bed','w',()=>mode('tenant')],[6,'Availability filter (now / by date)','Find a bed','w',()=>mode('tenant')],[7,'Commute time to named landmarks','Find a bed','w',()=>mode('tenant')],[8,'Map view with bed-count pins','Find a bed','w',()=>{mode('tenant');setView('map')}],[9,'Shortlist and compare','Find a bed','w',()=>mode('tenant')],
+[10,'Photos per room','Hostel page','w',()=>openHostel(1)],[11,'Weekly food menu','Hostel page','w',()=>{openHostel(1);htab('menu')}],[12,'Live availability','Hostel page','w',()=>openHostel(1)],[13,'Floor → room → bed navigation','Hostel page','w',()=>openHostel(1)],[14,'Cinema-style bed grid, 4 states','Hostel page','w',()=>openHostel(1)],[15,'Bed → room photos','Hostel page','w',()=>openHostel(1)],[16,'Bed attributes: bunk, window, bath','Hostel page','w',()=>openHostel(1)],[17,'Sharing options, price-first','Hostel page','w',()=>openHostel(1)],[18,'Move-in cost calculator','Hostel page','w',()=>openHostel(1)],[19,'App discount display','Hostel page','w',()=>openHostel(1)],[20,'Anonymised bed-mates','Hostel page','w',()=>openHostel(1)],[21,'Verified-stayer reviews with sub-ratings','Hostel page','w',()=>{openHostel(1);htab('reviews')}],[22,'House rules and policies','Hostel page','w',()=>{openHostel(1);htab('rules')}],
+[23,'Free 1-hour hold','Booking','w',()=>openHostel(1)],[24,'Paid hold tiers ₹299 / ₹499','Booking','w',()=>openHostel(1)],[25,'Paid trial night','Booking','w',()=>openHostel(1)],[26,'WhatsApp handoff both ways','Booking','w',()=>openHostel(1)],[27,'Owner response SLA, auto-release','Booking','w',()=>openHostel(1)],[28,'Visit scheduling, in person or video','Booking','w',()=>openHostel(1)],[29,'Waitlist for held beds and full rooms','Booking','w',()=>openHostel(1)],[30,'Cancellation and no-show rules','Booking','d',()=>openHostel(1)],[31,'Booking status timeline','Booking','w',()=>openHostel(1)],
+[32,'Have a hostel → contact form','Owner onboarding','w',()=>go('contact')],[33,'Add hostel wizard','Owner onboarding','w',()=>go('contact')],[34,'Room builder: templates','Owner','w',()=>{mode('owner');otab('rooms')}],[35,'Room builder: drag beds or upload sketch','Owner','w',()=>{mode('owner');otab('rooms')}],[36,'Bulk room creation','Owner','w',()=>{mode('owner');otab('map')}],[37,'Physical verification badge','HQ','w',()=>mode('hq')],
+[38,'Bookings summary with call button','Owner','w',()=>{mode('owner');otab('bookings')}],[39,'Occupancy bed map','Owner','w',()=>{mode('owner');otab('map')}],[40,'Rent tracker','Owner','w',()=>{mode('owner');otab('rent')}],[41,'One-tap WhatsApp reminders','Owner','w',()=>{mode('owner');otab('rent')}],[42,'Vacate notice handling','Owner','w',()=>{mode('owner');otab('map')}],[43,'Occupancy and lead analytics','Owner','w',()=>{mode('owner');otab('insights')}],[44,'Staff / warden login','Owner','d',()=>{mode('owner');otab('ops')}],[45,'Expense tracking and P&L','Owner','w',()=>{mode('owner');otab('money')}],[46,'Digital agreement and KYC','Owner','d',()=>{mode('owner');otab('tenants')}],[47,'Menu editor','Owner','w',()=>{mode('owner');otab('menu')}],
+[48,'In-app rent payment with receipts','Payments','d',()=>{mode('stay');stab('rent')}],[49,'Deposit handling and refund tracking','Payments','d',()=>{mode('stay');stab('rent')}],[50,'Owner subscription per bed','Payments','w',()=>{mode('owner');otab('plan')}],[51,'Hold-fee collection','Payments','d',()=>openHostel(1)],[52,'Rent split for shared rooms','Payments','d',()=>{mode('owner');otab('rent')}],
+[53,'Resident app','My stay','w',()=>mode('stay')],[54,'Complaints and maintenance tickets','My stay','w',()=>{mode('stay');stab('help')}],[55,'WhatsApp-first messaging','Owner','w',()=>{mode('owner');otab('wa')}],[56,'Listing syndication','Owner','d',()=>{mode('owner');otab('grow')}],[57,'City and landmark SEO pages','HQ','d',()=>{mode('hq');hqtab('index')}],[58,'Referral credit','My stay','w',()=>{mode('stay');stab('more')}],[59,'College / company partnerships','HQ','d',()=>{mode('hq');hqtab('partners')}],[60,'Distinct visual identity (bed grid)','Everywhere','w',()=>mode('tenant')],
+[61,'Buddy booking','Hostel page','w',()=>openHostel(1)],[62,'Roommate preference matching','Find a bed','w',()=>mode('tenant')],[63,'Move-out marketplace','Hostel page','d',()=>openHostel(1)],[64,'Short stays','Find a bed','w',()=>mode('tenant')],[65,'Parent-visit guest bed','Hostel page','w',()=>{openHostel(1);htab('rules')}],[66,'Safety score','Hostel page','w',()=>{openHostel(1);htab('safety')}],[67,'Real WiFi / water / power data','Hostel page','w',()=>{openHostel(1);htab('live')}],[68,'Vacancy and price-drop alerts','Find a bed','d',()=>mode('tenant')],[69,'Make an offer','Hostel page','w',()=>openHostel(1)],[70,'Multilingual (Telugu, Hindi)','Everywhere','w',()=>{setLang('te');mode('tenant')}],[71,'Shared-expense split','My stay','d',()=>mode('stay')],
+[72,'Dynamic pricing hints','Owner','w',()=>mode('owner')],[73,'Auto-relist on vacate notice','Owner','w',()=>{mode('owner');otab('map')}],[74,'Photo guidance / free photoshoot','Owner','d',()=>go('contact')],[75,'Electricity sub-meter logging','Owner','w',()=>{mode('owner');otab('rent')}],[76,'Police verification form generation','Owner','d',()=>{mode('owner');otab('tenants')}],[77,'Tenant reliability signal','Owner','d',()=>{mode('owner');otab('tenants')}],[78,'Multi-hostel view','Owner','w',()=>{mode('owner');otab('chain')}],[79,'Broadcast to residents','Owner','w',()=>{mode('owner');otab('ops')}],[80,'QR check-in and visitor log','Owner','d',()=>{mode('owner');otab('tenants')}],[81,'Vendor directory','Owner','d',()=>{mode('owner');otab('ops')}],[82,'Rent advance / owner credit','Owner','d',()=>{mode('owner');otab('rent')}],
+[83,'Deposit escrow','Platform','d',()=>{mode('stay');stab('rent')}],[84,'Verification tiers','Find a bed','w',()=>mode('tenant')],[85,'Dispute resolution','HQ','d',()=>{mode('hq');hqtab('trust')}],[86,'Hygiene standard checklist','HQ','d',()=>mode('hq')],[87,'City rent index','HQ','d',()=>{mode('hq');hqtab('index')}],[88,'Field captains','HQ','d',()=>{mode('hq');hqtab('captains')}],[89,'Resident perks marketplace','My stay','d',()=>{mode('stay');stab('more')}],[90,'College / HR API','HQ','d',()=>{mode('hq');hqtab('partners')}],
+[91,'Instant-book beds','Booking','w',()=>openHostel(1)],[92,'Owner response score','Find a bed','w',()=>mode('tenant')],[93,'Hold transfer','Booking','d',()=>openHostel(1)],[94,'Move-in handover photos','My stay','d',()=>mode('stay')],[95,'Bed history / renting resume','My stay','d',()=>{mode('stay');stab('more')}],[96,'Room swap requests','My stay','w',()=>mode('stay')],[97,'Food ratings per meal','Hostel page','w',()=>{openHostel(1);htab('menu')}],[98,'Commute pooling board','My stay','d',()=>mode('stay')],[99,'Emergency contacts and SOS','My stay','w',()=>{mode('stay');stab('more')}],[100,'Parent view','My stay','w',()=>{renderParent();go('parent')}],[101,'Vacate with one tap','My stay','w',()=>mode('stay')],
+[102,'Bed-level pricing','Hostel page','w',()=>openHostel(1)],[103,'Demand heatmap','Owner','d',()=>{mode('owner');otab('insights')}],[104,'Guaranteed-fill offers','Owner','d',()=>{mode('owner');otab('grow')}],[105,'Occupancy forecast','Owner','d',()=>{mode('owner');otab('insights')}],[106,'Agreement pre-filled from hold','Booking','d',()=>openHostel(1)],[107,'Deposit ledger and auto-refund','Owner','d',()=>{mode('owner');otab('money')}],[108,'WhatsApp-only owner mode','Owner','w',()=>{mode('owner');otab('wa')}],[109,'Warden app','Owner','d',()=>{mode('owner');otab('ops')}],[110,'Mess vendor headcount','Owner','w',()=>{mode('owner');otab('menu')}],[111,'Rent advance','Owner','d',()=>{mode('owner');otab('rent')}],[112,'Listing quality score','Owner','w',()=>{mode('owner');otab('insights')}],
+[113,'Bed-map accuracy guarantee','Booking','d',()=>openHostel(1)],[114,'Mystery-stay audits','HQ','d',()=>mode('hq')],[115,'Community moderation','HQ','d',()=>{mode('hq');hqtab('trust')}],[116,'Open availability API','HQ','d',()=>{mode('hq');hqtab('partners')}],[117,'Hostelzy Plus tenant subscription','Booking','w',()=>openHostel(1)],[118,'Owner referral network','Owner','d',()=>{mode('owner');otab('grow')}],[119,'City launch playbook','HQ','d',()=>{mode('hq');hqtab('playbook')}],
+[120,'Sketch → bed grid (AI)','Owner','d',()=>{mode('owner');otab('rooms')}],[121,'Menu OCR from whiteboard photo','Owner','d',()=>{mode('owner');otab('menu')}],[122,'Natural-language smart search','Find a bed','w',()=>mode('tenant')],[123,'Price recommendation','Owner','d',()=>{mode('owner');otab('insights')}],[124,'Fake-listing detection','HQ','d',()=>mode('hq')],[125,'Review summarisation','Hostel page','d',()=>{openHostel(1);htab('reviews')}]];
+function featureIndex(){const w=FEATURES.filter(f=>f[3]==='w').length;openModal(`<div class="head"><div><h3>All ${FEATURES.length} features</h3><div class="small muted">${w} working in this prototype, ${FEATURES.length-w} shown as screens with sample data</div></div><button class="btn sm" onclick="closeModal()">Close</button></div><div class="body"><div class="fidx">${FEATURES.map((f,i)=>`<div><b class="num">${f[0]}</b><div>${f[1]}<div class="area">${f[2]}</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><span class="st ${f[3]}">${f[3]==='w'?'Working':'Demo'}</span><button class="btn xs" onclick="closeModal();FEATURES[${i}][4]()">Show</button></div></div>`).join('')}</div></div>`,true)}
+
+/* ================= BOOT ================= */
+renderHome();renderOwner();
+</script>
+</body></html>
