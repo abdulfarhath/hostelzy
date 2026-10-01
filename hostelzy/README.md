@@ -29,7 +29,7 @@ exposes:
 | `role` | `tenant` `resident` `owner` |
 | `theme` | `light` `dark` |
 | `mode` | `plan` `list` `building` (bed picker) |
-| `sheet` | `search` `hold` `wa` `add` `bed` |
+| `sheet` | `search` `hold` `wa` `add` `bed` `enq` |
 | `moveTab` / `moreTab` | `vacate` `swap` / `complaints` `menu` `rules` |
 | `bare` | `true`: phone frame only |
 | `page` | `overview`: all screens |

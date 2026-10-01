@@ -64,6 +64,7 @@ class OverviewPage extends StatelessWidget {
         ('Live bed map', {'start': 'oBeds', 'role': 'owner'}),
         ('Bed actions', {'start': 'oBeds', 'role': 'owner', 'sheet': 'bed'}),
         ('Add booking', {'start': 'oToday', 'role': 'owner', 'sheet': 'add'}),
+        ('One enquiry', {'start': 'oToday', 'role': 'owner', 'sheet': 'enq'}),
         ('Rent collection', {'start': 'oRent', 'role': 'owner'}),
         ('Complaints queue', {'start': 'oMore', 'role': 'owner', 'moreTab': 'complaints'}),
         ('Edit menu', {'start': 'oMore', 'role': 'owner', 'moreTab': 'menu'}),

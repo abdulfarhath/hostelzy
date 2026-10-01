@@ -35,6 +35,10 @@ String occCounts(AppState s) {
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
 List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == 'anjani' && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: 3600, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id), ...s.reqs];
 
+/// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
+/// only as a section (false, the approved default).
+const enquiriesTile = false;
+
 class OwnerTodayScreen extends StatelessWidget {
   const OwnerTodayScreen({super.key});
   @override
@@ -46,11 +50,14 @@ class OwnerTodayScreen extends StatelessWidget {
     final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
     final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
     final openC = s.complaints.where((x) => x.status != 'Resolved').length;
+    final freshE = s.enquiries.where((e) => e.hid == 'anjani' && !e.contacted).length;
     final kpis = <(String, String, String, Color, VoidCallback)>[
       ('Free beds', '${c.free}', '${c.soon} freeing up soon', p.tx, () => s.tab('oBeds')),
       ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () {}),
       ('Rent pending', fmt(expected - collected), '${s.residents.where((r) => r.status == 'Overdue').length} overdue', p.tx, () => s.tab('oRent')),
-      (
+      if (enquiriesTile)
+        ('Enquiries', '$freshE', 'New from Hostelzy', freshE > 0 ? p.ad : p.tx, () {})
+      else (
         'Complaints',
         '$openC',
         'Open or in progress',
@@ -189,6 +196,7 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const _Enquiries(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -277,6 +285,152 @@ class OwnerTodayScreen extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F05 board 2: enquiries Hostelzy recorded before the tenant's WhatsApp
+/// opened. The phone is OTP-verified, so it matches the chat that follows.
+class _Enquiries extends StatelessWidget {
+  const _Enquiries();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final list = s.enquiries.where((e) => e.hid == 'anjani').toList();
+    final fresh = list.where((e) => !e.contacted).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [const Kicker('Enquiries from Hostelzy'), T(fresh > 0 ? '$fresh new' : 'All replied', s: 12, w: 800, c: p.ad)],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final e in list) _EnquiryRow(e),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shield', size: 16, color: p.mu)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Rich([sp(context, 'Not on this list = not from Hostelzy.', w: 800, c: p.tx), sp(context, ' Someone says they found you on Hostelzy? Ask for their HZ code.')], s: 12, c: p.mu, lh: 1.4)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EnquiryRow extends StatelessWidget {
+  const _EnquiryRow(this.e);
+  final Enquiry e;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final first = e.name.split(' ')[0];
+    final d = e.contacted;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: VGap(
+        gap: 8,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    T(e.name, w: 800, s: 16),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Ic('check', size: 14),
+                        const SizedBox(width: 5),
+                        Rich([sp(context, phoneSpaced(e.phone)), sp(context, ' · verified', c: p.mu)], s: 13),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        T('${e.bed != null ? 'Bed ${e.bed}' : 'Any bed'} · ', s: 13, c: p.mu),
+                        Tap(onTap: () => s.openEnquiry(e.ref), child: T(e.ref, s: 13, w: 600, c: p.ad)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+                    decoration: box(bg: d ? transparent : p.ab, w: 1, c: d ? p.dv : p.ab),
+                    child: T(d ? 'Contacted' : 'New', s: 11, w: 800, ls: .06, upper: true, c: d ? p.mu : p.ad),
+                  ),
+                  const SizedBox(height: 4),
+                  T(ago(s.now - e.at), s: 12, c: p.mu),
+                ],
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Cta(
+                  'WhatsApp',
+                  icon: 'msg',
+                  height: 44,
+                  px: 12,
+                  fs: 14,
+                  bg: d ? transparent : p.ac,
+                  fg: d ? p.tx : p.ai,
+                  border: d ? p.tx : p.ac,
+                  onTap: () {
+                    s.markContacted(e.ref);
+                    s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Cta(
+                  'Call',
+                  icon: 'phone',
+                  height: 44,
+                  px: 12,
+                  fs: 14,
+                  bg: transparent,
+                  fg: p.tx,
+                  border: p.tx,
+                  onTap: () {
+                    s.markContacted(e.ref);
+                    s.toastMsg('Calling $first on +91 ${phoneSpaced(e.phone)}…');
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

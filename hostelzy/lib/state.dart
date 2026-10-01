@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
     this.foodView = foodView ?? 'day';
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
+    enquiries = seedEnquiries(n);
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (const ['hold', 'holds', 'oToday'].contains(screen)) {
@@ -67,6 +68,14 @@ class AppState extends ChangeNotifier {
   String? swapBed;
   bool swapSent = false;
   late List<HoldRequest> reqs;
+  late List<Enquiry> enquiries;
+  int _nextRef = 4822;
+
+  /// HZ code of the enquiry behind the open WhatsApp sheet, if any.
+  String? waRef, waHid;
+
+  /// Enquiry open in the owner's enquiry sheet.
+  String? enqRef;
   List<Resident> residents = seedResidents();
   String rentF = 'All';
   List<DayMenu> menu = List.of(seedMenu);
@@ -113,10 +122,8 @@ class AppState extends ChangeNotifier {
       holdId = 'h0';
     }
     if (sheet == 'bed' && obed == null) obed = '204-B';
-    if (sheet == 'wa' && waTo == null) {
-      waTo = 'Srinivas';
-      waMsg = 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?';
-    }
+    if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
+    if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
   }
 
   void toastMsg(String m) {
@@ -158,6 +165,40 @@ class AppState extends ChangeNotifier {
     sheet = 'wa';
     waTo = to;
     waMsg = msg;
+    waRef = null;
+  });
+
+  /// The tenant's verified number (the demo number until they log in).
+  String get myPhone => phone.length == 10 ? phone : '9848012345';
+
+  /// F05 tenant → owner hand-off. Records the enquiry on Hostelzy first (the
+  /// owner is told from here, not by the WhatsApp text), then opens the
+  /// prefilled message ending with the HZ code and its link. One enquiry per
+  /// tenant + hostel + bed: tapping again reuses the code.
+  void enquire(String hid, String body, {String? bed, required String from}) => update(() => _enquire(hid, body, bed: bed, from: from));
+
+  void _enquire(String hid, String body, {String? bed, required String from}) {
+    final me = myPhone;
+    var e = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull;
+    if (e == null) {
+      e = Enquiry(ref: 'HZ-${_nextRef++}', name: 'Rahul Varma', phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch, from: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
+      enquiries = [e, ...enquiries];
+    }
+    sheet = 'wa';
+    waTo = hostelById(hid).owner;
+    waMsg = body;
+    waRef = e.ref;
+    waHid = hid;
+  }
+
+  /// Full message the tenant sends: their text plus the ref line.
+  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef · hostelzy.in/r/$waRef';
+
+  void markContacted(String ref) => update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
+
+  void openEnquiry(String ref) => update(() {
+    enqRef = ref;
+    sheet = 'enq';
   });
 
   ({int f, int t}) freeOf(String id) {

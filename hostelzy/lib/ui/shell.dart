@@ -400,12 +400,14 @@ class _Sheet extends StatelessWidget {
       'bed' => 'Bed ${s.obed ?? ''}',
       _ => '',
     };
+    final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
       'bed' => const _BedSheet(),
+      'enq' => const _EnquirySheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
@@ -440,7 +442,11 @@ class _Sheet extends StatelessWidget {
                             decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
                             child: Row(
                               children: [
-                                Expanded(child: T(title, w: 800, s: 20)),
+                                Expanded(
+                                  child: enq != null
+                                      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Kicker('Enquiry from Hostelzy'), const SizedBox(height: 2), T('${enq.ref} · ${enq.name}', w: 800, s: 20)])
+                                      : T(title, w: 800, s: 20),
+                                ),
                                 const SizedBox(width: 12),
                                 Tap(
                                   onTap: close,
@@ -625,19 +631,49 @@ class _HoldSheet extends StatelessWidget {
   }
 }
 
+/// F05 design question: the tenant note is green as the spec says, but the
+/// design rules keep green for savings and deals. Founder approved the
+/// default (green); false gives the neutral version from board 1.
+const enquiryNoteGreen = true;
+
 class _WaSheet extends StatelessWidget {
   const _WaSheet();
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final ref = s.waRef;
+    final noteFg = enquiryNoteGreen ? p.gn : p.tx;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 12,
         children: [
-          Rich([sp(context, 'To '), sp(context, s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
-          Container(padding: const EdgeInsets.all(14), color: p.sf, child: T(s.waMsg ?? '', s: 15, lh: 1.45)),
+          if (ref != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: box(bg: enquiryNoteGreen ? p.gb : p.sf, w: 2, c: enquiryNoteGreen ? p.gb : p.tx),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shieldOk', size: 20, color: noteFg)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Rich([sp(context, '${s.waTo} has been told on Hostelzy', w: 800, c: noteFg), sp(context, ', with your verified number and ref '), sp(context, ref, w: 800), sp(context, '.')], s: 14, lh: 1.4)),
+                ],
+              ),
+            ),
+          Rich([sp(context, 'To '), sp(context, ref != null ? '${s.waTo} · ${hostelById(s.waHid!).name}' : s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
+          Container(
+            padding: const EdgeInsets.all(14),
+            color: p.sf,
+            child: VGap(
+              gap: 10,
+              children: [
+                T(s.waMsg ?? '', s: 15, lh: 1.45),
+                if (ref != null) Rich([sp(context, 'Ref '), sp(context, ref, w: 800), sp(context, ' · hostelzy.in/r/$ref')], s: 14, lh: 1.45),
+              ],
+            ),
+          ),
           Cta(
             'Open WhatsApp',
             icon: 'msg',
@@ -657,13 +693,86 @@ class _WaSheet extends StatelessWidget {
             icon: 'check',
             height: 50,
             onTap: () {
-              s.copyText(s.waMsg ?? '');
+              s.copyText(s.waFull);
               s.update(() => s.sheet = null);
               s.toastMsg('Message copied.');
             },
           ),
+          if (ref != null) T("Change the message if you like. Your enquiry is already saved on Hostelzy, so you're covered either way.", s: 12, c: p.mu, lh: 1.45),
         ],
       ),
+    );
+  }
+}
+
+/// F05 board 3: one enquiry, opened from its HZ code on owner Today.
+class _EnquirySheet extends StatelessWidget {
+  const _EnquirySheet();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final e = s.enquiries.where((x) => x.ref == s.enqRef).firstOrNull;
+    if (e == null) return const SizedBox();
+    final first = e.name.split(' ')[0];
+    final r = e.bed != null ? s.findBed(e.hid, e.bed).r : null;
+    void contact(String how) {
+      s.markContacted(e.ref);
+      if (how == 'wa') {
+        s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+      } else {
+        s.update(() => s.sheet = null);
+        s.toastMsg(how == 'call' ? 'Calling $first on +91 ${phoneSpaced(e.phone)}…' : 'Marked as contacted.');
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        KV('Phone', '${phoneSpaced(e.phone)} · verified by OTP', keyWidth: 110),
+        KV('Asked about', e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed', keyWidth: 110),
+        KV('When', clockTime(e.at), keyWidth: 110),
+        KV('From', e.from, keyWidth: 110),
+        KV('Message', '“${e.msg}”', keyWidth: 110),
+        KV('Status', e.contacted ? 'Contacted' : 'New · not replied yet', keyWidth: 110),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          padding: const EdgeInsets.all(12),
+          color: p.sf,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(padding: EdgeInsets.only(top: 1), child: Ic('userPlus', size: 18)),
+              const SizedBox(width: 10),
+              Expanded(child: Rich([sp(context, 'If $first joins, add them in '), sp(context, 'Manage → Residents', w: 800), sp(context, " with this number. They'll show as "), sp(context, 'Joined via Hostelzy', w: 800), sp(context, '.')], s: 13, lh: 1.4)),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          child: Row(
+            children: [
+              Expanded(child: Cta('WhatsApp', icon: 'msg', height: 50, px: 14, fs: 15, onTap: () => contact('wa'))),
+              const SizedBox(width: 8),
+              Expanded(child: OutlineCta('Call', icon: 'phone', height: 50, px: 14, fs: 15, onTap: () => contact('call'))),
+            ],
+          ),
+        ),
+        if (!e.contacted)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(
+                onTap: () => contact('mark'),
+                child: const SizedBox(
+                  height: 44,
+                  child: Center(child: T('Mark as contacted', w: 800, s: 14, underline: true)),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
