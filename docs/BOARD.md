@@ -8,7 +8,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F01 | Core app from the Claude Design handoff (20 screens, 3 roles) | **Shipped** | Build | On `main`, APK `apk-1` |
 | F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Shipped** · merged 2026-10-02 | Build | PR #1 squash-merged by founder's instruction; APK builds from `main` |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Built** (2026-10-02) | Build | PR #5 on `feature/f03-deals` (includes #2, #3, #4; merge those first). Waiting for founder to check and merge |
-| F04 | Book with the advance, deal locked, HZ code | **Built** (2026-10-02) | Build | Branch `feature/f04-booking` (on top of #5; merge #2–#5 first). Waiting for founder to check and merge |
+| F04 | Book with the advance, deal locked, HZ code | **Built** (2026-10-02) | Build | PR #6 on `feature/f04-booking` (on top of #5; merge #2–#5 first). Waiting for founder to check and merge |
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Built** (2026-10-01) | Build | PR #2 on `feature/f05-enquiries`. Section (not tile), green note: defaults, switchable. Waiting for founder to check and merge |
 | F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Built** (2026-10-01) | Build | PR #3 on `feature/f06-residents` (on top of F05, PR #2; merge #2 first). Matching window 60 days (decided 2026-10-02). Waiting for founder to check and merge |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Spec ready** | Design | Decided 2026-10-02: 3 strikes, no move-off fee, phone after hold (tenant told why) |
