@@ -7,13 +7,14 @@ Tenants want to know exactly where their bed is and what's around it (fan, AC, w
 before visiting. Owners' rooms come in many shapes.
 
 ## What it does (phase 1)
-- **Owner editor (phone):** pick a room shape from the library (rectangle, L, T, U, angled corner,
-  narrow end, alcove), resize by edges, place items on a 1-ft grid: beds, bunk beds (2 beds),
-  window, door, fan, AC (with direction), washroom zone, pillar. Undo/redo, draft → publish,
-  copy layout to other rooms, mirror/flip.
-- **Request a shape:** photo + paper sketch photo + measurements + voice note. Hostelzy draws it on a
-  laptop admin editor (target 48 h), owner approves, the shape joins the library. Meanwhile the room
-  shows a temporary rectangle "Layout coming soon".
+- **Hostelzy team draws every layout** (decided 2026-10-02) on a laptop admin editor during or after
+  the onboarding visit: room shape from the library (rectangle, L, T, U, angled corner, narrow end,
+  alcove) or a new custom shape, items on a 1-ft grid: beds, bunk beds (2 beds), window, door, fan,
+  AC (with direction), washroom zone, pillar. Copy to other rooms, mirror/flip, version history.
+- **Owner in the app (phone):** sees each room's layout, **approves** it before it goes live, marks
+  items Working / Not working, and taps **Request a change** (photo + paper sketch + measurements +
+  voice note). Hostelzy redraws it **free, within 48 hours**; the owner approves the new version.
+  Until a room's layout is approved it shows "Layout coming soon".
 - **Tenant room view = seat map (F11):** tap a bed like a movie seat; layer toggles (fans, AC,
   windows, washroom); automatic bed facts ("Under a fan", "Window side · street", "Near the door",
   "Lower bunk", "AC airflow"); compare two beds.
@@ -42,11 +43,12 @@ item meaning (fan coverage, AC throw, window facing, shared washroom outside) ·
 business (founder's drawing time, owners who never draw → "Layout not added" + lower ranking).
 
 ## Later (phase 2)
-Draw custom shape wall by wall, AR measuring, sockets/cupboards/tables/lights/balcony, floor layout
+Owner draws/edits layouts on the phone (only if owners ask for it), draw custom shape wall by wall,
+AR measuring, sockets/cupboards/tables/lights/balcony, floor layout
 editor, photos pinned to items, bed filters in Explore (window bed, lower bunk), Telugu/Hindi.
 
 ## Open questions
-BOARD Q13–Q17.
+BOARD Q15–Q17. (Q13, Q14 answered 2026-10-02.)
 
 ## Design
 _Not started (waiting for spec)._

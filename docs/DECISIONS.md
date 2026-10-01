@@ -49,5 +49,10 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
 - Tenants can filter by **AC / non-AC** (Explore chips, search sheet, bed picker).
 - In the room layout (F12), a room marked AC must have an AC unit placed.
 
+**Room layouts (F12)**
+- The **Hostelzy team draws every room layout** (admin editor on a laptop). Owners don't draw; they
+  approve layouts, mark items working / not working, and request changes in the app.
+- New room shapes and layout changes are **free**, done **within 48 hours**.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
