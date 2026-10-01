@@ -2,7 +2,7 @@
 // (project/HostelzyApp.dc.html).
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms()});
   final String id, name, gender, area, owner;
   final int from, reviews, reply;
   final double rating;
@@ -10,14 +10,56 @@ class Hostel {
   final Map<String, int> mins;
   final double x, y;
   final List<String> tags;
+  final Terms terms;
+}
+
+/// How a hostel charges (F02, Hyderabad / Chennai norm): an advance plus the
+/// first month at move-in, then only the monthly fee. On leaving the owner
+/// keeps [maintenance] from the advance and returns the rest.
+///
+/// Notice days, fee due day and electricity are placeholders until the
+/// founder answers BOARD questions 5 and 6.
+class Terms {
+  const Terms({this.advance = 3000, this.maintenance = 1000, this.noticeDays = 30, this.dueOnJoining = true, this.electricityExtra = true});
+  final int advance, maintenance, noticeDays;
+
+  /// Monthly fee due on the joining date (true) or on the 1st (false).
+  final bool dueOnJoining;
+  final bool electricityExtra;
+
+  int get refund => advance - maintenance;
+
+  /// Day of the month the fee is due for someone who joined on [joinDay].
+  int dueDay(int joinDay) => dueOnJoining ? joinDay : 1;
+}
+
+/// "Today" in the sample data.
+final appToday = DateTime(2026, 10, 1);
+
+const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/// `31 Oct`
+String dayMon(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+
+/// Last-day choices when giving notice today: the earliest day the notice
+/// period allows, then 15 and 30 days after it.
+List<String> leaveDates(Terms t) => [for (final x in [0, 15, 30]) dayMon(appToday.add(Duration(days: t.noticeDays + x)))];
+
+/// `Due 14 Oct` for a resident who joined on [joinDay].
+String dueNote(Terms t, int joinDay) => 'Due ${t.dueDay(joinDay)} ${_months[appToday.month - 1]}';
+
+/// `13 days left`, `due today`.
+String dueLeft(Terms t, int joinDay) {
+  final n = t.dueDay(joinDay) - appToday.day;
+  return n <= 0 ? 'due today' : '$n day${n == 1 ? '' : 's'} left';
 }
 
 const hostels = <Hostel>[
   Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 212, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
-  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 340, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors']),
-  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace']),
+  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 340, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
+  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500)),
   Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 158, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
-  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 187, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room']),
+  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 187, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
   Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 410, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
 ];
 
@@ -148,14 +190,18 @@ class Resident {
   Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note);
 }
 
+/// The sample resident (Rahul, bed 204-B) joined Anjani Residency on 14 Mar.
+const residentJoined = '14 Mar';
+const residentJoinDay = 14;
+
 List<Resident> seedResidents() => [
-  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: 'Due 5 Oct'),
+  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay)),
   Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep'),
   Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep'),
   Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late'),
   Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct'),
   Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late'),
-  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: 'Due 5 Oct'),
+  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22)),
   Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep'),
 ];
 
@@ -225,7 +271,25 @@ class Rule {
   final String k, v;
 }
 
-const seedRules = [Rule('Gate closes', '10:30 pm'), Rule('Visitors', 'Common area only, till 8 pm'), Rule('Notice period', '30 days'), Rule('Security deposit', "2 months' rent"), Rule('Quiet hours', '11 pm – 6 am')];
+List<Rule> seedRules(Terms t) => [
+  const Rule('Gate closes', '10:30 pm'),
+  const Rule('Visitors', 'Common area only, till 8 pm'),
+  Rule('Notice period', '${t.noticeDays} days'),
+  Rule('Advance', '${fmt(t.advance)} at move-in'),
+  Rule('Exit maintenance', '${fmt(t.maintenance)} kept from the advance'),
+  Rule('Fee due', t.dueOnJoining ? 'Every month on the joining date' : 'On the 1st of every month'),
+  Rule('Electricity', t.electricityExtra ? 'Extra, split by room meter' : 'Included in the fee'),
+  const Rule('Quiet hours', '11 pm – 6 am'),
+];
+
+/// Hostel page rule rows for [h].
+List<List<String>> moneyRules(Hostel h) => [
+  ['Notice period', '${h.terms.noticeDays} days'],
+  ['Advance', '${fmt(h.terms.advance)} + first month at move-in'],
+  ['Exit maintenance', '${fmt(h.terms.maintenance)} kept from the advance'],
+  ['Fee due', h.terms.dueOnJoining ? 'Every month on your joining date' : 'On the 1st of every month'],
+  ['Electricity', h.terms.electricityExtra ? 'Extra, split by room meter' : 'Included in the fee'],
+];
 
 const homeOf = {'tenant': 'explore', 'resident': 'rHome', 'owner': 'oToday'};
 

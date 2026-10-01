@@ -61,7 +61,8 @@ class AppState extends ChangeNotifier {
   String? rated;
   List<Complaint> complaints = seedComplaints();
   String cCat = 'WiFi', cText = '';
-  String vDate = '31 Oct', vReason = 'New job';
+  late String vDate = leaveDates(hostels[0].terms).first;
+  String vReason = 'New job';
   bool notice = false;
   String? swapBed;
   bool swapSent = false;
@@ -70,7 +71,7 @@ class AppState extends ChangeNotifier {
   String rentF = 'All';
   List<DayMenu> menu = List.of(seedMenu);
   int mDay = 3;
-  List<Rule> rules = List.of(seedRules);
+  List<Rule> rules = seedRules(hostels[0].terms);
   String addName = '', addPhone = '', addDate = 'Today';
   String? addBed;
   String? obed;

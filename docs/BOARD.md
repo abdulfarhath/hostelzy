@@ -6,7 +6,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | ID | Feature | Stage | Owner chat | Notes |
 |---|---|---|---|---|
 | F01 | Core app from the Claude Design handoff (20 screens, 3 roles) | **Shipped** | Build | On `main`, APK `apk-1` |
-| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Spec ready** · no design needed | Build | Copy/data change across tenant, resident, owner screens |
+| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Built** (2026-10-01) | Build | Branch `feature/f02-advance-model`, PR open. Placeholders for Q5/Q6 (30 days, due on joining date, electricity extra). Waiting on founder answers + merge |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design ready** | Design | Mockups 1, 2, 4 in the Deals canvas. Waiting on open questions 1–3 |
 | F04 | Book with the advance, deal locked, HZ code | **Design ready** | Design | Mockup 3 in the Deals canvas. Waiting on open question 4 |
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Spec ready** | Design | Draft code on branch `draft/f05-enquiries` (unapproved) |

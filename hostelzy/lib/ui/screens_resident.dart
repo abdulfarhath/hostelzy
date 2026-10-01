@@ -11,6 +11,7 @@ class ResidentHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final terms = hostelById('anjani').terms;
     final tm = s.menu[3];
     final board = <(String, String?, VoidCallback?)>[('Arjun and Sai leave 8:40 am for Mindspace. Auto share, ₹40 each.', 'Join', () => s.toastMsg('Joined. Meet at the gate at 8:40.')), ('September electricity for room 204: ₹1,260, split 3 ways.', null, null), ('Water tank cleaning on Saturday, 10 am to 1 pm.', null, null)];
     final quick = <(String, String, VoidCallback)>[
@@ -78,7 +79,7 @@ class ResidentHomeScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       const T('₹8,020', w: 800, s: 34, ls: -.02, lh: 1.05),
                       const SizedBox(height: 2),
-                      T(s.paid ? 'Paid today. Thank you.' : 'Due 5 Oct · 4 days left', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
+                      T(s.paid ? 'Paid today. Thank you.' : '${dueNote(terms, residentJoinDay)} · ${dueLeft(terms, residentJoinDay)}', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
                     ],
                   ),
                 ),
@@ -208,6 +209,7 @@ class RentPayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final terms = hostelById('anjani').terms;
     final history = [if (s.paid) ('October 2026', '₹8,020', 'Paid 1 Oct by ${s.payM}'), ('September 2026', '₹8,040', 'Paid 3 Sep by UPI'), ('August 2026', '₹7,980', 'Paid 4 Aug by UPI'), ('July 2026', '₹8,110', 'Paid 2 Jul by Card')];
     return Scroll(
       key: ValueKey('rPay${s.scrollEpoch}'),
@@ -252,7 +254,7 @@ class RentPayScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 8),
-                  T('Due 5 Oct. The owner gets a receipt on WhatsApp.', s: 12, c: p.mu),
+                  T('${dueNote(terms, residentJoinDay)}. The owner gets a receipt on WhatsApp.', s: 12, c: p.mu),
                 ],
               ),
             ),
@@ -287,7 +289,7 @@ class RentPayScreen extends StatelessWidget {
                 ),
               ),
             ),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Deposit')),
+          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Advance')),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
@@ -298,8 +300,8 @@ class RentPayScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Rich([sp(context, '₹15,200', w: 800), sp(context, ' '), sp(context, 'held since 14 Mar', c: p.mu)]),
-                  Tag('Refundable', bg: p.sf),
+                  Rich([sp(context, fmt(terms.advance), w: 800), sp(context, ' '), sp(context, 'paid $residentJoined', c: p.mu)]),
+                  Tag('${fmt(terms.refund)} back when you leave', bg: p.sf),
                 ],
               ),
             ),
@@ -684,6 +686,8 @@ class MoveScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final terms = hostelById('anjani').terms;
+    final dates = leaveDates(terms);
     final a = s.rooms['anjani']!;
     final swapBeds = <({Bed b, Room r})>[];
     for (final r in a) {
@@ -702,9 +706,9 @@ class MoveScreen extends StatelessWidget {
                   child: VGap(
                     gap: 12,
                     children: [
-                      Rich([sp(context, 'Notice period is '), sp(context, '30 days', w: 800), sp(context, '. The earliest you can leave is '), sp(context, '31 Oct', w: 800), sp(context, '.')], s: 14, lh: 1.45),
+                      Rich([sp(context, 'Notice period is '), sp(context, '${terms.noticeDays} days', w: 800), sp(context, '. The earliest you can leave is '), sp(context, dates.first, w: 800), sp(context, '.')], s: 14, lh: 1.45),
                       const Padding(padding: EdgeInsets.only(top: 6), child: Kicker('Last day')),
-                      Seg(opts: same(['31 Oct', '15 Nov', '30 Nov']), cur: s.vDate, onPick: (v) => s.update(() => s.vDate = v), pad: const EdgeInsets.all(12), fs: 14),
+                      Seg(opts: same(dates), cur: s.vDate, onPick: (v) => s.update(() => s.vDate = v), pad: const EdgeInsets.all(12), fs: 14),
                       const Padding(padding: EdgeInsets.only(top: 6), child: Kicker('Reason')),
                       wrap(6, [
                         for (final r in const ['New job', 'Moving home', 'Found another place', 'Other']) ChipBtn(r, on: r == s.vReason, onTap: () => s.update(() => s.vReason = r)),
@@ -712,10 +716,10 @@ class MoveScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Padding(padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16), child: Kicker('Deposit refund')),
-                const LineRow('Deposit held', '₹15,200', pad: EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
-                const LineRow('Deductions', '₹0 so far, after inspection', pad: EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
-                const LineRow('Estimated refund', '₹15,200 within 7 days', vw: 800, pad: EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16), child: Kicker('Advance refund')),
+                LineRow('Advance paid', fmt(terms.advance), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
+                LineRow('Exit maintenance', '− ${fmt(terms.maintenance)}', pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
+                LineRow('Refund', '${fmt(terms.refund)} within 7 days', vw: 800, pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Cta(
@@ -754,7 +758,7 @@ class MoveScreen extends StatelessWidget {
                     children: [
                       TimelineStep(t: 'Notice given', d: 'Today, 1 Oct', bg: p.tx, bd: p.tx),
                       TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
-                      TimelineStep(t: 'Deposit back to your UPI', d: 'Within 7 days of leaving', bg: transparent, bd: p.tk),
+                      TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
                     ],
                   ),
                 ),

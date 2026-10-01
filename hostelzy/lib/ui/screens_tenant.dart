@@ -651,8 +651,7 @@ class DetailScreen extends StatelessWidget {
     final rules = [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],
-      ['Notice period', '30 days'],
-      ['Deposit', "2 months' rent"],
+      ...moneyRules(h),
       ['Food', h.food ? 'Included, veg and non-veg' : 'Not included, shared kitchen'],
     ];
     Widget tagRow(int i) => IntrinsicHeight(
@@ -1435,7 +1434,7 @@ class HoldScreen extends StatelessWidget {
       steps = [
         TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),
         TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Bed reserved', d: hold.opt == 'free' ? (done ? 'Confirmed on WhatsApp' : 'Usually within ${i.hh.reply} minutes') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
-        TimelineStep(t: 'Visit and move in', d: "Pay the deposit at move-in. 2 months' rent.", bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
+        TimelineStep(t: 'Visit and move in', d: 'Pay ${fmt(i.hh.terms.advance)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
       ];
       canSim = st == 'waiting';
       canCancel = st == 'waiting' || st == 'confirmed' || st == 'held';

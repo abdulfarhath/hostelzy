@@ -682,6 +682,7 @@ class _AddSheet extends StatelessWidget {
       }
     }
     final sel = s.addBed != null ? s.findBed('anjani', s.addBed) : null;
+    final terms = hostelById('anjani').terms;
     Widget label(String t) => T(t, w: 800, s: 13);
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -738,6 +739,26 @@ class _AddSheet extends StatelessWidget {
               ),
             ),
           ),
+          Css(
+            s: 14,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                T('Advance', c: p.mu),
+                T('${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', w: 800),
+              ],
+            ),
+          ),
+          Css(
+            s: 14,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                T('Due at move-in', c: p.mu),
+                T(sel?.r != null ? fmt(terms.advance + sel!.r!.rent) : 'Pick a bed', w: 800),
+              ],
+            ),
+          ),
           Cta(
             'Add booking',
             icon: 'check',
@@ -775,6 +796,8 @@ class _BedSheet extends StatelessWidget {
     if (f.b == null) return const SizedBox();
     final b = f.b!, r = f.r!;
     final res = s.residents.where((x) => x.bed == b.id).firstOrNull;
+    final terms = hostelById('anjani').terms;
+    final leave = leaveDates(terms).first;
     final stl = {'free': 'Free', 'soon': 'Free from ${b.soon}', 'held': 'On hold', 'booked': 'Taken'}[b.state]!;
     void done(String m) {
       s.update(() => s.sheet = null);
@@ -784,11 +807,11 @@ class _BedSheet extends StatelessWidget {
     final actions = <(String, VoidCallback, bool)>[];
     if (b.state == 'booked') {
       actions.add((
-        'Mark as leaving 31 Oct',
+        'Mark as leaving $leave',
         () {
           b.state = 'soon';
-          b.soon = '31 Oct';
-          done('Bed ${b.id} is listed as free from 31 Oct.');
+          b.soon = leave;
+          done('Bed ${b.id} is listed as free from $leave.');
         },
         true,
       ));
@@ -827,6 +850,7 @@ class _BedSheet extends StatelessWidget {
         KV('Room', '${r.n} · Floor ${r.floor} · ${r.share} sharing', keyWidth: 110),
         KV('Position', b.spot, keyWidth: 110),
         KV('Rent', '${fmt(r.rent)} a month', keyWidth: 110),
+        KV('Advance', '${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', keyWidth: 110),
         KV('Status', stl, keyWidth: 110),
         KV(
           'Resident',
