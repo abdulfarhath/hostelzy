@@ -9,8 +9,8 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Shipped** · merged 2026-10-02 | Build | PR #1 squash-merged by founder's instruction; APK builds from `main` |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design approved** · 2026-10-02 | Build | Mockups 1, 2, 4 in the Deals canvas, updated 2026-10-02 (6-month headline, max 3 deals, owner number after hold) |
 | F04 | Book with the advance, deal locked, HZ code | **Design approved** · 2026-10-02 | Build | Mockup 3 in the Deals canvas, updated 2026-10-02 (pay the owner, free hold, no ₹299 hold) |
-| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
-| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design approved** · 2026-10-01 | Build | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Matching window 60 days (decided 2026-10-02) |
+| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Built** (2026-10-01) | Build | PR #2 on `feature/f05-enquiries`. Section (not tile), green note: defaults, switchable. Waiting for founder to check and merge |
+| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Built** (2026-10-01) | Build | PR #3 on `feature/f06-residents` (on top of F05, PR #2; merge #2 first). Matching window 60 days (decided 2026-10-02). Waiting for founder to check and merge |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Spec ready** | Design | Decided 2026-10-02: 3 strikes, no move-off fee, phone after hold (tenant told why) |
 | F08 | Verified-resident reviews + Hostelzy score ranking | **Spec ready** | Design | |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Spec ready** | Design | Decided 2026-10-02: ₹100 next-stay discount |

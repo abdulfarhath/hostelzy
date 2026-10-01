@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show mergeSort;
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -35,6 +36,10 @@ String occCounts(AppState s) {
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
 List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == 'anjani' && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: 3600, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id), ...s.reqs];
 
+/// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
+/// only as a section (false, the approved default).
+const enquiriesTile = false;
+
 class OwnerTodayScreen extends StatelessWidget {
   const OwnerTodayScreen({super.key});
   @override
@@ -46,11 +51,14 @@ class OwnerTodayScreen extends StatelessWidget {
     final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
     final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
     final openC = s.complaints.where((x) => x.status != 'Resolved').length;
+    final freshE = s.enquiries.where((e) => e.hid == 'anjani' && !e.contacted).length;
     final kpis = <(String, String, String, Color, VoidCallback)>[
       ('Free beds', '${c.free}', '${c.soon} freeing up soon', p.tx, () => s.tab('oBeds')),
       ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () {}),
       ('Rent pending', fmt(expected - collected), '${s.residents.where((r) => r.status == 'Overdue').length} overdue', p.tx, () => s.tab('oRent')),
-      (
+      if (enquiriesTile)
+        ('Enquiries', '$freshE', 'New from Hostelzy', freshE > 0 ? p.ad : p.tx, () {})
+      else (
         'Complaints',
         '$openC',
         'Open or in progress',
@@ -189,6 +197,7 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const _Enquiries(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -277,6 +286,152 @@ class OwnerTodayScreen extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F05 board 2: enquiries Hostelzy recorded before the tenant's WhatsApp
+/// opened. The phone is OTP-verified, so it matches the chat that follows.
+class _Enquiries extends StatelessWidget {
+  const _Enquiries();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final list = s.enquiries.where((e) => e.hid == 'anjani').toList();
+    final fresh = list.where((e) => !e.contacted).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [const Kicker('Enquiries from Hostelzy'), T(fresh > 0 ? '$fresh new' : 'All replied', s: 12, w: 800, c: p.ad)],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final e in list) _EnquiryRow(e),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shield', size: 16, color: p.mu)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Rich([sp(context, 'Not on this list = not from Hostelzy.', w: 800, c: p.tx), sp(context, ' Someone says they found you on Hostelzy? Ask for their HZ code.')], s: 12, c: p.mu, lh: 1.4)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EnquiryRow extends StatelessWidget {
+  const _EnquiryRow(this.e);
+  final Enquiry e;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final first = e.name.split(' ')[0];
+    final d = e.contacted;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: VGap(
+        gap: 8,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    T(e.name, w: 800, s: 16),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Ic('check', size: 14),
+                        const SizedBox(width: 5),
+                        Rich([sp(context, phoneSpaced(e.phone)), sp(context, ' · verified', c: p.mu)], s: 13),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        T('${e.bed != null ? 'Bed ${e.bed}' : 'Any bed'} · ', s: 13, c: p.mu),
+                        Tap(onTap: () => s.openEnquiry(e.ref), child: T(e.ref, s: 13, w: 600, c: p.ad)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+                    decoration: box(bg: d ? transparent : p.ab, w: 1, c: d ? p.dv : p.ab),
+                    child: T(d ? 'Contacted' : 'New', s: 11, w: 800, ls: .06, upper: true, c: d ? p.mu : p.ad),
+                  ),
+                  const SizedBox(height: 4),
+                  T(ago(s.now - e.at), s: 12, c: p.mu),
+                ],
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Cta(
+                  'WhatsApp',
+                  icon: 'msg',
+                  height: 44,
+                  px: 12,
+                  fs: 14,
+                  bg: d ? transparent : p.ac,
+                  fg: d ? p.tx : p.ai,
+                  border: d ? p.tx : p.ac,
+                  onTap: () {
+                    s.markContacted(e.ref);
+                    s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Cta(
+                  'Call',
+                  icon: 'phone',
+                  height: 44,
+                  px: 12,
+                  fs: 14,
+                  bg: transparent,
+                  fg: p.tx,
+                  border: p.tx,
+                  onTap: () {
+                    s.markContacted(e.ref);
+                    s.toastMsg('Calling $first on +91 ${phoneSpaced(e.phone)}…');
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -698,7 +853,9 @@ class OwnerManageScreen extends StatelessWidget {
     const next = {'Open': 'Start work', 'In progress': 'Mark resolved'};
     const nxs = {'Open': 'In progress', 'In progress': 'Resolved'};
     Widget body;
-    if (s.moreTab == 'complaints') {
+    if (s.moreTab == 'residents') {
+      body = const _Residents();
+    } else if (s.moreTab == 'complaints') {
       final sorted = s.complaints.asMap().entries.toList()
         ..sort((x, y) {
           final a = x.value.status == 'Resolved' ? 1 : 0, b = y.value.status == 'Resolved' ? 1 : 0;
@@ -860,7 +1017,7 @@ class OwnerManageScreen extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: PageHead(kicker: 'Anjani Residency', title: 'Manage'),
         ),
-        Seg(opts: const [('complaints', 'Complaints'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => s.update(() => s.moreTab = v), pad: const EdgeInsets.all(10), margin: const EdgeInsets.symmetric(horizontal: 16)),
+        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), margin: const EdgeInsets.symmetric(horizontal: 16)),
         const SizedBox(height: 14),
         Expanded(
           child: Container(
@@ -871,6 +1028,309 @@ class OwnerManageScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+// ------------------------------------------------------------ F06 residents
+
+/// Resident tag looks (F06 board 4).
+({String label, Color bg, Color fg, Color bd}) residentTag(Pal p, String k) => switch (k) {
+  'hz' => (label: 'Via Hostelzy', bg: p.tx, fg: p.bg, bd: p.tx),
+  'direct' => (label: 'Direct', bg: transparent, fg: p.tx, bd: p.tx),
+  'wait' => (label: 'Waiting OTP', bg: p.ab, fg: p.ad, bd: p.ab),
+  _ => (label: 'Before Hostelzy', bg: transparent, fg: p.mu, bd: p.dv),
+};
+
+class _Residents extends StatelessWidget {
+  const _Residents();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final missing = s.unassignedBeds;
+    const filters = [('All', null), ('Via Hostelzy', 'hz'), ('Direct', 'direct'), ('Waiting OTP', 'wait'), ('Before Hostelzy', 'before')];
+    final cur = filters.firstWhere((f) => f.$1 == s.resF).$2;
+    // Waiting for their code first, then joins since Hostelzy, then the first import.
+    const order = {'wait': 0, 'hz': 1, 'direct': 1, 'before': 2};
+    final rows = s.residents.where((r) => cur == null || r.tag == cur).toList();
+    mergeSort(rows, compare: (a, b) => order[a.tag]! - order[b.tag]!);
+    final by = dayName(appToday.add(const Duration(days: addResidentDays)));
+    String beds(List<String> b) => b.length == 1 ? 'Bed ${b[0]}' : 'Beds ${b.sublist(0, b.length - 1).join(', ')} and ${b.last}';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (missing.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.all(12),
+            decoration: box(bg: p.ab, w: 2, c: p.ad),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(padding: const EdgeInsets.only(top: 1), child: Ic('warn', size: 20, color: p.ad)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      T('${missing.length} taken bed${missing.length == 1 ? ' has' : 's have'} no resident', w: 800, s: 14, c: p.ad),
+                      const SizedBox(height: 2),
+                      T("${beds(missing)}. Add who's staying there by $by.", s: 13, lh: 1.4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.all(16).copyWith(top: 12, bottom: 12),
+          child: Row(
+            children: [
+              Expanded(child: Cta('Add resident', icon: 'plus', height: 50, px: 16, fs: 15, onTap: s.openAddResident)),
+              const SizedBox(width: 8),
+              Tap(
+                onTap: () => s.go('oInvite'),
+                child: Container(
+                  height: 50,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: box(w: 2, c: p.tx),
+                  child: const Row(children: [Ic('qr', size: 18), SizedBox(width: 10), T('Invite QR', w: 800, s: 15)]),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Row(
+            children: [
+              for (final f in filters) ...[
+                if (f != filters.first) const SizedBox(width: 6),
+                Tap(
+                  onTap: () => s.update(() => s.resF = f.$1),
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    alignment: Alignment.center,
+                    decoration: box(bg: f.$1 == s.resF ? p.tx : transparent, w: 1, c: f.$1 == s.resF ? p.tx : p.dv),
+                    child: T('${f.$1} ${s.residents.where((r) => f.$2 == null || r.tag == f.$2).length}', s: 13, w: 600, c: f.$1 == s.resF ? p.bg : p.tx),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final r in rows)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: Row(
+                    children: [
+                      Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: T(initials(r.name), w: 800, s: 13)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            T(r.name, w: 800, s: 15),
+                            const SizedBox(height: 1),
+                            T('Bed ${r.bed} · ${r.since}${r.confirmed && r.ref != null ? ' · ${r.ref}' : ''}', s: 12, c: p.mu),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      () {
+                        final t = residentTag(p, r.tag);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+                          decoration: box(bg: t.bg, w: 1, c: t.bd),
+                          child: T(t.label, s: 11, w: 800, ls: .04, upper: true, nowrap: true, c: t.fg),
+                        );
+                      }(),
+                    ],
+                  ),
+                ),
+              if (rows.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  child: T('No one here yet.', s: 14, c: p.mu),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F06 board 6: invite residents by QR, then approve who signs up.
+class OwnerInviteScreen extends StatelessWidget {
+  const OwnerInviteScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    const link = 'hostelzy.in/j/ANJ-7Q2';
+    Widget step(String t, String d) => Expanded(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(t, w: 800, s: 13), const SizedBox(height: 2), T(d, s: 12, c: p.mu)]),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              const Expanded(child: PageHead(kicker: 'Anjani Residency · Residents', title: 'Invite residents', size: 28)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Scroll(
+              key: ValueKey('oInvite${s.scrollEpoch}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
+                          child: const SizedBox(width: 175, height: 175, child: CustomPaint(painter: _QrPainter(Color(0xFF201E1D)))),
+                        ),
+                        const SizedBox(height: 12),
+                        const T(link, w: 800, s: 18),
+                        const SizedBox(height: 2),
+                        T("Stick it at the front desk or send it in your residents' group.", s: 13, c: p.mu, align: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.toastMsg('Opening WhatsApp to share $link…'))),
+                        const SizedBox(width: 8),
+                        Expanded(child: Cta('Print poster', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.toastMsg('Poster saved as a PDF.'))),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [step('1 · Scan', 'Name, phone, bed'), step('2 · Code', 'Phone verified'), step('3 · You approve', 'Then they count')]),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [const Kicker('Waiting for you'), if (s.signups.isNotEmpty) T('${s.signups.length} to approve', s: 12, w: 800, c: p.ad)],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final g in s.signups)
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [T(g.name, w: 800, s: 15), const SizedBox(height: 1), T('Bed ${g.bed} · phone verified · ${g.ago}', s: 12, c: p.mu)],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Tap(
+                                  onTap: () => s.approveSignup(g),
+                                  child: Container(height: 44, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center, color: p.ac, child: T('Approve', w: 800, s: 14, c: p.ai)),
+                                ),
+                                const SizedBox(width: 8),
+                                Semantics(
+                                  label: 'Not my resident',
+                                  button: true,
+                                  child: Tap(
+                                    onTap: () => s.rejectSignup(g),
+                                    child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const Ic('x', size: 16)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (s.signups.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: T('No one waiting. New sign-ups show up here.', s: 14, c: p.mu),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Placeholder QR (25×25 modules, three finder squares), as in the design.
+/// The real code comes with the backend.
+class _QrPainter extends CustomPainter {
+  const _QrPainter(this.ink);
+  final Color ink;
+  @override
+  void paint(Canvas canvas, Size size) {
+    const n = 25;
+    final c = size.width / n;
+    final paint = Paint()..color = ink;
+    var seed = 7321;
+    double rnd() {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed / 2147483648;
+    }
+
+    int finder(int r, int col) {
+      for (final (r0, c0) in const [(0, 0), (0, n - 7), (n - 7, 0)]) {
+        final y = r - r0, x = col - c0;
+        if (y >= -1 && y <= 7 && x >= -1 && x <= 7) {
+          if (y < 0 || x < 0 || y > 6 || x > 6) return 0;
+          if (y == 0 || y == 6 || x == 0 || x == 6) return 1;
+          return (y >= 2 && y <= 4 && x >= 2 && x <= 4) ? 1 : 0;
+        }
+      }
+      return -1;
+    }
+
+    for (var r = 0; r < n; r++) {
+      for (var col = 0; col < n; col++) {
+        final f = finder(r, col);
+        final on = f == -1 ? rnd() < .5 : f == 1;
+        if (on) canvas.drawRect(Rect.fromLTWH(col * c, r * c, c, c), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_QrPainter old) => old.ink != ink;
 }
 
 // ------------------------------------------------------------ F16 rate card
