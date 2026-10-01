@@ -34,9 +34,8 @@ Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F06", boards 4–
 - Should a resident ever see "Joined via Hostelzy"? The design keeps the tag owner-only.
 
 ## Build
-Branch `feature/f06-residents` (2026-10-01). Built on F05 (`feature/f05-enquiries`, PR #2) for
-the enquiry matching, with F02 (`feature/f02-advance-model`, PR #1) merged in for the money terms.
-Merge #1 and #2 first; this PR's own diff is then F06 only.
+Branch `feature/f06-residents` (2026-10-01), on top of F05 (`feature/f05-enquiries`, PR #2) for
+the enquiry matching; uses F02's money terms (on `main` since 2026-10-02). Merge #2 first.
 
 **Model.** `Resident` gains phone, `via` (hz / direct / before), `since`, matched `ref`,
 `confirmed`, advance and join time; tag = Waiting OTP until confirmed. `AppState.matchFor()`:
@@ -77,4 +76,4 @@ share and print come with the backend (F13).
 **Tests:** `test/flows_test.dart` → "owner adds a resident; phone matched to the enquiry;
 resident confirms" and "invite QR: owner approves or removes sign-ups". The complaints test now
 taps the Complaints segment (Manage opens on Residents). `flutter analyze` clean,
-`flutter test` 14/14.
+`flutter test` 15/15.
