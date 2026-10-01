@@ -41,5 +41,13 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
 - Firebase for push and crash reports. GitHub Actions builds the APK on every push to `main`.
 - Budget-conscious: ≈ ₹2,600/month at launch.
 
+## 2026-10-02
+
+**Room pricing**
+- Price is set by the owner per **sharing type × AC / non-AC**. A single hostel can have both AC and
+  non-AC rooms. **No pricing by bed position** (window, fan, etc.).
+- Tenants can filter by **AC / non-AC** (Explore chips, search sheet, bed picker).
+- In the room layout (F12), a room marked AC must have an AC unit placed.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
