@@ -1,6 +1,6 @@
 # F09 · Stay Rewards
 
-**Stage:** Spec ready
+**Stage:** Design ready · 2026-10-02
 
 ## Problem
 Make tenants want every stay recorded on Hostelzy, so collusion costs them.
@@ -17,7 +17,20 @@ Make tenants want every stay recorded on Hostelzy, so collusion costs them.
 None. ₹100 decided 2026-10-02.
 
 ## Design
-Needs mockups: rewards screen in Me, badge on tenant profile for owners.
+Canvas https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja. Awaiting founder approval.
+
+1. **Tenant: Me → Stay Rewards** (tweak Level: Member / Trusted tenant / Not a member yet).
+   - Member: level card ("since 1 Oct · first stay via Hostelzy at Anjani Residency"), ₹100 off your next hostel (paid by Hostelzy, green), 2-hour free holds, and Trusted tenant progress (4 of 6 months: rent on time, no owner complaints, 6 months).
+   - Trusted tenant: badge owners see, lower-advance deals, first look at free beds, plus the Member perks.
+   - Not a member yet: what you get after a first stay.
+   - Every version: invite a friend, code RAVI-100, Share, "₹100 each after your friend's first month", "1 friend joined · ₹100 on the way".
+2. **Owner: Trusted tenant badge.** A hold request on owner Today shows a "Trusted tenant" tag; tapping it explains what it means (6 months, rent on time, no complaints, phone verified). It never shows which hostels they stayed at before.
+3. **Tenant: 2-hour hold for Members.** The hold sheet: "Free hold · 2 hours (Member perk)" next to "Pay advance ₹3,000 straight to the owner". Note: everyone else gets 1 hour.
+4. **Tenant: ₹100 reward at move-in.** Move-in summary: first month ₹6,400, green "Member reward · paid by Hostelzy −₹100", pay ₹6,300. Note that the owner still gets the full ₹6,400.
+- Dark mode: board "1 in dark mode". Every board has a Dark tweak.
+
+**Design questions for the founder**
+- Hostelzy pays the ₹100 straight to the owner in the design, so the owner isn't short. Hostelzy never holds tenants' money, but paying out to owners is new. OK, or should the ₹100 come off the owner's next plan invoice instead (F10)?
 
 ## Build
 _Not started._
