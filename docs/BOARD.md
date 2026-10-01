@@ -12,7 +12,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
 | F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design approved** · 2026-10-01 | Build | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Matching window 60 days (decided 2026-10-02) |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Design ready** · 2026-10-02 | Design | Fair Play canvas. Awaiting founder approval |
-| F08 | Verified-resident reviews + Hostelzy score ranking | **Spec ready** | Design | |
+| F08 | Verified-resident reviews + Hostelzy score ranking | **Design ready** · 2026-10-02 | Design | Reviews canvas. Awaiting founder approval |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Spec ready** | Design | Decided 2026-10-02: ₹100 next-stay discount |
 | F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Spec ready** | Design | Decided 2026-10-02: flat plan ₹499 / ₹999 / ₹1,499, 30-day trial |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
@@ -46,3 +46,4 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 - Plan summary page: https://claude.ai/artifact/P8dsEAYo1GtvDyEc6SZN6y
 - Architecture page: https://claude.ai/artifact/3mqzfR9Dec8azyaExbgcFP
 - Fair Play mockups (F07): https://claude.ai/artifact/1a7M3JyP9Vxy2kBataCXZ5
+- Reviews mockups (F08): https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F
