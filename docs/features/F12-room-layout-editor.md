@@ -1,6 +1,6 @@
 # F12 · Room layout editor and room layers (with F11 seat-map booking)
 
-**Stage:** Spec ready · 2026-10-02 (F11 seat map merged in)
+**Stage:** Design ready · 2026-10-02 (F11 seat map merged in)
 
 ## Problem
 Tenants want to know exactly where their bed is and what's around it (fan, AC, window, washroom)
@@ -52,7 +52,26 @@ editor, photos pinned to items, bed filters in Explore (window bed, lower bunk),
 None. All answered 2026-10-02 (see DECISIONS.md).
 
 ## Design
-_Not started (waiting for spec)._
+Canvas https://claude.ai/artifact/8uEkfu5EzRsDeZrkb8Gjaz. Awaiting founder approval. Sample room: Anjani 204, 18 × 15 ft, 3 sharing, AC, ₹8,200. Items: window (faces street), door, attached washroom, 2 fans (dashed ~4 ft circles), AC unit with its airflow. Layers are told apart by pattern (bar, dashed circle, stripes, hatching), not colour alone.
+
+1. **Tenant: Room tab.** The bed picker segment is now Plan · Room · List · Building. It shows the room drawn on a 1-ft grid, with layer toggles for Fans, AC, Windows and Washroom. Beds are tapped like seats (Free, Taken, On hold, Selected) and never show names. The selected bed gets automatic facts ("Under a fan", "Window side · faces street", "In the AC airflow", "Door 4 m away") and the line "Same price as every bed here". Below: "Verified by Hostelzy visit · 28 Sep", then Compare beds and Hold bed. Interactive.
+2. **Tenant: compare two beds.** The same map with two beds marked, then a side-by-side table (fan, AC, window, door, washroom, walls), with differences in bold. The last row shows the same price for both.
+3. **Tenant: special states** (tweak "State"):
+   - "Layout coming soon": dashed box, "The Hostelzy team is drawing this room", and "Tell me when it's ready".
+   - Women's PG before a hold: Plan tab locked with "Floor plan shows after you hold a bed"; room layouts stay in the Room tab. Note: never shows gates, CCTV, exits or names.
+   - Signed out: "Sign in to see room layouts" and Verify my phone.
+4. **Owner: approve a layout** (Beds → room). Status bar shows "Check it and approve to go live · v2 drawn 1 Oct". Each item has a Working / Not working switch; when off, the item turns red on the map and the hint says tenants see "Not working" / "AC under repair" and a complaint is raised. Buttons: Approve layout and Request a change. Interactive.
+5. **Owner: request a change (sheet).** "What's different?" text box, plus tiles for Room photo, Paper sketch, Voice note and More photos, and length × width in ft. Note: "Free. The Hostelzy team redraws it within 48 hours…". Send request. Interactive.
+6. **Hostelzy admin: layout editor** (1440 × 900, laptop):
+   - Top bar: breadcrumb, "v2 draft · v1 live", Copy to rooms…, Mirror, Flip, History, Send to owner for approval.
+   - Left: the shape library (rectangle, L, T, U, angled corner, narrow end, alcove, custom) and the items palette (bed, bunk bed, window, door, fan, AC, washroom zone, pillar), with a reminder: no gates, CCTV, exits; sockets in phase 2.
+   - Middle: the room at 160% on a 1-ft grid, AC selected.
+   - Right: properties (wall, blows, reach, status); beds linked to the bed map ("204-A has a resident · can't delete"); checks (AC room has an AC unit, 3 beds = 3 sharing, window facing set, no gates/CCTV/exits); and the owner's request with the 48-hour countdown.
+- Dark mode: board "1 in dark mode". Every board has a Dark tweak.
+
+**Design questions for the founder**
+- Fan and AC "reach" circles are drawn as dashed outlines and stripes. Clear enough on a cheap phone, or show only the fact chips by default with layers off?
+- The Room tab comes second (Plan · Room · List · Building). Should Room be the default tab once a room has an approved layout?
 
 ## Build
 _Not started._
