@@ -1,0 +1,266 @@
+// Sample data and pure helpers, ported 1:1 from the Claude Design prototype
+// (project/HostelzyApp.dc.html).
+
+class Hostel {
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags});
+  final String id, name, gender, area, owner;
+  final int from, reviews, reply;
+  final double rating;
+  final bool food, ac, instant;
+  final Map<String, int> mins;
+  final double x, y;
+  final List<String> tags;
+}
+
+const hostels = <Hostel>[
+  Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 212, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
+  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 340, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors']),
+  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace']),
+  Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 158, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
+  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 187, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room']),
+  Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 410, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
+];
+
+/// Number as JavaScript prints it (`4.0` → `4`).
+String jsNum(num n) => n == n.roundToDouble() ? n.round().toString() : n.toString();
+
+Hostel hostelById(String id) => hostels.firstWhere((h) => h.id == id);
+
+const landmarks = ['Hitec City', 'Gachibowli', 'Ameerpet', 'JNTU'];
+const landmarkXY = <String, List<double>>{
+  'Hitec City': [50, 36],
+  'Gachibowli': [16, 72],
+  'Ameerpet': [86, 76],
+  'JNTU': [78, 8],
+};
+
+/// `'₹' + Math.round(n).toLocaleString('en-IN')`
+String fmt(num n) {
+  final v = n.round();
+  final neg = v < 0;
+  final s = v.abs().toString();
+  String out;
+  if (s.length <= 3) {
+    out = s;
+  } else {
+    final last3 = s.substring(s.length - 3);
+    var rest = s.substring(0, s.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    out = '${parts.join(',')},$last3';
+  }
+  return '₹${neg ? '-' : ''}$out';
+}
+
+const spots = <int, List<String>>{
+  2: ['By the window', 'By the door'],
+  3: ['By the window', 'Middle', 'By the door'],
+  4: ['Window, lower bunk', 'Window, upper bunk', 'Door, lower bunk', 'Door, upper bunk'],
+};
+const soonDates = ['8 Oct', '12 Oct', '15 Oct', '20 Oct'];
+
+class Bed {
+  Bed({required this.id, required this.letter, required this.room, required this.floor, required this.spot, required this.state, required this.soon});
+  final String id, letter, spot;
+  final int room, floor;
+
+  /// free | held | soon | booked
+  String state;
+  String soon;
+  bool mine = false;
+}
+
+class Room {
+  Room({required this.n, required this.floor, required this.share, required this.rent, required this.bath, required this.beds});
+  final int n, floor, share, rent;
+  final String bath;
+  final List<Bed> beds;
+}
+
+List<Room> mkRooms(Hostel h, int i) {
+  var s = i * 977 + 131;
+  double rnd() {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  }
+
+  const sh = [2, 3, 4, 3];
+  final out = <Room>[];
+  for (var f = 1; f <= 3; f++) {
+    for (var r = 1; r <= 4; r++) {
+      final share = sh[(r + f) % 4], n = f * 100 + r;
+      final beds = <Bed>[];
+      for (var k = 0; k < share; k++) {
+        final x = rnd();
+        beds.add(
+          Bed(
+            id: '$n-${'ABCD'[k]}',
+            letter: 'ABCD'[k],
+            room: n,
+            floor: f,
+            spot: spots[share]![k],
+            state: x < .34
+                ? 'free'
+                : x < .44
+                ? 'held'
+                : x < .54
+                ? 'soon'
+                : 'booked',
+            soon: soonDates[(x * 40).floor() % 4],
+          ),
+        );
+      }
+      out.add(Room(n: n, floor: f, share: share, rent: h.from + (4 - share) * 1100 + (f == 3 ? 300 : 0), bath: r % 2 == 1 ? 'Attached' : 'Shared', beds: beds));
+    }
+  }
+  return out;
+}
+
+void _setB(List<Room> rooms, String id, String st) {
+  for (final r in rooms) {
+    for (final b in r.beds) {
+      if (b.id == id) b.state = st;
+    }
+  }
+}
+
+void fixAnjani(List<Room> a) {
+  for (final id in ['204-A', '204-B', '204-C', '101-A', '102-B', '203-A', '301-B', '302-B']) {
+    _setB(a, id, 'booked');
+  }
+  for (final id in ['204-D', '201-C', '202-A', '103-B']) {
+    _setB(a, id, 'free');
+  }
+  _setB(a, '203-B', 'soon');
+  _setB(a, '102-C', 'held');
+  _setB(a, '301-A', 'held');
+}
+
+class Resident {
+  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note});
+  final String name, bed;
+  final int amt;
+  String status, note;
+  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note);
+}
+
+List<Resident> seedResidents() => [
+  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: 'Due 5 Oct'),
+  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep'),
+  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep'),
+  Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late'),
+  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct'),
+  Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late'),
+  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: 'Due 5 Oct'),
+  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep'),
+];
+
+class HoldRequest {
+  HoldRequest({required this.id, required this.name, required this.bed, required this.type, required this.secs, required this.note, required this.start, this.hold});
+  final String id, name, bed, type, note;
+  final int secs, start;
+  final String? hold;
+}
+
+List<HoldRequest> seedRequests(int now) => [HoldRequest(id: 'k1', name: 'Karthik M', bed: '102-C', type: 'Free hold', secs: 2460, note: 'Can I visit at 6 pm today?', start: now), HoldRequest(id: 'v1', name: 'Vamsi Reddy', bed: '301-A', type: 'Free hold', secs: 3180, note: 'Joining Infosys on 12 Oct.', start: now)];
+
+class Complaint {
+  Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false});
+  final int id;
+  final String by, cat, text, date;
+  final bool mine;
+  String status, note;
+  Complaint copyWith({String? status, String? note}) => Complaint(id: id, by: by, cat: cat, text: text, status: status ?? this.status, date: date, note: note ?? this.note, mine: mine);
+}
+
+List<Complaint> seedComplaints() => [
+  Complaint(id: 1, by: 'Rahul V · 204', cat: 'Geyser', text: 'No hot water in bathroom 2 since Monday.', status: 'In progress', date: '28 Sep', note: 'Plumber booked for Tuesday', mine: true),
+  Complaint(id: 2, by: 'Rahul V · 204', cat: 'WiFi', text: 'Drops every night after 11 pm.', status: 'Resolved', date: '20 Sep', note: 'Router replaced', mine: true),
+  Complaint(id: 3, by: 'Teja N · 102', cat: 'Cleaning', text: 'Room not swept for three days.', status: 'Open', date: '30 Sep', note: ''),
+  Complaint(id: 4, by: 'Faiz M · 101', cat: 'Water', text: 'Low pressure on floor 1 in the mornings.', status: 'Open', date: '1 Oct', note: ''),
+];
+
+class DayMenu {
+  const DayMenu(this.b, this.l, this.n);
+  final String b, l, n;
+  String of(String k) => k == 'b'
+      ? b
+      : k == 'l'
+      ? l
+      : n;
+  DayMenu withMeal(String k, String v) => DayMenu(k == 'b' ? v : b, k == 'l' ? v : l, k == 'n' ? v : n);
+}
+
+const seedMenu = [
+  DayMenu('Idli, sambar, coconut chutney', 'Rice, dal, bendakaya fry, curd', 'Chapati, paneer butter masala'),
+  DayMenu('Upma, banana', 'Rice, sambar, cabbage poriyal', 'Egg curry, rice, rasam'),
+  DayMenu('Poori, aloo curry', 'Veg biryani, raita', 'Chapati, dal tadka, salad'),
+  DayMenu('Pesarattu, ginger chutney', 'Rice, tomato pappu, aloo fry, curd', 'Chicken curry or paneer, chapati'),
+  DayMenu('Dosa, peanut chutney', 'Rice, rasam, beans fry', 'Veg fried rice, gobi manchurian'),
+  DayMenu('Pongal, vada', 'Lemon rice, curd rice, papad', 'Chapati, chana masala'),
+  DayMenu('Aloo paratha, curd', 'Chicken biryani or veg biryani', 'Khichdi, pickle'),
+];
+
+const meals = [
+  ['b', 'Breakfast', '7:30 – 9:30'],
+  ['l', 'Lunch', '12:30 – 2:00'],
+  ['n', 'Dinner', '8:00 – 10:00'],
+];
+const weekDays = [
+  ['Mon', '28'],
+  ['Tue', '29'],
+  ['Wed', '30'],
+  ['Thu', '1'],
+  ['Fri', '2'],
+  ['Sat', '3'],
+  ['Sun', '4'],
+];
+
+class Rule {
+  const Rule(this.k, this.v);
+  final String k, v;
+}
+
+const seedRules = [Rule('Gate closes', '10:30 pm'), Rule('Visitors', 'Common area only, till 8 pm'), Rule('Notice period', '30 days'), Rule('Security deposit', "2 months' rent"), Rule('Quiet hours', '11 pm – 6 am')];
+
+const homeOf = {'tenant': 'explore', 'resident': 'rHome', 'owner': 'oToday'};
+
+class HoldOption {
+  const HoldOption(this.title, this.sub, this.amt, this.note, this.cta);
+  final String title, sub, amt, note, cta;
+}
+
+const holdOptions = <String, HoldOption>{
+  'free': HoldOption('Free hold', 'Held for 1 hour. The owner confirms before it is yours.', '₹0', 'If the owner does not confirm within the hour, the bed is released. You pay nothing.', 'Place free hold'),
+  'paid': HoldOption('Paid hold', 'Guaranteed for 48 hours. Visit when it suits you.', '₹299', "₹299 comes off your first month's rent. Refunded in full if the owner cancels.", 'Pay ₹299 and hold'),
+  'token': HoldOption('Book now', 'Pay a token advance. The bed is yours right away.', '₹2,000', 'The token is adjusted in your first rent. Full refund if you cancel within 24 hours.', 'Pay ₹2,000 and book'),
+};
+
+class Hold {
+  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status});
+  final String id, hid, bed, opt;
+  final int room, start;
+
+  /// waiting | confirmed | held | booked | released
+  final String status;
+  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s);
+}
+
+/// Countdown text, `cd()` in the prototype.
+String cd(num t) {
+  final v = t < 0 ? 0 : t.floor();
+  final h = v ~/ 3600, m = (v % 3600) ~/ 60, x = v % 60;
+  return '${h > 0 ? '$h:${m.toString().padLeft(2, '0')}' : '$m'}:${x.toString().padLeft(2, '0')}';
+}
+
+/// `s.replace(/(\d{5})(\d{0,5})/, '$1 $2')`
+String phoneSpaced(String s) => s.replaceFirstMapped(RegExp(r'(\d{5})(\d{0,5})'), (m) => '${m[1]} ${m[2]}');
+
+String initials(String n) {
+  final s = n.split(' ').map((w) => w.isEmpty ? '' : w[0]).join();
+  return s.length > 2 ? s.substring(0, 2) : s;
+}
