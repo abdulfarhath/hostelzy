@@ -62,6 +62,7 @@ class OverviewPage extends StatelessWidget {
       [
         ('Today + hold requests', {'start': 'oToday', 'role': 'owner'}),
         ('Live bed map', {'start': 'oBeds', 'role': 'owner'}),
+        ('Rooms and rent', {'start': 'oRates', 'role': 'owner'}),
         ('Bed actions', {'start': 'oBeds', 'role': 'owner', 'sheet': 'bed'}),
         ('Add booking', {'start': 'oToday', 'role': 'owner', 'sheet': 'add'}),
         ('Rent collection', {'start': 'oRent', 'role': 'owner'}),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
+import 'package:hostelzy/ui/common.dart';
 import 'package:hostelzy/ui/shell.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
@@ -193,6 +194,57 @@ void main() {
     expect(dueNote(const Terms(dueOnJoining: false), 14), 'Due 1 Oct');
     expect(dueLeft(const Terms(dueOnJoining: false), 14), 'due today');
     expect(hostelById('saisri').terms.refund, 1500);
+  });
+
+  testWidgets('AC / non-AC: filter, price grid, picker, owner rate card (F16)', (tester) async {
+    final s = AppState(start: 'explore', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('Sai Sri Ladies Hostel'), findsOneWidget);
+    await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
+    expect(s.fR, 'AC');
+    expect(find.text('Sai Sri Ladies Hostel'), findsNothing);
+    expect(find.text('NON-AC'), findsNothing);
+    await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
+    expect(find.text('Nest 42 Co-living'), findsNothing);
+    expect(find.text('Sai Sri Ladies Hostel'), findsOneWidget);
+    await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
+    expect(s.fR, 'Any');
+
+    // Hostel page: sharing × type grid.
+    await tap(tester, find.text('Anjani Residency'));
+    expect(find.text('Not offered'), findsOneWidget);
+    expect(find.text('₹11,000'), findsOneWidget);
+    expect(find.text('Every bed in a room type costs the same. Window or door, upper or lower.'), findsOneWidget);
+
+    // Picker: AC filter skips non-AC rooms.
+    await tap(tester, find.text('Pick a bed'));
+    await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
+    expect(s.findBed('anjani', '${s.room}-A').r!.ac, isFalse);
+    await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
+    final r = s.rooms['anjani']!.firstWhere((x) => x.n == s.room);
+    expect(r.ac, isTrue);
+    expect(find.textContaining('${r.share} sharing · AC · '), findsOneWidget);
+    s.dispose();
+
+    // Owner: edit the rate card and a room's type.
+    final o = AppState(start: 'oBeds', role: 'owner');
+    await pumpApp(tester, o);
+    await tap(tester, find.text('Rooms and rent'));
+    expect(o.screen, 'oRates');
+    await tester.enterText(find.bySemanticsLabel('Walk-in price, 3 sharing AC'), '9500');
+    await tester.pump();
+    final r204 = o.rooms['anjani']!.firstWhere((x) => x.n == 204);
+    o.setRoomAc(r204, true);
+    await tester.pump();
+    expect(o.acDraft![204], isFalse);
+    await tap(tester, find.text('+ Add'));
+    expect(o.rateDraft![rateKey(true, 4)], 7600 + 1200);
+    o.setRoomAc(r204, true);
+    await tap(tester, find.text('Save rate card'));
+    expect(o.rooms['anjani']!.firstWhere((x) => x.n == 201).rent, 9500);
+    expect(r204.ac, isTrue);
+    expect(r204.rent, 8800);
+    o.dispose();
   });
 
   test('data helpers match the prototype', () {

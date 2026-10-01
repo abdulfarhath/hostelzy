@@ -2,7 +2,7 @@
 // (project/HostelzyApp.dc.html).
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms()});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false});
   final String id, name, gender, area, owner;
   final int from, reviews, reply;
   final double rating;
@@ -11,6 +11,10 @@ class Hostel {
   final double x, y;
   final List<String> tags;
   final Terms terms;
+
+  /// F16: [ac] = has AC rooms; [onlyAc] = every room is AC.
+  final bool onlyAc;
+  bool get hasNon => !ac || !onlyAc;
 }
 
 /// How a hostel charges (F02, Hyderabad / Chennai norm): an advance plus the
@@ -57,7 +61,7 @@ String dueLeft(Terms t, int joinDay) {
 const hostels = <Hostel>[
   Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 212, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
   Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 340, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
-  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500)),
+  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
   Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 158, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
   Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 187, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
   Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 410, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
@@ -117,11 +121,36 @@ class Bed {
 }
 
 class Room {
-  Room({required this.n, required this.floor, required this.share, required this.rent, required this.bath, required this.beds});
-  final int n, floor, share, rent;
+  Room({required this.n, required this.floor, required this.share, required this.rent, required this.bath, required this.beds, this.ac = false, this.acRepair = false});
+  final int n, floor, share;
   final String bath;
   final List<Bed> beds;
+
+  /// F16: the rent comes from the hostel's rate card (sharing × AC / non-AC),
+  /// so it changes when the owner edits the rate card or the room type.
+  int rent;
+  bool ac;
+
+  /// AC not working: the room stays AC; tenants see "AC under repair".
+  bool acRepair;
+  String get type => ac ? 'AC' : 'Non-AC';
 }
+
+/// F16 rate-card key: `ac3`, `non2`.
+String rateKey(bool ac, int share) => '${ac ? 'ac' : 'non'}$share';
+
+/// Sample rate card: non-AC as before (₹1,100 more per bed fewer), AC
+/// ₹1,200 more. Hostels with both kinds have no 4-sharing AC rooms.
+Map<String, int> seedRates(Hostel h) => {
+  for (final s in [2, 3, 4]) ...{
+    if (h.hasNon) rateKey(false, s): h.from + (4 - s) * 1100,
+    if (h.ac && (h.onlyAc || s < 4)) rateKey(true, s): h.from + (4 - s) * 1100 + (h.onlyAc ? 0 : 1200),
+  },
+};
+
+/// Sample room types: AC-only and non-AC-only hostels are uniform; mixed
+/// hostels have AC on floors 2 and 3 for 2 and 3 sharing.
+bool seedRoomAc(Hostel h, int floor, int share) => h.ac && (h.onlyAc || (floor >= 2 && share <= 3));
 
 List<Room> mkRooms(Hostel h, int i) {
   var s = i * 977 + 131;
@@ -131,6 +160,7 @@ List<Room> mkRooms(Hostel h, int i) {
   }
 
   const sh = [2, 3, 4, 3];
+  final rates = seedRates(h);
   final out = <Room>[];
   for (var f = 1; f <= 3; f++) {
     for (var r = 1; r <= 4; r++) {
@@ -156,7 +186,8 @@ List<Room> mkRooms(Hostel h, int i) {
           ),
         );
       }
-      out.add(Room(n: n, floor: f, share: share, rent: h.from + (4 - share) * 1100 + (f == 3 ? 300 : 0), bath: r % 2 == 1 ? 'Attached' : 'Shared', beds: beds));
+      final ac = seedRoomAc(h, f, share);
+      out.add(Room(n: n, floor: f, share: share, rent: rates[rateKey(ac, share)]!, ac: ac, bath: r % 2 == 1 ? 'Attached' : 'Shared', beds: beds));
     }
   }
   return out;
@@ -180,6 +211,7 @@ void fixAnjani(List<Room> a) {
   _setB(a, '203-B', 'soon');
   _setB(a, '102-C', 'held');
   _setB(a, '301-A', 'held');
+  a.firstWhere((r) => r.n == 201).acRepair = true;
 }
 
 class Resident {

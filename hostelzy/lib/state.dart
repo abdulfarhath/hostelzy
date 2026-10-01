@@ -11,6 +11,7 @@ class AppState extends ChangeNotifier {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView}) {
     for (var i = 0; i < hostels.length; i++) {
       rooms[hostels[i].id] = mkRooms(hostels[i], i);
+      rates[hostels[i].id] = seedRates(hostels[i]);
     }
     fixAnjani(rooms['anjani']!);
     final n = DateTime.now().millisecondsSinceEpoch;
@@ -33,7 +34,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'oToday', 'oBeds', 'oRent', 'oMore'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'oToday', 'oBeds', 'oRent', 'oMore', 'oRates'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -43,6 +44,18 @@ class AppState extends ChangeNotifier {
   List<String> hist = [];
   String phone = '', otp = '';
   final Map<String, List<Room>> rooms = {};
+
+  /// F16: rate card per hostel, `rateKey(ac, share)` → monthly rent.
+  final Map<String, Map<String, int>> rates = {};
+
+  /// F16 room-type filters: Explore + search (`fR`), bed picker (`pR`).
+  /// Any | AC | Non-AC
+  String fR = 'Any', pR = 'Any';
+
+  /// Owner rate card being edited (`oRates`): a copy until saved.
+  Map<String, int>? rateDraft;
+  Map<int, bool>? acDraft;
+  int rcFloor = 2;
   String hid = 'anjani';
   int floor = 2;
   int? room;
@@ -98,6 +111,10 @@ class AppState extends ChangeNotifier {
   }
 
   void _prep() {
+    if (screen == 'oRates' && rateDraft == null) {
+      rateDraft = Map.of(rates['anjani']!);
+      acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
+    }
     if (screen == 'picker' || sheet == 'hold') {
       final rs = rooms[hid]!;
       final r = rs.where((r) => r.floor == 2 && r.beds.any((b) => b.state == 'free')).firstOrNull ?? rs[0];
@@ -160,6 +177,75 @@ class AppState extends ChangeNotifier {
     waMsg = msg;
   });
 
+  /// F16: does room [r] match room-type filter [f] (Any | AC | Non-AC)?
+  static bool fits(Room r, String f) => f == 'Any' || (f == 'AC') == r.ac;
+
+  /// F16: cheapest rent and free beds for one room type at a hostel, or
+  /// null when the hostel has no rooms of that type.
+  ({int from, int free})? typeSummary(String hid, bool ac) {
+    final rs = rooms[hid]!.where((r) => r.ac == ac).toList();
+    if (rs.isEmpty) return null;
+    return (from: rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b), free: rs.fold(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length));
+  }
+
+  /// Bed picker room-type filter: keep the open room if it fits, else jump
+  /// to the first fitting room (with a free bed) on this floor, then any floor.
+  void pickRoomType(String f) => update(() {
+    pR = f;
+    final rs = rooms[hid]!;
+    final cur = rs.where((r) => r.n == room).firstOrNull;
+    if (cur != null && fits(cur, f)) return;
+    final fit = rs.where((r) => fits(r, f));
+    final r = fit.where((r) => r.floor == floor && r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull;
+    if (r != null) {
+      room = r.n;
+      floor = r.floor;
+    }
+    bed = null;
+  });
+
+  /// Owner opens "Rooms and rent" with a draft copy of the rate card.
+  void openRates() {
+    rateDraft = Map.of(rates['anjani']!);
+    acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
+    rcFloor = 2;
+    go('oRates');
+  }
+
+  void setRoomAc(Room r, bool ac) {
+    if (ac && rateDraft![rateKey(true, r.share)] == null) return toastMsg('Add a ${r.share} sharing AC price first.');
+    if (!ac && rateDraft![rateKey(false, r.share)] == null) return toastMsg('Add a ${r.share} sharing non-AC price first.');
+    update(() => acDraft![r.n] = ac);
+  }
+
+  /// "Not offered · + Add": starts from the other type's price (± ₹1,200).
+  void addRate(bool ac, int share) => update(() {
+    final other = rateDraft![rateKey(!ac, share)] ?? rateDraft!.values.reduce((a, b) => a < b ? a : b);
+    rateDraft![rateKey(ac, share)] = other + (ac ? 1200 : -1200);
+  });
+
+  void saveRates() {
+    final rs = rooms['anjani']!;
+    final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
+    update(() {
+      rates['anjani'] = Map.of(rateDraft!);
+      for (final r in rs) {
+        r.ac = acDraft![r.n]!;
+      }
+      applyRates('anjani');
+    });
+    toastMsg(newAc > 0 ? 'Saved. The Hostelzy team adds the AC unit to the layout within 48 hours.' : 'Rate card saved. Tenants see the new prices now.');
+  }
+
+  /// Rewrites every room's rent from the hostel's rate card.
+  void applyRates(String hid) {
+    final rc = rates[hid]!;
+    for (final r in rooms[hid]!) {
+      final v = rc[rateKey(r.ac, r.share)];
+      if (v != null) r.rent = v;
+    }
+  }
+
   ({int f, int t}) freeOf(String id) {
     var f = 0, t = 0;
     for (final r in rooms[id]!) {
@@ -181,9 +267,13 @@ class AppState extends ChangeNotifier {
   }
 
   void openPicker() {
-    final rs = rooms[hid]!;
+    final h = hostelById(hid);
+    // F16: carry the Explore room filter into the picker when it applies.
+    final f = h.ac && h.hasNon ? fR : 'Any';
+    final rs = rooms[hid]!.where((r) => fits(r, f)).toList();
     final r = rs.where((r) => r.floor == 2 && r.beds.any((b) => b.state == 'free')).firstOrNull ?? rs.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? rs[0];
     update(() {
+      pR = f;
       hist = [...hist, screen];
       screen = 'picker';
       sheet = null;

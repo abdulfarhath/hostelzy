@@ -25,7 +25,7 @@ exposes:
 
 | Param | Values |
 | --- | --- |
-| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `oToday` `oBeds` `oRent` `oMore` |
+| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `oToday` `oBeds` `oRent` `oMore` `oRates` |
 | `role` | `tenant` `resident` `owner` |
 | `theme` | `light` `dark` |
 | `mode` | `plan` `list` `building` (bed picker) |

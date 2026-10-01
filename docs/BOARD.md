@@ -19,7 +19,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design ready** · 2026-10-02 | Design | Boards 1–6 in the Room Layouts canvas. Awaiting founder approval |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Spec ready** · 2026-10-02 | Design | Visits start now with a visit kit; app import after F13 |
-| F16 | AC / non-AC room types, pricing grid and filter | **Design approved** · 2026-10-02 | Build | Boards 1–6 in the AC / Non-AC Rooms canvas (2026-10-02). Touches F03, F04, F12. No position-based pricing |
+| F16 | AC / non-AC room types, pricing grid and filter | **Built** (2026-10-02) | Build | Branch `feature/f16-ac-rooms`. Deal display waits for F03. Waiting for founder to check and merge |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Spec ready** · 2026-10-02 | Design | In-app screens. Store setup needs Play account + domain |
 
 ## Plan (founder, 2026-10-02)

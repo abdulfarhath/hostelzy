@@ -310,6 +310,7 @@ class _AppBody extends StatelessWidget {
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
+    'oRates' => const OwnerRatesScreen(),
     _ => const SizedBox(),
   };
 }
@@ -500,6 +501,7 @@ class _SearchSheet extends StatelessWidget {
           ),
           group('Who is it for', Seg(opts: const [('Any', 'Any'), ('Women', 'Women'), ('Men', 'Men'), ('Co-living', 'Co-ed')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad)),
           group('Sharing', Seg(opts: same(['Any', '2', '3', '4']), cur: s.fS, onPick: (v) => s.update(() => s.fS = v), pad: segPad)),
+          group('Room', Seg(opts: same(['Any', 'AC', 'Non-AC']), cur: s.fR, onPick: (v) => s.update(() => s.fR = v), pad: segPad)),
           group('Monthly budget', Seg(opts: const [('Any', 'Any'), ('6k', '<6k'), ('8k', '<8k'), ('10k', '<10k')], cur: s.fB, onPick: (v) => s.update(() => s.fB = v), pad: segPad)),
           Tap(
             onTap: () => s.update(() => s.fFood = !s.fFood),

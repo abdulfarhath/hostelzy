@@ -9,7 +9,14 @@ import 'kit.dart';
 
 List<Hostel> filtered(AppState s) {
   final lim = {'Any': 1e9, '6k': 6000, '8k': 8000, '10k': 10000}[s.fB]!;
-  final out = hostels.where((h) => (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && h.from <= lim && (s.fS == 'Any' || s.rooms[h.id]!.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')))).toList();
+  bool ok(Hostel h) {
+    final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
+    if (rs.isEmpty) return false;
+    final from = rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
+    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
+  }
+
+  final out = hostels.where(ok).toList();
   // Array.prototype.sort is stable; List.sort is not guaranteed to be, so sort by (mins, index).
   final idx = {for (var i = 0; i < hostels.length; i++) hostels[i].id: i};
   out.sort((a, b) {
@@ -21,10 +28,25 @@ List<Hostel> filtered(AppState s) {
 
 String searchSummary(AppState s) {
   final budget = {'Any': 'Any budget', '6k': 'Under ₹6,000', '8k': 'Under ₹8,000', '10k': 'Under ₹10,000'}[s.fB]!;
-  return [s.lm, s.fG == 'Any' ? 'Anyone' : s.fG, s.fS == 'Any' ? null : '${s.fS} sharing', budget, s.fFood ? 'Food' : null].whereType<String>().join(' · ');
+  return [s.lm, s.fG == 'Any' ? 'Anyone' : s.fG, s.fS == 'Any' ? null : '${s.fS} sharing', s.fR == 'Any' ? null : '${s.fR} rooms', budget, s.fFood ? 'Food' : null].whereType<String>().join(' · ');
 }
 
-String featOf(Hostel h) => [h.food ? 'Food' : 'No food', h.ac ? 'AC' : null].whereType<String>().join(' · ');
+String featOf(Hostel h) => [h.food ? 'Food' : 'No food', h.ac ? (h.onlyAc ? 'AC rooms' : 'AC and non-AC') : null].whereType<String>().join(' · ');
+
+/// F16: small AC / Non-AC tag (AC: ink border, Non-AC: muted).
+class RoomTypeTag extends StatelessWidget {
+  const RoomTypeTag(this.ac, {super.key});
+  final bool ac;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 5),
+      decoration: box(w: 1, c: ac ? p.tx : p.dv),
+      child: T(ac ? 'AC' : 'Non-AC', s: 10, w: 800, ls: .06, upper: true, c: ac ? p.tx : p.mu),
+    );
+  }
+}
 
 // ------------------------------------------------------------ explore
 
@@ -38,7 +60,12 @@ class ExploreScreen extends StatelessWidget {
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
     final chips = [
-      ChipBtn('All', on: s.fG == 'Any', onTap: () => set(() => s.fG = 'Any')),
+      ChipBtn('All', on: s.fG == 'Any' && s.fR == 'Any', onTap: () => set(() {
+        s.fG = 'Any';
+        s.fR = 'Any';
+      })),
+      ChipBtn('AC', on: s.fR == 'AC', onTap: () => set(() => s.fR = s.fR == 'AC' ? 'Any' : 'AC')),
+      ChipBtn('Non-AC', on: s.fR == 'Non-AC', onTap: () => set(() => s.fR = s.fR == 'Non-AC' ? 'Any' : 'Non-AC')),
       ChipBtn('Women', on: s.fG == 'Women', onTap: () => set(() => s.fG = 'Women')),
       ChipBtn('Men', on: s.fG == 'Men', onTap: () => set(() => s.fG = 'Men')),
       ChipBtn('Co-living', on: s.fG == 'Co-living', onTap: () => set(() => s.fG = 'Co-living')),
@@ -109,6 +136,7 @@ class ExploreScreen extends StatelessWidget {
                               s.fS = 'Any';
                               s.fB = 'Any';
                               s.fFood = false;
+                              s.fR = 'Any';
                             }),
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
@@ -136,25 +164,12 @@ class HostelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final free = s.freeOf(h.id).f;
-    final dots = <Widget>[];
-    for (final r in s.rooms[h.id]!) {
-      for (final b in r.beds) {
-        if (b.state == 'free' && !b.mine) {
-          dots.add(Container(width: 6, height: 9, color: p.tx));
-        } else if (b.state == 'soon') {
-          dots.add(
-            SizedBox(
-              width: 6,
-              height: 9,
-              child: Dashed(color: p.tx, width: 1, child: const SizedBox.expand()),
-            ),
-          );
-        } else {
-          dots.add(Container(width: 6, height: 9, color: p.tk));
-        }
-      }
-    }
+    // F16: one line per room type, filtered like the list.
+    final lines = [
+      for (final ac in [true, false])
+        if (s.fR == 'Any' || (s.fR == 'AC') == ac)
+          if (s.typeSummary(h.id, ac) case final t?) (ac: ac, from: t.from, free: t.free),
+    ];
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -214,21 +229,23 @@ class HostelCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     T('${h.mins[s.lm]} min to ${s.lm} · ${featOf(h)}', s: 13, c: p.mu),
                     const Spacer(),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Wrap(spacing: 2, runSpacing: 2, children: dots),
-                    ),
-                    const SizedBox(height: 4 + 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        T('$free beds free', s: 12, w: 600),
-                        Rich([sp(context, fmt(h.from), s: 17, w: 800), sp(context, '/mo', s: 12, c: p.mu)]),
-                      ],
-                    ),
+                    const SizedBox(height: 10),
+                    for (final l in lines) ...[
+                      if (l != lines.first) const SizedBox(height: 3),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [RoomTypeTag(l.ac), const SizedBox(width: 6), T('${l.free} free', s: 12, c: p.mu)],
+                          ),
+                          Rich([sp(context, 'from ', s: 12, c: p.mu), sp(context, fmt(l.from), s: 16, w: 800), sp(context, '/mo', s: 12, c: p.mu)]),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -643,11 +660,13 @@ class DetailScreen extends StatelessWidget {
     final rs = s.rooms[h.id]!;
     final free = s.freeOf(h.id).f;
     final saved = s.saved[h.id] ?? false;
-    final types = [2, 3, 4].map((n) {
-      final rr = rs.where((r) => r.share == n).toList();
-      final fr = rr.fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length);
-      return (label: '$n sharing', sub: '${rr.length} rooms · ${fr > 0 ? '$fr beds free' : 'Full right now'}', price: fmt(rr.map((r) => r.rent).reduce((a, b) => a < b ? a : b)));
-    });
+    // F16: sharing × room type grid; one column per type the hostel has.
+    final kinds = [if (h.hasNon) false, if (h.ac) true];
+    ({int price, int free})? cell(int n, bool ac) {
+      final rr = rs.where((r) => r.share == n && r.ac == ac).toList();
+      if (rr.isEmpty) return null;
+      return (price: rr.first.rent, free: rr.fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length));
+    }
     final rules = [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],
@@ -759,27 +778,90 @@ class DetailScreen extends StatelessWidget {
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tagRow(0), const SizedBox(height: 1), tagRow(2)]),
                 ),
-                const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 6), child: Kicker('Rent by room type')),
-                for (final t in types)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [const Kicker('Rent by room type'), T('per month', s: 12, c: p.mu)],
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: box(w: 2, c: p.tx),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+                        child: IntrinsicHeight(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              T(t.label, w: 800, s: 16),
-                              T(t.sub, s: 13, c: p.mu),
+                              const SizedBox(width: 92),
+                              for (final ac in kinds)
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                                    decoration: BoxDecoration(border: Border(left: bs(1, p.hl))),
+                                    child: T(ac ? 'AC' : 'Non-AC', s: 11, w: 800, ls: .06, upper: true),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Rich([sp(context, t.price), sp(context, '/mo', s: 12, w: 400, c: p.mu)], w: 800, s: 17),
-                      ],
-                    ),
+                      ),
+                      for (final n in [2, 3, 4])
+                        if (kinds.any((ac) => cell(n, ac) != null))
+                          Container(
+                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  SizedBox(
+                                    width: 92,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Align(alignment: Alignment.centerLeft, child: T('$n sharing', w: 800, s: 14)),
+                                    ),
+                                  ),
+                                  for (final ac in kinds)
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 10),
+                                        decoration: BoxDecoration(border: Border(left: bs(1, p.hl))),
+                                        child: () {
+                                          final c = cell(n, ac);
+                                          return Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              T(c != null ? fmt(c.price) : '—', w: 800, s: 17, c: c != null ? p.tx : p.mu),
+                                              const SizedBox(height: 1),
+                                              T(c != null ? (c.free > 0 ? '${c.free} free' : 'Full right now') : 'Not offered', s: 12, c: p.mu),
+                                            ],
+                                          );
+                                        }(),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                    ],
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: VGap(
+                    gap: 4,
+                    children: [
+                      T('Every bed in a room type costs the same. Window or door, upper or lower.', s: 12, c: p.mu, lh: 1.4),
+                      T('${h.food ? 'Food included. ' : ''}Electricity ${h.terms.electricityExtra ? "extra, by the room's meter" : 'included'}.', s: 12, c: p.mu, lh: 1.4),
+                    ],
+                  ),
+                ),
                 Container(
                   margin: const EdgeInsets.only(top: 14),
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
@@ -925,6 +1007,19 @@ class PickerScreen extends StatelessWidget {
             ],
           ),
         ),
+        if (h.ac && h.hasNon)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                const Padding(padding: EdgeInsets.only(right: 4), child: Kicker('Room')),
+                for (final f in const ['Any', 'AC', 'Non-AC']) ...[
+                  const SizedBox(width: 6),
+                  ChipBtn(f, on: s.pR == f, onTap: () => s.pickRoomType(f)),
+                ],
+              ],
+            ),
+          ),
         const SizedBox(height: 12),
         Expanded(
           child: Container(
@@ -945,7 +1040,7 @@ class PickerScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     T(hasSel ? 'Bed ${sb.b!.id}' : 'No bed picked', w: 800, s: 17),
-                    T(hasSel ? '${sb.b!.spot} · ${sb.r!.share} sharing · ${fmt(sb.r!.rent)}/mo' : 'Tap a free bed to hold it', s: 12, c: p.mu, ell: true),
+                    T(hasSel ? '${sb.b!.spot} · ${sb.r!.share} sharing · ${sb.r!.type} · ${fmt(sb.r!.rent)}/mo' : 'Tap a free bed to hold it', s: 12, c: p.mu, ell: true),
                   ],
                 ),
               ),
@@ -1008,7 +1103,7 @@ class _PlanMode extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final floors = [
-      for (final f in [1, 2, 3]) (f, rooms.where((r) => r.floor == f).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
+      for (final f in [1, 2, 3]) (f, rooms.where((r) => r.floor == f && AppState.fits(r, s.pR)).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
     ];
     final tiles = rooms.where((r) => r.floor == s.floor).toList();
     final cols = room.share == 3 ? 3 : 2;
@@ -1034,7 +1129,8 @@ class _PlanMode extends StatelessWidget {
           items: floors,
           cur: s.floor,
           onPick: (f) {
-            final r = rooms.where((r) => r.floor == f && r.beds.any((b) => b.state == 'free')).firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
+            final fit = rooms.where((r) => r.floor == f && AppState.fits(r, s.pR));
+            final r = fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
             s.update(() {
               s.floor = f;
               s.room = r.n;
@@ -1053,13 +1149,15 @@ class _PlanMode extends StatelessWidget {
                   () {
                     final r = tiles[i];
                     final fr = r.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length;
+                    final fits = AppState.fits(r, s.pR);
                     return Tap(
+                      enabled: fits,
                       onTap: () => s.update(() {
                         s.room = r.n;
                         s.bed = null;
                       }),
                       child: Opacity(
-                        opacity: fr > 0 ? 1 : .5,
+                        opacity: !fits ? .35 : (fr > 0 ? 1 : .5),
                         child: Container(
                           width: 86,
                           padding: const EdgeInsets.all(10),
@@ -1068,7 +1166,9 @@ class _PlanMode extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               T('${r.n}', w: 800, s: 19),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 3),
+                              Align(alignment: Alignment.centerLeft, child: RoomTypeTag(r.ac)),
+                              const SizedBox(height: 3),
                               T('${r.share} sharing', s: 12, c: p.mu),
                               const SizedBox(height: 2),
                               T(fr > 0 ? '$fr open' : 'Full', s: 12, w: 600),
@@ -1095,10 +1195,17 @@ class _PlanMode extends StatelessWidget {
                   T('Room ${room.n}', w: 800, s: 20, nowrap: true),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: T('${room.share} sharing · ${room.bath} bath · ${fmt(room.rent)}', s: 12, c: p.mu, align: TextAlign.right),
+                    child: Rich([sp(context, '${room.share} sharing · ${room.type} · ${fmt(room.rent)}'), sp(context, '/mo', w: 400, c: p.mu)], s: 13, w: 600, align: TextAlign.right),
                   ),
                 ],
               ),
+              if (room.ac && room.acRepair)
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                  color: p.ab,
+                  child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+                ),
               const SizedBox(height: 12),
               Container(
                 decoration: box(w: 2, c: p.tx),
@@ -1120,6 +1227,16 @@ class _PlanMode extends StatelessWidget {
                           child: Container(color: p.tx),
                         ),
                         Positioned(top: 10, left: w * .22, child: const _PlanLabel('Window')),
+                        if (room.ac)
+                          Positioned(
+                            top: 8,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 6),
+                              decoration: box(w: 1, c: p.tx),
+                              child: const T('AC UNIT', s: 10, w: 800, ls: .08),
+                            ),
+                          ),
                         Positioned(bottom: -2, right: 20, width: 64, height: 2, child: Container(color: p.bg)),
                         const Positioned(bottom: 10, right: 20, child: _PlanLabel('Door')),
                         if (room.bath == 'Attached') const Positioned(bottom: 10, left: 14, child: _PlanLabel('Attached bath ↙')),
@@ -1194,7 +1311,7 @@ class _ListMode extends StatelessWidget {
     final lb = <({Bed b, Room r})>[];
     for (final r in rooms) {
       for (final b in r.beds) {
-        if ((b.state == 'free' || b.state == 'soon') && !b.mine) lb.add((b: b, r: r));
+        if ((b.state == 'free' || b.state == 'soon') && !b.mine && AppState.fits(r, s.pR)) lb.add((b: b, r: r));
       }
     }
     // Stable sort by rent.
@@ -1241,7 +1358,7 @@ class _ListMode extends StatelessWidget {
                           children: [
                             T('Bed ${e.b.id}', w: 800, s: 16),
                             const SizedBox(height: 2),
-                            T('Floor ${e.r.floor} · ${e.r.share} sharing · ${e.r.bath} bath', s: 12, c: p.mu),
+                            T('Floor ${e.r.floor} · ${e.r.share} sharing · ${e.r.type} · ${e.r.bath} bath', s: 12, c: p.mu),
                             const SizedBox(height: 2),
                             T('${e.b.spot} · ${e.b.state == 'soon' ? 'Free from ${e.b.soon}' : 'Free now'}', s: 12, w: 600),
                           ],

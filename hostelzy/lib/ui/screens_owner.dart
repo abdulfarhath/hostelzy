@@ -5,7 +5,7 @@ import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
 import 'screens_resident.dart' show WeekTable;
-import 'screens_tenant.dart' show FloorTabs;
+import 'screens_tenant.dart' show FloorTabs, RoomTypeTag;
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
   var t = 0, booked = 0, held = 0, soon = 0, free = 0;
@@ -397,7 +397,22 @@ class OwnerBedsScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: occCounts(s), title: 'Bed map'),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: PageHead(kicker: occCounts(s), title: 'Bed map')),
+                const SizedBox(width: 12),
+                Tap(
+                  onTap: s.openRates,
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: box(w: 2, c: p.tx),
+                    child: const Row(children: [Ic('wallet', size: 16), SizedBox(width: 8), T('Rooms and rent', w: 800, s: 13)]),
+                  ),
+                ),
+              ],
+            ),
           ),
           Seg(opts: const [('plan', 'Floor plan'), ('grid', 'All floors')], cur: s.obView, onPick: (v) => s.update(() => s.obView = v), margin: const EdgeInsets.fromLTRB(16, 0, 16, 14)),
           if (s.obView == 'plan') ...[
@@ -852,6 +867,187 @@ class OwnerManageScreen extends StatelessWidget {
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
             child: Scroll(key: ValueKey('oMore${s.scrollEpoch}'), child: body),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ------------------------------------------------------------ F16 rate card
+
+/// F16 board 5: rate card (sharing × AC / non-AC) and each room's type.
+class OwnerRatesScreen extends StatelessWidget {
+  const OwnerRatesScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final d = s.rateDraft ?? s.rates['anjani']!;
+    final acd = s.acDraft ?? {for (final r in s.rooms['anjani']!) r.n: r.ac};
+    final rooms = s.rooms['anjani']!.where((r) => r.floor == s.rcFloor).toList();
+    Widget head(String t, {Color? c}) => T(t, s: 10, w: 600, ls: .08, upper: true, c: c ?? p.mu);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              const Expanded(child: PageHead(kicker: 'Anjani Residency · Beds', title: 'Rooms and rent', size: 28)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Scroll(
+              key: ValueKey('oRates${s.scrollEpoch}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [const Kicker('Rate card · per month'), T('One price per type', s: 12, c: p.mu)],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Row(children: [Expanded(child: head('Room type')), const SizedBox(width: 8), SizedBox(width: 104, child: head('Walk-in')), const SizedBox(width: 8), SizedBox(width: 86, child: head('Hostelzy'))]),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final n in [2, 3, 4])
+                          for (final ac in [false, true])
+                            Container(
+                              constraints: const BoxConstraints(minHeight: 52),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                              decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Row(children: [T('$n sharing', w: 800, s: 14), const SizedBox(width: 6), RoomTypeTag(ac)])),
+                                  const SizedBox(width: 8),
+                                  if (d[rateKey(ac, n)] case final v?) ...[
+                                    SizedBox(
+                                      width: 104,
+                                      child: Semantics(
+                                        label: 'Walk-in price, $n sharing ${ac ? 'AC' : 'Non-AC'}',
+                                        child: Field(
+                                          value: fmt(v),
+                                          height: 40,
+                                          fs: 14,
+                                          w: 600,
+                                          pad: const EdgeInsets.symmetric(horizontal: 8),
+                                          numeric: true,
+                                          onChanged: (t) {
+                                            final dg = t.replaceAll(RegExp(r'\D'), '');
+                                            s.update(() => s.rateDraft![rateKey(ac, n)] = int.tryParse(dg.length > 6 ? dg.substring(0, 6) : dg) ?? 0);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Deals (F03) will lower this column; until then it matches the walk-in price.
+                                    SizedBox(
+                                      width: 86,
+                                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(fmt(v), w: 800, s: 15), T('Same as walk-in', s: 11, c: p.mu)]),
+                                    ),
+                                  ] else
+                                    SizedBox(
+                                      width: 198,
+                                      child: Tap(
+                                        onTap: () => s.addRate(ac, n),
+                                        child: Dashed(
+                                          color: p.dv,
+                                          width: 1,
+                                          child: Container(
+                                            height: 40,
+                                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                                            alignment: Alignment.centerLeft,
+                                            child: Row(children: [T('Not offered · ', s: 13, w: 600, c: p.mu), T('+ Add', s: 13, w: 800, c: p.ad)]),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Kicker('Rooms · Floor ${s.rcFloor}'),
+                        Row(
+                          children: [
+                            T('Floor ', s: 12, c: p.mu),
+                            for (final f in [1, 2, 3]) ...[
+                              if (f > 1) T(' · ', s: 12, c: p.mu),
+                              Tap(onTap: () => s.update(() => s.rcFloor = f), child: T('$f', s: 12, w: f == s.rcFloor ? 800 : 400, c: f == s.rcFloor ? p.tx : p.mu, underline: f == s.rcFloor)),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final r in rooms)
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      T('Room ${r.n}', w: 800, s: 15),
+                                      const SizedBox(height: 1),
+                                      T('${r.share} sharing · ${d[rateKey(acd[r.n]!, r.share)] != null ? '${fmt(d[rateKey(acd[r.n]!, r.share)]!)} walk-in' : 'no price yet'}', s: 12, c: p.mu),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                SizedBox(
+                                  width: 150,
+                                  child: Seg(opts: const [('non', 'Non-AC'), ('ac', 'AC')], cur: acd[r.n]! ? 'ac' : 'non', onPick: (v) => s.setRoomAc(r, v == 'ac'), pad: const EdgeInsets.symmetric(vertical: 9, horizontal: 6)),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: T('AC rooms need an AC unit in the layout. The Hostelzy team adds it within 48 hours.', s: 12, c: p.mu, lh: 1.4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Cta('Save rate card', icon: 'check', height: 52, px: 16, fs: 15, onTap: s.saveRates),
         ),
       ],
     );
