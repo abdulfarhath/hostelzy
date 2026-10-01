@@ -17,7 +17,9 @@ The prototype's ₹2,000 token and ₹299 paid hold don't match how Hyderabad ho
 None. Decided 2026-10-02: keep the free 1-hour hold, drop the ₹299 paid hold.
 
 ## Design
-Canvas board 3 (Book). Awaiting founder approval. Note: the mockup shows "Pay ₹3,000 by UPI" in-app; adjust to "pay the owner" per DECISIONS.
+Canvas https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn, board 3 (Book). Updated 2026-10-02. Awaiting founder approval.
+- "Pay the owner to book": "Pay Srinivas today ₹3,000". Footnote: paid by UPI straight to the owner, Hostelzy never holds the money.
+- Two buttons: **Pay advance** (red) and **Hold free** ("1 hour · 2 h for Members"). No ₹299 paid hold anywhere.
 
 ## Build
 _Not started._
