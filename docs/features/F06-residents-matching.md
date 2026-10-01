@@ -1,6 +1,6 @@
 # F06 · Resident list and join matching
 
-**Stage:** Design ready
+**Stage:** Design approved (founder, 2026-10-01)
 
 ## Problem
 Owners can take app tenants off-app. Matching phone numbers shows who joined via Hostelzy.
@@ -19,7 +19,7 @@ Owners can take app tenants off-app. Matching phone numbers shows who joined via
 BOARD Q8.
 
 ## Design
-Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F06", boards 4–7). Awaiting founder approval.
+Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F06", boards 4–7). **Design approved by the founder on 2026-10-01**, as shown (default tweak settings). The design questions below were not answered at approval; build the defaults shown and keep them easy to change.
 
 4. **Owner: Manage → Residents.** New first segment in Manage (Residents · Complaints · Menu · Rules). Red banner for taken beds with no resident ("Beds 204-A and 301-C. Add who's staying there by Sat 3 Oct."). Add resident (red) + Invite QR. Filter chips with counts: All, Via Hostelzy, Direct, Waiting OTP, Before Hostelzy. Rows: initials, name, bed, join date (+ HZ code when matched), tag. Interactive filters.
    - Tags: **Via Hostelzy** (black fill), **Direct** (outline), **Waiting OTP** (red tint, not counted yet), **Before Hostelzy** (grey; the grandfathered first import).

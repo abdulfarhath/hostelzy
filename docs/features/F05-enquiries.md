@@ -1,6 +1,6 @@
 # F05 · Enquiry flow
 
-**Stage:** Design ready
+**Stage:** Design approved (founder, 2026-10-01)
 
 ## Problem
 A WhatsApp message can be edited or never sent, so it can't prove a tenant came from Hostelzy.
@@ -18,7 +18,7 @@ A WhatsApp message can be edited or never sent, so it can't prove a tenant came 
 - Should Enquiries take a KPI tile on owner Today, or stay a section?
 
 ## Design
-Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F05", boards 1–3). Awaiting founder approval.
+Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F05", boards 1–3). **Design approved by the founder on 2026-10-01**, as shown (default tweak settings). The design questions below were not answered at approval; build the defaults shown and keep them easy to change.
 
 1. **Tenant: WhatsApp sheet.** Opens after "Ask on WhatsApp". Note at the top: "Srinivas has been told on Hostelzy, with your verified number and ref HZ-4821." Prefilled message ends with `Ref HZ-4821 · hostelzy.in/r/HZ-4821`. Open WhatsApp / Copy message, same as today's sheet.
 2. **Owner Today: "Enquiries from Hostelzy".** Section under the KPI tiles, above Hold requests. Each row: name, phone with "verified", bed (or "Any bed"), HZ code, time, New/Contacted tag, WhatsApp + Call. WhatsApp is red while New, outline once Contacted (tapping either marks it Contacted). Footer: "Not on this list = not from Hostelzy. Ask for their HZ code." Interactive.

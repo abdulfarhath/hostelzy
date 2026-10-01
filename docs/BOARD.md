@@ -9,8 +9,8 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Spec ready** · no design needed | Build | Copy/data change across tenant, resident, owner screens |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design ready** | Design | Mockups 1, 2, 4 in the Deals canvas. Waiting on open questions 1–3 |
 | F04 | Book with the advance, deal locked, HZ code | **Design ready** | Design | Mockup 3 in the Deals canvas. Waiting on open question 4 |
-| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design ready** | Design | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
-| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design ready** | Design | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Waiting on open question 8 |
+| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
+| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design approved** · 2026-10-01 | Build | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Waiting on open question 8 |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Spec ready** | Design | Waiting on open questions 9, 11, 12 |
 | F08 | Verified-resident reviews + Hostelzy score ranking | **Spec ready** | Design | |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Spec ready** | Design | Waiting on open question 10 |
