@@ -581,6 +581,9 @@ const _svgIcons = <String, String>{
   'shield': '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/>',
   'shieldOk': '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
   'userPlus': '<path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M19 8v6M16 11h6"/>',
+  'qr': '<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM21 14v1M14 21h1M18 18h3v3"/>',
+  'warn': '<path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/>',
+  'print': '<path d="M6 9V3h12v6M6 18H3v-8h18v8h-3M6 14h12v7H6z"/>',
   'swap': '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
 };
 

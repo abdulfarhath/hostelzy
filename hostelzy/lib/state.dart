@@ -20,7 +20,7 @@ class AppState extends ChangeNotifier {
     this.theme = theme ?? 'light';
     this.mode = mode ?? 'plan';
     this.moveTab = moveTab ?? 'vacate';
-    this.moreTab = moreTab ?? 'complaints';
+    this.moreTab = moreTab ?? 'residents';
     this.foodView = foodView ?? 'day';
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
@@ -34,7 +34,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'oToday', 'oBeds', 'oRent', 'oMore'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -77,6 +77,17 @@ class AppState extends ChangeNotifier {
   /// Enquiry open in the owner's enquiry sheet.
   String? enqRef;
   List<Resident> residents = seedResidents();
+
+  // F06: residents list, add-resident sheet, invite sign-ups, confirm stay.
+  String resF = 'All';
+  List<Signup> signups = List.of(seedSignups);
+  String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
+  String? rBed;
+  int rPickBack = 3;
+  String cOtp = '';
+
+  /// Bed of the resident on the confirm-your-stay screen.
+  String? cBed;
   String rentF = 'All';
   List<DayMenu> menu = List.of(seedMenu);
   int mDay = 3;
@@ -124,6 +135,16 @@ class AppState extends ChangeNotifier {
     if (sheet == 'bed' && obed == null) obed = '204-B';
     if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
     if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
+    if (screen == 'rConfirm') {
+      cBed = residents.where((r) => !r.confirmed).firstOrNull?.bed;
+      cOtp = '';
+    }
+    if (sheet == 'addR' && rBed == null) {
+      rBed = unassignedBeds.firstOrNull;
+      final r = rBed != null ? findBed('anjani', rBed).r : null;
+      rFee = r != null ? '${r.rent}' : '';
+      rAdv = '${hostels[0].terms.advance}';
+    }
   }
 
   void toastMsg(String m) {
@@ -195,6 +216,117 @@ class AppState extends ChangeNotifier {
   String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef · hostelzy.in/r/$waRef';
 
   void markContacted(String ref) => update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
+
+  // ------------------------------------------------------------ F06
+
+  /// Taken beds at Anjani with nobody added for them.
+  List<String> get unassignedBeds => [
+    for (final r in rooms['anjani']!)
+      for (final b in r.beds)
+        if (b.state == 'booked' && !residents.any((x) => x.bed == b.id)) b.id,
+  ];
+
+  /// Join time in ms for the add-resident sheet's "Joined on" choice.
+  int get rJoinAt {
+    final days = switch (rJoin) {
+      'Today' => 0,
+      'Yesterday' => 1,
+      _ => rPickBack,
+    };
+    return now - days * 86400000;
+  }
+
+  String get rJoinLabel => dayName(appToday.subtract(Duration(days: switch (rJoin) {
+    'Today' => 0,
+    'Yesterday' => 1,
+    _ => rPickBack,
+  })));
+
+  /// Joined via Hostelzy: this phone enquired about, held or booked a bed at
+  /// Anjani on Hostelzy within [matchWindowDays] before joining.
+  ({String ref, String what, int at})? matchFor(String phone, int joinAt) {
+    if (phone.length != 10) return null;
+    final from = joinAt - matchWindowDays * 86400000;
+    bool inWin(int t) => t >= from && t <= joinAt + 86400000;
+    final e = enquiries.where((e) => e.hid == 'anjani' && e.phone == phone && inWin(e.at)).firstOrNull;
+    if (e != null) return (ref: e.ref, what: 'asked about your hostel', at: e.at);
+    if (phone == myPhone) {
+      final h = holds.where((h) => h.hid == 'anjani' && h.status != 'released' && inWin(h.start)).firstOrNull;
+      if (h != null) return (ref: 'bed ${h.bed}', what: h.opt == 'token' ? 'booked a bed' : 'held a bed', at: h.start);
+    }
+    return null;
+  }
+
+  Resident _newResident(String name, String phone, String bed, int amt, int adv, int joinAt, {required bool confirmed}) {
+    final m = matchFor(phone, joinAt);
+    final b = findBed('anjani', bed).b;
+    if (b != null) b.state = 'booked';
+    final joined = dayMon(DateTime.fromMillisecondsSinceEpoch(joinAt));
+    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt);
+  }
+
+  void openAddResident() => update(() {
+    final free = unassignedBeds;
+    rName = '';
+    rPhone = '';
+    rJoin = 'Today';
+    rBed = free.isNotEmpty ? free.first : null;
+    final r = rBed != null ? findBed('anjani', rBed).r : null;
+    rFee = r != null ? '${r.rent}' : '';
+    rAdv = '${hostels[0].terms.advance}';
+    sheet = 'addR';
+  });
+
+  void pickResidentBed(String id) => update(() {
+    rBed = id;
+    final r = findBed('anjani', id).r;
+    if (r != null) rFee = '${r.rent}';
+  });
+
+  /// "Add and send code": the resident is listed as Waiting OTP until they
+  /// confirm with the WhatsApp code.
+  void addResident() {
+    final name = rName.trim();
+    if (name.isEmpty || rPhone.length != 10 || rBed == null) return toastMsg('Add a name, a 10-digit number and a bed.');
+    final res = _newResident(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, rJoinAt, confirmed: false);
+    update(() {
+      residents = [res, ...residents];
+      sheet = null;
+      resF = 'All';
+    });
+    toastMsg('Code sent to ${name.split(' ')[0]} on WhatsApp.');
+  }
+
+  /// Invite QR sign-ups have verified their phone already; approving counts them.
+  void approveSignup(Signup g) {
+    final r = findBed('anjani', g.bed).r;
+    final res = _newResident(g.name, g.phone, g.bed, r?.rent ?? 0, hostels[0].terms.advance, now, confirmed: true);
+    update(() {
+      signups = signups.where((x) => x.id != g.id).toList();
+      residents = [res, ...residents];
+    });
+    toastMsg('${g.name.split(' ')[0]} is now a resident of bed ${g.bed}.');
+  }
+
+  void rejectSignup(Signup g) {
+    update(() => signups = signups.where((x) => x.id != g.id).toList());
+    toastMsg('Removed. ${g.name.split(' ')[0]} has been told.');
+  }
+
+  /// The resident the confirm screen is for (the newest one waiting).
+  Resident? get toConfirm => residents.where((r) => r.bed == cBed).firstOrNull ?? residents.where((r) => !r.confirmed).firstOrNull;
+
+  void confirmStay() {
+    final r = toConfirm;
+    if (r == null) return;
+    if (cOtp.length != 6) return toastMsg('Enter the 6-digit code.');
+    update(() {
+      cBed = r.bed;
+      r.confirmed = true;
+      r.since = 'Joined ${dayMon(r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday)}';
+      cOtp = '';
+    });
+  }
 
   void openEnquiry(String ref) => update(() {
     enqRef = ref;

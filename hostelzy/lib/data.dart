@@ -183,27 +183,82 @@ void fixAnjani(List<Room> a) {
 }
 
 class Resident {
-  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note});
+  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt});
   final String name, bed;
   final int amt;
   String status, note;
-  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note);
+
+  /// F06. `phone`: 10 digits. `via`: hz (joined via Hostelzy) | direct |
+  /// before (the grandfathered first import). `since`: "Joined 28 Sep" or
+  /// "Since Mar 2026". `ref`: the matched HZ code. A resident only counts
+  /// once [confirmed] by the WhatsApp code.
+  final String phone, via;
+  String since;
+  final String? ref;
+  final int advance;
+  bool confirmed;
+
+  /// When they moved in (ms), for residents added in the app.
+  final int? joinAt;
+
+  /// hz | direct | before | wait
+  String get tag => confirmed ? via : 'wait';
+  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt);
 }
+
+/// F06: how far back a phone's enquiry, hold or booking counts towards
+/// "Joined via Hostelzy" (BOARD Q8; 30 days for now).
+const matchWindowDays = 30;
+
+/// Owners must add new residents within this many days (F06 rules).
+const addResidentDays = 2;
+
+const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/// `Sat 3 Oct`
+String dayName(DateTime d) => '${_weekdays[d.weekday - 1]} ${dayMon(d)}';
 
 /// The sample resident (Rahul, bed 204-B) joined Anjani Residency on 14 Mar.
 const residentJoined = '14 Mar';
 const residentJoinDay = 14;
 
 List<Resident> seedResidents() => [
-  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay)),
-  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep'),
-  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep'),
-  Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late'),
-  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct'),
-  Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late'),
-  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22)),
-  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep'),
+  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay), phone: '9848012345', since: 'Since Mar 2026'),
+  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9866104421', since: 'Since Jun 2026'),
+  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000312876', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712'),
+  Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late', phone: '9959021143', since: 'Since Nov 2025'),
+  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9640087712', via: 'direct', since: 'Joined 18 Sep'),
+  Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late', phone: '9701556210', since: 'Since Feb 2026'),
+  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9849770135', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790'),
+  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9177345602', since: 'Since Jan 2026'),
+  // The rest of the first import (grandfathered, "Before Hostelzy").
+  for (final (n, b, a, ph, since) in const [
+    ('Suresh Babu', '101-C', 7600, '9393012458', 'Since Nov 2025'),
+    ('Kiran Kumar', '101-D', 7600, '9440221907', 'Since Apr 2026'),
+    ('Venkatesh P', '102-A', 8700, '9848561230', 'Since Dec 2025'),
+    ('Srikanth Rao', '104-B', 8700, '9010443381', 'Since May 2026'),
+    ('Ajay Varma', '104-C', 8700, '9573120094', 'Since Jul 2026'),
+    ('Mahesh Yadav', '201-A', 8700, '9908811265', 'Since Feb 2026'),
+    ('Rohit Sharma', '201-B', 8700, '9618003347', 'Since Aug 2026'),
+    ('Praveen K', '203-C', 8700, '9246510082', 'Since Jan 2026'),
+    ('Anil Kumar', '302-A', 9000, '9885203316', 'Since Mar 2026'),
+    ('Ganesh Reddy', '303-B', 7900, '9550147720', 'Since Jun 2026'),
+    ('Sunil Naik', '303-C', 7900, '9032668814', 'Since Apr 2026'),
+    ('Ramesh Goud', '304-C', 9000, '9701934456', 'Since May 2026'),
+  ])
+    Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since),
+  // Added by the owner today, waiting for the resident's WhatsApp code.
+  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9849033121', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false),
 ];
+
+/// F06 board 6: people who scanned the owner's invite QR and verified their
+/// phone, waiting for the owner to approve.
+class Signup {
+  const Signup(this.id, this.name, this.phone, this.bed, this.ago);
+  final String id, name, phone, bed, ago;
+}
+
+const seedSignups = [Signup('s1', 'Abhishek P', '9866450921', '103-A', '2 h ago'), Signup('s2', 'Naveen Goud', '9701883240', '202-B', '5 h ago')];
 
 /// F05: a tenant tapped "Ask on WhatsApp" / "WhatsApp owner". Hostelzy
 /// records it (HZ code, OTP-verified phone, hostel, bed, time) before
