@@ -23,8 +23,9 @@ Kondapur** (IT). Tenant marketing starts only in those clusters.
 2. **Owner signs up** with OTP, reads and accepts the Fair Play rules (F07) out loud with the founder.
 3. **Add hostel** (founder's admin mode, owner watching):
    - Basics: name, gender (men / women / co-living), map pin, area, food, rules, amenities, gate time.
-   - **Room generator:** floors × rooms per floor × sharing × AC/non-AC → beds created in one go,
-     then fix the odd rooms.
+   - **Room generator, floor by floor** (floors differ, see "Uneven floors" below): add a floor →
+     number of rooms on it → default sharing and AC/non-AC → "Copy previous floor" to save time →
+     fix the odd rooms. Beds are created from this.
    - **Rate card** (F16): price per sharing × AC/non-AC, advance, maintenance, notice (F02).
    - **Photos taken by the founder** (consistent quality): front, each room type, washroom, food,
      common area. Minimum 8.
@@ -33,6 +34,25 @@ Kondapur** (IT). Tenant marketing starts only in those clusters.
    - Optional: pick up to 3 deals (F03).
 4. **Leave behind:** printed A4 QR poster for residents ("Join your hostel on Hostelzy: pay rent,
    raise complaints") and a small "Book on Hostelzy" sticker for the gate.
+
+## Uneven floors (founder, 2026-10-02)
+Real buildings are not a neat grid. One floor may have 3 rooms, the next 6, the ground floor none.
+- **Each floor has its own room count.** No "rooms per floor" number for the whole hostel.
+- **Floors with no beds are allowed** (ground floor with kitchen, office, parking). They are
+  stored but hidden from tenants.
+- **Floor names:** Ground, 1, 2, 3 … and Terrace. A building can start at Ground or at 1.
+- **Room numbers are the owner's own,** editable and unique in the hostel: gaps (101, 102, 105),
+  letters (A1, G-02) and different counts per floor are all fine. Default suggestion: floor × 100
+  + n (G01, G02 on the ground floor).
+- **Every room keeps its own sharing and AC/non-AC,** so one floor can mix 2-, 3- and 4-sharing.
+- **Later changes** (Manage → Rooms): add or remove a room or a whole floor. A room or floor with a
+  resident or an active hold can't be removed.
+- **Tenant bed picker and owner bed map:** floor tabs show only floors that have beds, each with
+  its free-bed count. The floor plan grid adapts to any number of rooms (1 to 20+), wrapping into
+  rows; it never assumes 4 rooms.
+- **Room layouts (F12)** are per room, so they are not affected.
+- **Sample data** must include uneven floors (e.g. Ground 0 rooms, 1st 3 rooms, 2nd 5, 3rd 2) so the
+  tests cover it.
 
 ## Rules
 - **Goes live only when complete:** owner OTP verified, ≥ 8 photos, every room type priced, bed
