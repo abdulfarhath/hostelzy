@@ -114,6 +114,22 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - Each floor has its own number of rooms (and can have none). Room numbers are the owner's own.
   Screens must never assume the same rooms on every floor. Details: F14 "Uneven floors".
 
+**Design follow-ups** *(Ideas chat, on the founder's delegation, 2026-10-02)*
+- **F07:** if the owner fixes a wrong "Direct" within the 48 hours, the case closes **without a
+  strike**. Three such fixes in 6 months = one warning.
+- **F08:** tenants see the **star rating from verified reviews** (e.g. ★ 4.3 · 18 reviews) and the
+  rank with reasons ("#2 in Hitec City: quick replies, beds kept up to date"). The internal score
+  number is not shown. Score weights: reviews 50%, enquiry reply speed 15%, availability kept fresh
+  15%, complaints resolved 10%, listing complete (photos, layouts) 10%. Strikes lower the rank.
+- **F09:** the ₹100 next-stay discount is given by the owner at move-in and **credited on the
+  owner's next Hostelzy invoice** (no cash moves from Hostelzy; during the trial it carries to the
+  first invoice).
+- **F12:** fans and AC are shown as icons with text labels; coverage circles appear only when that
+  layer is switched on. **Plan stays the default tab**; tapping a room opens Room.
+- **F16:** **no separate AC electricity line**: one line "Electricity extra, by meter" for every
+  room. The rate card lives in **Manage → Rates** (and step 3 of Add hostel).
+- **F10 UPI ID:** needs the founder (placeholder until then).
+
 **Standing approval** — founder, 2026-10-02
 - The founder approves **every design, current and future**, and **every merge**, in advance:
   "approve everything, design everything, don't wait for my approvals, keep building".
