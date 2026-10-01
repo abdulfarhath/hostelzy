@@ -510,7 +510,7 @@ class _GridPainter extends CustomPainter {
 ({Hostel hh, Room r, double left}) holdInfo(AppState s, Hold h) {
   final hh = hostelById(h.hid);
   final r = s.findBed(h.hid, h.bed).r!;
-  final secs = h.opt == 'paid' ? 172800 : 3600;
+  const secs = freeHoldSecs;
   return (hh: hh, r: r, left: secs - (s.now - h.start) / 1000);
 }
 
@@ -520,7 +520,7 @@ class HoldsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Confirmed', 'held': 'Held · paid', 'booked': 'Booked', 'released': 'Released'};
+    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Confirmed', 'held': 'Held', 'booked': 'Booked · advance paid', 'released': 'Released'};
     return Scroll(
       key: ValueKey('holds${s.scrollEpoch}'),
       child: Column(
@@ -1619,8 +1619,8 @@ class HoldScreen extends StatelessWidget {
       final m = switch (st) {
         'waiting' => ['Waiting for ${i.hh.owner}', cd(i.left), 'left for ${i.hh.owner} to confirm. Usually replies in ~${i.hh.reply} min.', 'sf', 'tx'],
         'confirmed' => ['Confirmed by ${i.hh.owner}', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
-        'held' => ['Held for you', cd(i.left), 'Guaranteed. ₹299 comes off your first rent.', 'gn', 'ai'],
-        'booked' => ['Booked', 'Yours.', 'Move in from 5 Oct. The ₹2,000 token is adjusted in your first rent.', 'gn', 'ai'],
+        'held' => ['Held for you', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
+        'booked' => ['Booked', 'Yours.', 'Advance paid to ${i.hh.owner}. Show ${hold.ref ?? 'your HZ code'} when you move in; your deal is locked.', 'gn', 'ai'],
         _ => ['Released', '—', 'The hold ended. You paid nothing.', 'sf', 'tx'],
       };
       final done = st != 'waiting' && st != 'released';
@@ -1633,11 +1633,17 @@ class HoldScreen extends StatelessWidget {
       fg = m[4] == 'ai' ? p.ai : p.tx;
       owner = i.hh.owner;
       final o = holdOptions[hold.opt]!;
-      rows = [('Room', '${i.r.n} · ${i.r.share} sharing · Floor ${i.r.floor}'), ('Rent', '${fmt(i.r.rent)} a month'), ('Hold type', o.title), ('Paid now', o.amt)];
+      final q = s.quote(hold.hid, i.r.ac, i.r.share);
+      rows = [
+        ('Room', '${i.r.n} · ${i.r.share} sharing · Floor ${i.r.floor}'),
+        ('Rent', '${fmt(q.hzFee)} a month'),
+        ('Hold type', o.title),
+        if (hold.opt == 'book') ...[('Paid to ${i.hh.owner}', fmt(hold.paid)), ('HZ code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Deal locked', hold.perks.join(' · '))] else ('Paid now', '₹0'),
+      ];
       steps = [
         TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),
-        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Bed reserved', d: hold.opt == 'free' ? (done ? 'Confirmed on WhatsApp' : 'Usually within ${i.hh.reply} minutes') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
-        TimelineStep(t: 'Visit and move in', d: 'Pay ${fmt(i.hh.terms.advance)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
+        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Advance paid', d: hold.opt == 'free' ? (done ? 'Confirmed on WhatsApp' : 'Usually within ${i.hh.reply} minutes') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
+        TimelineStep(t: 'Visit and move in', d: hold.opt == 'book' ? 'Pay the first month (${fmt(q.hzFirst)}) at move-in. Show ${hold.ref}.' : 'Pay ${fmt(q.hzAdv)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
       ];
       canSim = st == 'waiting';
       canCancel = st == 'waiting' || st == 'confirmed' || st == 'held';

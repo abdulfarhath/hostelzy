@@ -73,8 +73,8 @@ void main() {
     expect(s.bed, isNotNull);
     final bed = s.bed!;
     await tap(tester, find.text('Hold bed'));
-    expect(find.text('Hold bed $bed'), findsOneWidget);
-    await tap(tester, find.text('Place free hold'));
+    expect(find.text('Book bed $bed'), findsOneWidget);
+    await tap(tester, find.text('Hold free'));
     expect(s.screen, 'hold');
     expect(find.text('WAITING FOR SRINIVAS'), findsOneWidget);
     expect(s.findBed('anjani', bed).b!.state, 'held');
@@ -445,6 +445,37 @@ void main() {
     expect((a.save6, a.upfront, a.ribbon), (0, 1000, '₹1,000 less upfront'));
     final f = DealQuote(const Terms(), 6400, {'first', 'noadmin'});
     expect((f.save6, f.ribbon), (1500, 'Save ₹1,500 in 6 mo'));
+  });
+
+  testWidgets('book with the advance: deal locked, HZ code, owner sees it (F04)', (tester) async {
+    final s = AppState(start: 'detail', role: 'tenant');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('Book with deal'));
+    expect(s.screen, 'picker');
+    await tap(tester, find.text('FREE').first);
+    final bed = s.bed!;
+    final r = s.findBed('anjani', bed).r!;
+    await tap(tester, find.text('Hold bed'));
+    expect(find.text('Book bed $bed'), findsOneWidget);
+    expect(find.text('Pay Srinivas today'), findsOneWidget);
+    expect(find.text('Your deal is locked'), findsOneWidget);
+    expect(find.text('${fmt(r.rent - 200)} monthly'), findsOneWidget);
+    expect(find.text('₹500 exit only'), findsOneWidget);
+    expect(find.text('1 hour · 2 h for Members'), findsOneWidget);
+    expect(find.textContaining('₹299'), findsNothing);
+    final ref = s.peekRef;
+    await tap(tester, find.text('Pay advance'));
+    final h = s.holds.single;
+    expect((h.opt, h.status, h.ref, h.paid), ('book', 'booked', ref, 3000));
+    expect(s.findBed('anjani', bed).b!.state, 'booked');
+    expect(find.text('BOOKED'), findsOneWidget);
+    expect(find.text(ref), findsOneWidget);
+
+    // The booking is on the owner's Hostelzy list, and matches the phone (F05/F06).
+    expect(s.enquiries.first.ref, ref);
+    expect(s.enquiries.first.from, 'Book · Pay advance');
+    expect(s.matchFor('9848012345', s.now)?.ref, ref);
+    s.dispose();
   });
 
   test('data helpers match the prototype', () {

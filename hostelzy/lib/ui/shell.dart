@@ -397,7 +397,7 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'search' => 'Search',
-      'hold' => sb?.b != null ? 'Hold bed ${sb!.b!.id}' : 'Hold',
+      'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
       'wa' => 'Continue on WhatsApp',
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
@@ -556,6 +556,8 @@ class _SearchSheet extends StatelessWidget {
   }
 }
 
+/// F04 board 3: book by paying the advance straight to the owner (deal
+/// locked, HZ code), or hold free for an hour.
 class _HoldSheet extends StatelessWidget {
   const _HoldSheet();
   @override
@@ -564,73 +566,139 @@ class _HoldSheet extends StatelessWidget {
     final p = PalScope.of(context);
     final h = hostelById(s.hid);
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
-    final o = holdOptions[s.holdOpt]!;
+    if (sb?.b == null) return const SizedBox();
+    final b = sb!.b!, r = sb.r!;
+    final q = s.quote(h.id, r.ac, r.share);
+    final perks = s.lockedPerks(q, h);
+    Widget line(String k, Widget v, {Color? bg, Color? fg}) => Container(
+      color: bg,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: null,
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [T(k, s: 14, c: fg ?? p.mu), v]),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-          child: T(sb?.b != null ? '${h.name} · Room ${sb!.r!.n} · ${fmt(sb.r!.rent)}/mo' : '', s: 13, c: p.mu),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: T('${h.name} · Room ${r.n} · ${r.share} sharing${h.ac ? ' · ${r.type}' : ''} · ${b.spot}', s: 13, c: p.mu),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: VGap(
-            gap: 8,
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          decoration: box(w: 2, c: p.tx),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final k in holdOptions.keys)
-                () {
-                  final on = k == s.holdOpt;
-                  final opt = holdOptions[k]!;
-                  return Tap(
-                    onTap: () => s.update(() => s.holdOpt = k),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: box(bg: on ? p.ab : transparent, w: 2, c: on ? p.ac : p.hl),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: const Kicker('Pay the owner to book'),
+              ),
+              Container(
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: line('Advance (refundable)', T(fmt(q.hzAdv), s: 14, w: 800)),
+              ),
+              Container(
+                color: p.tx,
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [T('Pay ${h.owner} today', w: 800, s: 15, c: p.bg), T(fmt(q.hzAdv), w: 800, s: 26, c: p.bg)],
+                ),
+              ),
+              const Padding(padding: EdgeInsets.fromLTRB(12, 10, 12, 4), child: Kicker('Pay at the hostel on move-in')),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    T('First month fee', s: 14, c: p.mu),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        if (q.hzFirst < q.fee) ...[
+                          Text(fmt(q.fee), style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
+                          const SizedBox(width: 4),
+                        ],
+                        T(fmt(q.hzFirst), s: 14, w: 800),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.all(12),
+          color: q.any ? p.gb : p.sf,
+          child: q.any
+              ? VGap(
+                  gap: 8,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [T('Your deal is locked', w: 800, s: 15, c: p.gn), T(s.peekRef, s: 12, w: 800, ls: .04, c: p.gn)],
+                    ),
+                    LayoutBuilder(
+                      builder: (context, c) => Wrap(
+                        runSpacing: 6,
                         children: [
-                          SizedBox(
-                            width: 20,
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                width: 18,
-                                height: 18,
-                                alignment: Alignment.center,
-                                decoration: box(w: 2, c: p.tx),
-                                child: Container(width: 8, height: 8, color: on ? p.ac : transparent),
-                              ),
+                          for (final k in perks)
+                            SizedBox(
+                              width: c.maxWidth / 2,
+                              child: Row(children: [Ic('check', size: 14, color: p.gn), const SizedBox(width: 6), Flexible(child: T(k, s: 13))]),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                T(opt.title, w: 800, s: 16),
-                                const SizedBox(height: 3),
-                                T(opt.sub, s: 13, c: p.mu, lh: 1.35),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          T(opt.amt, w: 800, s: 18),
                         ],
                       ),
                     ),
-                  );
-                }(),
+                    T('Show this code at the hostel. The owner sees the same deal in their app.', s: 12, c: p.mu, lh: 1.4),
+                  ],
+                )
+              : T('No Hostelzy deal on this room type. Exit rules are still locked: ${fmt(q.hzExit)} maintenance, ${h.terms.noticeDays} days notice.', s: 13, c: p.mu, lh: 1.4),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [T('Back when you leave', s: 13, c: p.mu), Rich([sp(context, fmt(q.hzBack), w: 800), sp(context, ' of your ${fmt(q.hzAdv)}', c: p.mu)], s: 13)],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Expanded(child: Cta('Pay advance', height: 56, px: 14, fs: 15, onTap: () => s.placeHold('book'))),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Tap(
+                  onTap: () => s.placeHold('free'),
+                  child: Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: box(w: 2, c: p.tx),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [const T('Hold free', w: 800, s: 15), T('1 hour · 2 h for Members', s: 11, w: 600, c: p.mu)],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
-          child: T(o.note, s: 12, c: p.mu, lh: 1.45),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Cta(o.cta, px: 16, onTap: s.placeHold),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: T('You pay ${fmt(q.hzAdv)} by UPI straight to ${h.owner}. Hostelzy never holds your money; we keep the record and your deal.', s: 12, c: p.mu, lh: 1.4),
         ),
       ],
     );

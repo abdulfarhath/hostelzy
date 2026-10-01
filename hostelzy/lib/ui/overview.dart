@@ -159,7 +159,7 @@ class OverviewPage extends StatelessWidget {
                     const SizedBox(height: 10),
                     fact('Beds:', 'the same five states everywhere. Free (outline), free soon (dashed), on hold (hatched), taken (grey), selected (red).'),
                     const SizedBox(height: 10),
-                    fact('Holds:', 'free for 1 hour (owner confirms), ₹299 for 48 hours, or a ₹2,000 token to book outright. Owner contact always goes through WhatsApp.'),
+                    fact('Holds:', 'free for 1 hour (owner confirms), or book by paying the ₹3,000 advance straight to the owner with the Hostelzy deal locked (F04). Owner contact always goes through WhatsApp.'),
                   ],
                 ),
               ),

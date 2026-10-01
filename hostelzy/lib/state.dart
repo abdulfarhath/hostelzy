@@ -275,13 +275,19 @@ class AppState extends ChangeNotifier {
   /// tenant + hostel + bed: tapping again reuses the code.
   void enquire(String hid, String body, {String? bed, required String from}) => update(() => _enquire(hid, body, bed: bed, from: from));
 
-  void _enquire(String hid, String body, {String? bed, required String from}) {
+  /// Records (or reuses) the tenant's enquiry for this hostel + bed.
+  Enquiry _record(String hid, String body, {String? bed, required String from}) {
     final me = myPhone;
     var e = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull;
     if (e == null) {
       e = Enquiry(ref: 'HZ-${_nextRef++}', name: 'Rahul Varma', phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch, from: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
       enquiries = [e, ...enquiries];
     }
+    return e;
+  }
+
+  void _enquire(String hid, String body, {String? bed, required String from}) {
+    final e = _record(hid, body, bed: bed, from: from);
     sheet = 'wa';
     waTo = hostelById(hid).owner;
     waMsg = body;
@@ -329,7 +335,7 @@ class AppState extends ChangeNotifier {
     if (e != null) return (ref: e.ref, what: 'asked about your hostel', at: e.at);
     if (phone == myPhone) {
       final h = holds.where((h) => h.hid == 'anjani' && h.status != 'released' && inWin(h.start)).firstOrNull;
-      if (h != null) return (ref: 'bed ${h.bed}', what: h.opt == 'token' ? 'booked a bed' : 'held a bed', at: h.start);
+      if (h != null) return (ref: 'bed ${h.bed}', what: h.opt == 'book' ? 'booked a bed' : 'held a bed', at: h.start);
     }
     return null;
   }
@@ -528,27 +534,39 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  void placeHold() {
+  /// F04: the HZ code a booking of the selected bed will get (the tenant's
+  /// enquiry code for this hostel and bed, if they already have one).
+  String get peekRef => enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == myPhone).firstOrNull?.ref ?? 'HZ-$_nextRef';
+
+  /// Perks locked into a booking, as shown on the locked-deal card.
+  List<String> lockedPerks(DealQuote q, Hostel h) => [
+    if (q.hzFee < q.fee) '${fmt(q.hzFee)} monthly',
+    if (q.hzExit < q.exit) '${fmt(q.hzExit)} exit only',
+    if (q.firstOffNow > 0) '${fmt(firstOff)} off first month',
+    if (q.hzAdv < q.adv) '${fmt(q.hzAdv)} advance',
+    if (q.join > 0) 'No joining fee',
+    if (q.laundry) 'Free laundry weekly',
+    '${h.terms.noticeDays} days notice',
+  ];
+
+  /// [opt]: `free` (1-hour hold) or `book` (advance paid to the owner, deal
+  /// locked, HZ code recorded like an enquiry so F05/F06 see it).
+  void placeHold([String? how]) {
     final b = findBed(hid, bed).b;
     if (b == null) return;
-    final opt = holdOpt;
-    b.state = opt == 'token' ? 'booked' : 'held';
+    final opt = how ?? holdOpt;
+    final r = findBed(hid, bed).r!;
+    final h0 = hostelById(hid);
+    final q = quote(hid, r.ac, r.share);
+    String? ref;
+    if (opt == 'book') {
+      ref = _record(hid, 'Booked bed ${b.id} with the advance.', bed: b.id, from: 'Book · Pay advance').ref;
+    }
+    b.state = opt == 'book' ? 'booked' : 'held';
     b.mine = true;
     final t = DateTime.now().millisecondsSinceEpoch;
     final id = 'h$t';
-    final h = Hold(
-      id: id,
-      hid: hid,
-      bed: b.id,
-      room: b.room,
-      opt: opt,
-      start: t,
-      status: opt == 'free'
-          ? 'waiting'
-          : opt == 'paid'
-          ? 'held'
-          : 'booked',
-    );
+    final h = Hold(id: id, hid: hid, bed: b.id, room: b.room, opt: opt, start: t, status: opt == 'free' ? 'waiting' : 'booked', ref: ref, paid: opt == 'book' ? q.hzAdv : 0, perks: opt == 'book' && q.any ? lockedPerks(q, h0) : const []);
     update(() {
       holds = [...holds, h];
       holdId = id;
@@ -557,13 +575,7 @@ class AppState extends ChangeNotifier {
       hist = [...hist, screen];
       screen = 'hold';
     });
-    toastMsg(
-      opt == 'free'
-          ? 'Hold placed. ${hostelById(hid).owner} has been told on WhatsApp.'
-          : opt == 'paid'
-          ? 'Paid ₹299. The bed is held for 48 hours.'
-          : 'Paid ₹2,000. The bed is yours.',
-    );
+    toastMsg(opt == 'free' ? 'Hold placed. ${h0.owner} has been told on WhatsApp.' : 'Paid ${fmt(q.hzAdv)} to ${h0.owner}. Your deal is locked: $ref.');
   }
 
   void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());

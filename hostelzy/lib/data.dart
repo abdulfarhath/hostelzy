@@ -423,20 +423,30 @@ class HoldOption {
   final String title, sub, amt, note, cta;
 }
 
+/// F04: two ways to take a bed. The ₹299 paid hold and the ₹2,000 token are
+/// gone (DECISIONS 2026-10-02): book by paying the advance straight to the
+/// owner, or hold free for an hour.
 const holdOptions = <String, HoldOption>{
-  'free': HoldOption('Free hold', 'Held for 1 hour. The owner confirms before it is yours.', '₹0', 'If the owner does not confirm within the hour, the bed is released. You pay nothing.', 'Place free hold'),
-  'paid': HoldOption('Paid hold', 'Guaranteed for 48 hours. Visit when it suits you.', '₹299', "₹299 comes off your first month's rent. Refunded in full if the owner cancels.", 'Pay ₹299 and hold'),
-  'token': HoldOption('Book now', 'Pay a token advance. The bed is yours right away.', '₹2,000', 'The token is adjusted in your first rent. Full refund if you cancel within 24 hours.', 'Pay ₹2,000 and book'),
+  'free': HoldOption('Free hold', 'Held for 1 hour. The owner confirms before it is yours.', '₹0', 'If the owner does not confirm within the hour, the bed is released. You pay nothing.', 'Hold free'),
+  'book': HoldOption('Booked with advance', 'Advance paid to the owner. The bed is yours.', '', 'Paid by UPI straight to the owner. Hostelzy never holds your money.', 'Pay advance'),
 };
 
+/// Free hold length; Members (F09) get 2 hours.
+const freeHoldSecs = 3600;
+
 class Hold {
-  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status});
+  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const []});
   final String id, hid, bed, opt;
   final int room, start;
 
+  /// F04 booking: HZ code, advance paid to the owner, and the locked deal.
+  final String? ref;
+  final int paid;
+  final List<String> perks;
+
   /// waiting | confirmed | held | booked | released
   final String status;
-  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s);
+  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks);
 }
 
 /// Countdown text, `cd()` in the prototype.
