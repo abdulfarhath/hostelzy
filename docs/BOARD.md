@@ -18,17 +18,21 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Spec ready** · 2026-10-02 | Design | Design after F16 |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
-| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Idea** · spec in progress | Ideas | Visits start now with a visit kit; app import after F13. 4 founder questions |
+| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Spec ready** · 2026-10-02 | Design | Visits start now with a visit kit; app import after F13 |
 | F16 | AC / non-AC room types, pricing grid and filter | **Design ready** | Design | Boards 1–6 in the AC / Non-AC Rooms canvas (2026-10-02). Touches F03, F04, F12. No position-based pricing |
-| F15 | Play Store launch: signing, privacy policy, account deletion, closed test | **Idea** | Ideas | Needs Play account + domain |
+| F15 | Play Store launch: settings, account deletion, permissions, privacy | **Spec ready** · 2026-10-02 | Design | In-app screens. Store setup needs Play account + domain |
 
-## Suggested order
-F02 → F16 → F03 + F04 → F05 → F06 → F08 → F07 → F09 → F10 → F13/F14 → F15. F12 design after F16.
+## Plan (founder, 2026-10-02)
+1. **Design** designs everything planned, in this order: F03 + F04 (updated) → F12 → F07 → F08 →
+   F09 → F10 → F14 → F15. (F16, F05, F06 done.)
+2. **Founder** reviews and approves the designs.
+3. **Build** builds approved features in this order: F02 (PR #1) → F05 → F06 → F16 → F03 + F04 →
+   F08 → F07 → F09 → F10 → F12 → F14 → F15, then F13 backend when the accounts exist.
 
 ## Open questions for the founder
 All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01 and 2026-10-02).
 
-18. F14: which 2 areas first? Start visits now with a visit kit? Manager accounts? Founder alone on visits?
+18. ~~F14 questions~~ **Decided 2026-10-02 (see DECISIONS.md).**
 
 ## Links
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`

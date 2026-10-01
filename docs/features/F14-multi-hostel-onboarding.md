@@ -1,6 +1,6 @@
 # F14 · Onboarding hostels: Add hostel tool, multi-hostel, invite QR
 
-**Stage:** Idea · spec in progress (founder to confirm the 4 questions below)
+**Stage:** Spec ready · 2026-10-02
 
 ## Problem
 The founder wants 20 hostels live this month, onboarded in person, mostly alone. Each visit must
@@ -60,14 +60,14 @@ Kondapur** (IT). Tenant marketing starts only in those clusters.
 Lead → Visited → Signed up → Data complete → Live → Trial → Paying. One row per hostel, with
 the area, the owner's phone, the next step and the date.
 
-## Open questions (founder)
-1. Which 2 clusters first? (Proposal: Ameerpet/SR Nagar + Madhapur/Hitec City/Kondapur.)
-2. Start visits now with the visit kit, before the backend? (Proposal: yes.)
-3. Manager accounts in the first version? (Proposal: yes; most PGs have one.)
-4. Does someone help with visits, or the founder alone? (Decides how much the admin mode needs.)
+## Decisions (2026-10-02, Ideas chat on the founder's delegation; founder can change)
+1. First clusters: **Ameerpet / SR Nagar** and **Madhapur / Hitec City / Kondapur**.
+2. **Visits start now** with the visit kit; data is imported when F13 + F14 are built.
+3. **Manager accounts are in the first version.**
+4. The founder visits alone for now; admin mode supports adding team members later.
 
 ## Design
-_Waiting for spec._
+_Not started._
 
 ## Build
 _Not started. Depends on F13 (backend)._

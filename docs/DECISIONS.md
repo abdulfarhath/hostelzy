@@ -100,5 +100,15 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - The room view **sits beside the bed picker's Plan tab** as a new **Room** tab. Tapping a room in
   Plan opens it in Room.
 
+**Onboarding (F14)** *(Ideas chat)*
+- First clusters: Ameerpet / SR Nagar and Madhapur / Hitec City / Kondapur (~10 hostels each).
+- Visits start now with a visit kit; data goes into the app after F13 + F14.
+- Owner + Manager roles in the first version. A listing goes live only when complete
+  ("Visited by Hostelzy" badge). Availability confirmed every 3 days.
+
+**Process** — founder, 2026-10-02
+- The Design chat designs **every planned feature**. The founder reviews and approves the designs;
+  the Build chat then builds the approved features in the board's order.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
