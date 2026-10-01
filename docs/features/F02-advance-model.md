@@ -1,6 +1,6 @@
 # F02 · Fix the advance model
 
-**Stage:** Built (2026-10-01) · no design needed · waiting on merge
+**Stage:** Shipped · merged 2026-10-02
 
 ## Problem
 The app copies a "2 months' deposit" model. Hyderabad and Chennai hostels charge a ₹3,000 advance plus the first month, and keep ₹1,000–1,500 maintenance from the advance on exit.

@@ -1,6 +1,6 @@
 # F16 · AC / non-AC room types, pricing grid and filter
 
-**Stage:** Design ready
+**Stage:** Design approved (founder, 2026-10-02)
 
 ## Problem
 One hostel often has both AC and non-AC rooms at different prices. The app has a single hostel-level

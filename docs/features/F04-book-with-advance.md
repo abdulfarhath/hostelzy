@@ -1,6 +1,6 @@
 # F04 · Book with the advance, deal locked
 
-**Stage:** Design ready
+**Stage:** Design approved (founder, 2026-10-02)
 
 ## Problem
 The prototype's ₹2,000 token and ₹299 paid hold don't match how Hyderabad hostels work.

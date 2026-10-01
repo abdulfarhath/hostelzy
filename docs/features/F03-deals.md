@@ -1,6 +1,6 @@
 # F03 · Hostelzy deals
 
-**Stage:** Design ready
+**Stage:** Design approved (founder, 2026-10-02)
 
 ## Problem
 Tenants need a reason to book through Hostelzy instead of walking in; owners need a cheap way to fill beds.
