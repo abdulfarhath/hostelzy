@@ -17,7 +17,7 @@ The app copies a "2 months' deposit" model. Hyderabad and Chennai hostels charge
 
 ## Open questions
 - ~~Notice 15 or 30 days? Fee due on joining date or the 1st? Electricity included?~~ Answered 2026-10-01: 30 days, joining date, electricity extra.
-- Food included in the fee, or extra? (rest of BOARD Q6)
+- ~~Food included in the fee, or extra?~~ Answered 2026-10-01: included.
 
 ## Design
 Not needed: reuse existing screens, change copy and numbers only.
@@ -31,8 +31,9 @@ Branch `feature/f02-advance-model` (2026-10-01).
 `dueLeft` work from the sample "today" (1 Oct 2026). Food still comes from `Hostel.food`.
 
 **Founder answers (2026-10-01, Build chat):** 30 days notice, fee due on the joining date,
-electricity extra. These are the `Terms` defaults. Food: not answered yet, stays as each
-hostel lists it (`Hostel.food`).
+electricity extra. These are the `Terms` defaults. Food (2026-10-01): included in the fee where the hostel
+serves meals (hostel page: "Included, veg and non-veg"). Nest 42 serves no meals in the
+sample data (shared kitchen), so it stays "Not included".
 
 **Screens changed**
 - Tenant · hostel page rules: Notice period, Advance "₹3,000 + first month at move-in",

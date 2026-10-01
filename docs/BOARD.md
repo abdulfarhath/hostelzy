@@ -30,7 +30,7 @@ F02 → F03 + F04 → F05 → F06 → F08 → F07 → F09 → F10 → F13/F14 �
 3. Max 3 deals per owner? (F03)
 4. Keep the free 1-hour hold next to "Pay advance"? Drop the ₹299 paid hold? (F04)
 5. ~~Notice period 15 or 30 days? Fee due on the joining date or the 1st?~~ **Answered 2026-10-01:** 30 days, fee due on the joining date. (F02; Ideas chat: please add to DECISIONS.md)
-6. Electricity and food included in the fee, or extra? **Electricity: extra (answered 2026-10-01).** Food: still open. (F02)
+6. ~~Electricity and food included in the fee, or extra?~~ **Answered 2026-10-01:** electricity extra, food included. (F02; Ideas chat: please add to DECISIONS.md)
 7. Owner pricing: A flat monthly plan, or B per matched join? (F10)
 8. Matching window: 30 or 60 days? (F06)
 9. Strikes: 3, or ban on the 2nd? (F07)
