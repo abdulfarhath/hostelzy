@@ -1,6 +1,6 @@
 # F15 · Play Store launch
 
-**Stage:** Spec ready · 2026-10-02 (in-app screens only; store setup needs founder accounts)
+**Stage:** Design ready · 2026-10-02
 
 ## Problem
 A professional release on Google Play, which requires a privacy policy, account deletion, honest
@@ -26,7 +26,16 @@ account deletion, signed app bundle, Data Safety form, closed test with 12 teste
 None for design.
 
 ## Design
-_Not started._
+Canvas https://claude.ai/artifact/PBCza1yUDPzNVc2QHDrAN4. Awaiting founder approval.
+
+1. **Settings** (from Me / Manage). Account (name, phone), Appearance (Light / Dark / Phone setting), notification switches (hold updates, rent reminders, new free beds), Language (English), Privacy policy, Terms, Help on WhatsApp, Log out, Delete account (red), version line. Owners also get "Fair Play rules" in the same list.
+2. **Delete account: what happens.** Two columns. Deleted: name and phone, saved hostels, holds and enquiries, rewards. Kept: stay records the hostel must keep, reviews as "Former resident", Fair Play case records. Optional reason; Continue / Keep my account.
+3. **Delete: confirm or blocked** (tweak Can delete / Blocked · open hold / Blocked · unpaid owner plan). OTP confirm, or a red "You can't delete your account yet" with the reason and a button to fix it.
+4. **Delete: done.** What was removed, and that signing up again starts fresh.
+5. **Permission explainers** (tweak Notifications / Location / Camera and photos). Shown before the system prompt: why, three plain uses, Allow / Not now ("Pick an area instead" for location); "You can change this in Settings".
+6. **Phone screen with consent line.** The existing "Your mobile number" screen plus "By continuing you agree to the Terms and Privacy policy." under Send code.
+7. **Force update / maintenance** (tweak). "Update Hostelzy to continue" (version too old, Update on Google Play, versions shown) or "Back in a few minutes" (data safe, expected time, WhatsApp).
+- Dark mode: board "1 in dark mode". Every board has a Dark tweak.
 
 ## Build
 _Not started._
