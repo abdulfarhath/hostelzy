@@ -3,6 +3,10 @@ name: Android APK
 on:
   push:
     branches: [main]
+    # Docs-only changes (board, specs, decisions) don't need a new APK.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:
