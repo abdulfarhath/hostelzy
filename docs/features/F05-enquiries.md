@@ -56,6 +56,4 @@ the tenant's own enquiries start at HZ-4822.
 - Tenant note is **green**; `enquiryNoteGreen` in `shell.dart` gives the neutral version.
 
 **Tests:** `test/flows_test.dart` → "enquiry recorded before WhatsApp; owner sees and contacts it"
-and "WhatsApp owner from a hold records the bed". `flutter analyze` clean, `flutter test` 10/10.
-Not in this branch: F02's money terms (PR #1), so this branch still shows the old deposit copy
-until F02 merges.
+and "WhatsApp owner from a hold records the bed". `flutter analyze` clean, `flutter test` 12/12. Rebased onto `main` after F02 merged (2026-10-02).
