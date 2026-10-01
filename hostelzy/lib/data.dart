@@ -453,3 +453,92 @@ String initials(String n) {
   final s = n.split(' ').map((w) => w.isEmpty ? '' : w[0]).join();
   return s.length > 2 ? s.substring(0, 2) : s;
 }
+
+// ------------------------------------------------------------ F03 deals
+
+/// The owner's deal menu (F03). Amounts are fixed for now.
+const monthlyOff = 200, firstOff = 500, advanceOff = 1000, exitHz = 500, joiningFee = 1000, laundryCost = 50;
+
+const dealMenu = ['exit', 'monthly', 'first', 'advance', 'laundry', 'noadmin'];
+
+/// Max active deals per owner (DECISIONS 2026-10-02).
+const maxDeals = 3;
+
+const dealTitle = {
+  'exit': 'Lower exit maintenance',
+  'monthly': 'Monthly fee discount',
+  'first': 'First month off',
+  'advance': 'Lower advance',
+  'laundry': 'Free extra',
+  'noadmin': 'No joining fee',
+};
+
+/// Short perk labels for chips and the locked-deal card.
+String dealPerk(String id) => switch (id) {
+  'exit' => '${fmt(exitHz)} exit',
+  'monthly' => '${fmt(monthlyOff)} off monthly',
+  'first' => '${fmt(firstOff)} off first month',
+  'advance' => '${fmt(advanceOff)} lower advance',
+  'laundry' => 'Free laundry',
+  _ => 'No joining fee',
+};
+
+/// A hostel's published deals: which ones, which room types (all | ac |
+/// non, F16) and when the owner last confirmed them.
+class Deals {
+  const Deals({this.on = const {}, this.target = 'all', this.confirmed = '1 Oct'});
+  final Set<String> on;
+  final String target, confirmed;
+  bool covers(bool ac) => on.isNotEmpty && (target == 'all' || (target == 'ac') == ac);
+  String get targetText => switch (target) {
+    'ac' => 'AC rooms only',
+    'non' => 'non-AC rooms only',
+    _ => 'all rooms',
+  };
+
+  /// One-line summary: "₹200 off every month".
+  String get summary => on.contains('monthly') ? '${fmt(monthlyOff)} off every month' : on.isEmpty ? '' : dealPerk(dealMenu.firstWhere(on.contains));
+}
+
+final seedDeals = <String, Deals>{
+  'anjani': const Deals(on: {'exit', 'monthly', 'laundry'}),
+  'saisri': const Deals(on: {'exit', 'advance'}),
+  'greenview': const Deals(on: {'first', 'exit'}),
+  'orchid': const Deals(on: {'monthly'}, target: 'non'),
+};
+
+/// Walk-in vs Hostelzy prices for one room type at one monthly [fee].
+class DealQuote {
+  DealQuote(Terms t, this.fee, Set<String> on)
+    : hzFee = fee - (on.contains('monthly') ? monthlyOff : 0),
+      adv = t.advance,
+      hzAdv = t.advance - (on.contains('advance') ? advanceOff : 0),
+      exit = t.maintenance,
+      hzExit = on.contains('exit') && t.maintenance > exitHz ? exitHz : t.maintenance,
+      join = on.contains('noadmin') ? joiningFee : 0,
+      firstOffNow = on.contains('first') ? firstOff : 0,
+      laundry = on.contains('laundry');
+  final int fee, hzFee, adv, hzAdv, exit, hzExit, join, firstOffNow;
+  final bool laundry;
+
+  int get hzFirst => hzFee - firstOffNow;
+  int get move => adv + fee + join;
+  int get hzMove => hzAdv + hzFirst;
+  int get back => adv - exit;
+  int get hzBack => hzAdv - hzExit;
+
+  /// Saving over the first 6 months (DECISIONS: the headline).
+  int get save6 => (6 * fee + join) - (5 * hzFee + hzFirst);
+  int get upfront => move - hzMove;
+  int get moreBack => hzExit < exit ? exit - hzExit : 0;
+  bool get any => hzFee != fee || hzAdv != adv || hzExit != exit || join > 0 || firstOffNow > 0 || laundry;
+
+  /// Explore ribbon text.
+  String get ribbon => save6 > 0
+      ? 'Save ${fmt(save6)} in 6 mo'
+      : upfront > 0
+      ? '${fmt(upfront)} less upfront'
+      : moreBack > 0
+      ? '${fmt(moreBack)} more back'
+      : 'Hostelzy deal';
+}

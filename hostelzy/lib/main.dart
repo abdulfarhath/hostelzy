@@ -24,7 +24,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
     mode: _pick(q['mode'], const ['plan', 'list', 'building']),
     sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
-    moreTab: _pick(q['moreTab'], const ['residents', 'complaints', 'menu', 'rules']),
+    moreTab: _pick(q['moreTab'], const ['residents', 'complaints', 'deals', 'menu', 'rules']),
     foodView: _pick(q['foodView'], const ['day', 'week']),
     mView: _pick(q['mView'], const ['day', 'week']),
   );

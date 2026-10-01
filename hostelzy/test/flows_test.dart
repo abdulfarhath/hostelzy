@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
+import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
@@ -66,7 +67,7 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Anjani Residency'));
     expect(s.screen, 'detail');
-    await tap(tester, find.text('Pick a bed'));
+    await tap(tester, find.text('Book with deal'));
     expect(s.screen, 'picker');
     await tap(tester, find.text('FREE').first);
     expect(s.bed, isNotNull);
@@ -363,7 +364,7 @@ void main() {
     expect(find.text('Every bed in a room type costs the same. Window or door, upper or lower.'), findsOneWidget);
 
     // Picker: AC filter skips non-AC rooms.
-    await tap(tester, find.text('Pick a bed'));
+    await tap(tester, find.text('Book with deal'));
     await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
     expect(s.findBed('anjani', '${s.room}-A').r!.ac, isFalse);
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
@@ -391,6 +392,59 @@ void main() {
     expect(r204.ac, isTrue);
     expect(r204.rent, 8800);
     o.dispose();
+  });
+
+  testWidgets('Hostelzy deals: Explore badges, deal table, owner picks deals (F03)', (tester) async {
+    final s = AppState(start: 'explore', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('Save ₹1,200 in 6 mo'), findsWidgets);
+    expect(find.text('₹1,000 less upfront'), findsOneWidget);
+    await tap(tester, find.widgetWithText(ChipBtn, 'Best deals'));
+    expect(filtered(s).first.id, 'anjani');
+    expect(s.bestQuote(filtered(s).last.id), isNull);
+
+    // Hostel page: With Hostelzy vs Walk in, 6-month headline.
+    await tap(tester, find.text('Anjani Residency'));
+    expect(find.text('Hostelzy deal · Non-AC'), findsOneWidget);
+    expect(find.text('YOU SAVE IN THE FIRST 6 MONTHS'), findsOneWidget);
+    expect(find.text('₹200 less to move in + ₹200/month'), findsOneWidget);
+    expect(find.text('Plus ₹500 more'), findsOneWidget);
+    expect(find.text('Free laundry weekly'), findsOneWidget);
+    expect(find.text('Book with deal'), findsOneWidget);
+    expect(find.text('Hostelzy deal: ₹200 off every month · all rooms'), findsOneWidget);
+
+    // Owner: max 3 deals, AC rooms only.
+    s.jump('oMore', 'owner');
+    await tester.pump();
+    await tap(tester, find.text('Deals'));
+    expect(s.moreTab, 'deals');
+    s.toggleDeal('first');
+    expect(s.dealDraft, {'exit', 'monthly', 'laundry'});
+    s.toggleDeal('laundry');
+    s.toggleDeal('first');
+    await tester.pump(const Duration(seconds: 3)); // let the "Pick up to 3" toast go
+    await tap(tester, find.text('AC only'));
+    await tap(tester, find.text('Publish deals'));
+    expect(s.dealsOf('anjani').on, {'exit', 'monthly', 'first'});
+    expect(s.dealsOf('anjani').covers(false), isFalse);
+
+    // Tenant: the non-AC table now points to the AC deal.
+    s.jump('detail', 'tenant');
+    s.update(() => s.dealAc = false);
+    await tester.pump();
+    expect(find.text('No Hostelzy deal on non-AC rooms'), findsOneWidget);
+    await tap(tester, find.text('See the deal on AC rooms'));
+    expect(find.text('Hostelzy deal · AC'), findsOneWidget);
+    s.dispose();
+  });
+
+  test('deal quote maths (F03)', () {
+    final q = DealQuote(const Terms(), 8700, {'exit', 'monthly'});
+    expect((q.hzFee, q.move, q.hzMove, q.save6, q.upfront, q.moreBack, q.hzBack), (8500, 11700, 11500, 1200, 200, 500, 2500));
+    final a = DealQuote(const Terms(maintenance: 1500), 8200, {'exit', 'advance'});
+    expect((a.save6, a.upfront, a.ribbon), (0, 1000, '₹1,000 less upfront'));
+    final f = DealQuote(const Terms(), 6400, {'first', 'noadmin'});
+    expect((f.save6, f.ribbon), (1500, 'Save ₹1,500 in 6 mo'));
   });
 
   test('data helpers match the prototype', () {

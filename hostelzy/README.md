@@ -30,7 +30,7 @@ exposes:
 | `theme` | `light` `dark` |
 | `mode` | `plan` `list` `building` (bed picker) |
 | `sheet` | `search` `hold` `wa` `add` `bed` `enq` `addR` |
-| `moveTab` / `moreTab` | `vacate` `swap` / `residents` `complaints` `menu` `rules` |
+| `moveTab` / `moreTab` | `vacate` `swap` / `residents` `complaints` `deals` `menu` `rules` |
 | `bare` | `true`: phone frame only |
 | `page` | `overview`: all screens |
 

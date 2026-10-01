@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
+import 'deals.dart';
 import 'kit.dart';
 import 'screens_resident.dart' show WeekTable;
 import 'screens_tenant.dart' show FloorTabs, RoomTypeTag;
@@ -855,6 +856,8 @@ class OwnerManageScreen extends StatelessWidget {
     Widget body;
     if (s.moreTab == 'residents') {
       body = const _Residents();
+    } else if (s.moreTab == 'deals') {
+      body = const OwnerDeals();
     } else if (s.moreTab == 'complaints') {
       final sorted = s.complaints.asMap().entries.toList()
         ..sort((x, y) {
@@ -1017,7 +1020,7 @@ class OwnerManageScreen extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: PageHead(kicker: 'Anjani Residency', title: 'Manage'),
         ),
-        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), margin: const EdgeInsets.symmetric(horizontal: 16)),
+        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
         const SizedBox(height: 14),
         Expanded(
           child: Container(
@@ -1345,6 +1348,7 @@ class OwnerRatesScreen extends StatelessWidget {
     final d = s.rateDraft ?? s.rates['anjani']!;
     final acd = s.acDraft ?? {for (final r in s.rooms['anjani']!) r.n: r.ac};
     final rooms = s.rooms['anjani']!.where((r) => r.floor == s.rcFloor).toList();
+    final deal = s.dealsOf('anjani');
     Widget head(String t, {Color? c}) => T(t, s: 10, w: 600, ls: .08, upper: true, c: c ?? p.mu);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1416,11 +1420,14 @@ class OwnerRatesScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    // Deals (F03) will lower this column; until then it matches the walk-in price.
-                                    SizedBox(
-                                      width: 86,
-                                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(fmt(v), w: 800, s: 15), T('Same as walk-in', s: 11, c: p.mu)]),
-                                    ),
+                                    // F03: the Hostelzy price is the walk-in price minus any monthly deal.
+                                    () {
+                                      final off = deal.covers(ac) && deal.on.contains('monthly');
+                                      return SizedBox(
+                                        width: 86,
+                                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(fmt(off ? v - monthlyOff : v), w: 800, s: 15, c: off ? p.gn : p.tx), T(off ? '${fmt(monthlyOff)} off' : 'Same as walk-in', s: 11, c: p.mu)]),
+                                      );
+                                    }(),
                                   ] else
                                     SizedBox(
                                       width: 198,
@@ -1442,6 +1449,21 @@ class OwnerRatesScreen extends StatelessWidget {
                               ),
                             ),
                       ],
+                    ),
+                  ),
+                  Tap(
+                    onTap: s.openDeals,
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      color: deal.on.isEmpty ? p.sf : p.gb,
+                      child: Row(
+                        children: [
+                          Expanded(child: T(deal.on.isEmpty ? 'No Hostelzy deal yet' : 'Deal: ${deal.summary} · ${deal.targetText}', s: 13, w: 800, c: deal.on.isEmpty ? p.tx : p.gn)),
+                          const SizedBox(width: 8),
+                          T(deal.on.isEmpty ? 'Add' : 'Change', s: 13, w: 800, c: deal.on.isEmpty ? p.ad : p.gn, underline: true),
+                        ],
+                      ),
                     ),
                   ),
                   Padding(

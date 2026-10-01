@@ -46,6 +46,66 @@ class AppState extends ChangeNotifier {
   String phone = '', otp = '';
   final Map<String, List<Room>> rooms = {};
 
+  /// F03: each hostel's published deals.
+  final Map<String, Deals> deals = Map.of(seedDeals);
+
+  /// Owner's deal picker draft (Manage → Deals) and the tenant's deal-table room type.
+  Set<String>? dealDraft;
+  String dealTarget = 'all';
+  bool? dealAc;
+
+  /// F03 Explore sort: Best deals first.
+  bool bestDeals = false;
+
+  Deals dealsOf(String hid) => deals[hid] ?? const Deals();
+
+  /// Walk-in vs Hostelzy quote for a room type ([ac], [share]) at [hid].
+  DealQuote quote(String hid, bool ac, int share) {
+    final h = hostelById(hid);
+    final d = dealsOf(hid);
+    final fee = rates[hid]![rateKey(ac, share)] ?? h.from;
+    return DealQuote(h.terms, fee, d.covers(ac) ? d.on : const {});
+  }
+
+  /// Best 6-month saving at a hostel across its room types (Explore sort and ribbon).
+  DealQuote? bestQuote(String hid, {String f = 'Any'}) {
+    DealQuote? best;
+    for (final r in rooms[hid]!) {
+      if (!fits(r, f)) continue;
+      final q = quote(hid, r.ac, r.share);
+      if (!q.any) continue;
+      if (best == null || q.save6 > best.save6 || (q.save6 == best.save6 && q.upfront > best.upfront)) best = q;
+    }
+    return best;
+  }
+
+  void openDeals() => update(() {
+    final d = dealsOf('anjani');
+    dealDraft = Set.of(d.on);
+    dealTarget = d.target;
+    screen = 'oMore';
+    hist = [];
+    sheet = null;
+    moreTab = 'deals';
+  });
+
+  void toggleDeal(String id) {
+    final cur = dealDraft ??= Set.of(dealsOf('anjani').on);
+    if (cur.contains(id)) {
+      update(() => cur.remove(id));
+    } else if (cur.length >= maxDeals) {
+      toastMsg('Pick up to $maxDeals. Remove one first.');
+    } else {
+      update(() => cur.add(id));
+    }
+  }
+
+  void publishDeals() {
+    final on = Set.of(dealDraft ?? dealsOf('anjani').on);
+    update(() => deals['anjani'] = Deals(on: on, target: dealTarget, confirmed: dayMon(appToday)));
+    toastMsg(on.isEmpty ? 'Deals removed. Tenants see walk-in prices.' : 'Deals published. Tenants who book through Hostelzy get them.');
+  }
+
   /// F16: rate card per hostel, `rateKey(ac, share)` → monthly rent.
   final Map<String, Map<String, int>> rates = {};
 

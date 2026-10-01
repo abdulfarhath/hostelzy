@@ -74,6 +74,7 @@ class OverviewPage extends StatelessWidget {
         ('Complaints queue', {'start': 'oMore', 'role': 'owner', 'moreTab': 'complaints'}),
         ('Edit menu', {'start': 'oMore', 'role': 'owner', 'moreTab': 'menu'}),
         ('Edit rules', {'start': 'oMore', 'role': 'owner', 'moreTab': 'rules'}),
+        ('Hostelzy deals', {'start': 'oMore', 'role': 'owner', 'moreTab': 'deals'}),
       ],
     ),
     (
