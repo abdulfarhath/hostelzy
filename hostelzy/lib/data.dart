@@ -17,8 +17,8 @@ class Hostel {
 /// first month at move-in, then only the monthly fee. On leaving the owner
 /// keeps [maintenance] from the advance and returns the rest.
 ///
-/// Notice days, fee due day and electricity are placeholders until the
-/// founder answers BOARD questions 5 and 6.
+/// Defaults agreed with the founder on 2026-10-01 (BOARD Q5, Q6): 30 days'
+/// notice, fee due on the joining date, electricity extra.
 class Terms {
   const Terms({this.advance = 3000, this.maintenance = 1000, this.noticeDays = 30, this.dueOnJoining = true, this.electricityExtra = true});
   final int advance, maintenance, noticeDays;

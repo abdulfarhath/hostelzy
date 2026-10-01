@@ -6,7 +6,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | ID | Feature | Stage | Owner chat | Notes |
 |---|---|---|---|---|
 | F01 | Core app from the Claude Design handoff (20 screens, 3 roles) | **Shipped** | Build | On `main`, APK `apk-1` |
-| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Built** (2026-10-01) | Build | Branch `feature/f02-advance-model`, PR #1. Placeholders for Q5/Q6 (30 days, due on joining date, electricity extra). Waiting on founder answers + merge |
+| F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Built** (2026-10-01) | Build | Branch `feature/f02-advance-model`, PR #1. Q5/Q6 answered (30 days, due on joining date, electricity extra). Waiting on merge |
 | F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design ready** | Design | Mockups 1, 2, 4 in the Deals canvas. Waiting on open questions 1–3 |
 | F04 | Book with the advance, deal locked, HZ code | **Design ready** | Design | Mockup 3 in the Deals canvas. Waiting on open question 4 |
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Spec ready** | Design | Draft code on branch `draft/f05-enquiries` (unapproved) |
@@ -29,8 +29,8 @@ F02 → F03 + F04 → F05 → F06 → F08 → F07 → F09 → F10 → F13/F14 �
 2. Is the 6-deal menu right? Any local deals to add? (F03)
 3. Max 3 deals per owner? (F03)
 4. Keep the free 1-hour hold next to "Pay advance"? Drop the ₹299 paid hold? (F04)
-5. Notice period 15 or 30 days? Fee due on the joining date or the 1st? (F02)
-6. Electricity and food included in the fee, or extra? (F02)
+5. ~~Notice period 15 or 30 days? Fee due on the joining date or the 1st?~~ **Answered 2026-10-01:** 30 days, fee due on the joining date. (F02; Ideas chat: please add to DECISIONS.md)
+6. Electricity and food included in the fee, or extra? **Electricity: extra (answered 2026-10-01).** Food: still open. (F02)
 7. Owner pricing: A flat monthly plan, or B per matched join? (F10)
 8. Matching window: 30 or 60 days? (F06)
 9. Strikes: 3, or ban on the 2nd? (F07)
