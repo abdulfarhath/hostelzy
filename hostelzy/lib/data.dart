@@ -207,8 +207,8 @@ class Resident {
 }
 
 /// F06: how far back a phone's enquiry, hold or booking counts towards
-/// "Joined via Hostelzy" (BOARD Q8; 30 days for now).
-const matchWindowDays = 30;
+/// "Joined via Hostelzy" (60 days, decided 2026-10-02).
+const matchWindowDays = 60;
 
 /// Owners must add new residents within this many days (F06 rules).
 const addResidentDays = 2;

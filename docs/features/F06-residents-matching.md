@@ -41,7 +41,7 @@ Merge #1 and #2 first; this PR's own diff is then F06 only.
 **Model.** `Resident` gains phone, `via` (hz / direct / before), `since`, matched `ref`,
 `confirmed`, advance and join time; tag = Waiting OTP until confirmed. `AppState.matchFor()`:
 a phone counts as **Joined via Hostelzy** if it enquired about (F05), held or booked a bed at the
-hostel within `matchWindowDays` (30, BOARD Q8) before joining; otherwise **Direct**.
+hostel within `matchWindowDays` (**60 days**, decided 2026-10-02) before joining; otherwise **Direct**.
 Sample data: Anjani's 23 taken beds now have residents except 103-A and 202-B (flagged); the
 first import is "Before Hostelzy"; Sai Kiran and Nikhil Goud are Via Hostelzy, Teja Naidu
 Direct, Ravi Teja (303-D, HZ-4821) Waiting OTP. Two invite sign-ups wait for approval
@@ -69,7 +69,7 @@ first import.
 **Design defaults (unanswered design questions)**
 - Residents is a segment in Manage (not a sixth tab).
 - "Joined via Hostelzy" is owner-only; the resident's confirm screen doesn't show it.
-- Window 30 days: `matchWindowDays` in `lib/data.dart`.
+- Window: 60 days (decided 2026-10-02), `matchWindowDays` in `lib/data.dart`.
 
 **Not built yet:** the 3-day rule isn't enforced (only shown as the banner's date); real QR,
 share and print come with the backend (F13).

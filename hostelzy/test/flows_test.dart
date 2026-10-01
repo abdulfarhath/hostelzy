@@ -282,7 +282,7 @@ void main() {
     expect(find.textContaining('($ref)'), findsOneWidget);
     await tester.enterText(find.byType(EditableText).at(1), '9000000000');
     await tester.pump();
-    expect(find.textContaining('No Hostelzy enquiry, hold or booking from this number in the last 30 days.'), findsOneWidget);
+    expect(find.textContaining('No Hostelzy enquiry, hold or booking from this number in the last 60 days.'), findsOneWidget);
     await tester.enterText(find.byType(EditableText).at(1), '9848012345');
     await tester.pump();
     await tap(tester, find.text('Add and send code'));
@@ -326,6 +326,18 @@ void main() {
     expect(s.signups, isEmpty);
     expect(find.text('No one waiting. New sign-ups show up here.'), findsOneWidget);
     expect(s.unassignedBeds, ['202-B']);
+    s.dispose();
+  });
+
+  test('matching window is 60 days (F06)', () {
+    final s = AppState();
+    const day = 86400000;
+    s.enquiries = [
+      Enquiry(ref: 'HZ-1', name: 'A', phone: '9000000001', hid: 'anjani', at: s.now - 45 * day, from: '', msg: ''),
+      Enquiry(ref: 'HZ-2', name: 'B', phone: '9000000002', hid: 'anjani', at: s.now - 61 * day, from: '', msg: ''),
+    ];
+    expect(s.matchFor('9000000001', s.now)?.ref, 'HZ-1');
+    expect(s.matchFor('9000000002', s.now), isNull);
     s.dispose();
   });
 
