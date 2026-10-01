@@ -41,5 +41,22 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
 - Firebase for push and crash reports. GitHub Actions builds the APK on every push to `main`.
 - Budget-conscious: ≈ ₹2,600/month at launch.
 
+## 2026-10-02
+
+**Room pricing**
+- Price is set by the owner per **sharing type × AC / non-AC**. A single hostel can have both AC and
+  non-AC rooms. **No pricing by bed position** (window, fan, etc.).
+- Tenants can filter by **AC / non-AC** (Explore chips, search sheet, bed picker).
+- In the room layout (F12), a room marked AC must have an AC unit placed.
+
+**Money terms (F02, founder answers 2026-10-01)**
+- Notice period **30 days**. Monthly fee is due on the **joining date** (not the 1st).
+- **Electricity is extra**; **food is included** in the fee where the hostel serves meals.
+
+**Room layouts (F12)**
+- The **Hostelzy team draws every room layout** (admin editor on a laptop). Owners don't draw; they
+  approve layouts, mark items working / not working, and request changes in the app.
+- New room shapes and layout changes are **free**, done **within 48 hours**.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
