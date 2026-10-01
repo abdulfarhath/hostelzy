@@ -1,6 +1,6 @@
 # F14 · Onboarding hostels: Add hostel tool, multi-hostel, invite QR
 
-**Stage:** Spec ready · 2026-10-02
+**Stage:** Design ready · 2026-10-02
 
 ## Problem
 The founder wants 20 hostels live this month, onboarded in person, mostly alone. Each visit must
@@ -23,8 +23,9 @@ Kondapur** (IT). Tenant marketing starts only in those clusters.
 2. **Owner signs up** with OTP, reads and accepts the Fair Play rules (F07) out loud with the founder.
 3. **Add hostel** (founder's admin mode, owner watching):
    - Basics: name, gender (men / women / co-living), map pin, area, food, rules, amenities, gate time.
-   - **Room generator:** floors × rooms per floor × sharing × AC/non-AC → beds created in one go,
-     then fix the odd rooms.
+   - **Room generator, floor by floor** (floors differ, see "Uneven floors" below): add a floor →
+     number of rooms on it → default sharing and AC/non-AC → "Copy previous floor" to save time →
+     fix the odd rooms. Beds are created from this.
    - **Rate card** (F16): price per sharing × AC/non-AC, advance, maintenance, notice (F02).
    - **Photos taken by the founder** (consistent quality): front, each room type, washroom, food,
      common area. Minimum 8.
@@ -33,6 +34,25 @@ Kondapur** (IT). Tenant marketing starts only in those clusters.
    - Optional: pick up to 3 deals (F03).
 4. **Leave behind:** printed A4 QR poster for residents ("Join your hostel on Hostelzy: pay rent,
    raise complaints") and a small "Book on Hostelzy" sticker for the gate.
+
+## Uneven floors (founder, 2026-10-02)
+Real buildings are not a neat grid. One floor may have 3 rooms, the next 6, the ground floor none.
+- **Each floor has its own room count.** No "rooms per floor" number for the whole hostel.
+- **Floors with no beds are allowed** (ground floor with kitchen, office, parking). They are
+  stored but hidden from tenants.
+- **Floor names:** Ground, 1, 2, 3 … and Terrace. A building can start at Ground or at 1.
+- **Room numbers are the owner's own,** editable and unique in the hostel: gaps (101, 102, 105),
+  letters (A1, G-02) and different counts per floor are all fine. Default suggestion: floor × 100
+  + n (G01, G02 on the ground floor).
+- **Every room keeps its own sharing and AC/non-AC,** so one floor can mix 2-, 3- and 4-sharing.
+- **Later changes** (Manage → Rooms): add or remove a room or a whole floor. A room or floor with a
+  resident or an active hold can't be removed.
+- **Tenant bed picker and owner bed map:** floor tabs show only floors that have beds, each with
+  its free-bed count. The floor plan grid adapts to any number of rooms (1 to 20+), wrapping into
+  rows; it never assumes 4 rooms.
+- **Room layouts (F12)** are per room, so they are not affected.
+- **Sample data** must include uneven floors (e.g. Ground 0 rooms, 1st 3 rooms, 2nd 5, 3rd 2) so the
+  tests cover it.
 
 ## Rules
 - **Goes live only when complete:** owner OTP verified, ≥ 8 photos, every room type priced, bed
@@ -67,7 +87,32 @@ the area, the owner's phone, the next step and the date.
 4. The founder visits alone for now; admin mode supports adding team members later.
 
 ## Design
-_Not started._
+Canvas https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T. Awaiting founder approval.
+
+Add hostel wizard (Hostelzy admin mode on the founder's phone during the visit; 6-step progress bar and a red "Hostelzy admin mode" tag):
+1. **Basics.** Name, who it's for, map pin checked at the gate, food, gate time, total beds, amenities.
+2. **Room generator.** Floors × rooms per floor, default sharing and AC/Non-AC; preview grid of all rooms ("12 rooms · 37 beds"); odd rooms tapped and changed (marked in red); bed IDs match the bed map and layouts.
+3. **Rate card.** Only the room types used, with a missing price flagged in red. Money terms: advance, amount kept on leaving, notice, fee due date. Optional "Pick deals now".
+4. **Photos.** 8-photo minimum by type (front, each room type, washroom, food, common area, gate sticker) with counter; sketch + measurements done per room type for F12.
+5. **Residents.** Type one / paste a list; "18 of 27 taken beds"; tagged Before Hostelzy (grandfathered, F06); each gets a WhatsApp code.
+6. **Go-live checklist** (tweak Not ready / Ready): owner OTP, Fair Play accepted, ≥ 8 photos, every room type priced, bed status checked, map pin checked. "Go live" stays locked until all six are done. Note: the 30-day trial starts on the go-live day.
+
+After go-live:
+7. **Tenant: "Visited by Hostelzy · 1 Oct 2026"** badge on the hostel page (photos by our team, beds and prices checked in person), plus availability (tweak: "5 free beds · confirmed 2 days ago" / "Availability not confirmed").
+8. **Owner: add a manager** (sheet over Manage → Team). Name and phone; manager can: beds and holds, residents, enquiries, complaints, food; only the owner: plan and billing, deals, rate card, Fair Play notices. Invite by OTP.
+9. **Owner: hostel switcher.** Tap the hostel name on Today to see every hostel with its status (Live / Trial), "Add another hostel (the Hostelzy team visits)"; one plan per hostel.
+10. **Owner: "Still 4 free beds?"** The WhatsApp nudge and the in-app card listing the beds, with Yes, all 4 free / Update; the 7-day rule is spelled out.
+11. **Founder admin: onboarding tracker** (1440 × 900). Columns Lead → Visited → Signed up → Data complete → Live → Trial → Paying, one card per hostel (area, phone, next step), cluster filter, "Live 4 of 20 this month".
+12. **Resident QR poster (A4).** "Join your hostel on Hostelzy", large QR, three benefits (pay rent, complaints, food menu), Scan → Verify → Confirm, the link, and "Hostelzy never asks for your OTP or password".
+- Dark mode: board "6 in dark mode". Every phone board has a Dark tweak (the poster is for print).
 
 ## Build
 _Not started. Depends on F13 (backend)._
+
+**Uneven floors fix (2026-10-02, branch `feature/uneven-floors`, ahead of F14):** sample hostels
+now have uneven floors (`floorPlans` in `lib/data.dart`: Sai Sri 3 / 5 / 2 rooms, Greenview 4 / 2,
+Lakshmi 2 / none / 5; Anjani unchanged 4 / 4 / 4). `floorsOf()` lists floors that have beds; the
+tenant bed picker (floor tabs, Plan, Building) and the owner bed map (floor plan splits the rooms
+between the street and courtyard sides; All floors wraps two rooms per row) use it, so empty
+floors are hidden and any room count works. Test: "uneven floors: picker and owner bed map follow
+each floor". The room generator itself comes with F14.

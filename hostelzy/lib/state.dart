@@ -173,6 +173,9 @@ class AppState extends ChangeNotifier {
   String obView = 'plan';
   int obFloor = 2;
 
+  /// The owner's hostel (one per owner until F14).
+  String ownHid = 'anjani';
+
   /// Bumped whenever a screen's scroll position should reset.
   int scrollEpoch = 0;
 

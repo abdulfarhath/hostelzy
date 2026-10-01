@@ -478,6 +478,39 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('uneven floors: picker and owner bed map follow each floor', (tester) async {
+    // Lakshmi: floor 1 has 2 rooms, floor 2 none, floor 3 has 5.
+    final s = AppState(start: 'explore', role: 'tenant');
+    s.hid = 'lakshmi';
+    await pumpApp(tester, s);
+    expect(floorsOf(s.rooms['lakshmi']!), [1, 3]);
+    s.openPicker();
+    await tester.pump();
+    expect(find.text('Floor 1'), findsOneWidget);
+    expect(find.text('Floor 2'), findsNothing);
+    await tap(tester, find.text('Floor 3'));
+    expect(s.floor, 3);
+    for (final n in [301, 302, 303, 304, 305]) {
+      expect(find.text('$n'), findsOneWidget);
+    }
+    await tap(tester, find.text('Building'));
+    expect(find.text('F2'), findsNothing);
+    expect(find.text('F3'), findsOneWidget);
+    s.dispose();
+
+    // Owner bed map: Sai Sri has 3, 5 and 2 rooms per floor.
+    final o = AppState(start: 'oBeds', role: 'owner');
+    o.ownHid = 'saisri';
+    await pumpApp(tester, o);
+    await tap(tester, find.text('Floor 2'));
+    expect(find.text('205'), findsOneWidget);
+    await tap(tester, find.text('All floors'));
+    expect(find.text('Room 305'), findsNothing);
+    expect(find.text('Room 302'), findsOneWidget);
+    expect(find.text('Room 205'), findsOneWidget);
+    o.dispose();
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');

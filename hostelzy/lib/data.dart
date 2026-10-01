@@ -152,6 +152,18 @@ Map<String, int> seedRates(Hostel h) => {
 /// hostels have AC on floors 2 and 3 for 2 and 3 sharing.
 bool seedRoomAc(Hostel h, int floor, int share) => h.ac && (h.onlyAc || (floor >= 2 && share <= 3));
 
+/// Rooms per floor (DECISIONS 2026-10-02, "Uneven floors"): floors differ
+/// and can be empty. Hostels not listed have 3 floors of 4 rooms (Anjani's
+/// rooms stay as they were).
+const floorPlans = <String, List<int>>{
+  'saisri': [3, 5, 2],
+  'greenview': [4, 2],
+  'lakshmi': [2, 0, 5],
+};
+
+/// Floors that have at least one bed, lowest first.
+List<int> floorsOf(List<Room> rooms) => (rooms.where((r) => r.beds.isNotEmpty).map((r) => r.floor).toSet().toList()..sort());
+
 List<Room> mkRooms(Hostel h, int i) {
   var s = i * 977 + 131;
   double rnd() {
@@ -162,8 +174,9 @@ List<Room> mkRooms(Hostel h, int i) {
   const sh = [2, 3, 4, 3];
   final rates = seedRates(h);
   final out = <Room>[];
-  for (var f = 1; f <= 3; f++) {
-    for (var r = 1; r <= 4; r++) {
+  final plan = floorPlans[h.id] ?? const [4, 4, 4];
+  for (var f = 1; f <= plan.length; f++) {
+    for (var r = 1; r <= plan[f - 1]; r++) {
       final share = sh[(r + f) % 4], n = f * 100 + r;
       final beds = <Bed>[];
       for (var k = 0; k < share; k++) {

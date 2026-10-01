@@ -1075,7 +1075,7 @@ class _BedSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final f = s.findBed('anjani', s.obed);
+    final f = s.findBed(s.ownHid, s.obed);
     if (f.b == null) return const SizedBox();
     final b = f.b!, r = f.r!;
     final res = s.residents.where((x) => x.bed == b.id).firstOrNull;

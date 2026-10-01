@@ -1189,7 +1189,7 @@ class _PlanMode extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final floors = [
-      for (final f in [1, 2, 3]) (f, rooms.where((r) => r.floor == f && AppState.fits(r, s.pR)).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
+      for (final f in floorsOf(rooms)) (f, rooms.where((r) => r.floor == f && AppState.fits(r, s.pR)).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
     ];
     final tiles = rooms.where((r) => r.floor == s.floor).toList();
     final cols = room.share == 3 ? 3 : 2;
@@ -1553,9 +1553,7 @@ class _BuildingMode extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                floorRow(3),
-                floorRow(2),
-                floorRow(1),
+                for (final f in floorsOf(rooms).reversed) floorRow(f),
                 Container(
                   decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
                   child: IntrinsicHeight(

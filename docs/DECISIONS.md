@@ -110,5 +110,19 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - The Design chat designs **every planned feature**. The founder reviews and approves the designs;
   the Build chat then builds the approved features in the board's order.
 
+**Uneven floors** — founder, 2026-10-02
+- Each floor has its own number of rooms (and can have none). Room numbers are the owner's own.
+  Screens must never assume the same rooms on every floor. Details: F14 "Uneven floors".
+
+**Standing approval** — founder, 2026-10-02
+- The founder approves **every design, current and future**, and **every merge**, in advance:
+  "approve everything, design everything, don't wait for my approvals, keep building".
+- So: Design marks each finished design **Design approved** itself (noting "standing approval").
+  Build builds approved features in the board's order and **merges its own PR to `main`** once
+  `flutter analyze` is clean and `flutter test` passes (each merge publishes an APK).
+- Quality gates stay: flow test per feature, analyze clean, tests pass, Build section filled in.
+- Still needs the founder in person: accounts and money (Supabase, Firebase, MSG91, Google Play,
+  domain), and anything that changes `DECISIONS.md` business rules.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

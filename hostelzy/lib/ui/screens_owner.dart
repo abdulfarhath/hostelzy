@@ -11,7 +11,7 @@ import 'screens_tenant.dart' show FloorTabs, RoomTypeTag;
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
   var t = 0, booked = 0, held = 0, soon = 0, free = 0;
-  for (final r in s.rooms['anjani']!) {
+  for (final r in s.rooms[s.ownHid]!) {
     for (final b in r.beds) {
       t++;
       switch (b.state) {
@@ -470,7 +470,8 @@ class OwnerBedsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final a = s.rooms['anjani']!;
+    final a = s.rooms[s.ownHid]!;
+    final floors = floorsOf(a);
     int freeOn(int f) => a.where((r) => r.floor == f).fold<int>(0, (x, r) => x + r.beds.where((b) => b.state == 'free').length);
     void openBed(Bed b) => s.update(() {
       s.sheet = 'bed';
@@ -546,6 +547,9 @@ class OwnerBedsScreen extends StatelessWidget {
     Widget label10(String t) => T(t, s: 10, w: 600, ls: .1, upper: true, lh: 1.3, c: p.mu, nowrap: true);
 
     final fr = a.where((r) => r.floor == s.obFloor).toList();
+    if (fr.isEmpty && floors.isNotEmpty) fr.addAll(a.where((r) => r.floor == floors.first));
+    // Uneven floors: the street side takes the first half of the rooms, the courtyard side the rest.
+    final top = (fr.length + 1) ~/ 2;
     return Scroll(
       key: ValueKey('oBeds${s.scrollEpoch}'),
       child: Column(
@@ -574,9 +578,9 @@ class OwnerBedsScreen extends StatelessWidget {
           if (s.obView == 'plan') ...[
             FloorTabs(
               items: [
-                for (final f in [1, 2, 3]) (f, freeOn(f)),
+                for (final f in floors) (f, freeOn(f)),
               ],
-              cur: s.obFloor,
+              cur: fr.isNotEmpty ? fr.first.floor : s.obFloor,
               onPick: (f) => s.update(() => s.obFloor = f),
               borderTop: true,
             ),
@@ -599,7 +603,7 @@ class OwnerBedsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        planHalf(fr.sublist(0, 2)),
+                        planHalf(fr.sublist(0, top)),
                         Container(
                           height: 46,
                           decoration: BoxDecoration(
@@ -628,7 +632,7 @@ class OwnerBedsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        planHalf(fr.sublist(2, 4)),
+                        if (fr.length > top) planHalf(fr.sublist(top)) else const SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -639,7 +643,7 @@ class OwnerBedsScreen extends StatelessWidget {
             ),
           ],
           if (s.obView == 'grid')
-            for (final f in [1, 2, 3])
+            for (final f in floors)
               Container(
                 decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
                 child: Column(
@@ -701,16 +705,16 @@ class OwnerBedsScreen extends StatelessWidget {
                             ),
                           ),
                         );
+                        // Two rooms per row, whatever the floor has.
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            IntrinsicHeight(
-                              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [cell(rs[0]), const SizedBox(width: 1), cell(rs[1])]),
-                            ),
-                            const SizedBox(height: 1),
-                            IntrinsicHeight(
-                              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [cell(rs[2]), const SizedBox(width: 1), cell(rs[3])]),
-                            ),
+                            for (var k = 0; k < rs.length; k += 2) ...[
+                              if (k > 0) const SizedBox(height: 1),
+                              IntrinsicHeight(
+                                child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [cell(rs[k]), const SizedBox(width: 1), k + 1 < rs.length ? cell(rs[k + 1]) : Expanded(child: Container(color: p.bg))]),
+                              ),
+                            ],
                           ],
                         );
                       }(),
@@ -1477,8 +1481,8 @@ class OwnerRatesScreen extends StatelessWidget {
                         Row(
                           children: [
                             T('Floor ', s: 12, c: p.mu),
-                            for (final f in [1, 2, 3]) ...[
-                              if (f > 1) T(' · ', s: 12, c: p.mu),
+                            for (final f in floorsOf(s.rooms['anjani']!)) ...[
+                              if (f != floorsOf(s.rooms['anjani']!).first) T(' · ', s: 12, c: p.mu),
                               Tap(onTap: () => s.update(() => s.rcFloor = f), child: T('$f', s: 12, w: f == s.rcFloor ? 800 : 400, c: f == s.rcFloor ? p.tx : p.mu, underline: f == s.rcFloor)),
                             ],
                           ],
