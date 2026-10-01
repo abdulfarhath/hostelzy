@@ -69,9 +69,10 @@ Canvas https://claude.ai/artifact/8uEkfu5EzRsDeZrkb8Gjaz. Awaiting founder appro
    - Right: properties (wall, blows, reach, status); beds linked to the bed map ("204-A has a resident · can't delete"); checks (AC room has an AC unit, 3 beds = 3 sharing, window facing set, no gates/CCTV/exits); and the owner's request with the 48-hour countdown.
 - Dark mode: board "1 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- Fan and AC "reach" circles are drawn as dashed outlines and stripes. Clear enough on a cheap phone, or show only the fact chips by default with layers off?
-- The Room tab comes second (Plan · Room · List · Building). Should Room be the default tab once a room has an approved layout?
+**Updated 2026-10-02 for DECISIONS "Design follow-ups"**
+- Fans show as icons labelled FAN (red "FAN · NOT WORKING" when broken), the AC unit as "AC UNIT"; window, door and washroom are always labelled.
+- Board 1 toggles are "Show fan reach" and "Show AC airflow", off by default; the circles and airflow appear only when switched on. Owner and admin boards show them.
+- Plan stays the default tab; tapping a room opens Room (board 1 shows the Room tab open).
 
 ## Build
 _Not started._

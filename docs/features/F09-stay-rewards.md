@@ -29,8 +29,9 @@ Canvas https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja. Awaiting founder appro
 4. **Tenant: ₹100 reward at move-in.** Move-in summary: first month ₹6,400, green "Member reward · paid by Hostelzy −₹100", pay ₹6,300. Note that the owner still gets the full ₹6,400.
 - Dark mode: board "1 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- Hostelzy pays the ₹100 straight to the owner in the design, so the owner isn't short. Hostelzy never holds tenants' money, but paying out to owners is new. OK, or should the ₹100 come off the owner's next plan invoice instead (F10)?
+**Updated 2026-10-02 for DECISIONS "Design follow-ups"**
+- Board 4: the owner gives ₹100 off at move-in; "Hostelzy credits that ₹100 on Ramesh's next Hostelzy invoice". No cash from Hostelzy. Perks no longer say "paid by Hostelzy".
+- F10 board 1 shows the matching credit line ("Credit · ₹100 · comes off your first invoice").
 
 ## Build
 _Not started._

@@ -28,9 +28,9 @@ Canvas https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F. Awaiting founder appro
 6. **Owner: reply to a review.** New / All / Low rating; reply box under a review; rule: one reply each, reviews can't be removed, only reported for abuse.
 - Dark mode: board "3 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- The score weights shown (30/20/15/10/10/15) are placeholders. Do you want to set them, or let the Ideas chat decide?
-- Should tenants see the score number, or only the rank and the reasons?
+**Updated 2026-10-02 for DECISIONS "Design follow-ups"**
+- Board 4: sort chip is "Recommended"; cards show ★ rating from verified reviews and "#N in Madhapur" with reasons ("Quick replies, beds kept up to date"); no score number.
+- Board 5 (owner) is now "Your ranking": #1 of 9, factor bars with the weights (reviews 50%, reply speed 15%, beds kept up to date 15%, complaints resolved 10%, listing complete 10%) rated Strong / Good / Can improve; strikes lower the rank. No number shown.
 
 ## Build
 _Not started._

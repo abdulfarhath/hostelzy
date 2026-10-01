@@ -36,10 +36,9 @@ Canvas https://claude.ai/artifact/1orwCNMz68vVRrMhfqtpKV. Awaiting founder appro
 6. **F03 deal per room type.** The F03 deal table is unchanged, with a "Non-AC · 3 sharing / AC · 3 sharing" switch above it. If the deal doesn't cover the chosen type: "No Hostelzy deal on non-AC rooms. You pay the walk-in price here." plus a link to the covered type. Tweak "Deal" (default AC only).
 - Dark mode: boards "1 in dark mode" and "3 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- AC electricity: the grid says "Electricity extra, by the room's meter" for all rooms (DECISIONS 2026-10-02). If some hostels charge AC electricity separately, add an "AC power" line under the grid?
-- Rate card lives under the Beds tab ("Rooms and rent"). OK, or in Manage?
-- Deals target is shown read-only on the rate card ("Change" opens the F03 deal picker); the F03 picker itself is not redesigned.
+**Updated 2026-10-02 for DECISIONS "Design follow-ups"**
+- Board 3: one line "Electricity extra, by meter." for every room.
+- Board 5 is now **Manage → Rates** (Manage tab active); the same rate card is step 3 of Add hostel (F14).
 
 ## Build
 _Not started._

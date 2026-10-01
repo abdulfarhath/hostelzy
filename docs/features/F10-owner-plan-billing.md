@@ -28,8 +28,7 @@ Canvas https://claude.ai/artifact/H9qRG67RPK2W5zN1ssYY4N. Awaiting founder appro
 6. **Founder admin: payments** (1440 × 900). Tiles: to check, paying, on trial, overdue, this month's total. Table: hostel, invoice, amount, UTR, sent, status, with Mark paid / Not received / Send reminder. Header rule: "Match every UTR in the bank or merchant app. Never trust screenshots."
 - Dark mode: board "2 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- Which UPI ID should the QR use (your personal UPI or a separate business one)?
+**Updated 2026-10-02:** board 1 shows a "Credit · ₹100 Member reward" line (F09). **Still open:** the UPI ID for the QR (placeholder until the founder decides).
 
 ## Build
 _Not started._

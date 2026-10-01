@@ -31,8 +31,8 @@ Canvas https://claude.ai/artifact/1a7M3JyP9Vxy2kBataCXZ5. Awaiting founder appro
 7. **Founder admin: Cases** (1440 × 900). Queue with New / Waiting / Decide / Closed, one row per signal type from the spec. The case in the middle: signals, the owner's reply, the tenant's answer, then Close · no issue / Ask for more / Strike 1. Right: owner history and the decision rules.
 - Dark mode: board "5 in dark mode". Every board has a Dark tweak.
 
-**Design questions for the founder**
-- Should fixing a mistake inside the 48 hours (changing to Via Hostelzy) close the case with no strike? The design doesn't promise it either way.
+**Updated 2026-10-02 for DECISIONS "Design follow-ups"**
+- Board 5: "Change Ravi to Via Hostelzy · a mistake fixed within 48 h: case closed, no strike"; footer "3 fixes in 6 months = 1 warning". Board 1 note says the same.
 
 ## Build
 _Not started._
