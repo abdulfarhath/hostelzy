@@ -17,7 +17,7 @@ Tenants need a reason to book through Hostelzy instead of walking in; owners nee
 - All savings in rupees, never percentages. Green = savings only; red stays for actions.
 
 ## Open questions
-BOARD Q1–Q3.
+None. Decided 2026-10-02: headline = saving over first 6 months (upfront part shown under it), 6-deal menu as is, max 3 active deals.
 
 ## Design
 Canvas https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn · boards 1 (hostel page), 2 (Explore), 4 (owner deal picker, interactive). Awaiting founder approval.

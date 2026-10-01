@@ -58,5 +58,47 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
   approve layouts, mark items working / not working, and request changes in the app.
 - New room shapes and layout changes are **free**, done **within 48 hours**.
 
+## 2026-10-02 · Founder answers + delegated decisions
+
+Founder answered Q7, Q10, Q11, Q12 and told the Ideas chat to decide the rest ("take all other
+decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder can overturn any.
+
+**Owner pricing (F10)** — founder
+- **Plan A: flat monthly plan** by hostel size: up to 30 beds **₹499/mo**, 31–80 beds **₹999/mo**,
+  80+ beds **₹1,499/mo** (plus a featured spot in its area). **30-day free trial.** No per-join fee.
+- Paid by UPI QR, checked by UTR (as decided 2026-10-01).
+
+**Stay Rewards (F09)** — founder
+- Next-stay discount is **₹100** (not ₹300), paid by Hostelzy, on the first month of the next
+  Hostelzy hostel. Referral reward stays ₹100 each after the friend's first month *(Ideas chat)*.
+
+**Fair Play (F07)**
+- **No move-off fee** for owners — founder.
+- **Owner's phone number is shown only after a hold** — founder. Tenants are told clearly why: the
+  hostel page says "Owner's number shows after you hold a bed. Talking through Hostelzy keeps your
+  deal and your ₹100 reward." Before a hold, contact is through "Enquire on WhatsApp" (F05), which
+  is recorded with an HZ code.
+- **3 strikes** *(Ideas chat)*: 1) warning, 2) deals hidden for 30 days, 3) removed from Hostelzy.
+  A proven fake "Direct" for a tenant who came from the app counts as one strike.
+- **Matching window 60 days** *(Ideas chat)*: an app enquiry/hold matches a resident added up to
+  60 days later (people often visit, wait for salary, then join).
+
+**Deals (F03)** *(Ideas chat)*
+- Headline saving = **saving over the first 6 months**, with the upfront part shown under it
+  ("₹1,500 off advance + ₹200/month"). 6 months is a typical stay and stays honest.
+- The **6-deal menu stays as designed**; no local deals added for now.
+- **Max 3 active deals** per owner (per room type, F16).
+
+**Holds (F04)** *(Ideas chat)*
+- **Keep the free 1-hour hold** (2 hours for Members, F09). **Drop the ₹299 paid hold**: Hostelzy
+  never holds money, and the advance is paid straight to the owner.
+
+**Room layouts (F12)** *(Ideas chat)*
+- Women's PGs: room layouts only for logged-in (OTP) users; whole-floor plans only after a hold.
+  Every hostel: never show gates, CCTV, exits or residents' names.
+- **No power sockets in phase 1** (phase 2).
+- The room view **sits beside the bed picker's Plan tab** as a new **Room** tab. Tapping a room in
+  Plan opens it in Room.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

@@ -16,7 +16,7 @@ Owners can take app tenants off-app. Matching phone numbers shows who joined via
 - New residents must be added within 3 days.
 
 ## Open questions
-BOARD Q8.
+None. Matching window 60 days (decided 2026-10-02).
 
 ## Design
 Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F06", boards 4–7). **Design approved by the founder on 2026-10-01**, as shown (default tweak settings). The design questions below were not answered at approval; build the defaults shown and keep them easy to change.

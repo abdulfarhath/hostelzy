@@ -1,6 +1,6 @@
 # F12 · Room layout editor and room layers (with F11 seat-map booking)
 
-**Stage:** Idea · spec in progress
+**Stage:** Spec ready · 2026-10-02 (F11 seat map merged in)
 
 ## Problem
 Tenants want to know exactly where their bed is and what's around it (fan, AC, window, washroom)
@@ -15,7 +15,8 @@ before visiting. Owners' rooms come in many shapes.
   items Working / Not working, and taps **Request a change** (photo + paper sketch + measurements +
   voice note). Hostelzy redraws it **free, within 48 hours**; the owner approves the new version.
   Until a room's layout is approved it shows "Layout coming soon".
-- **Tenant room view = seat map (F11):** tap a bed like a movie seat; layer toggles (fans, AC,
+- **Tenant Room tab = seat map (F11):** a new **Room** tab beside the bed picker's Plan tab;
+  tapping a room in Plan opens it in Room. In it: tap a bed like a movie seat; layer toggles (fans, AC,
   windows, washroom); automatic bed facts ("Under a fan", "Window side · street", "Near the door",
   "Lower bunk", "AC airflow"); compare two beds.
 
@@ -29,7 +30,7 @@ before visiting. Owners' rooms come in many shapes.
 - Honesty: residents answer "Is the layout accurate?" in reviews; "Confirm layout" every 3 months;
   "Verified by Hostelzy visit" badge.
 - Safety: layouts only for logged-in OTP users; never show gates, CCTV, exits; women's-PG floor plans
-  only after a hold (pending founder confirmation, BOARD Q15). Residents' names never shown on plans.
+  only after a hold (decided 2026-10-02). Residents' names never shown on plans.
 - Tenants see the last published layout; one editor at a time; version history kept.
 
 ## Problems considered
@@ -43,12 +44,12 @@ item meaning (fan coverage, AC throw, window facing, shared washroom outside) ·
 business (founder's drawing time, owners who never draw → "Layout not added" + lower ranking).
 
 ## Later (phase 2)
-Owner draws/edits layouts on the phone (only if owners ask for it), draw custom shape wall by wall,
+Power sockets, owner draws/edits layouts on the phone (only if owners ask for it), draw custom shape wall by wall,
 AR measuring, sockets/cupboards/tables/lights/balcony, floor layout
 editor, photos pinned to items, bed filters in Explore (window bed, lower bunk), Telugu/Hindi.
 
 ## Open questions
-BOARD Q15–Q17. (Q13, Q14 answered 2026-10-02.)
+None. All answered 2026-10-02 (see DECISIONS.md).
 
 ## Design
 _Not started (waiting for spec)._
