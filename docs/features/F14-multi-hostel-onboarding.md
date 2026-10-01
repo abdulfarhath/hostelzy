@@ -1,6 +1,6 @@
 # F14 · Onboarding hostels: Add hostel tool, multi-hostel, invite QR
 
-**Stage:** Spec ready · 2026-10-02
+**Stage:** Design ready · 2026-10-02
 
 ## Problem
 The founder wants 20 hostels live this month, onboarded in person, mostly alone. Each visit must
@@ -67,7 +67,24 @@ the area, the owner's phone, the next step and the date.
 4. The founder visits alone for now; admin mode supports adding team members later.
 
 ## Design
-_Not started._
+Canvas https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T. Awaiting founder approval.
+
+Add hostel wizard (Hostelzy admin mode on the founder's phone during the visit; 6-step progress bar and a red "Hostelzy admin mode" tag):
+1. **Basics.** Name, who it's for, map pin checked at the gate, food, gate time, total beds, amenities.
+2. **Room generator.** Floors × rooms per floor, default sharing and AC/Non-AC; preview grid of all rooms ("12 rooms · 37 beds"); odd rooms tapped and changed (marked in red); bed IDs match the bed map and layouts.
+3. **Rate card.** Only the room types used, with a missing price flagged in red. Money terms: advance, amount kept on leaving, notice, fee due date. Optional "Pick deals now".
+4. **Photos.** 8-photo minimum by type (front, each room type, washroom, food, common area, gate sticker) with counter; sketch + measurements done per room type for F12.
+5. **Residents.** Type one / paste a list; "18 of 27 taken beds"; tagged Before Hostelzy (grandfathered, F06); each gets a WhatsApp code.
+6. **Go-live checklist** (tweak Not ready / Ready): owner OTP, Fair Play accepted, ≥ 8 photos, every room type priced, bed status checked, map pin checked. "Go live" stays locked until all six are done. Note: the 30-day trial starts on the go-live day.
+
+After go-live:
+7. **Tenant: "Visited by Hostelzy · 1 Oct 2026"** badge on the hostel page (photos by our team, beds and prices checked in person), plus availability (tweak: "5 free beds · confirmed 2 days ago" / "Availability not confirmed").
+8. **Owner: add a manager** (sheet over Manage → Team). Name and phone; manager can: beds and holds, residents, enquiries, complaints, food; only the owner: plan and billing, deals, rate card, Fair Play notices. Invite by OTP.
+9. **Owner: hostel switcher.** Tap the hostel name on Today to see every hostel with its status (Live / Trial), "Add another hostel (the Hostelzy team visits)"; one plan per hostel.
+10. **Owner: "Still 4 free beds?"** The WhatsApp nudge and the in-app card listing the beds, with Yes, all 4 free / Update; the 7-day rule is spelled out.
+11. **Founder admin: onboarding tracker** (1440 × 900). Columns Lead → Visited → Signed up → Data complete → Live → Trial → Paying, one card per hostel (area, phone, next step), cluster filter, "Live 4 of 20 this month".
+12. **Resident QR poster (A4).** "Join your hostel on Hostelzy", large QR, three benefits (pay rent, complaints, food menu), Scan → Verify → Confirm, the link, and "Hostelzy never asks for your OTP or password".
+- Dark mode: board "6 in dark mode". Every phone board has a Dark tweak (the poster is for print).
 
 ## Build
 _Not started. Depends on F13 (backend)._
