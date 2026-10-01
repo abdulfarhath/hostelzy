@@ -91,7 +91,7 @@ Canvas https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T. Awaiting founder appro
 
 Add hostel wizard (Hostelzy admin mode on the founder's phone during the visit; 6-step progress bar and a red "Hostelzy admin mode" tag):
 1. **Basics.** Name, who it's for, map pin checked at the gate, food, gate time, total beds, amenities.
-2. **Room generator.** Floors × rooms per floor, default sharing and AC/Non-AC; preview grid of all rooms ("12 rooms · 37 beds"); odd rooms tapped and changed (marked in red); bed IDs match the bed map and layouts.
+2. **Rooms, floor by floor** (updated for "Uneven floors"). One block per floor, each with its own room count. Ground floor can be "No beds (kitchen, office) · hidden from tenants". Room numbers are editable (101, 102, 105 · 204A). Each floor has "Copy previous floor"; at the bottom, Add floor / Add terrace. Changed rooms are marked in red. Sample: Ground 0, 1st 3, 2nd 5, 3rd 2 = 10 rooms, 29 beds.
 3. **Rate card.** Only the room types used, with a missing price flagged in red. Money terms: advance, amount kept on leaving, notice, fee due date. Optional "Pick deals now".
 4. **Photos.** 8-photo minimum by type (front, each room type, washroom, food, common area, gate sticker) with counter; sketch + measurements done per room type for F12.
 5. **Residents.** Type one / paste a list; "18 of 27 taken beds"; tagged Before Hostelzy (grandfathered, F06); each gets a WhatsApp code.
@@ -104,6 +104,10 @@ After go-live:
 10. **Owner: "Still 4 free beds?"** The WhatsApp nudge and the in-app card listing the beds, with Yes, all 4 free / Update; the 7-day rule is spelled out.
 11. **Founder admin: onboarding tracker** (1440 × 900). Columns Lead → Visited → Signed up → Data complete → Live → Trial → Paying, one card per hostel (area, phone, next step), cluster filter, "Live 4 of 20 this month".
 12. **Resident QR poster (A4).** "Join your hostel on Hostelzy", large QR, three benefits (pay rent, complaints, food menu), Scan → Verify → Confirm, the link, and "Hostelzy never asks for your OTP or password".
+Uneven floors:
+13. **Tenant: bed picker Plan** (tweak 2nd floor · 5 rooms / 1st floor · 3 rooms). Floor tabs show only floors with beds, each with its free count; room tiles wrap into rows of 4; the room header shows sharing · AC · price.
+14. **Owner: bed map.** Every floor stacked with its own rooms (3 / 5 / 2), bed squares by state, the Ground floor shown as "No beds · hidden from tenants", and "Add or remove rooms (not rooms with a resident or hold)".
+- F16 board 4 (bed picker) shows a 4-room floor as one case; boards 13 and 14 here are the uneven reference.
 - Dark mode: board "6 in dark mode". Every phone board has a Dark tweak (the poster is for print).
 
 ## Build
