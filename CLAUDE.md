@@ -22,6 +22,13 @@ Three chats work on this repo at the same time. Each has one role.
    so the other chats see it. The repo is the shared memory: chats do not see
    each other's conversations.
 
+## Standing approval (founder, 2026-10-02)
+
+The founder has approved every design and every merge in advance. Design marks finished designs
+**Design approved** itself; Build merges its own PR to `main` once `flutter analyze` is clean and
+`flutter test` passes. Accounts, money and changes to business rules still need the founder.
+This overrides the "only the founder approves" lines below until the founder says otherwise.
+
 ## Feature stages (`docs/BOARD.md`)
 
 `Idea → Spec ready → Designing → Design ready → Design approved → Building → Built → Shipped`
