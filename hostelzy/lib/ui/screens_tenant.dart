@@ -825,7 +825,7 @@ class DetailScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      OutlineCta('Ask on WhatsApp', icon: 'msg', height: 44, px: 14, fs: 14, onTap: () => s.openWA(h.owner, 'Hi ${h.owner}, I found ${h.name} on Hostelzy. Can I come and see the rooms this evening?')),
+                      OutlineCta('Ask on WhatsApp', icon: 'msg', height: 44, px: 14, fs: 14, onTap: () => s.enquireOnWhatsApp(h.id, 'Hi ${h.owner}, I found ${h.name} on Hostelzy. Can I come and see the rooms this evening?')),
                     ],
                   ),
                 ),
@@ -1440,7 +1440,7 @@ class HoldScreen extends StatelessWidget {
       canSim = st == 'waiting';
       canCancel = st == 'waiting' || st == 'confirmed' || st == 'held';
       canMoveIn = st == 'confirmed' || st == 'booked' || st == 'held';
-      wa = () => s.openWA(i.hh.owner, "Hi ${i.hh.owner}, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?");
+      wa = () => s.enquireOnWhatsApp(hold.hid, "Hi ${i.hh.owner}, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

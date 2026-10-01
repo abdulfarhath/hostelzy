@@ -159,6 +159,31 @@ List<Resident> seedResidents() => [
   Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep'),
 ];
 
+/// A tenant tapped "WhatsApp owner". Recorded on Hostelzy before WhatsApp
+/// opens, so the owner can trust it whatever the tenant ends up typing.
+class Enquiry {
+  Enquiry({required this.ref, required this.name, required this.phone, required this.hid, this.bed, required this.at, this.contacted = false});
+  final String ref, name, phone, hid;
+  final String? bed;
+  final int at;
+  final bool contacted;
+  Enquiry withContacted() => Enquiry(ref: ref, name: name, phone: phone, hid: hid, bed: bed, at: at, contacted: true);
+}
+
+List<Enquiry> seedEnquiries(int now) => [
+  Enquiry(ref: 'HZ-4817', name: 'Sandeep Kumar', phone: '9849033121', hid: 'anjani', bed: '201-C', at: now - 18 * 60000),
+  Enquiry(ref: 'HZ-4809', name: 'Imran Shaikh', phone: '9701245580', hid: 'anjani', at: now - 2 * 3600000, contacted: true),
+];
+
+/// "18 min ago", "2 h ago".
+String ago(int ms) {
+  final m = ms ~/ 60000;
+  if (m < 1) return 'just now';
+  if (m < 60) return '$m min ago';
+  final h = m ~/ 60;
+  return h < 24 ? '$h h ago' : '${h ~/ 24} d ago';
+}
+
 class HoldRequest {
   HoldRequest({required this.id, required this.name, required this.bed, required this.type, required this.secs, required this.note, required this.start, this.hold});
   final String id, name, bed, type, note;

@@ -637,6 +637,16 @@ class _WaSheet extends StatelessWidget {
         gap: 12,
         children: [
           Rich([sp(context, 'To '), sp(context, s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
+          if (s.waRef != null)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+              decoration: BoxDecoration(color: p.gb, border: Border(left: bs(4, p.gn))),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Padding(padding: const EdgeInsets.only(top: 2), child: Ic('check', size: 16, color: p.gn)),
+                const SizedBox(width: 10),
+                Expanded(child: Rich([sp(context, '${s.waTo} has been told on Hostelzy', w: 800, c: p.tx), sp(context, ', with your verified number and ref ${s.waRef}. Edit the message if you like.')], s: 13, c: p.mu)),
+              ]),
+            ),
           Container(padding: const EdgeInsets.all(14), color: p.sf, child: T(s.waMsg ?? '', s: 15, lh: 1.45)),
           Cta(
             'Open WhatsApp',

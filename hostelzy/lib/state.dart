@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
     this.foodView = foodView ?? 'day';
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
+    enquiries = seedEnquiries(n);
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (const ['hold', 'holds', 'oToday'].contains(screen)) {
@@ -66,6 +67,11 @@ class AppState extends ChangeNotifier {
   String? swapBed;
   bool swapSent = false;
   late List<HoldRequest> reqs;
+  late List<Enquiry> enquiries;
+  int _nextRef = 4821;
+
+  /// Ref of the enquiry behind the open WhatsApp sheet, if any.
+  String? waRef;
   List<Resident> residents = seedResidents();
   String rentF = 'All';
   List<DayMenu> menu = List.of(seedMenu);
@@ -157,7 +163,30 @@ class AppState extends ChangeNotifier {
     sheet = 'wa';
     waTo = to;
     waMsg = msg;
+    waRef = null;
   });
+
+  /// Tenant → owner hand-off. Records the enquiry on Hostelzy first (the
+  /// owner is notified from here, not by the WhatsApp text), then opens the
+  /// pre-filled message with the reference code and verification link.
+  void enquireOnWhatsApp(String hid, String body, {String? bed}) {
+    final h = hostelById(hid);
+    final me = phone.length == 10 ? phone : '9848012345';
+    var e = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull;
+    if (e == null) {
+      e = Enquiry(ref: 'HZ-${_nextRef++}', name: 'Rahul Varma', phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch);
+      enquiries = [e, ...enquiries];
+    }
+    final ref = e.ref;
+    update(() {
+      sheet = 'wa';
+      waTo = h.owner;
+      waMsg = '$body\nHostelzy ref: $ref\nhostelzy.in/r/$ref';
+      waRef = ref;
+    });
+  }
+
+  void markContacted(String ref) => update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
 
   ({int f, int t}) freeOf(String id) {
     var f = 0, t = 0;

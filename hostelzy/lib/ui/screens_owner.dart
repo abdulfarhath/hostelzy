@@ -278,8 +278,116 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const _Enquiries(),
         ],
       ),
+    );
+  }
+}
+
+/// Enquiries recorded by Hostelzy when a tenant taps "WhatsApp owner". The
+/// phone number is OTP-verified, so it matches the WhatsApp chat that follows.
+class _Enquiries extends StatelessWidget {
+  const _Enquiries();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final list = s.enquiries.where((e) => e.hid == 'anjani').toList();
+    final fresh = list.where((e) => !e.contacted).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [const Kicker('Enquiries from Hostelzy'), T(fresh > 0 ? '$fresh new' : 'All answered', s: 12, w: 600, c: fresh > 0 ? p.ad : p.mu)],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final e in list)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: VGap(
+                    gap: 8,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                T(e.name, w: 800, s: 16),
+                                const SizedBox(height: 2),
+                                T('+91 ${phoneSpaced(e.phone)} · verified', s: 13, c: p.mu),
+                                const SizedBox(height: 2),
+                                T(e.bed != null ? 'Holding bed ${e.bed}' : 'Asked about the hostel', s: 13),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Tag(e.contacted ? 'Contacted' : 'New', bg: e.contacted ? p.sf : p.ab, fg: e.contacted ? p.tx : p.ad),
+                              const SizedBox(height: 6),
+                              T(e.ref, s: 12, w: 600, tab: true),
+                              T(ago(s.now - e.at), s: 11, c: p.mu),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _PlainBtn(
+                              'WhatsApp',
+                              bg: p.tx,
+                              fg: p.bg,
+                              onTap: () {
+                                s.markContacted(e.ref);
+                                s.openWA(e.name, 'Hi ${e.name.split(' ')[0]}, this is Srinivas from Anjani Residency. I got your Hostelzy enquiry (${e.ref}).');
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _PlainBtn(
+                              'Call',
+                              border: p.tx,
+                              onTap: () {
+                                s.markContacted(e.ref);
+                                s.toastMsg('Calling ${e.name.split(' ')[0]} on +91 ${phoneSpaced(e.phone)}…');
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              if (list.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  child: T('No enquiries yet. Tenants who tap "WhatsApp owner" show up here first.', s: 14, c: p.mu),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                child: T('A WhatsApp message comes from Hostelzy only if its number is on this list.', s: 12, c: p.mu),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
