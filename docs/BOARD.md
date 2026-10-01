@@ -14,7 +14,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Design ready** · 2026-10-02 | Design | Fair Play canvas. Awaiting founder approval |
 | F08 | Verified-resident reviews + Hostelzy score ranking | **Design ready** · 2026-10-02 | Design | Reviews canvas. Awaiting founder approval |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Design ready** · 2026-10-02 | Design | Stay Rewards canvas. Awaiting founder approval |
-| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Spec ready** | Design | Decided 2026-10-02: flat plan ₹499 / ₹999 / ₹1,499, 30-day trial |
+| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Design ready** · 2026-10-02 | Design | Owner Plan canvas. Awaiting founder approval |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design approved** · 2026-10-02 (standing approval) | Build | Boards 1–6 in the Room Layouts canvas |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
@@ -48,3 +48,4 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 - Fair Play mockups (F07): https://claude.ai/artifact/1a7M3JyP9Vxy2kBataCXZ5
 - Reviews mockups (F08): https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F
 - Stay Rewards mockups (F09): https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja
+- Owner Plan mockups (F10): https://claude.ai/artifact/H9qRG67RPK2W5zN1ssYY4N
