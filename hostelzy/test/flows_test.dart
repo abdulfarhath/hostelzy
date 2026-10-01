@@ -138,6 +138,63 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('advance model: ₹3,000 advance, maintenance kept on exit (F02)', (tester) async {
+    // Tenant: hostel page rules and the hold steps.
+    final s = AppState(start: 'detail', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('₹3,000 + first month at move-in'), findsOneWidget);
+    expect(find.text('₹1,000 kept from the advance'), findsOneWidget);
+    expect(find.textContaining("2 months"), findsNothing);
+    s.jump('hold', 'tenant');
+    await tester.pump();
+    expect(find.text('Pay ₹3,000 advance + first month at move-in.'), findsOneWidget);
+    s.dispose();
+
+    // Resident: Pay rent shows the advance and what comes back.
+    final r = AppState(start: 'rPay', role: 'resident');
+    await pumpApp(tester, r);
+    expect(find.text('Due 14 Oct. The owner gets a receipt on WhatsApp.'), findsOneWidget);
+    expect(find.text('₹2,000 BACK WHEN YOU LEAVE'), findsOneWidget);
+    expect(find.textContaining('₹15,200'), findsNothing);
+
+    // Move out: refund = advance − maintenance, with the notice date.
+    r.go('move');
+    await tester.pump();
+    expect(find.text('31 Oct'), findsWidgets);
+    expect(find.text('− ₹1,000'), findsOneWidget);
+    expect(find.text('₹2,000 within 7 days'), findsOneWidget);
+    await tap(tester, find.text('Give notice for'));
+    expect(r.notice, isTrue);
+    expect(find.text('₹2,000 back to your UPI'), findsOneWidget);
+    r.dispose();
+
+    // Owner: bed sheet and add booking show advance and maintenance.
+    final o = AppState(start: 'oBeds', role: 'owner', sheet: 'bed');
+    await pumpApp(tester, o);
+    expect(find.text('₹3,000 · ₹1,000 kept on exit'), findsOneWidget);
+    expect(find.text('Mark as leaving 31 Oct'), findsOneWidget);
+    o.update(() {
+      o.sheet = 'add';
+      o.addBed = '102-A';
+    });
+    await tester.pump();
+    final rent = o.findBed('anjani', '102-A').r!.rent;
+    expect(find.text(fmt(3000 + rent)), findsOneWidget);
+    o.dispose();
+  });
+
+  test('advance terms helpers', () {
+    const t = Terms();
+    expect(t.refund, 2000);
+    expect(leaveDates(t), ['31 Oct', '15 Nov', '30 Nov']);
+    expect(leaveDates(const Terms(noticeDays: 15)).first, '16 Oct');
+    expect(dueNote(t, 14), 'Due 14 Oct');
+    expect(dueLeft(t, 14), '13 days left');
+    expect(dueNote(const Terms(dueOnJoining: false), 14), 'Due 1 Oct');
+    expect(dueLeft(const Terms(dueOnJoining: false), 14), 'due today');
+    expect(hostelById('saisri').terms.refund, 1500);
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');
