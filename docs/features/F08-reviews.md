@@ -1,6 +1,6 @@
 # F08 · Verified reviews and Hostelzy score
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 Google reviews can be faked; tenants trust reviews from real residents.
@@ -18,7 +18,7 @@ Google reviews can be faked; tenants trust reviews from real residents.
 None.
 
 ## Design
-Canvas https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F. Awaiting founder approval.
+Canvas https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F. **Design approved by the founder on 2026-10-02.**
 
 1. **Resident: 30-day review.** Overall stars, 1–5 for Food, Cleanliness, Safety, Water and power, Owner; "Is the room layout accurate? Yes / Mostly / No" (F12); optional text. Shows as "Ravi T. · verified resident". Footer: only confirmed stays can review, one review per stay, editable.
 2. **Resident: exit review.** "Did you get your advance back?" with the expected amount worked out from the locked deal (₹3,000 − ₹500 = ₹2,500): Yes, all / Only part / Not yet. Then overall stars and "Would you stay again?". The answer feeds the hostel's "advance returned" record.

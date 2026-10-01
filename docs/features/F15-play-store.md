@@ -1,6 +1,6 @@
 # F15 · Play Store launch
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 A professional release on Google Play, which requires a privacy policy, account deletion, honest
@@ -26,7 +26,7 @@ account deletion, signed app bundle, Data Safety form, closed test with 12 teste
 None for design.
 
 ## Design
-Canvas https://claude.ai/artifact/PBCza1yUDPzNVc2QHDrAN4. Awaiting founder approval.
+Canvas https://claude.ai/artifact/PBCza1yUDPzNVc2QHDrAN4. **Design approved by the founder on 2026-10-02.**
 
 1. **Settings** (from Me / Manage). Account (name, phone), Appearance (Light / Dark / Phone setting), notification switches (hold updates, rent reminders, new free beds), Language (English), Privacy policy, Terms, Help on WhatsApp, Log out, Delete account (red), version line. Owners also get "Fair Play rules" in the same list.
 2. **Delete account: what happens.** Two columns. Deleted: name and phone, saved hostels, holds and enquiries, rewards. Kept: stay records the hostel must keep, reviews as "Former resident", Fair Play case records. Optional reason; Continue / Keep my account.

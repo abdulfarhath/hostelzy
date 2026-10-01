@@ -1,6 +1,6 @@
 # F07 · Fair Play rules and collusion checks
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 Owner and tenant may agree to join off-app with the deal to skip Hostelzy.
@@ -20,7 +20,7 @@ Owner and tenant may agree to join off-app with the deal to skip Hostelzy.
 None. Decided 2026-10-02.
 
 ## Design
-Canvas https://claude.ai/artifact/1a7M3JyP9Vxy2kBataCXZ5. Awaiting founder approval.
+Canvas https://claude.ai/artifact/1a7M3JyP9Vxy2kBataCXZ5. **Design approved by the founder on 2026-10-02.**
 
 1. **Owner: Fair Play rules + OTP accept** (step 3 of signup). Four numbered rules: add every resident within 3 days; never take a Hostelzy tenant off the app; honour the deal and exit rules; keep beds and prices up to date. Then the strike ladder (1 warning · 2 deals hidden 30 days · 3 removed, "No fines"; 48 hours to explain), the OTP code and "I accept the Fair Play rules".
 2. **Tenant: owner's number after a hold** (tweak Before / After a hold). Before a hold: masked number with a lock, the explainer line "Owner's number shows after you hold a bed. Talking through Hostelzy keeps your deal and your ₹100 reward.", and "Enquire on WhatsApp · saved with an HZ code" (F05). After a hold: the number shows, with Call and WhatsApp.

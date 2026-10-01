@@ -1,6 +1,6 @@
 # F10 · Owner plan and UPI payment check
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 Hostelzy earns from owners without holding money and without a company.
@@ -18,7 +18,7 @@ Hostelzy earns from owners without holding money and without a company.
 None. Plan A decided 2026-10-02.
 
 ## Design
-Canvas https://claude.ai/artifact/H9qRG67RPK2W5zN1ssYY4N. Awaiting founder approval.
+Canvas https://claude.ai/artifact/H9qRG67RPK2W5zN1ssYY4N. **Design approved by the founder on 2026-10-02.**
 
 1. **Owner: Manage → Your plan.** Trial card ("18 days left · ends 2 Nov · first invoice ₹999"), the three plans by size (up to 30 beds ₹499, 31–80 ₹999 marked "Your plan · 32 beds", 80+ ₹1,499 with a featured spot), what's included ("No commission · Hostelzy never touches your tenants' money"), and the invoice list.
 2. **Owner: invoice with UPI QR.** HZ-INV-1024, ₹999 due 2 Nov. The QR fills in the amount and the invoice code as the note. Pay to "Hostelzy · [HOSTELZY UPI ID]" (placeholder until you have the UPI ID). Open UPI app / I've paid.

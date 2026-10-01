@@ -1,6 +1,6 @@
 # F09 · Stay Rewards
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 Make tenants want every stay recorded on Hostelzy, so collusion costs them.
@@ -17,7 +17,7 @@ Make tenants want every stay recorded on Hostelzy, so collusion costs them.
 None. ₹100 decided 2026-10-02.
 
 ## Design
-Canvas https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja. Awaiting founder approval.
+Canvas https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja. **Design approved by the founder on 2026-10-02.**
 
 1. **Tenant: Me → Stay Rewards** (tweak Level: Member / Trusted tenant / Not a member yet).
    - Member: level card ("since 1 Oct · first stay via Hostelzy at Anjani Residency"), ₹100 off your next hostel (paid by Hostelzy, green), 2-hour free holds, and Trusted tenant progress (4 of 6 months: rent on time, no owner complaints, 6 months).

@@ -11,16 +11,16 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F04 | Book with the advance, deal locked, HZ code | **Design approved** · 2026-10-02 | Build | Mockup 3 in the Deals canvas, updated 2026-10-02 (pay the owner, free hold, no ₹299 hold) |
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
 | F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design approved** · 2026-10-01 | Build | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Matching window 60 days (decided 2026-10-02) |
-| F07 | Fair Play rules, collusion checks, cases, strikes | **Design ready** · 2026-10-02 | Design | Fair Play canvas. Awaiting founder approval |
-| F08 | Verified-resident reviews + Hostelzy score ranking | **Design ready** · 2026-10-02 | Design | Reviews canvas. Awaiting founder approval |
-| F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Design ready** · 2026-10-02 | Design | Stay Rewards canvas. Awaiting founder approval |
-| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Design ready** · 2026-10-02 | Design | Owner Plan canvas. Awaiting founder approval |
+| F07 | Fair Play rules, collusion checks, cases, strikes | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Fair Play canvas |
+| F08 | Verified-resident reviews + Hostelzy score ranking | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Reviews canvas |
+| F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Stay Rewards canvas |
+| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Owner Plan canvas |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design approved** · 2026-10-02 (standing approval) | Build | Boards 1–6 in the Room Layouts canvas |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
-| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design ready** · 2026-10-02 | Design | Onboarding canvas. Awaiting founder approval |
+| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
 | F16 | AC / non-AC room types, pricing grid and filter | **Design approved** · 2026-10-02 | Build | Boards 1–6 in the AC / Non-AC Rooms canvas (2026-10-02). Touches F03, F04, F12. No position-based pricing |
-| F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design ready** · 2026-10-02 | Design | Play Store Screens canvas. Awaiting founder approval |
+| F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build

@@ -1,6 +1,6 @@
 # F14 · Onboarding hostels: Add hostel tool, multi-hostel, invite QR
 
-**Stage:** Design ready · 2026-10-02
+**Stage:** Design approved · 2026-10-02 (founder: "approve all")
 
 ## Problem
 The founder wants 20 hostels live this month, onboarded in person, mostly alone. Each visit must
@@ -87,7 +87,7 @@ the area, the owner's phone, the next step and the date.
 4. The founder visits alone for now; admin mode supports adding team members later.
 
 ## Design
-Canvas https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T. Awaiting founder approval.
+Canvas https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T. **Design approved by the founder on 2026-10-02.**
 
 Add hostel wizard (Hostelzy admin mode on the founder's phone during the visit; 6-step progress bar and a red "Hostelzy admin mode" tag):
 1. **Basics.** Name, who it's for, map pin checked at the gate, food, gate time, total beds, amenities.
