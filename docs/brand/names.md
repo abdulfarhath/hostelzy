@@ -263,3 +263,21 @@ Taken (.com and .app): Hostra, Bedra, Stayra, Tenra, Aramo, Gharo, Rumo, Hostiva
 3. **Mukaa**: softest sound, short.
 
 Same rule: only web + domain checks here. Lawyer must run IP India search (classes 9, 42, 43, 36).
+
+---
+
+# HostelHunt check (2026-10-02)
+
+Founder asked: trademark, .in and .com for **HostelHunt**.
+
+| Check | Result |
+|---|---|
+| .com | ❌ **Taken**: hostelhunt.com is an existing hostel marketplace + hostel software (profiles on e27, Facebook, GitHub; lists India among its countries). |
+| .in | **Not checked**: .in lookup and whois sites are blocked here. Founder can check on any domain site (GoDaddy, Hostinger). |
+| .app / .co / .io / gethostelhunt.com | ✅ free |
+| Same field in India | ⚠️ **Hostel Hunter** (hostelhunter.in): finds hostels near universities, "search, visit, move in". Almost our exact service. |
+| Trademark (IP India) | **Not checked**: IP India search site is blocked here. Web search found no "Hostel Hunt" filing, but that proves nothing. |
+| Plain words | "Hostel hunt" describes the service, so it is weak under s.9(1)(b), like FindHostel. |
+
+**Brand chat view: not recommended.** Taken .com by a hostel business, a near-twin (Hostel Hunter) in India,
+and hard to protect. Fine as an ad phrase ("Start your hostel hunt") but not as the brand.
