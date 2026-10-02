@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
+import 'backend.dart' show Listings, RemoteSettings;
 import 'data.dart';
 import 'poster.dart';
 
@@ -1069,7 +1070,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// All hostels, best rank first.
-  List<String> get rankOrder => (hostels.map((h) => h.id).toList()..sort((a, b) => rankScore(b).compareTo(rankScore(a))));
+  List<String> get rankOrder => (browsable.map((h) => h.id).toList()..sort((a, b) => rankScore(b).compareTo(rankScore(a))));
   int rankOf(String hid) => rankOrder.indexOf(hid) + 1;
 
   /// What tenants see as the reason for the rank: the two strongest factors.
@@ -1743,6 +1744,7 @@ class AppState extends ChangeNotifier {
   /// Opens the UPI app with the owner's ID, amount and note filled in.
   void payByUpi(Payment p) {
     final u = ownerUpi[p.hid]!;
+    if (u.id.isEmpty) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner} hasn’t added a UPI ID yet. Ask them on WhatsApp.');
     openLink(upiUri(id: u.id, name: u.name, amt: p.amt, note: p.note), 'a UPI app');
     update(() {
       payId = p.id;
@@ -1826,6 +1828,37 @@ class AppState extends ChangeNotifier {
 
   /// Update / maintenance screen: update | maintenance.
   String gateKind = 'update';
+
+  /// F15 maintenance message ("6:30 pm"), from the backend once online.
+  String maintUntil = maintenanceUntil;
+
+  // ------------------------------------------------------------ F13 backend
+
+  /// Live hostels from the database replace the sample ones for tenants.
+  void applyListings(Listings l) => update(() {
+    liveListings = true;
+    livePos.addAll(l.pos);
+    for (final h in l.hostels) {
+      hostels.removeWhere((x) => x.id == h.id);
+      hostels.add(h);
+      rooms[h.id] = l.rooms[h.id]!;
+      rates[h.id] = l.rates[h.id]!;
+      ownerUpi[h.id] = l.upi[h.id]!;
+      stats[h.id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
+      confirmed[h.id] = 0;
+    }
+  });
+
+  /// Remote switches: too-old builds must update; maintenance mode.
+  void applySettings(RemoteSettings r) => update(() {
+    maintUntil = r.maintenanceUntil;
+    if (appBuild < r.minBuild || r.maintenanceUntil.isNotEmpty) {
+      gateKind = appBuild < r.minBuild ? 'update' : 'maintenance';
+      screen = 'gate';
+      hist = [];
+      sheet = null;
+    }
+  });
 
   String delReason = '', delOtp = '';
 

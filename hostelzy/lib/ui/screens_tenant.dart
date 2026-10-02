@@ -23,7 +23,7 @@ List<Hostel> filtered(AppState s) {
     return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
   }
 
-  final out = hostels.where(ok).toList();
+  final out = browsable.where(ok).toList();
   // Array.prototype.sort is stable; List.sort is not guaranteed to be, so sort by (mins, index).
   final idx = {for (var i = 0; i < hostels.length; i++) hostels[i].id: i};
   int saving(Hostel h) {

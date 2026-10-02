@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'app_config.dart';
+import 'backend.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
@@ -34,6 +36,27 @@ class _HostelzyAppState extends State<HostelzyApp> {
     plan: _pick(q['plan'], const ['late5', 'late15', 'checking', 'paid', 'missing']),
   );
   late bool overview = q['page'] == 'overview';
+
+  @override
+  void initState() {
+    super.initState();
+    if (dataSource == 'supabase') _goLive();
+  }
+
+  /// F13: live hostels and remote switches from Supabase.
+  Future<void> _goLive() async {
+    try {
+      final db = await SupabaseData.connect();
+      final s = await db.settings();
+      if (s != null) state.applySettings(s);
+      final l = await db.listings();
+      if (l != null) state.applyListings(l);
+    } catch (e) {
+      // Say so instead of quietly showing sample hostels as if they were live.
+      state.toastMsg('Couldn’t reach Hostelzy. Showing sample hostels. Check your internet.');
+      debugPrint('Supabase: $e');
+    }
+  }
 
   static String? _pick(String? v, List<String> ok) => v != null && ok.contains(v) ? v : null;
 

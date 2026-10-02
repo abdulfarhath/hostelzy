@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hostelzy/app_config.dart' show teamPasscode;
+import 'dart:convert';
+
+import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey;
+import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -1628,5 +1631,81 @@ void main() {
     expect(find.textContaining(RegExp('Sai Sri Ladies Hostel', caseSensitive: false)), findsWidgets);
     expect(find.textContaining(RegExp('Anjani', caseSensitive: false)), findsNothing);
     o.dispose();
+  });
+
+  test('backend config: sample data by default, only the public anon key (F13)', () {
+    expect(dataSource, 'sample');
+    expect(supabaseUrl, 'https://oafiaczotlilomlvhphp.supabase.co');
+    // The repo is public: the key in the app must be the anon key, never service_role.
+    final claims = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(supabaseAnonKey.split('.')[1])))) as Map;
+    expect((claims['role'], claims['ref']), ('anon', 'oafiaczotlilomlvhphp'));
+    final rs = settingsFromRows([
+      {'key': 'min_supported_build', 'value': '3'},
+      {'key': 'maintenance_until', 'value': ''},
+    ]);
+    expect((rs.minBuild, rs.maintenanceUntil), (3, ''));
+  });
+
+  testWidgets('live hostels from Supabase replace the samples for tenants (F13)', (tester) async {
+    final l = listingsFromRows([
+      {
+        'id': '10000000-0000-0000-0000-000000000001',
+        'name': 'Real Test PG',
+        'gender': 'Men',
+        'area': 'Kondapur',
+        'lat': 17.46,
+        'lng': 78.36,
+        'owner_name': 'Imran',
+        'food': true,
+        'ac': false,
+        'only_ac': false,
+        'instant': false,
+        'tags': ['Wi-Fi'],
+        'terms': {'advance': 5000, 'maintenance': 1000, 'noticeDays': 15, 'dueOnJoining': false, 'electricityExtra': true},
+        'upi_id': '',
+        'upi_name': '',
+        'rate_cards': [
+          {'ac': false, 'share': 2, 'rent': 9000},
+          {'ac': false, 'share': 3, 'rent': 7500},
+        ],
+        'rooms': [
+          {
+            'number': 102, 'label': null, 'floor': 1, 'share': 3, 'rent': 7500, 'ac': false, 'ac_repair': false, 'bath': 'Attached',
+            'beds': [
+              {'letter': 'B', 'spot': 'Door side', 'state': 'soon', 'free_from': '2026-10-12'},
+              {'letter': 'A', 'spot': 'Window side', 'state': 'free', 'free_from': null},
+              {'letter': 'C', 'spot': '', 'state': 'booked', 'free_from': null},
+            ],
+          },
+          {'number': 101, 'label': '101A', 'floor': 1, 'share': 2, 'rent': 9000, 'ac': false, 'bath': 'Shared', 'beds': []},
+        ],
+      },
+    ]);
+    final h = l.hostels.single;
+    expect((h.name, h.from, h.owner, h.terms.advance, h.terms.dueOnJoining, h.rating), ('Real Test PG', 7500, 'Imran', 5000, false, 0.0));
+    final rs = l.rooms[h.id]!;
+    expect(rs.map((r) => r.label), ['101A', '102']);
+    expect(rs[1].beds.map((b) => '${b.id} ${b.state} ${b.soon}'), ['102-A free ', '102-B soon 12 Oct', '102-C booked ']);
+    expect(l.rates[h.id], {'non2': 9000, 'non3': 7500});
+
+    final s = AppState(start: 'explore', role: 'tenant');
+    s.applyListings(l);
+    expect(filtered(s).map((x) => x.name), ['Real Test PG']);
+    expect(posOf(h), (17.46, 78.36));
+    expect(hostelById('anjani').name, 'Anjani Residency'); // owner/resident samples still work
+    await pumpApp(tester, s);
+    expect(find.text('Real Test PG'), findsWidgets);
+    expect(find.text('Anjani Residency'), findsNothing);
+    // No UPI ID yet: say so instead of opening an empty UPI link.
+    s.lastLink = null;
+    s.payByUpi(Payment(id: 'p1', kind: 'advance', hid: h.id, who: 'You', what: 'Advance', bed: '102-A', amt: 5000, note: 'HZ'));
+    expect(s.lastLink, isNull);
+    expect(s.toast, 'Imran hasn’t added a UPI ID yet. Ask them on WhatsApp.');
+    // Remote switch: a too-old build has to update.
+    s.applySettings((minBuild: 99, maintenanceUntil: ''));
+    expect((s.screen, s.gateKind), ('gate', 'update'));
+    s.dispose();
+    resetSampleData();
+    expect(browsable.length, 6);
   });
 }

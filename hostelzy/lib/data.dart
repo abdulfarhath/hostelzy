@@ -1045,7 +1045,20 @@ const _seedIds = ['anjani', 'saisri', 'nest42', 'greenview', 'orchid', 'lakshmi'
 void resetSampleData() {
   hostels.removeWhere((h) => !_seedIds.contains(h.id));
   ownerPhones.removeWhere((k, _) => !_seedIds.contains(k));
+  liveListings = false;
+  livePos.clear();
 }
+
+/// F13: true once live hostels came from the database. Tenants then browse
+/// only those; the sample hostels stay only behind the owner and resident
+/// sample screens until those are online too.
+bool liveListings = false;
+
+/// Hostels a tenant can find (Explore, map, ranking).
+List<Hostel> get browsable => liveListings ? hostels.where((h) => !_seedIds.contains(h.id)).toList() : hostels;
+
+/// Map positions of live hostels (from the database).
+final livePos = <String, (double, double)>{};
 
 /// The owner is asked to confirm free beds every 3 days; after 7 days
 /// tenants see "Availability not confirmed" and the hostel ranks lower.
@@ -1217,7 +1230,7 @@ const areaLatLng = <String, (double, double)>{
   'KPHB': (17.4935, 78.3995),
 };
 
-(double, double) posOf(Hostel h) => hostelLatLng[h.id] ?? areaLatLng[h.area] ?? landmarkLatLng['Hitec City']!;
+(double, double) posOf(Hostel h) => livePos[h.id] ?? hostelLatLng[h.id] ?? areaLatLng[h.area] ?? landmarkLatLng['Hitec City']!;
 
 /// Straight-line distance in km (haversine). Travel time comes later.
 double kmBetween((double, double) a, (double, double) b) {

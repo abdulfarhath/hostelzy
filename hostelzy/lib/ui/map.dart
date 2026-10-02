@@ -28,7 +28,7 @@ class MapScreen extends StatelessWidget {
     final filt = filtered(s);
     final mh = hostelById(s.mapSel);
     final here = landmarkLatLng[s.lm]!;
-    final pins = [for (final ho in hostels) ho]..sort((a, b) => (a.id == s.mapSel ? 1 : 0) - (b.id == s.mapSel ? 1 : 0));
+    final pins = [for (final ho in browsable) ho]..sort((a, b) => (a.id == s.mapSel ? 1 : 0) - (b.id == s.mapSel ? 1 : 0));
     final free = s.freeOf(mh.id).f;
     return Stack(
       children: [
