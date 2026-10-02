@@ -169,3 +169,44 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
 - **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
 - **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
+### Wave 3 · Built · 2026-10-02 (branch `feature/f21-w3`)
+Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
+- **Resident Home** has one job: the rent and today's food.
+  - Header "Hello, <name>" with the avatar.
+  - Rent card, then three actions right under it: **Pay rent**, **Raise complaint**, **Message owner**.
+  - Then the 30-day review prompt (until it's done) and today's food.
+  - The notice / swap tiles and the layout-fix card are gone from Home. They are in **Me › My stay**: Room layouts · fix any room, Swap bed, Give notice.
+- **Help:**
+  - category chips (Wi-Fi, Water, Electricity, Cleaning, Food, Other) and a text box
+  - a camera button (one photo, compressed like hostel photos; tap again to remove it) and **Send to owner** (was "Send to warden")
+  - The new complaint shows inline right away: **Sent** · "Just now · <owner> sees it in the app" on the server, and an honest "Saved on this phone · tell <owner> on WhatsApp too" in demo builds.
+  - Statuses read **Sent / Being fixed / Fixed**.
+  - Empty state: "No complaints · When something breaks, tell <owner> here. You’ll see when it’s fixed."
+- **Complaint photos on the server.** Migration `20261002210000_f21_complaint_photo.sql` adds:
+  - `complaints.photo`
+  - a private `complaint-photos` bucket. The resident uploads into their own folder at a hostel they live in; the resident, that hostel's staff and the team can read it.
+  - a trigger: the photo must be the author's own at that hostel, and can't be changed later
+  - Test: `supabase/tests/complaintphoto_test.sql`. FOUNDER-TODO **4s**.
+  - Owners see "See photo" on the complaint (a 1-hour private link).
+- **Bug fixed:** on the server, complaints were saved with an empty bed (`myBedLabel` was always '' there). It now uses the resident's own bed, which also fixes the default room for layout fixes.
+- **Owner Today:**
+  - **Needs you now · N**, soonest first:
+    - holds with their countdown (Confirm hold / Decline; Trusted tenant badge)
+    - "Received ₹X?" (Yes, received / Not received)
+    - new enquiries (WhatsApp)
+    - layout fixes (Compare)
+  - Then **This month**: beds taken, free beds, rent pending.
+  - The Fair Play card, the plan banner, "confirm your free beds" and "confirm layouts" stay.
+  - The big occupancy bar, the 4 KPI tiles, the rank card and the separate lists are gone.
+- **Owner Manage** opens on one vertical list with an icon, a one-line status and red counts where something waits:
+  - Enquiries, Residents, Complaints, Deals, Rates and UPI, Food menu, House rules, Photos, Room layouts, Reviews and ranking, Team, Your plan
+  - A row opens its section with a back button, so the 6-tab strip and the button row are gone.
+  - **Enquiries** is an extra row (not on the board). It keeps the full list with Call and "Not on this list = not from Hostelzy", which Fair Play relies on.
+  - Reviews and ranking opens the ranking, with "Read and reply to reviews ›".
+- **Owner plain words:**
+  - Residents are tagged **Came from the app / Walked in / Not confirmed / Joined before Hostelzy** (were Via Hostelzy / Direct / Before Hostelzy). Fair Play says "Change Teja to “Came from the app”".
+  - The centre tab is **Add tenant** (was Booking).
+- **Tests:**
+  - `test/home_today_test.dart` ("F21 W3: …", 4 tests): resident Home and My stay; Help with a photo, the inline status and the owner's photo; the server upload path; owner Today's list and Manage's list.
+  - Older flow tests were updated to the new places.
+

@@ -87,7 +87,11 @@ abstract class HostelRepo {
   Future<void> sendUtr(String paymentId, String utr);
   /// Received + a hold: the hold becomes a booking too.
   Future<void> confirmPayment(String paymentId, bool received, {String? holdId});
-  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body});
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body, String? photo});
+
+  /// F21 W3: a complaint's photo (private bucket `complaint-photos`).
+  Future<String> uploadComplaintPhoto(String hid, String uid, Uint8List jpg);
+  Future<String?> complaintPhotoUrl(String path);
   Future<void> updateComplaint(String key, {required String status, required String note});
 
   /// S1: a tenant's hold on bed [bedKey] (`free`, or `book` with the
@@ -200,7 +204,11 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> confirmPayment(String paymentId, bool received, {String? holdId}) async {}
   @override
-  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) async {}
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body, String? photo}) async {}
+  @override
+  Future<String> uploadComplaintPhoto(String hid, String uid, Uint8List jpg) => throw UnsupportedError('sample data');
+  @override
+  Future<String?> complaintPhotoUrl(String path) async => null;
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) async {}
   @override
@@ -353,8 +361,18 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) =>
-      db.from('complaints').insert({'hostel_id': hid, 'bed': bed, 'cat': cat, 'body': body});
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body, String? photo}) =>
+      db.from('complaints').insert({'hostel_id': hid, 'bed': bed, 'cat': cat, 'body': body, 'photo': ?photo});
+
+  @override
+  Future<String> uploadComplaintPhoto(String hid, String uid, Uint8List jpg) async {
+    final path = '$hid/$uid/${DateTime.now().microsecondsSinceEpoch}.jpg';
+    await db.storage.from('complaint-photos').uploadBinary(path, jpg, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    return path;
+  }
+
+  @override
+  Future<String?> complaintPhotoUrl(String path) async => db.storage.from('complaint-photos').createSignedUrl(path, 3600);
 
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) =>

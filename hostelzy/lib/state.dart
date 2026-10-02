@@ -68,7 +68,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     this.theme = theme ?? 'light';
     this.mode = mode ?? 'plan';
     this.moveTab = moveTab ?? 'vacate';
-    this.moreTab = moreTab ?? 'residents';
+    this.moreTab = moreTab ?? 'home';
     this.foodView = foodView ?? 'day';
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
@@ -397,19 +397,56 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   Future<void> raiseComplaint() async {
     if (cText.trim().isEmpty) return toastMsg('Tell us what is wrong first.');
     final text = cText.trim();
+    final photo = cPhoto;
     if (onServer) {
       final h = myHostel;
       if (h == null) return toastMsg('Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
-      final ok = await _write(() => data.raiseComplaint(hid: h, bed: myBedLabel, cat: cCat, body: text));
+      final uid = account?.uid;
+      final ok = await _write(() async {
+        // F21 W3: the photo goes up first, then the complaint points at it.
+        final path = photo != null && uid != null ? await data.uploadComplaintPhoto(h, uid, photo) : null;
+        await data.raiseComplaint(hid: h, bed: myBedLabel, cat: cCat, body: text, photo: path);
+      });
       if (!ok) return;
-      update(() => cText = '');
-      return toastMsg('Sent to your owner. You’ll see when they’re on it.');
+      update(() {
+        cText = '';
+        cPhoto = null;
+      });
+      await refreshLive();
+      return;
     }
+    final id = DateTime.now().millisecondsSinceEpoch;
     update(() {
-      complaints = [...complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: '$meShort · 204', cat: cCat, text: text, status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
+      complaints = [...complaints, Complaint(id: id, by: '$meShort · 204', cat: cCat, text: text, status: 'Open', date: dayMon(appToday), note: 'Saved on this phone · tell $stayOwner on WhatsApp too', mine: true, at: id)];
+      if (photo != null) complaintPhotosLocal[id] = photo;
       cText = '';
+      cPhoto = null;
     });
-    toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
+  }
+
+  /// Help: one photo for the complaint (compressed like hostel photos).
+  Future<void> pickComplaintPhoto() async {
+    final raw = await picker.pick();
+    if (raw == null) return;
+    final jpg = prepPhoto(raw, 'free');
+    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    update(() => cPhoto = jpg);
+  }
+
+  /// Owner: open a complaint's photo (a short-lived private link on the server).
+  Future<void> openComplaintPhoto(Complaint c) async {
+    final local = complaintPhotosLocal[c.id];
+    if (local != null) {
+      return update(() {
+        cPhotoView = c.id;
+        sheet = 'cPhoto';
+      });
+    }
+    final path = c.photo;
+    if (path == null) return;
+    final url = await data.complaintPhotoUrl(path);
+    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    openLink(Uri.parse(url), 'the photo');
   }
 
   /// Owner: Open → In progress → Resolved (C: saved on the server when live).
@@ -423,7 +460,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   }
 
   /// The resident's bed as shown on complaints (live: not known yet → '').
-  String get myBedLabel => onServer ? '' : '204';
+  // F21 W3: on the server, the resident's own bed (complaints and layout fixes said none).
+  String get myBedLabel => onServer ? (myStay?.bed ?? '') : '204';
 
   // F06
 

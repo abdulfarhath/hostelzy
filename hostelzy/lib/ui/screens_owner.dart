@@ -9,7 +9,6 @@ import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
 import 'layout.dart' show ConfirmLayoutsCard;
-import 'layout_fixes.dart' show OwnerFixCards;
 import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
@@ -62,56 +61,20 @@ class OwnerTodayScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final c = countBeds(s);
-    final reqs = allRequests(s);
     final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
     final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
-    final openC = s.complaints.where((x) => x.status != 'Resolved').length;
-    final freshE = s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted).length;
-    final kpis = <(String, String, String, Color, VoidCallback)>[
-      ('Free beds', '${c.free}', '${c.soon} freeing up soon', p.tx, () => s.tab('oBeds')),
-      ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () => s.toastMsg(reqs.isEmpty ? 'No hold requests right now.' : 'Hold requests are listed below on Today.')),
-      ('Rent pending', fmt(expected - collected), '${s.residents.where((r) => r.status == 'Overdue').length} overdue', p.tx, () => s.tab('oRent')),
-      if (enquiriesTile)
-        ('Enquiries', '$freshE', 'New from Hostelzy', freshE > 0 ? p.ad : p.tx, () {})
-      else (
-        'Complaints',
-        '$openC',
-        'Open or in progress',
-        p.tx,
-        () => s.update(() {
-          s.screen = 'oMore';
-          s.hist = [];
-          s.sheet = null;
-          s.moreTab = 'complaints';
-        }),
-      ),
+    final kpis = <(String, String, String)>[
+      ('${c.booked} / ${c.t}', 'beds taken', 'oBeds'),
+      ('${c.free}', 'free beds', 'oBeds'),
+      (fmt(expected - collected), 'rent pending', 'oRent'),
     ];
-    Widget kpi((String, String, String, Color, VoidCallback) k) => Expanded(
-      child: Tap(
-        onTap: k.$5,
-        child: Container(
-          color: p.bg,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              T(k.$1, s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.mu),
-              const SizedBox(height: 2),
-              T(k.$2, w: 800, s: 28, ls: -.02, c: k.$4),
-              const SizedBox(height: 2),
-              T(k.$3, s: 12, c: p.mu),
-            ],
-          ),
-        ),
-      ),
-    );
     return Scroll(
       key: ValueKey('oToday${s.scrollEpoch}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -124,191 +87,182 @@ class OwnerTodayScreen extends StatelessWidget {
                 Tap(
                   onTap: () => s.go('me'),
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     color: p.ac,
                     alignment: Alignment.center,
-                    child: T(initials(s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner), w: 800, s: 14, c: p.ai),
+                    child: T(initials(s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner), w: 800, s: 15, c: p.ai),
                   ),
                 ),
               ],
             ),
           ),
           const PlanBanner(),
+          const _FairPlayCard(),
+          // F21 W3: one list of what needs the owner, soonest first.
+          const NeedsYouNow(),
+          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('This month')),
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border(top: bs(2, p.tx), bottom: bs(2, p.tx)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    T('${c.t == 0 ? 0 : (c.booked / c.t * 100).round()}%', w: 800, s: 64, lh: .9, ls: -.04),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: T('${c.booked} of ${c.t} beds taken', s: 13, c: p.mu, align: TextAlign.right),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: box(w: 2, c: p.tx),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (i, k) in kpis.indexed)
+                    Expanded(
+                      child: Tap(
+                        onTap: () => s.tab(k.$3),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(border: i > 0 ? Border(left: bs(1, p.hl)) : null),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(k.$1, w: 800, s: 20, ell: true), T(k.$2, s: 12, c: p.mu)]),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+                ],
+              ),
+            ),
+          ),
+          const FreeBedsCard(),
+          const ConfirmLayoutsCard(),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+/// F21 W3 owner Today: holds with their countdown, payments to confirm, new
+/// enquiries and layout fixes, each with its own buttons.
+class NeedsYouNow extends StatelessWidget {
+  const NeedsYouNow({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final items = <({String key, String icon, String title, String sub, String right, bool urgent, List<(String, String, VoidCallback)> btns, Widget? badge})>[
+      for (final r in [...allRequests(s)]..sort((a, b) => (a.secs - (s.now - a.start) / 1000).compareTo(b.secs - (s.now - b.start) / 1000)))
+        (
+          key: 'hold-${r.id}',
+          icon: 'clock',
+          title: 'Hold on bed ${r.bed}',
+          sub: '${r.name} · ${r.type}${r.secs > freeHoldSecs ? ' · 2 h' : ''}${r.note.isEmpty ? '' : ' · “${r.note}”'}',
+          right: cd(r.secs - (s.now - r.start) / 1000),
+          urgent: true,
+          btns: [('Confirm hold', 'check', () => s.confirmHoldReq(r)), ('Decline', 'x', () => s.declineHoldReq(r))],
+          badge: r.trusted
+              ? Tap(
+                  onTap: () => s.update(() {
+                    s.trustedReq = r.id;
+                    s.sheet = 'trusted';
+                  }),
+                  child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
+                )
+              : null,
+        ),
+      for (final x in s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting'))
+        (
+          key: 'pay-${x.id}',
+          icon: 'wallet',
+          title: 'Received ${fmt(x.amt)}?',
+          sub: '${x.who} · ${x.what}${x.kind == 'rent' ? ' · bed ${x.bed}' : ''} · UPI ref. ${utrSpaced(x.utr ?? '')}',
+          right: x.at > 0 ? ago(s.now - x.at) : 'Today',
+          urgent: false,
+          btns: [('Yes, received', 'check', () => s.confirmPayment(x, true)), ('Not received', 'x', () => s.confirmPayment(x, false))],
+          badge: null,
+        ),
+      for (final e in s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted))
+        (
+          key: 'enq-${e.ref}',
+          icon: 'msg',
+          title: 'New enquiry · ${e.name}',
+          sub: '${e.bed != null ? 'Bed ${e.bed}' : 'Any bed'} · ${e.ref}${e.msg.isEmpty ? '' : ' · “${e.msg}”'}',
+          right: ago(s.now - e.at),
+          urgent: false,
+          btns: [
+            (
+              'WhatsApp',
+              'msg',
+              () {
+                s.markContacted(e.ref);
+                s.openWA(e.name, 'Hi ${e.name.split(' ')[0]}, this is ${h.owner} from ${h.name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
+              },
+            ),
+          ],
+          badge: null,
+        ),
+      for (final f in s.fixesWaiting)
+        (
+          key: 'fix-${f.id}',
+          icon: 'grid',
+          title: 'Layout fix for Room ${f.room}',
+          sub: ['From ${f.author}', if (f.note.isNotEmpty) '“${f.note}”'].join(' · '),
+          right: ago(DateTime.now().millisecondsSinceEpoch - f.at),
+          urgent: false,
+          btns: [('Compare', 'arrow', () => s.openFix(f))],
+          badge: null,
+        ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Kicker('Needs you now · ${items.length}'), if (items.length > 1) T('Soonest first', s: 12, w: 800, c: p.mu)]),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final it in items)
                 Container(
-                  height: 14,
-                  decoration: box(w: 2, c: p.tx),
-                  child: LayoutBuilder(
-                    builder: (context, bx) {
-                      final w = bx.maxWidth;
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(width: c.t == 0 ? 0 : w * c.booked / c.t, color: p.tx),
-                          SizedBox(
-                            width: c.t == 0 ? 0 : w * c.held / c.t,
-                            child: CustomPaint(painter: Hatch(p.tx, 2, 5)),
-                          ),
-                          Container(width: c.t == 0 ? 0 : w * c.soon / c.t, color: p.ab),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Css(
-                  s: 12,
-                  c: p.mu,
-                  child: Wrap(
-                    spacing: 14,
-                    runSpacing: 14,
+                  key: ValueKey(it.key),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: VGap(
+                    gap: 8,
                     children: [
-                      const T('■ Taken'),
-                      const T('▨ On hold'),
-                      T('■ Freeing up', c: p.ad),
-                      const T('□ Free'),
+                      Row(
+                        children: [
+                          Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: Ic(it.icon, size: 18)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                T(it.title, w: 800, s: 15),
+                                if (it.badge != null) Padding(padding: const EdgeInsets.symmetric(vertical: 3), child: Align(alignment: Alignment.centerLeft, child: it.badge!)),
+                                T(it.sub, s: 12, c: p.mu, lh: 1.35),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          T(it.right, w: 800, s: 14, tab: true, c: it.urgent ? p.ad : p.mu),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          for (final (i, b) in it.btns.indexed) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(child: Cta(b.$1, icon: b.$2, height: 40, px: 14, fs: 13, bg: i == 0 ? p.ac : transparent, fg: i == 0 ? p.ai : p.tx, border: i == 0 ? p.ac : p.tx, onTap: b.$3)),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: p.hl,
-              border: Border(bottom: bs(2, p.dv)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                IntrinsicHeight(
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [kpi(kpis[0]), const SizedBox(width: 1), kpi(kpis[1])]),
+              if (items.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  child: T('Nothing waiting. New holds, payments and enquiries show up here and as notifications.', s: 14, c: p.mu, lh: 1.4),
                 ),
-                const SizedBox(height: 1),
-                IntrinsicHeight(
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [kpi(kpis[2]), const SizedBox(width: 1), kpi(kpis[3])]),
-                ),
-              ],
-            ),
+            ],
           ),
-          const _FairPlayCard(),
-          const FreeBedsCard(),
-          const ConfirmLayoutsCard(),
-          const PaymentsToCheck(),
-          // F19: residents' layout fixes waiting for the owner.
-          const OwnerFixCards(),
-          const _Enquiries(),
-          const _RankCard(),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
-          Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final r in reqs)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: VGap(
-                      gap: 8,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      T(r.name, w: 800, s: 16),
-                                      // F09: the Trusted tenant badge; tap for what it means.
-                                      if (r.trusted) ...[
-                                        const SizedBox(width: 6),
-                                        Tap(
-                                          onTap: () => s.update(() {
-                                            s.trustedReq = r.id;
-                                            s.sheet = 'trusted';
-                                          }),
-                                          child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  T('Bed ${r.bed} · ${r.type}${r.secs > freeHoldSecs ? ' · 2 h' : ''}', s: 13, c: p.mu),
-                                  const SizedBox(height: 2),
-                                  T('“${r.note}”', s: 13),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                T(cd(r.secs - (s.now - r.start) / 1000), w: 800, s: 20, tab: true, c: p.ad),
-                                // Inline in an anonymous line box, so the 16px strut sets its height.
-                                Rich([sp(context, 'to reply', s: 11, c: p.mu)]),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _PlainBtn(
-                                'Confirm hold',
-                                bg: p.ac,
-                                fg: p.ai,
-                                onTap: () => s.confirmHoldReq(r),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _PlainBtn(
-                                'Decline',
-                                border: p.tx,
-                                onTap: () => s.declineHoldReq(r),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                if (reqs.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                    child: T('No one waiting. New requests show up here and on WhatsApp.', s: 14, c: p.mu),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -345,39 +299,6 @@ class _FairPlayCard extends StatelessWidget {
             Ic('chev', size: 18, color: p.ad),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// F08: the owner's rank and new reviews, linking to both screens.
-class _RankCard extends StatelessWidget {
-  const _RankCard();
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final h = hostelById(s.ownHid);
-    final fresh = s.reviews.where((r) => r.hid == h.id && r.fresh && r.reply == null).length;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-      child: VGap(
-        gap: 8,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [const Kicker('Reviews and ranking'), T(fresh > 0 ? '$fresh to reply' : 'All replied', s: 12, w: 800, c: p.ad)],
-          ),
-          Row(
-            children: [
-              Expanded(child: Cta('Your rank #${s.rankOf(h.id)}', icon: 'chart', height: 48, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oRank'))),
-              const SizedBox(width: 8),
-              Expanded(child: Cta('Reviews · ${jsNum(h.rating)}', icon: 'chev', height: 48, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oReviews'))),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -528,28 +449,6 @@ class _EnquiryRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A `<button>` with a fixed height: label left-aligned, vertically centred.
-class _PlainBtn extends StatelessWidget {
-  const _PlainBtn(this.label, {required this.onTap, this.bg, this.fg, this.border});
-  final String label;
-  final VoidCallback onTap;
-  final Color? bg, fg, border;
-  @override
-  Widget build(BuildContext context) => Tap(
-    onTap: onTap,
-    child: Container(
-      height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: Alignment.centerLeft,
-      decoration: box(
-        bg: bg,
-        border: border != null ? Border.all(width: 2, color: border!) : null,
-      ),
-      child: T(label, w: 800, s: 14, c: fg),
-    ),
-  );
 }
 
 const ownerLegend = [('Free', 'free'), ('Free soon', 'soon'), ('On hold', 'held'), ('Taken', 'booked')];
@@ -962,6 +861,8 @@ class OwnerManageScreen extends StatelessWidget {
     Widget body;
     if (s.moreTab == 'residents') {
       body = const _Residents();
+    } else if (s.moreTab == 'enquiries') {
+      body = const _Enquiries();
     } else if (s.moreTab == 'deals') {
       body = const OwnerDeals();
     } else if (s.moreTab == 'rates') {
@@ -993,6 +894,9 @@ class OwnerManageScreen extends StatelessWidget {
                       ],
                     ),
                     T(c.text, s: 14),
+                    // F21 W3: the resident's photo, if they added one.
+                    if (c.photo != null || s.complaintPhotosLocal[c.id] != null)
+                      Tap(key: ValueKey('cphoto-${c.id}'), onTap: () => s.openComplaintPhoto(c), child: Row(children: [Ic('camera', size: 14, color: p.ad), const SizedBox(width: 6), T('See photo', s: 13, w: 800, c: p.ad)])),
                     if (next[c.status] != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -1123,79 +1027,22 @@ class OwnerManageScreen extends StatelessWidget {
     }
     // F18: while typing, the header makes room for the field and keyboard.
     final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
+    if (s.moreTab == 'home') return const _ManageList();
+    const titles = {'enquiries': 'Enquiries', 'residents': 'Residents', 'complaints': 'Complaints', 'deals': 'Deals', 'rates': 'Rates and UPI', 'menu': 'Food menu', 'rules': 'House rules'};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!typing)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(child: PageHead(kicker: hostelById(s.ownHid).name, title: 'Manage')),
-              // B7: the buttons scroll sideways on small phones.
-              Flexible(
-                flex: 3,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: Row(
-                    children: [
-                      // B7: hostel photos.
-                      Tap(
-                        key: const ValueKey('managePhotos'),
-                        onTap: s.openPhotos,
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                          decoration: box(w: 2, c: p.tx),
-                          child: const T('Photos', w: 800, s: 13),
-                        ),
-                      ),
-                      Tap(
-                        onTap: () => s.go('oLayouts'),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                          decoration: box(w: 2, c: p.tx),
-                          child: const T('Layouts', w: 800, s: 13),
-                        ),
-                      ),
-                      Tap(
-                        onTap: () => s.go('oTeam'),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                          decoration: box(w: 2, c: p.tx),
-                          child: const T('Team', w: 800, s: 13),
-                        ),
-                      ),
-                      Tap(
-                        onTap: () => s.go('oPlan'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                          decoration: box(w: 2, c: p.tx),
-                          child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        // F18: six tabs scroll sideways on small phones instead of squashing.
-        LayoutBuilder(
-          builder: (context, c) => Scroll(
-            horizontal: true,
-            child: SizedBox(
-              width: c.maxWidth < 460 ? 460 : c.maxWidth,
-              child: Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('rates', 'Rates'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : v == 'rates' ? s.openRates() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+            child: Row(
+              children: [
+                BackBtn(key: const ValueKey('manageBack'), onTap: () => s.update(() => s.moreTab = 'home')),
+                const SizedBox(width: 12),
+                Expanded(child: PageHead(kicker: '${hostelById(s.ownHid).name} · Manage', title: titles[s.moreTab] ?? 'Manage', size: 26, gap: 2)),
+              ],
             ),
           ),
-        ),
-        const SizedBox(height: 14),
         Expanded(
           child: Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -1207,14 +1054,88 @@ class OwnerManageScreen extends StatelessWidget {
   }
 }
 
+/// F21 W3: Manage is one vertical list: icon, name, a one-line status and a
+/// red count when something needs the owner.
+class _ManageList extends StatelessWidget {
+  const _ManageList();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final waiting = s.residents.where((r) => r.tag == 'wait').length;
+    final open = s.complaints.where((c) => c.status == 'Open').length, fixing = s.complaints.where((c) => c.status == 'In progress').length;
+    final deals = s.dealsOf(h.id).on.length;
+    final upi = s.ownerUpi[h.id]?.id ?? '';
+    final types = s.rates[h.id]?.length ?? 0;
+    final photos = s.photosOf[h.id]?.length;
+    final live = s.layouts[h.id]?.length ?? 0;
+    final fixes = s.fixesWaiting.length;
+    final inv = s.invoice;
+    final myE = s.enquiries.where((e) => e.hid == h.id).toList();
+    final newE = myE.where((e) => !e.contacted).length;
+    void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : s.update(() => s.moreTab = t);
+    final rows = <(String, String, String, int, VoidCallback)>[
+      ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
+      ('msg', 'Enquiries', newE == 0 ? '${myE.length} from Hostelzy · all replied' : '$newE new · ${myE.length} from Hostelzy', newE, () => section('enquiries')),
+      ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
+      ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
+      ('wallet', 'Rates and UPI', '$types room type${types == 1 ? '' : 's'}${upi.isEmpty ? ' · no UPI ID yet' : ' · $upi'}', 0, () => section('rates')),
+      ('utensils', 'Food menu', 'Breakfast, lunch and dinner, by day', 0, () => section('menu')),
+      ('doc', 'House rules', s.rules.isEmpty ? 'None yet' : '${s.rules.first.k} ${s.rules.first.v}', 0, () => section('rules')),
+      ('camera', 'Photos', photos == null ? 'Your hostel’s photos' : '$photos photo${photos == 1 ? '' : 's'}', 0, s.openPhotos),
+      ('grid', 'Room layouts', '$live live${fixes > 0 ? ' · $fixes fix${fixes == 1 ? '' : 'es'} to check' : ''}', fixes, () => s.go('oLayouts')),
+      ('chart', 'Reviews and ranking', '${h.reviews == 0 ? 'No reviews yet' : jsNum(h.rating)} · #${s.rankOf(h.id)} near ${s.lm}', 0, () => s.go('oRank')),
+      ('user', 'Team', 'Managers who help you run it', 0, () => s.go('oTeam')),
+      ('shield', 'Your plan', s.trialLeft > 0 ? 'Trial · ${s.trialLeft} days left' : switch (inv.status) { 'paid' => 'Paid', 'checking' => 'Checking your payment', 'missing' => 'Payment not found', _ => inv.late > 0 ? '${inv.late} days late' : 'Due' }, inv.late > 0 ? 1 : 0, () => s.go('oPlan')),
+    ];
+    return Scroll(
+      key: ValueKey('oMoreList${s.scrollEpoch}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 14), child: Tap(onTap: () => s.update(() => s.sheet = 'switch'), child: PageHead(kicker: h.name, title: 'Manage'))),
+          Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final r in rows)
+                  Tap(
+                    key: ValueKey('manage-${r.$2}'),
+                    onTap: r.$5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(
+                        children: [
+                          Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: Ic(r.$1, size: 18)),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(r.$2, w: 800, s: 16), T(r.$3, s: 13, c: p.mu, ell: true)])),
+                          if (r.$4 > 0) ...[const SizedBox(width: 8), Container(color: p.ac, padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2), child: T('${r.$4}', s: 12, w: 800, c: p.ai))],
+                          const SizedBox(width: 8),
+                          Ic('chev', size: 18, color: p.mu),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ------------------------------------------------------------ F06 residents
 
 /// Resident tag looks (F06 board 4).
 ({String label, Color bg, Color fg, Color bd}) residentTag(Pal p, String k) => switch (k) {
-  'hz' => (label: 'Via Hostelzy', bg: p.tx, fg: p.bg, bd: p.tx),
-  'direct' => (label: 'Direct', bg: transparent, fg: p.tx, bd: p.tx),
+  'hz' => (label: 'Came from the app', bg: p.tx, fg: p.bg, bd: p.tx),
+  'direct' => (label: 'Walked in', bg: transparent, fg: p.tx, bd: p.tx),
   'wait' => (label: 'Not confirmed', bg: p.ab, fg: p.ad, bd: p.ab),
-  _ => (label: 'Before Hostelzy', bg: transparent, fg: p.mu, bd: p.dv),
+  _ => (label: 'Joined before Hostelzy', bg: transparent, fg: p.mu, bd: p.dv),
 };
 
 class _Residents extends StatelessWidget {
@@ -1224,7 +1145,7 @@ class _Residents extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final missing = s.unassignedBeds;
-    const filters = [('All', null), ('Via Hostelzy', 'hz'), ('Direct', 'direct'), ('Not confirmed', 'wait'), ('Before Hostelzy', 'before')];
+    const filters = [('All', null), ('Came from the app', 'hz'), ('Walked in', 'direct'), ('Not confirmed', 'wait'), ('Joined before Hostelzy', 'before')];
     final cur = filters.firstWhere((f) => f.$1 == s.resF).$2;
     // Waiting for their code first, then joins since Hostelzy, then the first import.
     const order = {'wait': 0, 'hz': 1, 'direct': 1, 'before': 2};

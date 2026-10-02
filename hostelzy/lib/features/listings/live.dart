@@ -223,6 +223,8 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   note: r['note'] as String? ?? '',
   mine: me != null && r['author_id'] == me,
   key: r['id'] as String,
+  photo: r['photo'] as String?,
+  at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
 );
 
 LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], int? now}) => (

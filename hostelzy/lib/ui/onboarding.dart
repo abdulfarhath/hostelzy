@@ -728,7 +728,7 @@ class _Residents extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
                         decoration: box(w: 1, c: p.dv),
-                        child: T('Before Hostelzy', s: 11, w: 800, ls: .05, upper: true, c: p.mu),
+                        child: T('Joined before Hostelzy', s: 11, w: 800, ls: .05, upper: true, c: p.mu),
                       ),
                     ],
                   ),
@@ -743,7 +743,7 @@ class _Residents extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: T('Residents here before Hostelzy count as Before Hostelzy (grandfathered, F06). They confirm their stay in the app by joining with your invite code.', s: 12, c: p.mu, lh: 1.45),
+          child: T('Residents here before Hostelzy count as “Joined before Hostelzy”. They confirm their stay in the app by joining with your invite code.', s: 12, c: p.mu, lh: 1.45),
         ),
       ],
     );

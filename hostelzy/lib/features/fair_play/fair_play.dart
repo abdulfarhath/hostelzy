@@ -56,7 +56,7 @@ extension FairPlayActions on AppState {
       // S5: the server checks the 48 hours, switches the resident and closes it.
       data.fixCase(key).then((_) async {
         await refreshLive();
-        toastMsg('${c.resident} is now Via Hostelzy. Case closed, no strike.');
+        toastMsg('${c.resident} now shows as came from the app. Case closed, no strike.');
       }, onError: (Object e) {
         final m = '$e';
         toastMsg(m.contains('48 hours are over')
@@ -77,7 +77,7 @@ extension FairPlayActions on AppState {
         ownerFixes = 0;
       }
     });
-    toastMsg('${c.resident} is now Via Hostelzy. Case closed, no strike.');
+    toastMsg('${c.resident} now shows as came from the app. Case closed, no strike.');
   }
 
   void replyCase(FairCase c) {
