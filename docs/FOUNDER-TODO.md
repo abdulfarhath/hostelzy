@@ -11,21 +11,18 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] UPI ID `9059790014@axl`, support WhatsApp `9059790014`
 - [x] Firebase SHA-1 / SHA-256 added, new google-services.json
 - [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
+- [x] Google login tested setup; Firebase key locked to the Android app
+- [x] Supabase v2 SQL (firebase ids)
 
 ## Now
-1. **Build chat: send the 2 answers** (approve placeholder edit; signing key as a GitHub secret).
-2. **GitHub secret** (Build gives you the value):
-   - github.com/abdulfarhath/hostelzy → Settings → Secrets and variables → Actions
-   - New repository secret → paste the name and value Build gives you → Add secret
-   - Tell Build "done".
-3. **Firebase fingerprints** (Ideas chat gives you SHA-1 and SHA-256):
-   - Firebase → ⚙ Project settings → General → Your apps → Android
-   - Add fingerprint → paste SHA-1 → Save
-   - Add fingerprint → paste SHA-256 → Save
-4. **Test the new APK**: install it, tap "Continue with Google", tell the Ideas chat what happens.
+1. **Test the F18 APK** (back button, stay logged in, own name/phone, map: my location + area picker,
+   owner layout editing). Tell the Ideas chat ✅ / ❌ with screenshots.
+2. *(Optional)* Google login in the demo APK: Firebase → Add app → Android →
+   `app.hostelzy.hostelzy.demo` → add SHA-1 `46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`
+   → download google-services.json → send to the Ideas chat.
 
 ## Soon (before real hostels)
-5. **Lock the Firebase key** (stops others using it):
+5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
    - Click "Android key (auto created by Firebase)"
    - Application restrictions → Android apps → Add → package `app.hostelzy.hostelzy` + SHA-1 → Save
