@@ -89,6 +89,14 @@ abstract class HostelRepo {
   /// S1: releases a hold. The tenant's own release also cancels its
   /// unconfirmed advance ([cancelPay]); staff only release the bed.
   Future<void> releaseHold(String id, {bool cancelPay = true});
+
+  /// S2: the owner confirms a tenant's free hold (`held`).
+  Future<void> setHoldStatus(String id, String status);
+
+  /// S2: the owner adds a resident on bed [bedKey]. The server matches the
+  /// phone to Hostelzy (60 days), opens a Fair Play case when added late, and
+  /// books the bed. Returns how it matched.
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn});
 }
 
 class SampleRepo implements HostelRepo {
@@ -141,6 +149,10 @@ class SampleRepo implements HostelRepo {
   Future<({String id, String ref, String? payId})> placeHold({required String hid, required String bedKey, required String opt, int advance = 0}) => throw UnsupportedError('sample data');
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {}
+  @override
+  Future<void> setHoldStatus(String id, String status) async {}
+  @override
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) => throw UnsupportedError('sample data');
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -206,7 +218,7 @@ class SupabaseRepo implements HostelRepo {
       db.from('enquiries').select().order('created_at', ascending: false),
       db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
       db.from('complaints').select().order('created_at', ascending: false),
-      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('hostel_id, user_id, confirmed, left_on').eq('user_id', me),
+      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').isFilter('left_on', null).order('joined_on', ascending: false),
       db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
     ]);
     return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], me: me);
@@ -254,6 +266,19 @@ class SupabaseRepo implements HostelRepo {
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await db.from('holds').update({'status': 'released'}).eq('id', id);
     if (cancelPay) await db.from('payments').update({'status': 'cancelled'}).eq('hold_id', id).inFilter('status', ['pending', 'waiting', 'missing']);
+  }
+
+  @override
+  Future<void> setHoldStatus(String id, String status) => db.from('holds').update({'status': status}).eq('id', id);
+
+  @override
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
+    final r = await db
+        .from('stays')
+        .insert({'hostel_id': hid, 'bed_id': bedKey, 'name': name, 'phone': phone, 'rent': rent, 'advance': advance, 'joined_on': '${joinedOn.year}-${'${joinedOn.month}'.padLeft(2, '0')}-${'${joinedOn.day}'.padLeft(2, '0')}'})
+        .select('via, late_days')
+        .single();
+    return (via: r['via'] as String, lateDays: r['late_days'] as int);
   }
 
   @override

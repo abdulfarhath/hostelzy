@@ -33,6 +33,7 @@ extension SyncActions on AppState {
       ..addAll(l.expired);
     myHostel = l.myHostel;
     signups = l.signups;
+    residents = l.residents;
   });
 
   /// C: signed in on Supabase with live rows: actions write to the server.

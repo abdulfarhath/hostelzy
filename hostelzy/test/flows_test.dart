@@ -23,6 +23,7 @@ import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/kit.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
+import 'package:hostelzy/ui/screens_owner.dart' show allRequests;
 import 'package:hostelzy/ui/shell.dart';
 import 'package:hostelzy/router.dart';
 
@@ -2579,6 +2580,71 @@ void main() {
     s.dispose();
   });
 
+  test('S2: on Supabase, the owner\'s residents and hold decisions are on the server', () async {
+    // Stays → resident rows: rent from the latest rent payment, not the owner's own stay.
+    final l = liveFromRows(holds: [], enquiries: [], complaints: [], me: 'fb-owner', payments: [
+      {'id': 'p1', 'hostel_id': 'h1', 'kind': 'rent', 'amount': 8000, 'stay_id': 's1', 'status': 'waiting', 'created_at': '2026-10-02T10:00:00Z'},
+      {'id': 'p0', 'hostel_id': 'h1', 'kind': 'rent', 'amount': 8000, 'stay_id': 's1', 'status': 'paid', 'created_at': '2026-09-02T10:00:00Z'},
+    ], stays: [
+      {'id': 's1', 'hostel_id': 'h1', 'user_id': 'fb-kiran', 'name': 'Kiran Rao', 'phone': '9876500001', 'via': 'hz', 'ref': 'HZ-5001', 'rent': 8000, 'advance': 3000, 'joined_on': '2026-09-01', 'late_days': 0, 'confirmed': true, 'left_on': null, 'beds': {'letter': 'C', 'rooms': {'number': 101}}},
+      {'id': 's2', 'hostel_id': 'h1', 'user_id': null, 'name': 'Ravi', 'phone': '9876500002', 'via': 'direct', 'rent': 7000, 'advance': 0, 'joined_on': '2026-10-02', 'confirmed': false, 'left_on': null, 'beds': null},
+      {'id': 's3', 'hostel_id': 'h9', 'user_id': 'fb-owner', 'name': 'Me', 'confirmed': true, 'joined_on': '2026-01-01', 'left_on': null},
+    ]);
+    expect(l.residents.map((r) => '${r.key} ${r.name} ${r.bed} ${r.status} ${r.tag} ${r.since}'), ['s1 Kiran Rao 101-C Waiting hz Joined 1 Oct'.replaceFirst('1 Oct', dayMon(DateTime(2026, 9, 1))), 's2 Ravi  Due wait Added ${dayMon(DateTime(2026, 10, 2))}']);
+    expect(l.myHostel, 'h9');
+
+    final s = AppState(start: 'oToday', role: 'owner');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner'));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    expect(s.residents, isEmpty); // no sample residents on the server
+    // Add a resident on a bed that has a server id.
+    final r0 = s.rooms[s.ownHid]!.firstWhere((r) => r.beds.any((b) => b.state == 'free'));
+    final i = r0.beds.indexWhere((b) => b.state == 'free');
+    final b0 = r0.beds[i];
+    r0.beds[i] = Bed(id: b0.id, letter: b0.letter, room: b0.room, floor: b0.floor, spot: b0.spot, state: 'free', soon: '', key: 'bed-key');
+    s.update(() {
+      s.rName = 'Ravi Kumar';
+      s.rPhone = '9876500002';
+      s.rBed = b0.id;
+      s.rFee = '7000';
+      s.rAdv = '3000';
+      s.sheet = 'addR';
+    });
+    s.addResident();
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(fake.calls.single, 'stay ${s.ownHid} bed-key Ravi Kumar 9876500002 7000 3000');
+    expect((s.residents.single.name, s.sheet, r0.beds[i].state), ('Ravi Kumar', null, 'booked'));
+    expect(s.toast, 'Added. Ravi confirms by joining with your invite code.');
+    // A typed code proves nothing on the server: the resident joins with the invite instead.
+    s.update(() {
+      s.cBed = '101-A';
+      s.cOtp = '123456';
+    });
+    s.confirmStay();
+    expect(s.toast, contains('confirms by joining with your invite code'));
+    expect(s.residents.single.confirmed, isFalse);
+    // A tenant's free hold: the owner confirms it, or declines it (no advance is touched).
+    final h = Hold(id: 'hold-x', hid: s.ownHid, bed: '101-A', room: 101, opt: 'free', start: DateTime.now().millisecondsSinceEpoch, status: 'waiting', ref: 'HZ-5020');
+    s.update(() => s.holds = [h]);
+    final req = allRequests(s).single;
+    expect((req.name, req.note), ('Hostelzy tenant', 'Code HZ-5020 · placed in the Hostelzy app'));
+    s.confirmHoldReq(req);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'holdstatus hold-x held');
+    s.update(() => s.holds = [h]);
+    s.declineHoldReq(req);
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect((fake.calls.last, s.toast), ('release hold-x false', 'Declined. Bed 101-A is free again.'));
+    s.stopLive();
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -2870,7 +2936,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents);
     return 'HZ-5009';
   }
 
@@ -2899,15 +2965,28 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
+  }
+
+  // S2: the owner's residents and hold decisions.
+  @override
+  Future<void> setHoldStatus(String id, String status) => _rec('holdstatus $id $status');
+  @override
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
+    await _rec('stay $hid $bedKey $name $phone $rent $advance');
+    rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
+      Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
+      ...rows.residents,
+    ]);
+    return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents);
   }
 }
 

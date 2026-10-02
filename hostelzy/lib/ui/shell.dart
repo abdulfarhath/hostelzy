@@ -1068,7 +1068,7 @@ class _AddResidentSheet extends StatelessWidget {
     final p = PalScope.of(context);
     final missing = s.unassignedBeds;
     final free = <String>[
-      for (final r in s.rooms['anjani']!)
+      for (final r in s.rooms[s.ownHid] ?? const <Room>[])
         for (final b in r.beds)
           if (b.state == 'free' && !b.mine) b.id,
     ];
@@ -1162,15 +1162,15 @@ class _AddSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final a = s.rooms['anjani']!;
+    final a = s.rooms[s.ownHid] ?? const <Room>[];
     final freeA = <Bed>[];
     for (final r in a) {
       for (final b in r.beds) {
         if (b.state == 'free' || b.state == 'soon') freeA.add(b);
       }
     }
-    final sel = s.addBed != null ? s.findBed('anjani', s.addBed) : null;
-    final terms = hostelById('anjani').terms;
+    final sel = s.addBed != null ? s.findBed(s.ownHid, s.addBed) : null;
+    final terms = hostelById(s.ownHid).terms;
     Widget label(String t) => T(t, w: 800, s: 13);
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -1259,8 +1259,22 @@ class _AddSheet extends StatelessWidget {
               if (s.addPhone.isNotEmpty && !AppState.validPhone(s.addPhone)) return s.toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
               if (sel == null || sel.b == null) return s.toastMsg('Pick a bed.');
               if (sel.b!.state == 'booked') return s.toastMsg('Bed ${sel.b!.id} is already taken.');
-              sel.b!.state = 'booked';
               final name = s.addName.trim();
+              if (s.onServer) {
+                // S2: the booking is a stay on the server (moving in on the chosen day).
+                final days = switch (s.addDate) { 'Today' => 0, 'Tomorrow' => 1, _ => 4 };
+                s.addStayLive(name, s.addPhone, sel.b!.id, sel.r!.rent, terms.advance, appToday.add(Duration(days: days)), booking: true).then((ok) {
+                  if (!ok) return;
+                  s.update(() {
+                    s.addName = '';
+                    s.addPhone = '';
+                    s.addBed = null;
+                    s.addDate = 'Today';
+                  });
+                });
+                return;
+              }
+              sel.b!.state = 'booked';
               s.update(() {
                 s.sheet = null;
                 final m = s.matchFor(s.addPhone, s.now);

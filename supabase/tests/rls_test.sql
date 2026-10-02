@@ -49,9 +49,10 @@ insert into public.rooms (id, hostel_id, number, floor, share, rent) values
   ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 101, 1, 2, 9000);
 insert into public.beds (id, hostel_id, room_id, letter) values
   ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'D'),
-  ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'A');
+  ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'A'),
+  ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'C');
 insert into public.stays (hostel_id, bed_id, user_id, name, confirmed) values
-  ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'fb-resident', 'Rahul Varma', true);
+  ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 'fb-resident', 'Rahul Varma', true);
 insert into public.layouts (hostel_id, room, stage, w, h) values
   ('10000000-0000-0000-0000-000000000001', 204, 'draft', 12, 10),
   ('10000000-0000-0000-0000-000000000001', 204, 'published', 12, 10);
@@ -62,7 +63,7 @@ insert into public.fair_cases (ref, hostel_id, title, signal) values ('FP-1', '1
 select test.act('anon', null);
 select test.rows('select count(*) from public.hostels', 1);          -- live only
 select test.rows('select count(*) from public.rooms', 1);
-select test.rows('select count(*) from public.beds', 1);
+select test.rows('select count(*) from public.beds', 2);
 select test.rows('select count(*) from public.layouts', 0);           -- sign in first
 select test.rows('select count(*) from public.profiles', 0);
 select test.rows('select count(*) from public.stays', 0);
@@ -187,7 +188,7 @@ reset role;
 
 -- ------------------------------------------------------------ B6 Realtime publication
 do $$ begin
-  if (select string_agg(tablename, ',' order by tablename) from pg_publication_tables where pubname = 'supabase_realtime') is distinct from 'complaints,enquiries,holds,invite_signups,payments' then
+  if (select string_agg(tablename, ',' order by tablename) from pg_publication_tables where pubname = 'supabase_realtime') is distinct from 'complaints,enquiries,holds,invite_signups,payments,stays' then
     raise exception 'Realtime publication is missing tables';
   end if;
 end $$;

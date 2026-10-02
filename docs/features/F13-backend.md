@@ -332,3 +332,17 @@ Not needed.
   - Tests: `supabase/tests/holds_test.sql`.
 - Sample data and the demo are unchanged.
 - Test: `S1: on Supabase, holds and bookings are placed on the server`.
+
+**S2 · the owner's residents on the server · 2026-10-02** (branch `feature/s2-server-residents`):
+- **Resident list:** signed in on Supabase, the owner's list comes from `stays` (current ones, RLS: their hostels'). It updates live, because `stays` was added to Realtime. Rent shows from the stay's latest rent payment: Paid, Waiting, or Due ("No rent payment yet this month").
+- **Add a resident** and **Add booking** insert a stay. The server matches the phone to Hostelzy (60 days), opens a Fair Play case when the resident was added more than 3 days late, and books the bed.
+- **Confirming:** a typed WhatsApp code proves nothing, so on the server the resident confirms by joining with the hostel's invite code. Approving it links the owner's entry with the same phone instead of adding a second one.
+- **Hold requests:** the owner confirms a tenant's free hold (`held`) or declines it (released; the tenant's advance isn't touched). Tenants' names aren't shared, so the request shows "Hostelzy tenant" and the HZ code.
+- Owner resident screens now follow the selected hostel instead of the sample one.
+- **Migration `20261002110000_s2_residents.sql`:**
+  - A current stay books its bed, and moving out frees it.
+  - `decide_signup` links an existing entry.
+  - `stays` is added to Realtime.
+  - Tests: `supabase/tests/residents_test.sql`. The RLS fixture's resident now has their own bed.
+- Not yet: rent payments started by residents on the server, and moving out from the app.
+- Test: `S2: on Supabase, the owner's residents and hold decisions are on the server`.

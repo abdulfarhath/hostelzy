@@ -3,9 +3,9 @@ part of '../../state.dart';
 // F06
 extension ResidentsActions on AppState {
 
-  /// Taken beds at Anjani with nobody added for them.
+  /// Taken beds at the owner's hostel with nobody added for them.
   List<String> get unassignedBeds => [
-    for (final r in rooms['anjani']!)
+    for (final r in rooms[ownHid] ?? const <Room>[])
       for (final b in r.beds)
         if (b.state == 'booked' && !residents.any((x) => x.bed == b.id)) b.id,
   ];
@@ -27,15 +27,16 @@ extension ResidentsActions on AppState {
   })));
 
   /// Joined via Hostelzy: this phone enquired about, held or booked a bed at
-  /// Anjani on Hostelzy within [matchWindowDays] before joining.
+  /// the owner's hostel on Hostelzy within [matchWindowDays] before joining.
+  /// (On Supabase the server decides; this is the preview.)
   ({String ref, String what, int at})? matchFor(String phone, int joinAt) {
     if (phone.length != 10) return null;
     final from = joinAt - matchWindowDays * 86400000;
     bool inWin(int t) => t >= from && t <= joinAt + 86400000;
-    final e = enquiries.where((e) => e.hid == 'anjani' && e.phone == phone && inWin(e.at)).firstOrNull;
+    final e = enquiries.where((e) => e.hid == ownHid && e.phone == phone && inWin(e.at)).firstOrNull;
     if (e != null) return (ref: e.ref, what: 'asked about your hostel', at: e.at);
     if (phone == myPhone) {
-      final h = holds.where((h) => h.hid == 'anjani' && h.status != 'released' && inWin(h.start)).firstOrNull;
+      final h = holds.where((h) => h.hid == ownHid && h.status != 'released' && inWin(h.start)).firstOrNull;
       if (h != null) return (ref: 'bed ${h.bed}', what: h.opt == 'book' ? 'booked a bed' : 'held a bed', at: h.start);
     }
     return null;
@@ -43,7 +44,7 @@ extension ResidentsActions on AppState {
 
   Resident _newResident(String name, String phone, String bed, int amt, int adv, int joinAt, {required bool confirmed}) {
     final m = matchFor(phone, joinAt);
-    final b = findBed('anjani', bed).b;
+    final b = findBed(ownHid, bed).b;
     if (b != null) b.state = 'booked';
     final joined = dayMon(DateTime.fromMillisecondsSinceEpoch(joinAt));
     // F06: residents who came through Hostelzy are added within 3 days of
@@ -53,7 +54,7 @@ extension ResidentsActions on AppState {
     if (lateDays > 0) {
       final id = 'FP-0${143 + cases.length - AppState.seedCaseCount}';
       cases = [
-        FairCase(openedAt: DateTime.now().millisecondsSinceEpoch, id: id, hid: 'anjani', title: '$name added $lateDays days after moving in', signal: 'Hostelzy resident (${m!.ref}) added after the 3-day limit', status: 'new', resident: bed, events: [CaseEvent(dayMon(DateTime.fromMillisecondsSinceEpoch(m.at)), 'On Hostelzy', 'Tenant ${m.what}'), CaseEvent(joined, 'Moved in', 'Bed $bed'), CaseEvent(dayMon(appToday), 'Added by the owner', '$lateDays days later', flag: true)]),
+        FairCase(openedAt: DateTime.now().millisecondsSinceEpoch, id: id, hid: ownHid, title: '$name added $lateDays days after moving in', signal: 'Hostelzy resident (${m!.ref}) added after the 3-day limit', status: 'new', resident: bed, events: [CaseEvent(dayMon(DateTime.fromMillisecondsSinceEpoch(m.at)), 'On Hostelzy', 'Tenant ${m.what}'), CaseEvent(joined, 'Moved in', 'Bed $bed'), CaseEvent(dayMon(appToday), 'Added by the owner', '$lateDays days later', flag: true)]),
         ...cases,
       ];
     }
@@ -65,6 +66,10 @@ extension ResidentsActions on AppState {
   void addResident() {
     final name = rName.trim();
     if (name.isEmpty || rPhone.length != 10 || rBed == null) return toastMsg('Add a name, a 10-digit number and a bed.');
+    if (onServer) {
+      addStayLive(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, DateTime.fromMillisecondsSinceEpoch(rJoinAt));
+      return;
+    }
     final res = _newResident(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, rJoinAt, confirmed: false);
     update(() {
       residents = [res, ...residents];
@@ -83,8 +88,8 @@ extension ResidentsActions on AppState {
       });
       return;
     }
-    final r = findBed('anjani', g.bed).r;
-    final res = _newResident(g.name, g.phone, g.bed, r?.rent ?? 0, hostels[0].terms.advance, now, confirmed: true);
+    final r = findBed(ownHid, g.bed).r;
+    final res = _newResident(g.name, g.phone, g.bed, r?.rent ?? 0, hostelById(ownHid).terms.advance, now, confirmed: true);
     update(() {
       signups = signups.where((x) => x.id != g.id).toList();
       residents = [res, ...residents];
@@ -109,6 +114,9 @@ extension ResidentsActions on AppState {
   void confirmStay() {
     final r = toConfirm;
     if (r == null) return;
+    // S2: on Supabase nothing checks a typed code, so the resident confirms by
+    // joining with the hostel's invite code (approving links this entry).
+    if (onServer) return toastMsg('${r.name.split(' ')[0]} confirms by joining with your invite code. Share it from Invite; approving it links this entry.');
     if (cOtp.length != 6) return toastMsg('Enter the 6-digit code.');
     update(() {
       cBed = r.bed;
@@ -274,6 +282,65 @@ extension ResidentsActions on AppState {
       payId = pay?.id;
     });
     if (pay == null) toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
+  }
+
+  /// S2: the owner adds a resident (or a booking) on the server; the list,
+  /// the bed and any Fair Play case come back from it.
+  Future<bool> addStayLive(String name, String phone, String bedLabel, int rent, int advance, DateTime joinedOn, {bool booking = false}) async {
+    final b = findBed(ownHid, bedLabel).b;
+    if (b?.key == null) {
+      toastMsg('Bed $bedLabel isn’t on the server. Pull down to refresh and try again.');
+      return false;
+    }
+    ({String via, int lateDays})? res;
+    final ok = await _write(() async => res = await data.addStay(hid: ownHid, bedKey: b!.key, name: name, phone: phone, rent: rent, advance: advance, joinedOn: joinedOn));
+    if (!ok) return false;
+    update(() {
+      b!.state = 'booked';
+      sheet = null;
+      resF = 'All';
+    });
+    final first = name.split(' ')[0];
+    toastMsg(res!.lateDays > 0
+        ? 'Added, ${res!.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
+        : booking
+        ? 'Booked bed $bedLabel. Send them a welcome on WhatsApp.'
+        : 'Added${res!.via == 'hz' ? ' (came through Hostelzy)' : ''}. $first confirms by joining with your invite code.');
+    return true;
+  }
+
+  /// S2: the owner confirms a tenant's free hold.
+  void confirmHoldReq(HoldRequest r) {
+    final first = r.name.split(' ')[0];
+    if (r.hold != null && onServer) {
+      _write(() => data.setHoldStatus(r.hold!, 'held')).then((ok) {
+        if (ok) toastMsg('Hold confirmed. The tenant sees it in Hostelzy.');
+      });
+      return;
+    }
+    if (r.hold != null) {
+      setHold(r.hold!, 'confirmed');
+    } else {
+      update(() => reqs = reqs.where((x) => x.id != r.id).toList());
+    }
+    toastMsg('Hold confirmed. Let $first know on WhatsApp.');
+  }
+
+  /// S2: the owner declines a hold request; the bed is free again.
+  void declineHoldReq(HoldRequest r) {
+    final h = r.hold == null ? null : holds.where((x) => x.id == r.hold).firstOrNull;
+    if (h != null && onServer) return releaseHold(h, msg: 'Declined. Bed ${r.bed} is free again.');
+    final b = findBed(ownHid, r.bed).b;
+    if (b != null) {
+      b.state = 'free';
+      b.mine = false;
+    }
+    if (r.hold != null) {
+      setHold(r.hold!, 'released');
+    } else {
+      update(() => reqs = reqs.where((x) => x.id != r.id).toList());
+    }
+    toastMsg('Declined. Bed ${r.bed} is free again.');
   }
 
   /// S1: on Supabase the server places the hold (bed free, at most 2, HZ code)
