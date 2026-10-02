@@ -29,12 +29,33 @@ class WelcomeScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Row(children: [BrandMark(size: 17, mono: p.ai), const SizedBox(width: 6), const T('hostelzy', w: 800, s: 20, ls: -.02)]), const T('Hyderabad', s: 12, w: 600, ls: .1, upper: true)]),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Row(mainAxisSize: MainAxisSize.min, children: [BrandMark(size: 17, mono: p.ai), const SizedBox(width: 6), const T('hostelzy', w: 800, s: 20, ls: -.02)]), const Flexible(child: T('Hyderabad', s: 12, w: 600, ls: .1, upper: true, align: TextAlign.right))]),
             ),
+            // F21 W4: the language row, once a language has checked strings.
+            if (s.langChoices.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: Container(
+                  decoration: box(w: 2, c: p.ai),
+                  child: Row(
+                    children: [
+                      for (final (code, label) in s.langChoices)
+                        Expanded(
+                          child: Tap(
+                            key: ValueKey('wlang-$code'),
+                            onTap: () => s.pickLang(code),
+                            child: Container(color: s.lang == code ? p.ai : null, padding: const EdgeInsets.symmetric(vertical: 10), alignment: Alignment.center, child: T(label, s: 14, w: 800, c: s.lang == code ? p.ac : p.ai)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-                child: Column(mainAxisAlignment: MainAxisAlignment.end, crossAxisAlignment: CrossAxisAlignment.stretch, children: const [T('See the bed before you see the building.', w: 800, s: 58, lh: .94, ls: -.04, balance: true)]),
+                // F21 W4: the decorative headline shrinks to fit at large text sizes.
+                child: Align(alignment: Alignment.bottomLeft, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.bottomLeft, child: MediaQuery.withNoTextScaling(child: const SizedBox(width: 350, child: T('See the bed before you see the building.', w: 800, s: 58, lh: .94, ls: -.04, balance: true))))),
               ),
             ),
             Container(

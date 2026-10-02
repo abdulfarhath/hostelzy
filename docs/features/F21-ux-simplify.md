@@ -169,7 +169,7 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
 - **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
 - **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
-### Wave 3 · Built · 2026-10-02 (branch `feature/f21-w3`)
+### Wave 3 · Built · 2026-10-02 (merged, #68)
 Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
 - **Resident Home** has one job: the rent and today's food.
   - Header "Hello, <name>" with the avatar.
@@ -210,6 +210,38 @@ Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
   - `test/home_today_test.dart` ("F21 W3: …", 4 tests): resident Home and My stay; Help with a photo, the inline status and the owner's photo; the server upload path; owner Today's list and Manage's list.
   - Older flow tests were updated to the new places.
 
+
+### Wave 4 · Built · 2026-10-02 (branch `feature/f21-w4`)
+Designs `Skeleton`, `Offline`, `Error`, plus items 20–24.
+- **Languages (item 20), checked strings only** (Ideas chat, 2026-10-02).
+  - Strings live in `hostelzy/assets/l10n/app_te.arb` and `app_hi.arb`, keyed by the English text. `T` looks each string up in the picked language and falls back to English, so screens need no rewiring.
+  - **No machine translation in the app:** both files are empty in this build, and empty values never count.
+  - The picker (Settings → Language, and a row on Welcome) shows a language only once it has strings, labelled "తెలుగు (beta)" until `"@@reviewed": true`. Until then Settings says "Telugu and Hindi come once a native speaker has checked the words."
+  - The language choice is saved on the phone.
+  - `docs/i18n/te-review.md` lists the 281 fixed owner, resident and shared strings for a native speaker to fill in. FOUNDER-TODO **4t**.
+- **Accessibility (item 21):**
+  - Every `Tap` is a button for screen readers.
+  - Small targets accept taps up to 48×48 around them without changing the layout.
+  - Text under 12px is raised to 12; small capital labels stay at 11.
+  - Text scaling goes up to 2× (it was capped at 1.3).
+    - `Cta` buttons, the Google button and the rows that overflowed now wrap or flex, so 32 screens render at 2× with no overflow.
+    - The bed map (a floor drawing) and the Welcome headline grow at most 1.3×, or shrink to fit.
+- **Loading and offline (item 22):**
+  - Grey skeleton cards show while hostels load.
+  - "You’re offline · Hostels show again when you’re back online. Your saved hostels and holds are still here. · Retry", never "No hostels".
+  - Retry reconnects to the server.
+- **Errors and Undo (item 23):**
+  - "Couldn’t load your holds · Check your internet · Retry" shows inline when the live refresh fails.
+  - **Release hold** and **Remove saved** show an Undo toast for 5 seconds. A released hold is only released on the server once Undo has passed.
+- **Consistency (item 24):** Log out and the theme are in Settings only, so Me no longer has them. The filter labels already match from Wave 2.
+- **Tests:** `test/everywhere_test.dart` ("F21 W4: …", 18 tests):
+  - Undo for holds and saved
+  - skeleton, offline and Retry
+  - the inline error for holds
+  - button semantics, the 48×48 tap and text sizes
+  - 12 screens at 2× text
+  - languages: beta, fallback and no picker without strings
+  - Settings-only Log out and theme
 
 ## Decisions during build (Ideas chat, 2026-10-02)
 - Welcome language row appears only in W4 when Telugu/Hindi really exist (no fake options).

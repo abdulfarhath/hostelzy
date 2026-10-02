@@ -150,3 +150,33 @@ class HoldNotifySheet extends StatelessWidget {
     );
   }
 }
+
+/// F21 W4: English, plus any language with checked strings ("beta" until a
+/// native speaker has checked them all).
+class LangSheet extends StatelessWidget {
+  const LangSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 10,
+        children: [
+          for (final (code, label) in s.langChoices)
+            Tap(
+              key: ValueKey('lang-$code'),
+              onTap: () => s.pickLang(code),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: box(bg: s.lang == code ? p.sf : null, w: s.lang == code ? 2 : 1, c: s.lang == code ? p.tx : p.dv),
+                child: T(label, w: 800, s: 16),
+              ),
+            ),
+          T('Words not checked yet show in English.', s: 12, c: p.mu),
+        ],
+      ),
+    );
+  }
+}

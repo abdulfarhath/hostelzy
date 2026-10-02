@@ -9,6 +9,9 @@ mixin _OnPhoneData {
 
   /// The user's own name: typed by them (prefilled from Google, editable).
   String myName = '';
+
+  /// F21 W4: the toast's Undo, while it shows.
+  VoidCallback? toastUndo;
 }
 
 extension OnPhoneActions on AppState {
@@ -30,6 +33,7 @@ extension OnPhoneActions on AppState {
     'signedIn': signedIn,
     'role': role,
     'theme': theme,
+    'lang': lang,
     'name': myName,
     'phone': phone,
     if (account != null) 'account': {'uid': account!.uid, 'name': account!.name, 'email': account!.email},
@@ -107,7 +111,44 @@ extension OnPhoneActions on AppState {
 
   void toastMsg(String m) {
     _toastTimer?.cancel();
-    update(() => toast = m);
+    update(() {
+      toast = m;
+      toastUndo = null;
+    });
     _toastTimer = Timer(const Duration(milliseconds: 2600), () => update(() => toast = null));
+  }
+
+  /// F21 W4: "Hold on bed 204-D released · Undo" for 5 seconds.
+  void toastWithUndo(String m, VoidCallback undo) {
+    _toastTimer?.cancel();
+    update(() {
+      toast = m;
+      toastUndo = undo;
+    });
+    _toastTimer = Timer(undoSecs, () => update(() {
+      toast = null;
+      toastUndo = null;
+    }));
+  }
+
+  void undoToast() {
+    final u = toastUndo;
+    _toastTimer?.cancel();
+    update(() {
+      toast = null;
+      toastUndo = null;
+    });
+    u?.call();
+  }
+
+  /// F21 W4: Remove saved, with Undo.
+  void toggleSaved(String hid) {
+    final was = saved[hid] ?? false;
+    update(() => saved[hid] = !was);
+    if (was) {
+      toastWithUndo('Removed from saved', () => update(() => saved[hid] = true));
+    } else {
+      toastMsg('Saved on this phone.');
+    }
   }
 }

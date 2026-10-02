@@ -12,6 +12,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/photos/pick.dart' show GalleryPicker;
+import 'l10n.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
@@ -78,6 +79,8 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     state.watchPushToken();
     state.startReminders(reminders);
+    // F21 W4: the checked Telugu / Hindi strings bundled with this build.
+    loadLangs().then((l) => state.update(() => state.langs = l));
     WidgetsBinding.instance.addObserver(this);
     if (dataSource == 'supabase') {
       _goLive();
@@ -88,6 +91,9 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
 
   /// F13: live hostels and remote switches from Supabase.
   Future<void> _goLive() async {
+    // F21 W4: skeleton cards until the hostels arrive; "offline" if they can't.
+    state.reconnect = _goLive;
+    state.update(() => state.listState = 'loading');
     try {
       final db = await SupabaseRepo.connect(idToken: signIn.available ? signIn.idToken : null);
       state.data = db;
@@ -95,6 +101,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       if (s != null) state.applySettings(s);
       final l = await db.listings();
       if (l != null) state.applyListings(l);
+      state.update(() => state.listState = 'ready');
       // B6: the signed-in user's holds, enquiries, payments and complaints, live.
       await state.startLive();
       // F20: a new phone gets its reminders back.
@@ -103,8 +110,10 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       await state.syncPushToken();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
-      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
-      state.toastMsg('Couldn’t reach Hostelzy. Check your internet and open the app again.');
+      if (state.listState == 'loading') {
+        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
+        state.update(() => state.listState = 'offline');
+      }
       debugPrint('Supabase: $e');
     }
   }
@@ -141,7 +150,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       ),
       builder: (context, child) => MediaQuery(
         // F18: follow the phone's text size, capped so layouts still fit.
-        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 1.3)),
+        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 2)),
         child: overview ? OverviewPage(onOpenPrototype: () => setState(() => overview = false)) : AppScope(state: state, child: child!),
       ),
     );

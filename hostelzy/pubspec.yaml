@@ -79,6 +79,7 @@ flutter:
   # The Hostelzy room mark (logo B3-a2, docs/brand/assets).
   assets:
     - assets/brand/
+    - assets/l10n/
 
   fonts:
     - family: Archivo

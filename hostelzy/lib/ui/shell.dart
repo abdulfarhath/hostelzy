@@ -7,6 +7,7 @@ import '../state.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
+import '../l10n.dart';
 import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
@@ -53,7 +54,9 @@ class HostelzyShell extends StatelessWidget {
       },
       child: PalScope(
         pal: pal,
-        child: DefaultTextStyle(
+        child: LangScope(
+          strings: s.langs[s.lang]?.strings ?? const {},
+          child: DefaultTextStyle(
           style: rootTextStyle(pal),
           child: LayoutBuilder(
             builder: (context, c) {
@@ -62,6 +65,7 @@ class HostelzyShell extends StatelessWidget {
               return const _FullScreen();
             },
           ),
+        ),
         ),
       ),
     );
@@ -361,7 +365,9 @@ class _AppBody extends StatelessWidget {
                     color: p.tx,
                     boxShadow: const [BoxShadow(offset: Offset(0, 12), blurRadius: 32, color: Color.fromRGBO(0, 0, 0, .25))],
                   ),
-                  child: T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg),
+                  child: s.toastUndo == null
+                      ? T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg)
+                      : Row(children: [Expanded(child: T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg)), Tap(key: const ValueKey('undo'), onTap: s.undoToast, child: Padding(padding: const EdgeInsets.only(left: 12), child: T('Undo', s: 14, w: 800, c: p.bg, underline: true)))]),
                 ),
               ),
           ],
@@ -434,7 +440,8 @@ class _AppBody extends StatelessWidget {
     'oRooms' => const OwnerRoomsScreen(),
     'aTeam' => const TeamMembersScreen(),
     'oToday' => const OwnerTodayScreen(),
-    'oBeds' => const OwnerBedsScreen(),
+    // F21 W4: the bed map is a floor drawing; its labels grow at most 1.3×.
+    'oBeds' => MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: const OwnerBedsScreen()),
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
     'oInvite' => const OwnerInviteScreen(),
@@ -570,6 +577,7 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'cPhoto' => 'Photo',
+      'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
@@ -639,6 +647,7 @@ class _Sheet extends StatelessWidget {
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'holdNotify' => const HoldNotifySheet(),
+      'lang' => const LangSheet(),
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),

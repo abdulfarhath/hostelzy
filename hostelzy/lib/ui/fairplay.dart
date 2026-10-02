@@ -254,8 +254,8 @@ class OwnerContact extends StatelessWidget {
               child: Tap(
                 onTap: () => s.enquire(h.id, 'Hi ${h.owner}, I found ${h.name} on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp'),
                 child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  constraints: const BoxConstraints(minHeight: 50),
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 14),
                   decoration: box(w: 2, c: p.tx),
                   child: Row(
                     children: [

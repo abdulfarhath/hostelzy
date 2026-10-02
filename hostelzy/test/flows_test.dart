@@ -186,9 +186,12 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('theme switch from the profile', (tester) async {
+  testWidgets('theme switch in Settings (F21 W4: only there)', (tester) async {
     final s = AppState(start: 'me', role: 'tenant');
     await pumpApp(tester, s);
+    expect(find.text('Dark'), findsNothing);
+    expect(find.text('Log out'), findsNothing);
+    await tap(tester, find.text('Settings'));
     await tap(tester, find.text('Dark'));
     expect(s.theme, 'dark');
     s.dispose();

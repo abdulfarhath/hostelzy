@@ -124,7 +124,7 @@ class PlanScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Kicker('Plans by hostel size'), T('No commission', s: 12, w: 800)]),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Flexible(child: Kicker('Plans by hostel size')), SizedBox(width: 8), Flexible(child: T('No commission', s: 12, w: 800, align: TextAlign.right))]),
                 ),
                 Container(
                   decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -144,7 +144,7 @@ class PlanScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(children: [T(planTiers[i].label, w: 800, s: 16), if (i == tier) ...[const SizedBox(width: 8), Tag('Your plan', bg: p.tx, fg: p.bg)]]),
+                                    Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [T(planTiers[i].label, w: 800, s: 16), if (i == tier) Tag('Your plan', bg: p.tx, fg: p.bg)]),
                                     const SizedBox(height: 2),
                                     T(i == tier ? 'You have ${s.planBeds} beds' : planTiers[i].note, s: 12, c: p.mu),
                                   ],

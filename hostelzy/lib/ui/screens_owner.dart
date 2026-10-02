@@ -220,7 +220,7 @@ class NeedsYouNow extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Kicker('Needs you now · ${items.length}'), if (items.length > 1) T('Soonest first', s: 12, w: 800, c: p.mu)]),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Flexible(child: Kicker('Needs you now · ${items.length}')), if (items.length > 1) Flexible(child: T('Soonest first', s: 12, w: 800, c: p.mu, align: TextAlign.right))]),
         ),
         Container(
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
@@ -776,19 +776,24 @@ class OwnerRentScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        T('Collected', s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.mu),
-                        T(fmt(collected), w: 800, s: 34, ls: -.02, c: p.gn),
-                      ],
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          T('Collected', s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.mu),
+                          FittedBox(fit: BoxFit.scaleDown, child: T(fmt(collected), w: 800, s: 34, ls: -.02, c: p.gn)),
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        T('Pending', s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.mu),
-                        T(fmt(expected - collected), w: 800, s: 22, c: p.ad),
-                      ],
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          T('Pending', s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.mu),
+                          FittedBox(fit: BoxFit.scaleDown, child: T(fmt(expected - collected), w: 800, s: 22, c: p.ad)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
