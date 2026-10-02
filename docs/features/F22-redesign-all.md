@@ -1,6 +1,6 @@
 # F22 · Redesign every screen (F21 style)
 
-**Stage:** Designing · Areas 1–2 (Tenant, Resident) designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
+**Stage:** Designing · Areas 1–3 (Tenant, Resident, Owner) designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
 decisions, never take my approval").
 
 ## Rules (from the approved F21 demo)
@@ -71,6 +71,36 @@ Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, rep
 - `rReview`: 4 rows of 40px stars, an optional line, Post review. `rExit`: "Did you get your ₹2,000 back?" (Yes / Not yet / No), overall stars, optional line.
 - `rewards`: dark status card (Member · ₹100 · 2-hour holds), 3 steps to earn, Invite a friend.
 - Already redesigned via F21: Home, Help, Confirm your stay. Reminders (F20) stay as built.
+
+### Area 3 · Owner: done 2026-10-02
+- `oBeds`:
+  - floor chips with free counts
+  - 2-column room cards with bed boxes (free / hold / taken / selected red)
+  - legend and "Rooms and rates ›"
+  - tapping a bed opens the **bed sheet**: resident, room, rent, since and how they came; Message / Mark as leaving
+  - plus dark
+- `oRent`: Collected ₹ and "Still to come" with a progress bar; seg All / Due / Late / Paid; rows with a tag and a 44px bell to remind; plus dark.
+- `oMore · Residents`:
+  - search bar; chips "Came from the app / Walked in / Joined before Hostelzy"
+  - "2 taken beds have no resident" banner; rows with plain tags; a QR button for Invite
+- **Add tenant** (centre tab sheet): name, +91 phone, bed, move-in date, "How did they find you?" (Hostelzy app / Walked in / Before Hostelzy), and the booking-code hint.
+- `oInvite`: QR next to the code, Share link / Print poster, "Waiting for you" with Approve / ✕, "Make a new code".
+- `enquiry sheet`: Booking code first, WhatsApp / Call, "add him with this booking code".
+- Manage pages:
+  - **Deals:** up to 3 switches; active ones in green
+  - **Rates and UPI:** one table of room type / walk-in / Hostelzy price, one UPI ID, Test with ₹1, "Rooms and floors ›"
+  - **Complaints:** seg Open / Being fixed / Fixed, one action per row
+  - **Food menu:** day chips, 3 fields, "Copy Friday to Saturday", Save
+  - **House rules:** plain fields
+  - **Reviews and ranking:** one page, with score and rank tiles, a "To rank higher" line and Reply buttons
+- `oPlan + oInvoice`: **one screen** with a tweak for Free trial / Due / Checking / Paid / Late. Each has a big status card, Plan / Pay to / Invoice rows, and one or two actions. It replaces plan, invoice, UTR, status and overdue. Plus dark.
+- `oCase` (Fair Play check):
+  - "Reply within 47 hours" banner
+  - what happened, as a timeline with flagged steps in red
+  - reply box; "Send my reply" / "Change him to “Came from the app”"
+- `oTeam`: you plus managers, with "Managers can’t see your plan, deals, rates or Fair Play notices", and Add a manager.
+- Removed: the Still-free-beds card (now an item in "Needs you now").
+- Kept: switcher, trusted sheet, strike notices, and the layouts / rooms / photos row (already one job per screen).
 
 The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 
