@@ -21,6 +21,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    `app.hostelzy.hostelzy.demo` → add SHA-1 `46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`
    → download google-services.json → send to the Ideas chat.
 
+5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
