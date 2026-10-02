@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join a hostel · Hostelzy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+<header><span></span><a href="../">Hostelzy</a></header>
+<h1>You're invited to your hostel on Hostelzy</h1>
+<div class="box" id="box" hidden>
+  <div class="mu">Invite code</div>
+  <div class="code" id="code"></div>
+  <p class="mu">Pay rent by UPI, see the food menu and raise complaints from your phone.</p>
+</div>
+<p id="none" class="mu" hidden>This link has no invite code. Ask your hostel owner for the full link.</p>
+<a class="cta" id="open" href="#" hidden>Open in Hostelzy</a>
+<a class="cta ghost" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
+<p class="mu">Then open Hostelzy, sign in and pick <b>I live in a Hostelzy PG</b>. Keep this code: your hostel uses it to link your account to your bed.</p>
+<script>
+  const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
+  if (/^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$/.test(c)) {
+    document.getElementById('code').textContent = c;
+    document.getElementById('box').hidden = false;
+    const o = document.getElementById('open');
+    o.href = 'hostelzy://app/j?c=' + encodeURIComponent(c);
+    o.hidden = false;
+  } else {
+    document.getElementById('none').hidden = false;
+  }
+</script>
+<footer><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../delete-account/">Delete account</a><a href="https://wa.me/919059790014">WhatsApp us</a></footer>
+</main>
+</body>
+</html>

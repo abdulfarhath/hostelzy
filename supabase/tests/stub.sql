@@ -24,3 +24,6 @@ alter table storage.objects enable row level security;
 grant usage on schema storage to anon, authenticated, service_role;
 grant all on storage.objects to anon, authenticated, service_role;
 grant select on storage.buckets to anon, authenticated, service_role;
+
+-- Supabase's Realtime publication (empty until a migration adds tables).
+create publication supabase_realtime;

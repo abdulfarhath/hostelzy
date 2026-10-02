@@ -13,28 +13,18 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
 - [x] Firebase key locked to the Android app
 - [x] Supabase v2 SQL (firebase ids)
+- [x] B5: pg_cron + pg_net, server rules SQL, FCM key, push secret, SUPABASE_ACCESS_TOKEN
 
 ## Now
 1. **Test the F18 APK** (back button, stay logged in, own name/phone, map: my location + area picker,
    owner layout editing). Tell the Ideas chat ✅ / ❌ with screenshots.
 2. ~~Google login in the demo APK~~ (done 2026-10-02; in the app via PR #38).
-3. **Server rules (B5)**, added by the Build chat. Each line is one step:
-   - Supabase → **Database** → **Extensions** → search `pg_cron` → turn it on.
-   - Same page → search `pg_net` → turn it on.
-   - Supabase → **SQL Editor** → **New query**.
-   - Paste `supabase/migrations/20261002030000_b5_server_rules.sql` from GitHub (Copy raw file) → **Run** → "Success".
-   - New query again → paste `supabase/migrations/20261002050000_b7_photos.sql` → **Run** → "Success" (hostel photos).
-4. **Push notifications (B5)**:
-   - Firebase → ⚙ **Project settings** → **Service accounts** → **Generate new private key** (a .json file downloads).
-   - Supabase → **Edge Functions** → **Secrets** → **Add**: name `FCM_SERVICE_ACCOUNT`, value = the whole .json file's text → Save.
-   - Delete the downloaded .json from your computer.
-   - Make a long random password (any password generator, 32+ characters). This is the push secret.
-   - Same Secrets page → **Add**: name `PUSH_SECRET`, value = that password → Save.
-   - Supabase → **SQL Editor** → run: `select vault.create_secret('PASTE-THE-PASSWORD', 'push_secret');`
-   - Supabase → your avatar → **Account preferences** → **Access Tokens** → **Generate new token** → name it `github-deploy` → copy it.
-   - GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**: `SUPABASE_ACCESS_TOKEN` = that token.
-   - GitHub repo → **Actions** → **Supabase functions** → **Run workflow** (this deploys the push sender).
-   - Tell the Build chat "push set up"; it checks a test notification end to end.
+3. ~~Server rules (B5)~~ (done 2026-10-02).
+4. ~~Push notifications (B5)~~ (done 2026-10-02; old leaked key aeaa9d98 deleted, new key in Supabase only).
+4a. **Live updates (B6)**: Supabase → **SQL Editor** → **New query** → paste `supabase/migrations/20261002040000_b6_realtime.sql` (Copy raw file) → **Run** → "Success".
+4e. **Hostel photos (B7)**: Supabase → SQL Editor → paste `supabase/migrations/20261002050000_b7_photos.sql` → **Run** → "Success".
+
+5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):

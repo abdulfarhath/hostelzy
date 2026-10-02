@@ -3,6 +3,7 @@
 // database. Row Level Security decides what each user may read or write.
 
 import 'dart:typed_data';
+import 'dart:async';
 import 'dart:ui' show Offset;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
 import '../../data.dart';
 import '../photos/photo.dart';
+import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
@@ -40,6 +42,12 @@ abstract class HostelRepo {
 
   /// Saves the order (list order) and which photo is the cover.
   Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId);
+  /// B6: what this user may see of holds, enquiries, payments and complaints;
+  /// null keeps the built-in sample data.
+  Future<LiveRows?> live({String? me});
+
+  /// B6: emits a table name whenever one of [liveTables] changes (Realtime).
+  Stream<String> changes();
 }
 
 class SampleRepo implements HostelRepo {
@@ -60,6 +68,10 @@ class SampleRepo implements HostelRepo {
   Future<void> removePhoto(HostelPhoto p) async {}
   @override
   Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {}
+  @override
+  Future<LiveRows?> live({String? me}) async => null;
+  @override
+  Stream<String> changes() => const Stream.empty();
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -101,6 +113,29 @@ class SupabaseRepo implements HostelRepo {
     for (final (i, p) in ordered.indexed) {
       await db.from('hostel_photos').update({'ord': i, 'cover': p.id == coverId}).eq('id', p.id);
     }
+  }
+
+  @override
+  Future<LiveRows?> live({String? me}) async {
+    final r = await Future.wait([
+      db.from('holds').select('*, beds(letter, rooms(number, label))').order('started_at', ascending: false),
+      db.from('enquiries').select().order('created_at', ascending: false),
+      db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
+      db.from('complaints').select().order('created_at', ascending: false),
+    ]);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], me: me);
+  }
+
+  @override
+  Stream<String> changes() {
+    final out = StreamController<String>();
+    var ch = db.channel('hz-live');
+    for (final t in liveTables) {
+      ch = ch.onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: t, callback: (_) => out.add(t));
+    }
+    ch.subscribe();
+    out.onCancel = () => db.removeChannel(ch);
+    return out.stream;
   }
 
   @override

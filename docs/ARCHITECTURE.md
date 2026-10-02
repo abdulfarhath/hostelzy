@@ -39,10 +39,10 @@ everywhere, one class owns every feature.
 - Each feature folder owns its screens, state and repository calls (`lib/features/<area>/`).
 
 ## Migration order (small steps, app keeps working)
-1. Router + back stack (go_router) and session restore (shared_preferences + Firebase currentUser). (F18 groups 1–2)
+1. Router + back stack (go_router) and session restore (shared_preferences + Firebase currentUser). (F18 groups 1–2) **go_router 2026-10-02:** `lib/router.dart` (`MaterialApp.router`); deep links `hostelzy://app/r?c=HZ-…` and `/j?c=…` (also under `/hostelzy/app/`). Screens and the back stack stay in `AppState`; Android back is the shell's PopScope.
 2. `Me` profile (name, phone, role) from Supabase `profiles`; sample identity removed. (F18 group 3)
 3. Repository interface; move hostels/rooms/beds/rates reads to SupabaseRepo; release builds use it. **Done 2026-10-02 (B3):** `lib/features/listings/repo.dart`; CI publishes `hostelzy.apk` (Supabase) and `hostelzy-demo.apk` (samples).
 4. Split `AppState` by area as each feature moves to the repository. **Done 2026-10-02 (B4):** `lib/features/<area>/` parts (fair_play, rewards, plan, layouts, team, onboarding, reviews, session, map, residents, holds, payments, listings, links); `state.dart` keeps the core.
 5. Edge Functions: HZ codes, hold expiry cron, push sending, resident matching. **Built 2026-10-02 (B5):** rules in the database (`supabase/migrations/20261002030000_b5_server_rules.sql`: HZ/FP codes, hold rules + expiry, 60-day matching, Fair Play signals, invoices, push outbox; jobs on pg_cron) and the `send-push` Edge Function (FCM HTTP v1). Tests: `supabase/tests/b5_test.sql`, `supabase/functions/tests/`.
-6. Realtime for holds/enquiries/payments so owner and tenant phones stay in sync.
+6. Realtime for holds/enquiries/payments so owner and tenant phones stay in sync. **Built 2026-10-02 (B6):** `lib/features/listings/live.dart` + `SupabaseRepo.live()/changes()`; migration `20261002040000_b6_realtime.sql` adds holds, enquiries, payments, complaints to `supabase_realtime`. A change is a signal; the app refetches (debounced 400 ms) under RLS.
 7. Storage for photos; team web console with admin login; remove passcode mode.

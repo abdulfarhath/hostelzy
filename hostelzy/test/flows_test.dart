@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,8 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp;
+import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
@@ -22,6 +24,7 @@ import 'package:hostelzy/ui/kit.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:hostelzy/router.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
   for (final (family, files) in [
@@ -368,7 +371,7 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Invite QR'));
     expect(s.screen, 'oInvite');
-    expect(find.text('hostelzy.in/j/ANJ-7Q2'), findsOneWidget);
+    expect(find.text('farhath.me/hostelzy/app/j/?c=ANJ-7Q2'), findsOneWidget);
     expect(find.text('2 to approve'), findsOneWidget);
     await tap(tester, find.text('Approve').first);
     final r = s.residents.first;
@@ -1109,9 +1112,9 @@ void main() {
     await pumpApp(tester, l);
     // F18 (C1): Terms and Privacy policy are real links.
     await tap(tester, find.text('Privacy policy'));
-    expect(l.lastLink.toString(), 'https://hostelzy.in/privacy');
+    expect(l.lastLink.toString(), 'https://farhath.me/hostelzy/app/privacy/');
     await tap(tester, find.text('Terms'));
-    expect(l.lastLink.toString(), 'https://hostelzy.in/terms');
+    expect(l.lastLink.toString(), 'https://farhath.me/hostelzy/app/terms/');
     await tester.pump(const Duration(seconds: 3));
     await tester.enterText(find.byType(TextField).first, 'Asha');
     await tester.enterText(find.byType(TextField).last, '5000000001');
@@ -1258,7 +1261,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
-    expect(s.lastLink.toString(), 'https://hostelzy.in/privacy');
+    expect(s.lastLink.toString(), 'https://farhath.me/hostelzy/app/privacy/');
     await tester.pump(const Duration(seconds: 3));
     // Help opens WhatsApp to Hostelzy's support number.
     await tap(tester, find.text('Help on WhatsApp'));
@@ -1589,7 +1592,7 @@ void main() {
     // Resident QR poster: a real A4 PDF.
     final o = AppState(start: 'oInvite', role: 'owner');
     await pumpApp(tester, o);
-    await tester.runAsync(() => o.sharePoster('https://hostelzy.in/j/ANJ-7Q2'));
+    await tester.runAsync(() => o.sharePoster(inviteLink('ANJ-7Q2')));
     expect(o.lastPosterBytes, greaterThan(1000));
     o.dispose();
 
@@ -1691,6 +1694,15 @@ void main() {
       {'key': 'maintenance_until', 'value': ''},
     ]);
     expect((rs.minBuild, rs.maintenanceUntil), (3, ''));
+    // Public pages and links all hang off one base (DECISIONS "Web address for now").
+    expect(webBase, 'https://farhath.me/hostelzy/app');
+    expect((privacyUrl, deleteAccountUrl), ('$webBase/privacy/', '$webBase/delete-account/'));
+    expect(enquiryLink('HZ-5001'), 'https://farhath.me/hostelzy/app/r/?c=HZ-5001');
+    expect(inviteLink('ANJ-7Q2'), 'https://farhath.me/hostelzy/app/j/?c=ANJ-7Q2');
+    // Each page exists in the repo's app/ folder.
+    for (final f in ['index.html', 'privacy/index.html', 'terms/index.html', 'delete-account/index.html', 'r/index.html', 'j/index.html']) {
+      expect(File('../app/$f').existsSync(), isTrue, reason: f);
+    }
   });
 
   testWidgets('live hostels from Supabase replace the samples for tenants (F13)', (tester) async {
@@ -2313,6 +2325,97 @@ void main() {
     demo.dispose();
     t.dispose();
   });
+
+  test('B6: live rows map server statuses to the app', () {
+    final l = liveFromRows(
+      holds: [
+        {'id': 'h1', 'hostel_id': 'x', 'opt': 'advance', 'status': 'waiting', 'ref': 'HZ-5002', 'started_at': '2026-10-02T10:00:00Z', 'beds': {'letter': 'A', 'rooms': {'number': 101, 'label': null}}},
+        {'id': 'h2', 'hostel_id': 'x', 'opt': 'free', 'status': 'expired', 'ref': 'HZ-5003', 'started_at': '2026-10-02T09:00:00Z', 'beds': {'letter': 'B', 'rooms': {'number': 204, 'label': '204A'}}},
+      ],
+      enquiries: [
+        {'ref': 'HZ-5001', 'name': 'Kiran', 'phone': '9111111111', 'hostel_id': 'x', 'bed': '101-A', 'created_at': '2026-10-02T08:00:00Z', 'source': 'Hostel page · Ask on WhatsApp', 'msg': 'Hi', 'contacted': false},
+      ],
+      payments: [
+        {'id': 'p1', 'hostel_id': 'x', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'h1', 'status': 'pending', 'utr': null, 'created_at': '2026-10-02T10:00:00Z', 'confirmed_at': null, 'holds': {'beds': {'letter': 'A', 'rooms': {'number': 101}}}},
+      ],
+      complaints: [
+        {'id': '0000002a-0000-0000-0000-000000000000', 'author_id': 'me', 'bed': '101-A', 'cat': 'WiFi', 'body': 'Slow', 'status': 'Fixed', 'note': 'Router reset', 'created_at': '2026-10-01T08:00:00Z'},
+      ],
+      me: 'me',
+    );
+    expect(l.holds.map((h) => '${h.bed} ${h.room} ${h.opt} ${h.status} ${h.ref}'), ['101-A 101 book waiting HZ-5002', '204A-B 204 free released HZ-5003']);
+    expect(l.expired, {'h2'});
+    expect((l.enquiries.single.ref, l.enquiries.single.bed, l.enquiries.single.hid), ('HZ-5001', '101-A', 'x'));
+    final p = l.payments.single;
+    expect((p.status, p.what, p.bed, p.holdId, p.utr), ('due', 'Advance for bed 101-A', '101-A', 'h1', null));
+    final c = l.complaints.single;
+    expect((c.id, c.status, c.mine, c.date), (42, 'Resolved', true, '1 Oct'));
+  });
+
+  test('B6: signed in on Supabase, lists are live and refetch on Realtime changes', () async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final empty = liveFromRows(holds: [], enquiries: [], payments: [], complaints: []);
+    final fake = _FakeLive(empty);
+    s.data = fake;
+    // Not signed in with Google: nothing is fetched.
+    await s.startLive();
+    expect(fake.fetches, 0);
+    s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@x.in');
+    await s.startLive();
+    expect((fake.fetches, fake.askedAs), (1, 'fb-owner'));
+    expect([s.enquiries.length, s.holds.length, s.payments.length, s.complaints.length], [0, 0, 0, 0]); // samples replaced, never mixed
+    // A tenant enquires: Realtime says "enquiries changed"; three quick changes, one refetch.
+    fake.rows = liveFromRows(holds: [], enquiries: [
+      {'ref': 'HZ-5009', 'name': 'Asha', 'phone': '9000000001', 'hostel_id': 'x', 'created_at': '2026-10-02T11:00:00Z'},
+    ], payments: [], complaints: []);
+    fake.ctrl..add('enquiries')..add('holds')..add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    expect(s.enquiries.single.ref, 'HZ-5009');
+    // Logged out: no more updates.
+    s.stopLive();
+    fake.ctrl.add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    s.dispose();
+  });
+
+  testWidgets('go_router deep links: enquiry and invite links open the right place', (tester) async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final r = appRouter(s, (_) => const HostelzyShell(bare: true));
+    addTearDown(r.dispose);
+    await _loadFonts(tester);
+    tester.view.physicalSize = const Size(410, 864);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: r, builder: (c, child) => AppScope(state: s, child: child!)));
+    await tester.pump();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    // An owner opens a tenant's enquiry link: Today, with that enquiry open.
+    s.update(() => s.screen = 'oRent');
+    r.go('/r?c=hz-4821');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.sheet, s.enqRef), ('oToday', 'enq', 'HZ-4821'));
+    expect(r.routerDelegate.currentConfiguration.uri.path, '/');
+    // Not this account's code: say so, stay put.
+    s.update(() => s.sheet = null);
+    r.go('/hostelzy/app/r?c=HZ-9999');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.toast), ('oToday', 'HZ-9999 isn’t in this account. Sign in with the account that sent or got it.'));
+    r.go('/r?c=nonsense');
+    await tester.pumpAndSettle();
+    expect(s.toast, 'That link has no HZ code.');
+    // A resident invite is kept for sign-up.
+    r.go('/j?c=anj-7q2');
+    await tester.pumpAndSettle();
+    expect((s.pendingInvite, s.toast), ('ANJ-7Q2', 'Invite ANJ-7Q2 saved. Sign in and pick “I live in a Hostelzy PG”.'));
+    // Any other link just opens the app.
+    r.go('/somewhere/else');
+    await tester.pumpAndSettle();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2391,6 +2494,24 @@ class _FakePicker implements PhotoPicker {
   final int w, h;
   @override
   Future<Uint8List?> pick() async => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
+}
+
+/// B6: a Supabase stand-in with live rows and a Realtime change stream.
+class _FakeLive extends SampleRepo {
+  _FakeLive(this.rows);
+  LiveRows rows;
+  int fetches = 0;
+  String? askedAs;
+  final ctrl = StreamController<String>.broadcast();
+  @override
+  Future<LiveRows?> live({String? me}) async {
+    fetches++;
+    askedAs = me;
+    return rows;
+  }
+
+  @override
+  Stream<String> changes() => ctrl.stream;
 }
 
 class _FakeLocator implements Locator {

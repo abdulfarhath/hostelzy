@@ -15,6 +15,7 @@ import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
+import 'features/listings/live.dart' show LiveRows;
 import 'features/listings/repo.dart' show HostelRepo, Listings, RemoteSettings, SampleRepo;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
@@ -233,6 +234,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   void dispose() {
     _ticker?.cancel();
     _toastTimer?.cancel();
+    stopLive();
     super.dispose();
   }
 
