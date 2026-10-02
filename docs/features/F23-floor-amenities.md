@@ -73,6 +73,12 @@ washroom**. So every item has a **where**: *On the floor* (shared) or *In room w
 After approval, F23 goes into the main canvas, renamed **"Hostelzy · Main design"** (same URL as
 "All screens": https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB).
 
+**Done 2026-10-02 (Main design v20).** The founder confirmed in the Design chat ("approve all"). The row
+"F23 · Floor amenities, room plan first · built in #75" has 8 boards: hostel page "On each floor" (light
+and dark), room plan first with the "On floor 2" strip, "Floor view" and WASHROOM · GEYSER, the floor
+sheet, the add sheet, owner Layouts → Shared things, filters, and a new **owner Today** board ("Broken:
+Washing machine, floor 2 · Marked by a resident" with one **Fixed** button, as built).
+
 ## Rules
 - Residents: max 20 edits a day per hostel; the owner can mute a resident's edits (same as F19).
 - Every change is logged (who, when) and visible to the owner and team.
