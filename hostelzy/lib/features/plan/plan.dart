@@ -22,7 +22,8 @@ extension PlanActions on AppState {
   int get planCredit => ownerCredits.where((c) => c.hid == ownHid).fold(0, (a, c) => a + c.amt);
 
   /// What the owner pays on [invoice]: the plan less any Member-reward credits.
-  int get invoiceAmt => (planPrice - planCredit).clamp(0, planPrice);
+  /// On Supabase it is the server's invoice amount.
+  int get invoiceAmt => invoice.key != null ? invoice.amt : (planPrice - planCredit).clamp(0, planPrice);
   int get trialLeft => invoice.status == 'upcoming' ? trialEnd.difference(appToday).inDays : 0;
   bool dealsPaused(String hid) => invoices.any((i) => i.hid == hid && i.pausesDeals);
 
@@ -48,6 +49,22 @@ extension PlanActions on AppState {
 
   void sendUtr() {
     if (utrDraft.length != 12) return toastMsg('The UTR has 12 digits.');
+    final key = invoice.key;
+    if (onServer && key != null) {
+      // S7: saved on the server; the team checks it against the bank.
+      final utr = utrDraft;
+      _write(() => data.sendInvoiceUtr(key, utr)).then((ok) {
+        if (!ok) return;
+        update(() {
+          invoice.sent = '${dayName(appToday)}, ${clockTime(DateTime.now().millisecondsSinceEpoch)}';
+          sheet = null;
+          screen = 'oPayStatus';
+        });
+        toastMsg('UTR saved. Hostelzy checks it against the bank record.');
+      });
+      return;
+    }
+    if (onServer) return toastMsg('Your first invoice isn’t out yet. You pay once it arrives.');
     update(() {
       invoice
         ..amt = invoiceAmt
@@ -62,6 +79,13 @@ extension PlanActions on AppState {
 
   /// Founder admin: the UTR is in the bank record.
   void markPaid(Invoice i) {
+    final key = i.key;
+    if (onServer && key != null) {
+      _write(() => data.checkInvoice(key, 'paid')).then((ok) {
+        if (ok) toastMsg('${i.ref} marked paid.');
+      });
+      return;
+    }
     update(() {
       i
         ..status = 'paid'
@@ -73,6 +97,13 @@ extension PlanActions on AppState {
 
   /// Founder admin: no payment with that UTR reached the bank.
   void notReceived(Invoice i) {
+    final key = i.key;
+    if (onServer && key != null) {
+      _write(() => data.checkInvoice(key, 'missing')).then((ok) {
+        if (ok) toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
+      });
+      return;
+    }
     update(() => i.status = 'missing');
     toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
   }

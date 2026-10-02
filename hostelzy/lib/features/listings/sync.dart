@@ -37,6 +37,15 @@ extension SyncActions on AppState {
     myHostel = l.myHostel;
     signups = l.signups;
     residents = l.residents;
+    // S7: the plan comes from the server: real invoices only, and the owner's
+    // newest one (or the trial, before the first is issued).
+    invoices = l.invoices;
+    if (rooms[ownHid] != null) {
+      final mine = l.invoices.where((i) => i.hid == ownHid).firstOrNull;
+      final trial = l.trialEnds[ownHid];
+      if (trial != null) planStart = trial.subtract(const Duration(days: trialDays));
+      invoice = mine ?? Invoice(ref: 'First invoice', hid: ownHid, beds: planBeds, amt: planPrice, due: trialEnd.add(const Duration(days: 1)));
+    }
   });
 
   /// C: signed in on Supabase with live rows: actions write to the server.

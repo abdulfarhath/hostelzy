@@ -104,6 +104,11 @@ abstract class HostelRepo {
   Future<void> saveDeals(String hid, Deals d);
   Future<void> saveRules(String hid, List<Rule> rules);
   Future<void> saveUpi(String hid, String id, String name);
+
+  /// S7: the owner's UTR for a plan invoice (→ checking); the team then marks
+  /// it paid or not received (`paid` | `missing`).
+  Future<void> sendInvoiceUtr(String key, String utr);
+  Future<void> checkInvoice(String key, String status);
 }
 
 class SampleRepo implements HostelRepo {
@@ -168,6 +173,10 @@ class SampleRepo implements HostelRepo {
   Future<void> saveRules(String hid, List<Rule> rules) async {}
   @override
   Future<void> saveUpi(String hid, String id, String name) async {}
+  @override
+  Future<void> sendInvoiceUtr(String key, String utr) async {}
+  @override
+  Future<void> checkInvoice(String key, String status) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -235,8 +244,10 @@ class SupabaseRepo implements HostelRepo {
       db.from('complaints').select().order('created_at', ascending: false),
       me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').isFilter('left_on', null).order('joined_on', ascending: false),
       db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
+      db.from('invoices').select(),
+      db.from('owner_plans').select('hostel_id, trial_ends'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], me: me);
   }
 
   @override
@@ -314,6 +325,12 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> saveUpi(String hid, String id, String name) => db.from('hostels').update({'upi_id': id, 'upi_name': name}).eq('id', hid);
+
+  @override
+  Future<void> sendInvoiceUtr(String key, String utr) => db.from('invoices').update({'utr': utr, 'status': 'checking'}).eq('id', key);
+
+  @override
+  Future<void> checkInvoice(String key, String status) => db.from('invoices').update({'status': status, if (status == 'paid') 'late': 0}).eq('id', key);
 
   @override
   Stream<String> changes() {
