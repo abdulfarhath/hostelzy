@@ -395,3 +395,17 @@ Not needed.
   - Tests: `supabase/tests/fairplay_test.sql`.
 - **Not on the server:** the "3 fixes in 6 months = 1 warning" count. The team sees the fixes in closed cases.
 - Test: `S5: on Supabase, Fair Play cases, replies, fixes, decisions and reports go to the server`.
+
+**S8 · managers and multi-hostel owners · 2026-10-02** (branch `feature/s8-managers`):
+- **Role gates (real APK):** the gates were still the sample ones, so owners couldn't open owner screens unless they were on the team, and residents could never open resident screens.
+  - "I run a hostel" opens once the server lists you as staff of a hostel (`hostel_staff`).
+  - "I live in a Hostelzy PG" opens once the owner has confirmed your stay.
+- **Switcher:** the owner switcher lists the hostels you run on the server, and the owner screens follow the first one. Hostels whose rooms weren't loaded (for example, listings loaded before sign-in) are fetched once more, never opened empty.
+- **Managers:** a typed phone number proves nothing (phones aren't verified), so a manager joins with a one-time code.
+  - The owner adds a manager (name, phone), and the server makes the code (`new_manager_invite`, owner only).
+  - WhatsApp opens with the invite link. The manager opens it, signs in with Google and is made staff (`join_as_manager`, which works once, for 7 days). The owner gets a push.
+  - The owner's manager list shows who joined.
+- **Migration `20261002150000_s8_managers.sql`:**
+  - The `manager_invites` table and the two functions.
+  - Tests: `supabase/tests/managers_test.sql`.
+- Test: `S8: on Supabase, owners see the hostels they run; managers join with a one-time code`.

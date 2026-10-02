@@ -6,7 +6,7 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
 const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases'];
@@ -180,7 +180,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   key: r['id'] as String,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], int? now}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], int? now}) => (
   holds: [
     for (final r in holds)
       holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
@@ -194,6 +194,9 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
   // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
   // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.
+  // S8: the hostels this user runs (owner or manager), and the owners' manager invites.
+  myHostels: [for (final r in staff) if (r['user_id'] == me) r['hostel_id'] as String],
+  managers: [for (final r in managers) (hid: r['hostel_id'] as String, name: r['name'] as String, phone: r['phone'] as String? ?? '', joined: r['used_by'] != null)],
   cases: [for (final r in cases) caseFromRow(r)]..sort((a, b) => (b.openedAt ?? 0).compareTo(a.openedAt ?? 0)),
   invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
   trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},

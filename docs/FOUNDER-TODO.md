@@ -48,6 +48,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 4i. **Plan invoices in the app (S7)** (after 4h): Supabase → SQL Editor → paste `supabase/migrations/20261002120000_s7_invoices.sql` → **Run** → "Success".
 4j. **Reviews from the app (S4)** (after 4i): Supabase → SQL Editor → paste `supabase/migrations/20261002130000_s4_reviews.sql` → **Run** → "Success".
 4k. **Fair Play from the app (S5)** (after 4j): Supabase → SQL Editor → paste `supabase/migrations/20261002140000_s5_fair_play.sql` → **Run** → "Success".
+4l. **Managers (S8)** (after 4k): Supabase → SQL Editor → paste `supabase/migrations/20261002150000_s8_managers.sql` → **Run** → "Success".
 
 4n. **Demo APK sign-in** (likely cause of "Couldn't sign in" in the demo; the real APK works):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials → "Android key (auto created by Firebase)".
