@@ -1419,6 +1419,54 @@ void main() {
     r.dispose();
   });
 
+  testWidgets('3-day rule: a Hostelzy resident added late shows Late and opens a Fair Play signal (F06/F07)', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner', moreTab: 'residents');
+    await pumpApp(tester, s);
+    final cases0 = s.cases.length;
+    // On time: moved in yesterday, added today.
+    s.openAddResident();
+    s.update(() {
+      s.rName = 'Ravi Teja';
+      s.rPhone = s.enquiries.firstWhere((e) => e.hid == 'anjani').phone;
+      s.rJoin = 'Yesterday';
+    });
+    s.addResident();
+    expect(s.residents.first.lateDays, 0);
+    expect(s.cases.length, cases0);
+    await tester.pump(const Duration(seconds: 3));
+    // Late: came through Hostelzy, moved in 5 days ago, added only now.
+    final e = Enquiry(ref: 'HZ-4700', name: 'Sandeep Kumar', phone: '9000000077', hid: 'anjani', at: s.now - 10 * 86400000, from: 'Hostel page', msg: '');
+    s.update(() => s.enquiries = [...s.enquiries, e]);
+    s.openAddResident();
+    s.update(() {
+      s.rName = 'Sandeep Kumar';
+      s.rPhone = e.phone;
+      s.rJoin = 'Pick';
+      s.rPickBack = 5;
+    });
+    s.addResident();
+    final r = s.residents.first;
+    expect((r.name, r.via, r.lateDays), ('Sandeep Kumar', 'hz', 5));
+    expect(s.cases.length, cases0 + 1);
+    expect(s.cases.first.title, 'Sandeep Kumar added 5 days after moving in');
+    expect(s.cases.first.status, 'new');
+    await tester.pump();
+    expect(find.text('LATE · 5D'), findsOneWidget);
+    // A Direct resident (no Hostelzy match) added late is not a Fair Play matter.
+    s.openAddResident();
+    s.update(() {
+      s.rName = 'Walk In';
+      s.rBed = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;
+      s.rPhone = '9000000088';
+      s.rJoin = 'Pick';
+      s.rPickBack = 6;
+    });
+    s.addResident();
+    expect((s.residents.first.via, s.residents.first.lateDays), ('direct', 0));
+    expect(s.cases.length, cases0 + 1);
+    s.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

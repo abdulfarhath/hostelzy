@@ -77,3 +77,6 @@ share and print come with the backend (F13).
 resident confirms" and "invite QR: owner approves or removes sign-ups". The complaints test now
 taps the Complaints segment (Manage opens on Residents). `flutter analyze` clean,
 `flutter test` 15/15.
+
+
+**3-day rule (2026-10-02, branch `feature/f06-three-day-rule`):** when the owner adds a resident whose phone matches a Hostelzy enquiry, hold or booking, and the move-in date is more than 3 days ago (`addWithinDays`), the resident is tagged **Late · N days** in Manage → Residents and a **Fair Play signal** opens (new case "X added N days after moving in", with the Hostelzy, move-in and added dates). Direct residents (no Hostelzy match) are never late. The "Code sent on WhatsApp" toast now says honestly that the resident confirms with the code once the app is online. Test: `3-day rule: a Hostelzy resident added late shows Late and opens a Fair Play signal (F06/F07)`.

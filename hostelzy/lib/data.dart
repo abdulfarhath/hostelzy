@@ -249,7 +249,7 @@ void fixAnjani(List<Room> a) {
 }
 
 class Resident {
-  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt});
+  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt, this.lateDays = 0});
   final String name, bed;
   final int amt;
   String status, note;
@@ -263,6 +263,10 @@ class Resident {
   final String? ref;
   final int advance;
   bool confirmed;
+
+  /// F06 3-day rule: added this many days after moving in, though they came
+  /// through Hostelzy (0 = on time). Shown as Late and a Fair Play signal.
+  final int lateDays;
 
   /// When they moved in (ms), for residents added in the app.
   final int? joinAt;
@@ -278,6 +282,9 @@ const matchWindowDays = 60;
 
 /// Owners must add new residents within this many days (F06 rules).
 const addResidentDays = 2;
+
+/// F06: a resident who came through Hostelzy is added within 3 days of moving in.
+const addWithinDays = 3;
 
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
