@@ -61,3 +61,45 @@ keep one of them, not both.
 ## Next
 Founder picks 2–3 names. Then for each: deeper checks (.in domain, social handles,
 store search by hand on a phone, company register), and first logo sketches.
+
+---
+
+# Round 2: names like "Hostelzy" (2026-10-02)
+
+Founder: "Hostelzy sounded good. Can there be something like this? It's not all about bed."
+So round 2 = whole-stay names, friendly ending, like Hostelzy.
+
+## First: why "Hostelzy" itself is risky
+- **Hostelz.com** is a hostel search site (since 2002, 35,000+ listings, has an app).
+- "Hostelzy" = "Hostelz" + "y". Same business. One letter apart.
+- hostelzy.com and .app are free, but that does not make the name safe.
+- A lawyer may say it is too close. **Don't build the brand on it until a lawyer checks.**
+- Also: "hostel" alone is a common word. Only the ending (zy, ji…) can be protected.
+
+## The list
+
+| # | Name | Say it | Story | .com | .app | Quick check |
+|---|---|---|---|---|---|---|
+| 1 | **Hostelji** | HOS-tel-jee | "Ji" = respect and warmth, like "Bhaiya ji". A hostel app that treats you well. | ✅ | ✅ | Nothing found. |
+| 2 | **Staypakka** | stay-PUK-kaa | Your stay is pakka: confirmed, trusted. | ✅ | ✅ | Nothing found. |
+| 3 | **PGpakka** | pee-jee-PUK-kaa | "PG pakka" = PG sorted. Very local. | ✅ | ✅ | Nothing found. |
+| 4 | **Hostelpakka** | HOS-tel-PUK-kaa | Hostel sorted. | ✅ | ✅ | Nothing found. Long (4 sounds). |
+| 5 | **Staymitra** | stay-MIT-raa | "Mitra" = friend in Telugu and Hindi. Your stay friend. | ❌ | ✅ | .com taken. |
+| 6 | **PGmitra** / **Hostelmitra** | | Same story. | ❌ | ✅ | .com taken. |
+| 7 | **Rehnazy** | REH-naa-zee | "Rehna" = to stay (Hindi) + zy. | ✅ | ✅ | Close to "Rahna Homes" (round 1 note). |
+| 8 | **Hostelzo** | HOS-tel-zo | Hostel + zo. | ✅ | ✅ | ⚠️ "Zo" is Zostel's style (Zostel, Zo Rooms): big hostel brand in India. |
+| 9 | **Hostelezy** | HOS-tel-ee-zee | Hostel made easy. | ✅ | ❌ not checked | ⚠️ Same Hostelz problem. Drop. |
+| 10 | **Stayji** | STAY-jee | Like Hostelji. | ❌ | ✅ | .com taken. |
+| 11 | **Hostelyo** | HOS-tel-yo | Friendly "yo". | ❌ | ✅ | .com taken. |
+| 12 | Stayzy | | | ❌ | ❌ | ❌ "StayZ" PG app (Delhi) exists. Drop. |
+| 13 | Roomzy / Livzy / Dormzy / Nestzy | | | ❌ | mixed | ❌ Domains taken; "Roomys", "NestAway" in same field. Drop. |
+| 14 | Hostelwala / PGwala | | | ❌ | | ❌ "Hostelwala" app exists. Drop. |
+
+Checks: web search + .com/.app registry lookup only. No IP India search, no .in,
+no direct Play Store search (blocked here). A trademark lawyer must check before launch
+(classes 9, 42, 43, 36).
+
+## Brand chat's picks (round 2)
+1. **Hostelji**: closest feel to Hostelzy, warm, easy for everyone, .com free.
+2. **Staypakka**: says the promise (trust), about the whole stay, .com free.
+3. **Cotkey** (from round 1): still works, "key" = your way into a stay, not only a bed.
