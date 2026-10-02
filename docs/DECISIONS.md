@@ -200,5 +200,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   page; don't touch it. All URLs come from one config value so the switch to hostelzy.in is one
   line.
 
+**Residents fix their room layout** — founder, 2026-10-02
+- A **confirmed resident of a room** (and only them) can edit that room's layout as a suggestion and
+  send it to the owner. The owner approves or rejects; approval publishes it. Tenants browsing and
+  people with only a hold can't. Spec: F19.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

@@ -23,6 +23,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f15-play-store`. Outside-the-app checklist (Play account, domain pages, upload key, SHA-1) in the feature file |
 | F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Shipped** · parts 1–3 + leftovers merged 2026-10-02 | Build | Honest login, real links, holds expire, UPI → UTR → owner confirms, real map, large screens with a left nav rail, honest toasts, owner screens follow the selected hostel. Group B needs F13 |
 | F18 | Real-user bug fixes (back button, stay logged in, own name/phone, gated roles, crashes, keyboard, map location + area, owner edits layouts) | **Built** · all 10 groups merged 2026-10-02 (APK `apk-32`) | Build | From the founder's phone test of apk-29. Photos/gallery, delete v2 and the team console need the backend (F13 part 2) |
+| F19 | Residents fix their room layout (resident edits own room → owner approves) | **Spec ready** · 2026-10-02 | Design | Founder idea. Reward for approved fixes: founder to decide |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
