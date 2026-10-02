@@ -28,9 +28,21 @@ mixin _GuestData {
 
   /// Tries the server again (set by main.dart; null in tests and demo builds).
   Future<void> Function()? reconnect;
+
+  /// F21 W4: the app's language (en | te | hi) and the checked strings bundled.
+  String lang = 'en';
+  Map<String, LangPack> langs = const {};
 }
 
 extension GuestActions on AppState {
+
+  /// Languages the picker offers: English, plus any with checked strings.
+  List<(String, String)> get langChoices => [('en', 'English'), for (final l in langs.values) if (l.strings.isNotEmpty) (l.code, l.label)];
+
+  void pickLang(String code) => update(() {
+    lang = code;
+    sheet = null;
+  });
 
   /// "You're offline · Retry".
   Future<void> retryListings() async {

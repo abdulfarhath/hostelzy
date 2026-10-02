@@ -123,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                _Row('Language', icon: 'globe', value: 'English', onTap: () => s.toastMsg('Telugu and Hindi come later.')),
+                _Row('Language', icon: 'globe', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),
                 _Row('Privacy policy', icon: 'doc', onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser')),
                 _Row('Terms', icon: 'doc', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
                 if (s.role == 'owner') _Row('Fair Play rules', icon: 'shield', onTap: () => s.go('oRules')),

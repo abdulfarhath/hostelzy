@@ -31,6 +31,26 @@ class WelcomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Row(mainAxisSize: MainAxisSize.min, children: [BrandMark(size: 17, mono: p.ai), const SizedBox(width: 6), const T('hostelzy', w: 800, s: 20, ls: -.02)]), const Flexible(child: T('Hyderabad', s: 12, w: 600, ls: .1, upper: true, align: TextAlign.right))]),
             ),
+            // F21 W4: the language row, once a language has checked strings.
+            if (s.langChoices.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: Container(
+                  decoration: box(w: 2, c: p.ai),
+                  child: Row(
+                    children: [
+                      for (final (code, label) in s.langChoices)
+                        Expanded(
+                          child: Tap(
+                            key: ValueKey('wlang-$code'),
+                            onTap: () => s.pickLang(code),
+                            child: Container(color: s.lang == code ? p.ai : null, padding: const EdgeInsets.symmetric(vertical: 10), alignment: Alignment.center, child: T(label, s: 14, w: 800, c: s.lang == code ? p.ac : p.ai)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),

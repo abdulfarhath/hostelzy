@@ -12,6 +12,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/photos/pick.dart' show GalleryPicker;
+import 'l10n.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
@@ -78,6 +79,8 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     state.watchPushToken();
     state.startReminders(reminders);
+    // F21 W4: the checked Telugu / Hindi strings bundled with this build.
+    loadLangs().then((l) => state.update(() => state.langs = l));
     WidgetsBinding.instance.addObserver(this);
     if (dataSource == 'supabase') {
       _goLive();

@@ -33,6 +33,7 @@ extension OnPhoneActions on AppState {
     'signedIn': signedIn,
     'role': role,
     'theme': theme,
+    'lang': lang,
     'name': myName,
     'phone': phone,
     if (account != null) 'account': {'uid': account!.uid, 'name': account!.name, 'email': account!.email},

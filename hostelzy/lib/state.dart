@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
 import 'data.dart';
+import 'l10n.dart';
 import 'poster.dart';
 import 'push.dart';
 import 'reminders.dart';
@@ -273,6 +274,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     phone = m['phone'] as String? ?? '';
     role = m['role'] as String? ?? 'tenant';
     theme = m['theme'] as String? ?? 'light';
+    lang = m['lang'] as String? ?? 'en';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
     pushAsked = m['pushAsked'] as bool? ?? false;
     restoreRem(m['rem'] as Map<String, dynamic>?);

@@ -7,6 +7,7 @@ import '../state.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
+import '../l10n.dart';
 import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
@@ -53,7 +54,9 @@ class HostelzyShell extends StatelessWidget {
       },
       child: PalScope(
         pal: pal,
-        child: DefaultTextStyle(
+        child: LangScope(
+          strings: s.langs[s.lang]?.strings ?? const {},
+          child: DefaultTextStyle(
           style: rootTextStyle(pal),
           child: LayoutBuilder(
             builder: (context, c) {
@@ -62,6 +65,7 @@ class HostelzyShell extends StatelessWidget {
               return const _FullScreen();
             },
           ),
+        ),
         ),
       ),
     );
@@ -573,6 +577,7 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'cPhoto' => 'Photo',
+      'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
@@ -642,6 +647,7 @@ class _Sheet extends StatelessWidget {
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'holdNotify' => const HoldNotifySheet(),
+      'lang' => const LangSheet(),
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),

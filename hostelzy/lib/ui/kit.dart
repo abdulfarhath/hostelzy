@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../l10n.dart';
+
 /// Colour tokens from the design (`[data-hz]` CSS variables).
 class Pal {
   const Pal({required this.bg, required this.sf, required this.tx, required this.mu, required this.ac, required this.ai, required this.ab, required this.ad, required this.dv, required this.hl, required this.tk, required this.page, required this.gn, required this.gb});
@@ -52,7 +54,9 @@ class T extends StatelessWidget {
     final lineH = lh ?? (mono ? ((1.02 * size).round() + (.3 * size).round()) / size : null);
     var style = cssStyle(DefaultTextStyle.of(context).style, s: sz, w: w, c: c, ls: ls, lh: lineH, tab: tab, mono: mono);
     if (underline) style = style.copyWith(decoration: TextDecoration.underline, decorationColor: style.color);
-    final t = upper ? text.toUpperCase() : text;
+    // F21 W4: the picked language's checked string, else English.
+    final tx = LangScope.tr(context, text);
+    final t = upper ? tx.toUpperCase() : tx;
     final Widget out;
     if (ell) {
       out = Text(t, style: style, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, textAlign: align);
@@ -500,12 +504,13 @@ class Tap extends StatelessWidget {
   final Widget child;
   final bool enabled;
   @override
-  Widget build(BuildContext context) => Semantics(
-    // F21 W4: screen readers hear a button; small targets still take a 48×48 tap.
-    button: onTap != null,
-    enabled: enabled && onTap != null,
-    child: _MinHit(
-      on: onTap != null,
+  // F21 W4: screen readers hear a button; small targets still take a 48×48 tap
+  // (the hit test wraps everything, so nothing inside cuts it short).
+  Widget build(BuildContext context) => _MinHit(
+    on: onTap != null,
+    child: Semantics(
+      button: onTap != null,
+      enabled: enabled && onTap != null,
       child: MouseRegion(
         cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
         child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child),

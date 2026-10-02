@@ -62,6 +62,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 4q. **Layout fix extras (F19)** (after 4m): Supabase → SQL Editor → paste `supabase/migrations/20261002190000_f19_extras.sql` → **Run** → "Success". It adds quick fixes, the private `fix-photos` bucket, repairs and muting. Until then, the app's quick fix and mute buttons say they couldn’t save.
 4r. **Hold replies reach the tenant (F21)** (after 4a): Supabase → SQL Editor → paste `supabase/migrations/20261002200000_f21_hold_reply_push.sql` → **Run** → "Success". The tenant then gets a notification when the owner keeps or declines their free hold. Until then the hold still works; only that notification is missing.
 4s. **Complaint photos (F21)** (after 4a): Supabase → SQL Editor → paste `supabase/migrations/20261002210000_f21_complaint_photo.sql` → **Run** → "Success". It adds a private `complaint-photos` bucket and a photo on each complaint. Until then, complaints with a photo say they couldn’t be sent; complaints without one work as before.
+4t. **Check Telugu wording with a native speaker (F21)** (any time): the strings to translate are in `docs/i18n/te-review.md`; translations go into `hostelzy/assets/l10n/app_te.arb`. No machine translation goes into the app, so until someone writes and checks them the app stays in English. Once a native speaker has checked the file, set `"@@reviewed": true` and the language picker drops “beta”.
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
