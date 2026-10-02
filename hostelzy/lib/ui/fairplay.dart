@@ -4,6 +4,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
+import 'onboarding.dart' show TeamHead, StatusTag;
 
 // F07 Fair Play: the owner's rules (board 1), the owner's number after a hold
 // (2), "Did you join?" (3), the tenant's report (4), the owner's case (5),
@@ -537,8 +538,9 @@ class StrikeScreen extends StatelessWidget {
   }
 }
 
-/// F07 board 7: the founder's case queue. The design is a 1440 px desk
-/// screen; in the app it is one column (queue, then the open case).
+/// F07 board 7: the founder's case queue. F22 Area 4 (aCases): one list by
+/// stage; a case waiting for a decision is decided inline. Tap a case for
+/// its signals, the owner's reply and the owner's history.
 class AdminCasesScreen extends StatelessWidget {
   const AdminCasesScreen({super.key});
   @override
@@ -557,18 +559,7 @@ class AdminCasesScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Rich([sp(context, 'Hostelzy '), sp(context, 'team', c: p.ac)], w: 800, s: 20)]),
-              const SizedBox(height: 2),
-              T('Fair Play cases · Strikes: 1 warning · 2 deals hidden 30 days · 3 removed. No fines.', s: 12, c: p.mu),
-            ],
-          ),
-        ),
+        const TeamHead(kicker: 'Hostelzy team', title: 'Fair Play cases'),
         Seg(
           opts: [('new', 'New ${count('new')}'), ('waiting', 'Waiting ${count('waiting')}'), ('decide', 'Decide ${count('decide')}'), ('closed', 'Closed')],
           cur: s.adminTab,
@@ -578,40 +569,83 @@ class AdminCasesScreen extends StatelessWidget {
           }),
           pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           center: true,
-          margin: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
         ),
+        const SizedBox(height: 10),
         Expanded(
           child: Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
             child: Scroll(
               key: ValueKey('aCases${s.scrollEpoch}'),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (final c in list) ...[
-                    Tap(
-                      onTap: () => s.update(() => s.adminCase = s.adminCase == c.id ? null : c.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(color: c.id == s.adminCase ? p.ab : null, border: Border(bottom: bs(1, p.hl))),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(children: [Expanded(child: T('${c.id} · ${hostelById(c.hid).name}', w: 800, s: 14)), Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(bg: c.status == 'decide' ? p.ab : transparent, w: 1, c: c.status == 'decide' ? p.ab : p.dv), child: T(tag(c.status), s: 11, w: 800, ls: .05, upper: true, c: c.status == 'decide' ? p.ad : p.mu))]),
-                            const SizedBox(height: 4),
-                            T(c.result ?? c.signal, s: 13, c: p.mu),
-                          ],
-                        ),
+                    Container(
+                      key: ValueKey('aCase-${c.id}'),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(color: c.id == s.adminCase ? p.sf : null, border: Border(bottom: bs(1, p.hl))),
+                      child: VGap(
+                        gap: 8,
+                        children: [
+                          Tap(
+                            onTap: () => s.update(() => s.adminCase = s.adminCase == c.id ? null : c.id),
+                            child: VGap(
+                              gap: 4,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: T('${c.id} · ${hostelById(c.hid).name}', w: 800, s: 16, lh: 1.25)),
+                                    const SizedBox(width: 8),
+                                    StatusTag(tag(c.status), hot: c.status == 'decide'),
+                                  ],
+                                ),
+                                T(c.result ?? c.signal, s: 13, c: p.mu, lh: 1.4),
+                              ],
+                            ),
+                          ),
+                          if (c.status == 'decide') _Decide(c),
+                        ],
                       ),
                     ),
                     if (open == c) _AdminCase(c),
                   ],
                   if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('No cases here.', s: 14, c: p.mu)),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: T('Decide after the 48-hour window or the owner’s reply. A proven fake “Direct” for an app tenant is one strike. The tenant’s answer and our records count more than screenshots. Strikes: 1 warning · 2 deals hidden 30 days · 3 removed. No fines.', s: 13, c: p.mu, lh: 1.5),
+                  ),
                 ],
               ),
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// No issue / Ask more / Strike n, side by side.
+class _Decide extends StatelessWidget {
+  const _Decide(this.c);
+  final FairCase c;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final n = (s.strikes[c.hid] ?? 0) + 1;
+    Widget b(String t, String icon, String how, {bool hot = false}) => Expanded(
+      child: Cta(t, icon: icon, height: 42, px: 10, fs: 13, iconSize: 16, gap: 6, bg: hot ? null : transparent, fg: hot ? null : p.tx, border: hot ? null : p.tx, onTap: () => s.decideCase(c, how)),
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        b('No issue', 'check', 'close'),
+        const SizedBox(width: 6),
+        b('Ask more', 'msg', 'more'),
+        const SizedBox(width: 6),
+        b('Strike $n', 'flag', 'strike', hot: true),
       ],
     );
   }
@@ -625,17 +659,16 @@ class _AdminCase extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final h = hostelById(c.hid);
-    final n = (s.strikes[c.hid] ?? 0) + 1;
     final residents = c.hid == 'anjani' ? s.residents : const <Resident>[];
     return Container(
-      decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+      decoration: BoxDecoration(color: p.sf, border: Border(bottom: bs(2, p.tx))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0), child: T('${h.name}: ${c.title}', w: 800, s: 20, lh: 1.1)),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 0), child: T('${h.name}: ${c.title}', w: 800, s: 18, lh: 1.15)),
           if (c.events.isNotEmpty) ...[const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 4), child: Kicker('Signals')), _Timeline(c.events)],
           const Padding(padding: EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Owner’s reply')),
-          Container(margin: const EdgeInsets.symmetric(horizontal: 16), padding: const EdgeInsets.all(12), color: p.sf, child: T(c.ownerReply != null ? '“${c.ownerReply}”' : 'No reply yet. 48 hours from the notice.', s: 14, lh: 1.5)),
+          Container(margin: const EdgeInsets.symmetric(horizontal: 16), padding: const EdgeInsets.all(12), color: p.bg, child: T(c.ownerReply != null ? '“${c.ownerReply}”' : 'No reply yet. 48 hours from the notice.', s: 14, lh: 1.5)),
           if (c.tenantNote != null) ...[
             const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Tenant')),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('“${c.tenantNote}”', s: 14, w: 800, lh: 1.5)),
@@ -643,22 +676,9 @@ class _AdminCase extends StatelessWidget {
           const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Owner history')),
           for (final (k, v) in [('Strikes', '${s.strikes[c.hid] ?? 0} of 3'), ('Live since', '1 Oct 2026'), if (residents.isNotEmpty) ('Residents', '${residents.length} · ${residents.where((r) => r.via == 'hz').length} via Hostelzy')])
             KV(k, v, keyWidth: 110),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: T('Decide only after the 48-hour window or the owner’s reply. A proven fake “Direct” for an app tenant is one strike. The tenant’s answer and our records outweigh messages and screenshots.', s: 12, c: p.mu, lh: 1.5),
-          ),
-          if (c.status != 'closed')
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: VGap(
-                gap: 8,
-                children: [
-                  OutlineCta('Close · no issue', icon: 'check', height: 50, onTap: () => s.decideCase(c, 'close')),
-                  OutlineCta('Ask for more', icon: 'msg', height: 50, onTap: () => s.decideCase(c, 'more')),
-                  Cta('Strike $n · ${strikeLadder[(n - 1).clamp(0, 2)].$2.toLowerCase()}', icon: 'flag', height: 50, px: 16, fs: 15, onTap: () => s.decideCase(c, 'strike')),
-                ],
-              ),
-            ),
+          // A decide case has its buttons on the row; new and waiting ones decide here.
+          if (c.status == 'new' || c.status == 'waiting') Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0), child: _Decide(c)),
+          const SizedBox(height: 16),
         ],
       ),
     );

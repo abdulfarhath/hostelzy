@@ -146,8 +146,8 @@ class DeleteAccountScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final block = s.deleteBlock;
     Widget item(String icon, String t) => Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.only(top: 2), child: Ic(icon, size: 14, color: p.tx)), const SizedBox(width: 8), Expanded(child: T(t, s: 13, lh: 1.4))]),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.only(top: 2), child: Ic(icon, size: 18, color: p.tx)), const SizedBox(width: 10), Expanded(child: T(t, s: 15, lh: 1.45))]),
     );
     if (block != null) {
       return Column(
@@ -183,17 +183,18 @@ class DeleteAccountScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 14), child: T('This can’t be undone. Here’s exactly what happens.', s: 14, c: p.mu, lh: 1.5)),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(14),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 14), child: T('This can’t be undone.', s: 15, c: p.mu, lh: 1.5)),
+                // F22 Area 5 (board `delAcc`): two short lists, what goes and what stays.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const T('Deleted', w: 800, s: 14), for (final t in const ['Your name and phone', 'Saved hostels and searches', 'Holds and enquiries', 'Your Stay Rewards and referral code']) item('trash', t)])),
-                      const SizedBox(width: 14),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const T('Kept', w: 800, s: 14), for (final t in const ['Stay records the hostel must keep (dates, rent receipts)', 'Your reviews, shown as “Former resident”', 'Fair Play case records']) item('lock', t)])),
+                      const T('Deleted', w: 800, s: 15),
+                      for (final x in const ['Your name, phone and Google sign-in', 'Saved hostels, holds and enquiries', 'Stay Rewards and your referral code']) item('trash', x),
+                      const SizedBox(height: 14),
+                      const T('Kept, without your name', w: 800, s: 15),
+                      for (final x in const ['Stay records the hostel must keep (dates, rent receipts)', 'Your reviews, shown as “Former resident”', 'Fair Play case records']) item('lock', x),
                     ],
                   ),
                 ),
@@ -310,8 +311,8 @@ class PermissionScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final (icon, title, sub, uses, yes, no) = switch (s.permKind) {
-      'location' => ('pin', 'Use your location?', 'Optional. We use it only to show hostels near you.', ['Distance to hostels from where you are', 'Never shared with owners', 'Or just pick an area: Ameerpet, Hitec City…'], 'Use my location', 'Type an area instead'),
-      'camera' => ('camera', 'Allow camera and photos?', 'Needed only when you add a photo.', ['A photo for a complaint (leaking tap, broken fan)', 'Owners: photos of rooms and layout changes', 'We never open your camera on our own'], 'Allow', 'Not now'),
+      'location' => ('pin', 'Use your location?', 'Only to show hostels near you. Owners never see it.', <String>[], 'Use my location', 'Type an area instead'),
+      'camera' => ('camera', 'Allow the camera?', 'To add a photo to a complaint or a layout fix. Only when you tap the camera.', <String>[], 'Allow camera', 'Not now'),
       _ => ('bell', 'Turn on notifications?', 'Only for things you’d want to know straight away.', ['When the owner confirms your hold', 'Rent reminders, 3 days before'], 'Turn on', 'Not now'),
     };
     void allow() {
@@ -340,6 +341,7 @@ class PermissionScreen extends StatelessWidget {
             const SizedBox(height: 14),
             T(sub, s: 15, c: p.mu, lh: 1.5),
             const SizedBox(height: 20),
+            if (uses.isNotEmpty)
             Container(
               decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
               child: Column(
@@ -361,7 +363,7 @@ class PermissionScreen extends StatelessWidget {
               if (s.permKind == 'location') s.openWhere();
             }),
             const SizedBox(height: 10),
-            T('Your phone asks next. You can change this in Settings.', s: 12, c: p.mu),
+            T('Your phone asks next. Change it any time in Settings.', s: 13, c: p.mu),
           ],
         ),
       ),

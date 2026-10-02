@@ -131,7 +131,19 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
-### Area 3 · Owner: built 2026-10-02 (branch `feature/f22-owner`)
+### Areas 4 and 5 · Onboarding, team tools, leftovers: built 2026-10-02 (branch `feature/f22-onboarding`)
+- **Sign in:** logo, a title that says why ("Sign in to hold a bed" / "…to list your PG" / "…to join your PG"), Continue with Google, "Keep browsing as a guest", the Terms line. "Use on this phone only" stays as a small link (the only way in without a Google account).
+- **About you:** two fields, the "Not verified" tag, "We’ll check it by SMS later".
+- **Role:** "What brings you here?" with three big rows; "You can switch later in Me".
+- **Join your PG:** a code field with Join, Scan the poster QR (opens the phone camera; there is no in-app scanner yet), "No code?" with Send my number on WhatsApp, "Not in a PG yet? Find a bed ›".
+- **List your PG:** one line (visit, 30 days free, from ₹499 a month, no commission; matches DECISIONS), PG name, area chips, Request a visit / WhatsApp Hostelzy.
+- **Team tools:** Add hostel is one frame with a 6-step bar (Basics, Rooms floor by floor with Copy floor above / Add floor, Ready to go live? with red open items and "Go live · N things left"); the tracker groups the 7 real stages into Lead / Visited / Signed up / Live with a next step per row; Payments to check has To check / Late / Paid / Upcoming; Fair Play cases have New / Waiting / Decide / Closed with No issue / Ask more / Strike n inline and the decide rule.
+- **Permissions:** location and camera asks are short (no bullet list); notifications keep only what the app does.
+- **Delete account:** "Deleted" and "Kept, without your name" as two lists; Fair Play case records stay in the kept list because they are kept.
+- Honest differences: the Fair Play row in Go live says the team reads the rules with the owner and ticks it (there is no owner-side "I agree" on their phone); Food on Basics cycles the three real options; the Upcoming tab keeps trial invoices reachable.
+- Tests: `test/start_test.dart`, `test/team_app_test.dart`, older tests updated.
+
+### Area 3 · Owner: built 2026-10-02 (merged, #73)
 - **Beds:** floor chips with free counts, rooms as cards with bed boxes (the open bed shows red), legend, "Rooms and rates ›". The red "New layout" button stays on a room when Hostelzy drew a version to publish.
 - **Bed sheet:** status, resident, room, rent, since and how they came, advance; Message / Mark as leaving (taken), Release hold (held), Add tenant to this bed / Hold for a walk-in (free); "Room … layout ›".
 - **Rent:** Collected and Still to come with a bar; seg All / Due / Late / Paid with counts; rows with a plain tag and a 44px bell.

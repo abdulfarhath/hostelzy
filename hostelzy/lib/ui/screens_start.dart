@@ -114,12 +114,20 @@ class _StepHead extends StatelessWidget {
 
 /// F13: Sign in with Google (DECISIONS 2026-10-02). Until Google sign-in is
 /// switched on in Firebase, "Use on this phone only" keeps everything local.
+/// F22 Area 4 (board `login`): the logo, why we ask, one Google button,
+/// "Keep browsing as a guest", the Terms line.
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final (title, sub) = switch (s.afterSignIn) {
+      'owner' => ('Sign in to list your PG', 'So the Hostelzy team knows who to call. No passwords, no codes.'),
+      'resident' => ('Sign in to join your PG', 'So your owner knows it’s you. No passwords, no codes.'),
+      'enquiry' || 'book' || 'hold' => ('Sign in to hold a bed', 'So owners know who’s coming. No passwords, no codes.'),
+      _ => ('Sign in', 'With your Google account. No passwords, no codes.'),
+    };
     return FillScroll(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -127,15 +135,27 @@ class LoginScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)),
-            const _StepHead(step: 'Step 1 of 2', title: 'Sign in', sub: 'With your Google account. No passwords, no codes.'),
+            const SizedBox(height: 40),
+            const Align(alignment: Alignment.centerLeft, child: BrandMark(size: 64)),
+            const SizedBox(height: 14),
+            T(title, w: 800, s: 34, lh: 1.02, ls: -.025),
+            const SizedBox(height: 14),
+            T(sub, s: 16, c: p.mu, lh: 1.5),
             const Spacer(),
+            const SizedBox(height: 24),
             GoogleButton(s.signingIn ? 'Opening Google…' : 'Continue with Google', busy: s.signingIn, onTap: s.continueWithGoogle),
-            const SizedBox(height: 10),
-            OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
-            const SizedBox(height: 8),
-            T('Nothing is saved to an account. You can sign in later.', s: 12, c: p.mu, align: TextAlign.center),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
+            Center(
+              child: Tap(
+                key: const ValueKey('keepGuest'),
+                onTap: s.browse,
+                child: const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: T('Keep browsing as a guest', w: 800, s: 15)),
+              ),
+            ),
             _Agree(s: s),
+            const SizedBox(height: 10),
+            // Without a Google account: everything stays on this phone.
+            Center(child: Tap(onTap: s.continueOnPhone, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: T('Use on this phone only', s: 13, w: 600, c: p.mu)))),
           ],
         ),
       ),
@@ -162,7 +182,8 @@ class PhoneScreen extends StatelessWidget {
             phoneOtpLogin
                 ? const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.')
                 // F13: typed, not verified: owners see "not verified" until SMS checks exist.
-                : _StepHead(step: 'Step 2 of 2${s.account != null ? ' · ${s.account!.email}' : ''}', title: 'About you', sub: '${s.account != null ? 'Signed in as ${s.account!.email}. ' : ''}Owners use your number to call or WhatsApp you. They see it as “not verified” until Hostelzy can check numbers by SMS.'),
+                // F22 Area 4 (board `about`): two fields, the "not verified" tag.
+                : _StepHead(step: s.account?.email ?? 'About you', title: 'About you', sub: 'Owners use this to call or WhatsApp you.'),
             const SizedBox(height: 28),
             // F18: the user's own name (never a sample one).
             if (!phoneOtpLogin) ...[
@@ -193,6 +214,7 @@ class PhoneScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (!phoneOtpLogin) ...[const SizedBox(height: 6), T('We’ll check it by SMS later. Until then owners see “not verified”.', s: 13, c: p.mu, lh: 1.4)],
             const Spacer(),
             Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
             const SizedBox(height: 12),
@@ -281,6 +303,7 @@ class OtpScreen extends StatelessWidget {
   }
 }
 
+/// F22 Area 4 (board `role`): "What brings you here?" with three big rows.
 class RoleScreen extends StatelessWidget {
   const RoleScreen({super.key});
   @override
@@ -288,61 +311,51 @@ class RoleScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     const roles = [
-      ['tenant', '01', 'I need a bed', 'Search PGs and hostels, pick the exact bed, hold it.'],
-      ['resident', '02', 'I live in a Hostelzy PG', 'Pay rent, see the menu, raise complaints.'],
-      ['owner', '03', 'I run a hostel', 'Bed map, hold requests, rent and complaints.'],
+      ('tenant', 'search', 'I need a bed', 'Find and hold a bed in a PG'),
+      ('resident', 'home', 'I live in a PG', 'Rent, food and complaints'),
+      ('owner', 'bed', 'I run a PG', 'Beds, residents and rent'),
     ];
     return FillScroll(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             // F18 (C3): back to About you.
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [if (s.hist.isNotEmpty) ...[Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)), const SizedBox(height: 8)], const PageHead(kicker: 'Welcome', title: 'How will you use Hostelzy?', size: 34, gap: 6)]),
+            child: Row(
+              children: [
+                if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)],
+                Expanded(child: PageHead(kicker: s.meFirst.isEmpty ? 'Welcome' : 'Welcome, ${s.meFirst}', title: 'What brings you here?', size: 30, gap: 2)),
+              ],
+            ),
           ),
-          for (final r in roles)
-            Tap(
-              onTap: () => s.pickRole(r[0]),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-                decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 36,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: T(r[1], w: 800, s: 14, c: p.ad),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+          Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final r in roles)
+                  Tap(
+                    key: ValueKey('role-${r.$1}'),
+                    onTap: () => s.pickRole(r.$1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(
                         children: [
-                          T(r[2], w: 800, s: 22, ls: -.015),
-                          const SizedBox(height: 4),
-                          T(r[3], s: 14, c: p.mu, lh: 1.4),
+                          Container(width: 48, height: 48, color: p.sf, alignment: Alignment.center, child: Ic(r.$2, size: 24, color: p.tx)),
+                          const SizedBox(width: 14),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(r.$3, w: 800, s: 19), const SizedBox(height: 2), T(r.$4, s: 14, c: p.mu)])),
+                          Ic('chev', size: 18, color: p.tx),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const SizedBox(
-                      width: 24,
-                      child: Padding(padding: EdgeInsets.only(top: 4), child: Ic('arrow', size: 22)),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: T('You can switch later from your profile.', s: 12, c: p.mu),
           ),
+          const Spacer(),
+          Padding(padding: const EdgeInsets.all(16), child: T('You can switch later in Me.', s: 13, c: p.mu)),
         ],
       ),
     );
@@ -359,33 +372,20 @@ class RoleGateScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final owner = s.roleGate == 'owner';
-    final who = s.meName.isEmpty ? '' : '${s.meName} · ';
-    Widget step(int n, String t, String sub) => Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(width: 28, height: 28, color: p.tx, alignment: Alignment.center, child: T('$n', w: 800, s: 14, c: p.bg)),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(t, w: 800, s: 14), T(sub, s: 12, c: p.mu)])),
-        ],
-      ),
-    );
+    // F22 Area 4 (boards `gateRes`, `gateOwn`): one job each.
     final head = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '$who${owner ? 'I run a PG' : 'I live in a PG'}', title: owner ? 'List your hostel' : 'Ask your owner to add you', size: owner ? 30 : 28))],
+        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: owner ? 'I run a PG' : 'I live in a PG', title: owner ? 'List your PG' : 'Join your PG', size: 30, gap: 2))],
       ),
     );
     final List<Widget> body;
     final List<Widget> foot;
     if (owner) {
       body = [
-        T('The Hostelzy team sets up every hostel in person, so the listing is right from day one.', s: 15, c: p.mu, lh: 1.5),
-        Column(children: [step(1, 'Request a visit', 'Tell us the hostel name and area'), step(2, 'We visit (about 45 min)', 'Photos, rooms, prices, residents'), step(3, 'You check and go live', '30 days free, then from ₹499 a month')]),
-        VGap(gap: 6, children: [const T('Hostel name', w: 800, s: 13), Field(key: const ValueKey('gateHostel'), value: s.gateHostel, placeholder: 'e.g. Sri Sai Men’s PG', onChanged: (v) => s.update(() => s.gateHostel = v))]),
+        T('We visit, take photos and set it up with you. 30 days free, then from ₹499 a month. No commission.', s: 15, c: p.mu, lh: 1.5),
+        VGap(gap: 6, children: [const T('PG name', w: 800, s: 13), Field(key: const ValueKey('gateHostel'), value: s.gateHostel, placeholder: 'e.g. Sri Sai Men’s PG', onChanged: (v) => s.update(() => s.gateHostel = v))]),
         VGap(
           gap: 6,
           children: [
@@ -396,49 +396,37 @@ class RoleGateScreen extends StatelessWidget {
       ];
       foot = [
         Cta('Request a visit', onTap: s.requestVisit, height: 54, px: 16, fs: 15),
-        OutlineCta('WhatsApp Hostelzy · +91 ${phoneSpaced(supportWhatsApp)}', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),
+        OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),
       ];
     } else {
+      final num = s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : null;
       body = [
-        T('Your rent, food menu and complaints open once your PG owner adds you with this number.', s: 15, c: p.mu, lh: 1.5),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: box(w: 2, c: p.tx),
-          child: VGap(
-            gap: 4,
-            children: [
-              const Kicker('Your number'),
-              T(s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : 'Add your number in Settings', w: 800, s: 24, ls: .02),
-              const SizedBox(height: 6),
-              Cta('Send it to your owner on WhatsApp', icon: 'msg', height: 48, px: 16, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Hi, please add me as a resident on Hostelzy. My number is +91 ${phoneSpaced(s.phone)}${s.meName.isEmpty ? '' : ' (${s.meName})'}.')),
-            ],
-          ),
-        ),
+        T('Your owner gives you a code, or scan the Hostelzy poster at your PG.', s: 15, c: p.mu, lh: 1.5),
+        // C: type the code (filled in when the invite link opened the app).
         Row(
           children: [
-            Container(width: 40, height: 40, color: p.sf, alignment: Alignment.center, child: Ic('qr', size: 20, color: p.tx)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const T('Is there a Hostelzy poster at your PG?', w: 800, s: 15), T('Scan its QR to ask to join. The owner approves you.', s: 12, c: p.mu)])),
+            Expanded(child: Field(key: const ValueKey('inviteCode'), value: s.inviteDraft.isEmpty ? s.pendingInvite ?? '' : s.inviteDraft, placeholder: 'e.g. ANJ-7Q2', height: 54, fs: 20, w: 800, ls: .06, onChanged: (v) => s.update(() => s.inviteDraft = v.toUpperCase()))),
+            const SizedBox(width: 8),
+            Cta(s.joining ? 'Sending…' : 'Join', key: const ValueKey('joinGo'), height: 54, px: 16, fs: 15, expand: false, onTap: s.joinInvite),
           ],
         ),
         // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
-        Cta('Scan the invite QR', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.'), height: 54, px: 16, fs: 15),
-        // C: or type the code (filled in when the invite link opened the app).
-        VGap(
-          gap: 6,
-          children: [
-            const T('Have an invite code?', w: 800, s: 13),
-            Row(
-              children: [
-                Expanded(child: Field(key: const ValueKey('inviteCode'), value: s.inviteDraft.isEmpty ? s.pendingInvite ?? '' : s.inviteDraft, placeholder: 'e.g. ANJ-7Q2', onChanged: (v) => s.update(() => s.inviteDraft = v.toUpperCase()))),
-                const SizedBox(width: 8),
-                Cta(s.joining ? 'Sending…' : 'Ask to join', icon: 'arrow', height: 48, px: 14, fs: 14, expand: false, bg: p.tx, fg: p.bg, onTap: s.joinInvite),
-              ],
-            ),
-          ],
+        OutlineCta('Scan the poster QR', icon: 'qr', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.')),
+        Container(
+          margin: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.all(12),
+          color: p.sf,
+          child: VGap(
+            gap: 6,
+            children: [
+              const T('No code?', w: 800, s: 14),
+              T(num == null ? 'Ask your owner to add you with your mobile number. Add it in Settings first.' : 'Ask your owner to add you with $num.', s: 14, c: p.mu, lh: 1.4),
+              Cta('Send my number on WhatsApp', icon: 'msg', height: 46, px: 16, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Hi, please add me as a resident on Hostelzy. My number is ${num ?? ''}${s.meName.isEmpty ? '' : ' (${s.meName})'}.')),
+            ],
+          ),
         ),
       ];
-      foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed', w: 800, s: 14, c: p.tx))];
+      foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed ›', w: 800, s: 15, c: p.tx))];
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
