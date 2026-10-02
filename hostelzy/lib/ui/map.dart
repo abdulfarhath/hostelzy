@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../data.dart';
+import '../map_config.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
@@ -36,9 +37,18 @@ class MapScreen extends StatelessWidget {
             key: ValueKey('map${s.lm}'),
             options: MapOptions(initialCenter: _ll(here), initialZoom: 13, minZoom: 10, maxZoom: 18, backgroundColor: p.sf),
             children: [
-              if (mapTiles) TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'app.hostelzy.hostelzy'),
+              if (mapTiles) TileLayer(urlTemplate: mapTileUrl, userAgentPackageName: mapUserAgent),
               MarkerLayer(
                 markers: [
+                  // Other landmarks as small labels.
+                  for (final l in landmarks.where((l) => l != s.lm))
+                    Marker(
+                      point: _ll(landmarkLatLng[l]!),
+                      width: 110,
+                      height: 18,
+                      alignment: Alignment.centerRight,
+                      child: Row(children: [Container(width: 7, height: 7, color: p.mu), const SizedBox(width: 4), Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(horizontal: 3), child: T(l, s: 11, w: 600, c: p.mu))]),
+                    ),
                   Marker(
                     point: _ll(here),
                     width: 140,
@@ -91,6 +101,15 @@ class MapScreen extends StatelessWidget {
             ),
           ),
         ),
+        // My location needs the location permission (F15); never a fake spot.
+        Positioned(
+          right: 12,
+          top: 66,
+          child: Tap(
+            onTap: () => s.toastMsg('Your location comes once the app asks for location permission. Showing distances from ${s.lm} for now.'),
+            child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(bg: p.bg, w: 2, c: p.tx), child: const Ic('pin', size: 20)),
+          ),
+        ),
         Positioned(
           left: 12,
           right: 12,
@@ -98,7 +117,7 @@ class MapScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(alignment: Alignment.centerRight, child: Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T('© OpenStreetMap contributors', s: 10, c: p.mu))),
+              Align(alignment: Alignment.centerRight, child: Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T(mapAttribution, s: 10, c: p.mu))),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.all(12),

@@ -1131,6 +1131,7 @@ void main() {
     final s = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, s);
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
+    expect(find.text('Gachibowli'), findsOneWidget); // other landmarks are labelled
     final mh = hostelById(s.mapSel);
     expect(find.text('${kmLabel(kmTo(mh, 'Hitec City'))} from Hitec City · rated ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
     await tap(tester, find.text('₹${(hostelById('greenview').from / 1000).toStringAsFixed(1)}k'));
