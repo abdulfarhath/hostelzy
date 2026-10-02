@@ -369,6 +369,7 @@ class _AppBody extends StatelessWidget {
   Widget _screen(String k) => switch (k) {
     'welcome' => const WelcomeScreen(),
     'login' => const LoginScreen(),
+    'saved' => const SavedScreen(),
     'roleGate' => const RoleGateScreen(),
     'oCreate' => const CreateLayoutScreen(),
     'oPublished' => const LayoutPublishedScreen(),
@@ -1247,7 +1248,11 @@ class _AddSheet extends StatelessWidget {
             px: 16,
             fs: 15,
             onTap: () {
-              if (s.addName.trim().isEmpty || sel == null || sel.b == null) return s.toastMsg('Add a name and pick a bed.');
+              // F18 (F10): a real name, a real mobile number and a free bed.
+              if (s.addName.trim().length < 2) return s.toastMsg('Add the tenant’s name.');
+              if (s.addPhone.isNotEmpty && !AppState.validPhone(s.addPhone)) return s.toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
+              if (sel == null || sel.b == null) return s.toastMsg('Pick a bed.');
+              if (sel.b!.state == 'booked') return s.toastMsg('Bed ${sel.b!.id} is already taken.');
               sel.b!.state = 'booked';
               final name = s.addName.trim();
               s.update(() {
@@ -1303,9 +1308,8 @@ class _BedSheet extends StatelessWidget {
       actions.add((
         'Release hold',
         () {
-          b.state = 'free';
-          b.mine = false;
-          done('Bed ${b.id} is free again.');
+          s.ownerReleaseBed(s.ownHid, b);
+          done('Bed ${b.id} is ${b.state == 'soon' ? 'free soon' : 'free'} again.');
         },
         true,
       ));
@@ -1321,8 +1325,8 @@ class _BedSheet extends StatelessWidget {
       actions.add((
         'Hold for a walk-in',
         () {
-          b.state = 'held';
-          done('Bed ${b.id} held for 1 hour.');
+          s.holdWalkIn(s.ownHid, b);
+          done('Bed ${b.id} held for 1 hour. It frees itself after that.');
         },
         false,
       ));

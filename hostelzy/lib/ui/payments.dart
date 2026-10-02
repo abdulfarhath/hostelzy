@@ -237,6 +237,8 @@ class UpiCard extends StatelessWidget {
           T('Pays you ₹1 from your own phone to check it works.', s: 12, c: p.mu),
           _shieldNote(context, [sp(context, 'Advances and rent go straight to this UPI ID. Hostelzy never holds the money; you confirm each payment in the app.')]),
           if (u.id.startsWith('sample.')) T('This is a sample ID. Type your own before tenants pay you.', s: 12, w: 800, c: p.ad),
+          // F18 (F11): name@bank, e.g. srinivas@okaxis or 98xxxxxx10@ybl.
+          if (u.id.isNotEmpty && !validUpiId(u.id)) T('That isn’t a UPI ID. It looks like name@bank (for example srinivas@okaxis).', s: 12, w: 800, c: p.ad),
         ],
       ),
     );

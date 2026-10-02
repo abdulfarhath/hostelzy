@@ -99,7 +99,7 @@ class MapScreen extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 7),
                               decoration: box(bg: sel ? p.tx : p.ac, w: 2, c: sel ? p.tx : p.ac),
-                              child: T(fmt(ho.from), w: 800, s: 13, c: sel ? p.bg : p.ai),
+                              child: T(fmt(s.fromOf(ho)), w: 800, s: 13, c: sel ? p.bg : p.ai),
                             ),
                           ),
                         );
@@ -218,7 +218,7 @@ class MapScreen extends StatelessWidget {
                                 const SizedBox(height: 3),
                                 T('${kmLabel(s.kmFor(mh))} ${s.kmFrom} · ${mh.reviews == 0 ? 'New' : 'rated ${jsNum(mh.rating)}'} · ${s.freeOf(mh.id).f} free', s: 12, c: p.mu),
                                 const SizedBox(height: 4),
-                                Rich([sp(context, fmt(mh.from)), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
+                                Rich([sp(context, fmt(s.fromOf(mh))), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
                               ],
                             ),
                           ),

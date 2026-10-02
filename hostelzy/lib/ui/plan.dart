@@ -88,7 +88,7 @@ class PlanScreen extends StatelessWidget {
     final tag = invoiceTag(p, inv);
     final credits = s.ownerCredits.where((c) => c.hid == s.ownHid).toList();
     final (kick, big, sub) = switch (inv.status) {
-      'upcoming' => ('Free trial', '${s.trialLeft} days left', 'Ends ${dayName(trialEnd)}. First invoice ${fmt(s.invoiceAmt)} on ${dayName(inv.due)}.'),
+      'upcoming' => ('Free trial', '${s.trialLeft} days left', 'Ends ${dayName(s.trialEnd)}. First invoice ${fmt(s.invoiceAmt)} on ${dayName(inv.due)}.'),
       'checking' => (planTiers[tier].label, 'Checking your payment', 'UTR ${utrSpaced(inv.utr ?? '')} · usually within a day.'),
       'paid' => (planTiers[tier].label, 'Paid for ${_monthNames[inv.due.month - 1]}', 'Next invoice on ${dayMon(DateTime(inv.due.year, inv.due.month + 1, inv.due.day))}.'),
       'missing' => (planTiers[tier].label, 'Payment not found', 'Check the UTR in your UPI app, or pay again with the QR.'),

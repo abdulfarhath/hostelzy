@@ -495,7 +495,7 @@ class MeScreen extends StatelessWidget {
     final isOwner = s.role == 'owner';
     final rows = <(String, VoidCallback, Color)>[
       if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
-      ('Saved hostels', () => s.toastMsg('${s.saved.values.where((v) => v).length} saved'), p.tx),
+      ('Saved hostels · ${s.saved.values.where((v) => v).length}', () => s.go('saved'), p.tx),
       ('Settings', () => s.go('settings'), p.tx),
       ('Switch role', () => s.tab('role'), p.tx),
       ('Log out', s.logOut, p.ad),
@@ -855,7 +855,7 @@ class DetailScreen extends StatelessWidget {
                       Text('${fmt(dq.move)} walk in', style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
                       T('${fmt(dq.hzMove)} to move in', w: 800, s: 18),
                     ] else ...[
-                      Rich([sp(context, 'From ${fmt(h.from)}'), sp(context, '/mo', s: 12, w: 400, c: p.mu)], w: 800, s: 18),
+                      Rich([sp(context, 'From ${fmt(s.fromOf(h))}'), sp(context, '/mo', s: 12, w: 400, c: p.mu)], w: 800, s: 18),
                       T('$free beds free right now', s: 12, c: p.mu),
                     ],
                   ],
@@ -1603,15 +1603,7 @@ class HoldScreen extends StatelessWidget {
                       OutlineCta('Directions', icon: 'pin', onTap: () => s.directions(hostelById(hold?.hid ?? s.hid))),
                       if (canCancel)
                         Tap(
-                          onTap: () {
-                            final b = s.findBed(hold!.hid, hold.bed).b;
-                            if (b != null) {
-                              b.state = 'free';
-                              b.mine = false;
-                            }
-                            s.setHold(hold.id, 'released');
-                            s.toastMsg('Hold released.');
-                          },
+                          onTap: () => s.releaseHold(hold!, msg: 'Hold released.'),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: T('Release this hold', w: 600, s: 14, c: p.ad),
@@ -1636,6 +1628,71 @@ class HoldScreen extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F18 (D9): the hostels the tenant saved, kept on this phone.
+class SavedScreen extends StatelessWidget {
+  const SavedScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final list = [for (final e in s.saved.entries) if (e.value && hostels.any((h) => h.id == e.key)) hostelById(e.key)];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: 'Me · ${list.length} saved', title: 'Saved hostels', size: 28))]),
+        ),
+        Expanded(
+          child: list.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      T('Nothing saved yet. Tap Save on a hostel to keep it here.', s: 15, c: p.mu, lh: 1.5),
+                      const SizedBox(height: 14),
+                      Cta('Explore hostels', onTap: () => s.tab('explore')),
+                    ],
+                  ),
+                )
+              : Scroll(
+                  child: Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final h in list)
+                          Tap(
+                            onTap: () => s.update(() {
+                              s.hist = [...s.hist, s.screen];
+                              s.screen = 'detail';
+                              s.hid = h.id;
+                              s.dealAc = null;
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(h.name, w: 800, s: 15), T('${h.gender} · ${h.area} · ${kmLabel(s.kmFor(h))} ${s.kmFrom}', s: 12, c: p.mu)])),
+                                  Rich([sp(context, fmt(s.fromOf(h))), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
+                                  const SizedBox(width: 8),
+                                  Tap(onTap: () => s.update(() => s.saved[h.id] = false), child: Ic('x', size: 18, color: p.mu)),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
         ),
       ],
     );

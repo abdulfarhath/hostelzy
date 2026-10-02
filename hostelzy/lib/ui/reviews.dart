@@ -294,7 +294,7 @@ class ResidentReviewScreen extends StatelessWidget {
             gap: 8,
             children: [
               Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postReview),
-              T('Only residents with a confirmed stay can review. One review per stay; you can edit it later.', s: 12, c: p.mu, lh: 1.4),
+              T('Only residents with a confirmed stay can review. One review per stay.', s: 12, c: p.mu, lh: 1.4),
             ],
           ),
         ),

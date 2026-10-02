@@ -935,10 +935,9 @@ void main() {
     await tap(tester, find.text('Send request'));
     expect(l.request, isNull);
     await tester.enterText(find.byType(TextField).first, 'Bed C is against the washroom wall.');
-    await tap(tester, find.text('Room photo'));
     await tap(tester, find.text('Send request'));
     expect(l.request?.text, 'Bed C is against the washroom wall.');
-    expect(l.request?.added, {'photo'});
+    expect(l.request?.added, isEmpty); // no fake photos: they go on WhatsApp
     expect(find.text('Help requested · Hostelzy replies within 48 h'), findsOneWidget);
 
     // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
@@ -1105,8 +1104,12 @@ void main() {
     // Login: no demo fill in release; the resend timer counts down.
     final l = AppState(start: 'phone', role: 'tenant');
     await pumpApp(tester, l);
-    expect(find.text('Privacy policy', findRichText: true), findsNothing);
-    expect(find.textContaining('Privacy policy', findRichText: true), findsOneWidget);
+    // F18 (C1): Terms and Privacy policy are real links.
+    await tap(tester, find.text('Privacy policy'));
+    expect(l.lastLink.toString(), 'https://hostelzy.in/privacy');
+    await tap(tester, find.text('Terms'));
+    expect(l.lastLink.toString(), 'https://hostelzy.in/terms');
+    await tester.pump(const Duration(seconds: 3));
     await tester.enterText(find.byType(TextField).first, 'Asha');
     await tester.enterText(find.byType(TextField).last, '5000000001');
     await tester.pump();
@@ -2081,6 +2084,82 @@ void main() {
     expect((r101.version, r101.w, s.liveLayout('anjani', 101)!.w), (1, w0, w0));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
+  });
+
+  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, passcode lockout (F18)', (tester) async {
+    final s = AppState(start: 'explore', role: 'tenant');
+    s.update(() => s.phone = '9876543210');
+    // A bed that was "free soon" goes back to "free soon" when released (D10).
+    final soon = s.rooms['saisri']!.expand((r) => r.beds).firstWhere((b) => b.state == 'soon');
+    s.update(() {
+      s.hid = 'saisri';
+      s.bed = soon.id;
+    });
+    s.placeHold('free');
+    expect(soon.state, 'held');
+    s.releaseHold(s.holds.last);
+    expect((soon.state, soon.mine, s.holds.last.status), ('soon', false, 'released'));
+    // At most two active holds (D12).
+    final free = s.rooms['nest42']!.expand((r) => r.beds).where((b) => b.state == 'free').take(3).toList();
+    for (final b in free) {
+      s.update(() {
+        s.hid = 'nest42';
+        s.bed = b.id;
+      });
+      s.placeHold('free');
+    }
+    expect((s.activeHolds, free[2].state, s.toast), (2, 'free', 'You can hold 2 beds at a time. Release one in Holds first.'));
+    // The owner releasing the bed updates the tenant's hold record too (F9).
+    s.ownerReleaseBed('nest42', free[0]);
+    expect((free[0].state, s.holds.firstWhere((h) => h.bed == free[0].id).status), ('free', 'released'));
+    // Walk-in holds free themselves after an hour (F8).
+    final w = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free');
+    s.holdWalkIn('anjani', w);
+    expect(w.state, 'held');
+    s.walkIns['anjani|${w.id}'] = 0;
+    await tester.pump(const Duration(seconds: 2)); // the app's 1-second ticker
+    expect(w.state, 'free');
+
+    // Saved hostels list (D9).
+    s.update(() => s.saved['orchid'] = true);
+    await pumpApp(tester, s);
+    s.tab('me');
+    await tester.pump();
+    await tap(tester, find.text('Saved hostels · 1'));
+    expect(s.screen, 'saved');
+    expect(find.text('Orchid Women\'s PG'), findsOneWidget);
+    // Fair Play hours run from when the case opened (F4).
+    final c = FairCase(id: 'x', hid: 'anjani', title: 't', signal: 's', status: 'new', openedAt: s.now - 10 * 3600000);
+    expect(c.hoursLeftAt(s.now).round(), 38);
+    // UPI IDs look like name@bank (F11).
+    expect((validUpiId('srinivas@okaxis'), validUpiId('9059790014@axl'), validUpiId('srinivas'), validUpiId('a@1')), (true, true, false, false));
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+
+    // Owner: a ₹0 price can't be saved; "from ₹X" follows the rate card (D8).
+    final o = AppState(start: 'oToday', role: 'owner');
+    o.openRates();
+    final k0 = o.rateDraft!.keys.first;
+    o.rateDraft![k0] = 0;
+    o.saveRates();
+    expect(o.toast, startsWith('Set a price for'));
+    o.openRates();
+    final cheapest = o.fromOf(hostelById('anjani'));
+    for (final k in o.rateDraft!.keys.toList()) {
+      o.rateDraft![k] = o.rateDraft![k]! + 500;
+    }
+    o.saveRates();
+    expect(o.fromOf(hostelById('anjani')), cheapest + 500);
+    // Team passcode: 5 wrong tries lock it (G1).
+    for (var i = 0; i < 5; i++) {
+      o.teamCode = '0000';
+      o.unlockTeam();
+    }
+    expect(o.toast, 'Too many wrong tries. Team mode is locked for 15 minutes.');
+    o.teamCode = teamPasscode;
+    o.unlockTeam();
+    expect(o.teamUnlocked, isFalse);
+    o.dispose();
   });
 }
 
