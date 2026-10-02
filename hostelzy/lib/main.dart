@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'app_config.dart';
 import 'features/listings/repo.dart';
 import 'push.dart';
+import 'router.dart';
 import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
@@ -56,6 +57,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
     plan: _pick(q['plan'], const ['late5', 'late15', 'checking', 'paid', 'missing']),
   );
   late bool overview = q['page'] == 'overview';
+  late final router = appRouter(state, (_) => HostelzyShell(bare: q['bare'] == 'true', onOpenOverview: () => setState(() => overview = true)));
   late final StreamSubscription<(String, String)> _pushSub;
 
   @override
@@ -95,13 +97,15 @@ class _HostelzyAppState extends State<HostelzyApp> {
   @override
   void dispose() {
     _pushSub.cancel();
+    router.dispose();
     state.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       title: 'Hostelzy',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -114,14 +118,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
       builder: (context, child) => MediaQuery(
         // F18: follow the phone's text size, capped so layouts still fit.
         data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 1.3)),
-        child: child!,
+        child: overview ? OverviewPage(onOpenPrototype: () => setState(() => overview = false)) : AppScope(state: state, child: child!),
       ),
-      home: overview
-          ? OverviewPage(onOpenPrototype: () => setState(() => overview = false))
-          : AppScope(
-              state: state,
-              child: HostelzyShell(bare: q['bare'] == 'true', onOpenOverview: () => setState(() => overview = true)),
-            ),
     );
   }
 }

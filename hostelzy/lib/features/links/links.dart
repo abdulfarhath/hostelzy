@@ -8,9 +8,41 @@ mixin _LinksData {
 
   /// Holds that ran out (shown as "Hold expired").
   final Set<String> expiredHolds = {};
+
+  /// A resident invite code from a link (app/j/), kept until the resident
+  /// signs up with it.
+  String? pendingInvite;
 }
 
 extension LinksActions on AppState {
+
+  /// Deep link app/r/?c=HZ-…: opens that enquiry for its owner, or the
+  /// tenant's holds. Only enquiries this account can see.
+  void openEnquiryLink(String code) {
+    final c = code.trim().toUpperCase();
+    if (!RegExp(r'^HZ-[0-9]{3,8}$').hasMatch(c)) return toastMsg('That link has no HZ code.');
+    final e = enquiries.where((x) => x.ref == c).firstOrNull;
+    if (!signedIn || e == null) return toastMsg('$c isn’t in this account. Sign in with the account that sent or got it.');
+    update(() {
+      hist = [];
+      if (role == 'owner') {
+        screen = 'oToday';
+        enqRef = c;
+        sheet = 'enq';
+      } else {
+        screen = 'holds';
+        sheet = null;
+      }
+    });
+  }
+
+  /// Deep link app/j/?c=…: keeps the invite code for the resident sign-up.
+  void openInviteLink(String code) {
+    final c = code.trim().toUpperCase();
+    if (!RegExp(r'^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$').hasMatch(c)) return toastMsg('That link has no invite code.');
+    update(() => pendingInvite = c);
+    toastMsg('Invite $c saved. Sign in and pick “I live in a Hostelzy PG”.');
+  }
 
   /// Opens another app. Nothing is sent from Hostelzy itself.
   Future<void> openLink(Uri u, String app) async {

@@ -26,3 +26,4 @@ li { margin: 4px 0; }
 .cta.ghost { background: transparent; color: var(--tx); border-color: var(--tx); }
 footer { margin-top: 40px; padding-top: 14px; border-top: 2px solid var(--dv); font-size: 13px; color: var(--mu); }
 footer a { color: var(--mu); margin-right: 14px; }
+[hidden] { display: none !important; }
