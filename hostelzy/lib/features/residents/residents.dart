@@ -108,31 +108,6 @@ extension ResidentsActions on AppState {
     toastMsg('Removed.');
   }
 
-  /// The resident the confirm screen is for (the newest one waiting).
-  Resident? get toConfirm => residents.where((r) => r.bed == cBed).firstOrNull ?? residents.where((r) => !r.confirmed).firstOrNull;
-
-  void confirmStay() {
-    final r = toConfirm;
-    if (r == null) return;
-    if (!cAgree) return toastMsg('Tick “This is correct” first.');
-    // F21: no typed code (nothing sends one). On the server the resident
-    // confirms by joining with the hostel's invite code; approving links it.
-    if (onServer) {
-      return update(() {
-        roleGate = 'resident';
-        hist = [...hist, screen];
-        screen = 'roleGate';
-      });
-    }
-    update(() {
-      cBed = r.bed;
-      r.confirmed = true;
-      r.since = 'Joined ${dayMon(r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday)}';
-      cAgree = false;
-    });
-    toastMsg('Confirmed. Welcome to your stay.');
-  }
-
   /// F16: cheapest rent and free beds for one room type at a hostel, or
   /// null when the hostel has no rooms of that type.
   ({int from, int free})? typeSummary(String hid, bool ac) {

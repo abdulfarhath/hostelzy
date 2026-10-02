@@ -303,30 +303,20 @@ class DeleteDoneScreen extends StatelessWidget {
   }
 }
 
-/// Board 5: explainer before Android's own permission prompt.
+/// Board 5: explainer before Android's own notifications prompt.
 class PermissionScreen extends StatelessWidget {
   const PermissionScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final (icon, title, sub, uses, yes, no) = switch (s.permKind) {
-      'location' => ('pin', 'Use your location?', 'Only to show hostels near you. Owners never see it.', <String>[], 'Use my location', 'Type an area instead'),
-      'camera' => ('camera', 'Allow the camera?', 'To add a photo to a complaint or a layout fix. Only when you tap the camera.', <String>[], 'Allow camera', 'Not now'),
-      _ => ('bell', 'Turn on notifications?', 'Only for things you’d want to know straight away.', ['When the owner confirms your hold', 'Rent reminders, 3 days before'], 'Turn on', 'Not now'),
-    };
+    // The one ask before Android's own prompt. Photos come from the phone's
+    // picker (no camera permission) and location from the Near me sheet.
+    const icon = 'bell', title = 'Turn on notifications?', sub = 'Only for things you’d want to know straight away.', yes = 'Turn on', no = 'Not now';
+    const uses = ['When the owner confirms your hold', 'Rent reminders, 3 days before'];
     void allow() {
       s.back();
-      // F13: notifications ask Android now. Location and camera come later;
-      // nothing is switched on behind the user's back.
-      switch (s.permKind) {
-        case 'location':
-          s.toastMsg('Location comes in a later update. Showing distances from ${s.lm}.');
-        case 'camera':
-          s.toastMsg('Photos come in a later update.');
-        default:
-          s.enablePush();
-      }
+      s.enablePush();
     }
 
     return FillScroll(
@@ -358,10 +348,7 @@ class PermissionScreen extends StatelessWidget {
             const Spacer(),
             Cta(yes, height: 54, px: 16, fs: 15, onTap: allow),
             const SizedBox(height: 8),
-            OutlineCta(no, icon: 'x', onTap: () {
-              s.back();
-              if (s.permKind == 'location') s.openWhere();
-            }),
+            OutlineCta(no, icon: 'x', onTap: s.back),
             const SizedBox(height: 10),
             T('Your phone asks next. Change it any time in Settings.', s: 13, c: p.mu),
           ],

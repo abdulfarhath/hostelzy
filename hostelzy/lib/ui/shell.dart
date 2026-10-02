@@ -404,11 +404,9 @@ class _AppBody extends StatelessWidget {
     'help' => const HelpScreen(),
     'move' => const MoveScreen(),
     'rStay' => const StayScreen(),
-    'rConfirm' => const ConfirmStayScreen(),
     'rReview' => const ResidentReviewScreen(),
     'rExit' => const ExitReviewScreen(),
     'reviews' => const ReviewsScreen(),
-    'oReviews' => const OwnerReviewsScreen(),
     'oRank' => const OwnerRankScreen(),
     'oRules' => const OwnerRulesScreen(),
     'oCase' => const OwnerCaseScreen(),
@@ -579,13 +577,13 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
+      'foodWeek' => 'Food menu',
       'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
       'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
-      'areas' => 'Pick an area',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
         'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
@@ -596,7 +594,6 @@ class _Sheet extends StatelessWidget {
       'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
-      'joined' => 'Did you join ${hostelById(s.endedHold?.hid ?? s.stayHostel.id).name}?',
       'report' => 'Tell us what happened',
       'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
@@ -622,8 +619,7 @@ class _Sheet extends StatelessWidget {
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
-      'loc' || 'areas' => 'Map',
-      'joined' => 'One quick question',
+      'loc' => 'Map',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom}',
@@ -647,6 +643,7 @@ class _Sheet extends StatelessWidget {
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
+      'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
       _ => null,
     };
@@ -657,7 +654,6 @@ class _Sheet extends StatelessWidget {
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
-      'areas' => const AreasSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
@@ -665,7 +661,6 @@ class _Sheet extends StatelessWidget {
       'enq' => const _EnquirySheet(),
       'addR' => const _AddResidentSheet(),
       'rank' => const RankSheet(),
-      'joined' => const JoinedSheet(),
       'report' => const ReportSheet(),
       'trusted' => const TrustedSheet(),
       'utr' => const UtrSheet(),
@@ -687,6 +682,7 @@ class _Sheet extends StatelessWidget {
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
       'amFloor' => const AmenityFloorSheet(),
+      'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
       _ => const SizedBox(),
     };

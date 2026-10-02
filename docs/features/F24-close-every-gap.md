@@ -108,3 +108,40 @@ Add a manager. Picker frame: Floor view opens first only for guests or rooms wit
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
+
+## Build
+**Wave A item 4: food menu, plus item 24 and dead code.** Branch `feature/food-menu-live`.
+- **Menu on the server (`menus`).**
+  - The owner opens Manage › Food menu. It loads that hostel's week and starts empty: the sample week only appears in demo builds.
+  - A week typed on the phone before (F18) is offered as "Not saved yet".
+  - **Save menu** writes all 7 days. Offline, nothing is lost.
+  - The note under the menu says "Residents see this week in their Food tab" only after saving.
+- **Resident.** Home "Today's food" and Food load the menu every time they open, so an owner's save shows the next time Food or Home opens. "hasn't put the menu on Hostelzy yet" shows only when there's truly no menu.
+- **Breakfast rating.**
+  - Good / Okay / Poor goes to `rate_meal`: confirmed residents only, one answer per meal per day.
+  - The owner sees "Residents this week: Breakfast: N good · N okay · N poor" on the Food menu page, from `meal_votes`, as counts only.
+  - The copy says the owner sees how many, never who.
+- **Tenant (boards `new-foodPeek` and `new-foodWeek`, Design v21).**
+  - The hostel page shows "Food menu · today, <day>": Breakfast, Lunch and Dinner, each with its time, then **Whole week ›**.
+  - Whole week opens the Food menu sheet: Mon–Sun chips and three meals, with no rating.
+  - A hostel that serves food but has no menu says "Menu not added yet". A hostel without food shows nothing.
+  - The page loads the menu each time it opens.
+- **Owner editor matches the v21 `menu` board.**
+  - The footer note reads "Residents and tenants see it after you tap Save".
+  - An empty hostel says "No menu yet. Tenants see "Menu not added yet"…".
+  - Placeholders read "What's for breakfast?" and so on.
+  - Save stays off until something changes.
+  - The button reads **Save menu**, not "Save Monday": it saves the whole week.
+- **SQL: `20261002230000_food_menu.sql`** (FOUNDER-TODO **4v**).
+  - Anyone can read a live hostel's menu.
+  - New `meal_ratings` table, with no read policy.
+  - New functions `rate_meal` and `meal_votes`.
+  - Tests: `supabase/tests/food_test.sql`.
+- **Item 24, Confirm your stay: removed (Build's call, as the Ideas chat allowed).** On the server, the owner approving the invite sign-up is the confirmation: the stay is created confirmed. A second "Yes, that's right" screen would ask the resident to confirm something already done.
+- **Item 24, camera explainer: not added.**
+  - Photos come from Android's photo picker, which needs no camera permission. An "Allow the camera?" screen would ask for something the app never uses.
+  - The permission screen is now notifications only. The "Location / Photos come in a later update" toasts are gone; location uses the Near me sheet.
+  - This matches Design v21 retiring permL/permC.
+- **Removed dead code:** the `oReviews` route (Manage goes to oRank), the `areas` sheet, the `joined` sheet (Holds has the inline "Did you join?" card) and the `rConfirm` screen.
+- **Not in this PR:** "meal reminders use the menu's real times". `menus` has no times yet, and reminders use the fixed meal times shown in Food.
+- **Tests:** `test/food_test.dart` (resident, owner on a fake server, an empty new hostel, the tenant peek and week sheet, 2× text). PR #77. Updated: flows, owner_manage, resident, start, tenant.

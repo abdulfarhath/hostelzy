@@ -169,6 +169,16 @@ abstract class HostelRepo {
   /// hostel); returns the row id. Residents: at most 20 changes a day.
   Future<String> saveAmenity(Amenity a);
   Future<void> removeAmenity(String key);
+
+  /// A hostel's food menu, Monday first (null when it has none); anyone can
+  /// read a live hostel's. Staff save the whole week at once.
+  Future<List<DayMenu>?> menu(String hid);
+  Future<void> saveMenu(String hid, List<DayMenu> week);
+
+  /// A resident's Good / Okay / Poor for today's [meal] ('b', 'l' or 'n');
+  /// staff get this week's counts per meal, never who.
+  Future<void> rateMeal(String hid, String meal, String rating);
+  Future<Map<String, Map<String, int>>> mealVotes(String hid);
 }
 
 class SampleRepo implements HostelRepo {
@@ -296,6 +306,15 @@ class SampleRepo implements HostelRepo {
 
   @override
   Future<void> removeAmenity(String key) async {}
+
+  @override
+  Future<List<DayMenu>?> menu(String hid) async => null;
+  @override
+  Future<void> saveMenu(String hid, List<DayMenu> week) async {}
+  @override
+  Future<void> rateMeal(String hid, String meal, String rating) async {}
+  @override
+  Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -618,6 +637,26 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> removePushToken(String token) => db.from('push_tokens').delete().eq('token', token);
+
+  @override
+  Future<List<DayMenu>?> menu(String hid) async => menuFromRows(await db.from('menus').select('day, breakfast, lunch, dinner').eq('hostel_id', hid));
+
+  @override
+  Future<void> saveMenu(String hid, List<DayMenu> week) => db.from('menus').upsert([
+    for (final (i, d) in week.indexed) {'hostel_id': hid, 'day': i, 'breakfast': d.b.trim(), 'lunch': d.l.trim(), 'dinner': d.n.trim()},
+  ], onConflict: 'hostel_id,day');
+
+  @override
+  Future<void> rateMeal(String hid, String meal, String rating) => db.rpc('rate_meal', params: {'p_hostel': hid, 'p_meal': meal, 'p_rating': rating});
+
+  @override
+  Future<Map<String, Map<String, int>>> mealVotes(String hid) async {
+    final out = <String, Map<String, int>>{};
+    for (final r in (await db.rpc('meal_votes', params: {'p_hostel': hid}) as List).cast<Map<String, dynamic>>()) {
+      out.putIfAbsent(r['meal'] as String, () => {})[r['rating'] as String] = (r['n'] as num).toInt();
+    }
+    return out;
+  }
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
@@ -751,3 +790,14 @@ Amenity amenityFromRow(Map<String, dynamic> r) => Amenity(
   byResident: r['by_role'] == 'resident',
   at: DateTime.parse(r['updated_at'] as String? ?? r['created_at'] as String).millisecondsSinceEpoch,
 );
+
+/// `menus` rows → the week, Monday first; null when there are none.
+List<DayMenu>? menuFromRows(List<Map<String, dynamic>> rows) {
+  if (rows.isEmpty) return null;
+  final w = List<DayMenu>.filled(7, const DayMenu('', '', ''));
+  for (final r in rows) {
+    final d = (r['day'] as num).toInt();
+    if (d >= 0 && d < 7) w[d] = DayMenu(r['breakfast'] as String? ?? '', r['lunch'] as String? ?? '', r['dinner'] as String? ?? '');
+  }
+  return w;
+}

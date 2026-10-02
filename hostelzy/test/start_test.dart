@@ -102,16 +102,14 @@ void main() {
     o.dispose();
   });
 
-  testWidgets('F22 Area 5: location and camera asks are short; Delete account is two lists', (tester) async {
+  testWidgets('F22 Area 5: the one permission ask is notifications; Delete account is two lists', (tester) async {
+    // Photos come from the phone's picker (no camera permission); location from the Near me sheet.
     final s = AppState(start: 'perm');
-    s.permKind = 'camera';
     await _pump(tester, s);
-    expect(find.text('Allow the camera?'), findsOneWidget);
-    expect(find.text('Allow camera'), findsOneWidget);
+    expect(find.text('Turn on notifications?'), findsOneWidget);
     expect(find.text('Your phone asks next. Change it any time in Settings.'), findsOneWidget);
-    s.update(() => s.permKind = 'location');
-    await tester.pump();
-    expect(find.text('Only to show hostels near you. Owners never see it.'), findsOneWidget);
+    expect(find.textContaining('camera'), findsNothing);
+    expect(find.textContaining('later update'), findsNothing);
     s.dispose();
 
     final d = AppState(start: 'delAcc', role: 'tenant');

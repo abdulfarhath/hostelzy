@@ -379,7 +379,7 @@ class ExitReviewScreen extends StatelessWidget {
 
 /// F08 boards 5 and 6, F22 Area 3: Reviews and ranking on one page: the
 /// rating and rank tiles, what would raise the rank, then every review with
-/// Reply ('oRank' and 'oReviews' both show it).
+/// Reply ('oRank' shows it).
 class OwnerReviewsScreen extends StatelessWidget {
   const OwnerReviewsScreen({super.key});
   @override

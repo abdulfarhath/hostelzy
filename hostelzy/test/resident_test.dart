@@ -90,7 +90,9 @@ void main() {
     expect(find.text('How was breakfast?'), findsOneWidget);
     await _tap(tester, find.text('Good'));
     expect(s.rated, 'Good');
-    expect(find.text('Goes to the kitchen without your name.'), findsOneWidget);
+    expect(find.text('Srinivas sees how many said each, never your name.'), findsOneWidget);
+    expect(s.toast, 'Thanks. Srinivas sees how many said Good, not who.');
+    expect(s.mealVotes['b']!['good'], 10);
     await tester.pump(const Duration(seconds: 3));
     // Another day: no tags, no feedback.
     await _tap(tester, find.byKey(ValueKey('day-${(todayIdx + 1) % 7}')));

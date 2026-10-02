@@ -122,16 +122,18 @@ void main() {
     expect(find.text('Copy Friday to Saturday'), findsOneWidget);
     await tester.enterText(find.byType(EditableText).first, 'Masala dosa');
     await tester.pump();
-    expect(s.menu[4].b, 'Masala dosa');
+    final m = s.menuDraft!;
+    expect(m[4].b, 'Masala dosa');
+    expect(find.text('Not saved yet. Residents and tenants see it after you tap Save.'), findsOneWidget);
     await _tap(tester, find.text('Copy Friday to Saturday'));
-    expect((s.menu[5].b, s.menu[5].l, s.menu[5].n), (s.menu[4].b, s.menu[4].l, s.menu[4].n));
+    expect((s.menuDraft![5].b, s.menuDraft![5].l, s.menuDraft![5].n), (m[4].b, m[4].l, m[4].n));
     expect(s.toast, 'Saturday now has Friday’s menu.');
     // Sunday copies to Monday.
     await _tap(tester, find.byKey(const ValueKey('menuDay-6')));
     expect(find.text('Copy Sunday to Monday'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3)); // let the toast go
-    await _tap(tester, find.byKey(const ValueKey('menuDone')));
-    expect(s.moreTab, 'home');
+    await _tap(tester, find.byKey(const ValueKey('menuSave')));
+    expect((s.moreTab, s.menuOf('anjani')![4].b, s.menuOf('anjani')![5].b), ('home', 'Masala dosa', 'Masala dosa'));
     s.dispose();
   });
 
@@ -166,10 +168,6 @@ void main() {
     s.update(() => s.strikes['anjani'] = 1);
     await tester.pump();
     expect(find.textContaining('Fair Play strikes'), findsOneWidget);
-    // The same page at 'oReviews'.
-    s.jump('oReviews', 'owner');
-    await tester.pump();
-    expect(find.text('Reviews and ranking'), findsOneWidget);
     s.dispose();
   });
 

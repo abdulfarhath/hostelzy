@@ -171,9 +171,16 @@ void main() {
   testWidgets('owner menu edits show in the resident Food tab', (tester) async {
     final s = AppState(start: 'oMore', role: 'owner', moreTab: 'menu');
     await pumpApp(tester, s);
+    s.update(() => s.mDay = todayIdx);
+    await tester.pump();
     await tester.enterText(find.byType(EditableText).first, 'Masala dosa');
     await tester.pump();
-    expect(s.menu[3].b, 'Masala dosa');
+    expect(s.menuDraft![todayIdx].b, 'Masala dosa');
+    // Not on the resident's side until it's saved.
+    expect(s.menuOf('anjani')![todayIdx].b, isNot('Masala dosa'));
+    await tap(tester, find.byKey(const ValueKey('menuSave')));
+    expect((s.menuOf('anjani')![todayIdx].b, s.moreTab, s.menuDirty), ('Masala dosa', 'home', false));
+    expect(s.toast, 'Menu saved. Residents see it in their Food tab now.');
     s.jump('rHome', 'resident');
     await tester.pump();
     expect(find.text('Masala dosa'), findsOneWidget);
@@ -384,19 +391,6 @@ void main() {
     expect(s.unassignedBeds, ['202-B']);
     expect(find.text('1 taken bed has no resident'), findsOneWidget);
 
-    // Resident checks the details and confirms (F21: no fake code); now counted as Via Hostelzy.
-    s.jump('rConfirm', 'resident');
-    await tester.pump();
-    expect(find.text('You live in Anjani Residency, bed 103-A.'), findsOneWidget);
-    expect(find.textContaining('back when you leave.'), findsOneWidget);
-    expect(find.textContaining('code'), findsNothing);
-    await tap(tester, find.text('Yes, that’s right'));
-    expect((added.confirmed, s.toast), (false, 'Tick “This is correct” first.'));
-    await tap(tester, find.byKey(const ValueKey('stayAgree')));
-    await tap(tester, find.text('Yes, that’s right'));
-    expect(added.confirmed, isTrue);
-    expect(added.tag, 'hz');
-    expect(find.text('You’re confirmed'), findsOneWidget);
     s.dispose();
   });
 
@@ -685,7 +679,7 @@ void main() {
     // F22 Area 3: one page; no strikes, so no strike tip.
     expect(find.textContaining('To rank higher: '), findsOneWidget);
     expect(find.textContaining('Fair Play strikes'), findsNothing);
-    s.jump('oReviews', 'owner');
+    s.jump('oRank', 'owner');
     await tester.pump();
     final waiting = s.reviews.where((r) => r.hid == 'anjani' && r.reply == null).length;
     expect(find.text('Reply'), findsNWidgets(waiting));
@@ -776,9 +770,7 @@ void main() {
     expect(s.holdSecs, 3600);
 
     // "Yes, I joined" (F07) makes the tenant a Member.
-    s.update(() => s.sheet = 'joined');
-    await tester.pump();
-    await tap(tester, find.text('Yes, I joined'));
+    s.answerJoined('yes');
     expect(s.level, 'member');
     expect(s.holdSecs, 7200);
     await tester.pump();
@@ -2682,14 +2674,6 @@ void main() {
     expect(fake.calls.single, 'stay ${s.ownHid} bed-key Ravi Kumar 9876500002 7000 3000');
     expect((s.residents.single.name, s.sheet, r0.beds[i].state), ('Ravi Kumar', null, 'booked'));
     expect(s.toast, 'Added. Ravi confirms by joining with your invite code.');
-    // F21: no typed code. On the server the resident confirms by joining with the invite.
-    s.update(() {
-      s.cBed = '101-A';
-      s.cAgree = true;
-    });
-    s.confirmStay();
-    expect(s.screen, 'roleGate');
-    expect(s.residents.single.confirmed, isFalse);
     // A tenant's free hold: the owner confirms it, or declines it (no advance is touched).
     final h = Hold(id: 'hold-x', hid: s.ownHid, bed: '101-A', room: 101, opt: 'free', start: DateTime.now().millisecondsSinceEpoch, status: 'waiting', ref: 'HZ-5020');
     s.update(() => s.holds = [h]);

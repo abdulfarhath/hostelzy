@@ -284,33 +284,6 @@ class OwnerContact extends StatelessWidget {
   }
 }
 
-/// F07 board 3: asked after a hold ends.
-class JoinedSheet extends StatelessWidget {
-  const JoinedSheet({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-      child: VGap(
-        gap: 12,
-        children: [
-          Rich([sp(context, 'You held '), sp(context, 'bed ${s.endedHold?.bed ?? '102-B'}', w: 800), sp(context, s.endedHold != null ? ' at ${hostelById(s.endedHold!.hid).name}. Your answer' : ' on 11 Sep. Your answer keeps deals honest and unlocks your '), sp(context, '₹100 Member reward', w: 800, c: p.gn), sp(context, ' for your next stay.')], s: 14, lh: 1.45),
-          Cta('Yes, I joined', icon: 'check', height: 54, px: 16, fs: 15, onTap: () => s.answerJoined('yes')),
-          OutlineCta('No, I didn’t join', icon: 'x', height: 50, onTap: () => s.answerJoined('no')),
-          OutlineCta('Still deciding', icon: 'clock', height: 50, onTap: () => s.answerJoined('later')),
-          Tap(
-            onTap: () => s.update(() => s.sheet = 'report'),
-            child: SizedBox(height: 44, child: Row(children: [Ic('flag', size: 16, color: p.ad), const SizedBox(width: 8), T('The owner asked me to skip the app', s: 14, w: 800, c: p.ad)])),
-          ),
-          T('Only Hostelzy sees your answer.', s: 12, c: p.mu),
-        ],
-      ),
-    );
-  }
-}
-
 /// F07 board 4: a private report.
 class ReportSheet extends StatelessWidget {
   const ReportSheet({super.key});

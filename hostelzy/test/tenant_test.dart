@@ -237,24 +237,11 @@ void main() {
 
   testWidgets('F22 Area 1: the notifications ask promises only what the app does', (tester) async {
     final s = AppState(start: 'perm', role: 'tenant');
-    s.permKind = 'notifications';
     await _pump(tester, s);
     expect(find.text('Turn on notifications?'), findsOneWidget);
     expect(find.text('When the owner confirms your hold'), findsOneWidget);
     expect(find.text('Rent reminders, 3 days before'), findsOneWidget);
     expect(find.textContaining('about to end'), findsNothing);
     s.dispose();
-
-    // Location: "Not now" goes to typing an area.
-    final l = AppState(start: 'explore', role: 'tenant');
-    await _pump(tester, l);
-    l.update(() {
-      l.permKind = 'location';
-      l.go('perm');
-    });
-    await tester.pump();
-    await _tap(tester, find.text('Type an area instead'));
-    expect(l.screen, 'where');
-    l.dispose();
   });
 }
