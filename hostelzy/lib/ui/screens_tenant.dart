@@ -142,14 +142,21 @@ class ExploreScreen extends StatelessWidget {
                 for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
+                  // F22 Area 1: what to do next, not just "nothing here".
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-                    child: VGap(
-                      gap: 10,
+                    padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                    child: Column(
                       children: [
-                        T(s.mapArea != null ? 'No hostels in ${s.mapArea} yet' : 'No hostels in this area yet', w: 800, s: 20),
-                        T('Hostelzy is adding hostels area by area, after a visit to each one. Check back soon, or try another area.', s: 14, c: p.mu, lh: 1.45),
-                        Align(alignment: Alignment.centerLeft, child: Tap(onTap: s.openWhere, child: Container(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14), decoration: box(w: 2, c: p.tx), child: const T('Pick another area', w: 800, s: 14)))),
+                        Container(width: 64, height: 64, alignment: Alignment.center, color: p.sf, child: const Ic('search', size: 30)),
+                        const SizedBox(height: 12),
+                        T(s.mapArea != null ? 'No hostels in ${s.mapArea} yet' : 'No hostels in this area yet', w: 800, s: 22, align: TextAlign.center),
+                        const SizedBox(height: 8),
+                        T('We add hostels area by area, after we visit each one. Try a nearby area.', s: 15, c: p.mu, lh: 1.5, align: TextAlign.center),
+                        const SizedBox(height: 14),
+                        if (s.nearbyArea case final a?)
+                          Cta('Try $a', key: const ValueKey('tryArea'), height: 50, px: 16, fs: 15, expand: false, onTap: () => s.pickWhereArea(a))
+                        else
+                          OutlineCta('Pick another area', icon: 'pin', onTap: s.openWhere),
                       ],
                     ),
                   )

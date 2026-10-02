@@ -1213,13 +1213,11 @@ void main() {
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
     expect(find.text('Gachibowli'), findsOneWidget); // other landmarks are labelled
     final mh = hostelById(s.mapSel);
-    expect(find.text('${kmLabel(kmTo(mh, 'Hitec City'))} from Hitec City · rated ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
+    // F22 Area 1: one card with one facts line, the real cost and View.
+    expect(find.text('${mh.gender} · ${kmLabel(kmTo(mh, 'Hitec City'))} · ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
     await tap(tester, find.text(fmt(hostelById('greenview').from)));
     expect(s.mapSel, 'greenview');
-    await tap(tester, find.text('Directions'));
-    expect(s.lastLink.toString(), 'https://www.google.com/maps/dir/?api=1&destination=17.464,78.356');
-    await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('View hostel'));
+    await tap(tester, find.byKey(const ValueKey('mapView')));
     expect((s.screen, s.hid), ('detail', 'greenview'));
     s.dispose();
 
@@ -1362,11 +1360,11 @@ void main() {
     // The map's my-location button explains before asking; it never fakes a spot.
     final m = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, m);
-    await tap(tester, find.text('Use my location'));
+    await tap(tester, find.byKey(const ValueKey('mapLoc')));
     expect((m.screen, m.sheet), ('map', 'loc'));
     expect(find.text('Use your location?'), findsOneWidget);
-    await tap(tester, find.text('Pick an area instead'));
-    expect((m.screen, m.sheet, m.myPos), ('map', 'areas', null));
+    await tap(tester, find.text('Type an area instead'));
+    expect((m.screen, m.sheet, m.myPos), ('where', null, null));
     m.dispose();
   });
 
@@ -2144,18 +2142,18 @@ void main() {
     // Use my location: explainer first, then the map centres on you and sorts by distance.
     final loc = _FakeLocator((17.4610, 78.3610));
     s.locator = loc;
-    await tap(tester, find.text('Use my location'));
+    await tap(tester, find.byKey(const ValueKey('mapLoc')));
     expect((s.sheet, loc.asked), ('loc', 0));
     await tap(tester, find.text('Allow location'));
     await tester.pump();
     expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'near', 'Near me'));
     expect(find.byKey(const ValueKey('youAreHere')), findsOneWidget);
-    expect(find.textContaining('km from you'), findsWidgets);
+    expect(s.kmFrom, 'from you');
     await tester.pump(const Duration(seconds: 3));
     // Denied: no position is invented; the area picker opens instead.
     final d = AppState(start: 'map', role: 'tenant')..locator = _FakeLocator(null, LocateFail.denied);
     await d.useMyLocation();
-    expect((d.myPos, d.sheet, d.toast), (null, 'areas', 'No problem. Pick an area instead.'));
+    expect((d.myPos, d.screen, d.toast), (null, 'where', 'No problem. Type an area instead.'));
     d.dispose();
 
     // Search this area: after a pan, hostels within 3 km of the new centre.

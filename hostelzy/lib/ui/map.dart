@@ -7,12 +7,13 @@ import '../map_config.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
-import 'screens_tenant.dart' show WhereBar, filtered;
+import 'photos.dart';
+import 'screens_tenant.dart' show WhereBar, cardCost, filtered;
 
-// F17 board 9 + F18 "Map v2": a real map (OpenStreetMap tiles, attribution
-// shown) with price pins for the hostels that match the filters, an area
-// picker, "Search this area" after a pan, "Use my location" (explainer, then
-// Android asks), and a card with distance, Directions and View hostel.
+// F17 board 9 + F18 "Map v2" + F22 Area 1: a real map (OpenStreetMap tiles,
+// attribution shown) with price pins for the hostels that match the filters,
+// the "Where?" field and a location button on top, "Search this area" after a
+// pan, and one photo card with the real cost and View.
 
 /// Tiles load from the network; flow tests turn them off.
 bool mapTiles = true;
@@ -110,25 +111,24 @@ class MapScreen extends StatelessWidget {
             ],
           ),
         ),
-        // Design "Map v2": area picker + List.
+        // F22 Area 1: the one "Where?" field on top, with a location button.
         Positioned(
-          top: 10,
+          top: 12,
           left: 12,
           right: 12,
           child: Row(
             children: [
               Expanded(
-                // F21 W2: the same "Where?" field as Explore.
-                child: KeyedSubtree(key: const ValueKey('mapArea'), child: WhereBar(onTap: s.openWhere, height: 46)),
+                child: KeyedSubtree(key: const ValueKey('mapArea'), child: WhereBar(onTap: s.openWhere, height: 50)),
               ),
               const SizedBox(width: 8),
+              // Explainer first; Android asks only after "Allow location".
               Tap(
-                onTap: () => s.tab('explore'),
-                child: Container(
-                  height: 46,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: box(bg: p.bg, w: 2, c: p.tx),
-                  child: const Row(children: [Ic('list', size: 16), SizedBox(width: 6), T('List', s: 14, w: 800)]),
+                key: const ValueKey('mapLoc'),
+                onTap: () => s.update(() => s.sheet = 'loc'),
+                child: Semantics(
+                  label: 'Use my location',
+                  child: Container(width: 50, height: 50, alignment: Alignment.center, decoration: box(bg: p.bg, w: 2, c: p.tx), child: const Ic('pin', size: 20)),
                 ),
               ),
             ],
@@ -136,17 +136,17 @@ class MapScreen extends StatelessWidget {
         ),
         if (s.mapMoved)
           Positioned(
-            top: 68,
+            top: 74,
             left: 0,
             right: 0,
             child: Center(
               child: Tap(
                 onTap: s.searchThisArea,
                 child: Container(
-                  height: 38,
+                  height: 40,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   color: p.tx,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('search', size: 14, color: p.bg), const SizedBox(width: 6), T('Search this area', s: 13, w: 800, c: p.bg)]),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('search', size: 16, color: p.bg), const SizedBox(width: 6), T('Search this area', s: 14, w: 800, c: p.bg)]),
                 ),
               ),
             ),
@@ -158,23 +158,8 @@ class MapScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T(mapAttribution, s: 10, c: p.mu)),
-                  const Spacer(),
-                  // Explainer first; Android asks only after "Allow location".
-                  Tap(
-                    onTap: () => s.update(() => s.sheet = 'loc'),
-                    child: Container(
-                      height: 46,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: box(bg: p.bg, w: 2, c: p.tx),
-                      child: const Row(mainAxisSize: MainAxisSize.min, children: [Ic('pin', size: 16), SizedBox(width: 8), T('Use my location', s: 14, w: 800)]),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
+              Align(alignment: Alignment.centerRight, child: Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T(mapAttribution, s: 10, c: p.mu))),
+              const SizedBox(height: 6),
               if (mh == null)
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -184,61 +169,78 @@ class MapScreen extends StatelessWidget {
                     children: [
                       T('No hostels ${s.mapArea != null ? 'in ${s.mapArea}' : 'here'} yet', w: 800, s: 16),
                       const SizedBox(height: 4),
-                      T('Hostelzy is adding hostels area by area. Try another area or clear the filters.', s: 13, c: p.mu),
+                      T('We add hostels area by area, after we visit each one. Try a nearby area.', s: 13, c: p.mu),
                       const SizedBox(height: 10),
-                      OutlineCta('Pick another area', icon: 'pin', height: 46, fs: 14, onTap: s.openWhere),
+                      if (s.nearbyArea case final a?) Cta('Try $a', height: 46, px: 14, fs: 14, onTap: () => s.pickWhereArea(a)) else OutlineCta('Pick another area', icon: 'pin', height: 46, fs: 14, onTap: s.openWhere),
                     ],
                   ),
                 )
               else
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: box(bg: p.bg, w: 2, c: p.tx),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Stripes(step: 6, width: 64, height: 64, border: Border.all(width: 1, color: p.hl)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                T(mh.name, w: 800, s: 16, lh: 1.15),
-                                const SizedBox(height: 3),
-                                T('${kmLabel(s.kmFor(mh))} ${s.kmFrom} · ${mh.reviews == 0 ? 'New' : 'rated ${jsNum(mh.rating)}'} · ${s.freeOf(mh.id).f} free', s: 12, c: p.mu),
-                                const SizedBox(height: 4),
-                                Rich([sp(context, fmt(s.fromOf(mh))), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(child: Cta('Directions', icon: 'pin', height: 46, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.directions(mh))),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Cta('View hostel', height: 46, px: 12, fs: 14, onTap: () => s.update(() {
-                              s.hist = [...s.hist, s.screen];
-                              s.screen = 'detail';
-                              s.sheet = null;
-                              s.hid = mh.id;
-                              s.dealAc = null;
-                            })),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                MapCard(mh),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// F22 Area 1: the map's one card: photo, name, one facts line, the real
+/// cost and View.
+class MapCard extends StatelessWidget {
+  const MapCard(this.h, {super.key});
+  final Hostel h;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final photos = s.photosOf[h.id] ?? const [];
+    final cost = cardCost(s, h);
+    return Container(
+      decoration: box(bg: p.bg, w: 2, c: p.tx),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 112,
+              child: CustomPaint(
+                painter: Hatch(p.sf, 8, 16, base: p.bg),
+                child: Stack(children: [
+                  Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
+                  if (photos.isEmpty) Positioned(left: 6, bottom: 4, child: T('No photos yet', s: 11, c: p.mu)),
+                ]),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    T(h.name, w: 800, s: 16, lh: 1.15),
+                    const SizedBox(height: 3),
+                    T('${h.gender} · ${kmLabel(s.kmFor(h))} · ${h.reviews == 0 ? 'New' : jsNum(h.rating)} · ${s.freeOf(h.id).f} free', s: 13, c: p.mu),
+                    if (cost != null) ...[
+                      const SizedBox(height: 3),
+                      Rich([sp(context, '${fmt(cost.fee)}/mo', w: 800), sp(context, ' · ${fmt(cost.move)} to move in')], s: 14),
+                    ],
+                    const SizedBox(height: 8),
+                    Cta('View', key: const ValueKey('mapView'), height: 40, px: 14, fs: 14, onTap: () => s.update(() {
+                      s.hist = [...s.hist, s.screen];
+                      s.screen = 'detail';
+                      s.sheet = null;
+                      s.hid = h.id;
+                      s.dealAc = null;
+                      s.rulesOpen = false;
+                    })),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -255,7 +257,7 @@ class LocationSheet extends StatelessWidget {
       child: VGap(
         gap: 12,
         children: [
-          const T('We use it only to show hostels near you and how far they are. Owners never see where you are.', s: 15, lh: 1.5),
+          T('Only to show hostels near you and how far they are. Owners never see where you are.', s: 15, c: p.mu, lh: 1.5),
           Tap(
             onTap: s.useMyLocation,
             child: Container(
@@ -270,8 +272,7 @@ class LocationSheet extends StatelessWidget {
               ),
             ),
           ),
-          OutlineCta('Pick an area instead', icon: 'pin', onTap: () => s.update(() => s.sheet = 'areas')),
-          T('You can change this in Settings.', s: 12, c: p.mu),
+          OutlineCta('Type an area instead', icon: 'search', onTap: s.openWhere),
         ],
       ),
     );

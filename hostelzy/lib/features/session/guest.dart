@@ -122,6 +122,15 @@ extension GuestActions on AppState {
     fDeals = false;
   });
 
+  /// F22 Area 1: the nearest area that has hostels (for "Try Hitec City").
+  String? get nearbyArea {
+    final from = areaLatLng[mapArea] ?? areaCenter ?? myPos ?? landmarkLatLng[lm];
+    final have = [for (final a in mapAreas) if (a != mapArea && browsable.any((h) => h.area == a && !removed(h.id))) a];
+    if (have.isEmpty || from == null) return have.firstOrNull;
+    have.sort((a, b) => kmBetween(areaLatLng[a] ?? from, from).compareTo(kmBetween(areaLatLng[b] ?? from, from)));
+    return have.first;
+  }
+
   /// What the "Where?" bar shows.
   String get whereLabel => mapArea ?? (areaCenter != null ? 'This area on the map' : myPos != null ? 'Near me' : 'Near $lm');
 
