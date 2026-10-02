@@ -445,10 +445,12 @@ class _AppBody extends StatelessWidget {
 const _tabs = {
   'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('saved', 'Saved', 'heart'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
   'resident': [('rHome', 'Home', 'home'), ('food', 'Food', 'utensils'), ('rPay', 'Pay rent', 'wallet'), ('help', 'Help', 'wrench'), ('me', 'Me', 'user')],
-  'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Booking', 'plus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
+  'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Add tenant', 'userPlus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
 };
 
 void _openTab(AppState s, String k) {
+  // F21 W3: Manage opens on its list.
+  if (k == 'oMore') s.moreTab = 'home';
   if (k != '*') return s.tab(k);
   s.update(() {
     s.sheet = 'add';
@@ -567,6 +569,7 @@ class _Sheet extends StatelessWidget {
     final p = PalScope.of(context);
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
+      'cPhoto' => 'Photo',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
@@ -578,7 +581,7 @@ class _Sheet extends StatelessWidget {
         _ => 'Sign in to hold this bed',
       },
       'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
-      'add' => 'Add a booking',
+      'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'joined' => 'Did you join ${hostelById(s.endedHold?.hid ?? s.stayHostel.id).name}?',
@@ -636,6 +639,7 @@ class _Sheet extends StatelessWidget {
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'holdNotify' => const HoldNotifySheet(),
+      'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
       'areas' => const AreasSheet(),

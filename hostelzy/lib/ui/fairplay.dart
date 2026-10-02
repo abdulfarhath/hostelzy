@@ -417,7 +417,7 @@ class OwnerCaseScreen extends StatelessWidget {
                               color: p.ac,
                               child: Row(
                                 children: [
-                                  Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [T('Change $first to Via Hostelzy', w: 800, s: 15, c: p.ai), T('A mistake fixed within 48 h: case closed, no strike', s: 11, w: 600, c: p.ai)])),
+                                  Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [T('Change $first to “Came from the app”', w: 800, s: 15, c: p.ai), T('A mistake fixed within 48 h: case closed, no strike', s: 11, w: 600, c: p.ai)])),
                                   Ic('check', size: 18, color: p.ai),
                                 ],
                               ),

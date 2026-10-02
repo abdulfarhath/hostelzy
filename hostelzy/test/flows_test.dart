@@ -113,8 +113,9 @@ void main() {
     // The same hold shows up in the owner's request inbox.
     s.jump('oToday', 'owner');
     await tester.pump();
-    expect(find.text('Bed $bed · Free hold'), findsOneWidget);
-    await tap(tester, find.text('Confirm hold').first);
+    // F21 W3: it's in "Needs you now" with its countdown.
+    expect(find.text('Hold on bed $bed'), findsOneWidget);
+    await tap(tester, find.text('Confirm hold').last); // soonest first: the new hold has the most time left
     expect(s.holds.single.status, 'confirmed');
     s.dispose();
   });
@@ -174,11 +175,13 @@ void main() {
     await pumpApp(tester, s);
     await tester.enterText(find.byType(EditableText).first, 'Fan is broken');
     await tester.pump();
-    await tap(tester, find.text('Send to warden'));
+    await tap(tester, find.text('Send to owner'));
     expect(s.complaints.last.text, 'Fan is broken');
+    // F21 W3: it shows inline as Sent.
+    expect(find.text('SENT'), findsWidgets);
     s.jump('oMore', 'owner');
     await tester.pump();
-    await tap(tester, find.text('Complaints'));
+    await tap(tester, find.byKey(const ValueKey('manage-Complaints')));
     expect(find.text('Fan is broken'), findsOneWidget);
     s.dispose();
   });
@@ -219,6 +222,13 @@ void main() {
 
     // Owner Today lists it, newest first, as New.
     s.jump('oToday', 'owner');
+    await tester.pump();
+    // F21 W3: new ones in "Needs you now"; the full list in Manage → Enquiries.
+    expect(find.text('New enquiry · ${s.enquiries.first.name}'), findsOneWidget);
+    s.update(() {
+      s.screen = 'oMore';
+      s.moreTab = 'enquiries';
+    });
     await tester.pump();
     expect(find.text('ENQUIRIES FROM HOSTELZY'), findsOneWidget);
     expect(find.text(ref), findsOneWidget);
@@ -319,9 +329,12 @@ void main() {
     await tap(tester, find.text('Ask on WhatsApp'));
     final ref = s.waRef!;
 
-    // Owner: Manage opens on Residents, with the unassigned-beds banner.
+    // Owner: Manage opens on its list (F21 W3); Residents has the unassigned-beds banner.
     s.jump('oMore', 'owner');
     await tester.pump();
+    expect(s.moreTab, 'home');
+    expect(find.text('Residents'), findsOneWidget);
+    await tap(tester, find.byKey(const ValueKey('manage-Residents')));
     expect(s.moreTab, 'residents');
     expect(s.unassignedBeds, ['103-A', '202-B']);
     expect(find.text('2 taken beds have no resident'), findsOneWidget);
@@ -374,7 +387,7 @@ void main() {
   });
 
   testWidgets('invite QR: owner approves or removes sign-ups (F06)', (tester) async {
-    final s = AppState(start: 'oMore', role: 'owner');
+    final s = AppState(start: 'oMore', role: 'owner', moreTab: 'residents');
     await pumpApp(tester, s);
     await tap(tester, find.text('Invite QR'));
     expect(s.screen, 'oInvite');
@@ -684,7 +697,7 @@ void main() {
     // Owner fixes the mistake within 48 h: no strike.
     await tap(tester, find.text('Fair Play check FP-0142'));
     expect(s.screen, 'oCase');
-    await tap(tester, find.text('Change Teja to Via Hostelzy'));
+    await tap(tester, find.text('Change Teja to “Came from the app”'));
     expect(s.residents.firstWhere((r) => r.name == 'Teja Naidu').via, 'hz');
     expect(s.cases.first.status, 'closed');
     expect(s.strikes['anjani'] ?? 0, 0);
@@ -1113,8 +1126,8 @@ void main() {
     expect((s.screen, s.sheet, s.bed), ('picker', 'hold', h.bed));
     s.dispose();
 
-    // Owner: Call opens the phone app; reminders open WhatsApp with the text.
-    final o = AppState(start: 'oToday', role: 'owner');
+    // Owner: Call opens the phone app (Manage → Enquiries, F21 W3).
+    final o = AppState(start: 'oMore', role: 'owner', moreTab: 'enquiries');
     await pumpApp(tester, o);
     await tap(tester, find.text('Call').first);
     expect(o.lastLink.toString(), startsWith('tel:+91'));
@@ -1364,7 +1377,7 @@ void main() {
     // ...and Manage → Layouts lists every room with its state.
     o.tab('oMore');
     await tester.pump();
-    await tap(tester, find.text('Layouts'));
+    await tap(tester, find.byKey(const ValueKey('manage-Room layouts')));
     expect(o.screen, 'oLayouts');
     expect(find.text('DRAFT'), findsOneWidget); // room 204: Hostelzy's v2 to publish
     expect(find.text('LIVE'), findsWidgets);
@@ -2288,7 +2301,7 @@ void main() {
     s.data = fake;
     s.picker = _FakePicker(1200, 1200);
     await pumpApp(tester, s);
-    await tap(tester, find.byKey(const ValueKey('managePhotos')));
+    await tap(tester, find.byKey(const ValueKey('manage-Photos')));
     expect(s.screen, 'oPhotos');
     expect(find.text('0 of 8 minimum'), findsOneWidget);
     expect(find.text('Drag to reorder. The first is the cover.'), findsOneWidget);
@@ -2510,7 +2523,7 @@ void main() {
     expect(s.toast, 'Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
     s.update(() => s.myHostel = 'h1');
     await s.raiseComplaint();
-    expect((fake.calls.last, s.cText), ('complaint h1 WiFi No water', ''));
+    expect((fake.calls.last, s.cText), ('complaint h1 Wi-Fi No water', ''));
     final c = Complaint(id: 1, by: '101-A', cat: 'WiFi', text: 'Slow', status: 'Open', date: '1 Oct', note: '', key: 'c-uuid');
     s.update(() => s.complaints = [c]);
     await s.advanceComplaint(c);
@@ -2843,7 +2856,7 @@ void main() {
     for (var k = 0; k < 4; k++) {
       await Future<void>.delayed(Duration.zero);
     }
-    expect((fake.calls.last, s.toast), ('fix c1', 'Late Larry is now Via Hostelzy. Case closed, no strike.'));
+    expect((fake.calls.last, s.toast), ('fix c1', 'Late Larry now shows as came from the app. Case closed, no strike.'));
     fake.fixError = 'the 48 hours are over; reply instead';
     s.fixCase(c1);
     for (var k = 0; k < 4; k++) {
@@ -3010,9 +3023,10 @@ void main() {
     t.dispose();
 
     // A resident: their room screen → Edit room → the suggestion editor.
-    final r = AppState(start: 'rHome', role: 'resident');
+    final r = AppState(start: 'me', role: 'resident');
     await pumpApp(tester, r);
-    await tap(tester, find.textContaining('Room layouts.', findRichText: true));
+    // F21 W3: Me › My stay › Room layouts.
+    await tap(tester, find.text('Room layouts · fix any room'));
     expect((r.screen, r.fixHid, r.fixRoom), ('rRoom', 'anjani', 204));
     await tap(tester, find.text('203'));
     expect(find.text('Something in the wrong place?'), findsOneWidget);
@@ -3072,9 +3086,9 @@ void main() {
     // The owner: Today card → compare side by side → approve & publish.
     final o = AppState(start: 'oToday', role: 'owner');
     await pumpApp(tester, o);
-    expect(find.text('LAYOUT FIXES FROM RESIDENTS'), findsOneWidget);
+    // F21 W3: in "Needs you now".
     expect(find.text('Layout fix for Room 203'), findsOneWidget);
-    await tap(tester, find.text('Compare and decide'));
+    await tap(tester, find.text('Compare'));
     expect(o.screen, 'oFix');
     expect(find.text('SUGGESTED'), findsOneWidget);
     expect(find.textContaining('WHAT CHANGED'), findsOneWidget);
@@ -3492,7 +3506,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<void> confirmPayment(String paymentId, bool received, {String? holdId}) => _rec('confirm $paymentId $received $holdId');
   @override
-  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) => _rec('complaint $hid $cat $body');
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body, String? photo}) => _rec('complaint $hid $cat $body${photo != null ? ' $photo' : ''}');
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) => _rec('complaint $key $status');
   @override

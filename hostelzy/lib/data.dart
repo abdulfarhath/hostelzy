@@ -399,20 +399,24 @@ class HoldRequest {
 List<HoldRequest> seedRequests(int now) => [HoldRequest(id: 'k1', name: 'Karthik M', bed: '102-C', type: 'Free hold', secs: 2460, note: 'Can I visit at 6 pm today?', start: now, trusted: true), HoldRequest(id: 'v1', name: 'Vamsi Reddy', bed: '301-A', type: 'Free hold', secs: 3180, note: 'Joining Infosys on 12 Oct.', start: now)];
 
 class Complaint {
-  Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false, this.key});
+  Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false, this.key, this.photo, this.at});
   final int id;
 
   /// The server's id (uuid) for live complaints; null on sample data.
   final String? key;
   final String by, cat, text, date;
   final bool mine;
+
+  /// F21 W3: the photo's storage path (server) and when it was raised (ms).
+  final String? photo;
+  final int? at;
   String status, note;
-  Complaint copyWith({String? status, String? note}) => Complaint(id: id, by: by, cat: cat, text: text, status: status ?? this.status, date: date, note: note ?? this.note, mine: mine, key: key);
+  Complaint copyWith({String? status, String? note}) => Complaint(id: id, by: by, cat: cat, text: text, status: status ?? this.status, date: date, note: note ?? this.note, mine: mine, key: key, photo: photo, at: at);
 }
 
 List<Complaint> seedComplaints() => [
   Complaint(id: 1, by: 'Rahul V · 204', cat: 'Geyser', text: 'No hot water in bathroom 2 since Monday.', status: 'In progress', date: '28 Sep', note: 'Plumber booked for Tuesday', mine: true),
-  Complaint(id: 2, by: 'Rahul V · 204', cat: 'WiFi', text: 'Drops every night after 11 pm.', status: 'Resolved', date: '20 Sep', note: 'Router replaced', mine: true),
+  Complaint(id: 2, by: 'Rahul V · 204', cat: 'Wi-Fi', text: 'Drops every night after 11 pm.', status: 'Resolved', date: '20 Sep', note: 'Router replaced', mine: true),
   Complaint(id: 3, by: 'Teja N · 102', cat: 'Cleaning', text: 'Room not swept for three days.', status: 'Open', date: '30 Sep', note: ''),
   Complaint(id: 4, by: 'Faiz M · 101', cat: 'Water', text: 'Low pressure on floor 1 in the mornings.', status: 'Open', date: '1 Oct', note: ''),
 ];
@@ -722,7 +726,7 @@ const fairBasics = [
 ];
 
 const fairRules = [
-  ('Add every resident within 3 days', 'Name and phone. That is how a stay counts as Via Hostelzy or Direct.'),
+  ('Add every resident within 3 days', 'Name and phone. That is how a stay counts as came from the app or walked in.'),
   ('Never take a Hostelzy tenant off the app', 'Don’t ask them to cancel a hold or pay you outside the booking.'),
   ('Honour the deal and exit rules', 'The price, advance and maintenance shown at booking.'),
   ('Keep beds and prices up to date', 'Confirm free beds when we ask, every 3 days.'),

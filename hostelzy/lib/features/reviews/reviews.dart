@@ -50,7 +50,13 @@ mixin _ReviewsData {
   int day = appToday.weekday - 1;
   String? rated;
   List<Complaint> complaints = seedComplaints();
-  String cCat = 'WiFi', cText = '';
+  String cCat = 'Wi-Fi', cText = '';
+
+  /// F21 W3: the photo for the next complaint, and photos of complaints
+  /// raised on this phone (demo builds; on the server they're in storage).
+  Uint8List? cPhoto;
+  final Map<int, Uint8List> complaintPhotosLocal = {};
+  int? cPhotoView;
   late String vDate = leaveDates(hostels[0].terms).first;
   String vReason = 'New job';
   bool notice = false;

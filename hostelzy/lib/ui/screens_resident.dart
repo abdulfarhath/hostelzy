@@ -26,47 +26,13 @@ class ResidentHomeScreen extends StatelessWidget {
     final nowMin = DateTime.now().hour * 60 + DateTime.now().minute;
     final mealEnds = [9 * 60 + 30, 14 * 60, 22 * 60];
     final nextMeal = mealEnds.indexWhere((e) => nowMin < e);
+    // F21 W3: three actions right under the rent card. Notice, swap and room
+    // layouts live in Me › My stay.
     final quick = <(String, String, VoidCallback)>[
-      (
-        'Swap bed',
-        'swap',
-        () => s.update(() {
-          s.hist = [...s.hist, s.screen];
-          s.screen = 'move';
-          s.sheet = null;
-          s.moveTab = 'swap';
-        }),
-      ),
-      (
-        'Give notice',
-        'logout',
-        () => s.update(() {
-          s.hist = [...s.hist, s.screen];
-          s.screen = 'move';
-          s.sheet = null;
-          s.moveTab = 'vacate';
-        }),
-      ),
+      ('Pay rent', 'wallet', () => s.tab('rPay')),
       ('Raise complaint', 'wrench', () => s.tab('help')),
       ('Message owner', 'msg', () => s.openWA(owner, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${s.stayRoom.isEmpty ? '' : ' from room ${s.stayRoom}'}.', phone: s.stayOwnerPhone)),
     ];
-    Widget quickBtn((String, String, VoidCallback) q) => Expanded(
-      child: Tap(
-        onTap: q.$3,
-        child: Container(
-          color: p.bg,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Ic(q.$2, size: 22, color: p.ad),
-              const SizedBox(height: 18),
-              T(q.$1, w: 800, s: 15),
-            ],
-          ),
-        ),
-      ),
-    );
     return Scroll(
       key: ValueKey('rHome${s.scrollEpoch}'),
       child: Column(
@@ -74,8 +40,15 @@ class ResidentHomeScreen extends StatelessWidget {
         children: [
           OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: st == null ? 'Your stay' : s.stayLine, title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: PageHead(kicker: st == null ? 'Your stay' : s.stayLine, title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 30)),
+                const SizedBox(width: 12),
+                Tap(onTap: () => s.tab('me'), child: Container(width: 44, height: 44, color: p.ac, alignment: Alignment.center, child: s.meName.isEmpty ? Ic('user', size: 20, color: p.ai) : T(initials(s.meName), w: 800, s: 15, c: p.ai))),
+              ],
+            ),
           ),
           if (s.showToday) const TodayCard(),
           Container(
@@ -102,6 +75,31 @@ class ResidentHomeScreen extends StatelessWidget {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: IntrinsicHeight(
+              child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, q) in quick.indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: Tap(
+                      key: ValueKey('quick-${q.$1}'),
+                      onTap: q.$3,
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 72),
+                        padding: const EdgeInsets.all(10),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [Ic(q.$2, size: 20, color: p.ad), const SizedBox(height: 6), T(q.$1, w: 800, s: 13, lh: 1.15)]),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            ),
+          ),
           // F08: the 30-day review (one per stay).
           if (!s.reviews.any((r) => r.name == s.meShort && r.kind == '30-day'))
             Tap(
@@ -120,23 +118,6 @@ class ResidentHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-          // F19: residents fix any room's layout at their hostel.
-          Tap(
-            onTap: () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[s.homeHid ?? 'anjani']?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101),
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-              decoration: box(w: 1, c: p.dv),
-              child: Row(
-                children: [
-                  const Ic('pencil', size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(child: Rich([sp(context, 'Room layouts. ', w: 800), sp(context, 'Something in the wrong place? Fix any room here.', c: p.mu)], s: 14, lh: 1.35)),
-                  const Ic('chev', size: 18),
-                ],
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 6),
             child: Row(
@@ -197,25 +178,7 @@ class ResidentHomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 22),
-            decoration: BoxDecoration(
-              color: p.hl,
-              border: Border(top: bs(2, p.dv), bottom: bs(1, p.hl)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                IntrinsicHeight(
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [quickBtn(quick[0]), const SizedBox(width: 1), quickBtn(quick[1])]),
-                ),
-                const SizedBox(height: 1),
-                IntrinsicHeight(
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [quickBtn(quick[2]), const SizedBox(width: 1), quickBtn(quick[3])]),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -659,66 +622,105 @@ class FoodScreen extends StatelessWidget {
   }
 }
 
+/// F21 W3: complaint words a resident reads ("Sent", "Being fixed", "Fixed").
+String complaintWord(String status) => switch (status) {
+  'Open' => 'Sent',
+  'In progress' => 'Being fixed',
+  _ => 'Fixed',
+};
+
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final mine = s.complaints.where((c) => c.mine).toList().reversed;
+    final owner = s.stayOwner;
+    final mine = s.complaints.where((c) => c.mine).toList().reversed.toList();
+    final now = DateTime.now().millisecondsSinceEpoch;
     return Scroll(
       key: ValueKey('help${s.scrollEpoch}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: const PageHead(kicker: 'Something wrong in your room?', title: 'Help'),
+            child: const T('Help', s: 30, w: 800, lh: 1.02, ls: -.025),
           ),
-          Container(
+          Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
             child: VGap(
-              gap: 12,
+              gap: 10,
               children: [
-                const Kicker('Raise a complaint'),
+                const Kicker('Something wrong in your room?'),
                 wrap(6, [
-                  for (final c in const ['WiFi', 'Water', 'Electricity', 'Cleaning', 'Food', 'Geyser', 'Other']) ChipBtn(c, on: c == s.cCat, onTap: () => s.update(() => s.cCat = c)),
+                  for (final c in const ['Wi-Fi', 'Water', 'Electricity', 'Cleaning', 'Food', 'Other']) ChipBtn(c, on: c == s.cCat, pad: const EdgeInsets.symmetric(vertical: 9, horizontal: 12), onTap: () => s.update(() => s.cCat = c)),
                 ]),
-                Field(value: s.cText, onChanged: (v) => s.update(() => s.cText = v), placeholder: "What's wrong? Bathroom, floor, since when.", maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
-                Cta(
-                  'Send to warden',
-                  height: 50,
-                  px: 16,
-                  fs: 15,
-                  onTap: s.raiseComplaint,
+                Field(value: s.cText, onChanged: (v) => s.update(() => s.cText = v), placeholder: 'What’s wrong? Where, and since when.', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
+                Row(
+                  children: [
+                    Tap(
+                      key: const ValueKey('cPhoto'),
+                      onTap: s.cPhoto == null ? s.pickComplaintPhoto : () => s.update(() => s.cPhoto = null),
+                      child: Container(
+                        width: 54,
+                        height: 54,
+                        decoration: box(w: 2, c: p.tx),
+                        alignment: Alignment.center,
+                        child: s.cPhoto == null ? const Ic('camera', size: 20) : Stack(fit: StackFit.expand, children: [Image.memory(s.cPhoto!, fit: BoxFit.cover), Align(alignment: Alignment.topRight, child: Container(color: p.bg, child: const Ic('x', size: 14)))]),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Cta('Send to owner', height: 54, px: 16, fs: 15, onTap: s.raiseComplaint)),
+                  ],
                 ),
-                T('Not fixed? Raise it again, or WhatsApp ${s.stayOwner}.', s: 12, c: p.mu),
               ],
             ),
           ),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('Your complaints')),
-          for (final c in mine)
+          if (mine.isEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-              child: VGap(
-                gap: 4,
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+              child: VGap(gap: 6, children: [const T('No complaints', w: 800, s: 17), T('When something breaks, tell $owner here. You’ll see when it’s fixed.', s: 14, c: p.mu, lh: 1.4)]),
+            )
+          else ...[
+            const Padding(padding: EdgeInsets.fromLTRB(16, 4, 16, 6), child: Kicker('Your complaints')),
+            Container(
+              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      T(c.cat, w: 800, s: 15),
-                      const SizedBox(width: 10),
-                      Tag(c.status, bg: tagOf(p, c.status).bg, fg: tagOf(p, c.status).fg),
-                    ],
-                  ),
-                  T(c.text, s: 14),
-                  T('${c.date} · ${c.note.isEmpty ? 'Sent to ${s.stayOwner}' : c.note}', s: 12, c: p.mu),
+                  for (final c in mine)
+                    () {
+                      final fresh = c.status == 'Open' && c.at != null && now - c.at! < 10 * 60 * 1000;
+                      final word = complaintWord(c.status);
+                      final when = fresh ? 'Just now' : c.date;
+                      final line = c.status == 'Open' && s.onServer ? '$owner sees it in the app' : (c.note.isEmpty ? 'Sent to $owner' : (c.status == 'Open' ? c.note : '“${c.note}”'));
+                      return Container(
+                        color: fresh ? p.sf : null,
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: null,
+                        child: VGap(
+                          gap: 4,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(child: T(c.cat, w: 800, s: 15)),
+                                if (c.photo != null || s.complaintPhotosLocal[c.id] != null) ...[Ic('camera', size: 14, color: p.mu), const SizedBox(width: 8)],
+                                word == 'Fixed' ? Tag(word, bg: transparent, fg: p.mu) : Tag(word, bg: p.ab, fg: p.ad),
+                              ],
+                            ),
+                            T(c.text, s: 14),
+                            T('$when · $line', s: 12, c: p.mu),
+                          ],
+                        ),
+                      );
+                    }(),
                 ],
               ),
             ),
+          ],
         ],
       ),
     );

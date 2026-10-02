@@ -473,6 +473,18 @@ class MeScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final isOwner = s.role == 'owner';
+    void move(String t) => s.update(() {
+      s.hist = [...s.hist, s.screen];
+      s.screen = 'move';
+      s.sheet = null;
+      s.moveTab = t;
+    });
+    // F21 W3: My stay (moved off resident Home).
+    final stay = <(String, VoidCallback, Color)>[
+      ('Room layouts · fix any room', () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[s.homeHid ?? 'anjani']?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101), p.tx),
+      ('Swap bed', () => move('swap'), p.tx),
+      ('Give notice', () => move('vacate'), p.tx),
+    ];
     final rows = <(String, VoidCallback, Color)>[
       ('Reminders · ${s.remSummary}', s.openReminders, p.tx),
       if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
@@ -523,6 +535,20 @@ class MeScreen extends StatelessWidget {
               ],
             ),
           ),
+          if (s.role == 'resident') ...[
+            const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('My stay')),
+            for (final r in stay)
+              Tap(
+                key: ValueKey('stay-${r.$1}'),
+                onTap: r.$2,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(border: Border(top: r == stay.first ? bs(2, p.dv) : BorderSide.none, bottom: bs(1, p.hl))),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(r.$1, s: 15, w: 600), Ic('chev', size: 18, color: p.mu)]),
+                ),
+              ),
+            const SizedBox(height: 12),
+          ],
           for (final r in rows)
             Tap(
               onTap: r.$2,

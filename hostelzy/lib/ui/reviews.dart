@@ -465,6 +465,11 @@ class OwnerRankScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _head(context, '${h.name} · Manage', 'Your ranking', size: 28),
+        // F21 W3: one Manage row for reviews and ranking; reviews open from here.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Align(alignment: Alignment.centerLeft, child: Tap(key: const ValueKey('readReviews'), onTap: () => s.go('oReviews'), child: T('Read and reply to reviews ›', s: 14, w: 800, c: p.ad))),
+        ),
         Expanded(
           child: Scroll(
             key: ValueKey('oRank${s.scrollEpoch}'),
