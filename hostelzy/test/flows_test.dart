@@ -6,13 +6,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
+import 'package:hostelzy/app_config.dart' show dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
 import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
 import 'package:hostelzy/locate.dart';
+import 'package:hostelzy/features/photos/photo.dart';
+import 'package:hostelzy/features/photos/pick.dart';
+import 'package:image/image.dart' as img;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -368,6 +371,8 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Invite QR'));
     expect(s.screen, 'oInvite');
+    await tester.pump();
+    await tester.pump();
     expect(find.text('farhath.me/hostelzy/app/j/?c=ANJ-7Q2'), findsOneWidget);
     expect(find.text('2 to approve'), findsOneWidget);
     await tap(tester, find.text('Approve').first);
@@ -1249,12 +1254,10 @@ void main() {
     expect(s.theme, 'system');
     expect(s.isDark(Brightness.dark), isTrue);
     expect(s.isDark(Brightness.light), isFalse);
-    // Turning a notification on shows the explainer first.
+    // No push on this device (tests, web): turning one on says so honestly.
     await tap(tester, find.text('New free beds'));
-    expect((s.screen, s.permKind), ('perm', 'notifications'));
-    expect(find.text('Turn on notifications?'), findsOneWidget);
-    await tap(tester, find.text('Turn on'));
-    expect(s.screen, 'settings');
+    await tester.pump();
+    expect((s.screen, s.toast), ('settings', 'Saved. Notifications work in the Android app.'));
     await tester.pump(const Duration(seconds: 3));
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
@@ -1275,18 +1278,49 @@ void main() {
     await tap(tester, find.text('Delete account'));
     expect(find.text('Delete your account?'), findsOneWidget);
     await tap(tester, find.text('Continue'));
-    expect(s.screen, 'delOtp');
-    await tap(tester, find.text('Delete my account'));
-    expect(s.screen, 'delOtp'); // needs the code
-    await tester.pump(const Duration(seconds: 3));
-    await tester.enterText(find.byType(TextField), '123456');
-    await tester.pump();
-    await tap(tester, find.text('Delete my account'));
+    expect(s.screen, 'delConfirm');
+    // Not signed in with Google: only this phone's data exists, and goes.
+    expect(find.text('Delete from this phone'), findsOneWidget);
+    await tap(tester, find.text('Delete from this phone'));
     expect((s.screen, s.phone, s.signedIn, s.level), ('delDone', '', false, 'none'));
     expect(find.text('Your account is deleted'), findsOneWidget);
-    await tap(tester, find.text('Close'));
+    expect(find.text('We removed your name, phone, Google sign-in, holds, saved hostels and rewards. Reviews stay as “Former resident”.'), findsOneWidget);
+    await tap(tester, find.text('Close Hostelzy'));
     expect(s.screen, 'welcome');
     s.dispose();
+
+    // Signed in with Google: confirm with Google, then the server, then Firebase.
+    final g = AppState(start: 'delConfirm', role: 'tenant');
+    final gs = _FakeSignIn(null);
+    final gd = _FakeData();
+    g.signIn = gs;
+    g.data = gd;
+    g.update(() => g.account = (uid: 'fb-asha', name: 'Asha Kiran', email: 'asha@gmail.com'));
+    await pumpApp(tester, g);
+    expect(find.text('Confirm it’s you'), findsOneWidget);
+    expect(find.text('AK'), findsOneWidget);
+    expect(find.text('asha@gmail.com'), findsOneWidget);
+    gs.reauthFail = SignInFail.cancelled;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, g.toast, gd.deleted), ('delConfirm', 'Not deleted. You closed Google.', false));
+    await tester.pump(const Duration(seconds: 3));
+    gs.reauthFail = SignInFail.otherAccount;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect(g.toast, 'That’s a different Google account. Pick asha@gmail.com.');
+    await tester.pump(const Duration(seconds: 3));
+    gs.reauthFail = null;
+    gd.deleteError = 'P0001: Owners: ask Hostelzy to close or hand over your hostel first.';
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, g.toast, gs.userDeleted), ('delConfirm', 'Owners: ask Hostelzy to close or hand over your hostel first.', false));
+    await tester.pump(const Duration(seconds: 3));
+    gd.deleteError = null;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, gd.deleted, gs.userDeleted, g.account), ('delDone', true, true, null));
+    g.dispose();
 
     // Owners with an unpaid plan can't delete yet.
     final o = AppState(start: 'delAcc', role: 'owner', plan: 'late5');
@@ -1324,19 +1358,25 @@ void main() {
     await tap(tester, find.text('Room 201'));
     expect((o.screen, o.lRoom), ('oLayout', 201));
 
-    // Team mode: Settings → Hostelzy team → passcode → team home.
+    // Team mode (B7): only a Google account with the team claim.
     o.update(() => o.screen = 'settings');
     await tester.pump();
     await tap(tester, find.text('Hostelzy team'));
     expect(o.sheet, 'team');
-    await tester.enterText(find.byType(TextField).last, '1111');
+    expect(find.text('Sign in with your Hostelzy team Google account, then come back here.'), findsOneWidget);
+    final fs = _FakeSignIn(null);
+    o.update(() {
+      o.signIn = fs;
+      o.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com');
+    });
     await tester.pump();
     await tap(tester, find.text('Open team tools'));
-    expect(o.teamUnlocked, isFalse);
+    await tester.pump();
+    expect((o.teamUnlocked, o.toast), (false, 'asha@gmail.com isn’t a Hostelzy team account.'));
     await tester.pump(const Duration(seconds: 3));
-    await tester.enterText(find.byType(TextField).last, teamPasscode);
-    await tester.pump();
+    fs.team = true;
     await tap(tester, find.text('Open team tools'));
+    await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
     expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
     for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
@@ -1793,7 +1833,7 @@ void main() {
     resetSampleData();
   });
 
-  testWidgets('push: explainer, then Android asks; allowed gets a token, denied says how to fix (F13)', (tester) async {
+  testWidgets('push: the Settings switch asks Android right away; allowed or denied is said honestly (F13)', (tester) async {
     for (final allow in [true, false]) {
       final s = AppState(start: 'settings', role: 'tenant');
       final fake = _FakePush(allow);
@@ -1801,16 +1841,14 @@ void main() {
       s.update(() => s.notif.updateAll((k, v) => false));
       await pumpApp(tester, s);
       await tap(tester, find.text('Rent reminders').first);
-      expect(find.text('Turn on notifications?'), findsOneWidget);
-      expect(fake.asked, 0); // the app's explainer comes before Android's prompt
-      await tap(tester, find.text('Turn on'));
       await tester.pump();
       expect(fake.asked, 1);
       if (allow) {
-        expect((s.pushToken, s.notif['rent'], s.notif['beds']), ('fcm-token', true, false));
-        expect(s.toast, 'Notifications allowed. Hostelzy starts sending them once your account is online.');
+        expect((s.osPushAllowed, s.notif['rent'], s.notif['beds']), (true, true, false));
+        // Not signed in with Google: allowed, but nothing to send to yet.
+        expect((s.pushToken, s.toast), (null, 'Notifications allowed. Sign in with Google to get them.'));
       } else {
-        expect((s.pushToken, s.notif['rent']), (null, false));
+        expect((s.osPushAllowed, s.notifOn('rent')), (false, false));
         expect(s.toast, 'Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
       }
       await tester.pump(const Duration(seconds: 3));
@@ -1852,12 +1890,16 @@ void main() {
     await tester.pump();
     expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
-    s.push = _FakePush(true);
+    final fp = _FakePush(true);
+    s.push = fp;
     await s.enablePush();
     expect(data.tokens, ['fcm-token']);
-    // Log out signs out of Google too.
+    expect(s.toast, 'Notifications are on for this phone.');
+    // Log out: the server forgets this phone's token, then Google signs out.
     s.logOut();
-    expect(((s.signIn as _FakeSignIn).signedOut, s.account), (true, null));
+    await tester.pump();
+    expect(data.removed, ['fcm-token']);
+    expect((fp.deleted, (s.signIn as _FakeSignIn).signedOut, s.account), (1, true, null));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
   });
@@ -2004,6 +2046,15 @@ void main() {
       m.dispose();
     }
     tester.view.resetViewInsets();
+    // No keyboard: Manage's header buttons and the photo screens fit too.
+    for (final start in ['oMore', 'oPhotos', 'gallery']) {
+      final m = AppState(start: start, role: start == 'gallery' ? 'tenant' : 'owner');
+      await tester.pumpWidget(MaterialApp(home: AppScope(state: m, child: const HostelzyShell())));
+      await tester.pump();
+      final err = tester.takeException();
+      expect(err == null ? null : '$start: $err', isNull);
+      m.dispose();
+    }
     tester.view.reset();
 
     // Crash guards.
@@ -2133,7 +2184,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, passcode lockout (F18)', (tester) async {
+  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, team sign-in (F18)', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     s.update(() => s.phone = '9876543210');
     // A bed that was "free soon" goes back to "free soon" when released (D10).
@@ -2197,16 +2248,116 @@ void main() {
     }
     o.saveRates();
     expect(o.fromOf(hostelById('anjani')), cheapest + 500);
-    // Team passcode: 5 wrong tries lock it (G1).
-    for (var i = 0; i < 5; i++) {
-      o.teamCode = '0000';
-      o.unlockTeam();
-    }
-    expect(o.toast, 'Too many wrong tries. Team mode is locked for 15 minutes.');
-    o.teamCode = teamPasscode;
-    o.unlockTeam();
-    expect(o.teamUnlocked, isFalse);
+    // No passcode exists any more (B7).
+    o.update(() => o.account = null);
+    await o.checkTeam();
+    expect(o.toast, 'Sign in with your Hostelzy team Google account first.');
     o.dispose();
+  });
+
+  test('B7: photos are cropped and compressed on the phone', () {
+    Uint8List png(int w, int h) => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
+    final a = img.decodeJpg(prepPhoto(png(1000, 1000), '4:3')!)!;
+    expect((a.width, a.height), (1000, 750));
+    final b = img.decodeJpg(prepPhoto(png(4000, 3000), 'free')!)!;
+    expect((b.width, b.height), (1600, 1200));
+    final c = img.decodeJpg(prepPhoto(png(900, 1200), '1:1')!)!;
+    expect((c.width, c.height), (900, 900));
+    expect(prepPhoto(Uint8List.fromList([1, 2, 3]), '4:3'), isNull);
+    expect(photoUrl('https://p.supabase.co', 'h1/a.jpg'), 'https://p.supabase.co/storage/v1/object/public/hostel-photos/h1/a.jpg');
+  });
+
+  testWidgets('B7: owner adds, orders and removes photos; tenants see the gallery', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner');
+    final fake = _FakePhotos();
+    s.data = fake;
+    s.picker = _FakePicker(1200, 1200);
+    await pumpApp(tester, s);
+    await tap(tester, find.byKey(const ValueKey('managePhotos')));
+    expect(s.screen, 'oPhotos');
+    expect(find.text('0 of 8 minimum'), findsOneWidget);
+    expect(find.text('Drag to reorder. The first is the cover.'), findsOneWidget);
+    // Add → crop (square, cover) → Use: uploads a compressed JPEG.
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect((s.screen, s.cropCover, s.cropLabel), ('oCrop', true, 'Front'));
+    await tap(tester, find.text('Square'));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(s.screen, 'oPhotos');
+    expect(fake.uploaded.length, 1);
+    final up = img.decodeJpg(fake.uploaded.single)!;
+    expect((up.width, up.height), (1200, 1200));
+    expect(find.text('COVER'), findsOneWidget);
+    expect(find.text('1 of 8 minimum'), findsOneWidget);
+    // Second photo: a washroom; the upload fails, then Retry works.
+    fake.failNext = true;
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect(s.cropCover, isFalse);
+    await tap(tester, find.text('Front ▾'));
+    await tap(tester, find.text('Room ▾'));
+    expect(s.cropLabel, 'Washroom');
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsOneWidget);
+    await tap(tester, find.text('Failed · Retry'));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsNothing);
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Front', 'Washroom']);
+    // Make the washroom the cover: it moves first and the order is saved.
+    await tap(tester, find.text('Washroom'));
+    expect(s.sheet, 'photo');
+    await tap(tester, find.text('Make it the cover'));
+    await tester.pump();
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Washroom', 'Front']);
+    expect(fake.lastOrder, ['ph1', 'ph0']);
+    expect(fake.lastCover, 'ph1');
+    // Remove the old front photo.
+    await tap(tester, find.text('Front'));
+    await tap(tester, find.text('Remove photo'));
+    await tester.pump();
+    expect(fake.rows.map((p) => p.id), ['ph1']);
+    await tap(tester, find.text('Done'));
+    expect(s.screen, 'oMore');
+
+    // Sample data never pretends to upload.
+    final demo = AppState(start: 'oPhotos', role: 'owner');
+    demo.picker = _FakePicker(400, 300);
+    await pumpApp(tester, demo);
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(demo.toast, 'Photos upload in the real Hostelzy app. This is sample data.');
+    expect(demo.photosOf[demo.ownHid] ?? const [], isEmpty);
+    await tester.pump(const Duration(seconds: 3));
+
+    // A tenant opens the hostel: cover, "See 2 photos", the gallery.
+    fake.rows
+      ..clear()
+      ..addAll([
+        (id: 'a', path: 'x/a.jpg', url: 'https://x.test/a.jpg', label: 'Front', ord: 0, cover: true),
+        (id: 'b', path: 'x/b.jpg', url: 'https://x.test/b.jpg', label: '3 sharing', ord: 1, cover: false),
+      ]);
+    final t = AppState(start: 'explore', role: 'tenant');
+    t.data = fake;
+    await pumpApp(tester, t);
+    t.update(() {
+      t.hid = 'anjani';
+      t.screen = 'detail';
+    });
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('See 2 photos'), findsOneWidget);
+    await tap(tester, find.text('See 2 photos'));
+    expect(t.screen, 'gallery');
+    expect(find.text('1 / 2 · Front'), findsOneWidget);
+    expect(find.text('Rooms 1'), findsOneWidget);
+    await tap(tester, find.text('Rooms 1'));
+    expect(find.text('1 / 1 · 3 sharing'), findsOneWidget);
+    await tap(tester, find.text('All 2'));
+    expect(find.text('Photos by the owner'), findsOneWidget);
+    s.dispose();
+    demo.dispose();
+    t.dispose();
   });
 
   test('B6: live rows map server statuses to the app', () {
@@ -2358,20 +2509,144 @@ void main() {
     s.stopLive();
     s.dispose();
   });
+
+  testWidgets('C: server invite codes: owner gets one, a resident asks to join', (tester) async {
+    // Owner on Supabase: the code comes from the server; a new one replaces it.
+    final o = AppState(start: 'oInvite', role: 'owner');
+    final od = _FakeInvites();
+    o.data = od;
+    await pumpApp(tester, o);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('farhath.me/hostelzy/app/j/?c=VAS-7Q2'), findsOneWidget);
+    await tap(tester, find.text('Make a new code (the old link stops working)'));
+    await tester.pump();
+    expect((o.inviteCode, o.toast), ('VAS-K9P', 'New code VAS-K9P. The old link and poster stop working.'));
+    o.dispose();
+
+    // Resident gate: the code from the invite link is filled in; joining needs Google.
+    final r = AppState(start: 'roleGate', role: 'tenant');
+    r.data = od;
+    r.update(() {
+      r.roleGate = 'resident';
+      r.pendingInvite = 'VAS-K9P';
+      r.myName = 'Kiran Rao';
+      r.phone = '9876543210';
+    });
+    await pumpApp(tester, r);
+    expect(find.text('Have an invite code?'), findsOneWidget);
+    await tap(tester, find.text('Ask to join'));
+    expect(r.toast, 'Sign in with Google to join with a code.');
+    await tester.pump(const Duration(seconds: 3));
+    r.update(() => r.account = (uid: 'fb-kiran', name: 'Kiran Rao', email: 'k@gmail.com'));
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(od.joined, ('VAS-K9P', 'Kiran Rao', '9876543210'));
+    expect((r.toast, r.pendingInvite), ('Asked to join Vasavi Boys Hostel. Your owner approves it, then your stay opens here.', null));
+    await tester.pump(const Duration(seconds: 3));
+    // A retired code: the server's reason, in plain words.
+    od.joinError = 'P0001: that invite code isn\'t valid any more; ask your owner for the new one';
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('inviteCode')), matching: find.byType(TextField)), 'vas-7q2');
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(r.toast, 'That code isn’t valid any more. Ask your owner for the new one.');
+    await tester.pump(const Duration(seconds: 3));
+    // Sample data never pretends to send it.
+    r.data = const SampleRepo();
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(r.toast, 'Invites work in the real Hostelzy app. This is sample data.');
+    await tester.pump(const Duration(seconds: 3));
+    r.dispose();
+  });
+
+  testWidgets('push fix: after sign-in the app offers once, saves the token every start, and says when it fails', (tester) async {
+    final s = AppState(start: 'role', role: 'tenant');
+    final data = _FakeData();
+    final fp = _FakePush(true);
+    s
+      ..data = data
+      ..push = fp
+      ..signIn = _FakeSignIn(null);
+    s.update(() => s.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
+    s.watchPushToken();
+    await pumpApp(tester, s);
+    // First home after a Google sign-in: the explainer, once.
+    s.pickRole('tenant');
+    await tester.pump();
+    await tester.pump();
+    expect((s.screen, s.permKind, s.pushAsked), ('perm', 'notifications', true));
+    await tap(tester, find.text('Not now'));
+    expect((s.screen, fp.asked), ('explore', 0));
+    expect(data.tokens, isEmpty);
+    // "Not now" is remembered, also on the phone.
+    expect(s.snapshot()['pushAsked'], isTrue);
+    s.pickRole('tenant');
+    await tester.pump();
+    await tester.pump();
+    expect(s.screen, 'explore');
+    // Settings shows the switch off while Android has it off; tapping asks right away.
+    s.update(() => s.screen = 'settings');
+    await tester.pump();
+    expect(s.notifOn('hold'), isFalse);
+    await tap(tester, find.text('Hold updates'));
+    await tester.pump();
+    expect((fp.asked, s.notifOn('hold')), (1, true));
+    expect(data.tokens, ['fcm-token']);
+    await tester.pump(const Duration(seconds: 3));
+    // Allowed some other way (phone settings): the next start just saves the token.
+    final again = AppState(start: 'explore', role: 'tenant');
+    final d2 = _FakeData();
+    again
+      ..data = d2
+      ..push = _FakePush(false, granted: true);
+    again.update(() => again.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
+    expect(await again.syncPushToken(), isTrue);
+    expect(d2.tokens, ['fcm-token']);
+    // FCM rotates the token: the server gets the new one.
+    fp.refresh.add('fcm-token-2');
+    await tester.pump();
+    expect(data.tokens.last, 'fcm-token-2');
+    // A failed save is said out loud, never silent.
+    d2.failTokens = true;
+    expect(await again.syncPushToken(force: true), isFalse);
+    expect(again.toast, 'Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app.');
+    // Not signed in: no prompt, nothing saved.
+    final anon = AppState(start: 'role', role: 'tenant');
+    anon.push = _FakePush(true);
+    anon.pickRole('tenant');
+    await tester.pump();
+    expect(anon.screen, 'explore');
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+    again.dispose();
+    anon.dispose();
+  });
 }
 
 class _FakePush implements Push {
-  _FakePush(this.allow);
+  _FakePush(this.allow, {this.granted = false});
   final bool allow;
-  int asked = 0;
+
+  /// Android's permission right now.
+  bool granted;
+  int asked = 0, deleted = 0;
+  final refresh = StreamController<String>.broadcast();
   @override
   Future<PushAsk> ask() async {
     asked++;
+    if (allow) granted = true;
     return allow ? PushAsk.allowed : PushAsk.denied;
   }
 
   @override
   Future<String?> token() async => 'fcm-token';
+  @override
+  Future<bool?> allowed() async => granted;
+  @override
+  Stream<String> get tokenRefresh => refresh.stream;
+  @override
+  Future<void> deleteToken() async => deleted++;
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
 }
@@ -2386,19 +2661,80 @@ class _FakeSignIn implements SignIn {
   Future<(Account?, SignInFail?)> google() async => fail != null ? (null, fail) : ((uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'), null);
   @override
   Future<String?> idToken() async => 'id-token';
+  bool team = false;
+  @override
+  Future<bool> isTeam() async => team;
   @override
   Account? get current => null;
   @override
   Future<void> signOut() async => signedOut = true;
+  SignInFail? reauthFail;
+  bool userDeleted = false;
+  @override
+  Future<SignInFail?> reauth() async => reauthFail;
+  @override
+  Future<void> deleteUser() async => userDeleted = true;
 }
 
 class _FakeData extends SampleRepo {
   ({String name, String email, String phone, String role})? profile;
-  final tokens = <String>[];
+  @override
+  bool get remote => true;
+  final tokens = <String>[], removed = <String>[];
+  bool failTokens = false;
+  @override
+  Future<void> removePushToken(String token) async => removed.add(token);
   @override
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
-  Future<void> savePushToken(String token) async => tokens.add(token);
+  Future<void> savePushToken(String token) async {
+    if (failTokens) throw Exception('offline');
+    tokens.add(token);
+  }
+  bool deleted = false;
+  String? deleteError;
+  @override
+  Future<void> deleteMyAccount() async {
+    if (deleteError != null) throw Exception(deleteError);
+    deleted = true;
+  }
+}
+
+/// B7: Storage stand-in. [failNext] makes the next upload fail once.
+class _FakePhotos extends SampleRepo {
+  final rows = <HostelPhoto>[];
+  final uploaded = <Uint8List>[];
+  bool failNext = false;
+  List<String>? lastOrder;
+  String? lastCover;
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async => sortPhotos(rows);
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
+    if (failNext) {
+      failNext = false;
+      throw Exception('network');
+    }
+    uploaded.add(jpg);
+    final p = (id: 'ph${rows.length}', path: '$hid/ph${rows.length}.jpg', url: 'https://x.test/ph${rows.length}.jpg', label: label, ord: ord, cover: cover);
+    rows.add(p);
+    return p;
+  }
+
+  @override
+  Future<void> removePhoto(HostelPhoto p) async => rows.removeWhere((x) => x.id == p.id);
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {
+    lastOrder = [for (final p in ordered) p.id];
+    lastCover = coverId;
+  }
+}
+
+class _FakePicker implements PhotoPicker {
+  _FakePicker(this.w, this.h);
+  final int w, h;
+  @override
+  Future<Uint8List?> pick() async => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
 }
 
 /// B6: a Supabase stand-in with live rows and a Realtime change stream.
@@ -2443,6 +2779,21 @@ class _FakeLive extends SampleRepo {
   Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) => _rec('complaint $hid $cat $body');
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) => _rec('complaint $key $status');
+}
+
+/// C: server invites stand-in.
+class _FakeInvites extends SampleRepo {
+  int calls = 0;
+  (String, String, String)? joined;
+  String? joinError;
+  @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => renew ? 'VAS-K9P' : 'VAS-7Q2';
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) async {
+    if (joinError != null) throw Exception(joinError);
+    joined = (code, name, phone);
+    return 'Vasavi Boys Hostel';
+  }
 }
 
 class _FakeLocator implements Locator {

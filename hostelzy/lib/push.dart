@@ -20,6 +20,16 @@ abstract class Push {
   /// This phone's FCM token, for the server to send pushes to.
   Future<String?> token();
 
+  /// Whether Android lets the app show notifications now, without asking.
+  /// Null where push doesn't exist (tests, web, desktop).
+  Future<bool?> allowed();
+
+  /// New tokens (FCM rotates them).
+  Stream<String> get tokenRefresh;
+
+  /// Forgets this phone's token (sign-out, account deleted).
+  Future<void> deleteToken();
+
   /// Notifications that arrive while the app is open: (title, body).
   Stream<(String, String)> get foreground;
 }
@@ -31,6 +41,12 @@ class NoPush implements Push {
   Future<PushAsk> ask() async => PushAsk.unavailable;
   @override
   Future<String?> token() async => null;
+  @override
+  Future<bool?> allowed() async => null;
+  @override
+  Stream<String> get tokenRefresh => const Stream.empty();
+  @override
+  Future<void> deleteToken() async {}
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
 }
@@ -45,6 +61,16 @@ class FirebasePush implements Push {
 
   @override
   Future<String?> token() => _m.getToken();
+  @override
+  Future<bool?> allowed() async {
+    final st = (await _m.getNotificationSettings()).authorizationStatus;
+    return st == AuthorizationStatus.authorized || st == AuthorizationStatus.provisional;
+  }
+
+  @override
+  Stream<String> get tokenRefresh => _m.onTokenRefresh;
+  @override
+  Future<void> deleteToken() => _m.deleteToken();
   @override
   Stream<(String, String)> get foreground => FirebaseMessaging.onMessage.where((m) => m.notification != null).map((m) => (m.notification!.title ?? 'Hostelzy', m.notification!.body ?? ''));
 }

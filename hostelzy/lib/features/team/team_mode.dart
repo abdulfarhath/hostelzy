@@ -3,38 +3,29 @@ part of '../../state.dart';
 // team mode
 mixin _TeamModeData {
 
-  /// Hostelzy team tools are unlocked on this phone (temporary passcode
-  /// until F13 adds real admin accounts).
+  /// Hostelzy team tools are open on this phone. B7: only for Google
+  /// accounts with the Firebase `team` claim (the passcode is gone).
   bool teamUnlocked = false;
-  String teamCode = '';
 
-  /// G1 stopgap until real admin accounts: 5 wrong tries lock it for 15 min.
-  int _teamFails = 0, _teamLockedUntil = 0;
+  /// Checking the claim with Firebase.
+  bool teamChecking = false;
 }
 
 extension TeamModeActions on AppState {
 
   void openTeam() {
     if (teamUnlocked) return go('aHome');
-    update(() {
-      teamCode = '';
-      sheet = 'team';
-    });
+    update(() => sheet = 'team');
   }
 
-  void unlockTeam() {
-    final t = DateTime.now().millisecondsSinceEpoch;
-    if (t < _teamLockedUntil) return toastMsg('Too many wrong tries. Try again in ${((_teamLockedUntil - t) / 60000).ceil()} min.');
-    if (teamCode != teamPasscode) {
-      _teamFails++;
-      if (_teamFails >= 5) {
-        _teamFails = 0;
-        _teamLockedUntil = t + 15 * 60000;
-        return toastMsg('Too many wrong tries. Team mode is locked for 15 minutes.');
-      }
-      return toastMsg('Wrong passcode. ${5 - _teamFails} tries left.');
-    }
-    _teamFails = 0;
+  /// Asks Firebase whether this Google account is on the Hostelzy team.
+  Future<void> checkTeam() async {
+    if (account == null) return toastMsg('Sign in with your Hostelzy team Google account first.');
+    if (teamChecking) return;
+    update(() => teamChecking = true);
+    final ok = await signIn.isTeam();
+    update(() => teamChecking = false);
+    if (!ok) return toastMsg('${account!.email} isn’t a Hostelzy team account.');
     update(() {
       teamUnlocked = true;
       sheet = null;

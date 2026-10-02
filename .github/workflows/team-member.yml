@@ -1,0 +1,35 @@
+name: Team member
+
+# The founder adds or removes a Hostelzy team Google account (the Firebase
+# `team` claim). Actions → Team member → Run workflow → email + add/remove.
+# Needs the GitHub secret FIREBASE_SERVICE_ACCOUNT (docs/FOUNDER-TODO.md).
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: Google account email (they must have signed in to Hostelzy once)
+        required: true
+        type: string
+      action:
+        description: Add or remove
+        required: true
+        type: choice
+        options: [add, remove]
+
+permissions:
+  contents: read
+
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set the team claim
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EMAIL: ${{ inputs.email }}
+          ACTION: ${{ inputs.action }}
+        run: node --experimental-strip-types tools/team-member.ts "$EMAIL" "$ACTION"

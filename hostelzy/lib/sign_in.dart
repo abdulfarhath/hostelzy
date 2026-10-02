@@ -11,7 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 typedef Account = ({String uid, String name, String email});
 
 /// Why Google sign-in didn't finish.
-enum SignInFail { cancelled, notSetUp, failed }
+enum SignInFail { cancelled, notSetUp, failed, otherAccount }
 
 abstract class SignIn {
   /// False where Google sign-in can't work (tests, web, desktop, no Firebase).
@@ -26,18 +26,34 @@ abstract class SignIn {
   /// The account Firebase still has signed in from last time, if any.
   Account? get current;
 
+  /// B7: the signed-in account has the `team: true` claim (set only by the
+  /// founder's "Team member" GitHub action, never by the app).
+  Future<bool> isTeam();
+
   Future<void> signOut();
+
+  /// C: confirms it's still you (Google again), before deleting the account.
+  Future<SignInFail?> reauth();
+
+  /// C: deletes the Firebase user (right after [reauth]).
+  Future<void> deleteUser();
 }
 
 /// No Google sign-in here: the app offers the local fallback.
 class NoSignIn implements SignIn {
   const NoSignIn();
   @override
+  Future<SignInFail?> reauth() async => SignInFail.notSetUp;
+  @override
+  Future<void> deleteUser() async {}
+  @override
   bool get available => false;
   @override
   Future<(Account?, SignInFail?)> google() async => (null, SignInFail.notSetUp);
   @override
   Future<String?> idToken() async => null;
+  @override
+  Future<bool> isTeam() async => false;
   @override
   Account? get current => null;
   @override
@@ -83,6 +99,17 @@ class FirebaseSignIn implements SignIn {
   Future<String?> idToken() async => _auth.currentUser?.getIdToken();
 
   @override
+  Future<bool> isTeam() async {
+    try {
+      // Forces a fresh token, so a claim added a minute ago counts.
+      final r = await _auth.currentUser?.getIdTokenResult(true);
+      return r?.claims?['team'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Account? get current {
     final u = _auth.currentUser;
     return u == null ? null : (uid: u.uid, name: u.displayName ?? '', email: u.email ?? '');
@@ -92,5 +119,35 @@ class FirebaseSignIn implements SignIn {
   Future<void> signOut() async {
     await _auth.signOut();
     if (_ready) await GoogleSignIn.instance.signOut();
+  }
+
+  @override
+  Future<SignInFail?> reauth() async {
+    final u = _auth.currentUser;
+    if (u == null) return SignInFail.failed;
+    try {
+      final g = GoogleSignIn.instance;
+      if (!_ready) {
+        await g.initialize(serverClientId: _webClientId.isEmpty ? null : _webClientId);
+        _ready = true;
+      }
+      final a = await g.authenticate();
+      await u.reauthenticateWithCredential(GoogleAuthProvider.credential(idToken: a.authentication.idToken));
+      return null;
+    } on GoogleSignInException catch (e) {
+      return e.code == GoogleSignInExceptionCode.canceled ? SignInFail.cancelled : SignInFail.failed;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Re-auth: ${e.code}');
+      return e.code == 'user-mismatch' ? SignInFail.otherAccount : SignInFail.failed;
+    } catch (e) {
+      debugPrint('Re-auth: $e');
+      return SignInFail.failed;
+    }
+  }
+
+  @override
+  Future<void> deleteUser() async {
+    await _auth.currentUser?.delete();
+    if (_ready) await GoogleSignIn.instance.disconnect();
   }
 }

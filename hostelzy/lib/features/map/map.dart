@@ -108,6 +108,8 @@ extension MapAreaActions on AppState {
       hist = [];
     });
     syncProfile();
+    // Push fix: after a Google sign-in, offer notifications once.
+    offerPush();
   }
 
   /// Android back button: close a sheet → previous screen → the role's home

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_config.dart';
 import '../data.dart';
@@ -79,10 +80,10 @@ class SettingsScreen extends StatelessWidget {
     final name = s.meName.isNotEmpty ? s.meName : (s.role == 'owner' ? hostelById(s.ownHid).owner : 'Add your name');
     final phone = '+91 ${phoneSpaced(s.myPhone)}';
     Widget toggle(String k, String t, String sub) => Tap(
-      onTap: () => s.notif[k]! ? s.update(() => s.notif[k] = false) : s.openPerm('notifications'),
+      onTap: () => s.toggleNotif(k),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notif[k]!)]),
+        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notifOn(k))]),
       ),
     );
     return Column(
@@ -223,28 +224,43 @@ class DeleteAccountScreen extends StatelessWidget {
   }
 }
 
-/// Board 3: confirm with the code.
-class DeleteOtpScreen extends StatelessWidget {
-  const DeleteOtpScreen({super.key});
+/// Delete account v2 (design 18): confirm it's you with Google.
+class DeleteConfirmScreen extends StatelessWidget {
+  const DeleteConfirmScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final a = s.account;
+    final google = a != null && s.signIn.available;
+    final name = a?.name.isNotEmpty == true ? a!.name : s.meName;
+    final initials = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2).map((w) => w[0].toUpperCase()).join();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _Head('Delete account', 'Confirm with the code'),
+        const _Head('Delete account', 'Confirm it’s you'),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: VGap(
-            gap: 10,
+            gap: 14,
             children: [
-              Rich([sp(context, 'We send a 6-digit code to '), sp(context, '+91 ${phoneSpaced(s.myPhone)}', w: 800, c: p.tx), sp(context, '.')], s: 14, c: p.mu),
-              Field(value: s.delOtp, numeric: true, placeholder: '6-digit code', fs: 22, w: 800, ls: .2, onChanged: (v) => s.update(() {
-                final d = v.replaceAll(RegExp(r'\D'), '');
-                s.delOtp = d.length > 6 ? d.substring(0, 6) : d;
-              })),
-              T(s.resendLeft > 0 ? 'Didn’t get it? Resend in ${cd(s.resendLeft)}' : 'Didn’t get it? Go back and continue again.', s: 12, c: p.mu),
+              T(google ? 'Sign in with Google once more to delete your Hostelzy account. This can’t be undone.' : 'This phone isn’t signed in with Google, so your Hostelzy data is only on this phone. Deleting removes it from here. This can’t be undone.', s: 15, c: p.mu, lh: 1.5),
+              if (a != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: box(w: 2, c: p.tx),
+                  child: Row(
+                    children: [
+                      Container(width: 40, height: 40, color: p.ac, alignment: Alignment.center, child: T(initials.isEmpty ? '?' : initials, w: 800, c: p.ai)),
+                      const SizedBox(width: 12),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(name, w: 800, s: 15), const SizedBox(height: 1), T(a.email, s: 12, c: p.mu)])),
+                    ],
+                  ),
+                ),
+              if (google)
+                GoogleButton(s.deleting ? 'Deleting…' : 'Confirm with Google', busy: s.deleting, onTap: s.confirmDelete)
+              else
+                Cta('Delete from this phone', icon: 'trash', height: 54, px: 16, fs: 15, onTap: s.confirmDelete),
             ],
           ),
         ),
@@ -252,7 +268,7 @@ class DeleteOtpScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: VGap(gap: 8, children: [Cta('Delete my account', icon: 'trash', height: 54, px: 16, fs: 15, opacity: s.delOtp.length == 6 ? 1 : .4, onTap: s.deleteAccount), OutlineCta('Cancel', icon: 'x', onTap: () => s.tab('me'))]),
+          child: OutlineCta('Keep my account', icon: 'back', height: 50, onTap: () => s.tab('me')),
         ),
       ],
     );
@@ -275,14 +291,15 @@ class DeleteDoneScreen extends StatelessWidget {
           const SizedBox(height: 14),
           const T('Your account is deleted', w: 800, s: 34, lh: 1.02, ls: -.025),
           const SizedBox(height: 14),
-          T('We removed your name, phone, holds and rewards. Your reviews now show as “Former resident”.', s: 15, c: p.mu, lh: 1.5),
-          const SizedBox(height: 10),
-          T('Changed your mind? Sign up again with the same number any time. Your old history won’t come back.', s: 13, c: p.mu, lh: 1.5),
+          T('We removed your name, phone, Google sign-in, holds, saved hostels and rewards. Reviews stay as “Former resident”.', s: 15, c: p.mu, lh: 1.5),
           const Spacer(),
-          Cta('Close', icon: 'x', height: 54, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.update(() {
-            s.screen = 'welcome';
-            s.hist = [];
-          })),
+          Cta('Close Hostelzy', icon: 'x', height: 54, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () {
+            s.update(() {
+              s.screen = 'welcome';
+              s.hist = [];
+            });
+            SystemNavigator.pop();
+          }),
         ],
       ),
     );

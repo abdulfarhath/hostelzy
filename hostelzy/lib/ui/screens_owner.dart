@@ -1142,31 +1142,53 @@ class OwnerManageScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(child: PageHead(kicker: hostelById(s.ownHid).name, title: 'Manage')),
-              // Room layouts (F12), managers (F14), the Hostelzy plan (F10).
-              Tap(
-                onTap: () => s.go('oLayouts'),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: const T('Layouts', w: 800, s: 13),
-                ),
-              ),
-              Tap(
-                onTap: () => s.go('oTeam'),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: const T('Team', w: 800, s: 13),
-                ),
-              ),
-              Tap(
-                onTap: () => s.go('oPlan'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
+              // B7: the buttons scroll sideways on small phones.
+              Flexible(
+                flex: 3,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    children: [
+                      // B7: hostel photos.
+                      Tap(
+                        key: const ValueKey('managePhotos'),
+                        onTap: s.openPhotos,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Photos', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oLayouts'),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Layouts', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oTeam'),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Team', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oPlan'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1347,7 +1369,9 @@ class OwnerInviteScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final link = inviteLink('ANJ-7Q2');
+    // C: the code comes from the server (sample data: the sample code).
+    final code = s.inviteCode;
+    final link = code == null ? '' : inviteLink(code);
     Widget step(String t, String d) => Expanded(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(t, w: 800, s: 13), const SizedBox(height: 2), T(d, s: 12, c: p.mu)]),
     );
@@ -1377,15 +1401,22 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
                     child: Column(
                       children: [
+                        if (code == null)
+                          OnShow(s.loadInvite, child: SizedBox(height: 203, child: Center(child: T('Getting your invite code…', s: 14, c: p.mu))))
+                        else
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
                           child: QrImageView(data: link, size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                         ),
                         const SizedBox(height: 12),
-                        T(shortLink(link), w: 800, s: 15),
-                        const SizedBox(height: 2),
-                        T("Stick it at the front desk or send it in your residents' group.", s: 13, c: p.mu, align: TextAlign.center),
+                        if (code != null) ...[
+                          T(shortLink(link), w: 800, s: 15),
+                          const SizedBox(height: 2),
+                          T("Stick it at the front desk or send it in your residents' group. Code $code.", s: 13, c: p.mu, align: TextAlign.center),
+                          const SizedBox(height: 6),
+                          Tap(onTap: () => s.loadInvite(renew: true), child: T('Make a new code (the old link stops working)', s: 12, w: 800, c: p.ad)),
+                        ],
                       ],
                     ),
                   ),
@@ -1393,9 +1424,9 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join ${hostelById(s.ownHid).name} on Hostelzy to pay rent, raise complaints and see the food menu: $link'))),
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, opacity: code == null ? .4 : 1, onTap: code == null ? null : () => s.share('Join ${hostelById(s.ownHid).name} on Hostelzy to pay rent, raise complaints and see the food menu: $link'))),
                         const SizedBox(width: 8),
-                        Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sharePoster(link))),
+                        Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, opacity: code == null ? .4 : 1, onTap: code == null ? null : () => s.sharePoster(link))),
                       ],
                     ),
                   ),

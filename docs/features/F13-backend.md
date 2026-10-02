@@ -248,6 +248,53 @@ Not needed.
 - Founder: run the B6 SQL file once in the SQL Editor (`docs/FOUNDER-TODO.md`).
 - Still to come (C): the owner and resident screens' writes (accept a hold, confirm a payment, update a complaint) go to Supabase, and Realtime then shows them on the other phone.
 
+
+**C · account deletion · 2026-10-02** (branch `feature/c-account-deletion`, design board 18 "Delete account v2"):
+- Settings → Delete account → **Confirm it’s you**: an account card with initials, name and email, and **Confirm with Google** (the official Google button, now also on the sign-in screen). **Keep my account** leaves.
+- Order:
+  1. Google re-authentication (`SignIn.reauth()`; a different account or a cancel stops it);
+  2. `delete_my_account()` on the server;
+  3. the Firebase user is deleted and Google disconnected;
+  4. the phone forgets everything.
+  If any step fails, nothing is called deleted.
+- Not signed in with Google: "Delete from this phone" (all the data is there). The fake 6-digit code step is gone.
+- `20261002070000_c_delete_account.sql`, `delete_my_account()` (signed-in users only):
+  - removes the profile, push tokens, move requests and staff rows;
+  - releases open holds and frees their beds;
+  - keeps others' records without the person: enquiries as "Deleted user", reviews as "Former resident", payments and complaints detached, stays unlinked;
+  - owners of a live hostel are asked to hand it over first;
+  - `guard_payment` and `guard_review` allow only that change during the deletion;
+  - tests: `supabase/tests/delete_test.sql`.
+- Done screen copy from the design, and **Close Hostelzy**. The web delete page now says the app deletes server data.
+
+**Push fix · 2026-10-02** (branch `feature/push-fix`, from the founder's phone test: no prompt, then no push):
+- **Offer once after sign-in:** the first time a Google-signed-in user lands on a home screen, the notifications explainer shows, then Android's prompt. "Not now" is remembered on the phone (`pushAsked`).
+- **Token saved every time:** on every app start (after Supabase connects), after Google sign-in, and when FCM rotates the token (`onTokenRefresh`). If Android already allows notifications and there's an account, `push_tokens` gets this phone's token. It also works when permission was given in the phone's settings or an earlier install.
+- **Honest Settings switch:** it shows on only if Android allows notifications too. When Android has them off, tapping asks Android right away, with no second tap.
+- **Sign-out and account deletion** remove this phone's token from the server and FCM.
+- **Failures show a toast** ("Couldn't turn on notifications for this phone…") instead of a hidden debug line. In the demo APK the message says no server sends anything.
+- Tests:
+  - `push fix: after sign-in the app offers once…`;
+  - the Settings switch test and the sign-in test are updated.
+
+
+**C · server-issued invites · 2026-10-02** (branch `feature/c-invites`):
+- `20261002080000_c_invites.sql`:
+  - `invites` holds one active code per hostel, like `VAS-7Q2`, from the hostel's name plus 3 random letters or digits. Only the server makes codes.
+  - `invite_signups` holds join requests.
+  - RPCs:
+    - `hostel_invite(h)` (staff);
+    - `new_hostel_invite(h)` (the old code stops working);
+    - `join_with_invite(code, name, phone, bed)`: signed in with Google; one pending request per person per hostel; the owner gets a push;
+    - `decide_signup(id, approve)`: staff; an approval creates the stay, matched as usual, and tells the resident.
+  - Tests: `supabase/tests/invites_test.sql`.
+- **App:**
+  - Owner Invite QR shows the server's code ("Getting your invite code…" until then), with "Make a new code".
+  - The resident gate has "Have an invite code?" and **Ask to join**; the code is filled in when the invite link opened the app (go_router `j/`).
+  - Server reasons are shown in plain words.
+  - Sample data never pretends to send it.
+- **Next:** with B6's live rows, the owner's "Waiting for you" list reads `invite_signups`, and Approve / Remove call `decide_signup`.
+
 **C · live writes · 2026-10-02** (branch `feature/c-live-writes`):
 - Signed in on Supabase with live rows (`AppState.onServer`), these actions write to the server first, then refetch. Realtime updates the other phone.
   - **Enquiry:** the server records it and returns the HZ code that goes into the WhatsApp message. Asking again reuses the code.

@@ -159,7 +159,52 @@ Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team co
   - a one-tag hostel, an unknown hostel id, an editor on a room without a layout, and the go-live check.
 
 
+**B7 · photos · 2026-10-02** (branch `feature/b7-photos`, design boards 14–16):
+- **Owner Photos** (Manage → Photos):
+  - albums: Hostel plus room types;
+  - a 3-column grid with the cover first, order numbers and labels;
+  - long-press and drag to reorder;
+  - uploads show their progress (prepared 50%, uploaded 100%); failed tiles say "Failed · Retry";
+  - Add photos; a minimum of 8;
+  - tap a photo to make it the cover or remove it.
+- **Crop:** 4:3 listing, Square or Free; "Set as cover photo"; what the photo shows, or its room type.
+  - The phone centre-crops, fits the photo in 1600 px and saves a JPEG at quality 80 (`package:image`), so a 3–5 MB photo becomes about 200–400 KB.
+  - Picked with `image_picker`.
+- **Tenant gallery:** the hostel page shows the cover and "See N photos". The gallery has a dark viewer (swipe), category chips with counts, thumbnails and "Photos by the owner".
+  - Hostels without photos say "No photos yet". The fake "1 / 12" is gone.
+- **Server:** `20261002050000_b7_photos.sql`:
+  - a public `hostel-photos` bucket with random file names;
+  - the `hostel_photos` table: label, order, one cover per hostel;
+  - RLS: only that hostel's staff or the team upload, change or remove, and only in that hostel's folder; tenants see live hostels' photos.
+  - Tests: `supabase/tests/b7_test.sql`.
+- **Sample data never pretends to upload:** "Photos upload in the real Hostelzy app."
+- Manage's header buttons scroll sideways on small phones; the 320 px check now covers Manage, Photos and Gallery.
+- Tests: `B7: photos are cropped…` and `B7: owner adds, orders and removes photos…`.
+
 **go_router · 2026-10-02** (branch `feature/go-router`; this was the follow-up to group 1):
 - `MaterialApp.router` with `lib/router.dart`. AppState keeps the screens and the back stack, so Android back works as before through PopScope.
 - Deep links from the web pages: `hostelzy://app/r?c=HZ-…` opens that enquiry (owner: Today with the enquiry sheet; tenant: Holds). A code this account can't see gets "isn't in this account". `hostelzy://app/j?c=…` keeps the invite code for sign-up. The demo APK uses `hostelzy-demo://`.
 - Other links open the app where it was. Test: `go_router deep links…`.
+
+**B7 part 2 · team accounts, console, no passcode · 2026-10-02** (branch `feature/b7-team-console`, design boards 19–22):
+- **Team accounts:**
+  - A Google account is on the team when Firebase has the `team: true` claim. The founder sets it with **Actions → Team member** (`tools/team-member.ts` and `supabase/functions/_shared/team.ts`, using Identity Toolkit and the service account from a GitHub secret).
+  - The app checks the claim with a fresh token (`SignIn.isTeam()`). Supabase's `is_team()` reads the same claim.
+- **The passcode mode is gone:** `teamPasscode`, the lockout and the passcode field are removed. The team sheet asks you to sign in with a team Google account and then checks it.
+- **Team console** (`app/console/`, GitHub Pages):
+  - Sign-in is Continue with Google, and non-team accounts are signed out with a message.
+  - **Onboarding:** a 6-column kanban (Lead, Visited, Signed up, Data complete, Live / trial, Paying). Click a draft to move it on. **Add hostel** creates a draft hostel plus its lead row: owner phone, visit time, gender.
+  - **Payments:**
+    - invoices with UTR;
+    - Checking rows have Mark paid / Not received;
+    - late rows have Remind on WhatsApp, using the owner's phone from the lead.
+  - **Fair Play cases:** New / Waiting / Decide / Closed, each with Close · no issue, Ask for more, and Strike · warning (adds a strike).
+  - **Layout help queue:** says honestly that requests come on WhatsApp for now.
+  - **Hostels:** Go live / Pause.
+  - Data comes from Supabase under the same RLS. The new `hostel_leads` table is team-only.
+  - Until the founder adds the Firebase web config, the page says "Not set up yet".
+- Tests:
+  - `supabase/functions/tests/team.test.ts` and `console.test.ts`;
+  - `supabase/tests/console_test.sql`;
+  - the app's team test now uses a fake team claim.
+- Founder steps: `docs/FOUNDER-TODO.md` 4b.

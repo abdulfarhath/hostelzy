@@ -2,6 +2,7 @@
 // sample hostels (offline, tests); `SupabaseRepo` reads live hostels from the
 // database. Row Level Security decides what each user may read or write.
 
+import 'dart:typed_data';
 import 'dart:async';
 import 'dart:ui' show Offset;
 
@@ -9,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_config.dart';
 import '../../data.dart';
+import '../photos/photo.dart';
 import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
@@ -19,6 +21,9 @@ typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<St
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
 
 abstract class HostelRepo {
+  /// True when this talks to a real server (Supabase); false on sample data.
+  bool get remote;
+
   /// Live hostels, or null to keep the built-in sample data.
   Future<Listings?> listings();
   Future<RemoteSettings?> settings();
@@ -29,6 +34,35 @@ abstract class HostelRepo {
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
 
+  /// C: the hostel's invite code from the server ([renew]: a new one, the old
+  /// link stops working). Null on sample data.
+  Future<String?> inviteCode(String hid, {bool renew = false});
+
+  /// C: asks to join the hostel with [code]; returns the hostel's name.
+  /// Throws [UnsupportedError] on sample data, or with the server's reason.
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''});
+
+  /// C: the owner approves or rejects an invite sign-up.
+  Future<void> decideSignup(String id, bool approve);
+
+  /// Removes this phone's token (sign-out, account deleted).
+  Future<void> removePushToken(String token);
+
+  /// C: deletes the signed-in user's data on the server (keeps others'
+  /// records without their identity). Throws with the server's reason.
+  Future<void> deleteMyAccount();
+
+  /// B7: a hostel's photos, cover first. Empty on sample data.
+  Future<List<HostelPhoto>> photos(String hid);
+
+  /// B7: uploads a compressed JPEG to the hostel's folder and records it.
+  /// Throws [UnsupportedError] on sample data (nothing is uploaded).
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover});
+
+  Future<void> removePhoto(HostelPhoto p);
+
+  /// Saves the order (list order) and which photo is the cover.
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId);
   /// B6: what this user may see of holds, enquiries, payments and complaints;
   /// null keeps the built-in sample data.
   Future<LiveRows?> live({String? me});
@@ -51,6 +85,8 @@ abstract class HostelRepo {
 class SampleRepo implements HostelRepo {
   const SampleRepo();
   @override
+  bool get remote => false;
+  @override
   Future<Listings?> listings() async => null;
   @override
   Future<RemoteSettings?> settings() async => null;
@@ -58,6 +94,24 @@ class SampleRepo implements HostelRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
   @override
   Future<void> savePushToken(String token) async {}
+  @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => null;
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> decideSignup(String id, bool approve) async {}
+  @override
+  Future<void> removePushToken(String token) async {}
+  @override
+  Future<void> deleteMyAccount() async {}
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async => const [];
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> removePhoto(HostelPhoto p) async {}
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {}
   @override
   Future<LiveRows?> live({String? me}) async => null;
   @override
@@ -79,6 +133,8 @@ class SampleRepo implements HostelRepo {
 class SupabaseRepo implements HostelRepo {
   SupabaseRepo(this.db);
   final SupabaseClient db;
+  @override
+  bool get remote => true;
 
   /// Connects with the public anon key from `app_config.dart`. Signed-in
   /// users send their Firebase ID token ([idToken]); Supabase checks it
@@ -86,6 +142,48 @@ class SupabaseRepo implements HostelRepo {
   static Future<SupabaseRepo> connect({Future<String?> Function()? idToken}) async {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseRepo(Supabase.instance.client);
+  }
+
+  @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => await db.rpc(renew ? 'new_hostel_invite' : 'hostel_invite', params: {'h': hid}) as String?;
+
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) async =>
+      await db.rpc('join_with_invite', params: {'p_code': code, 'p_name': name, 'p_phone': phone, 'p_bed': bed}) as String;
+
+  @override
+  Future<void> decideSignup(String id, bool approve) => db.rpc('decide_signup', params: {'p_id': id, 'p_approve': approve});
+
+  @override
+  Future<void> deleteMyAccount() => db.rpc('delete_my_account');
+
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async =>
+      sortPhotos([for (final r in await db.from('hostel_photos').select().eq('hostel_id', hid)) photoFromRow(supabaseUrl, r)]);
+
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
+    final path = '$hid/${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${jpg.length.toRadixString(36)}.jpg';
+    await db.storage.from('hostel-photos').uploadBinary(path, jpg, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    if (cover) await db.from('hostel_photos').update({'cover': false}).eq('hostel_id', hid).eq('cover', true);
+    final row = await db.from('hostel_photos').insert({'hostel_id': hid, 'path': path, 'label': label, 'ord': ord, 'cover': cover}).select().single();
+    return photoFromRow(supabaseUrl, row);
+  }
+
+  @override
+  Future<void> removePhoto(HostelPhoto p) async {
+    await db.from('hostel_photos').delete().eq('id', p.id);
+    await db.storage.from('hostel-photos').remove([p.path]);
+  }
+
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {
+    if (ordered.isEmpty) return;
+    // One cover at a time: clear it first, then set order and the new cover.
+    await db.from('hostel_photos').update({'cover': false}).inFilter('id', [for (final p in ordered) p.id]);
+    for (final (i, p) in ordered.indexed) {
+      await db.from('hostel_photos').update({'ord': i, 'cover': p.id == coverId}).eq('id', p.id);
+    }
   }
 
   @override
@@ -155,6 +253,9 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> savePushToken(String token) => db.from('push_tokens').upsert({'token': token, 'platform': 'android', 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'token');
+
+  @override
+  Future<void> removePushToken(String token) => db.from('push_tokens').delete().eq('token', token);
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.

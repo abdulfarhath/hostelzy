@@ -12,6 +12,11 @@ mixin _LinksData {
   /// A resident invite code from a link (app/j/), kept until the resident
   /// signs up with it.
   String? pendingInvite;
+
+  /// C: the code the resident types on the gate, and the owner's code.
+  String inviteDraft = '';
+  bool joining = false;
+  String? inviteCode;
 }
 
 extension LinksActions on AppState {
@@ -34,6 +39,49 @@ extension LinksActions on AppState {
         sheet = null;
       }
     });
+  }
+
+  /// C: the owner's invite code from the server (sample data: the sample code).
+  Future<void> loadInvite({bool renew = false}) async {
+    try {
+      final c = await data.inviteCode(ownHid, renew: renew);
+      update(() => inviteCode = c ?? (AppState.samples ? 'ANJ-7Q2' : null));
+      if (renew && c != null) toastMsg('New code $c. The old link and poster stop working.');
+    } catch (e) {
+      debugPrint('invite: $e');
+      toastMsg('Couldn’t get your invite code. Check your internet.');
+    }
+  }
+
+  /// C: a signed-in resident asks to join with a code; the owner approves.
+  Future<void> joinInvite() async {
+    final c = (inviteDraft.trim().isEmpty ? pendingInvite ?? '' : inviteDraft).trim().toUpperCase();
+    if (!RegExp(r'^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$').hasMatch(c)) return toastMsg('Enter the invite code from your owner, like ANJ-7Q2.');
+    if (account == null) return toastMsg('Sign in with Google to join with a code.');
+    if (joining) return;
+    update(() => joining = true);
+    try {
+      final h = await data.joinWithInvite(c, name: meName, phone: phone);
+      update(() {
+        joining = false;
+        pendingInvite = null;
+        inviteDraft = '';
+      });
+      toastMsg('Asked to join $h. Your owner approves it, then your stay opens here.');
+    } on UnsupportedError {
+      update(() => joining = false);
+      toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+    } catch (e) {
+      update(() => joining = false);
+      final m = '$e';
+      toastMsg(m.contains('valid any more')
+          ? 'That code isn’t valid any more. Ask your owner for the new one.'
+          : m.contains('already asked')
+          ? 'You already asked. Your owner will approve it.'
+          : m.contains('name and 10-digit')
+          ? 'Add your name and 10-digit phone in Settings first.'
+          : 'Couldn’t send it. Check your internet and try again.');
+    }
   }
 
   /// Deep link app/j/?c=…: keeps the invite code for the resident sign-up.

@@ -20,6 +20,13 @@ mixin _LoginData {
   /// backend (`push_tokens`) once phone login works.
   String? pushToken;
 
+  /// Push fix: Android's permission as last seen (null: no push here), the
+  /// token the server has, and whether we already asked after sign-in.
+  bool? osPushAllowed;
+  String? _savedPushToken;
+  bool pushAsked = false;
+  StreamSubscription<String>? _tokenSub;
+
   /// Permission explainer shown: notifications | location | camera.
   String permKind = 'notifications';
 
@@ -51,6 +58,7 @@ extension LoginActions on AppState {
         sheet = null;
       });
       startLive();
+      syncPushToken();
       return;
     }
     toastMsg(switch (fail) {
@@ -83,27 +91,106 @@ extension LoginActions on AppState {
     }
   }
 
-  /// After the explainer: Android's own prompt, then the token.
+  /// After the explainer (or the Settings switch): Android's own prompt,
+  /// then the token goes to the server.
   Future<void> enablePush() async {
+    update(() => pushAsked = true);
     final r = await push.ask();
     switch (r) {
       case PushAsk.allowed:
-        pushToken = await push.token();
-        final t = pushToken;
-        if (t != null && account != null) {
-          try {
-            await data.savePushToken(t);
-          } catch (e) {
-            debugPrint('Push token: $e');
-          }
-        }
-        update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
-        toastMsg('Notifications allowed. Hostelzy starts sending them once your account is online.');
+        update(() {
+          osPushAllowed = true;
+          notif.updateAll((k, v) => k == 'beds' ? v : true);
+        });
+        if (account == null) return toastMsg('Notifications allowed. Sign in with Google to get them.');
+        if (!data.remote) return toastMsg('Notifications allowed. This demo has no server, so nothing is sent.');
+        if (await syncPushToken(force: true)) toastMsg('Notifications are on for this phone.');
       case PushAsk.denied:
+        update(() => osPushAllowed = false);
         toastMsg('Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
       case PushAsk.unavailable:
         update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
         toastMsg('Saved. Notifications work in the Android app.');
     }
+  }
+
+  /// Push fix: on app start, after sign-in and on token refresh. If Android
+  /// already allows notifications and there's an account, the server gets
+  /// this phone's token. A failure is said out loud. True when it's saved.
+  Future<bool> syncPushToken({bool force = false}) async {
+    final ok = await push.allowed();
+    update(() => osPushAllowed = ok);
+    if (ok != true || account == null) return false;
+    final t = await push.token();
+    if (t == null) return false;
+    pushToken = t;
+    if (!force && t == _savedPushToken) return true;
+    try {
+      await data.savePushToken(t);
+      _savedPushToken = t;
+      return true;
+    } catch (e) {
+      debugPrint('Push token: $e');
+      toastMsg('Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app.');
+      return false;
+    }
+  }
+
+  /// Keeps the server's copy when FCM rotates the token.
+  void watchPushToken() {
+    _tokenSub?.cancel();
+    _tokenSub = push.tokenRefresh.listen((t) async {
+      if (account == null || osPushAllowed != true) return;
+      try {
+        await data.savePushToken(t);
+        _savedPushToken = t;
+        pushToken = t;
+      } catch (e) {
+        debugPrint('Push token refresh: $e');
+      }
+    });
+  }
+
+  /// Sign-out / account deleted: this phone stops getting their pushes.
+  Future<void> forgetPushToken() async {
+    final t = _savedPushToken ?? pushToken;
+    _savedPushToken = null;
+    pushToken = null;
+    if (t == null) return;
+    try {
+      await data.removePushToken(t);
+    } catch (e) {
+      debugPrint('Push token remove: $e');
+    }
+    try {
+      await push.deleteToken();
+    } catch (_) {}
+  }
+
+  /// First time after a Google sign-in lands on a home screen: explain, then
+  /// ask (once; "Not now" is remembered). Already allowed: just save the token.
+  Future<void> offerPush() async {
+    if (account == null) return;
+    final ok = await push.allowed();
+    update(() => osPushAllowed = ok);
+    if (ok == true) {
+      await syncPushToken();
+      return;
+    }
+    if (ok == null || pushAsked) return;
+    update(() => pushAsked = true);
+    openPerm('notifications');
+  }
+
+  /// Settings switch: shows on only when Android allows it too.
+  bool notifOn(String k) => notif[k]! && osPushAllowed != false;
+
+  void toggleNotif(String k) {
+    if (notifOn(k)) return update(() => notif[k] = false);
+    if (osPushAllowed == true) return update(() => notif[k] = true);
+    // Off at Android level: ask right away.
+    enablePush().then((_) {
+      if (osPushAllowed == true) update(() => notif[k] = true);
+    });
   }
 }
