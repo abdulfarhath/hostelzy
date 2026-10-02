@@ -505,6 +505,22 @@ class Tap extends StatelessWidget {
 }
 
 /// Horizontal or vertical scroller without scrollbars or overscroll glow.
+/// F18: a full-height screen that scrolls when it doesn't fit (small phones,
+/// keyboard open) while a Spacer still pushes the buttons to the bottom.
+class FillScroll extends StatelessWidget {
+  const FillScroll({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) => Scroll(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: box.maxHeight),
+        child: IntrinsicHeight(child: child),
+      ),
+    ),
+  );
+}
+
 class Scroll extends StatelessWidget {
   const Scroll({super.key, required this.child, this.horizontal = false, this.controller});
   final Widget child;

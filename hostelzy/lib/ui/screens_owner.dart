@@ -138,7 +138,7 @@ class OwnerTodayScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    T('${(c.booked / c.t * 100).round()}%', w: 800, s: 64, lh: .9, ls: -.04),
+                    T('${c.t == 0 ? 0 : (c.booked / c.t * 100).round()}%', w: 800, s: 64, lh: .9, ls: -.04),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Padding(
@@ -158,12 +158,12 @@ class OwnerTodayScreen extends StatelessWidget {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(width: w * c.booked / c.t, color: p.tx),
+                          Container(width: c.t == 0 ? 0 : w * c.booked / c.t, color: p.tx),
                           SizedBox(
-                            width: w * c.held / c.t,
+                            width: c.t == 0 ? 0 : w * c.held / c.t,
                             child: CustomPaint(painter: Hatch(p.tx, 2, 5)),
                           ),
-                          Container(width: w * c.soon / c.t, color: p.ab),
+                          Container(width: c.t == 0 ? 0 : w * c.soon / c.t, color: p.ab),
                         ],
                       );
                     },
@@ -509,7 +509,7 @@ class _EnquiryRow extends StatelessWidget {
                   border: d ? p.tx : p.ac,
                   onTap: () {
                     s.markContacted(e.ref);
-                    s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).');
+                    s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
                   },
                 ),
               ),
@@ -896,7 +896,7 @@ class OwnerRentScreen extends StatelessWidget {
                   child: LayoutBuilder(
                     builder: (context, c) => Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [Container(width: c.maxWidth * collected / expected, color: p.gn)],
+                      children: [Container(width: expected == 0 ? 0 : c.maxWidth * collected / expected, color: p.gn)],
                     ),
                   ),
                 ),
@@ -1130,9 +1130,12 @@ class OwnerManageScreen extends StatelessWidget {
         ),
       );
     }
+    // F18: while typing, the header makes room for the field and keyboard.
+    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (!typing)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Row(
@@ -1169,7 +1172,16 @@ class OwnerManageScreen extends StatelessWidget {
             ],
           ),
         ),
-        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('rates', 'Rates'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : v == 'rates' ? s.openRates() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
+        // F18: six tabs scroll sideways on small phones instead of squashing.
+        LayoutBuilder(
+          builder: (context, c) => Scroll(
+            horizontal: true,
+            child: SizedBox(
+              width: c.maxWidth < 460 ? 460 : c.maxWidth,
+              child: Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('rates', 'Rates'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : v == 'rates' ? s.openRates() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
+            ),
+          ),
+        ),
         const SizedBox(height: 14),
         Expanded(
           child: Container(
@@ -1591,7 +1603,7 @@ class RateCard extends StatelessWidget {
                           children: [
                             T('Floor ', s: 12, c: p.mu),
                             for (final f in floorsOf(s.rooms[s.ownHid]!)) ...[
-                              if (f != floorsOf(s.rooms[s.ownHid]!).first) T(' · ', s: 12, c: p.mu),
+                              if (f != floorsOf(s.rooms[s.ownHid]!).firstOrNull) T(' · ', s: 12, c: p.mu),
                               Tap(onTap: () => s.update(() => s.rcFloor = f), child: T('$f', s: 12, w: f == s.rcFloor ? 800 : 400, c: f == s.rcFloor ? p.tx : p.mu, underline: f == s.rcFloor)),
                             ],
                           ],

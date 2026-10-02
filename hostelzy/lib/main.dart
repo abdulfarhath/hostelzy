@@ -107,7 +107,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
         textSelectionTheme: const TextSelectionThemeData(selectionColor: Color(0x55EC3013)),
       ),
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+        // F18: follow the phone's text size, capped so layouts still fit.
+        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 1.3)),
         child: child!,
       ),
       home: overview

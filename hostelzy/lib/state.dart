@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,6 +38,18 @@ class AppState extends ChangeNotifier {
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
     enquiries = seedEnquiries(n);
+    // F18: the Play Store build starts with nobody else's data: no sample
+    // residents, hold requests, enquiries, sign-ups, cases, complaints or
+    // payments. Sample hostels for browsing stay until real ones are live (F13).
+    if (!samples) {
+      reqs = [];
+      enquiries = [];
+      residents = [];
+      signups = [];
+      cases = [];
+      complaints = [];
+      payments = [];
+    }
     _planDemo(plan);
     // F15: old builds must update; maintenance from the backend (F13).
     if (appBuild < minSupportedBuild || maintenanceUntil.isNotEmpty) {
@@ -56,7 +69,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -438,7 +451,8 @@ class AppState extends ChangeNotifier {
   });
 
   void sendLayoutRequest() {
-    final l = layoutOf(ownHid, lRoom)!;
+    final l = layoutOf(ownHid, lRoom);
+    if (l == null) return toastMsg('This room has no layout yet.');
     if (lReqText.trim().isEmpty && lReqAdded.isEmpty) return toastMsg('Say what’s different, or add a photo.');
     update(() {
       l.request = (text: lReqText.trim(), added: Set.of(lReqAdded), size: lReqLen.isNotEmpty && lReqWid.isNotEmpty ? '$lReqLen × $lReqWid ft' : '', at: '${dayMon(appToday)}, 7:10 pm');
@@ -473,6 +487,11 @@ class AppState extends ChangeNotifier {
   }
 
   void openLayout(int n, {bool editor = false}) => update(() {
+    // F18: a room without a layout gets a starting one to edit (no crash).
+    final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
+    if (editor && r != null && layoutOf(ownHid, n) == null) {
+      (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)..published = null;
+    }
     lRoom = n;
     edSel = null;
     hist = [...hist, screen];
@@ -960,6 +979,7 @@ class AppState extends ChangeNotifier {
   List<String> get goLiveLeft {
     final d = draft;
     return [
+      if (d.floors.every((f) => f.noBeds || f.rooms.isEmpty)) 'At least one room with beds',
       if (!d.ownerVerified) 'Owner phone checked by a call',
       if (!d.fairPlay) 'Fair Play rules accepted',
       if (d.photoCount < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
@@ -1007,7 +1027,7 @@ class AppState extends ChangeNotifier {
       name: d.name,
       gender: d.gender,
       area: d.area,
-      from: rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b),
+      from: rs.isEmpty ? 0 : rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b),
       rating: 0,
       reviews: 0,
       food: d.food != 'No food',
@@ -1370,8 +1390,9 @@ class AppState extends ChangeNotifier {
       rateDraft = Map.of(rates[ownHid]!);
       acDraft = {for (final r in rooms[ownHid]!) r.n: r.ac};
     }
-    if (screen == 'compare' && cmpA.isEmpty) {
-      final r = rooms[hid]!.firstWhere((r) => layoutOf(hid, r.n) != null && r.beds.where(_open).length >= 2);
+    final cr = screen == 'compare' && cmpA.isEmpty ? rooms[hid]!.where((r) => layoutOf(hid, r.n) != null && r.beds.where(_open).length >= 2).firstOrNull : null;
+    if (cr != null) {
+      final r = cr;
       final free = r.beds.where(_open).toList();
       room = r.n;
       floor = r.floor;
@@ -1433,6 +1454,48 @@ class AppState extends ChangeNotifier {
     hist = h;
     sheet = null;
   });
+
+  /// F18: sample owner / resident data only in debug builds and tests.
+  static bool samples = kDebugMode;
+
+  /// Owner screens: sample data in debug; in release only for the Hostelzy
+  /// team (team mode) or hostels the team put live on a visit, until owner
+  /// accounts come with the backend (F13 part 2).
+  bool get canOwner => samples || teamUnlocked || ownerHostels.any((h) => !isSeedHostel(h));
+
+  /// Resident screens need an owner to have added you (backend, F13 part 2).
+  bool get canResident => samples;
+
+  /// Which honest "not yet" screen the role picker showed: owner | resident.
+  String roleGate = 'resident';
+
+  /// Owner gate: "Request a visit" form.
+  String gateHostel = '', gateArea = '';
+
+  /// Sends the visit request to the Hostelzy team on WhatsApp (no backend yet).
+  void requestVisit() {
+    if (gateHostel.trim().length < 3) return toastMsg('Enter your hostel’s name.');
+    if (gateArea.isEmpty) return toastMsg('Pick the area.');
+    whatsapp(supportWhatsApp, 'Hi Hostelzy, please visit my hostel to list it.\nHostel: ${gateHostel.trim()}\nArea: $gateArea\nName: ${meName.isEmpty ? '-' : meName}\nPhone: ${phone.isEmpty ? '-' : '+91 ${phoneSpaced(phone)}'}');
+  }
+
+  /// Role picker: gated roles show how to get access instead of sample data.
+  void pickRole(String r) {
+    if ((r == 'owner' && !canOwner) || (r == 'resident' && !canResident)) {
+      return update(() {
+        roleGate = r;
+        hist = [...hist, screen];
+        screen = 'roleGate';
+      });
+    }
+    update(() {
+      role = r;
+      // F07: a new owner accepts the Fair Play rules first.
+      screen = r == 'owner' && !fairAccepted ? 'oRules' : homeOf[r]!;
+      hist = [];
+    });
+    syncProfile();
+  }
 
   /// F18: when Android back last showed "Press back again to exit" (ms).
   int _backAt = 0;
@@ -1674,7 +1737,7 @@ class AppState extends ChangeNotifier {
     rateDraft = Map.of(rates[ownHid]!);
     acDraft = {for (final r in rooms[ownHid]!) r.n: r.ac};
     final fs = floorsOf(rooms[ownHid]!);
-    rcFloor = fs.contains(2) ? 2 : fs.first;
+    rcFloor = fs.isEmpty ? 1 : (fs.contains(2) ? 2 : fs.first);
     // Manage → Rates (DECISIONS 2026-10-02).
     screen = 'oMore';
     hist = [];
@@ -1691,7 +1754,7 @@ class AppState extends ChangeNotifier {
 
   /// "Not offered · + Add": starts from the other type's price (± ₹1,200).
   void addRate(bool ac, int share) => update(() {
-    final other = rateDraft![rateKey(!ac, share)] ?? rateDraft!.values.reduce((a, b) => a < b ? a : b);
+    final other = rateDraft![rateKey(!ac, share)] ?? (rateDraft!.isEmpty ? hostelById(ownHid).from : rateDraft!.values.reduce((a, b) => a < b ? a : b));
     rateDraft![rateKey(ac, share)] = other + (ac ? 1200 : -1200);
   });
 
@@ -1869,6 +1932,8 @@ class AppState extends ChangeNotifier {
   /// Opens the UPI app with the owner's ID, amount and note filled in.
   void payByUpi(Payment p) {
     final u = ownerUpi[p.hid]!;
+    // F18: never pay a sample UPI ID in the Play Store build.
+    if (!samples && u.id.startsWith('sample.')) return toastMsg('This is a sample listing, so it has no real UPI ID. Don’t pay it.');
     if (u.id.isEmpty) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner} hasn’t added a UPI ID yet. Ask them on WhatsApp.');
     openLink(upiUri(id: u.id, name: u.name, amt: p.amt, note: p.note), 'a UPI app');
     update(() {
@@ -2191,8 +2256,27 @@ class AppState extends ChangeNotifier {
   }
 
   /// WhatsApp with the message filled in; [phone] empty lets the user pick a chat.
-  void whatsapp(String phone, String text) => openLink(Uri.parse('https://wa.me/${phone.isEmpty ? '' : '91$phone'}?text=${Uri.encodeComponent(text)}'), 'WhatsApp');
-  void call(String phone) => openLink(Uri.parse('tel:+91$phone'), 'the phone app');
+  void whatsapp(String phone, String text) {
+    if (_fakeContact(phone)) return;
+    openLink(Uri.parse('https://wa.me/${phone.isEmpty ? '' : '91$phone'}?text=${Uri.encodeComponent(text)}'), 'WhatsApp');
+  }
+
+  void call(String phone) {
+    if (phone.isEmpty) return toastMsg('No number to call yet.');
+    if (_fakeContact(phone)) return;
+    openLink(Uri.parse('tel:+91$phone'), 'the phone app');
+  }
+
+  /// Sample people have obvious fake numbers (90000 000xx / 001xx).
+  static bool isSampleNumber(String phone) => phone.startsWith('90000');
+
+  /// F18: the Play Store build never opens WhatsApp or the dialler for a
+  /// sample number; it says so instead.
+  bool _fakeContact(String phone) {
+    if (samples || !isSampleNumber(phone)) return false;
+    toastMsg('This is a sample listing, so there’s no real number yet.');
+    return true;
+  }
   void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${posOf(h).$1},${posOf(h).$2}'), 'Maps');
 
   /// The tenant's last ended hold: "Did you join?" asks about it (F07).

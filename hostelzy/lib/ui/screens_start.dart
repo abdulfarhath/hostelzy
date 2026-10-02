@@ -90,22 +90,24 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)),
-          const _StepHead(step: 'Step 1 of 2', title: 'Sign in', sub: 'With your Google account. No passwords, no codes.'),
-          const Spacer(),
-          Cta(s.signingIn ? 'Opening Google…' : 'Continue with Google', icon: 'user', onTap: s.continueWithGoogle, iconSize: 20, opacity: s.signingIn ? .6 : 1),
-          const SizedBox(height: 10),
-          OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
-          const SizedBox(height: 8),
-          T('Nothing is saved to an account. You can sign in later.', s: 12, c: p.mu, align: TextAlign.center),
-          const SizedBox(height: 12),
-          Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
-        ],
+    return FillScroll(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)),
+            const _StepHead(step: 'Step 1 of 2', title: 'Sign in', sub: 'With your Google account. No passwords, no codes.'),
+            const Spacer(),
+            Cta(s.signingIn ? 'Opening Google…' : 'Continue with Google', icon: 'user', onTap: s.continueWithGoogle, iconSize: 20, opacity: s.signingIn ? .6 : 1),
+            const SizedBox(height: 10),
+            OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
+            const SizedBox(height: 8),
+            T('Nothing is saved to an account. You can sign in later.', s: 12, c: p.mu, align: TextAlign.center),
+            const SizedBox(height: 12),
+            Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
@@ -117,61 +119,64 @@ class PhoneScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: BackBtn(onTap: s.back),
-          ),
-          phoneOtpLogin
-              ? const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.')
-              // F13: typed, not verified: owners see "not verified" until SMS checks exist.
-              : _StepHead(step: 'Step 2 of 2', title: 'Your mobile number', sub: '${s.account != null ? 'Signed in as ${s.account!.email}. ' : ''}Owners use it to call or WhatsApp you. They see it as “not verified” until Hostelzy can check numbers by SMS.'),
-          const SizedBox(height: 28),
-          // F18: the user's own name (never a sample one).
-          if (!phoneOtpLogin) ...[
-            const T('Your name', w: 800, s: 13),
-            const SizedBox(height: 6),
-            Field(key: const ValueKey('myName'), value: s.myName, placeholder: 'Full name', onChanged: (v) => s.update(() => s.myName = v)),
-            const SizedBox(height: 16),
-            const T('Mobile number', w: 800, s: 13),
-            const SizedBox(height: 6),
-          ],
-          Container(
-            height: 60,
-            decoration: box(w: 2, c: p.tx),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: 72,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.centerLeft,
-                  decoration: BoxDecoration(border: Border(right: bs(2, p.tx))),
-                  child: const T('+91', w: 800, s: 20),
-                ),
-                Expanded(
-                  child: Field(value: s.phone, onChanged: (v) => s.update(() => s.phone = _digits(v, 10)), placeholder: '10-digit number', numeric: true, border: false, height: null, fs: 22, w: 800, ls: .04, pad: const EdgeInsets.symmetric(horizontal: 14)),
-                ),
-              ],
+    return FillScroll(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: BackBtn(onTap: s.back),
             ),
-          ),
-          const Spacer(),
-          Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
-          const SizedBox(height: 12),
-          Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
-          // F17: demo shortcut for development only, never in the Play Store build.
-          if (kDebugMode) ...[
-            const SizedBox(height: 8),
-            Tap(
-              onTap: () => s.update(() => s.phone = '9000000001'),
-              child: T('Debug: fill a test number', s: 13, c: p.ad, w: 600),
+            phoneOtpLogin
+                ? const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.')
+                // F13: typed, not verified: owners see "not verified" until SMS checks exist.
+                : _StepHead(step: 'Step 2 of 2${s.account != null ? ' · ${s.account!.email}' : ''}', title: 'About you', sub: '${s.account != null ? 'Signed in as ${s.account!.email}. ' : ''}Owners use your number to call or WhatsApp you. They see it as “not verified” until Hostelzy can check numbers by SMS.'),
+            const SizedBox(height: 28),
+            // F18: the user's own name (never a sample one).
+            if (!phoneOtpLogin) ...[
+              const T('Your name', w: 800, s: 13),
+              const SizedBox(height: 6),
+              Field(key: const ValueKey('myName'), value: s.myName, placeholder: 'Full name', onChanged: (v) => s.update(() => s.myName = v)),
+              if (s.account != null) ...[const SizedBox(height: 4), T('From your Google account. Change it if you like.', s: 12, c: p.mu)],
+              const SizedBox(height: 16),
+              Row(children: [const Expanded(child: T('Mobile number', w: 800, s: 13)), Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('NOT VERIFIED', w: 800, s: 11, c: p.mu, ls: .05))]),
+              const SizedBox(height: 6),
+            ],
+            Container(
+              height: 60,
+              decoration: box(w: 2, c: p.tx),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 72,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(border: Border(right: bs(2, p.tx))),
+                    child: const T('+91', w: 800, s: 20),
+                  ),
+                  Expanded(
+                    child: Field(value: s.phone, onChanged: (v) => s.update(() => s.phone = _digits(v, 10)), placeholder: '10-digit number', numeric: true, border: false, height: null, fs: 22, w: 800, ls: .04, pad: const EdgeInsets.symmetric(horizontal: 14)),
+                  ),
+                ],
+              ),
             ),
+            const Spacer(),
+            Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
+            const SizedBox(height: 12),
+            Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+            // F17: demo shortcut for development only, never in the Play Store build.
+            if (kDebugMode) ...[
+              const SizedBox(height: 8),
+              Tap(
+                onTap: () => s.update(() => s.phone = '9000000001'),
+                child: T('Debug: fill a test number', s: 13, c: p.ad, w: 600),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -202,43 +207,45 @@ class OtpScreen extends StatelessWidget {
         ),
       );
     }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: BackBtn(onTap: s.back),
-          ),
-          _StepHead(step: 'Step 2 of 2', title: 'Enter the code', sub: 'Sent by SMS to +91 ${phoneSpaced(s.phone)}. Android can fill it in for you.'),
-          const SizedBox(height: 28),
-          Stack(
-            children: [
-              Row(children: cells),
-              Positioned.fill(
-                child: Field(value: s.otp, onChanged: (v) => s.update(() => s.otp = _digits(v, 6)), numeric: true, border: false, height: null, pad: EdgeInsets.zero, hiddenText: true),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              s.resendLeft > 0
-                  ? T('Resend in ${cd(s.resendLeft.toDouble())}', s: 13, c: p.mu)
-                  : Tap(onTap: s.sendCode, child: T('Resend code', s: 13, w: 800, c: p.ad)),
-              if (kDebugMode)
-                Tap(
-                  onTap: () => s.update(() => s.otp = '123456'),
-                  child: T('Debug: fill', s: 13, c: p.ad, w: 600),
+    return FillScroll(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: BackBtn(onTap: s.back),
+            ),
+            _StepHead(step: 'Step 2 of 2', title: 'Enter the code', sub: 'Sent by SMS to +91 ${phoneSpaced(s.phone)}. Android can fill it in for you.'),
+            const SizedBox(height: 28),
+            Stack(
+              children: [
+                Row(children: cells),
+                Positioned.fill(
+                  child: Field(value: s.otp, onChanged: (v) => s.update(() => s.otp = _digits(v, 6)), numeric: true, border: false, height: null, pad: EdgeInsets.zero, hiddenText: true),
                 ),
-              Tap(onTap: s.back, child: T('Change number', s: 13, w: 800, c: p.mu)),
-            ],
-          ),
-          const Spacer(),
-          Cta('Verify', onTap: () => s.otp.length == 6 ? (s..signedIn = true).go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, bg: s.otp.length == 6 ? null : p.tk, fg: s.otp.length == 6 ? null : p.mu),
-        ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                s.resendLeft > 0
+                    ? T('Resend in ${cd(s.resendLeft.toDouble())}', s: 13, c: p.mu)
+                    : Tap(onTap: s.sendCode, child: T('Resend code', s: 13, w: 800, c: p.ad)),
+                if (kDebugMode)
+                  Tap(
+                    onTap: () => s.update(() => s.otp = '123456'),
+                    child: T('Debug: fill', s: 13, c: p.ad, w: 600),
+                  ),
+                Tap(onTap: s.back, child: T('Change number', s: 13, w: 800, c: p.mu)),
+              ],
+            ),
+            const Spacer(),
+            Cta('Verify', onTap: () => s.otp.length == 6 ? (s..signedIn = true).go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, bg: s.otp.length == 6 ? null : p.tk, fg: s.otp.length == 6 ? null : p.mu),
+          ],
+        ),
       ),
     );
   }
@@ -255,62 +262,148 @@ class RoleScreen extends StatelessWidget {
       ['resident', '02', 'I live in a Hostelzy PG', 'Pay rent, see the menu, raise complaints.'],
       ['owner', '03', 'I run a hostel', 'Bed map, hold requests, rent and complaints.'],
     ];
+    return FillScroll(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+            child: const PageHead(kicker: 'Welcome', title: 'How will you use Hostelzy?', size: 34, gap: 6),
+          ),
+          for (final r in roles)
+            Tap(
+              onTap: () => s.pickRole(r[0]),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+                decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 36,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: T(r[1], w: 800, s: 14, c: p.ad),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          T(r[2], w: 800, s: 22, ls: -.015),
+                          const SizedBox(height: 4),
+                          T(r[3], s: 14, c: p.mu, lh: 1.4),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const SizedBox(
+                      width: 24,
+                      child: Padding(padding: EdgeInsets.only(top: 4), child: Ic('arrow', size: 22)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: T('You can switch later from your profile.', s: 12, c: p.mu),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F18: roles that need someone else first (design "Real app v2":
+/// ResidentGate, OwnerGate). Residents are added by their owner; owners are
+/// set up in person by the Hostelzy team. Never sample data instead.
+class RoleGateScreen extends StatelessWidget {
+  const RoleGateScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final owner = s.roleGate == 'owner';
+    final who = s.meName.isEmpty ? '' : '${s.meName} · ';
+    Widget step(int n, String t, String sub) => Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(width: 28, height: 28, color: p.tx, alignment: Alignment.center, child: T('$n', w: 800, s: 14, c: p.bg)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(t, w: 800, s: 14), T(sub, s: 12, c: p.mu)])),
+        ],
+      ),
+    );
+    final head = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '$who${owner ? 'I run a PG' : 'I live in a PG'}', title: owner ? 'List your hostel' : 'Ask your owner to add you', size: owner ? 30 : 28))],
+      ),
+    );
+    final List<Widget> body;
+    final List<Widget> foot;
+    if (owner) {
+      body = [
+        T('The Hostelzy team sets up every hostel in person, so the listing is right from day one.', s: 15, c: p.mu, lh: 1.5),
+        Column(children: [step(1, 'Request a visit', 'Tell us the hostel name and area'), step(2, 'We visit (about 45 min)', 'Photos, rooms, prices, residents'), step(3, 'You check and go live', '30 days free, then from ₹499 a month')]),
+        VGap(gap: 6, children: [const T('Hostel name', w: 800, s: 13), Field(key: const ValueKey('gateHostel'), value: s.gateHostel, placeholder: 'e.g. Sri Sai Men’s PG', onChanged: (v) => s.update(() => s.gateHostel = v))]),
+        VGap(
+          gap: 6,
+          children: [
+            const T('Area', w: 800, s: 13),
+            Wrap(spacing: 6, runSpacing: 6, children: [for (final a in const ['Ameerpet', 'SR Nagar', 'Madhapur', 'Hitec City', 'Kondapur', 'Gachibowli', 'KPHB', 'Other']) ChipBtn(a, on: s.gateArea == a, onTap: () => s.update(() => s.gateArea = a))]),
+          ],
+        ),
+      ];
+      foot = [
+        Cta('Request a visit', onTap: s.requestVisit, height: 54, px: 16, fs: 15),
+        OutlineCta('WhatsApp Hostelzy · +91 ${phoneSpaced(supportWhatsApp)}', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),
+      ];
+    } else {
+      body = [
+        T('Your rent, food menu and complaints open once your PG owner adds you with this number.', s: 15, c: p.mu, lh: 1.5),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: box(w: 2, c: p.tx),
+          child: VGap(
+            gap: 4,
+            children: [
+              const Kicker('Your number'),
+              T(s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : 'Add your number in Settings', w: 800, s: 24, ls: .02),
+              const SizedBox(height: 6),
+              Cta('Send it to your owner on WhatsApp', icon: 'msg', height: 48, px: 16, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Hi, please add me as a resident on Hostelzy. My number is +91 ${phoneSpaced(s.phone)}${s.meName.isEmpty ? '' : ' (${s.meName})'}.')),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            Container(width: 40, height: 40, color: p.sf, alignment: Alignment.center, child: Ic('qr', size: 20, color: p.tx)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const T('Is there a Hostelzy poster at your PG?', w: 800, s: 15), T('Scan its QR to ask to join. The owner approves you.', s: 12, c: p.mu)])),
+          ],
+        ),
+        // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
+        Cta('Scan the invite QR', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.'), height: 54, px: 16, fs: 15),
+      ];
+      foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed', w: 800, s: 14, c: p.tx))];
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        head,
+        Expanded(child: Scroll(child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VGap(gap: 12, children: body)))),
         Container(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: const PageHead(kicker: 'Welcome', title: 'How will you use Hostelzy?', size: 34, gap: 6),
-        ),
-        for (final r in roles)
-          Tap(
-            onTap: () {
-              s.update(() {
-                s.role = r[0];
-                // F07: a new owner accepts the Fair Play rules first.
-                s.screen = r[0] == 'owner' && !s.fairAccepted ? 'oRules' : homeOf[r[0]]!;
-                s.hist = [];
-              });
-              s.syncProfile();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-              decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 36,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: T(r[1], w: 800, s: 14, c: p.ad),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        T(r[2], w: 800, s: 22, ls: -.015),
-                        const SizedBox(height: 4),
-                        T(r[3], s: 14, c: p.mu, lh: 1.4),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const SizedBox(
-                    width: 24,
-                    child: Padding(padding: EdgeInsets.only(top: 4), child: Ic('arrow', size: 22)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        const Spacer(),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: T('You can switch later from your profile.', s: 12, c: p.mu),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: VGap(gap: 8, children: foot),
         ),
       ],
     );
