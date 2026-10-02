@@ -82,6 +82,23 @@ Not designed: a reward for approved fixes (the founder decides; until then, the 
   `layouts` and keeps the old version.
 - Push to the owner on new suggestion; push to the resident on decision.
 
+## v1 additions (Ideas chat, 2026-10-02, founder delegated: "keep going, no approval needed")
+1. **Visitor try mode**: non-residents can open the editor and move things around (nothing saved
+   to the server); only **Send** is locked, and tapping it shows the lock sheet. Leaving the editor
+   discards the try.
+2. **Quick fixes**: tap any item → "Wrong place" / "Missing" / "Broken" / "Not in this room" →
+   Send. The full editor stays for bigger changes. "Broken" items also show on the owner's Today as
+   a maintenance item.
+3. **Optional photo**: 1 photo per suggestion (Storage, same rules as hostel photos; visible only to
+   the owner and team).
+4. **Trust badge**: "Checked by N residents · <date>" on the room and hostel page, where N counts
+   approved suggestions from different residents in the last 6 months.
+5. **Spam limit**: max 3 pending suggestions per resident per hostel; the owner can mute a resident's
+   suggestions.
+
+Later (v2): "Share my room" image card for WhatsApp/Instagram.
+Still the founder's call: Stay Rewards credits for approved fixes (money). Default: none.
+
 ## Open questions (Ideas chat decides unless the founder says otherwise)
 - Reward for an approved fix (Stay Rewards credits)? Credits are money-like, so **founder decides**.
   Until then: no reward, just the "Checked by a resident" badge.
