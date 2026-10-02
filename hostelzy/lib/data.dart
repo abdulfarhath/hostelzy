@@ -5,8 +5,13 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect;
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = ''});
   final String id, name, gender, area, owner;
+
+  /// F24: false for a draft the team is still onboarding (never in Explore);
+  /// [visitedOn] is "Visited by Hostelzy" from the server ("2 Oct 2026").
+  final bool live;
+  final String visitedOn;
   final int from, reviews, reply;
   final double rating;
   final bool food, ac, instant;
@@ -1230,7 +1235,7 @@ void resetSampleData() {
 bool liveListings = false;
 
 /// Hostels a tenant can find (Explore, map, ranking).
-List<Hostel> get browsable => liveListings ? hostels.where((h) => !_seedIds.contains(h.id)).toList() : hostels;
+List<Hostel> get browsable => liveListings ? hostels.where((h) => !_seedIds.contains(h.id) && h.live).toList() : hostels;
 
 /// Map positions of live hostels (from the database).
 final livePos = <String, (double, double)>{};
@@ -1337,6 +1342,28 @@ class HostelDraft {
   final List<({String name, String phone, String bed})> residents = [];
   String ownerName = 'Srinivas', ownerPhone = '';
   bool ownerVerified = false, fairPlay = false, bedsChecked = false;
+
+  /// F24: the draft's id on the server once saved; the owner's one-time code
+  /// and whether their account is linked; residents already saved as stays.
+  String? serverId;
+  String ownerCode = '';
+  bool ownerLinked = false;
+  final Set<String> savedResidents = {};
+
+  HostelDraft();
+
+  /// F24: an empty draft for real hostels (the sample one is for the demo).
+  HostelDraft.blank() {
+    name = '';
+    area = '';
+    amenities = {};
+    floors
+      ..clear()
+      ..addAll([DraftFloor('Ground floor', []), DraftFloor('1st floor', [])]);
+    prices.clear();
+    photos.clear();
+    ownerName = '';
+  }
 
   Iterable<DraftRoom> get allRooms => floors.where((f) => !f.noBeds).expand((f) => f.rooms);
   int get roomCount => allRooms.length;

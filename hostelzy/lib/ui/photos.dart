@@ -28,7 +28,7 @@ class OwnerPhotosScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final h = hostelById(s.ownHid);
+    final h = hostelById(s.photoHid);
     final albums = s.photoAlbums(h.id);
     final album = albums.contains(s.photoAlbum) ? s.photoAlbum : 'Hostel';
     final shown = s.photosIn(h.id, album);
@@ -190,7 +190,7 @@ class CropScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final b = s.cropBytes;
     final hostelAlbum = s.photoAlbum == 'Hostel';
-    final labels = hostelAlbum ? hostelPhotoLabels : s.photoAlbums(s.ownHid).where((a) => a != 'Hostel').toList();
+    final labels = hostelAlbum ? hostelPhotoLabels : s.photoAlbums(s.photoHid).where((a) => a != 'Hostel').toList();
     const light = Color(0xFFF3F2F2);
     final ratio = switch (s.cropAspect) { '4:3' => 4 / 3, '1:1' => 1.0, _ => null };
     return Column(
@@ -389,13 +389,13 @@ class PhotoSheet extends StatelessWidget {
     final ph = s.selPhoto;
     if (ph == null) return const SizedBox();
     final hostelAlbum = s.albumOf(ph) == 'Hostel';
-    final isCover = hostelAlbum && s.photosIn(s.ownHid, 'Hostel').firstOrNull?.id == ph.id;
+    final isCover = hostelAlbum && s.photosIn(s.photoHid, 'Hostel').firstOrNull?.id == ph.id;
     return VGap(
       gap: 10,
       children: [
         AspectRatio(aspectRatio: 4 / 3, child: PhotoImg(ph.url)),
         if (hostelAlbum && !isCover) Cta('Make it the cover', icon: 'check', height: 52, fs: 15, onTap: () => s.makeCover(ph)),
-        OutlineCta('Remove photo', icon: 'trash', onTap: () => s.deletePhoto(s.ownHid, ph)),
+        OutlineCta('Remove photo', icon: 'trash', onTap: () => s.deletePhoto(s.photoHid, ph)),
       ],
     );
   }

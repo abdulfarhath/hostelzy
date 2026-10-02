@@ -1015,7 +1015,7 @@ void main() {
     expect(find.text('HOSTELZY TEAM · LIVE 3 OF 20 THIS MONTH'), findsOneWidget);
     await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
-    expect(find.text('ADD HOSTEL · STEP 1 OF 6'), findsOneWidget);
+    expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
     await tap(tester, find.text('Map pin · check it at the gate'));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
@@ -1052,6 +1052,13 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('Add resident'));
     expect(s.draft.residents.single.bed, '101-A');
+    await tap(tester, find.text('Next: owner account'));
+
+    // F24: the owner's account (the demo marks it linked).
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone6')), matching: find.byType(TextField)), '9000000009');
+    await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('ownerLink')));
+    expect(s.draft.ownerLinked, isTrue);
     await tap(tester, find.text('Next: go live'));
 
     // Go live stays locked until all six are done.
@@ -1060,8 +1067,6 @@ void main() {
     expect(s.screen, 'aAdd');
     await tap(tester, find.text('Fair Play rules: owner agreed'));
     await tap(tester, find.text('Bed status checked on the visit'));
-    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone')), matching: find.byType(TextField)), '9000000009');
-    await tester.pump();
     await tap(tester, find.text('Call it'));
     expect(s.lastLink.toString(), 'tel:+919000000009');
     await tap(tester, find.text('The owner’s phone rang'));

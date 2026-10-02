@@ -60,6 +60,34 @@ extension LinksActions on AppState {
     if (account == null) return toastMsg('Sign in with Google to join with a code.');
     if (joining) return;
     update(() => joining = true);
+    // F24: the owner's one-time code from the Hostelzy team links their account.
+    if (c.startsWith('OWN-')) {
+      try {
+        final h = await data.joinAsOwner(c);
+        update(() {
+          joining = false;
+          pendingInvite = null;
+          inviteDraft = '';
+        });
+        await refreshListings();
+        await refreshLive();
+        update(() => role = 'owner');
+        tab('oToday');
+        toastMsg('You run $h on Hostelzy now.');
+      } on UnsupportedError {
+        update(() => joining = false);
+        toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+      } catch (e) {
+        update(() => joining = false);
+        final m = '$e';
+        toastMsg(m.contains('valid any more')
+            ? 'That owner link isn’t valid any more. Ask Hostelzy for a new one.'
+            : m.contains('already has an owner')
+            ? 'This hostel already has an owner account. Ask Hostelzy.'
+            : 'Couldn’t join. Check your internet and try again.');
+      }
+      return;
+    }
     // S8: a manager's one-time code makes them staff of that hostel.
     if (c.startsWith('MGR-')) {
       try {
@@ -109,7 +137,7 @@ extension LinksActions on AppState {
     final c = code.trim().toUpperCase();
     if (!RegExp(r'^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$').hasMatch(c)) return toastMsg('That link has no invite code.');
     update(() => pendingInvite = c);
-    toastMsg('Invite $c saved. Sign in and pick “I live in a Hostelzy PG”.');
+    toastMsg(c.startsWith('OWN-') ? 'Owner link saved. Sign in and pick “I run a PG”.' : 'Invite $c saved. Sign in and pick “I live in a Hostelzy PG”.');
   }
 
   /// Opens another app. Nothing is sent from Hostelzy itself.

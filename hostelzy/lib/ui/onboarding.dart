@@ -59,7 +59,7 @@ Widget _field(String label, String v, ValueChanged<String> on, {bool numeric = f
 /// Boards 1–6: Add hostel, one step at a time.
 class AddHostelScreen extends StatelessWidget {
   const AddHostelScreen({super.key});
-  static const titles = ['Basics', 'Rooms, floor by floor', 'Rate card', 'Photos', 'Current residents', 'Ready to go live?'];
+  static const titles = ['Basics', 'Rooms, floor by floor', 'Rate card', 'Photos', 'Current residents', 'Owner account', 'Ready to go live?'];
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +73,7 @@ class AddHostelScreen extends StatelessWidget {
       3 => const _Rates(),
       4 => const _Photos(),
       5 => const _Residents(),
+      6 => const _OwnerAccount(),
       _ => const _GoLive(),
     };
     final left = s.goLiveLeft;
@@ -81,18 +82,19 @@ class AddHostelScreen extends StatelessWidget {
       2 => ('Next: rates · ${d.roomCount} rooms, ${d.bedCount} beds', d.roomCount > 0),
       3 => ('Next: photos', true),
       4 => ('Next: residents', true),
-      5 => ('Next: go live', true),
+      5 => ('Next: owner account', true),
+      6 => ('Next: go live', true),
       _ => (left.isEmpty ? 'Go live' : 'Go live · ${left.length} ${left.length == 1 ? 'thing' : 'things'} left', left.isEmpty),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TeamHead(kicker: 'Add hostel · step ${s.addStep} of 6', title: titles[i], onBack: () => s.addStep > 1 ? s.update(() => s.addStep--) : s.back()),
+        TeamHead(kicker: 'Add hostel · step ${s.addStep} of 7', title: titles[i], onBack: () => s.addStep > 1 ? s.update(() => s.addStep--) : s.back()),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: Row(
             children: [
-              for (var k = 0; k < 6; k++) ...[
+              for (var k = 0; k < 7; k++) ...[
                 if (k > 0) const SizedBox(width: 3),
                 Expanded(
                   child: Container(
@@ -123,11 +125,11 @@ class AddHostelScreen extends StatelessWidget {
             height: 54,
             px: 16,
             fs: 15,
-            opacity: ok || s.addStep == 6 ? 1 : .4,
+            opacity: ok || s.addStep == 7 ? 1 : .4,
             onTap: () {
-              if (s.addStep == 6) return s.goLive();
+              if (s.addStep == 7) return s.goLive();
               if (!ok) return s.toastMsg(s.addStep == 1 ? 'Add the hostel name.' : 'Add at least one room.');
-              s.update(() => s.addStep++);
+              s.nextAddStep();
             },
           ),
         ),
@@ -500,6 +502,21 @@ class _Photos extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final d = s.draft;
+    // F24: real photos on the server, through the owners' Photos screen.
+    if (s.onServer) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: VGap(
+          gap: 12,
+          children: [
+            T('${s.draftPhotos} of ${HostelDraft.minPhotos} photos', key: const ValueKey('draftPhotoCount'), w: 800, s: 22),
+            T('Take them on the visit: ${d.photoSlots.join(', ')}.', s: 14, c: p.mu, lh: 1.45),
+            Cta('Add photos', key: const ValueKey('draftPhotos'), icon: 'camera', height: 50, px: 14, fs: 15, onTap: s.openDraftPhotos),
+            T('They upload to this hostel now; the owner can change them later in Manage › Photos.', s: 12, c: p.mu),
+          ],
+        ),
+      );
+    }
     final slots = d.photoSlots;
     final rows = <Widget>[];
     for (var k = 0; k < slots.length; k += 3) {
@@ -713,6 +730,55 @@ class _Residents extends StatelessWidget {
 }
 
 /// Board 6: go-live checklist. "Go live" stays locked until every item is
+/// F24 board `aAddOwner` (step 6 of 7): the owner's name and number, and a
+/// one-time sign-in link on WhatsApp. Linked once they sign in with it.
+class _OwnerAccount extends StatelessWidget {
+  const _OwnerAccount();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final d = s.draft;
+    final first = d.ownerName.trim().isEmpty ? 'The owner' : d.ownerName.trim().split(' ').first;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: VGap(
+        gap: 12,
+        children: [
+          T('The owner runs ${d.name.trim().isEmpty ? 'the hostel' : d.name.trim()} from their phone: beds, rent, residents and enquiries. They sign in with Google; no password.', s: 14, c: p.mu, lh: 1.45),
+          VGap(gap: 6, children: [const T('Owner’s name', w: 800, s: 13), Field(key: const ValueKey('ownerName'), value: d.ownerName, placeholder: 'As tenants will see it', onChanged: (v) => s.update(() => d.ownerName = v))]),
+          VGap(gap: 6, children: [const T('Owner’s WhatsApp number', w: 800, s: 13), Field(key: const ValueKey('ownerPhone6'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), '')))]),
+          Container(
+            key: const ValueKey('ownerStatus'),
+            padding: const EdgeInsets.all(12),
+            decoration: box(w: 2, c: d.ownerLinked ? p.tx : p.dv),
+            child: Row(
+              children: [
+                Container(width: 28, height: 28, alignment: Alignment.center, decoration: box(bg: d.ownerLinked ? p.tx : null, w: 2, c: d.ownerLinked ? p.tx : p.mu), child: d.ownerLinked ? Ic('check', size: 16, color: p.bg) : null),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: VGap(
+                    gap: 2,
+                    children: [
+                      T(d.ownerLinked ? 'Linked' : d.ownerCode.isEmpty ? 'Not linked yet' : 'Link sent · waiting for $first', w: 800, s: 15),
+                      T(d.ownerLinked ? '$first runs it from the Hostelzy app.' : 'The link works once, for 7 days.', s: 13, c: p.mu),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!d.ownerLinked) ...[
+            Cta(d.ownerCode.isEmpty ? 'Send sign-in link on WhatsApp' : 'Send the link again', key: const ValueKey('ownerLink'), icon: 'msg', height: 50, px: 14, fs: 15, onTap: s.sendOwnerLink),
+            if (d.ownerCode.isNotEmpty) OutlineCta('Check again', key: const ValueKey('ownerCheck'), icon: 'check', height: 46, fs: 14, onTap: s.checkOwnerLinked),
+          ],
+          T('You can go on and come back: go live needs the owner linked.', s: 12, c: p.mu),
+        ],
+      ),
+    );
+  }
+}
+
 /// done; open items are red. F22 Area 4: the board's rows and footnote.
 class _GoLive extends StatelessWidget {
   const _GoLive();
@@ -727,7 +793,8 @@ class _GoLive extends StatelessWidget {
       if (d.floors.every((f) => f.noBeds || f.rooms.isEmpty)) (false, 'At least one room with beds', 'Add rooms on step 2', () => s.update(() => s.addStep = 2)),
       (d.ownerVerified, 'Owner’s phone rang', d.ownerVerified ? 'Checked by a call · ${phoneSpaced(d.ownerPhone)} · ${d.ownerName}' : 'Call the owner’s number on the visit, below', null),
       (d.fairPlay, 'Fair Play rules: owner agreed', d.fairPlay ? 'Read together on ${dayMon(appToday)}' : 'Read the rules out loud together, then tick here', () => s.update(() => d.fairPlay = !d.fairPlay)),
-      (d.photoCount >= HostelDraft.minPhotos, '${HostelDraft.minPhotos} photos', d.photoCount >= HostelDraft.minPhotos ? '${d.photoCount} of ${HostelDraft.minPhotos}' : '${d.photoCount} of ${HostelDraft.minPhotos} · add $missingPhotos', () => s.update(() => s.addStep = 4)),
+      (d.ownerLinked, 'Owner account linked', d.ownerLinked ? '${d.ownerName} signs in with Google' : 'Send the sign-in link on step 6', () => s.update(() => s.addStep = 6)),
+      (s.draftPhotos >= HostelDraft.minPhotos, '${HostelDraft.minPhotos} photos', s.draftPhotos >= HostelDraft.minPhotos ? '${s.draftPhotos} of ${HostelDraft.minPhotos}' : '${s.draftPhotos} of ${HostelDraft.minPhotos}${s.onServer ? '' : ' · add $missingPhotos'}', () => s.update(() => s.addStep = 4)),
       (d.missingPrices.isEmpty, 'Every room type has a price', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
       (d.bedsChecked, 'Bed status checked on the visit', '$taken taken · ${d.bedCount - taken} free · 0 on hold', () => s.update(() => d.bedsChecked = !d.bedsChecked)),
       (d.pinChecked, 'Map pin checked at the gate', d.pinChecked ? 'Done' : 'Check the pin at the gate', () => s.update(() => d.pinChecked = !d.pinChecked)),

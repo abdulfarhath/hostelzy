@@ -226,7 +226,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void openAddHostel() => update(() {
-    draft = HostelDraft();
+    draft = AppState.samples ? HostelDraft() : HostelDraft.blank();
     addStep = 1;
     hist = [...hist, screen];
     screen = 'aAdd';
@@ -569,6 +569,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       strikes[h.id] = l.strikes[h.id] ?? 0;
       if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
+      // F24: "Visited by Hostelzy" is the team's go-live date on the server.
+      if (h.visitedOn.isNotEmpty) visited[h.id] = h.visitedOn;
     }
     // S4: the live hostels' reviews replace any earlier copy of them.
     final ids = {for (final h in l.hostels) h.id};

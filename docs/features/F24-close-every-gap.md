@@ -156,3 +156,23 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - A held hostel whose owner has no number says "Number not added yet".
   - Residents' phones stay with staff through `stays`, as before.
 - **Tests:** `test/owner_phone_test.dart`.
+
+**Wave A items 2 and 3: onboard a real hostel; rooms saved.** Branch `feature/f24-onboard`.
+- **Server** (`20261002232000_f24_onboard.sql`, FOUNDER-TODO **4x**; tests: `supabase/tests/onboard_test.sql`):
+  - `save_hostel(id, jsonb)`, team only: creates or updates a draft: basics, rate card, the owner's number in `hostel_leads`, and rooms.
+  - `save_rooms(hostel, jsonb)`, staff or team: adds and changes rooms and beds. A room or bed with a resident, hold or booking is never removed.
+  - `new_owner_invite` (`OWN-` code, works once, for 7 days) and `join_as_owner`: one owner account per hostel; the profile becomes owner.
+  - `go_live(hostel)` checks there are rooms, a price for every room type, a linked owner and 8 photos. Then it sets the hostel live, records "Visited by Hostelzy" (`hostels.visited_on`) and creates `owner_plans` with the 30-day trial. Going live again never restarts the trial.
+- **Wizard: 7 steps (Design v22 `aAddOwner`).**
+  - In the real app it starts empty; the demo keeps the sample.
+  - After the rate card it saves the draft.
+  - Photos are real uploads, through the Photos screen for the draft.
+  - Residents become stays on the server, so their beds show taken.
+  - **Owner account** (step 6) takes the name and number and sends the sign-in link on WhatsApp. "Check again" shows **Linked**.
+  - Go live adds the row "Owner account linked", and the server's reason shows if something is missing.
+- **Owner's side.**
+  - The link (`app/j/?c=OWN-…`) is kept until sign-in.
+  - "I run a PG" shows "Run my PG on Hostelzy", which links the account and opens Today.
+- **Drafts never show to tenants.** `Hostel.live` is checked in Explore and in the Where? list. "Visited by Hostelzy" comes from the server.
+- **Owners' room changes** (add room, remove room or floor) save the whole list. If the server says someone is in a room, the change is undone and the toast says which room.
+- **Tests:** `test/onboard_test.dart`. Updated: team_app, flows.
