@@ -91,7 +91,9 @@ void main() {
     expect(s.screen, 'help');
     s.tab('me');
     await tester.pump();
-    expect(find.text('MY STAY'), findsOneWidget);
+    expect(find.text('Bed 204-B · Anjani Residency'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('me-My stay')));
+    expect(s.screen, 'rStay');
     await _tap(tester, find.text('Give notice'));
     expect((s.screen, s.moveTab), ('move', 'vacate'));
     s.dispose();

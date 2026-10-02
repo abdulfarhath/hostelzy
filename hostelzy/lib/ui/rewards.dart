@@ -9,28 +9,8 @@ import 'kit.dart';
 // owners (2), the Member hold length (3, in the hold sheet) and the ₹100
 // reward at move-in (4).
 
-class _Perk extends StatelessWidget {
-  const _Perk(this.title, this.sub, {this.amt, this.tag});
-  final String title, sub;
-  final String? amt, tag;
-  @override
-  Widget build(BuildContext context) {
-    final p = PalScope.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-      child: Row(
-        children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(title, w: 800, s: 15), const SizedBox(height: 2), T(sub, s: 12, c: p.mu, lh: 1.35)])),
-          if (amt != null) T(amt!, w: 800, s: 18, c: p.gn),
-          if (tag != null) Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T(tag!, s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
-        ],
-      ),
-    );
-  }
-}
-
-/// F09 board 1: Me → Stay Rewards.
+/// F09 board 1, F22 Area 2 (`rewards`): one dark status card, three steps to
+/// earn, Invite a friend.
 class RewardsScreen extends StatelessWidget {
   const RewardsScreen({super.key});
   @override
@@ -39,45 +19,41 @@ class RewardsScreen extends StatelessWidget {
     // S6: the code comes from the server, made once.
     if (s.onServer && s.serverRefCode == null) WidgetsBinding.instance.addPostFrameCallback((_) => s.loadReferralCode());
     final p = PalScope.of(context);
+    final trusted = s.level == 'trusted';
     final levelName = switch (s.level) {
       'trusted' => 'Trusted tenant',
       'member' => 'Member',
       _ => 'Not a member yet',
     };
-    Widget check(bool on, String t) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Container(width: 18, height: 18, alignment: Alignment.center, decoration: box(bg: on ? p.tx : transparent, w: 2, c: p.tx), child: on ? Ic('check', size: 12, color: p.bg) : null),
-          const SizedBox(width: 8),
-          Expanded(child: T(t, s: 13)),
-        ],
+    final cardLine = !s.isMember
+        ? 'off your next Hostelzy stay, once you move in through Hostelzy'
+        : s.rewardUsed
+        ? 'used on your first month here · 2-hour holds'
+        : 'off your next Hostelzy stay · 2-hour holds${trusted ? ' · Trusted badge' : ''}';
+    // S6: on the server, only rewards that were really given.
+    final friends = s.friendsJoined;
+    final steps = <(bool, String, String)>[
+      (s.isMember, 'Move in through Hostelzy', s.isMember ? '${fmt(memberReward)} credit · ${s.memberSince}' : '${fmt(memberReward)} off your next stay, and 2-hour holds'),
+      (
+        trusted,
+        'Pay rent on time for $trustedMonths months',
+        trusted
+            ? 'Trusted tenant badge · lower-advance deals'
+            : [
+                '${s.isMember ? s.monthsOnTime : 0} of $trustedMonths · Trusted tenant badge next',
+                // What keeps you from Trusted, said plainly.
+                if (s.isMember && s.lateRentMonths > 0) 'rent late in ${s.lateRentMonths} ${s.lateRentMonths == 1 ? 'month' : 'months'}',
+                if (s.isMember && s.ownerComplaints > 0) '${s.ownerComplaints} complaint from the owner',
+              ].join(' · '),
       ),
-    );
-    final perks = switch (s.level) {
-      'trusted' => [
-        const _Perk('Badge owners see', 'On your holds and enquiries', tag: 'Trusted'),
-        const _Perk('Lower-advance deals', 'From owners who offer them to trusted tenants'),
-        const _Perk('First look at free beds', 'Before everyone else'),
-        _Perk('${fmt(memberReward)} off your next hostel', 'First month', amt: fmt(memberReward)),
-        const _Perk('2-hour free holds', 'Everyone else gets 1 hour'),
-      ],
-      'member' => [
-        _Perk('${fmt(memberReward)} off your next hostel', s.rewardUsed ? 'Used on your first month here' : 'First month at your next Hostelzy hostel', amt: fmt(memberReward)),
-        const _Perk('2-hour free holds', 'Everyone else gets 1 hour'),
-      ],
-      _ => [
-        _Perk('${fmt(memberReward)} off your next hostel', 'After your first stay through Hostelzy', amt: fmt(memberReward)),
-        const _Perk('2-hour free holds', 'Instead of 1 hour'),
-        const _Perk('Trusted tenant after 6 months', 'Badge, lower-advance deals, first look at free beds'),
-      ],
-    };
+      (friends > 0 && s.onServer, 'Invite a friend who moves in', friends > 0 ? '$friends ${friends == 1 ? 'friend' : 'friends'} joined · ${fmt(referralReward)} each after their first month' : '${fmt(referralReward)} for each of you, after their first month'),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${s.meName.isEmpty ? 'You' : s.meName} · Me', title: 'Stay Rewards', size: 28))]),
+          child: Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: T('Stay Rewards', w: 800, s: 28, lh: 1.05))]),
         ),
         Expanded(
           child: Scroll(
@@ -86,69 +62,59 @@ class RewardsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
+                  key: const ValueKey('rewardCard'),
                   margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(14),
-                  decoration: box(bg: s.isMember ? p.tx : transparent, w: 2, c: p.tx),
+                  padding: const EdgeInsets.all(16),
+                  color: p.tx,
                   child: Css(
-                    c: s.isMember ? p.bg : p.tx,
+                    c: p.bg,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Kicker('Your level', c: s.isMember ? p.bg : p.mu),
-                        const SizedBox(height: 4),
-                        T(levelName, w: 800, s: 28, lh: 1.05),
-                        const SizedBox(height: 4),
-                        T(s.isMember ? s.memberSince : 'Join a hostel through Hostelzy to become a Member', s: 13),
+                        Kicker(levelName, c: p.bg),
+                        const SizedBox(height: 2),
+                        T(s.rewardUsed ? 'Used' : fmt(memberReward), w: 800, s: 48, lh: 1.05, ls: -.03),
+                        const SizedBox(height: 2),
+                        T(cardLine, s: 14, lh: 1.4),
                       ],
                     ),
                   ),
                 ),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker(s.isMember ? 'Your perks' : 'What you get')),
-                Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: perks)),
-                if (s.level == 'member') ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Kicker('Trusted tenant'), T('${s.monthsOnTime} of $trustedMonths months', s: 12, w: 800)]),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(height: 10, decoration: box(w: 2, c: p.tx), child: LayoutBuilder(builder: (context, c) => Row(children: [Container(width: c.maxWidth * s.monthsOnTime / trustedMonths, color: p.tx)]))),
-                        const SizedBox(height: 8),
-                        check(s.lateRentMonths == 0, s.lateRentMonths == 0 ? 'Rent paid on time · ${s.monthsOnTime} of ${s.monthsOnTime} months' : 'Rent late in ${s.lateRentMonths} of ${s.monthsOnTime} months'),
-                        check(s.ownerComplaints == 0, s.ownerComplaints == 0 ? 'No complaints from the owner' : '${s.ownerComplaints} complaint from the owner'),
-                        check(false, '$trustedMonths months in a Hostelzy hostel · ${trustedMonths - s.monthsOnTime} to go'),
-                        const SizedBox(height: 4),
-                        T('Then: a badge owners see, lower-advance deals and first look at newly free beds.', s: 12, c: p.mu, lh: 1.4),
-                      ],
-                    ),
-                  ),
-                ],
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Kicker('Invite a friend'), T('${fmt(referralReward)} each', s: 12, w: 800, c: p.gn)]),
-                ),
+                const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('How to earn')),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Kicker('Your code'), T(s.referralCode, w: 800, s: 22, ls: .04)])),
-                      Cta('Share', icon: 'msg', height: 44, px: 14, fs: 14, expand: false, gap: 10, bg: p.tx, fg: p.bg, onTap: () => s.share(s.referralText)),
+                      for (var i = 0; i < steps.length; i++)
+                        Container(
+                          key: ValueKey('earn-$i'),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                alignment: Alignment.center,
+                                color: steps[i].$1 ? p.tx : p.sf,
+                                child: steps[i].$1 ? Ic('check', size: 16, color: p.bg) : T('${i + 1}', w: 800, s: 15),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(steps[i].$2, w: 800, s: 16), T(steps[i].$3, s: 13, c: p.mu, lh: 1.35)])),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                  child: Rich([
-                    sp(context, 'You both get ${fmt(referralReward)} after your friend’s first month. '),
-                    // S6: on the server, only rewards that were really given.
-                    if (!s.onServer) sp(context, '${s.friendsJoined} friend joined · ${fmt(referralReward)} on the way.', w: 800, c: p.tx)
-                    else if (s.friendsJoined > 0) sp(context, '${s.friendsJoined} ${s.friendsJoined == 1 ? 'friend' : 'friends'} done · ${fmt(referralReward * s.friendsJoined)} earned.', w: 800, c: p.tx),
-                  ], s: 12, c: p.mu, lh: 1.45),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+                  child: OutlineCta('Invite a friend', icon: 'msg', onTap: () => s.share(s.referralText)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Rich([sp(context, 'Your code '), sp(context, s.referralCode, w: 800, c: p.tx)], s: 13, c: p.mu),
                 ),
                 // S6: a new tenant uses a friend's code before their first stay.
                 if (s.onServer && !s.isMember && !s.referred)

@@ -402,6 +402,7 @@ class _AppBody extends StatelessWidget {
     'food' => const FoodScreen(),
     'help' => const HelpScreen(),
     'move' => const MoveScreen(),
+    'rStay' => const StayScreen(),
     'rConfirm' => const ConfirmStayScreen(),
     'rReview' => const ResidentReviewScreen(),
     'rExit' => const ExitReviewScreen(),

@@ -150,7 +150,8 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('Send to Srinivas'));
     expect((s.myRent.status, s.paid), ('waiting', false));
-    expect(find.text('Waiting for Srinivas'), findsOneWidget);
+    expect(find.text('WAITING FOR SRINIVAS'), findsOneWidget);
+    expect(find.text('Remind Srinivas'), findsOneWidget);
     expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Waiting');
     await tester.pump(const Duration(seconds: 3));
     s.jump('oToday', 'owner');
@@ -160,7 +161,8 @@ void main() {
     expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Paid');
     s.jump('rPay', 'resident');
     await tester.pump();
-    expect(find.text('₹8,020 paid'), findsOneWidget);
+    expect(find.textContaining('RENT · PAID'), findsOneWidget);
+    expect(find.text('Share receipt'), findsOneWidget);
     s.dispose();
   });
 
@@ -289,16 +291,15 @@ void main() {
     // Resident: Pay rent shows the advance and what comes back.
     final r = AppState(start: 'rPay', role: 'resident');
     await pumpApp(tester, r);
-    expect(find.text('Due 14 Oct'), findsOneWidget);
-    expect(find.text('₹2,000 BACK WHEN YOU LEAVE'), findsOneWidget);
+    expect(find.textContaining('Due 14 Oct'), findsOneWidget);
+    expect(find.text('Advance ₹3,000 · ₹2,000 back when you leave'), findsOneWidget);
     expect(find.textContaining('₹15,200'), findsNothing);
 
     // Move out: refund = advance − maintenance, with the notice date.
     r.go('move');
     await tester.pump();
     expect(find.text('31 Oct'), findsWidgets);
-    expect(find.text('− ₹1,000'), findsOneWidget);
-    expect(find.text('₹2,000 within 7 days'), findsOneWidget);
+    expect(find.textContaining('(advance ₹3,000 minus ₹1,000 maintenance)', findRichText: true), findsOneWidget);
     await tap(tester, find.text('Give notice for'));
     expect(r.notice, isTrue);
     expect(find.text('₹2,000 back to your UPI'), findsOneWidget);
@@ -652,7 +653,9 @@ void main() {
     await tap(tester, find.text('Post review'));
     expect(s.screen, 'rReview');
     await tester.pump(const Duration(seconds: 3)); // the "Tap the stars" toast goes
-    await tap(tester, find.bySemanticsLabel('4 stars'));
+    for (final c in reviewCats) {
+      await tap(tester, find.bySemanticsLabel('$c 4 stars'));
+    }
     await tester.enterText(find.byType(EditableText).first, 'Food is good.');
     await tester.pump();
     await tap(tester, find.text('Yes'));
@@ -663,9 +666,9 @@ void main() {
     // Resident: exit review feeds the "advance returned" record.
     s.jump('rExit', 'resident');
     await tester.pump();
-    expect(find.text('₹2,000'), findsWidgets);
+    expect(find.text('Did you get your ₹2,000 back?'), findsOneWidget);
     await tap(tester, find.text('Not yet'));
-    await tap(tester, find.bySemanticsLabel('3 stars'));
+    await tap(tester, find.bySemanticsLabel('Overall 3 stars'));
     await tap(tester, find.text('Post review'));
     expect((s.stats['anjani']!.advFull, s.stats['anjani']!.advLeft), (35, 37));
 
@@ -759,7 +762,7 @@ void main() {
     await pumpApp(tester, s);
     expect(find.text('Not a member yet'), findsOneWidget); // the status line on Me
     await tap(tester, find.byKey(const ValueKey('me-Stay Rewards')));
-    expect(find.text('Not a member yet'), findsOneWidget);
+    expect(find.text('NOT A MEMBER YET'), findsOneWidget);
     expect(s.holdSecs, 3600);
 
     // "Yes, I joined" (F07) makes the tenant a Member.
@@ -769,8 +772,9 @@ void main() {
     expect(s.level, 'member');
     expect(s.holdSecs, 7200);
     await tester.pump();
-    expect(find.text('Member'), findsOneWidget);
-    expect(find.text('RAHUL-100'), findsOneWidget);
+    expect(find.text('MEMBER'), findsOneWidget);
+    expect(find.text('RAHUL-100', findRichText: true), findsNothing);
+    expect(find.textContaining('RAHUL-100', findRichText: true), findsOneWidget);
 
     // A Member's free hold lasts 2 hours.
     s.update(() {
@@ -1601,7 +1605,7 @@ void main() {
     s.update(() => s.becomeMember('Anjani Residency'));
     expect(s.level, 'member');
     await tester.pump();
-    await tap(tester, find.text('Share'));
+    await tap(tester, find.text('Invite a friend'));
     expect(s.lastShare, contains(s.referralCode));
     await tester.pump(const Duration(seconds: 3));
     // Six months, rent always on time, no owner complaints: Trusted.
@@ -1617,7 +1621,7 @@ void main() {
     expect(s.level, 'member');
     s.update(() => s.monthsOnTime = 4);
     await tester.pump();
-    expect(find.text('1 complaint from the owner'), findsOneWidget);
+    expect(find.text('4 of 6 · Trusted tenant badge next · 1 complaint from the owner'), findsOneWidget);
     s.dispose();
   });
 
@@ -3036,8 +3040,9 @@ void main() {
     // A resident: their room screen → Edit room → the suggestion editor.
     final r = AppState(start: 'me', role: 'resident');
     await pumpApp(tester, r);
-    // F21 W3: Me › My stay › Room layouts.
-    await tap(tester, find.text('Room layouts · fix any room'));
+    // F22: Me › My stay › Fix a room layout.
+    await tap(tester, find.byKey(const ValueKey('me-My stay')));
+    await tap(tester, find.text('Fix a room layout'));
     expect((r.screen, r.fixHid, r.fixRoom), ('rRoom', 'anjani', 204));
     await tap(tester, find.text('203'));
     expect(find.text('Something in the wrong place?'), findsOneWidget);

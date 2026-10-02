@@ -79,10 +79,11 @@ void main() {
     s.tab('rPay');
     await tester.pump();
     expect(find.textContaining('Anjani'), findsNothing);
-    expect(find.text('Pay ${h.owner}'), findsOneWidget);
-    expect(find.text('Rent, bed 101-A'), findsOneWidget);
+    expect(find.text('${h.name} · Bed 101-A'.toUpperCase()), findsOneWidget);
+    expect(find.text('Pay to'), findsOneWidget);
+    expect(find.text('Electricity · meter'), findsNothing); // no sample bill
     expect(find.text('I’ve paid · enter UTR'), findsNothing); // nothing to enter a UTR for yet
-    expect(find.text('History'.toUpperCase()), findsNothing); // no sample history
+    expect(find.text('Paid before'.toUpperCase()), findsNothing); // no sample history
     await s.payMyRent();
     await tester.pump();
     expect(server.calls.single, 'rent saisri stay-1 9000 ${s.rentNote}');

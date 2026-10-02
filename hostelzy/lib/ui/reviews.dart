@@ -52,16 +52,32 @@ class StarPicker extends StatelessWidget {
   }
 }
 
-class _Tag extends StatelessWidget {
-  const _Tag(this.text);
-  final String text;
+/// F22 Area 2: a label and five 40px stars on one row.
+class StarRow extends StatelessWidget {
+  const StarRow(this.label, {super.key, required this.value, required this.onPick});
+  final String label;
+  final int value;
+  final ValueChanged<int> onPick;
   @override
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
-      color: p.sf,
-      child: T(text, s: 11, w: 800, ls: .05, upper: true, nowrap: true, c: p.tx),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: Row(
+        children: [
+          Expanded(child: T(label, w: 800, s: 15)),
+          for (var i = 1; i <= 5; i++)
+            Semantics(
+              label: '$label $i stars',
+              button: true,
+              child: Tap(
+                onTap: () => onPick(i),
+                child: SizedBox(width: 40, height: 40, child: Center(child: Ic('star', size: 24, color: i <= value ? p.tx : p.tk))),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -219,7 +235,8 @@ class ReviewsScreen extends StatelessWidget {
   }
 }
 
-/// F08 board 1: the 30-day review.
+/// F08 board 1, F22 Area 2 (`rReview`): a row of stars per category, an
+/// optional line, Post review. Overall is the average of the rows.
 class ResidentReviewScreen extends StatelessWidget {
   const ResidentReviewScreen({super.key});
   @override
@@ -229,50 +246,45 @@ class ResidentReviewScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, '${s.stayHostel.name} · 30-day review', 'How is your stay so far?'),
+        _head(context, '30 days at ${s.stayHostel.name}', 'How is your stay?'),
         Expanded(
           child: Scroll(
             key: ValueKey('rReview${s.scrollEpoch}'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: VGap(gap: 8, children: [const T('Overall', w: 800, s: 13), StarPicker(value: s.rvStars, onPick: (v) => s.update(() => s.rvStars = v))]),
-                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       for (final c in reviewCats)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-                          child: Row(
-                            children: [
-                              Expanded(child: T(c, w: 800, s: 14)),
-                              const SizedBox(width: 10),
-                              SizedBox(
-                                width: 190,
-                                child: Seg(opts: same(['1', '2', '3', '4', '5']), cur: s.rvCats[c]?.toString(), onPick: (v) => s.update(() => s.rvCats[c] = int.parse(v)), pad: const EdgeInsets.symmetric(vertical: 9), dividers: true, center: true),
-                              ),
-                            ],
-                          ),
+                        StarRow(
+                          c,
+                          value: s.rvCats[c] ?? 0,
+                          onPick: (v) => s.update(() {
+                            s.rvCats[c] = v;
+                            final all = s.rvCats.values;
+                            s.rvStars = (all.reduce((a, b) => a + b) / all.length).round();
+                          }),
                         ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                  child: VGap(gap: 6, children: [const T('Is the room layout accurate?', w: 800, s: 13), Seg(opts: same(['Yes', 'Mostly', 'No']), cur: s.rvLayout, onPick: (v) => s.update(() => s.rvLayout = v), pad: const EdgeInsets.all(10))]),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: VGap(gap: 6, children: [const T('Is the room layout right?', w: 800, s: 13), Seg(opts: same(['Yes', 'Mostly', 'No']), cur: s.rvLayout, onPick: (v) => s.update(() => s.rvLayout = v), pad: const EdgeInsets.all(10))]),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: VGap(gap: 6, children: [const T('Anything to add? (optional)', w: 800, s: 13), Field(value: s.rvText, onChanged: (v) => s.update(() => s.rvText = v), placeholder: 'Food, water, the owner…')]),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                  child: Row(children: [T('Shows as ', s: 12, c: p.mu), _Tag('${s.meShort} · verified resident')]),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: VGap(
+                    gap: 8,
+                    children: [
+                      const T('Anything others should know? (optional)', w: 800, s: 13),
+                      Field(value: s.rvText, onChanged: (v) => s.update(() => s.rvText = v), placeholder: 'Food, water, the owner…', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
+                      T('Shown as ${s.meShort} · verified resident. ${s.stayOwner} can reply, not delete.', s: 13, c: p.mu, lh: 1.4),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -281,96 +293,75 @@ class ResidentReviewScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: VGap(
-            gap: 8,
-            children: [
-              Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postReview),
-              T('Only residents with a confirmed stay can review. One review per stay.', s: 12, c: p.mu, lh: 1.4),
-            ],
-          ),
+          child: Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postReview),
         ),
       ],
     );
   }
 }
 
-/// F08 board 2: the exit review with the advance check.
+/// F08 board 2, F22 Area 2 (`rExit`): did the advance come back, overall
+/// stars, an optional line.
 class ExitReviewScreen extends StatelessWidget {
   const ExitReviewScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final t = hostels[0].terms;
+    final t = s.stayHostel.terms;
     final back = t.advance - t.maintenance;
-    Widget option(String v, String title, String sub) {
+    Widget option(String v, String label) {
       final on = s.exAdv == v;
       return Tap(
+        key: ValueKey('exAdv-$v'),
         onTap: () => s.update(() => s.exAdv = v),
         child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: box(bg: on ? p.sf : transparent, w: on ? 2 : 1, c: on ? p.tx : p.dv),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 2),
-                width: 18,
-                height: 18,
-                alignment: Alignment.center,
-                decoration: box(w: 2, c: p.tx),
-                child: Container(width: 8, height: 8, color: on ? p.tx : transparent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(title, w: 800, s: 15), const SizedBox(height: 2), T(sub, s: 12, c: p.mu)])),
-            ],
-          ),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.centerLeft,
+          decoration: box(bg: on ? p.ab : transparent, w: 2, c: on ? p.ac : p.tx),
+          child: T(label, w: 800, s: 15),
         ),
       );
     }
 
-    Widget line(String k, String v, {bool bold = false}) => Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(k, s: 13, w: bold ? 800 : 400, c: bold ? p.tx : p.mu), T(v, s: bold ? 16 : 13, w: 800)]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, 'Leaving ${s.stayHostel.name} · ${s.vDate}', 'Did you get your advance back?'),
+        _head(context, '${s.stayHostel.name} · ${s.vDate}', 'Exit review'),
         Expanded(
           child: Scroll(
             key: ValueKey('rExit${s.scrollEpoch}'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: box(w: 2, c: p.tx),
-                  child: VGap(
-                    gap: 4,
-                    children: [
-                      line('Advance paid', fmt(t.advance)),
-                      line('Maintenance, from the exit rules', fmt(t.maintenance)),
-                      Container(padding: const EdgeInsets.only(top: 4), decoration: BoxDecoration(border: Border(top: bs(1, p.hl))), child: line('You should get back', fmt(back), bold: true)),
-                    ],
-                  ),
-                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: VGap(
                     gap: 8,
                     children: [
-                      option('all', 'Yes, all ${fmt(back)}', 'Back on the day I left'),
-                      option('part', 'Only part of it', 'Tell us how much'),
-                      option('not', 'Not yet', 'We remind the owner and check in a week'),
+                      T('Did you get your ${fmt(back)} back?', w: 800, s: 20, lh: 1.2),
+                      T('Advance ${fmt(t.advance)} minus ${fmt(t.maintenance)} maintenance.', s: 13, c: p.mu),
+                      option('all', 'Yes, ${fmt(back)}'),
+                      option('part', 'Only part of it'),
+                      option('not', 'Not yet'),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  child: VGap(gap: 8, children: [const T('Your stay overall', w: 800, s: 13), StarPicker(value: s.exStars, onPick: (v) => s.update(() => s.exStars = v))]),
+                Container(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: StarRow('Overall', value: s.exStars, onPick: (v) => s.update(() => s.exStars = v)),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: VGap(gap: 6, children: [const T('Would you stay here again?', w: 800, s: 13), Seg(opts: same(['Yes', 'Maybe', 'No']), cur: s.exAgain, onPick: (v) => s.update(() => s.exAgain = v), pad: const EdgeInsets.all(10))]),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: VGap(
+                    gap: 8,
+                    children: [
+                      const T('Anything others should know? (optional)', w: 800, s: 13),
+                      Field(value: s.exText, onChanged: (v) => s.update(() => s.exText = v), placeholder: 'The room, the owner, getting the advance back…', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
+                      T('Shown as ${s.meShort} · verified stay. Your answer counts toward the hostel’s “advance returned” record.', s: 13, c: p.mu, lh: 1.4),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -379,13 +370,7 @@ class ExitReviewScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: VGap(
-            gap: 8,
-            children: [
-              Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postExitReview),
-              T('Your answer counts toward the hostel’s “advance returned” record.', s: 12, c: p.mu, lh: 1.4),
-            ],
-          ),
+          child: Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postExitReview),
         ),
       ],
     );
