@@ -91,6 +91,7 @@ extension SyncActions on AppState {
       }
       try {
         await data.deleteMyAccount();
+        await forgetPushToken();
         await signIn.deleteUser();
       } catch (e) {
         update(() => deleting = false);
@@ -122,7 +123,7 @@ extension SyncActions on AppState {
 
   /// F18: logging out forgets everything this phone kept about the user.
   void logOut() {
-    signIn.signOut();
+    forgetPushToken().then((_) => signIn.signOut());
     stopLive();
     final me = phone;
     update(() {

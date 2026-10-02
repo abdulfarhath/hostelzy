@@ -21,6 +21,9 @@ typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<St
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
 
 abstract class HostelRepo {
+  /// True when this talks to a real server (Supabase); false on sample data.
+  bool get remote;
+
   /// Live hostels, or null to keep the built-in sample data.
   Future<Listings?> listings();
   Future<RemoteSettings?> settings();
@@ -30,6 +33,9 @@ abstract class HostelRepo {
 
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
+
+  /// Removes this phone's token (sign-out, account deleted).
+  Future<void> removePushToken(String token);
 
   /// C: deletes the signed-in user's data on the server (keeps others'
   /// records without their identity). Throws with the server's reason.
@@ -57,6 +63,8 @@ abstract class HostelRepo {
 class SampleRepo implements HostelRepo {
   const SampleRepo();
   @override
+  bool get remote => false;
+  @override
   Future<Listings?> listings() async => null;
   @override
   Future<RemoteSettings?> settings() async => null;
@@ -64,6 +72,8 @@ class SampleRepo implements HostelRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
   @override
   Future<void> savePushToken(String token) async {}
+  @override
+  Future<void> removePushToken(String token) async {}
   @override
   Future<void> deleteMyAccount() async {}
   @override
@@ -83,6 +93,8 @@ class SampleRepo implements HostelRepo {
 class SupabaseRepo implements HostelRepo {
   SupabaseRepo(this.db);
   final SupabaseClient db;
+  @override
+  bool get remote => true;
 
   /// Connects with the public anon key from `app_config.dart`. Signed-in
   /// users send their Firebase ID token ([idToken]); Supabase checks it
@@ -163,6 +175,9 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> savePushToken(String token) => db.from('push_tokens').upsert({'token': token, 'platform': 'android', 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'token');
+
+  @override
+  Future<void> removePushToken(String token) => db.from('push_tokens').delete().eq('token', token);
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.

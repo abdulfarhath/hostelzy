@@ -72,7 +72,12 @@ class _HostelzyAppState extends State<HostelzyApp> {
     // Dev start states (debug ?start=…) skip the saved login.
     if (q['start'] == null) state.restore(saved, firebaseUser: signIn.current);
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
-    if (dataSource == 'supabase') _goLive();
+    state.watchPushToken();
+    if (dataSource == 'supabase') {
+      _goLive();
+    } else {
+      state.syncPushToken();
+    }
   }
 
   /// F13: live hostels and remote switches from Supabase.
@@ -86,6 +91,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
       if (l != null) state.applyListings(l);
       // B6: the signed-in user's holds, enquiries, payments and complaints, live.
       await state.startLive();
+      // Push fix: every start, the server gets this phone's token if allowed.
+      await state.syncPushToken();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
       state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}));
