@@ -9,6 +9,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] Firebase → Google sign-in enabled
 - [x] Supabase → Third-party Auth → Firebase (`hostelzy`)
 - [x] UPI ID `9059790014@axl`, support WhatsApp `9059790014`
+- [x] Firebase SHA-1 / SHA-256 added, new google-services.json
+- [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
 
 ## Now
 1. **Build chat: send the 2 answers** (approve placeholder edit; signing key as a GitHub secret).
@@ -27,7 +29,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
    - Click "Android key (auto created by Firebase)"
    - Application restrictions → Android apps → Add → package `app.hostelzy.hostelzy` + SHA-1 → Save
-6. **Make the GitHub repo private** (hides the team passcode and code):
+6. **Make the GitHub repo private** (founder: do it at the end, once the app is production-ready and before the first real users; hides the team passcode and code):
    - Repo → Settings → scroll to Danger Zone → Change visibility → Private
    - Note: new APK downloads then need you logged in to GitHub.
 7. **Domain** (`hostelzy.in`, about ₹800/year; Hostinger/GoDaddy accept UPI):
