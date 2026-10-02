@@ -111,7 +111,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
       if (state.listState == 'loading') {
-        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
+        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
         state.update(() => state.listState = 'offline');
       }
       debugPrint('Supabase: $e');
