@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
@@ -194,10 +195,21 @@ class AppState extends ChangeNotifier {
 
   // ------------------------------------------------------------ F09 rewards
 
-  /// none | member | trusted. Member after a first stay through Hostelzy.
-  String level = 'none';
+  /// Member after a first stay through Hostelzy.
+  bool member = false;
   String memberSince = '';
-  int monthsOnTime = 0;
+
+  /// From the stay record (sample until the backend keeps it): months stayed
+  /// in Hostelzy hostels, months the rent was late, owner complaints.
+  int monthsOnTime = 0, lateRentMonths = 0, ownerComplaints = 0;
+
+  /// none | member | trusted. Trusted tenant is earned, not given: 6 months in
+  /// Hostelzy hostels, rent always on time, no complaints from the owner (F09).
+  String get level => !member
+      ? 'none'
+      : monthsOnTime >= trustedMonths && lateRentMonths == 0 && ownerComplaints == 0
+      ? 'trusted'
+      : 'member';
 
   /// The ₹100 Member reward has been used at a move-in.
   bool rewardUsed = false;
@@ -215,7 +227,7 @@ class AppState extends ChangeNotifier {
 
   void becomeMember(String hostelName) {
     if (isMember) return;
-    level = 'member';
+    member = true;
     memberSince = 'Since ${dayMon(appToday.add(const Duration(days: 1)))} · first stay via Hostelzy at $hostelName';
   }
 
@@ -1568,6 +1580,24 @@ class AppState extends ChangeNotifier {
 
   void copyText(String s) => Clipboard.setData(ClipboardData(text: s));
 
+  /// The last text handed to the phone's share sheet (tests read it).
+  String? lastShare;
+
+  /// Opens Android's share sheet (WhatsApp, SMS, Telegram…). Nothing is sent
+  /// until the user picks an app and sends it.
+  Future<void> share(String text) async {
+    lastShare = text;
+    try {
+      await SharePlus.instance.share(ShareParams(text: text));
+    } catch (_) {
+      copyText(text);
+      toastMsg('Sharing isn’t available here. The text is copied.');
+    }
+  }
+
+  /// "Find a PG on Hostelzy with my code …" (F09).
+  String get referralText => 'I found my PG on Hostelzy: see the exact bed before you visit. Use my code $referralCode when you join a hostel through Hostelzy and we both get ${fmt(referralReward)} after your first month.'; 
+
   // ------------------------------------------------------------ F17 payments
 
   /// Where tenants pay each owner. Sample IDs are clearly fake until the
@@ -1715,7 +1745,8 @@ class AppState extends ChangeNotifier {
       enquiries = enquiries.where((e) => e.phone != me).toList();
       holds = [];
       saved.clear();
-      level = 'none';
+      member = false;
+      monthsOnTime = 0;
       rewardUsed = false;
       phone = '';
       otp = '';

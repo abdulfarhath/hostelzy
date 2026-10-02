@@ -55,3 +55,6 @@ Trusted-tenant progress shows months on time out of 6. Referral code `RAHUL-100`
 
 **Tests:** `test/flows_test.dart` → "Stay Rewards: Member, 2-hour holds, ₹100 at move-in, Trusted
 badge". `flutter analyze` clean, `flutter test` 23/23.
+
+
+**Share + earned Trusted (2026-10-02, branch `feature/f09-share-trusted`):** "Share" on Stay Rewards opens the phone's share sheet (`share_plus`) with the real referral text and code (also used for the owner's invite link and the rent receipt). **Trusted tenant is computed** from the stay record: Member + 6 months in Hostelzy hostels + rent never late + no owner complaints; otherwise Member, with the progress checks showing the real state (late months, owner complaints). Stay data is sample until the backend keeps it (F13). Test: `Stay Rewards: share my code, Trusted tenant earned from the stay (F09)`.

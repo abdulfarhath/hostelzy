@@ -308,7 +308,7 @@ class RentPayScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     T('${monthYear(appToday)} · Srinivas confirmed on ${rent.done}', s: 14, w: 600),
                     const SizedBox(height: 12),
-                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.whatsapp('', 'Rent receipt · Anjani Residency · bed 204-B · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
+                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · Anjani Residency · bed 204-B · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
                   ],
                 ),
               ),
