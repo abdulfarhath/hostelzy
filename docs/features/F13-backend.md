@@ -204,3 +204,30 @@ Not needed.
   - `hostelzy-demo.apk` is sample data with the DEMO banner (`DATA=sample`, Gradle `HZ_DEMO=1`). It uses the `app.hostelzy.hostelzy.demo` id and the label "Hostelzy Demo", so it installs next to the real app. Firebase: the founder registered the demo app (same test SHA-1) on 2026-10-02, so Google sign-in, push and Crashlytics work in it too.
   - Both are signed with the test key. The PR check builds both.
 - Tests: the gated-roles test checks the banner appears only in the demo; the Supabase listings test covers published layouts and the empty state.
+
+**B5 · server rules and push · 2026-10-02** (branch `feature/b5-server-logic`):
+- What a modified app could skip now happens in the database (`20261002030000_b5_server_rules.sql`, safe to run again).
+- HZ codes for holds and enquiries, and FP case numbers, are issued by the server. The app's own code is ignored.
+- Hold rules:
+  - the bed must be free and in that hostel;
+  - at most 2 open holds per tenant;
+  - a free hold lasts 1 hour (2 for Members); paid and advance holds wait for the owner;
+  - the bed shows as held, and is freed again on release or expiry.
+- `expire_holds()` runs every minute (pg_cron).
+- Resident matching: a stay is "via Hostelzy" with its HZ code when that phone enquired, held or booked there in the 60 days before joining. The owner's pick can't change it.
+- Fair Play cases open automatically for:
+  - an HZ resident added more than 3 days after moving in;
+  - a booked HZ hold with nobody added after 3 days (daily scan).
+- Invoices:
+  - `issue_invoices()` on the 1st: one per live hostel once its trial ends, priced by bed count (499 / 999 / 1,499), minus credit;
+  - `invoice_sweep()` daily: late days; overdue (deals paused) at 15 days late, active again once paid.
+- Push:
+  - new holds, enquiries and complaints, and payments to check, add rows to `push_outbox` (only the server can read it);
+  - the `send-push` Edge Function sends them with FCM and drops dead phone tokens;
+  - pg_cron calls it every minute with a secret kept in Vault.
+- Jobs and helpers can't be called from the app. `is_server()` is true only with no request JWT, so an app token is never "server".
+- CI:
+  - `supabase-check.yml` runs the SQL tests on Postgres 16 and the function tests on Node for PRs that touch `supabase/`;
+  - `supabase-functions.yml` deploys `send-push` from main once `SUPABASE_ACCESS_TOKEN` exists.
+- Founder steps: `docs/FOUNDER-TODO.md` items 3–4.
+- Not yet: the app doesn't write holds or enquiries to Supabase. That comes with the live tenant, owner and resident screens (C), which will show the server's HZ code.

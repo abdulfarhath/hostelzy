@@ -4,11 +4,21 @@
 /// Shown in Settings. Keep in step with `version:` in pubspec.yaml.
 const appVersion = '1.0.0', appBuild = 1;
 
-/// Web pages required by Google Play (needs the domain, F15 outside the app).
-/// PLACEHOLDER until the pages are live.
-const privacyUrl = 'https://hostelzy.in/privacy';
-const termsUrl = 'https://hostelzy.in/terms';
-const deleteAccountUrl = 'https://hostelzy.in/delete-account';
+/// Hostelzy's public web pages (repo `app/`, GitHub Pages). DECISIONS
+/// 2026-10-02 "Web address for now": switching to hostelzy.in is this line.
+const webBase = 'https://farhath.me/hostelzy/app';
+
+/// Web pages required by Google Play.
+const privacyUrl = '$webBase/privacy/';
+const termsUrl = '$webBase/terms/';
+const deleteAccountUrl = '$webBase/delete-account/';
+
+/// Shareable links: an enquiry's HZ code, and a hostel's resident invite.
+String enquiryLink(String hz) => '$webBase/r/?c=${Uri.encodeQueryComponent(hz)}';
+String inviteLink(String code) => '$webBase/j/?c=${Uri.encodeQueryComponent(code)}';
+
+/// A link as people read it: no https://.
+String shortLink(String url) => url.replaceFirst(RegExp(r'^https?://'), '');
 
 /// Hostelzy's WhatsApp support number, 10 digits (the +91 is added when the
 /// link opens). DECISIONS 2026-10-02 "Payments contact + login SMS".

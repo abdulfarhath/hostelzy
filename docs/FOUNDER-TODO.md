@@ -13,13 +13,16 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
 - [x] Firebase key locked to the Android app
 - [x] Supabase v2 SQL (firebase ids)
+- [x] B5: pg_cron + pg_net, server rules SQL, FCM key, push secret, SUPABASE_ACCESS_TOKEN
 
 ## Now
 1. **Test the F18 APK** (back button, stay logged in, own name/phone, map: my location + area picker,
    owner layout editing). Tell the Ideas chat ✅ / ❌ with screenshots.
-2. *(Optional)* Google login in the demo APK: Firebase → Add app → Android →
-   `app.hostelzy.hostelzy.demo` → add SHA-1 `46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`
-   → download google-services.json → send to the Ideas chat.
+2. ~~Google login in the demo APK~~ (done 2026-10-02; in the app via PR #38).
+3. ~~Server rules (B5)~~ (done 2026-10-02).
+4. ~~Push notifications (B5)~~ (done 2026-10-02; old leaked key aeaa9d98 deleted, new key in Supabase only).
+
+5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
@@ -38,8 +41,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 10. **Map key**: Google Maps needs a card in Google Cloud (same card issue). If it still fails, we use
     MapTiler (free tier, no card) instead. Tell the Ideas chat which.
 11. **SMS OTP login**: when a card works, Firebase → Upgrade to Blaze → Authentication → Phone → Enable.
-12. **Push sending key**: Firebase → ⚙ Project settings → Service accounts → Generate new private key
-    → give it to Build **as a Supabase secret** (never in chat or GitHub). Build will show you where.
+12. ~~Push sending key~~: now step 4 above.
 
 ## Never
 - Never share the Supabase **service_role** key or any private key file in chat or GitHub.
