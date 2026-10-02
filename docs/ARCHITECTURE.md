@@ -44,5 +44,5 @@ everywhere, one class owns every feature.
 3. Repository interface; move hostels/rooms/beds/rates reads to SupabaseRepo; release builds use it. **Done 2026-10-02 (B3):** `lib/features/listings/repo.dart`; CI publishes `hostelzy.apk` (Supabase) and `hostelzy-demo.apk` (samples).
 4. Split `AppState` by area as each feature moves to the repository. **Done 2026-10-02 (B4):** `lib/features/<area>/` parts (fair_play, rewards, plan, layouts, team, onboarding, reviews, session, map, residents, holds, payments, listings, links); `state.dart` keeps the core.
 5. Edge Functions: HZ codes, hold expiry cron, push sending, resident matching.
-6. Realtime for holds/enquiries/payments so owner and tenant phones stay in sync.
+6. Realtime for holds/enquiries/payments so owner and tenant phones stay in sync. **Built 2026-10-02 (B6):** `lib/features/listings/live.dart` + `SupabaseRepo.live()/changes()`; migration `20261002040000_b6_realtime.sql` adds holds, enquiries, payments, complaints to `supabase_realtime`. A change is a signal; the app refetches (debounced 400 ms) under RLS.
 7. Storage for photos; team web console with admin login; remove passcode mode.

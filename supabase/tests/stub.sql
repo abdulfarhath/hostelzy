@@ -15,3 +15,6 @@ grant usage on schema public, auth to anon, authenticated, service_role;
 grant execute on all functions in schema auth to anon, authenticated;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+
+-- Supabase's Realtime publication (empty until a migration adds tables).
+create publication supabase_realtime;

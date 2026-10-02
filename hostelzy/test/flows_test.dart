@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'dart:convert';
 
 import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp;
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
@@ -2196,6 +2198,60 @@ void main() {
     expect(o.teamUnlocked, isFalse);
     o.dispose();
   });
+
+  test('B6: live rows map server statuses to the app', () {
+    final l = liveFromRows(
+      holds: [
+        {'id': 'h1', 'hostel_id': 'x', 'opt': 'advance', 'status': 'waiting', 'ref': 'HZ-5002', 'started_at': '2026-10-02T10:00:00Z', 'beds': {'letter': 'A', 'rooms': {'number': 101, 'label': null}}},
+        {'id': 'h2', 'hostel_id': 'x', 'opt': 'free', 'status': 'expired', 'ref': 'HZ-5003', 'started_at': '2026-10-02T09:00:00Z', 'beds': {'letter': 'B', 'rooms': {'number': 204, 'label': '204A'}}},
+      ],
+      enquiries: [
+        {'ref': 'HZ-5001', 'name': 'Kiran', 'phone': '9111111111', 'hostel_id': 'x', 'bed': '101-A', 'created_at': '2026-10-02T08:00:00Z', 'source': 'Hostel page · Ask on WhatsApp', 'msg': 'Hi', 'contacted': false},
+      ],
+      payments: [
+        {'id': 'p1', 'hostel_id': 'x', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'h1', 'status': 'pending', 'utr': null, 'created_at': '2026-10-02T10:00:00Z', 'confirmed_at': null, 'holds': {'beds': {'letter': 'A', 'rooms': {'number': 101}}}},
+      ],
+      complaints: [
+        {'id': '0000002a-0000-0000-0000-000000000000', 'author_id': 'me', 'bed': '101-A', 'cat': 'WiFi', 'body': 'Slow', 'status': 'Fixed', 'note': 'Router reset', 'created_at': '2026-10-01T08:00:00Z'},
+      ],
+      me: 'me',
+    );
+    expect(l.holds.map((h) => '${h.bed} ${h.room} ${h.opt} ${h.status} ${h.ref}'), ['101-A 101 book waiting HZ-5002', '204A-B 204 free released HZ-5003']);
+    expect(l.expired, {'h2'});
+    expect((l.enquiries.single.ref, l.enquiries.single.bed, l.enquiries.single.hid), ('HZ-5001', '101-A', 'x'));
+    final p = l.payments.single;
+    expect((p.status, p.what, p.bed, p.holdId, p.utr), ('due', 'Advance for bed 101-A', '101-A', 'h1', null));
+    final c = l.complaints.single;
+    expect((c.id, c.status, c.mine, c.date), (42, 'Resolved', true, '1 Oct'));
+  });
+
+  test('B6: signed in on Supabase, lists are live and refetch on Realtime changes', () async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final empty = liveFromRows(holds: [], enquiries: [], payments: [], complaints: []);
+    final fake = _FakeLive(empty);
+    s.data = fake;
+    // Not signed in with Google: nothing is fetched.
+    await s.startLive();
+    expect(fake.fetches, 0);
+    s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@x.in');
+    await s.startLive();
+    expect((fake.fetches, fake.askedAs), (1, 'fb-owner'));
+    expect([s.enquiries.length, s.holds.length, s.payments.length, s.complaints.length], [0, 0, 0, 0]); // samples replaced, never mixed
+    // A tenant enquires: Realtime says "enquiries changed"; three quick changes, one refetch.
+    fake.rows = liveFromRows(holds: [], enquiries: [
+      {'ref': 'HZ-5009', 'name': 'Asha', 'phone': '9000000001', 'hostel_id': 'x', 'created_at': '2026-10-02T11:00:00Z'},
+    ], payments: [], complaints: []);
+    fake.ctrl..add('enquiries')..add('holds')..add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    expect(s.enquiries.single.ref, 'HZ-5009');
+    // Logged out: no more updates.
+    s.stopLive();
+    fake.ctrl.add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2237,6 +2293,24 @@ class _FakeData extends SampleRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+}
+
+/// B6: a Supabase stand-in with live rows and a Realtime change stream.
+class _FakeLive extends SampleRepo {
+  _FakeLive(this.rows);
+  LiveRows rows;
+  int fetches = 0;
+  String? askedAs;
+  final ctrl = StreamController<String>.broadcast();
+  @override
+  Future<LiveRows?> live({String? me}) async {
+    fetches++;
+    askedAs = me;
+    return rows;
+  }
+
+  @override
+  Stream<String> changes() => ctrl.stream;
 }
 
 class _FakeLocator implements Locator {

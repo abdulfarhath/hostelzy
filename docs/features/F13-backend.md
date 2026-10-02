@@ -204,3 +204,20 @@ Not needed.
   - `hostelzy-demo.apk` is sample data with the DEMO banner (`DATA=sample`, Gradle `HZ_DEMO=1`). It uses the `app.hostelzy.hostelzy.demo` id and the label "Hostelzy Demo", so it installs next to the real app. Firebase: the founder registered the demo app (same test SHA-1) on 2026-10-02, so Google sign-in, push and Crashlytics work in it too.
   - Both are signed with the test key. The PR check builds both.
 - Tests: the gated-roles test checks the banner appears only in the demo; the Supabase listings test covers published layouts and the empty state.
+
+**B6 · Realtime · 2026-10-02** (branch `feature/b6-realtime`):
+- When a user is signed in on Supabase, their holds, enquiries, payments and complaints come from the database (`SupabaseRepo.live()`). RLS decides who sees what.
+- `20261002040000_b6_realtime.sql` puts those 4 tables in the `supabase_realtime` publication. Realtime checks RLS before sending a change.
+- A change is only a signal. The app refetches, at most once per 400 ms, so bed labels and the rules stay in one place.
+- Server statuses are mapped to the app's:
+  - an advance hold shows as a booking;
+  - an expired hold shows as released, marked as expired;
+  - pending payments show as due;
+  - fixed complaints show as resolved.
+- Live rows replace the lists and are never mixed with samples. Logging out stops the updates.
+- Tests:
+  - `B6: live rows map…`;
+  - `B6: signed in on Supabase…`;
+  - the publication check in `rls_test.sql`.
+- Founder: run the B6 SQL file once in the SQL Editor (`docs/FOUNDER-TODO.md`).
+- Still to come (C): the owner and resident screens' writes (accept a hold, confirm a payment, update a complaint) go to Supabase, and Realtime then shows them on the other phone.
