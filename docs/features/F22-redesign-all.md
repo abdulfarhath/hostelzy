@@ -143,7 +143,7 @@ One PR per area; flow tests per area; keep server behaviour unchanged.
 - Kept from the data model, not the boards: the five review categories, and the exit choices "Yes / Only part of it / Not yet" (the server stores all, part, not). The exit review does not say "Shown as Former resident", because only a deleted account is shown that way.
 - Tests: `test/resident_test.dart` (5 flows + 2× text on 7 screens), older tests updated.
 
-### Area 1 · Tenant: built 2026-10-02 (branch `feature/f22-tenant`)
+### Area 1 · Tenant: built 2026-10-02 (merged, #71)
 - **Map:** Where bar + location button on top, "Search this area", one hostel card at the bottom (photo, cost to move in, View). Location off or failing goes to typing an area.
 - **Explore empty:** "No hostels in X yet" with "Try <nearest area with hostels>".
 - **Me:** one list with a status on each row (Saved, Holds, Stay Rewards, Reminders, Settings, Help on WhatsApp), "Switch role ›".
