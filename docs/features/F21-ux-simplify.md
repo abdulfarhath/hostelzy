@@ -130,3 +130,7 @@ One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Tod
 - Tenants are asked for notifications after their first hold; owners/residents after sign-in.
 - "UPI reference" everywhere, including the owner plan invoice (shown once as "UPI reference (UTR)").
 - "Best deals" sort removed; a "Hostelzy deals only" filter chip stays.
+- W3: Manage gets an "Enquiries" row (full list + "Not on this list = not from Hostelzy", needed by Fair Play).
+- W3: complaint photos are real (private bucket; resident, staff, team can read).
+- W3: owner words "Came from the app / Walked in / Not confirmed / Joined before Hostelzy"; centre tab "Add tenant".
+- W3: "Reviews and ranking" is one Manage row.
