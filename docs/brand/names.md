@@ -168,3 +168,37 @@ Founder's idea: **HOSTELL**: "it **tells** you about hostels around you". Wants 
 - **Know the hostel before you go.**
 - **See the bed. Hold the bed.**
 - Hindi: **Aas-paas ke hostel, sach-sach.** (hostels nearby, the truth)
+
+---
+
+# Round 3: names that sound and feel good (2026-10-02)
+
+Founder: findhostel.in and gethostel.in are free (founder checked; Brand chat can't check .in).
+Asked for "better vocabulary, sounds good, feels good to listen".
+
+Note: **findhostel / gethostel are plain words**, so they can't be trademarked.
+Good as extra web addresses that point to the app, not as the brand name.
+
+## The list (.com/.app checked 2026-10-02 + web search)
+
+| Name | Say it | Feel / story | .com | .app | Quick check |
+|---|---|---|---|---|---|
+| **Hostelmila** | HOS-tel-MI-laa | "Hostel mila!" = "Found my hostel!" Same idea as findhostel, but warm. | ✅ | ✅ | Nothing found. |
+| **Hostelji** | HOS-tel-jee | Respect + warmth. | ✅ | ✅ | Nothing found (see deeper check above). |
+| **Hostelsaathi** | HOS-tel-SAA-thee | "Saathi" = companion, someone with you. | ✅ | ✅ | A "Saathi" travel app and a "Saathi" roommate site exist. Long (5 sounds). |
+| **Aaramstay** | aa-RAAM-stay | "Aaram" = rest, comfort. | ✅ | not checked | Nothing found. |
+| **Hostelghar** | HOS-tel-GHAR | A hostel that feels like home. | ✅ | not checked | Nothing found. Heavy "gh" sound. |
+| **Hostelsahi** | HOS-tel-SAA-hee | The right hostel. | ✅ | not checked | Nothing found. |
+| **HostelTell** | HOS-tel-TELL | Tells you about hostels around you. | ✅ | ✅ | Nothing found. |
+| Gharsa | GHAR-saa | "Ghar sa" = like home. | ❌ | ✅ | .com taken. |
+| Sukoon Hostel | su-KOON | "Sukoon" = peace. | ✅ | | A "Sukoon Hostel" exists (Muscat). |
+| Nivaas / Aashray / Nidra / Aangan / Hostelia / Roomora | | Lovely words | ❌ | ❌ | Domains taken. |
+
+## Brand chat's picks
+1. **Hostelmila**: the happy moment, and it matches the founder's "find / get hostel" idea.
+   Use findhostel.in / gethostel.in to point to it.
+2. **Hostelji**: warm and short.
+3. **Hostelsaathi**: the kindest meaning, but long.
+
+Same honesty rule: no IP India search done here; lawyer must check (classes 9, 42, 43, 36).
+"Hostel" is a common word, so the lawyer must confirm the whole name can be registered.
