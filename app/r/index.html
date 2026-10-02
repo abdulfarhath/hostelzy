@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enquiry · Hostelzy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+<header><span></span><a href="../">Hostelzy</a></header>
+<h1 id="t">A Hostelzy enquiry</h1>
+<div class="box" id="box" hidden>
+  <div class="mu">HZ code</div>
+  <div class="code" id="code"></div>
+  <p class="mu">This tenant found your hostel on Hostelzy. Keep this code: when they move in, add them in the app within 3 days.</p>
+</div>
+<p id="none" class="mu" hidden>This link has no HZ code. Ask the sender for the full link.</p>
+<a class="cta" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
+<p class="mu">Already have Hostelzy? Open it: owners find this enquiry on <b>Today</b>, tenants under <b>Holds</b>.</p>
+<script>
+  const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
+  if (/^HZ-[0-9]{3,8}$/.test(c)) {
+    document.getElementById('code').textContent = c;
+    document.getElementById('box').hidden = false;
+    document.title = c + ' · Hostelzy';
+  } else {
+    document.getElementById('none').hidden = false;
+  }
+</script>
+<footer><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../delete-account/">Delete account</a><a href="https://wa.me/919059790014">WhatsApp us</a></footer>
+</main>
+</body>
+</html>

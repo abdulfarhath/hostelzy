@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp;
+import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
 import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
@@ -365,7 +365,7 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Invite QR'));
     expect(s.screen, 'oInvite');
-    expect(find.text('hostelzy.in/j/ANJ-7Q2'), findsOneWidget);
+    expect(find.text('farhath.me/hostelzy/app/j/?c=ANJ-7Q2'), findsOneWidget);
     expect(find.text('2 to approve'), findsOneWidget);
     await tap(tester, find.text('Approve').first);
     final r = s.residents.first;
@@ -1106,9 +1106,9 @@ void main() {
     await pumpApp(tester, l);
     // F18 (C1): Terms and Privacy policy are real links.
     await tap(tester, find.text('Privacy policy'));
-    expect(l.lastLink.toString(), 'https://hostelzy.in/privacy');
+    expect(l.lastLink.toString(), 'https://farhath.me/hostelzy/app/privacy/');
     await tap(tester, find.text('Terms'));
-    expect(l.lastLink.toString(), 'https://hostelzy.in/terms');
+    expect(l.lastLink.toString(), 'https://farhath.me/hostelzy/app/terms/');
     await tester.pump(const Duration(seconds: 3));
     await tester.enterText(find.byType(TextField).first, 'Asha');
     await tester.enterText(find.byType(TextField).last, '5000000001');
@@ -1255,7 +1255,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
-    expect(s.lastLink.toString(), 'https://hostelzy.in/privacy');
+    expect(s.lastLink.toString(), 'https://farhath.me/hostelzy/app/privacy/');
     await tester.pump(const Duration(seconds: 3));
     // Help opens WhatsApp to Hostelzy's support number.
     await tap(tester, find.text('Help on WhatsApp'));
@@ -1586,7 +1586,7 @@ void main() {
     // Resident QR poster: a real A4 PDF.
     final o = AppState(start: 'oInvite', role: 'owner');
     await pumpApp(tester, o);
-    await tester.runAsync(() => o.sharePoster('https://hostelzy.in/j/ANJ-7Q2'));
+    await tester.runAsync(() => o.sharePoster(inviteLink('ANJ-7Q2')));
     expect(o.lastPosterBytes, greaterThan(1000));
     o.dispose();
 
@@ -1688,6 +1688,15 @@ void main() {
       {'key': 'maintenance_until', 'value': ''},
     ]);
     expect((rs.minBuild, rs.maintenanceUntil), (3, ''));
+    // Public pages and links all hang off one base (DECISIONS "Web address for now").
+    expect(webBase, 'https://farhath.me/hostelzy/app');
+    expect((privacyUrl, deleteAccountUrl), ('$webBase/privacy/', '$webBase/delete-account/'));
+    expect(enquiryLink('HZ-5001'), 'https://farhath.me/hostelzy/app/r/?c=HZ-5001');
+    expect(inviteLink('ANJ-7Q2'), 'https://farhath.me/hostelzy/app/j/?c=ANJ-7Q2');
+    // Each page exists in the repo's app/ folder.
+    for (final f in ['index.html', 'privacy/index.html', 'terms/index.html', 'delete-account/index.html', 'r/index.html', 'j/index.html']) {
+      expect(File('../app/$f').existsSync(), isTrue, reason: f);
+    }
   });
 
   testWidgets('live hostels from Supabase replace the samples for tenants (F13)', (tester) async {

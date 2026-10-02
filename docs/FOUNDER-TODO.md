@@ -22,6 +22,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 3. ~~Server rules (B5)~~ (done 2026-10-02).
 4. ~~Push notifications (B5)~~ (done 2026-10-02; old leaked key aeaa9d98 deleted, new key in Supabase only).
 
+5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
