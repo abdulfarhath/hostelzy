@@ -1097,7 +1097,7 @@ class _AddSheet extends StatelessWidget {
             gap: 6,
             children: [
               label('Moving in'),
-              Seg(opts: same(['Today', 'Tomorrow', '5 Oct']), cur: s.addDate, onPick: (v) => s.update(() => s.addDate = v), pad: const EdgeInsets.all(10)),
+              Seg(opts: same(['Today', 'Tomorrow', dayMon(appToday.add(const Duration(days: 4)))]), cur: s.addDate, onPick: (v) => s.update(() => s.addDate = v), pad: const EdgeInsets.all(10)),
             ],
           ),
           Container(

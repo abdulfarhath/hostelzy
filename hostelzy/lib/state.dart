@@ -1358,6 +1358,9 @@ class AppState extends ChangeNotifier {
   void call(String phone) => openLink(Uri.parse('tel:+91$phone'), 'the phone app');
   void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${posOf(h).$1},${posOf(h).$2}'), 'Maps');
 
+  /// The tenant's last ended hold: "Did you join?" asks about it (F07).
+  Hold? get endedHold => holds.where((h) => h.status == 'released').lastOrNull;
+
   /// Holds that ran out (shown as "Hold expired").
   final Set<String> expiredHolds = {};
 

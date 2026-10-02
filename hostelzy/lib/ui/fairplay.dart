@@ -282,7 +282,7 @@ class JoinedSheet extends StatelessWidget {
       child: VGap(
         gap: 12,
         children: [
-          Rich([sp(context, 'You held '), sp(context, 'bed 102-B', w: 800), sp(context, ' on 11 Sep. Your answer keeps deals honest and unlocks your '), sp(context, '₹100 Member reward', w: 800, c: p.gn), sp(context, ' for your next stay.')], s: 14, lh: 1.45),
+          Rich([sp(context, 'You held '), sp(context, 'bed ${s.endedHold?.bed ?? '102-B'}', w: 800), sp(context, s.endedHold != null ? ' at ${hostelById(s.endedHold!.hid).name}. Your answer' : ' on 11 Sep. Your answer keeps deals honest and unlocks your '), sp(context, '₹100 Member reward', w: 800, c: p.gn), sp(context, ' for your next stay.')], s: 14, lh: 1.45),
           Cta('Yes, I joined', icon: 'check', height: 54, px: 16, fs: 15, onTap: () => s.answerJoined('yes')),
           OutlineCta('No, I didn’t join', icon: 'x', height: 50, onTap: () => s.answerJoined('no')),
           OutlineCta('Still deciding', icon: 'clock', height: 50, onTap: () => s.answerJoined('later')),

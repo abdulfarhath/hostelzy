@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show mergeSort;
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data.dart';
 import '../state.dart';
@@ -58,7 +59,7 @@ class OwnerTodayScreen extends StatelessWidget {
     final freshE = s.enquiries.where((e) => e.hid == 'anjani' && !e.contacted).length;
     final kpis = <(String, String, String, Color, VoidCallback)>[
       ('Free beds', '${c.free}', '${c.soon} freeing up soon', p.tx, () => s.tab('oBeds')),
-      ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () {}),
+      ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () => s.toastMsg(reqs.isEmpty ? 'No hold requests right now.' : 'Hold requests are listed below on Today.')),
       ('Rent pending', fmt(expected - collected), '${s.residents.where((r) => r.status == 'Overdue').length} overdue', p.tx, () => s.tab('oRent')),
       if (enquiriesTile)
         ('Enquiries', '$freshE', 'New from Hostelzy', freshE > 0 ? p.ad : p.tx, () {})
@@ -850,9 +851,9 @@ class OwnerRentScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: 'October 2026', title: 'Rent'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: PageHead(kicker: monthYear(appToday), title: 'Rent'),
           ),
           Container(
             padding: const EdgeInsets.all(16),
@@ -1343,7 +1344,7 @@ class OwnerInviteScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
-                          child: const SizedBox(width: 175, height: 175, child: CustomPaint(painter: QrPainter(Color(0xFF201E1D)))),
+                          child: QrImageView(data: 'https://$link', size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                         ),
                         const SizedBox(height: 12),
                         const T(link, w: 800, s: 18),
@@ -1432,45 +1433,6 @@ class OwnerInviteScreen extends StatelessWidget {
 
 /// Placeholder QR (25×25 modules, three finder squares), as in the design.
 /// The real code comes with the backend.
-/// A stand-in QR code (sample data; the real one encodes the link or UPI URI).
-class QrPainter extends CustomPainter {
-  const QrPainter(this.ink);
-  final Color ink;
-  @override
-  void paint(Canvas canvas, Size size) {
-    const n = 25;
-    final c = size.width / n;
-    final paint = Paint()..color = ink;
-    var seed = 7321;
-    double rnd() {
-      seed = (seed * 1103515245 + 12345) % 2147483648;
-      return seed / 2147483648;
-    }
-
-    int finder(int r, int col) {
-      for (final (r0, c0) in const [(0, 0), (0, n - 7), (n - 7, 0)]) {
-        final y = r - r0, x = col - c0;
-        if (y >= -1 && y <= 7 && x >= -1 && x <= 7) {
-          if (y < 0 || x < 0 || y > 6 || x > 6) return 0;
-          if (y == 0 || y == 6 || x == 0 || x == 6) return 1;
-          return (y >= 2 && y <= 4 && x >= 2 && x <= 4) ? 1 : 0;
-        }
-      }
-      return -1;
-    }
-
-    for (var r = 0; r < n; r++) {
-      for (var col = 0; col < n; col++) {
-        final f = finder(r, col);
-        final on = f == -1 ? rnd() < .5 : f == 1;
-        if (on) canvas.drawRect(Rect.fromLTWH(col * c, r * c, c, c), paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(QrPainter old) => old.ink != ink;
-}
 
 // ------------------------------------------------------------ F16 rate card
 

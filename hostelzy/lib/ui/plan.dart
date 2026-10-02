@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
-import 'screens_owner.dart' show QrPainter;
 
 // F10 owner plan and UPI payment check: Manage → Your plan (board 1), the
 // invoice with a UPI QR (2), "I've paid" with the UTR (3, a sheet), payment
@@ -16,7 +16,7 @@ String _period(DateTime due) {
   return '${dayMon(due)} – ${dayMon(end)} ${end.year}';
 }
 
-const _monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const _monthNames = monthNames;
 
 /// Status tag for an invoice.
 ({String label, Color bg, Color fg}) invoiceTag(Pal p, Invoice i) => switch (i.status) {
@@ -256,10 +256,11 @@ class InvoiceScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
-                          child: const SizedBox(width: 175, height: 175, child: CustomPaint(painter: QrPainter(Color(0xFF201E1D)))),
+                          child: QrImageView(data: upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref).toString(), size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                         ),
                         const SizedBox(height: 12),
                         Rich([sp(context, 'Scan with any UPI app. Amount and the note '), sp(context, inv.ref, w: 800, c: p.tx), sp(context, ' are filled in.')], s: 13, c: p.mu, align: TextAlign.center),
+                        if (hostelzyUpiId.startsWith('[')) ...[const SizedBox(height: 6), T('Sample QR: Hostelzy’s UPI ID isn’t set yet. Don’t pay with it.', s: 12, w: 800, c: p.ad, align: TextAlign.center)],
                       ],
                     ),
                   ),
