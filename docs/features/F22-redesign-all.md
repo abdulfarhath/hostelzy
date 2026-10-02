@@ -1,6 +1,6 @@
 # F22 · Redesign every screen (F21 style)
 
-**Stage:** Designing · Areas 1–3 (Tenant, Resident, Owner) designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
+**Stage:** Design approved · all 5 areas designed 2026-10-02 (chats decide; founder confirmed in the Design chat) · founder, 2026-10-02 ("I really like the after… do every screen, your own
 decisions, never take my approval").
 
 ## Rules (from the approved F21 demo)
@@ -101,6 +101,30 @@ Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, rep
 - `oTeam`: you plus managers, with "Managers can’t see your plan, deals, rates or Fair Play notices", and Add a manager.
 - Removed: the Still-free-beds card (now an item in "Needs you now").
 - Kept: switcher, trusted sheet, strike notices, and the layouts / rooms / photos row (already one job per screen).
+
+### Area 4 · Onboarding + Hostelzy team in the app: done 2026-10-02
+- `login`: logo, "Sign in to hold a bed", "So owners know who’s coming. No passwords, no codes.", the Google button, "Keep browsing as a guest", Terms line. Plus dark.
+- `phone`: About you, with just two fields (name, +91 phone with a "Not verified" tag) and "We’ll check it by SMS later". Plus dark.
+- `role`: "What brings you here?" with three big rows (I need a bed / I live in a PG / I run a PG); "You can switch later in Me".
+- `roleGate`:
+  - resident: "Join your PG", a code field with Join, "Scan the poster QR", a "No code?" box with "Send my number on WhatsApp", "Not in a PG yet? Find a bed ›"
+  - owner: "List your PG", one line on visit / free trial / no commission, PG name, area chips, Request a visit / WhatsApp Hostelzy
+- `aAdd`: one wizard frame with a 6-segment progress bar and "Add hostel · step n of 6". Drawn: 1 Basics, 2 Rooms floor by floor (floor cards with room chips, Copy floor above, Add floor), 6 Ready to go live? (checklist with red open items, "Go live · 1 thing left") plus dark. Steps 3–5 keep the same frame; their content is unchanged.
+- `aTrack`: seg by stage, then rows with a next-step button and Add hostel.
+- `aPay`: "Match each UPI reference in the bank app", seg To check / Late / Paid, rows with Mark paid / Not received.
+- `aCases`: seg New / Waiting / Decide / Closed, inline No issue / Ask more / Strike 1, and the decide rule.
+- Kept: team sheet, aHome, aTeam, the layout editor, the team console website (already one job per page) and the web pages.
+
+### Area 5 · Leftovers: done 2026-10-02
+- `perm`: three sheets asked in context, not at start:
+  - notifications after the first hold ("Get a message when Srinivas replies?")
+  - location from the map
+  - camera from the camera button
+- `delAcc`: "Deleted" and "Kept, without your name" as two short lists; Continue / Keep my account.
+- `delConfirm`: account card plus "Confirm with Google". `delDone`: "Your account is deleted" and Close.
+- Kept: update / maintenance gate, open-hold block, F19 and F20 rows (designed in this style already), DEMO strip, back-to-exit toast.
+
+**F22 design is complete:** 88 boards are tagged Redesigned on All screens.
 
 The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 
