@@ -750,7 +750,7 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('New 4'));
     await tap(tester, find.textContaining('FP-0143'));
-    await tap(tester, find.text('Strike 1 · warning'));
+    await tap(tester, find.text('Strike 1'));
     expect(s.strikes['anjani'], 1);
     expect(s.dealsOf('anjani').on, isNotEmpty);
     s.decideCase(s.cases.firstWhere((c) => c.id == 'FP-0139'), 'strike');
@@ -866,7 +866,7 @@ void main() {
     // Founder: match the UTR in the bank, mark paid or not received.
     final a = AppState(start: 'aPay', role: 'owner');
     await pumpApp(tester, a);
-    expect(find.text('Check 2'), findsOneWidget);
+    expect(find.text('To check 2'), findsOneWidget);
     await tap(tester, find.text('Mark paid').first);
     expect(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-1019').status, 'paid');
     await tester.pump(const Duration(seconds: 3));
@@ -1014,21 +1014,22 @@ void main() {
     // Founder's tracker → Add hostel (admin mode).
     final s = AppState(start: 'aTrack', role: 'owner');
     await pumpApp(tester, s);
-    expect(find.text('Onboarding · Live 3 of 20 this month'), findsOneWidget);
-    await tap(tester, find.text('Add hostel ›'));
+    expect(find.text('HOSTELZY TEAM · LIVE 3 OF 20 THIS MONTH'), findsOneWidget);
+    await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
-    expect(find.text('HOSTELZY ADMIN MODE'), findsOneWidget);
-    await tap(tester, find.text('Kondapur · tap when checked at the gate'));
+    expect(find.text('ADD HOSTEL · STEP 1 OF 6'), findsOneWidget);
+    await tap(tester, find.text('Map pin · check it at the gate'));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
 
     // Uneven floors: Ground 0, 1st 3, 2nd 5, 3rd 2 = 10 rooms, 29 beds.
-    expect(find.text('10 rooms · 29 beds'), findsOneWidget);
-    expect(find.text('No beds here (kitchen, office) · hidden from tenants'), findsOneWidget);
-    await tap(tester, find.text('+').last);
+    expect(find.text('Next: rates · 10 rooms, 29 beds'), findsOneWidget);
+    expect(find.text('No beds here · hidden from tenants'), findsOneWidget);
+    await tap(tester, find.text('+ Room').last);
     expect(s.draft.floors[3].rooms.last.label, '303');
-    await tap(tester, find.text('−').last);
-    await tap(tester, find.text('Create 10 rooms, 29 beds'));
+    await tap(tester, find.byKey(const ValueKey('aRoom-303')));
+    await tap(tester, find.text('Remove room'));
+    await tap(tester, find.text('Next: rates · 10 rooms, 29 beds'));
 
     // Rate card: only the types used; 4 sharing is missing.
     expect(s.draft.missingPrices, ['non4']);
@@ -1059,7 +1060,7 @@ void main() {
     expect(find.text('Go live · 3 things left'), findsOneWidget);
     await tap(tester, find.text('Go live · 3 things left'));
     expect(s.screen, 'aAdd');
-    await tap(tester, find.text('Fair Play rules accepted'));
+    await tap(tester, find.text('Fair Play rules: owner agreed'));
     await tap(tester, find.text('Bed status checked on the visit'));
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone')), matching: find.byType(TextField)), '9000000009');
     await tester.pump();

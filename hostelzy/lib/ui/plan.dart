@@ -6,6 +6,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
+import 'onboarding.dart' show TeamHead, StatusTag;
 
 // F10 owner plan and UPI payment check. F22 Area 3: Your plan, the invoice
 // (with its UPI QR) and the payment status are one screen; "I've paid" with
@@ -339,8 +340,9 @@ class PlanBanner extends StatelessWidget {
   }
 }
 
-/// Board 6: the founder's payments. The design is a 1440 px desk screen; in
-/// the app it is one column (tiles, filter, then one card per invoice).
+/// Board 6: the founder's payments. F22 Area 4 (aPay): match each UPI
+/// reference in the bank app, then tap. One list by tab: To check, Late
+/// (overdue or not received), Paid, and Upcoming (on trial or not due yet).
 class AdminPaymentsScreen extends StatelessWidget {
   const AdminPaymentsScreen({super.key});
   @override
@@ -349,78 +351,48 @@ class AdminPaymentsScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final all = s.invoices;
     final check = all.where((i) => i.status == 'checking').toList();
-    final late = all.where((i) => i.status != 'paid' && i.late > 0).toList();
+    final late = all.where((i) => i.status != 'paid' && (i.late > 0 || i.status == 'missing')).toList();
     final paid = all.where((i) => i.status == 'paid').toList();
-    final trial = all.where((i) => i.status == 'upcoming').toList();
-    final list = switch (s.payTab) {
-      'check' => check,
+    final soon = all.where((i) => !check.contains(i) && !late.contains(i) && !paid.contains(i)).toList();
+    final tab = const ['late', 'paid', 'soon'].contains(s.payTab) ? s.payTab : 'check';
+    final list = switch (tab) {
       'late' => late,
       'paid' => paid,
-      'trial' => trial,
-      _ => all,
+      'soon' => soon,
+      _ => check,
     };
-    Widget tile(String k, String v, String sub) => Expanded(
-      child: Container(
-        color: p.bg,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [Kicker(k), const SizedBox(height: 2), T(v, w: 800, s: 24), T(sub, s: 12, c: p.mu)],
-        ),
-      ),
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Rich([sp(context, 'Hostelzy '), sp(context, 'team', c: p.ac)], w: 800, s: 20)]),
-              const SizedBox(height: 2),
-              T('Owner payments · Match every UTR in the bank or merchant app. Never trust screenshots.', s: 12, c: p.mu),
-            ],
-          ),
+        const TeamHead(kicker: 'Hostelzy team', title: 'Owner payments'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: T('Match each UPI reference in the bank app. Never trust screenshots.', s: 14, c: p.mu, lh: 1.4),
         ),
+        Seg(
+          opts: [('check', 'To check ${check.length}'), ('late', 'Late ${late.length}'), ('paid', 'Paid'), ('soon', 'Upcoming')],
+          cur: tab,
+          onPick: (v) => s.update(() => s.payTab = v),
+          pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          center: true,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        const SizedBox(height: 10),
         Expanded(
-          child: Scroll(
-            key: ValueKey('aPay${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  color: p.hl,
-                  child: Column(
-                    children: [
-                      IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tile('To check', '${check.length}', 'UTRs waiting'), const SizedBox(width: 1), tile('Paying', '${paid.length}', 'hostels')])),
-                      const SizedBox(height: 1),
-                      IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tile('On trial', '${trial.length}', 'free for 30 days'), const SizedBox(width: 1), tile('Overdue', '${late.length}', '${late.where((i) => i.pausesDeals).length} with deals paused')])),
-                      const SizedBox(height: 1),
-                      IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tile('Paid so far', fmt(paid.fold(0, (a, i) => a + i.amt)), '${paid.length} invoices paid')])),
-                    ],
-                  ),
-                ),
-                Seg(
-                  opts: [('check', 'Check ${check.length}'), ('late', 'Late ${late.length}'), ('paid', 'Paid'), ('trial', 'Trial'), ('all', 'All')],
-                  cur: s.payTab,
-                  onPick: (v) => s.update(() => s.payTab = v),
-                  pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  center: true,
-                  margin: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final i in list) _AdminInvoice(i),
-                      if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing here.', s: 14, c: p.mu)),
-                    ],
-                  ),
-                ),
-              ],
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Scroll(
+              key: ValueKey('aPay${s.scrollEpoch}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final i in list) _AdminInvoice(i),
+                  if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing here.', s: 14, c: p.mu)),
+                  if (tab == 'paid' && paid.isNotEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Paid so far: ${fmt(paid.fold(0, (a, i) => a + i.amt))} · ${paid.length} invoices', s: 13, c: p.mu)),
+                  if (tab == 'soon' && soon.isNotEmpty) Padding(padding: const EdgeInsets.all(16), child: T('On the 30-day free trial or not due yet. Nothing to check.', s: 13, c: p.mu)),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),
@@ -438,25 +410,40 @@ class _AdminInvoice extends StatelessWidget {
     final p = PalScope.of(context);
     final tag = invoiceTag(p, i);
     final amt = i == s.invoice && i.status != 'checking' && i.status != 'paid' ? s.invoiceAmt : i.amt;
+    final sub = [
+      i.ref,
+      if (i.utr != null) 'UPI ref ${utrSpaced(i.utr!)}',
+      if (i.sent != null) 'sent ${i.sent}' else if (i.status != 'upcoming') 'not sent',
+      if (i.status == 'upcoming') 'due ${dayMon(i.due)}',
+      if (i.pausesDeals) 'deals paused',
+      if (i.status == 'paid' && i.checked != null) 'checked ${i.checked}',
+    ].join(' · ');
     return Container(
+      key: ValueKey('aPay-${i.ref}'),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
       child: VGap(
-        gap: 6,
+        gap: 8,
         children: [
-          Row(children: [Expanded(child: T('${hostelById(i.hid).name} · ${i.beds} beds', w: 800, s: 14)), Tag(tag.label, bg: tag.bg, fg: tag.fg)]),
-          T('${i.ref} · ${fmt(amt)} · UTR ${i.utr != null ? utrSpaced(i.utr!) : '—'} · ${i.sent != null ? 'sent ${i.sent}' : 'not sent'}', s: 13, c: p.mu, lh: 1.4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: T('${hostelById(i.hid).name} · ${fmt(amt)}', w: 800, s: 16, lh: 1.25)),
+              const SizedBox(width: 8),
+              i.status == 'checking' ? const StatusTag('Check', hot: true) : StatusTag(tag.label, bg: tag.bg, fg: tag.fg),
+            ],
+          ),
+          T(sub, s: 13, c: p.mu, lh: 1.4),
           if (i.status == 'checking')
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Cta('Mark paid', icon: 'check', height: 44, px: 12, fs: 14, onTap: () => s.markPaid(i))),
+                Expanded(child: Cta('Mark paid', icon: 'check', height: 42, px: 12, fs: 13, onTap: () => s.markPaid(i))),
                 const SizedBox(width: 8),
-                Expanded(child: Cta('Not received', icon: 'x', height: 44, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.notReceived(i))),
+                Expanded(child: Cta('Not received', icon: 'x', height: 42, px: 12, fs: 13, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.notReceived(i))),
               ],
             ),
-          if (i.status == 'due' || i.status == 'missing')
-            if (i.late > 0 || i.status == 'missing') Cta('Send reminder', icon: 'msg', height: 44, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sendReminder(i)),
-          if (i.status == 'paid') T('Checked ${i.checked ?? ''}', s: 12, w: 800, c: p.gn),
+          if ((i.status == 'due' && i.late > 0) || i.status == 'missing') Cta('Send reminder', icon: 'msg', height: 42, px: 12, fs: 13, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sendReminder(i)),
         ],
       ),
     );

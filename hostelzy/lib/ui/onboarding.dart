@@ -10,13 +10,39 @@ import 'kit.dart';
 // (8), the hostel switcher (9), "Still N free beds?" (10) and the founder's
 // onboarding tracker (11, one column on the phone).
 
-/// Tag shown on every admin-mode screen.
-class AdminTag extends StatelessWidget {
-  const AdminTag({super.key});
+/// F22 Area 4: the header of every Hostelzy team tool (back, kicker, title).
+class TeamHead extends StatelessWidget {
+  const TeamHead({super.key, required this.kicker, required this.title, this.onBack});
+  final String kicker, title;
+  final VoidCallback? onBack;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [BackBtn(onTap: onBack ?? s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: kicker, title: title, gap: 2))],
+      ),
+    );
+  }
+}
+
+/// F22 Area 4: the small status label on a team row (11px capitals).
+class StatusTag extends StatelessWidget {
+  const StatusTag(this.text, {super.key, this.hot = false, this.bg, this.fg});
+  final String text;
+  final bool hot;
+  final Color? bg, fg;
   @override
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
-    return Tag('Hostelzy admin mode', bg: p.ab, fg: p.ad);
+    final b = bg ?? (hot ? p.ab : transparent);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+      decoration: box(bg: b, w: 1, c: bg ?? (hot ? p.ab : p.dv)),
+      child: T(text, s: 11, w: 800, ls: .05, lh: 1.3, upper: true, nowrap: true, c: fg ?? (hot ? p.ad : p.mu)),
+    );
   }
 }
 
@@ -33,7 +59,6 @@ Widget _field(String label, String v, ValueChanged<String> on, {bool numeric = f
 /// Boards 1–6: Add hostel, one step at a time.
 class AddHostelScreen extends StatelessWidget {
   const AddHostelScreen({super.key});
-  static const steps = ['Basics', 'Rooms', 'Rates', 'Photos', 'Residents', 'Go live'];
   static const titles = ['Basics', 'Rooms, floor by floor', 'Rate card', 'Photos', 'Current residents', 'Ready to go live?'];
 
   @override
@@ -53,7 +78,7 @@ class AddHostelScreen extends StatelessWidget {
     final left = s.goLiveLeft;
     final (cta, ok) = switch (s.addStep) {
       1 => ('Next: rooms', d.name.trim().isNotEmpty),
-      2 => ('Create ${d.roomCount} rooms, ${d.bedCount} beds', d.roomCount > 0),
+      2 => ('Next: rates · ${d.roomCount} rooms, ${d.bedCount} beds', d.roomCount > 0),
       3 => ('Next: photos', true),
       4 => ('Next: residents', true),
       5 => ('Next: go live', true),
@@ -62,36 +87,24 @@ class AddHostelScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        TeamHead(kicker: 'Add hostel · step ${s.addStep} of 6', title: titles[i], onBack: () => s.addStep > 1 ? s.update(() => s.addStep--) : s.back()),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: VGap(
-            gap: 10,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  BackBtn(onTap: () => s.addStep > 1 ? s.update(() => s.addStep--) : s.back()),
-                  const AdminTag(),
-                ],
-              ),
-              Row(
-                children: [
-                  for (var k = 0; k < 6; k++) ...[
-                    if (k > 0) const SizedBox(width: 3),
-                    Expanded(
-                      child: Container(
-                        height: 6,
-                        color: k < i
-                            ? p.tx
-                            : k == i
-                            ? p.ac
-                            : p.tk,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker('Add hostel · ${s.addStep} of 6 · ${steps[i]}'), const SizedBox(height: 4), T(titles[i], w: 800, s: 26, lh: 1.05, ls: -.025)]),
+              for (var k = 0; k < 6; k++) ...[
+                if (k > 0) const SizedBox(width: 3),
+                Expanded(
+                  child: Container(
+                    height: 6,
+                    color: k < i
+                        ? p.tx
+                        : k == i
+                        ? p.ac
+                        : p.tk,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -106,11 +119,11 @@ class AddHostelScreen extends StatelessWidget {
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           child: Cta(
             cta,
-            icon: s.addStep == 2 || s.addStep == 6 ? 'check' : 'arrow',
+            icon: 'arrow',
             height: 54,
             px: 16,
             fs: 15,
-            opacity: ok ? 1 : .4,
+            opacity: ok || s.addStep == 6 ? 1 : .4,
             onTap: () {
               if (s.addStep == 6) return s.goLive();
               if (!ok) return s.toastMsg(s.addStep == 1 ? 'Add the hostel name.' : 'Add at least one room.');
@@ -123,6 +136,7 @@ class AddHostelScreen extends StatelessWidget {
   }
 }
 
+/// Board 1 (F22 Area 4): name, who it's for, area, gate and food, the map pin.
 class _Basics extends StatelessWidget {
   const _Basics();
   @override
@@ -136,90 +150,56 @@ class _Basics extends StatelessWidget {
         gap: 12,
         children: [
           _field('Hostel name', d.name, (v) => s.update(() => d.name = v)),
-          VGap(
-            gap: 6,
-            children: [
-              _label('Who is it for'),
-              Seg(opts: const [('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: d.gender, onPick: (v) => s.update(() => d.gender = v), center: true),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              _label('Area'),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [for (final a in areaSpot.keys) ChipBtn(a, on: d.area == a, onTap: () => s.update(() => d.area = a))],
-              ),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              _label('Map pin'),
-              Tap(
-                onTap: () => s.update(() => d.pinChecked = !d.pinChecked),
-                child: Container(
-                  height: 96,
-                  decoration: box(w: 2, c: p.tx),
-                  child: Stack(
-                    children: [
-                      Positioned.fill(child: CustomPaint(painter: _Grid(p.hl))),
-                      Positioned(left: 160, top: 18, child: Ic('pin', size: 30, color: p.ac)),
-                      Positioned(
-                        left: 8,
-                        bottom: 6,
-                        child: Container(
-                          color: p.bg,
-                          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
-                          child: T(d.pinChecked ? '${d.area} · checked at the gate' : '${d.area} · tap when checked at the gate', s: 12, w: 600, c: d.pinChecked ? p.tx : p.ad),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              _label('Food'),
-              Seg(opts: [for (final f in foodOpts) (f, f)], cur: d.food, onPick: (v) => s.update(() => d.food = v), center: true),
-            ],
+          _label('For'),
+          Seg(opts: const [('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: d.gender, onPick: (v) => s.update(() => d.gender = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), center: true),
+          _label('Area'),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [for (final a in areaSpot.keys) ChipBtn(a, on: d.area == a, onTap: () => s.update(() => d.area = a))],
           ),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _field('Gate closes', d.gate, (v) => s.update(() => d.gate = v))),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: VGap(
                   gap: 6,
                   children: [
-                    _label('Total beds'),
-                    Container(
-                      height: 46,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      alignment: Alignment.centerLeft,
-                      decoration: box(w: 2, c: p.hl),
-                      child: T('${d.bedCount} · from rooms', s: 15, c: p.mu),
+                    _label('Food'),
+                    // One of three answers: each tap moves to the next.
+                    Tap(
+                      key: const ValueKey('aAddFood'),
+                      onTap: () => s.update(() => d.food = foodOpts[(foodOpts.indexOf(d.food) + 1) % foodOpts.length]),
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 46),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Row(children: [Expanded(child: T(d.food, s: 15)), Ic('chevD', size: 18, color: p.mu)]),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          VGap(
-            gap: 6,
-            children: [
-              _label('Amenities'),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [for (final a in amenityList) ChipBtn(a, on: d.amenities.contains(a), onTap: () => s.update(() => d.amenities.contains(a) ? d.amenities.remove(a) : d.amenities.add(a)))],
-              ),
-            ],
+          Cta(
+            d.pinChecked ? 'Map pin · checked at the gate' : 'Map pin · check it at the gate',
+            icon: d.pinChecked ? 'check' : 'pin',
+            height: 48,
+            px: 16,
+            fs: 14,
+            bg: transparent,
+            fg: p.tx,
+            border: p.tx,
+            onTap: () => s.update(() => d.pinChecked = !d.pinChecked),
+          ),
+          _label('Amenities'),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [for (final a in amenityList) ChipBtn(a, on: d.amenities.contains(a), onTap: () => s.update(() => d.amenities.contains(a) ? d.amenities.remove(a) : d.amenities.add(a)))],
           ),
         ],
       ),
@@ -227,132 +207,116 @@ class _Basics extends StatelessWidget {
   }
 }
 
-class _Grid extends CustomPainter {
-  _Grid(this.c);
-  final Color c;
+/// Board 2 (F22 Area 4): rooms floor by floor. Each floor is a card of room
+/// chips; tap a chip to rename it, change sharing or AC, or remove it.
+class _Rooms extends StatefulWidget {
+  const _Rooms();
   @override
-  void paint(Canvas canvas, Size size) {
-    final pt = Paint()..color = c;
-    for (double x = 16; x < size.width; x += 16) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), pt);
-    }
-    for (double y = 16; y < size.height; y += 16) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), pt);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_Grid o) => o.c != c;
+  State<_Rooms> createState() => _RoomsState();
 }
 
-/// Board 2: rooms floor by floor (uneven floors).
-class _Rooms extends StatelessWidget {
-  const _Rooms();
+class _RoomsState extends State<_Rooms> {
+  DraftRoom? sel;
+
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final d = s.draft;
     String suggest(int fi, int k) => fi == 0 ? 'G0${k + 1}' : '${fi * 100 + k + 1}';
-    Widget stepper(DraftFloor f, int fi) => Container(
-      decoration: box(w: 2, c: p.tx),
-      child: Row(
-        children: [
-          Tap(
-            onTap: () => s.update(() => f.rooms.isNotEmpty ? f.rooms.removeLast() : null),
-            child: const SizedBox(width: 36, height: 34, child: Center(child: T('−', w: 800, s: 18))),
-          ),
-          Container(
-            width: 40,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(border: Border.symmetric(vertical: bs(1, p.hl))),
-            child: T('${f.rooms.length}', w: 800, s: 15),
-          ),
-          Tap(
-            onTap: () => s.update(() {
-              var k = f.rooms.length;
-              while (d.allRooms.any((r) => r.label == suggest(fi, k))) {
-                k++;
-              }
-              f.rooms.add(DraftRoom(suggest(fi, k), d.defShare, d.defAc));
-            }),
-            child: const SizedBox(width: 36, height: 34, child: Center(child: T('+', w: 800, s: 18))),
-          ),
-        ],
-      ),
-    );
-    Widget roomTile(DraftRoom r) {
-      final changed = r.share != d.defShare || r.ac != d.defAc;
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
-        decoration: box(bg: changed ? p.ab : null, w: changed ? 2 : 1, c: changed ? p.ac : p.dv),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: 22,
-              child: Field(key: ValueKey(r), value: r.label, onChanged: (v) => s.update(() => r.label = v.trim().toUpperCase()), border: false, height: null, pad: EdgeInsets.zero, fs: 14, w: 800),
-            ),
-            Row(
-              children: [
-                Tap(
-                  onTap: () => s.update(() => r.share = r.share == 4 ? 1 : r.share + 1),
-                  child: T('${r.share}', s: 10, w: 800, c: p.mu),
-                ),
-                T(' · ', s: 10, c: p.mu),
-                Tap(
-                  onTap: () => s.update(() => r.ac = !r.ac),
-                  child: T(r.ac ? 'AC' : 'Non-AC', s: 10, w: 800, c: p.mu),
-                ),
-              ],
-            ),
-          ],
+    void addRoom(DraftFloor f, int fi) => s.update(() {
+      var k = f.rooms.length;
+      while (d.allRooms.any((r) => r.label == suggest(fi, k))) {
+        k++;
+      }
+      f.rooms.add(DraftRoom(suggest(fi, k), d.defShare, d.defAc));
+    });
+    String renumber(String label, int fi) => RegExp(r'^\d+$').hasMatch(label) ? '${int.parse(label) + 100}' : '$label-$fi';
+
+    Widget chip(DraftRoom r) {
+      final on = identical(sel, r);
+      return Tap(
+        key: ValueKey('aRoom-${r.label}'),
+        onTap: () => setState(() => sel = on ? null : r),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          decoration: box(bg: on ? p.tx : null, w: 1, c: on ? p.tx : p.dv),
+          child: Rich([sp(context, r.label, w: 800), sp(context, ' · ${r.share}${r.ac ? ' AC' : ''}')], s: 13, c: on ? p.bg : p.tx),
         ),
       );
     }
 
-    final floors = <Widget>[];
-    for (var fi = 0; fi < d.floors.length; fi++) {
-      final f = d.floors[fi];
-      final grid = <Widget>[];
-      for (var k = 0; k < f.rooms.length; k += 4) {
-        if (k > 0) grid.add(const SizedBox(height: 5));
-        grid.add(
+    Widget editor(DraftFloor f, DraftRoom r) => Container(
+      padding: const EdgeInsets.all(10),
+      color: p.sf,
+      child: VGap(
+        gap: 8,
+        children: [
           Row(
             children: [
-              for (var j = 0; j < 4; j++) ...[if (j > 0) const SizedBox(width: 5), Expanded(child: k + j < f.rooms.length ? roomTile(f.rooms[k + j]) : const SizedBox())],
+              Expanded(child: T('Room number', s: 13, w: 800)),
+              Tap(
+                onTap: () => s.update(() {
+                  f.rooms.remove(r);
+                  sel = null;
+                }),
+                child: T('Remove room', s: 13, w: 800, c: p.ad),
+              ),
             ],
           ),
-        );
-      }
-      floors.add(
+          Field(key: ValueKey(r), value: r.label, onChanged: (v) => s.update(() => r.label = v.trim().toUpperCase())),
+          Seg(opts: [for (var n = 1; n <= 4; n++) ('$n', '$n sharing')], cur: '${r.share}', onPick: (v) => s.update(() => r.share = int.parse(v)), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 2), fs: 13, center: true),
+          Seg(opts: const [('non', 'Non-AC'), ('ac', 'AC')], cur: r.ac ? 'ac' : 'non', onPick: (v) => s.update(() => r.ac = v == 'ac'), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 4), fs: 13, center: true),
+        ],
+      ),
+    );
+
+    final cards = <Widget>[];
+    for (var fi = 0; fi < d.floors.length; fi++) {
+      final f = d.floors[fi];
+      final open = f.rooms.where((r) => identical(r, sel)).firstOrNull;
+      cards.add(
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+          key: ValueKey('aFloor-$fi'),
+          padding: const EdgeInsets.all(10),
+          decoration: box(w: 2, c: p.tx),
           child: VGap(
             gap: 8,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         T(f.name, w: 800, s: 15),
-                        if (f.note.isNotEmpty) T(f.note, s: 11, c: p.mu),
+                        if (f.note.isNotEmpty && !f.noBeds) T(f.note, s: 12, c: p.mu),
                       ],
                     ),
                   ),
-                  if (!f.noBeds) stepper(f, fi),
+                  if (!f.noBeds) Tap(onTap: () => addRoom(f, fi), child: T('+ Room', s: 13, w: 800, c: p.ad)),
                 ],
               ),
+              if (f.noBeds)
+                Wrap(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      decoration: box(w: 1, c: p.dv),
+                      child: Rich([sp(context, f.note.isNotEmpty ? f.note : 'No rooms', w: 800), sp(context, ' · no beds')], s: 13),
+                    ),
+                  ],
+                )
+              else if (f.rooms.isNotEmpty)
+                Wrap(spacing: 6, runSpacing: 6, children: [for (final r in f.rooms) chip(r)]),
+              if (open != null) editor(f, open),
               if (f.noBeds || f.rooms.isEmpty)
                 Tap(
                   onTap: () => s.update(() => f.noBeds = !f.noBeds),
                   child: Row(
                     children: [
-                      Expanded(child: T(f.noBeds ? 'No beds here (kitchen, office) · hidden from tenants' : 'Has beds', s: 12, c: p.mu)),
+                      Expanded(child: T(f.noBeds ? 'No beds here · hidden from tenants' : 'Has beds', s: 13, c: p.mu)),
                       Container(
                         width: 44,
                         height: 24,
@@ -364,31 +328,46 @@ class _Rooms extends StatelessWidget {
                     ],
                   ),
                 ),
-              if (!f.noBeds) ...grid,
-              if (!f.noBeds && fi > 0 && d.floors[fi - 1].rooms.isNotEmpty)
-                Tap(
-                  onTap: () => s.update(() {
-                    f.rooms
-                      ..clear()
-                      ..addAll([for (final r in d.floors[fi - 1].rooms) r.copy()..label = RegExp(r'^\d+$').hasMatch(r.label) ? '${int.parse(r.label) + 100}' : '${r.label}-$fi']);
-                    f.note = 'Copied from ${d.floors[fi - 1].name.split(' ').first}, then changed';
-                  }),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: T('Copy previous floor', s: 12, w: 800, c: p.ad),
-                  ),
-                ),
             ],
           ),
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Row(
+    final top = d.floors.lastWhere((f) => !f.noBeds && f.rooms.isNotEmpty, orElse: () => d.floors.first);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: VGap(
+        gap: 12,
+        children: [
+          T('Floors can have different rooms. Tap a room to change sharing or AC.', s: 14, c: p.mu, lh: 1.4),
+          ...cards,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Cta(
+                  'Copy floor above',
+                  icon: 'copy',
+                  height: 44,
+                  px: 12,
+                  fs: 13,
+                  bg: transparent,
+                  fg: p.tx,
+                  border: p.tx,
+                  onTap: () {
+                    if (top.noBeds || top.rooms.isEmpty) return s.toastMsg('Add rooms to a floor first.');
+                    final fi = d.floors.length;
+                    s.update(() => d.floors.add(DraftFloor(floorName(fi), [for (final r in top.rooms) r.copy()..label = renumber(r.label, fi)], note: 'Copied from ${top.name.split(' ').first}')));
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Cta('Add floor', icon: 'plus', height: 44, px: 12, fs: 13, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.update(() => d.floors.add(DraftFloor(floorName(d.floors.length), [])))),
+              ),
+            ],
+          ),
+          Row(
             children: [
               Expanded(
                 child: Tap(
@@ -400,39 +379,22 @@ class _Rooms extends StatelessWidget {
                       d.defAc = true;
                     }
                   }),
-                  child: Rich([sp(context, 'Most rooms: ${d.defShare} sharing · ${d.defAc ? 'AC' : 'Non-AC'} · '), sp(context, 'Change', w: 800, c: p.ad)], s: 12, c: p.mu),
+                  child: Rich([sp(context, 'New rooms: ${d.defShare} sharing · ${d.defAc ? 'AC' : 'Non-AC'} · '), sp(context, 'Change', w: 800, c: p.ad)], s: 13, c: p.mu),
                 ),
               ),
-              T('${d.roomCount} rooms · ${d.bedCount} beds', w: 800, s: 13),
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: floors),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Cta('Add floor', icon: 'plus', height: 44, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.update(() => d.floors.add(DraftFloor(floorName(d.floors.length), [])))),
-              ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Cta('Add terrace', icon: 'plus', height: 44, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => d.floors.any((f) => f.name == 'Terrace') ? s.toastMsg('There is already a terrace.') : s.update(() => d.floors.add(DraftFloor('Terrace', [])))),
+              Tap(
+                onTap: () => d.floors.any((f) => f.name == 'Terrace') ? s.toastMsg('There is already a terrace.') : s.update(() => d.floors.add(DraftFloor('Terrace', []))),
+                child: T('+ Terrace', s: 13, w: 800, c: p.ad),
               ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: T('Tap a room number to rename it (gaps and letters are fine). Tap the sharing or AC below a number to change it.', s: 12, c: p.mu, lh: 1.45),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
+
 
 /// Board 3: rate card for the room types used, plus money terms.
 class _Rates extends StatelessWidget {
@@ -750,7 +712,8 @@ class _Residents extends StatelessWidget {
   }
 }
 
-/// Board 6: go-live checklist. "Go live" stays locked until all six are done.
+/// Board 6: go-live checklist. "Go live" stays locked until every item is
+/// done; open items are red. F22 Area 4: the board's rows and footnote.
 class _GoLive extends StatelessWidget {
   const _GoLive();
   @override
@@ -759,110 +722,84 @@ class _GoLive extends StatelessWidget {
     final p = PalScope.of(context);
     final d = s.draft;
     final taken = d.takenBeds;
+    final missingPhotos = d.photoSlots.where((x) => !d.photos.contains(x)).take(2).map((x) => x[0].toLowerCase() + x.substring(1)).join(' and ');
     final items = <(bool, String, String, VoidCallback?)>[
-      (d.ownerVerified, 'Owner phone checked by a call', d.ownerVerified ? '${phoneSpaced(d.ownerPhone)} · ${d.ownerName}' : 'Call the number on the visit; the owner’s phone should ring', null),
-      (d.fairPlay, 'Fair Play rules accepted', d.fairPlay ? 'Read together on ${dayMon(appToday)}' : 'Read the rules (F07) out loud together, then tick', () => s.update(() => d.fairPlay = !d.fairPlay)),
-      (d.photoCount >= HostelDraft.minPhotos, 'At least ${HostelDraft.minPhotos} photos', d.photoCount >= HostelDraft.minPhotos ? '${d.photoCount} of ${HostelDraft.minPhotos}' : '${d.photoCount} of ${HostelDraft.minPhotos} · add ${d.photoSlots.where((x) => !d.photos.contains(x)).take(2).join(' and ')}', () => s.update(() => s.addStep = 4)),
-      (d.missingPrices.isEmpty, 'Every room type priced', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
+      if (d.floors.every((f) => f.noBeds || f.rooms.isEmpty)) (false, 'At least one room with beds', 'Add rooms on step 2', () => s.update(() => s.addStep = 2)),
+      (d.ownerVerified, 'Owner’s phone rang', d.ownerVerified ? 'Checked by a call · ${phoneSpaced(d.ownerPhone)} · ${d.ownerName}' : 'Call the owner’s number on the visit, below', null),
+      (d.fairPlay, 'Fair Play rules: owner agreed', d.fairPlay ? 'Read together on ${dayMon(appToday)}' : 'Read the rules out loud together, then tick here', () => s.update(() => d.fairPlay = !d.fairPlay)),
+      (d.photoCount >= HostelDraft.minPhotos, '${HostelDraft.minPhotos} photos', d.photoCount >= HostelDraft.minPhotos ? '${d.photoCount} of ${HostelDraft.minPhotos}' : '${d.photoCount} of ${HostelDraft.minPhotos} · add $missingPhotos', () => s.update(() => s.addStep = 4)),
+      (d.missingPrices.isEmpty, 'Every room type has a price', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
       (d.bedsChecked, 'Bed status checked on the visit', '$taken taken · ${d.bedCount - taken} free · 0 on hold', () => s.update(() => d.bedsChecked = !d.bedsChecked)),
-      (d.pinChecked, 'Map pin checked', d.pinChecked ? 'At the gate' : 'Check the pin at the gate', () => s.update(() => d.pinChecked = !d.pinChecked)),
+      (d.pinChecked, 'Map pin checked at the gate', d.pinChecked ? 'Done' : 'Check the pin at the gate', () => s.update(() => d.pinChecked = !d.pinChecked)),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final (ok, t, sub, on) in items)
-                Tap(
-                  onTap: on ?? () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          alignment: Alignment.center,
-                          decoration: box(bg: ok ? p.tx : null, w: 2, c: ok ? p.tx : p.ad),
-                          child: ok ? Ic('check', size: 14, color: p.bg) : null,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              T(t, w: 800, s: 15),
-                              T(sub, s: 12, c: ok ? p.mu : p.ad, lh: 1.35),
-                            ],
-                          ),
-                        ),
-                      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (ok, t, sub, on) in items)
+            Tap(
+              onTap: on,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: box(bg: ok ? p.tx : null, w: 2, c: ok ? p.tx : p.ad),
+                      child: ok ? Ic('check', size: 16, color: p.bg) : null,
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          T(t, w: 800, s: 15),
+                          T(sub, s: 13, c: ok ? p.mu : p.ad, lh: 1.35),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-        if (!d.ownerVerified)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: VGap(
-              gap: 8,
-              children: [
-                Field(key: const ValueKey('ownerPhone'), value: d.ownerPhone, numeric: true, placeholder: 'Owner phone', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), ''))),
-                // No SMS codes yet (DECISIONS 2026-10-02): call it on the visit.
-                OutlineCta(
-                  'Call it',
-                  icon: 'phone',
-                  height: 46,
-                  fs: 14,
-                  onTap: () => d.ownerPhone.length != 10 ? s.toastMsg('Enter the 10-digit phone.') : s.call(d.ownerPhone),
-                ),
-                OutlineCta(
-                  'The owner’s phone rang',
-                  icon: 'check',
-                  height: 46,
-                  fs: 14,
-                  onTap: () {
-                    if (d.ownerPhone.length != 10) return s.toastMsg('Enter the 10-digit phone.');
-                    s.update(() => d.ownerVerified = true);
-                  },
-                ),
-              ],
+              ),
             ),
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: T('Optional: ${d.residents.length} residents added', s: 12, c: p.mu),
-        ),
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          padding: const EdgeInsets.all(12),
-          decoration: box(w: 2, c: p.tx),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+          if (!d.ownerVerified)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: VGap(
+                gap: 8,
                 children: [
-                  Ic('shieldOk', size: 18, color: p.tx),
-                  const SizedBox(width: 8),
-                  T('Visited by Hostelzy · ${dayMon(appToday)} ${appToday.year}', w: 800, s: 14),
+                  Field(key: const ValueKey('ownerPhone'), value: d.ownerPhone, numeric: true, placeholder: 'Owner phone', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), ''))),
+                  // No SMS codes yet (DECISIONS 2026-10-02): call it on the visit.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Cta('Call it', icon: 'phone', height: 46, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => d.ownerPhone.length != 10 ? s.toastMsg('Enter the 10-digit phone.') : s.call(d.ownerPhone))),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Cta('The owner’s phone rang', icon: 'check', height: 46, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () {
+                          if (d.ownerPhone.length != 10) return s.toastMsg('Enter the 10-digit phone.');
+                          s.update(() => d.ownerVerified = true);
+                        }),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 4),
-              T('This badge shows on the listing. The owner’s 30-day free trial starts the day it goes live.', s: 12, c: p.mu, lh: 1.4),
-            ],
-          ),
-        ),
-      ],
+            ),
+          const SizedBox(height: 12),
+          T('Optional: ${d.residents.length} residents added', s: 13, c: p.mu),
+          const SizedBox(height: 12),
+          T('Goes live with “Visited by Hostelzy · ${dayMon(appToday)} ${appToday.year}”. The 30-day free trial starts today.', s: 13, c: p.mu, lh: 1.45),
+        ],
+      ),
     );
   }
 }
+
 
 /// Board 7: Visited by Hostelzy + availability, on the hostel page.
 class VisitedBlock extends StatelessWidget {
@@ -1181,71 +1118,59 @@ class ManagerSheet extends StatelessWidget {
   }
 }
 
-/// Board 11: the founder's onboarding tracker. The design is a 1440 px
-/// board; on the phone each stage is a section.
+/// Board 11: the founder's onboarding tracker. F22 Area 4 (aTrack): a seg by
+/// stage, then one row per hostel with its next-step button, and Add hostel.
 class TrackerScreen extends StatelessWidget {
   const TrackerScreen({super.key});
+
+  /// The tabs, and the stages (onboardStages) each one holds.
+  static const tabs = [('Lead', [0]), ('Visited', [1]), ('Signed up', [2, 3]), ('Live', [4, 5, 6])];
+
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final list = s.leads.where((l) => s.trackCl < 0 || l.cluster == s.trackCl).toList();
+    final inCl = s.leads.where((l) => s.trackCl < 0 || l.cluster == s.trackCl).toList();
     final live = s.leads.where((l) => l.stage >= 4).length;
+    final tab = s.trackTab.clamp(0, tabs.length - 1);
+    final list = inCl.where((l) => tabs[tab].$2.contains(l.stage)).toList()..sort((a, b) => a.stage.compareTo(b.stage));
+    String lower(String t) => t.isEmpty ? t : t[0].toLowerCase() + t.substring(1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Rich([sp(context, 'Hostelzy '), sp(context, 'team', c: p.ac)], w: 800, s: 20)]),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Expanded(child: T('Onboarding · Live $live of 20 this month', s: 13, w: 800)),
-                  Tap(
-                    onTap: s.openAddHostel,
-                    child: T('Add hostel ›', s: 13, w: 800, c: p.ad),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        TeamHead(kicker: 'Hostelzy team · live $live of 20 this month', title: 'Onboarding'),
+        Seg(
+          opts: [for (var i = 0; i < tabs.length; i++) ('$i', '${tabs[i].$1} ${inCl.where((l) => tabs[i].$2.contains(l.stage)).length}')],
+          cur: '$tab',
+          onPick: (v) => s.update(() => s.trackTab = int.parse(v)),
+          pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          center: true,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
         ),
         Scroll(
           horizontal: true,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Row(
               children: [
-                ChipBtn('All ${s.leads.length}', on: s.trackCl < 0, onTap: () => s.update(() => s.trackCl = -1)),
-                for (var i = 0; i < clusters.length; i++) ...[const SizedBox(width: 6), ChipBtn('${clusters[i]} ${s.leads.where((l) => l.cluster == i).length}', on: s.trackCl == i, onTap: () => s.update(() => s.trackCl = i))],
+                ChipBtn('All areas', on: s.trackCl < 0, pad: const EdgeInsets.symmetric(vertical: 6, horizontal: 10), onTap: () => s.update(() => s.trackCl = -1)),
+                for (var i = 0; i < clusters.length; i++) ...[const SizedBox(width: 6), ChipBtn(clusters[i], on: s.trackCl == i, pad: const EdgeInsets.symmetric(vertical: 6, horizontal: 10), onTap: () => s.update(() => s.trackCl = i))],
               ],
             ),
           ),
         ),
         Expanded(
-          child: Scroll(
-            key: ValueKey('aTrack${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var st = 0; st < onboardStages.length; st++) ...[
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-                    decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
-                    child: Row(
-                      children: [
-                        Expanded(child: Kicker(onboardStages[st])),
-                        T('${list.where((l) => l.stage == st).length}', s: 12, w: 800),
-                      ],
-                    ),
-                  ),
-                  for (final l in list.where((l) => l.stage == st))
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Scroll(
+              key: ValueKey('aTrack${s.scrollEpoch}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final l in list)
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      key: ValueKey('aLead-${l.name}'),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                       child: Row(
                         children: [
@@ -1253,28 +1178,38 @@ class TrackerScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                T(l.name, w: 800, s: 15),
-                                T('${l.area} · Next: ${l.next}', s: 12, c: p.mu),
+                                T(l.name, w: 800, s: 16, lh: 1.25),
+                                T([l.area, if (tabs[tab].$2.length > 1) onboardStages[l.stage], 'next: ${lower(l.next)}'].join(' · '), s: 13, c: p.mu, lh: 1.4),
                               ],
                             ),
                           ),
-                          if (st < onboardStages.length - 1)
+                          if (l.stage < onboardStages.length - 1) ...[
+                            const SizedBox(width: 10),
                             Tap(
-                              onTap: () => st == 3 && l.hid == null ? s.openAddHostel() : s.update(() => l.stage++),
+                              onTap: () => l.stage == 3 && l.hid == null ? s.openAddHostel() : s.update(() => l.stage++),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                constraints: const BoxConstraints(minHeight: 40),
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                alignment: Alignment.center,
                                 decoration: box(w: 2, c: p.tx),
-                                child: T(st == 3 && l.hid == null ? 'Add hostel' : onboardStages[st + 1], s: 12, w: 800),
+                                child: T(l.stage == 3 && l.hid == null ? 'Add hostel' : onboardStages[l.stage + 1], s: 13, w: 800),
                               ),
                             ),
+                          ],
                         ],
                       ),
                     ),
+                  if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('No hostels at this stage.', s: 14, c: p.mu)),
+                  const SizedBox(height: 16),
                 ],
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: Cta('Add hostel', icon: 'plus', height: 54, px: 16, fs: 15, onTap: s.openAddHostel),
         ),
       ],
     );

@@ -26,6 +26,10 @@ mixin _OnboardingData {
   /// Onboarding tracker.
   final List<Lead> leads = seedLeads();
   int trackCl = -1;
+
+  /// Tracker tab (F22 Area 4): 0 Lead, 1 Visited, 2 Signed up (and data
+  /// complete), 3 Live (live, trial, paying).
+  int trackTab = 0;
 }
 
 extension OnboardingActions on AppState {
@@ -176,6 +180,7 @@ extension OnboardingActions on AppState {
       ownerHostels.add(id);
       leads.add(Lead(d.name, d.area, 'Trial ends ${dayMon(appToday.add(const Duration(days: 30)))}', 5, hid: id));
       screen = 'aTrack';
+      trackTab = 3;
       hist = [];
     });
     toastMsg('${d.name} is live. The 30-day trial starts today.');
