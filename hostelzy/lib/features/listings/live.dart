@@ -6,10 +6,10 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
-const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups'];
+const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays'];
 
 int _ms(Object? t) => t == null ? 0 : DateTime.parse(t as String).millisecondsSinceEpoch;
 
@@ -72,6 +72,31 @@ Payment paymentFromRow(Map<String, dynamic> r) {
   );
 }
 
+/// S2: a current stay → the owner's resident row. Rent shows from this
+/// stay's latest rent payment; with none it is Due.
+Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> payments) {
+  final rent = [for (final p in payments) if (p['stay_id'] == r['id'] && p['kind'] == 'rent' && p['status'] != 'cancelled') p]..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
+  final last = rent.firstOrNull;
+  final joined = DateTime.parse(r['joined_on'] as String);
+  final confirmed = r['confirmed'] as bool? ?? false;
+  return Resident(
+    name: r['name'] as String,
+    bed: bedLabel(r['beds'] as Map<String, dynamic>?),
+    amt: r['rent'] as int? ?? 0,
+    status: switch (last?['status']) { 'paid' => 'Paid', 'waiting' => 'Waiting', _ => 'Due' },
+    note: switch (last?['status']) { 'paid' => 'Confirmed', 'waiting' => 'UTR sent · confirm it', 'missing' => 'UTR not found', _ => 'No rent payment yet this month' },
+    phone: r['phone'] as String? ?? '',
+    via: r['via'] as String? ?? 'direct',
+    since: confirmed ? 'Joined ${dayMon(joined)}' : 'Added ${dayMon(joined)}',
+    ref: r['ref'] as String?,
+    confirmed: confirmed,
+    advance: r['advance'] as int? ?? 0,
+    joinAt: joined.millisecondsSinceEpoch,
+    lateDays: r['late_days'] as int? ?? 0,
+    key: r['id'] as String,
+  );
+}
+
 /// Complaint ids are uuids on the server; the app keys them by a stable int.
 int complaintKey(String uuid) => int.parse(uuid.replaceAll('-', '').substring(0, 8), radix: 16);
 
@@ -99,6 +124,8 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   // The hostel this user lives in (a confirmed, current stay), for complaints.
   myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
   // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
+  // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
+  residents: [for (final r in stays) if (r['left_on'] == null && r['user_id'] != me && r['name'] != null) residentFromRow(r, payments)],
   signups: [
     for (final r in signups)
       if (r['status'] == 'pending' && r['user_id'] != me)

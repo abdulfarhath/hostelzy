@@ -44,6 +44,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 4d. **Resident invites (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002080000_c_invites.sql` → **Run** → "Success".
 4f. **Live sign-up list (C)** (after 4d): Supabase → SQL Editor → paste `supabase/migrations/20261002090000_c_signups_realtime.sql` → **Run** → "Success".
 4g. **Holds and bookings on the server (S1)** (after 4f): Supabase → SQL Editor → paste `supabase/migrations/20261002100000_s1_holds.sql` → **Run** → "Success".
+4h. **Resident list on the server (S2)** (after 4g): Supabase → SQL Editor → paste `supabase/migrations/20261002110000_s2_residents.sql` → **Run** → "Success".
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):

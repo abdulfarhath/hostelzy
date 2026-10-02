@@ -255,8 +255,11 @@ void fixAnjani(List<Room> a) {
 }
 
 class Resident {
-  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt, this.lateDays = 0});
+  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt, this.lateDays = 0, this.key});
   final String name, bed;
+
+  /// S2: the stay's id on the server (null on sample data).
+  final String? key;
   final int amt;
   String status, note;
 
@@ -279,7 +282,7 @@ class Resident {
 
   /// hz | direct | before | wait
   String get tag => confirmed ? via : 'wait';
-  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt);
+  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt, lateDays: lateDays, key: key);
 }
 
 /// F06: how far back a phone's enquiry, hold or booking counts towards

@@ -41,7 +41,14 @@ String occCounts(AppState s) {
 }
 
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
-List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting')) HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), if (s.ownHid == 'anjani') ...s.reqs];
+/// S2: on Supabase the holds are tenants' (their name isn't shared; the HZ code is).
+List<HoldRequest> allRequests(AppState s) => [
+  for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting'))
+    s.onServer
+        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id)
+        : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
+  if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
+];
 
 /// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
 /// only as a section (false, the approved default).
@@ -273,14 +280,7 @@ class OwnerTodayScreen extends StatelessWidget {
                                 'Confirm hold',
                                 bg: p.ac,
                                 fg: p.ai,
-                                onTap: () {
-                                  if (r.hold != null) {
-                                    s.setHold(r.hold!, 'confirmed');
-                                  } else {
-                                    s.update(() => s.reqs = s.reqs.where((x) => x.id != r.id).toList());
-                                  }
-                                  s.toastMsg('Hold confirmed. Let ${r.name.split(' ')[0]} know on WhatsApp.');
-                                },
+                                onTap: () => s.confirmHoldReq(r),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -288,19 +288,7 @@ class OwnerTodayScreen extends StatelessWidget {
                               child: _PlainBtn(
                                 'Decline',
                                 border: p.tx,
-                                onTap: () {
-                                  final b = s.findBed('anjani', r.bed).b;
-                                  if (b != null) {
-                                    b.state = 'free';
-                                    b.mine = false;
-                                  }
-                                  if (r.hold != null) {
-                                    s.setHold(r.hold!, 'released');
-                                  } else {
-                                    s.update(() => s.reqs = s.reqs.where((x) => x.id != r.id).toList());
-                                  }
-                                  s.toastMsg('Declined. Bed ${r.bed} is free again.');
-                                },
+                                onTap: () => s.declineHoldReq(r),
                               ),
                             ),
                           ],

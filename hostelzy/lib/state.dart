@@ -417,15 +417,15 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     rPhone = '';
     rJoin = 'Today';
     rBed = free.isNotEmpty ? free.first : null;
-    final r = rBed != null ? findBed('anjani', rBed).r : null;
+    final r = rBed != null ? findBed(ownHid, rBed).r : null;
     rFee = r != null ? '${r.rent}' : '';
-    rAdv = '${hostels[0].terms.advance}';
+    rAdv = '${hostelById(ownHid).terms.advance}';
     sheet = 'addR';
   });
 
   void pickResidentBed(String id) => update(() {
     rBed = id;
-    final r = findBed('anjani', id).r;
+    final r = findBed(ownHid, id).r;
     if (r != null) rFee = '${r.rent}';
   });
 
