@@ -6,6 +6,7 @@ import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
+import 'plan.dart';
 import 'screens_resident.dart' show WeekTable;
 import 'screens_tenant.dart' show FloorTabs, RoomTypeTag;
 
@@ -119,6 +120,7 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const PlanBanner(),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -1109,9 +1111,23 @@ class OwnerManageScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: PageHead(kicker: 'Anjani Residency', title: 'Manage'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Expanded(child: PageHead(kicker: 'Anjani Residency', title: 'Manage')),
+              // F10: the owner's Hostelzy plan and invoices.
+              Tap(
+                onTap: () => s.go('oPlan'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                  decoration: box(w: 2, c: p.tx),
+                  child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
+                ),
+              ),
+            ],
+          ),
         ),
         Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('rates', 'Rates'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : v == 'rates' ? s.openRates() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
         const SizedBox(height: 14),
@@ -1304,7 +1320,7 @@ class OwnerInviteScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
-                          child: const SizedBox(width: 175, height: 175, child: CustomPaint(painter: _QrPainter(Color(0xFF201E1D)))),
+                          child: const SizedBox(width: 175, height: 175, child: CustomPaint(painter: QrPainter(Color(0xFF201E1D)))),
                         ),
                         const SizedBox(height: 12),
                         const T(link, w: 800, s: 18),
@@ -1390,8 +1406,9 @@ class OwnerInviteScreen extends StatelessWidget {
 
 /// Placeholder QR (25×25 modules, three finder squares), as in the design.
 /// The real code comes with the backend.
-class _QrPainter extends CustomPainter {
-  const _QrPainter(this.ink);
+/// A stand-in QR code (sample data; the real one encodes the link or UPI URI).
+class QrPainter extends CustomPainter {
+  const QrPainter(this.ink);
   final Color ink;
   @override
   void paint(Canvas canvas, Size size) {
@@ -1426,7 +1443,7 @@ class _QrPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_QrPainter old) => old.ink != ink;
+  bool shouldRepaint(QrPainter old) => old.ink != ink;
 }
 
 // ------------------------------------------------------------ F16 rate card

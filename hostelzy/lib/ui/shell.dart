@@ -6,6 +6,7 @@ import '../state.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
+import 'plan.dart';
 import 'reviews.dart';
 import 'rewards.dart';
 import 'screens_owner.dart';
@@ -321,6 +322,10 @@ class _AppBody extends StatelessWidget {
     'aCases' => const AdminCasesScreen(),
     'rewards' => const RewardsScreen(),
     'moveIn' => const MoveInScreen(),
+    'oPlan' => const PlanScreen(),
+    'oInvoice' => const InvoiceScreen(),
+    'oPayStatus' => const PayStatusScreen(),
+    'aPay' => const AdminPaymentsScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -419,11 +424,13 @@ class _Sheet extends StatelessWidget {
       'report' => 'Tell us what happened',
       'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
+      'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'joined' => 'One quick question',
+      'utr' => 'Invoice ${s.invoice.ref}',
       'report' => 'Anjani Residency · private',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       _ => null,
@@ -440,6 +447,7 @@ class _Sheet extends StatelessWidget {
       'joined' => const JoinedSheet(),
       'report' => const ReportSheet(),
       'trusted' => const TrustedSheet(),
+      'utr' => const UtrSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
