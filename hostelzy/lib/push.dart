@@ -32,6 +32,9 @@ abstract class Push {
 
   /// Notifications that arrive while the app is open: (title, body).
   Stream<(String, String)> get foreground;
+
+  /// A non-fatal problem for Crashlytics (e.g. why sign-in failed).
+  void report(Object error, {String? reason});
 }
 
 /// No Firebase here (tests, web, desktop): nothing is switched on.
@@ -49,6 +52,8 @@ class NoPush implements Push {
   Future<void> deleteToken() async {}
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
+  @override
+  void report(Object error, {String? reason}) {}
 }
 
 class FirebasePush implements Push {
@@ -71,6 +76,9 @@ class FirebasePush implements Push {
   Stream<String> get tokenRefresh => _m.onTokenRefresh;
   @override
   Future<void> deleteToken() => _m.deleteToken();
+  @override
+  void report(Object error, {String? reason}) => FirebaseCrashlytics.instance.recordError(error, StackTrace.current, reason: reason, fatal: false);
+
   @override
   Stream<(String, String)> get foreground => FirebaseMessaging.onMessage.where((m) => m.notification != null).map((m) => (m.notification!.title ?? 'Hostelzy', m.notification!.body ?? ''));
 }
