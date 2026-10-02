@@ -172,5 +172,13 @@ Shipped in parts (Build chat).
 - **Honest wording:** no "has been told", "gets a WhatsApp message", "Reminder sent", "Poster saved as a PDF" (now Copy link), complaint / notice / swap say "saved, tell Srinivas on WhatsApp too", no "Hostelzy steps in after 72 hours".
 - Test: `honest app: links open WhatsApp, phone and maps; holds expire; login resend (F17)`.
 
-**Still to do:** part 2, payments (UPI to the owner → UTR → owner confirms; boards 1–6), and part 3, the real map and the large-screen layout (boards 9, 11). Real-looking sample phone numbers, the real date and the rest of group A come with those parts; group B waits for F13.
+**Part 2 · shipped 2026-10-02** (branch `feature/f17-payments`): payments are **UPI to the owner → UTR → owner confirms → only then Booked / Paid** (boards 1–6).
+- `Payment` (advance or rent): due → waiting (UTR sent) → paid, or missing (owner says it didn't arrive). Every payment screen shows the 4-step bar.
+- **Advance:** "Pay advance" puts the bed on hold for the tenant (status `paying`, bed shows On hold) and opens **Pay the advance** (amount, "Pay to Srinivas · sample.owner@upi", UPI note = HZ code). "Pay ₹3,000 by UPI" opens the UPI app with `upi://pay?pa=…&pn=…&am=…&tn=HZ-…&cu=INR`, then asks for the UTR; "I've already paid · enter UTR" goes straight there. The hold screen shows Waiting for Srinivas ("not booked yet", Remind on WhatsApp, Fix the UTR), Not received (Fix the UTR, WhatsApp, Cancel and pick another bed), and **Booked only after Srinivas confirms**.
+- **Owner Today → Payments to check:** "Received ₹3,000?" with the UTR and UPI note, Yes, received / Not received (also for rent); one sample rent payment from Arjun is waiting.
+- **Rent:** the same steps; "Pay Srinivas ₹8,020" with Pay by UPI / I've paid · enter UTR; waiting / not received / paid ("Srinivas confirmed on …", Share receipt on WhatsApp); history says "Confirmed by Srinivas". No more card / net banking or "Receipt sent on WhatsApp". The amount lines are still sample data (server ledger, F13).
+- **Manage → Rates → Where tenants pay you:** UPI ID, name shown in UPI, Test with ₹1, "Hostelzy never holds the money"; the sample ID `sample.owner@upi` is flagged until the owner types theirs.
+- Tests: the F04 booking, F09 move-in and rent tests now go through UTR + owner confirm; new test `payments: owner says not received; tenant fixes or cancels; owner UPI ID (F17)`.
+
+**Still to do:** part 3, the real map and the large-screen layout (boards 9, 11). Real-looking sample phone numbers, the real date and the rest of group A come with those parts; group B waits for F13.
 

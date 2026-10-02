@@ -562,7 +562,7 @@ class HoldsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Confirmed', 'held': 'Held', 'booked': 'Booked · advance paid', 'released': 'Released'};
+    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Confirmed', 'held': 'Held', 'paying': 'Advance · owner to confirm', 'booked': 'Booked · advance confirmed', 'released': 'Released'};
     return Scroll(
       key: ValueKey('holds${s.scrollEpoch}'),
       child: Column(
@@ -1653,11 +1653,22 @@ class HoldScreen extends StatelessWidget {
     var rows = <(String, String)>[];
     var steps = <TimelineStep>[];
     var canSim = false, canCancel = false, canMoveIn = false, expired = false;
+    Payment? pay;
     VoidCallback wa = () {};
     if (hold != null) {
       final i = holdInfo(s, hold);
       final st = hold.status;
+      pay = hold.opt == 'book' ? s.payOfHold(hold.id) : null;
+      final amt = fmt(pay?.amt ?? hold.paid);
+      final utr = utrSpaced(pay?.utr ?? '');
       final m = switch (st) {
+        // F17: a booking stays "paying" until the owner confirms the money.
+        'paying' => switch (pay?.status) {
+          'waiting' => ['Waiting for ${i.hh.owner}', amt, 'Payment sent · ${i.hh.owner} needs to see $amt with UTR $utr in their account. Until then the bed is not booked yet.', 'sf', 'tx'],
+          'missing' => ['Not received', amt, '${i.hh.owner} says the payment didn’t arrive. Check UTR $utr in your UPI app. If the money left your account, send ${i.hh.owner} the UPI receipt on WhatsApp, or ask your bank.', 'sf', 'tx'],
+          _ => ['Pay the advance', amt, 'Pay ${i.hh.owner} by UPI, then enter the UTR. The bed is held for you meanwhile; it says Booked only after ${i.hh.owner} confirms.', 'sf', 'tx'],
+        },
+        'booked' when pay?.done != null => ['Booked', 'Yours.', '${i.hh.owner} confirmed $amt on ${pay!.done}. Show ${hold.ref ?? 'your HZ code'} at the hostel on move-in day.', 'gn', 'ai'],
         'waiting' => ['Free hold', cd(i.left), 'left on your free hold. ${i.hh.owner} doesn’t know yet: tell them on WhatsApp so they keep the bed.', 'sf', 'tx'],
         'confirmed' => ['Confirmed by ${i.hh.owner}', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
         'held' => ['Held for you', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
@@ -1666,7 +1677,7 @@ class HoldScreen extends StatelessWidget {
         _ => ['Released', '—', 'The hold ended. You paid nothing.', 'sf', 'tx'],
       };
       expired = st == 'released' && s.expiredHolds.contains(hold.id);
-      final done = st != 'waiting' && st != 'released';
+      final done = st != 'waiting' && st != 'released' && st != 'paying';
       hostel = i.hh.name;
       bed = hold.bed;
       label = m[0];
@@ -1681,11 +1692,11 @@ class HoldScreen extends StatelessWidget {
         ('Room', '${i.r.n} · ${i.r.share} sharing · Floor ${i.r.floor}'),
         ('Rent', '${fmt(q.hzFee)} a month'),
         ('Hold type', o.title),
-        if (hold.opt == 'book') ...[('Paid to ${i.hh.owner}', fmt(hold.paid)), ('HZ code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Deal locked', hold.perks.join(' · '))] else ('Paid now', '₹0'),
+        if (hold.opt == 'book') ...[(st == 'booked' ? 'Paid to ${i.hh.owner}' : 'Advance to ${i.hh.owner}', fmt(hold.paid)), if (pay?.utr != null) ('UTR', utr), ('HZ code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Deal locked', hold.perks.join(' · '))] else ('Paid now', '₹0'),
       ];
       steps = [
         TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),
-        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Advance paid', d: hold.opt == 'free' ? (done ? 'Confirmed by ${i.hh.owner}' : 'After you tell ${i.hh.owner} on WhatsApp') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
+        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Owner confirms the advance', d: hold.opt == 'free' ? (done ? 'Confirmed by ${i.hh.owner}' : 'After you tell ${i.hh.owner} on WhatsApp') : (st == 'booked' ? 'Confirmed by ${i.hh.owner}' : 'After you send the UTR'), bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
         TimelineStep(t: 'Visit and move in', d: hold.opt == 'book' ? 'Pay the first month (${fmt(q.hzFirst)}) at move-in. Show ${hold.ref}.' : 'Pay ${fmt(q.hzAdv)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
       ];
       // Demo only: never in the Play Store build (F17).
@@ -1740,7 +1751,21 @@ class HoldScreen extends StatelessWidget {
                     children: [
                       if (canMoveIn)
                         Cta("Moving in · see what to pay", height: 52, px: 16, fs: 15, onTap: () => s.go('moveIn')),
-                      if (expired) ...[
+                      if (pay != null && hold?.status == 'paying') ...[
+                        if (pay.status == 'due') ...[
+                          Cta('Pay ${fmt(pay.amt)} by UPI', height: 52, px: 16, fs: 15, onTap: () => s.payByUpi(pay!)),
+                          OutlineCta('I’ve already paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(pay!)),
+                        ],
+                        if (pay.status == 'waiting') ...[
+                          Cta('Remind $owner on WhatsApp', icon: 'msg', height: 52, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UTR ${utrSpaced(pay.utr ?? '')}, note ${pay.note}. Please confirm on Hostelzy.')),
+                          OutlineCta('Fix the UTR', icon: 'chev', onTap: () => s.openPayUtr(pay!)),
+                        ],
+                        if (pay.status == 'missing') ...[
+                          Cta('Fix the UTR', height: 52, px: 16, fs: 15, onTap: () => s.openPayUtr(pay!)),
+                          OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, about my advance for bed ${pay.bed}: UTR ${utrSpaced(pay.utr ?? '')}, note ${pay.note}.')),
+                          Tap(onTap: () => s.cancelBooking(hold!), child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: T('Cancel and pick another bed', w: 600, s: 14, c: p.ad))),
+                        ],
+                      ] else if (expired) ...[
                         Cta('Hold ${hold!.bed} again', height: 52, px: 16, fs: 15, onTap: () {
                           final b = s.findBed(hold.hid, hold.bed).b;
                           if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');

@@ -1059,3 +1059,27 @@ class HostelDraft {
   static const minPhotos = 8;
   int get takenBeds => residents.length;
 }
+
+// ------------------------------------------------------------ F17 payments
+
+/// A payment from a tenant or resident straight to the owner's UPI ID.
+/// Hostelzy never holds the money: the payer sends the UTR, the owner checks
+/// their bank and confirms. [kind]: advance | rent. [status]: due | waiting |
+/// paid | missing (owner says it didn't arrive).
+class Payment {
+  Payment({required this.id, required this.kind, required this.hid, required this.who, required this.what, required this.bed, required this.amt, required this.note, this.holdId, this.status = 'due', this.utr, this.sent, this.done});
+  final String id, kind, hid, who, what, bed, note;
+  final int amt;
+  final String? holdId;
+  String status;
+  String? utr, sent, done;
+}
+
+/// Sample: one rent payment already waiting for the owner (F17 board 4).
+List<Payment> seedPayments() => [
+  Payment(id: 'rent204B', kind: 'rent', hid: 'anjani', who: 'Rahul V.', what: 'October rent', bed: '204-B', amt: 8020, note: 'Rent Oct · 204-B'),
+  Payment(id: 'p1', kind: 'rent', hid: 'anjani', who: 'Arjun R.', what: 'October rent', bed: '204-A', amt: 7000, note: 'Rent Oct · 204-A', status: 'waiting', utr: '402199102245', sent: 'Thu 1 Oct, 9:20 am'),
+];
+
+/// `upi://pay` link with the payee, amount and note filled in.
+Uri upiUri({required String id, required String name, required int amt, required String note}) => Uri(scheme: 'upi', host: 'pay', queryParameters: {'pa': id, 'pn': name, 'am': '$amt', 'tn': note, 'cu': 'INR'});

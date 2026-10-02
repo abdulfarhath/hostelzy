@@ -8,6 +8,7 @@ import 'fairplay.dart';
 import 'kit.dart';
 import 'layout.dart';
 import 'onboarding.dart';
+import 'payments.dart';
 import 'plan.dart';
 import 'reviews.dart';
 import 'rewards.dart';
@@ -435,6 +436,8 @@ class _Sheet extends StatelessWidget {
       'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
       'layoutReq' => 'Request a change',
       'switch' => 'Switch hostel',
+      'payAdv' => 'Pay the advance',
+      'payUtr' => 'Enter the UTR',
       'manager' => 'Add a manager',
       _ => '',
     };
@@ -445,6 +448,8 @@ class _Sheet extends StatelessWidget {
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom}',
       'switch' => 'Your hostels',
+      'payAdv' => 'Book bed ${s.pay?.bed ?? ''} · deal ${s.pay?.note ?? ''}',
+      'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
       'report' => 'Anjani Residency · private',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
@@ -465,6 +470,8 @@ class _Sheet extends StatelessWidget {
       'utr' => const UtrSheet(),
       'layoutReq' => const LayoutRequestSheet(),
       'switch' => const SwitchSheet(),
+      'payAdv' => const PayAdvSheet(),
+      'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
       _ => const SizedBox(),
     };
