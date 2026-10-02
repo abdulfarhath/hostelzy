@@ -1,6 +1,6 @@
 # F22 · Redesign every screen (F21 style)
 
-**Stage:** Designing · Area 1 Tenant designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
+**Stage:** Designing · Areas 1–2 (Tenant, Resident) designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
 decisions, never take my approval").
 
 ## Rules (from the approved F21 demo)
@@ -57,6 +57,20 @@ Board names are the frame titles on the canvas (screen id · what it shows · Re
 - `settings`: You / Notifications / App (Language, Look Light/Dark/Auto, Privacy and terms, Hostelzy team), then Log out and Delete account; plus dark
 
 Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, report sheet, move-in reward. Delete account screens are redesigned in Area 5.
+
+### Area 2 · Resident: done 2026-10-02
+- `rPay`: Rent, one screen with a tweak for Due / Waiting for owner / Paid.
+  - big amount card (dark when paid); rows Rent / Electricity / Pay to
+  - "Paid before" list; "Advance ₹3,000 · ₹2,000 back when you leave"
+  - actions: "Pay ₹8,020 by UPI" + "I’ve paid · enter UPI reference" / "Remind Srinivas" + "Fix the UPI reference" / "Share receipt"
+  - plus dark
+- `food`: day strip, then today's 3 meals (Done / Next / Later), "How was breakfast?" Good / Okay / Poor, and "Whole week ›" in the header.
+- `me › My stay`: a bed card, then Move to another bed / Give notice / Review your stay / Fix a room layout, and the advance line. Give notice moves out of Home.
+- `move · notice`: 3 last-day choices, optional reason chips, "₹2,000 back to your UPI within 7 days", "Give notice for 1 Nov".
+- `move · swap`: free beds with the rent difference, then "Ask to move to 201-C".
+- `rReview`: 4 rows of 40px stars, an optional line, Post review. `rExit`: "Did you get your ₹2,000 back?" (Yes / Not yet / No), overall stars, optional line.
+- `rewards`: dark status card (Member · ₹100 · 2-hour holds), 3 steps to earn, Invite a friend.
+- Already redesigned via F21: Home, Help, Confirm your stay. Reminders (F20) stay as built.
 
 The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 

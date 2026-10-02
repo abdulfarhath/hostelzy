@@ -26,7 +26,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F19 | Residents fix room layouts (any room in their hostel → owner approves; others see a "residents only" nudge) | **Built** · 2026-10-02 (v1 core merged #60; v1 extras merged #66) | Build | Design: https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR · Founder idea. Reward for approved fixes: founder to decide |
 | F20 | Reminders: water every N min, my own tasks, hostel meal/rent reminders (on the phone) | **Built** · 2026-10-02 (PR feature/f20-reminders) | Build | Founder idea. Local notifications, works offline. Backup to the profile: follow-up PR (FOUNDER-TODO 4p) |
 | F21 | Simpler UI/UX: one job per home screen, guest browsing, plain words, honest data, Telugu, accessibility | **Design approved** · founder, 2026-10-02 · **Wave 1 merged** (#65) · **Wave 2 merged** (#67) · **Wave 3 merged** (#68) · **Wave 4 Built** (PR feature/f21-w4) | Founder (W2–W4) | 24 fixes in 4 waves; wave 1 = fake-data bugs |
-| F22 | Redesign every screen in the F21 style (simple, one job per screen, plain words) | **Designing** · Area 1 Tenant designed 2026-10-02 (on All screens, tag Redesigned) · Build can start Area 1 | Design → Build | Founder: "your own decisions, never take my approval". Area by area, built in parallel |
+| F22 | Redesign every screen in the F21 style (simple, one job per screen, plain words) | **Designing** · Areas 1–2 (Tenant, Resident) designed 2026-10-02 (on All screens, tag Redesigned) · Build can start both | Design → Build | Founder: "your own decisions, never take my approval". Area by area, built in parallel |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
