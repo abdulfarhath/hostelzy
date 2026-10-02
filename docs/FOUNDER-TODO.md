@@ -24,6 +24,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 
 5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
 
+4d. **Resident invites (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002080000_c_invites.sql` → **Run** → "Success".
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials

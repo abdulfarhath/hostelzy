@@ -393,6 +393,20 @@ class RoleGateScreen extends StatelessWidget {
         ),
         // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
         Cta('Scan the invite QR', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.'), height: 54, px: 16, fs: 15),
+        // C: or type the code (filled in when the invite link opened the app).
+        VGap(
+          gap: 6,
+          children: [
+            const T('Have an invite code?', w: 800, s: 13),
+            Row(
+              children: [
+                Expanded(child: Field(key: const ValueKey('inviteCode'), value: s.inviteDraft.isEmpty ? s.pendingInvite ?? '' : s.inviteDraft, placeholder: 'e.g. ANJ-7Q2', onChanged: (v) => s.update(() => s.inviteDraft = v.toUpperCase()))),
+                const SizedBox(width: 8),
+                Cta(s.joining ? 'Sending…' : 'Ask to join', icon: 'arrow', height: 48, px: 14, fs: 14, expand: false, bg: p.tx, fg: p.bg, onTap: s.joinInvite),
+              ],
+            ),
+          ],
+        ),
       ];
       foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed', w: 800, s: 14, c: p.tx))];
     }

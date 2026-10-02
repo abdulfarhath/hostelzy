@@ -231,3 +231,20 @@ Not needed.
   - `supabase-functions.yml` deploys `send-push` from main once `SUPABASE_ACCESS_TOKEN` exists.
 - Founder steps: `docs/FOUNDER-TODO.md` items 3–4.
 - Not yet: the app doesn't write holds or enquiries to Supabase. That comes with the live tenant, owner and resident screens (C), which will show the server's HZ code.
+
+**C · server-issued invites · 2026-10-02** (branch `feature/c-invites`):
+- `20261002080000_c_invites.sql`:
+  - `invites` holds one active code per hostel, like `VAS-7Q2`, from the hostel's name plus 3 random letters or digits. Only the server makes codes.
+  - `invite_signups` holds join requests.
+  - RPCs:
+    - `hostel_invite(h)` (staff);
+    - `new_hostel_invite(h)` (the old code stops working);
+    - `join_with_invite(code, name, phone, bed)`: signed in with Google; one pending request per person per hostel; the owner gets a push;
+    - `decide_signup(id, approve)`: staff; an approval creates the stay, matched as usual, and tells the resident.
+  - Tests: `supabase/tests/invites_test.sql`.
+- **App:**
+  - Owner Invite QR shows the server's code ("Getting your invite code…" until then), with "Make a new code".
+  - The resident gate has "Have an invite code?" and **Ask to join**; the code is filled in when the invite link opened the app (go_router `j/`).
+  - Server reasons are shown in plain words.
+  - Sample data never pretends to send it.
+- **Next:** with B6's live rows, the owner's "Waiting for you" list reads `invite_signups`, and Approve / Remove call `decide_signup`.

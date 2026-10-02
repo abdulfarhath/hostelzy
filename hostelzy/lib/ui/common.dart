@@ -462,3 +462,25 @@ class _FieldState extends State<Field> {
     );
   }
 }
+
+/// Runs [onShow] once after the first frame (e.g. load something for a screen).
+class OnShow extends StatefulWidget {
+  const OnShow(this.onShow, {super.key, required this.child});
+  final VoidCallback onShow;
+  final Widget child;
+  @override
+  State<OnShow> createState() => _OnShowState();
+}
+
+class _OnShowState extends State<OnShow> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onShow();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
