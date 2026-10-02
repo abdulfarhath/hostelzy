@@ -169,7 +169,7 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
 - **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
 - **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
-### Wave 3 · Built · 2026-10-02 (branch `feature/f21-w3`)
+### Wave 3 · Built · 2026-10-02 (merged, #68)
 Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
 - **Resident Home** has one job: the rent and today's food.
   - Header "Hello, <name>" with the avatar.
@@ -253,3 +253,5 @@ Designs `Skeleton`, `Offline`, `Error`, plus items 20–24.
 - W3: complaint photos are real (private bucket; resident, staff, team can read).
 - W3: owner words "Came from the app / Walked in / Not confirmed / Joined before Hostelzy"; centre tab "Add tenant".
 - W3: "Reviews and ranking" is one Manage row.
+- W4: Telugu/Hindi files ship empty (no machine translation); a language shows only when it has strings, as "(beta)" until reviewed. Founder/native speaker fills docs/i18n/te-review.md.
+- W4: text scales to 2× (bed map and Welcome headline cap at 1.3×); released holds sync after the 5-second Undo; Log out + theme live only in Settings.
