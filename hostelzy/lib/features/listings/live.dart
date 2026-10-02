@@ -6,7 +6,7 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
 const liveTables = ['holds', 'enquiries', 'payments', 'complaints'];
@@ -82,12 +82,15 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   date: dayMon(DateTime.parse(r['created_at'] as String).toLocal()),
   note: r['note'] as String? ?? '',
   mine: me != null && r['author_id'] == me,
+  key: r['id'] as String,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const []}) => (
   holds: [for (final r in holds) holdFromRow(r)],
   enquiries: [for (final r in enquiries) enquiryFromRow(r)],
   payments: [for (final r in payments) paymentFromRow(r)],
   complaints: [for (final r in complaints) complaintFromRow(r, me: me)],
   expired: {for (final r in holds) if (r['status'] == 'expired') r['id'] as String},
+  // The hostel this user lives in (a confirmed, current stay), for complaints.
+  myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
 );

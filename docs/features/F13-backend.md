@@ -294,3 +294,15 @@ Not needed.
   - Server reasons are shown in plain words.
   - Sample data never pretends to send it.
 - **Next:** with B6's live rows, the owner's "Waiting for you" list reads `invite_signups`, and Approve / Remove call `decide_signup`.
+
+**C · live writes · 2026-10-02** (branch `feature/c-live-writes`):
+- Signed in on Supabase with live rows (`AppState.onServer`), these actions write to the server first, then refetch. Realtime updates the other phone.
+  - **Enquiry:** the server records it and returns the HZ code that goes into the WhatsApp message. Asking again reuses the code.
+  - **Owner marks contacted.**
+  - **Payments:** the tenant's UTR → `waiting`. The owner confirms received → `paid`, and the hold becomes `booked`; not received → `missing`.
+  - **Complaints:** a resident raises one at their hostel (from their confirmed stay); the owner moves it Open → In progress → Resolved (`Fixed`).
+- If a write fails it says so ("Couldn’t save it…"), and nothing is shown as sent.
+- Sample data and the demo APK are unchanged (local only).
+- `Complaint.key` keeps the server id. `LiveRows.myHostel` is the resident's hostel.
+- Test: `C: on Supabase, enquiries, payments and complaints are written to the server`.
+- Still local-only: holds (they need bed ids from the listings) and the owner's sign-up approvals (after #46).

@@ -8,6 +8,9 @@ mixin _SyncData {
   /// C: deleting (Google confirm + server) is in progress.
   bool deleting = false;
 
+  /// C: the hostel this user lives in on the server (for complaints).
+  String? myHostel;
+
   /// B6: Realtime subscription and its debounce.
   StreamSubscription<String>? _liveSub;
   Timer? _liveWait;
@@ -26,7 +29,24 @@ extension SyncActions on AppState {
     expiredHolds
       ..clear()
       ..addAll(l.expired);
+    myHostel = l.myHostel;
   });
+
+  /// C: signed in on Supabase with live rows: actions write to the server.
+  bool get onServer => _liveSub != null;
+
+  /// Runs a server write, then refetches. False (and says why) if it failed.
+  Future<bool> _write(Future<void> Function() f) async {
+    try {
+      await f();
+      await refreshLive();
+      return true;
+    } catch (e) {
+      debugPrint('write: $e');
+      toastMsg('Couldn’t save it. Check your internet and try again.');
+      return false;
+    }
+  }
 
   Future<void> refreshLive() async {
     try {
@@ -48,6 +68,33 @@ extension SyncActions on AppState {
       _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
     });
   }
+
+  /// C: a tenant's enquiry on the server; the HZ code comes back from it.
+  Future<void> enquireLive(String hid, String body, {String? bed, required String from}) async {
+    final me = myPhone;
+    var ref = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull?.ref;
+    if (ref == null) {
+      try {
+        ref = await data.sendEnquiry(hid: hid, name: meName.isEmpty ? 'Hostelzy user' : meName, phone: me, bed: bed, source: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
+        await refreshLive();
+      } catch (e) {
+        debugPrint('enquiry: $e');
+        return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
+      }
+    }
+    update(() {
+      sheet = 'wa';
+      waTo = hostelById(hid).owner;
+      waPhone = ownerPhones[hid] ?? '';
+      waMsg = body;
+      waRef = ref;
+      waHid = hid;
+    });
+  }
+
+  Future<void> markContactedLive(String ref) => _write(() => data.markContacted(ref));
+  Future<bool> sendUtrLive(Payment p, String utr) => _write(() => data.sendUtr(p.id, utr));
+  Future<bool> confirmPaymentLive(Payment p, bool received) => _write(() => data.confirmPayment(p.id, received, holdId: p.holdId));
 
   void stopLive() {
     _liveSub?.cancel();

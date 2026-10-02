@@ -36,11 +36,13 @@ extension PaymentsActions on AppState {
     });
   }
 
-  void sendPayUtr() {
+  Future<void> sendPayUtr() async {
     final p = pay;
     if (p == null) return;
     if (payUtr.length != 12) return toastMsg('The UTR has 12 digits.');
     final h = hostelById(p.hid);
+    // C: on Supabase the owner sees it only once the server has it.
+    if (onServer && !await sendUtrLive(p, payUtr)) return;
     update(() {
       p
         ..utr = payUtr
@@ -58,8 +60,9 @@ extension PaymentsActions on AppState {
   }
 
   /// Owner: checked the bank. Only now is the bed Booked or the rent Paid.
-  void confirmPayment(Payment p, bool received) {
+  Future<void> confirmPayment(Payment p, bool received) async {
     final first = p.who.split(' ').first;
+    if (onServer && !await confirmPaymentLive(p, received)) return;
     update(() {
       p.status = received ? 'paid' : 'missing';
       if (received) p.done = dayMon(appToday);

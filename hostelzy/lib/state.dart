@@ -363,9 +363,51 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   /// owner is told from here, not by the WhatsApp text), then opens the
   /// prefilled message ending with the HZ code and its link. One enquiry per
   /// tenant + hostel + bed: tapping again reuses the code.
-  void enquire(String hid, String body, {String? bed, required String from}) => update(() => _enquire(hid, body, bed: bed, from: from));
+  void enquire(String hid, String body, {String? bed, required String from}) {
+    // C: on Supabase the server records it and issues the HZ code.
+    if (onServer) {
+      enquireLive(hid, body, bed: bed, from: from);
+      return;
+    }
+    update(() => _enquire(hid, body, bed: bed, from: from));
+  }
 
-  void markContacted(String ref) => update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
+  void markContacted(String ref) {
+    update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
+    if (onServer) markContactedLive(ref);
+  }
+
+  /// Resident: raise a complaint (C: saved on the server when live).
+  Future<void> raiseComplaint() async {
+    if (cText.trim().isEmpty) return toastMsg('Tell us what is wrong first.');
+    final text = cText.trim();
+    if (onServer) {
+      final h = myHostel;
+      if (h == null) return toastMsg('Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
+      final ok = await _write(() => data.raiseComplaint(hid: h, bed: myBedLabel, cat: cCat, body: text));
+      if (!ok) return;
+      update(() => cText = '');
+      return toastMsg('Sent to your owner. You’ll see when they’re on it.');
+    }
+    update(() {
+      complaints = [...complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: '$meShort · 204', cat: cCat, text: text, status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
+      cText = '';
+    });
+    toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
+  }
+
+  /// Owner: Open → In progress → Resolved (C: saved on the server when live).
+  Future<void> advanceComplaint(Complaint c) async {
+    const nxs = {'Open': 'In progress', 'In progress': 'Resolved'};
+    final next = nxs[c.status];
+    if (next == null) return;
+    final note = next == 'Resolved' ? 'Fixed by the owner' : 'Owner is on it';
+    update(() => complaints = complaints.map((x) => x.id == c.id ? x.copyWith(status: next, note: note) : x).toList());
+    if (onServer && c.key != null) await _write(() => data.updateComplaint(c.key!, status: next, note: note));
+  }
+
+  /// The resident's bed as shown on complaints (live: not known yet → '').
+  String get myBedLabel => onServer ? '' : '204';
 
   // F06
 
