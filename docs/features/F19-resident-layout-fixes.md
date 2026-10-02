@@ -74,6 +74,15 @@ Phone boards 390×844 (light; dark copies at the end of rows); console 1440×900
 11. **Approved** (`Approved`): "Live for tenants", v2 "fix by a resident", v1 kept in history, the tenant badge, and "Undo publish".
 12. **Team console, Layout fixes** (`Console`, `ConsoleDark`): a new nav item; a table of pending fixes, oldest first, with "Owner silent" past 7 days; a detail pane with the compare and Approve & publish / Reject / Remind the owner on WhatsApp.
 
+**v1 additions (designed 2026-10-02):**
+- `Try`: a visitor in **try mode** gets the full editor with a grey "Try mode · play freely, nothing is saved" strip. Only the outlined **Send · residents only** button is locked, and it opens the `Lock` sheet. Leaving discards the try.
+- `QuickFix`: tap an item, then pick **Wrong place / Missing / Broken / Not in this room**, add an optional word and an optional photo (camera button), and send ("Send: AC unit is broken"). "Bigger change? … the editor."
+- `Send` now has **1 photo (optional)**, "Only Srinivas and the Hostelzy team see it". The owner's `Compare` shows the photo.
+- The trust badge reads **"Checked by 3 residents · 2 Oct"** on `Checked` and `Approved` (N = different residents with approved fixes in 6 months).
+- `Limit`: "You have 3 fixes waiting at Anjani Residency", listing the waiting ones with "Keep my draft for later".
+- `Mute`: the owner taps "Mute Rahul’s suggestions" on `Compare`, then confirms in a sheet. The resident sees "Suggestions are off for this hostel"; unmuting is under Manage → Residents.
+- `Today` also shows a **Broken** quick fix as a repair card ("Broken: AC unit, Room 207" · Start work / Not broken).
+
 Not designed: a reward for approved fixes (the founder decides; until then, the badge only).
 
 ## Backend
