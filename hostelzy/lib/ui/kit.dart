@@ -745,3 +745,19 @@ class RenderCssRow extends RenderBox with ContainerRenderObjectMixin<RenderBox, 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) => defaultHitTestChildren(result, position: position);
 }
+
+/// The Hostelzy room mark (logo B3-a2). [mono] paints it in one colour, for
+/// the red Welcome screen where the red bed would disappear.
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, required this.size, this.mono});
+  final double size;
+  final Color? mono;
+  @override
+  Widget build(BuildContext context) {
+    final dark = PalScope.of(context).bg.computeLuminance() < .2;
+    if (mono != null) {
+      return SvgPicture.asset('assets/brand/mark-mono.svg', width: size, height: size, colorFilter: ColorFilter.mode(mono!, BlendMode.srcIn));
+    }
+    return SvgPicture.asset(dark ? 'assets/brand/mark-dark.svg' : 'assets/brand/mark-light.svg', width: size, height: size);
+  }
+}
