@@ -21,9 +21,15 @@ export async function serviceAccountJwt(sa: ServiceAccount, nowSecs: number, sco
     iat: nowSecs,
     exp: nowSecs + 3600,
   }));
-  const pem = sa.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
-  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  // A key pasted with literal "\n" (escaped twice) still works.
+  const pem = sa.private_key.replace(/\\n/g, '\n').replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  let key: CryptoKey;
+  try {
+    const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+    key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  } catch (e) {
+    throw new Error(`FCM_SERVICE_ACCOUNT private_key can't be read (${(e as Error).name})`);
+  }
   const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(`${head}.${claims}`)));
   return `${head}.${claims}.${b64url(sig)}`;
 }
@@ -49,10 +55,15 @@ export function fcmMessage(token: string, row: OutboxRow) {
 export const tokenGone = (status: number, body: string) =>
   status === 404 || (status === 400 && body.includes('registration token is not a valid FCM registration token')) || body.includes('UNREGISTERED');
 
+/** A short reason for push_outbox.error and the HTTP reply. */
+export const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 500);
+
 export type Db = {
   pending(limit: number): Promise<OutboxRow[]>;
   tokens(userIds: string[]): Promise<{ token: string; user_id: string }[]>;
   markSent(id: number, error: string | null): Promise<void>;
+  /** Notes why a row couldn't be sent yet; it stays pending and is retried. */
+  markError(id: number, error: string): Promise<void>;
   dropToken(token: string): Promise<void>;
 };
 
@@ -60,28 +71,42 @@ export type Db = {
  *  user was tried; with no phones it is closed with error "no phones". */
 export async function sendOutbox(db: Db, sa: ServiceAccount, f: Fetch, nowSecs: number, limit = 100) {
   const rows = await db.pending(limit);
-  if (rows.length === 0) return { rows: 0, sent: 0, failed: 0, dropped: 0 };
-  const toks = await db.tokens([...new Set(rows.map((r) => r.user_id))]);
-  const auth = await accessToken(sa, f, nowSecs);
-  let sent = 0, failed = 0, dropped = 0;
-  for (const row of rows) {
-    const mine = toks.filter((t) => t.user_id === row.user_id);
-    const errors: string[] = [];
-    for (const t of mine) {
-      const r = await f(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${auth}`, 'content-type': 'application/json' },
-        body: JSON.stringify(fcmMessage(t.token, row)),
-      });
-      if (r.ok) { sent++; continue; }
-      const body = await r.text();
-      if (tokenGone(r.status, body)) { await db.dropToken(t.token); dropped++; continue; }
-      failed++;
-      errors.push(`${r.status} ${body.slice(0, 200)}`);
-    }
-    await db.markSent(row.id, mine.length === 0 ? 'no phones' : errors.length ? errors.join('; ') : null);
+  if (rows.length === 0) return { rows: 0, sent: 0, failed: 0, dropped: 0, errored: 0 };
+  let toks: { token: string; user_id: string }[], auth: string;
+  try {
+    toks = await db.tokens([...new Set(rows.map((r) => r.user_id))]);
+    auth = await accessToken(sa, f, nowSecs);
+  } catch (e) {
+    // Nothing can be sent: say why on every row (they stay pending), then fail.
+    const why = errorText(e);
+    for (const row of rows) await db.markError(row.id, why).catch(() => {});
+    throw e;
   }
-  return { rows: rows.length, sent, failed, dropped };
+  let sent = 0, failed = 0, dropped = 0, errored = 0;
+  for (const row of rows) {
+    try {
+      const mine = toks.filter((t) => t.user_id === row.user_id);
+      const errors: string[] = [];
+      for (const t of mine) {
+        const r = await f(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${auth}`, 'content-type': 'application/json' },
+          body: JSON.stringify(fcmMessage(t.token, row)),
+        });
+        if (r.ok) { sent++; continue; }
+        const body = await r.text();
+        if (tokenGone(r.status, body)) { await db.dropToken(t.token); dropped++; continue; }
+        failed++;
+        errors.push(`${r.status} ${body.slice(0, 200)}`);
+      }
+      await db.markSent(row.id, mine.length === 0 ? 'no phones' : errors.length ? errors.join('; ') : null);
+    } catch (e) {
+      // One bad row doesn't stop the rest; it is retried next minute.
+      errored++;
+      await db.markError(row.id, errorText(e)).catch(() => {});
+    }
+  }
+  return { rows: rows.length, sent, failed, dropped, errored };
 }
 
 /** The database side over Supabase's REST API with the service role key. */
@@ -98,8 +123,34 @@ export function restDb(url: string, serviceKey: string, f: Fetch): Db {
     markSent: async (id, error) => {
       await call(`push_outbox?id=eq.${id}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify({ sent_at: new Date().toISOString(), error }) });
     },
+    markError: async (id, error) => {
+      await call(`push_outbox?id=eq.${id}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify({ error }) });
+    },
     dropToken: async (token) => {
       await call(`push_tokens?token=eq.${encodeURIComponent(token)}`, { method: 'DELETE', headers: { prefer: 'return=minimal' } });
     },
   };
+}
+
+/** The send-push request: checks the secret, sends, and on any failure answers
+ *  500 with the reason (never a secret) so net._http_response shows it. */
+export async function pushHandler(req: Request, env: (k: string) => string | undefined, f: Fetch, nowSecs: number, makeDb = restDb): Promise<Response> {
+  const secret = env('PUSH_SECRET');
+  if (!secret || req.headers.get('x-hz-secret') !== secret) return new Response('not allowed', { status: 401 });
+  let sa: ServiceAccount;
+  try {
+    sa = JSON.parse(env('FCM_SERVICE_ACCOUNT') ?? '{}');
+  } catch {
+    return new Response('send-push: FCM_SERVICE_ACCOUNT is not valid JSON (paste the whole file)', { status: 500 });
+  }
+  if (!sa.private_key) return new Response('FCM_SERVICE_ACCOUNT is not set', { status: 500 });
+  if (!sa.client_email || !sa.project_id) return new Response('send-push: FCM_SERVICE_ACCOUNT has no client_email or project_id', { status: 500 });
+  const url = env('SUPABASE_URL'), key = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return new Response('send-push: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing', { status: 500 });
+  try {
+    return Response.json(await sendOutbox(makeDb(url, key, f), sa, f, nowSecs));
+  } catch (e) {
+    console.error('send-push failed:', errorText(e));
+    return new Response(`send-push: ${errorText(e)}`, { status: 500 });
+  }
 }
