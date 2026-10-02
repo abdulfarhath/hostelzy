@@ -122,6 +122,12 @@ abstract class HostelRepo {
   Future<void> replyCase(String key, String reply, {bool reopen = false});
   Future<void> fixCase(String key);
   Future<void> decideCase(String key, String hid, String how, String? decision);
+
+  /// S8: the owner's one-time manager code, and joining with it (returns the
+  /// hostel's name). Throws with the server's reason; [UnsupportedError] on
+  /// sample data.
+  Future<String> managerInvite(String hid, String name, String phone);
+  Future<String> joinAsManager(String code);
 }
 
 class SampleRepo implements HostelRepo {
@@ -202,6 +208,10 @@ class SampleRepo implements HostelRepo {
   Future<void> fixCase(String key) async {}
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {}
+  @override
+  Future<String> managerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
+  @override
+  Future<String> joinAsManager(String code) => throw UnsupportedError('sample data');
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -272,8 +282,10 @@ class SupabaseRepo implements HostelRepo {
       db.from('invoices').select(),
       db.from('owner_plans').select('hostel_id, trial_ends'),
       db.from('fair_cases').select(),
+      db.from('hostel_staff').select('hostel_id, user_id, role'),
+      db.from('manager_invites').select().order('created_at'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], me: me);
   }
 
   @override
@@ -379,6 +391,12 @@ class SupabaseRepo implements HostelRepo {
     if (how == 'strike') await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
     await db.from('fair_cases').update({'status': how == 'more' ? 'waiting' : 'closed', 'decision': decision}).eq('id', key);
   }
+
+  @override
+  Future<String> managerInvite(String hid, String name, String phone) async => await db.rpc('new_manager_invite', params: {'h': hid, 'p_name': name, 'p_phone': phone}) as String;
+
+  @override
+  Future<String> joinAsManager(String code) async => await db.rpc('join_as_manager', params: {'p_code': code}) as String;
 
   @override
   Stream<String> changes() {

@@ -2866,6 +2866,59 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('S8: on Supabase, owners see the hostels they run; managers join with a one-time code', (tester) async {
+    final l = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', staff: [
+      {'hostel_id': 'h1', 'user_id': 'fb-owner', 'role': 'owner'},
+      {'hostel_id': 'h2', 'user_id': 'fb-owner', 'role': 'manager'},
+      {'hostel_id': 'h1', 'user_id': 'fb-ravi', 'role': 'manager'},
+    ], managers: [
+      {'hostel_id': 'h1', 'name': 'Ravi', 'phone': '9876500011', 'used_by': 'fb-ravi'},
+      {'hostel_id': 'h2', 'name': 'Other', 'phone': '9876500012', 'used_by': null},
+    ]);
+    expect(l.myHostels, ['h1', 'h2']);
+
+    final s = AppState(start: 'welcome', role: 'tenant');
+    final fake = _FakeLive(l);
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    // Hostels whose rooms aren't loaded yet are fetched once more, never opened empty.
+    await s.startLive();
+    await tester.pump();
+    expect(fake.listingsFetched, 1);
+    expect(s.ownHid, 'anjani');
+    for (final h in ['h1', 'h2']) {
+      s.rooms[h] = List.of(s.rooms['anjani']!);
+      s.rates[h] = Map.of(s.rates['anjani']!);
+    }
+    await s.refreshLive();
+    // The switcher lists the server's hostels; the owner screens follow the first.
+    expect(s.ownerHostels, ['h1', 'h2']);
+    expect(s.ownHid, 'h1');
+    expect(s.canOwner, isTrue);
+    expect(s.managers.map((m) => '${m.name} ${m.joined}'), ['Ravi true']);
+    // Residents: only once the owner has confirmed a stay on the server.
+    expect(s.canResident, AppState.samples);
+    // Adding a manager: a one-time code from the server, sent on WhatsApp.
+    s.update(() {
+      s.mgrName = 'Sunil K';
+      s.mgrPhone = '98765 00013';
+    });
+    s.addManager();
+    await tester.pump();
+    await tester.pump();
+    expect(fake.calls.last, 'mgr h1 Sunil K 9876500013');
+    expect(s.lastLink.toString(), contains('MGR-ABCD2345'));
+    expect(s.toast, 'WhatsApp opened with Sunil’s invite. They join once they open it and sign in.');
+    expect(s.managers.last.joined, isFalse);
+    // The manager opens the link and joins.
+    s.update(() => s.inviteDraft = 'mgr-abcd2345');
+    await s.joinInvite();
+    expect(fake.calls.last, 'joinmgr MGR-ABCD2345');
+    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a hostel” to start.');
+    s.stopLive();
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -3157,7 +3210,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
     return 'HZ-5009';
   }
 
@@ -3186,9 +3239,22 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
+  }
+
+  // S8: managers.
+  @override
+  Future<String> managerInvite(String hid, String name, String phone) async {
+    await _rec('mgr $hid $name $phone');
+    return 'MGR-ABCD2345';
+  }
+
+  @override
+  Future<String> joinAsManager(String code) async {
+    await _rec('joinmgr $code');
+    return 'Sai PG';
   }
 
   // S5: Fair Play.
@@ -3244,14 +3310,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
   }
 }
 

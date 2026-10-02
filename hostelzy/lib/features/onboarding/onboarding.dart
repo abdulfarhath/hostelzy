@@ -41,6 +41,23 @@ extension OnboardingActions on AppState {
   void addManager() {
     final ph = mgrPhone.replaceAll(RegExp(r'\D'), '');
     if (mgrName.trim().isEmpty || ph.length != 10) return toastMsg('Add a name and a 10-digit number.');
+    if (onServer) {
+      // S8: a one-time code from the server, sent to the manager on WhatsApp.
+      final name = mgrName.trim(), hid = ownHid;
+      data.managerInvite(hid, name, ph).then((code) {
+        update(() {
+          managers.add((name: name, phone: ph, joined: false));
+          mgrName = '';
+          mgrPhone = '';
+          sheet = null;
+        });
+        whatsapp(ph, 'Hi $name, you’re invited to manage ${hostelById(hid).name} on Hostelzy. Open this link, sign in with Google, and you’re in: ${inviteLink(code)} (code $code, works once, for 7 days)');
+        toastMsg('WhatsApp opened with ${name.split(' ')[0]}’s invite. They join once they open it and sign in.');
+      }, onError: (Object e) {
+        toastMsg('$e'.contains('only the owner') ? 'Only the owner adds managers.' : 'Couldn’t make the invite. Check your internet and try again.');
+      });
+      return;
+    }
     update(() {
       managers.add((name: mgrName.trim(), phone: ph, joined: false));
       mgrName = '';
