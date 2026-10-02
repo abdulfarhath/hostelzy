@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
+import 'fairplay.dart';
 import 'kit.dart';
 import 'reviews.dart';
 import 'screens_owner.dart';
@@ -313,6 +314,10 @@ class _AppBody extends StatelessWidget {
     'reviews' => const ReviewsScreen(),
     'oReviews' => const OwnerReviewsScreen(),
     'oRank' => const OwnerRankScreen(),
+    'oRules' => const OwnerRulesScreen(),
+    'oCase' => const OwnerCaseScreen(),
+    'oStrike' => const StrikeScreen(),
+    'aCases' => const AdminCasesScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -407,10 +412,17 @@ class _Sheet extends StatelessWidget {
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
+      'joined' => 'Did you join Anjani Residency?',
+      'report' => 'Tell us what happened',
       'bed' => 'Bed ${s.obed ?? ''}',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
+    final kicker = switch (s.sheet) {
+      'joined' => 'One quick question',
+      'report' => 'Anjani Residency · private',
+      _ => null,
+    };
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'hold' => const _HoldSheet(),
@@ -420,6 +432,8 @@ class _Sheet extends StatelessWidget {
       'enq' => const _EnquirySheet(),
       'addR' => const _AddResidentSheet(),
       'rank' => const RankSheet(),
+      'joined' => const JoinedSheet(),
+      'report' => const ReportSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
@@ -457,6 +471,8 @@ class _Sheet extends StatelessWidget {
                                 Expanded(
                                   child: enq != null
                                       ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Kicker('Enquiry from Hostelzy'), const SizedBox(height: 2), T('${enq.ref} · ${enq.name}', w: 800, s: 20)])
+                                      : kicker != null
+                                      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(kicker), const SizedBox(height: 2), T(title, w: 800, s: 20)])
                                       : T(title, w: 800, s: 20),
                                 ),
                                 const SizedBox(width: 12),

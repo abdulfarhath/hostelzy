@@ -576,6 +576,69 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('Fair Play: rules, owner number after a hold, case, strikes (F07)', (tester) async {
+    // A new owner accepts the rules with a code.
+    final s = AppState(start: 'role');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('I run a hostel'));
+    expect(s.screen, 'oRules');
+    await tap(tester, find.text('I accept the Fair Play rules'));
+    expect(s.fairAccepted, isFalse);
+    await tester.pump(const Duration(seconds: 3)); // the "Enter the code" toast goes
+    await tap(tester, find.text('Paste code from SMS'));
+    await tap(tester, find.text('I accept the Fair Play rules'));
+    expect((s.fairAccepted, s.screen), (true, 'oToday'));
+    expect(find.text('Fair Play check FP-0142'), findsOneWidget);
+
+    // Owner fixes the mistake within 48 h: no strike.
+    await tap(tester, find.text('Fair Play check FP-0142'));
+    expect(s.screen, 'oCase');
+    await tap(tester, find.text('Change Teja to Via Hostelzy'));
+    expect(s.residents.firstWhere((r) => r.name == 'Teja Naidu').via, 'hz');
+    expect(s.cases.first.status, 'closed');
+    expect(s.strikes['anjani'] ?? 0, 0);
+    expect(s.ownerFixes, 1);
+
+    // Tenant: the owner's number is hidden until a hold.
+    s.jump('detail', 'tenant');
+    await tester.pump();
+    expect(find.text('98••• •••••'), findsOneWidget);
+    expect(find.text('Shows after a hold'), findsOneWidget);
+    s.update(() => s.bed = '204-D');
+    s.placeHold('free');
+    s.jump('detail', 'tenant');
+    await tester.pump();
+    expect(find.text('98480 11223'), findsOneWidget);
+    expect(find.text('YOU HELD 204-D'), findsOneWidget);
+
+    // "Did you join?" and a private report.
+    s.jump('holds', 'tenant');
+    await tester.pump();
+    await tap(tester, find.text('Anjani Residency · 102-B'));
+    expect(s.sheet, 'joined');
+    await tap(tester, find.text('The owner asked me to skip the app'));
+    expect(s.sheet, 'report');
+    await tap(tester, find.text('Offered a lower price to skip the app'));
+    await tap(tester, find.text('Send report'));
+    expect(s.cases.first.signal, 'Tenant report: offered a lower price to skip the app');
+    expect(s.cases.first.status, 'new');
+
+    // Founder: strikes. Strike 2 hides deals, strike 3 removes the hostel.
+    s.jump('aCases', 'owner');
+    await tester.pump();
+    await tap(tester, find.text('New 4'));
+    await tap(tester, find.textContaining('FP-0143'));
+    await tap(tester, find.text('Strike 1 · warning'));
+    expect(s.strikes['anjani'], 1);
+    expect(s.dealsOf('anjani').on, isNotEmpty);
+    s.decideCase(s.cases.firstWhere((c) => c.id == 'FP-0139'), 'strike');
+    s.strikes['anjani'] = 2;
+    expect(s.dealsOf('anjani').on, isEmpty);
+    s.strikes['anjani'] = 3;
+    expect(filtered(s).any((h) => h.id == 'anjani'), isFalse);
+    s.dispose();
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');

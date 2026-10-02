@@ -4,6 +4,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
+import 'fairplay.dart';
 import 'kit.dart';
 
 // ------------------------------------------------------------ derived values
@@ -14,6 +15,8 @@ List<Hostel> filtered(AppState s) {
     final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
     if (rs.isEmpty) return false;
     final from = rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
+    // F07: a hostel with 3 strikes is removed from Hostelzy.
+    if (s.removed(h.id)) return false;
     return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
   }
 
@@ -567,6 +570,21 @@ class HoldsScreen extends StatelessWidget {
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
             child: const PageHead(kicker: "Beds you're holding", title: 'Holds'),
           ),
+          // F07 board 3: asked after a hold ends.
+          if (s.joinAnswer == null)
+            Tap(
+              onTap: () => s.update(() => s.sheet = 'joined'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: Row(
+                  children: [
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const T('Anjani Residency · 102-B', w: 800, s: 15), T('Hold ended 11 Sep · Did you join? One tap', s: 12, c: p.mu)])),
+                    Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('Ended', s: 11, w: 800, ls: .05, upper: true, c: p.mu)),
+                  ],
+                ),
+              ),
+            ),
           for (final h in s.holds.reversed)
             () {
               final i = holdInfo(s, h);
@@ -994,33 +1012,8 @@ class DetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(14),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(h.owner[0], w: 800)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                T('${h.owner}, owner', w: 800, s: 15),
-                                T('Usually replies in ~${h.reply} min', s: 12, c: p.mu),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      OutlineCta('Ask on WhatsApp', icon: 'msg', height: 44, px: 14, fs: 14, onTap: () => s.enquire(h.id, 'Hi ${h.owner}, I found ${h.name} on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp')),
-                    ],
-                  ),
-                ),
+                // F07: the owner's number shows only after a hold.
+                OwnerContact(h),
               ],
             ),
           ),

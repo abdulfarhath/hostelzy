@@ -637,3 +637,65 @@ const rankTips = {'fresh': 'Confirm free beds when we ask, every 3 days', 'compl
 String rankWord(double v) => v >= .85 ? 'Strong' : v >= .7 ? 'Good' : 'Can improve';
 
 const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh': 'beds kept up to date', 'complaints': 'complaints resolved fast', 'listing': 'full listing'};
+
+// ------------------------------------------------------------ F07 Fair Play
+
+/// Owners' phone numbers: tenants see them only after a hold (DECISIONS).
+const ownerPhones = {'anjani': '9848011223', 'saisri': '9849022314', 'nest42': '9000433125', 'greenview': '9866544216', 'orchid': '9440655327', 'lakshmi': '9959766418'};
+
+/// "98••• •••••"
+String maskPhone(String p) => '${p.substring(0, 2)}••• •••••';
+
+const fairRules = [
+  ('Add every resident within 3 days', 'Name and phone. That is how a stay counts as Via Hostelzy or Direct.'),
+  ('Never take a Hostelzy tenant off the app', 'Don’t ask them to cancel a hold or pay you outside the booking.'),
+  ('Honour the deal and exit rules', 'The price, advance and maintenance shown at booking.'),
+  ('Keep beds and prices up to date', 'Confirm free beds when we ask, every 3 days.'),
+];
+
+/// Strike ladder (DECISIONS 2026-10-02). No fines.
+const strikeLadder = [('Strike 1', 'Warning', 'Nothing changes yet'), ('Strike 2', 'Deals hidden', 'For 30 days'), ('Strike 3', 'Removed', 'From Hostelzy')];
+
+/// One dated fact from Hostelzy's own records.
+class CaseEvent {
+  const CaseEvent(this.date, this.title, this.sub, {this.flag = false});
+  final String date, title, sub;
+  final bool flag;
+}
+
+/// A Fair Play case: new → waiting (48 h for the owner) → decide → closed.
+class FairCase {
+  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2});
+  final String id, hid, title, signal;
+  String status;
+  final List<CaseEvent> events;
+
+  /// Resident the owner can switch to Via Hostelzy to fix the mistake.
+  final String? resident;
+  String? ownerReply, tenantNote, result;
+  final double hoursLeft;
+}
+
+List<FairCase> seedCases() => [
+  FairCase(
+    id: 'FP-0142',
+    hid: 'anjani',
+    title: 'Teja Naidu was added as Direct',
+    signal: 'Held, then added as Direct · tenant says yes',
+    status: 'waiting',
+    resident: 'Teja Naidu',
+    events: const [
+      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · phone 96400 87712 verified by OTP'),
+      CaseEvent('11 Sep', 'Held bed 102-B', 'Free 1-hour hold'),
+      CaseEvent('11 Sep', 'Hold cancelled by tenant', '18 minutes later'),
+      CaseEvent('18 Sep', 'Added by you as Direct', 'Bed 102-B · same phone number', flag: true),
+      CaseEvent('1 Oct', 'Teja answered “Yes, I joined”', 'In the Hostelzy app', flag: true),
+    ],
+    tenantNote: 'I found it on Hostelzy, the owner said I could skip the hold.',
+  ),
+  FairCase(id: 'FP-0141', hid: 'greenview', title: 'Bed 101-B taken after a cancelled hold', signal: 'Hold cancelled, same bed taken in 7 days', status: 'waiting'),
+  FairCase(id: 'FP-0140', hid: 'lakshmi', title: 'Tenant report', signal: 'Tenant report: asked to pay without the app', status: 'waiting'),
+  FairCase(id: 'FP-0139', hid: 'orchid', title: 'Direct resident on the deal price', signal: 'Direct resident paying the deal price', status: 'new'),
+  FairCase(id: 'FP-0138', hid: 'nest42', title: 'Holds declined while beds fill', signal: 'Declining holds while occupancy rises', status: 'new'),
+  FairCase(id: 'FP-0137', hid: 'saisri', title: 'Joined but never added', signal: 'Tenant said “Yes, I joined”, never added', status: 'new'),
+];
