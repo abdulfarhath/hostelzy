@@ -66,6 +66,7 @@ const NAV = [
   ['payments', 'Payments'],
   ['cases', 'Fair Play'],
   ['layout', 'Layout help'],
+  ['rewards', 'Rewards'],
   ['fixes', 'Layout fixes'],
   ['hostels', 'Hostels'],
 ];
@@ -205,6 +206,31 @@ const VIEWS = {
 
   async layout(db, again) {
     return VIEWS.cases(db, again);
+  },
+
+  // S6: the Stay Rewards ledger (append-only). The team can reverse an entry;
+  // a reversal is a new row, never an edit.
+  async rewards(db, again) {
+    const rows = await db.from('reward_ledger').select('*, hostels(name)').order('created_at', { ascending: false }).limit(200).then(ok);
+    const reversed = new Set(rows.filter((r) => r.reverses).map((r) => r.reverses));
+    const reverse = async (r) => {
+      const why = prompt('Why reverse this? (kept in the ledger)');
+      if (!why) return;
+      ok(await db.rpc('reverse_reward', { p_id: r.id, p_why: why }));
+      toast('Reversed. A new ledger row records it.');
+      again();
+    };
+    const who = (r) => r.hostels?.name ? `Owner · ${r.hostels.name}` : `Tenant · ${r.user_id ?? '—'}`;
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Stay Rewards'), el('span', { class: 'mu', style: 'font-size:13px' }, 'Every grant, spend and reversal. Only the server grants; nothing is ever edited or deleted.')),
+      el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['When', 'Who', 'What', 'Amount', 'Reason', ''].map((h) => el('div', {}, h))),
+        rows.length ? rows.map((r) => el('div', { class: 'tr' },
+          el('div', {}, dayMon(r.created_at)), el('div', {}, who(r)), el('div', {}, r.kind.replace('_', ' ')),
+          el('div', {}, (r.amount > 0 ? '+' : '−') + rupees(Math.abs(r.amount))), el('div', {}, r.reason),
+          el('div', {}, r.kind === 'reversal' ? el('span', { class: 'mu', style: 'font-size:13px' }, 'Reversal')
+            : reversed.has(r.id) ? el('span', { class: 'tag neutral' }, 'Reversed')
+            : el('button', { class: 'btn sm', onclick: () => reverse(r) }, 'Reverse')))) : el('p', { class: 'empty' }, 'No rewards yet. They start when a tenant’s first Hostelzy stay is confirmed.')),
+    ];
   },
 
   // F19 board 12: residents' layout fixes, oldest first. Owners decide

@@ -36,6 +36,8 @@ class RewardsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
+    // S6: the code comes from the server, made once.
+    if (s.onServer && s.serverRefCode == null) WidgetsBinding.instance.addPostFrameCallback((_) => s.loadReferralCode());
     final p = PalScope.of(context);
     final levelName = switch (s.level) {
       'trusted' => 'Trusted tenant',
@@ -141,8 +143,25 @@ class RewardsScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                  child: Rich([sp(context, 'You both get ${fmt(referralReward)} after your friend’s first month. '), sp(context, '${s.friendsJoined} friend joined · ${fmt(referralReward)} on the way.', w: 800, c: p.tx)], s: 12, c: p.mu, lh: 1.45),
+                  child: Rich([
+                    sp(context, 'You both get ${fmt(referralReward)} after your friend’s first month. '),
+                    // S6: on the server, only rewards that were really given.
+                    if (!s.onServer) sp(context, '${s.friendsJoined} friend joined · ${fmt(referralReward)} on the way.', w: 800, c: p.tx)
+                    else if (s.friendsJoined > 0) sp(context, '${s.friendsJoined} ${s.friendsJoined == 1 ? 'friend' : 'friends'} done · ${fmt(referralReward * s.friendsJoined)} earned.', w: 800, c: p.tx),
+                  ], s: 12, c: p.mu, lh: 1.45),
                 ),
+                // S6: a new tenant uses a friend's code before their first stay.
+                if (s.onServer && !s.isMember && !s.referred)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                    child: Row(
+                      children: [
+                        Expanded(child: Field(value: s.friendCode, onChanged: (v) => s.update(() => s.friendCode = v), placeholder: 'A friend’s code, like ASHA-4K7Q')),
+                        const SizedBox(width: 8),
+                        Cta('Use', height: 46, px: 14, fs: 14, expand: false, gap: 8, onTap: s.useFriendCode),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

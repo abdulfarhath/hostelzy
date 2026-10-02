@@ -56,6 +56,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Under Application restrictions → Android apps, the list has only `app.hostelzy.hostelzy`. **Add** `app.hostelzy.hostelzy.demo` with the same SHA-1 (`46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`) → Save.
    - The next APK's toast shows the real code (for example "firebase: … blocked") if it is still something else.
 
+4o. **Stay Rewards on the server (S6)** (after 4l; run it after 4m if F19 is merged first, the order doesn't matter): Supabase → SQL Editor → paste `supabase/migrations/20261002170000_s6_stay_rewards.sql` → **Run** → "Success".
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
