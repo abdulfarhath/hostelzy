@@ -35,6 +35,11 @@ abstract class HostelRepo {
   /// (then UPI → UTR → the owner confirms, as for advances).
   Future<void> startRent({required String hid, required String stayKey, required int amount, required String note});
 
+  /// F20: the user's reminder settings, backed up on their profile so a new
+  /// phone gets them back. Null on sample data or when nothing is saved.
+  Future<void> saveReminders(String uid, Map<String, dynamic> settings);
+  Future<Map<String, dynamic>?> loadReminders(String uid);
+
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
 
@@ -158,6 +163,10 @@ class SampleRepo implements HostelRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
   @override
   Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> saveReminders(String uid, Map<String, dynamic> settings) async {}
+  @override
+  Future<Map<String, dynamic>?> loadReminders(String uid) async => null;
   @override
   Future<void> savePushToken(String token) async {}
   @override
@@ -493,6 +502,15 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) =>
       db.from('payments').insert({'hostel_id': hid, 'stay_id': stayKey, 'kind': 'rent', 'amount': amount, 'note': note});
+
+  @override
+  Future<void> saveReminders(String uid, Map<String, dynamic> settings) => db.from('profiles').update({'reminders': settings}).eq('id', uid);
+
+  @override
+  Future<Map<String, dynamic>?> loadReminders(String uid) async {
+    final r = await db.from('profiles').select('reminders').eq('id', uid).maybeSingle();
+    return r?['reminders'] as Map<String, dynamic>?;
+  }
 
   @override
   Future<void> savePushToken(String token) => db.from('push_tokens').upsert({'token': token, 'platform': 'android', 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'token');
