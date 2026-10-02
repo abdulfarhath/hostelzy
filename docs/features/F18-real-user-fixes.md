@@ -1,6 +1,6 @@
 # F18 · Real-user bug fixes (from the founder's phone test, apk-29)
 
-**Stage:** Building · 2026-10-02 · no design needed (follow existing screens; F17 rules apply)
+**Stage:** Building · Design approved 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
 
 Founder found on a real phone: back button exits/jumps to start, login forgotten after reopening,
 dummy numbers on code screens, name prefilled, no "use my location" / area picker, owner can't edit
@@ -50,6 +50,20 @@ Owner confirms holds/payments from their phone (D1, D2), server HZ codes, shared
 and delete the Firebase user + server data), notifications (H6), real admin accounts (G1),
 `DATA=supabase` release once real hostels exist (C6).
 
+## Design
+
+**Design approved · 2026-10-02** (standing approval). Canvas "Hostelzy · Real app v2": https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
+Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team console 1440×900.
+
+1. **Sign in:** Main (Continue with Google; use the official Google button asset), Profile (name from Google, editable; phone +91 "Not verified"; role), ResidentGate ("Ask your owner to add you"), OwnerGate ("List your hostel": request a visit, WhatsApp Hostelzy +91 90597 90014), ProfileDark.
+2. **Empty states:** Empty (tweak: no hostels in this area / no holds / no saved hostels / no residents / no enquiries / no complaints).
+3. **Map v2:** Map ("Search this area" chip after a pan), Location (Use my location + permission explainer), Areas (area picker sheet), List (hostels in this area), MapDark.
+4. **Owner layout editor:** Rooms (pick a room), Create (no layout yet: Create layout, or Ask Hostelzy to help), Editor (edit room; safety rules stay), Published ("Live for tenants"), EditorDark.
+5. **Photos and saved:** Photos (owner upload: pick, order, cover, progress, failed + retry), Crop, Gallery (tenant), Saved (saved hostels).
+6. **Delete account v2:** Delete (tweak: Confirm with Google / Deleted).
+7. **Team web console (1440):** Console (sign in with Google), ConsoleOnboarding (tracker + add hostel), ConsolePayments (UTR check), ConsoleCases (Fair Play cases + layout help queue).
+8. **Small UX:** BackExit ("Press back again to exit" toast), Demo (DEMO banner while on sample data), KeyboardUtr and KeyboardAdd (sheets stay above the keyboard, CTA visible).
+
 ## Build
 
 **Groups 1–3 · back button, stay logged in, own identity** (branch `feature/f18-back-login-identity`):
@@ -66,4 +80,38 @@ and delete the Firebase user + server data), notifications (H6), real admin acco
   - `myPhone` no longer falls back to `90000 00001`; Me shows **Add your number** instead.
   - The resident's stay (Anjani 204-B) is still sample data in debug builds; group 4 gates it in release.
 - Test: `back button, stay logged in, own name and phone (F18)`. Sample-flow tests now sign in a named user first.
+
+**Groups 4–7 · gated roles, no fake contacts, keyboard + small phones, crashes** (branch `feature/f18-roles-contacts-crashes`):
+- **Gated roles (4):**
+  - `AppState.samples` (debug builds and tests only) seeds sample residents, hold requests, enquiries, sign-ups, cases, complaints and payments; the Play Store build starts with none.
+  - Picking **I live in a Hostelzy PG** or **I run a hostel** without access opens the design's gate screens, with the user's own name in the header:
+    - **ResidentGate:** "Ask your owner to add you" shows your number with "Send it to your owner on WhatsApp", the invite-QR row ("Scan the invite QR" says to use the phone camera; no in-app scanner yet) and "Not in a PG yet? Find a bed".
+    - **OwnerGate:** "List your hostel" has 3 steps, the hostel name, area chips, **Request a visit** (a WhatsApp to Hostelzy with name, area and phone) and "WhatsApp Hostelzy · +91 90597 90014".
+  - Owners get in through team mode or a hostel the team put live; residents wait for the backend (F13 part 2).
+  - The design's **DEMO** banner ("Sample data. Nothing you do here is real.") shows in the Play Store build while the listings are samples.
+- **No fake contacts (5):**
+  - In the Play Store build, WhatsApp and calls to sample numbers (`90000…`) and UPI to `sample.*@upi` are blocked with an honest toast.
+  - The owner's enquiry reply WhatsApp now carries the tenant's phone.
+  - "Message warden" (a made-up Ravi) becomes **Message owner** with the hostel's number.
+- **Keyboard + small phones (6):**
+  - The bottom inset follows the keyboard (tabs hide while typing) and sheets sit above it.
+  - Login, About you, OTP, Role and Permission screens scroll (`FillScroll`) when they don't fit.
+  - Manage's six tabs scroll sideways under 460 px, and its header hides while typing.
+  - Text follows the phone's size, capped at 1.3×.
+- **Crash guards (7):**
+  - hostels with fewer than 4 tags (D4);
+  - a missing owner phone or a blank owner name (D5, plus `maskPhone` on an empty number);
+  - hostels or floors with no rooms (D6: rate card floor, add-rate fallback, compare with no eligible room);
+  - the layout editor on a room with no layout, which now creates a starting layout (G2);
+  - go-live with no rooms, which is blocked by a new "At least one room with beds" check (G3);
+  - 0 beds or 0 expected rent shows 0% instead of NaN (F2, F3);
+  - `hostelById` for an unknown id returns "Hostel no longer listed" (H9);
+  - `appToday` is now a getter, so the date moves on overnight (H8).
+
+  Rate drafts after a hostel switch (F6) were already cleared in F17.
+- Test: `gated roles, no fake contacts, small phones, crash guards (F18)` covers:
+  - the release gates and DEMO banner;
+  - blocked sample WhatsApp, call and UPI;
+  - Login, About you, Role, Permission and Manage at 320×568 with the keyboard open (no overflow);
+  - a one-tag hostel, an unknown hostel id, an editor on a room without a layout, and the go-live check.
 
