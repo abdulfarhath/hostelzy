@@ -51,6 +51,22 @@ secondary toggle. Applies to the tenant bed picker, resident "My room", owner La
 5. **Owner** (`Owner`): Floor 2 with seg Rooms | Shared things, floor chips, a "A resident changed this floor" banner, rows with who/when and an edit button, "Add a shared thing", and a note that broken things go to Today as a repair.
 6. **Filters** (`Filters`): "On the floor" chips with icons: Washing machine, Fridge, RO water.
 
+## Room-level items: geyser in the washroom (founder, 2026-10-02)
+Some things live **inside a room**, not on the floor. Most common: a **geyser in the room's attached
+washroom**. So every item has a **where**: *On the floor* (shared) or *In room washroom / In room*.
+- Add sheet: after picking the icon, one more row **Where?** → `On the floor` · `In room washroom`
+  (default for Geyser) · `In the room`. Picking a room option shows room chips (201, 202… or
+  "All rooms on this floor").
+- Tenant hostel page, floor row: `Floor 2 · Fridge · Washing machine · RO · Geyser in 4 of 6 rooms`.
+- Room plan: the washroom block gets a small geyser icon + "Geyser" label; the room card / bed sheet
+  says "🚿 Geyser in washroom".
+- Filter: "Geyser in my washroom" (rooms with attached washroom + geyser).
+- Not working works the same (greyed + repair card).
+
+## Main design canvas
+After approval, F23 goes into the main canvas, renamed **"Hostelzy · Main design"** (same URL as
+"All screens": https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB).
+
 ## Rules
 - Residents: max 20 edits a day per hostel; the owner can mute a resident's edits (same as F19).
 - Every change is logged (who, when) and visible to the owner and team.
