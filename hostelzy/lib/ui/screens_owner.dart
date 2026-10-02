@@ -751,7 +751,7 @@ class OwnerManageScreen extends StatelessWidget {
       'deals' => (const OwnerDeals(), Cta('Save deals', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.publishDeals)),
       'rates' => (const RateCard(), Cta('Save', key: const ValueKey('saveRates'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveRates)),
       'complaints' => (const _Complaints(), null),
-      'menu' => (const _MenuEditor(), Cta(s.menuDirty ? 'Save menu' : 'Saved', key: const ValueKey('menuSave'), icon: 'check', height: 54, px: 16, fs: 15, opacity: s.menuDirty ? 1 : .4, onTap: s.menuDirty ? s.saveMenu : null)),
+      'menu' => (const _MenuEditor(), Cta('Save menu', key: const ValueKey('menuSave'), icon: 'check', height: 54, px: 16, fs: 15, opacity: s.menuDirty ? 1 : .4, onTap: s.menuDirty ? s.saveMenu : null)),
       _ => (const _HouseRules(), Cta('Save rules', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveRules)),
     };
     // F18: while typing, the header makes room for the field and keyboard.
@@ -918,6 +918,8 @@ class _MenuEditor extends StatelessWidget {
               decoration: box(w: 2, c: p.tx),
               child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600), T('Counts only. Hostelzy never shows who said what.', s: 12, c: p.mu)]),
             ),
+          if (s.menuOf(s.ownHid) == null && !s.menuDirty)
+            T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuEmpty'), s: 13, c: p.mu, lh: 1.4),
           Row(
             children: [
               for (var i = 0; i < 7; i++) ...[
@@ -945,11 +947,12 @@ class _MenuEditor extends StatelessWidget {
                 Field(
                   key: ValueKey('menu-$d-${m[0]}'),
                   value: week[d].of(m[0]),
+                  placeholder: 'What’s for ${m[1].toLowerCase()}?',
                   onChanged: (v) => s.setMenuMeal(d, m[0], v),
                 ),
               ],
             ),
-          T(s.menuDirty ? 'Not saved yet. Residents see the menu once you tap Save menu.' : 'Residents see this week in their Food tab.', key: const ValueKey('menuNote'), s: 13, c: s.menuDirty ? p.ad : p.mu),
+          T(s.menuDirty ? 'Not saved yet. Residents and tenants see it after you tap Save.' : 'Residents and tenants see it after you tap Save.', key: const ValueKey('menuNote'), s: 13, c: s.menuDirty ? p.ad : p.mu),
           OutlineCta(
             'Copy ${full[d]} to ${full[to]}',
             icon: 'copy',

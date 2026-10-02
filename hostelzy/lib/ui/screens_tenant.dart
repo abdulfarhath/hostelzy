@@ -1600,8 +1600,9 @@ class SavedScreen extends StatelessWidget {
   }
 }
 
-/// Hostel page: today's breakfast, lunch and dinner from the owner's menu,
-/// and "Food menu ›" for the whole week. Hidden when there's no menu.
+/// Hostel page (board `new-foodPeek`): today's three meals from the owner's
+/// menu, then "Whole week ›" (the `foodWeek` sheet). A hostel that serves
+/// food but has no menu yet says so; one without food shows nothing.
 class FoodPeek extends StatelessWidget {
   const FoodPeek({super.key, required this.hid});
   final String hid;
@@ -1610,9 +1611,19 @@ class FoodPeek extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final m = s.menuOf(hid);
+    final show = m != null || hostelById(hid).food;
+    Widget row({Key? key, required Widget child, VoidCallback? onTap}) {
+      final c = Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+        child: child,
+      );
+      return onTap == null ? c : Tap(key: key, onTap: onTap, child: c);
+    }
+
     return OnShow(
       () => s.loadMenu(hid),
-      child: m == null
+      child: !show
           ? const SizedBox.shrink()
           : Column(
               key: const ValueKey('foodPeek'),
@@ -1620,33 +1631,39 @@ class FoodPeek extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(child: Kicker('Food today · $todayName')),
-                      Tap(key: const ValueKey('foodMenu'), onTap: () => s.openFoodFor(hid), child: T('Food menu ›', s: 14, w: 800)),
-                    ],
-                  ),
+                  child: Kicker('Food menu · today, $todayName'),
                 ),
                 Container(
                   decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      for (final ml in meals)
-                        if (m[todayIdx].of(ml[0]).trim().isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      if (m == null)
+                        row(child: T('Menu not added yet', s: 14, c: p.mu))
+                      else ...[
+                        for (final ml in meals)
+                          row(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(width: 84, child: T(ml[1], w: 800, s: 14)),
+                                SizedBox(
+                                  width: 92,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [T(ml[1], w: 800, s: 14), T(ml[2], s: 11, c: p.mu)],
+                                  ),
+                                ),
                                 const SizedBox(width: 8),
-                                Expanded(child: T(m[todayIdx].of(ml[0]), s: 14, c: p.mu, lh: 1.35)),
+                                Expanded(child: T(m[todayIdx].of(ml[0]).trim().isEmpty ? '—' : m[todayIdx].of(ml[0]), s: 14, c: p.mu, lh: 1.35)),
                               ],
                             ),
                           ),
+                        row(
+                          key: const ValueKey('foodMenu'),
+                          onTap: () => s.openFoodFor(hid),
+                          child: Row(children: [const Expanded(child: T('Whole week', w: 800, s: 14)), Ic('chev', size: 16, color: p.tx)]),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1656,3 +1673,63 @@ class FoodPeek extends StatelessWidget {
   }
 }
 
+/// Board `new-foodWeek`: a hostel's menu, Mon–Sun chips and three meals.
+class FoodWeekSheet extends StatelessWidget {
+  const FoodWeekSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final m = s.menuOf(s.foodFor ?? s.hid) ?? blankWeek;
+    final d = s.fwDay;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 12,
+        children: [
+          Row(
+            children: [
+              for (var i = 0; i < 7; i++) ...[
+                if (i > 0) const SizedBox(width: 4),
+                Expanded(
+                  child: Tap(
+                    key: ValueKey('fwDay-$i'),
+                    onTap: () => s.update(() => s.fwDay = i),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      alignment: Alignment.center,
+                      decoration: box(bg: i == d ? p.tx : transparent, w: 1, c: i == d ? p.tx : p.dv),
+                      child: FittedBox(fit: BoxFit.scaleDown, child: T(weekDays[i][0], s: 13, w: 800, c: i == d ? p.bg : p.tx, nowrap: true)),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final ml in meals)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(ml[2], s: 12, c: p.mu)])),
+                        const SizedBox(width: 8),
+                        Expanded(child: T(m[d].of(ml[0]).trim().isEmpty ? '—' : m[d].of(ml[0]), s: 14, lh: 1.4)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          T('From ${hostelById(s.foodFor ?? s.hid).owner}’s menu on Hostelzy.', s: 12, c: p.mu),
+        ],
+      ),
+    );
+  }
+}

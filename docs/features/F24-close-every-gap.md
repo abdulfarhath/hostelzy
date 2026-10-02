@@ -121,7 +121,17 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - Good / Okay / Poor goes to `rate_meal`: confirmed residents only, one answer per meal per day.
   - The owner sees "Residents this week: Breakfast: N good · N okay · N poor" on the Food menu page, from `meal_votes`, as counts only.
   - The copy says the owner sees how many, never who.
-- **Tenant.** The hostel page shows "Food today · <day>" with today's meals and **Food menu ›**, which opens the week with Back and no rating. The page loads the menu when it opens; a hostel without one shows nothing.
+- **Tenant (boards `new-foodPeek` and `new-foodWeek`, Design v21).**
+  - The hostel page shows "Food menu · today, <day>": Breakfast, Lunch and Dinner, each with its time, then **Whole week ›**.
+  - Whole week opens the Food menu sheet: Mon–Sun chips and three meals, with no rating.
+  - A hostel that serves food but has no menu says "Menu not added yet". A hostel without food shows nothing.
+  - The page loads the menu each time it opens.
+- **Owner editor matches the v21 `menu` board.**
+  - The footer note reads "Residents and tenants see it after you tap Save".
+  - An empty hostel says "No menu yet. Tenants see "Menu not added yet"…".
+  - Placeholders read "What's for breakfast?" and so on.
+  - Save stays off until something changes.
+  - The button reads **Save menu**, not "Save Monday": it saves the whole week.
 - **SQL: `20261002230000_food_menu.sql`** (FOUNDER-TODO **4v**).
   - Anyone can read a live hostel's menu.
   - New `meal_ratings` table, with no read policy.
@@ -134,4 +144,4 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - This matches Design v21 retiring permL/permC.
 - **Removed dead code:** the `oReviews` route (Manage goes to oRank), the `areas` sheet, the `joined` sheet (Holds has the inline "Did you join?" card) and the `rConfirm` screen.
 - **Not in this PR:** "meal reminders use the menu's real times". `menus` has no times yet, and reminders use the fixed meal times shown in Food.
-- **Tests:** `test/food_test.dart` (resident, owner on a fake server, tenant peek, 2× text). Updated: flows, owner_manage, resident, start, tenant.
+- **Tests:** `test/food_test.dart` (resident, owner on a fake server, an empty new hostel, the tenant peek and week sheet, 2× text). PR #77. Updated: flows, owner_manage, resident, start, tenant.

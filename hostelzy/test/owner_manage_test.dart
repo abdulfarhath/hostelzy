@@ -124,7 +124,7 @@ void main() {
     await tester.pump();
     final m = s.menuDraft!;
     expect(m[4].b, 'Masala dosa');
-    expect(find.text('Not saved yet. Residents see the menu once you tap Save menu.'), findsOneWidget);
+    expect(find.text('Not saved yet. Residents and tenants see it after you tap Save.'), findsOneWidget);
     await _tap(tester, find.text('Copy Friday to Saturday'));
     expect((s.menuDraft![5].b, s.menuDraft![5].l, s.menuDraft![5].n), (m[4].b, m[4].l, m[4].n));
     expect(s.toast, 'Saturday now has Friday’s menu.');

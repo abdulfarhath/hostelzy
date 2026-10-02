@@ -17,8 +17,9 @@ mixin _FoodData {
   /// editor starts from it until it is saved.
   List<DayMenu>? phoneMenu;
 
-  /// The hostel a tenant opened Food for from its hostel page.
+  /// The hostel a tenant opened the Food menu sheet for, and its day.
   String? foodFor;
+  int fwDay = 0;
 
   /// Owner: this week's breakfast / lunch / dinner ratings, counts only.
   Map<String, Map<String, int>> mealVotes = AppState.samples ? {'b': {'good': 9, 'okay': 3, 'poor': 1}} : {};
@@ -39,9 +40,6 @@ extension FoodActions on AppState {
   /// The hostel Food shows: a resident's own, or the one a tenant opened.
   String get foodHid => role == 'resident' ? stayHostel.id : (foodFor ?? hid);
 
-  /// A tab screen of this role (a tenant's Food page is a page, not a tab).
-  bool get onTab => AppState.tabScreens.contains(screen) && !(screen == 'food' && role != 'resident');
-
   /// The week Food and Home show (blank when there is none).
   List<DayMenu> get menu => menuOf(foodHid) ?? blankWeek;
 
@@ -57,15 +55,12 @@ extension FoodActions on AppState {
     }
   }
 
-  /// Tenant: the whole week of a hostel's food, from its page.
-  void openFoodFor(String h) {
-    update(() {
-      foodFor = h;
-      day = todayIdx;
-      foodView = 'day';
-    });
-    go('food');
-  }
+  /// Tenant: the whole week of a hostel's food, from its page (a sheet).
+  void openFoodFor(String h) => update(() {
+    foodFor = h;
+    fwDay = todayIdx;
+    sheet = 'foodWeek';
+  });
 
   /// Owner: Manage › Food menu. Starts from the saved week (or one typed on
   /// this phone before), then from the server's once it arrives.

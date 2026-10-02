@@ -82,7 +82,7 @@ class _Wide extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final map = s.role == 'tenant' && width >= 1000;
-    final rail = s.onTab;
+    final rail = AppState.tabScreens.contains(s.screen);
     return ColoredBox(
       color: p.bg,
       child: Row(
@@ -323,7 +323,7 @@ class _AppBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final showTabs = tabs && s.onTab && MediaQuery.viewInsetsOf(context).bottom == 0;
+    final showTabs = tabs && AppState.tabScreens.contains(s.screen) && MediaQuery.viewInsetsOf(context).bottom == 0;
     // Material installs its own DefaultTextStyle; put the design's back.
     return Material(
       type: MaterialType.transparency,
@@ -577,6 +577,7 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
+      'foodWeek' => 'Food menu',
       'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
       'lang' => 'Language',
@@ -642,6 +643,7 @@ class _Sheet extends StatelessWidget {
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
+      'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
       _ => null,
     };
@@ -680,6 +682,7 @@ class _Sheet extends StatelessWidget {
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
       'amFloor' => const AmenityFloorSheet(),
+      'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
       _ => const SizedBox(),
     };
