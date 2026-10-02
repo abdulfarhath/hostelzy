@@ -101,6 +101,12 @@ Phone boards 390×844, with dark copies at the end of each row. Existing tokens 
 - **Saved on this phone** with the rest of the app's state. Glasses live in their own key so
   Done from a notification can count one in the background.
 
-**Not in this PR (follow-up):** backing reminders up to the profile on the server so a new phone
-gets them back (needs a `profiles.reminders` column + FOUNDER-TODO step). Owners have no Me tab,
-so the offer and Today card are for tenants and residents.
+- **Backup on the profile (follow-up PR, branch `feature/f20-reminders-backup`):** signed in on the
+  server, every change the user makes is saved to `profiles.reminders` (their own row only; an
+  object of at most 16 KB). On sign-in or app start, a phone with nothing set yet gets the
+  backed-up settings back and schedules them. A phone that already has its own settings keeps
+  them. App start never overwrites the backup. Migration `20261002180000_f20_reminders.sql`,
+  tests `supabase/tests/reminders_test.sql` and "F20: signed in on the server, settings are
+  backed up…". Founder step: FOUNDER-TODO 4p.
+
+Owners have no Me tab, so the offer and Today card are for tenants and residents.

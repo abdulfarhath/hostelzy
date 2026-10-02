@@ -58,6 +58,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 
 4o. **Stay Rewards on the server (S6)** (after 4l; run it after 4m if F19 is merged first, the order doesn't matter): Supabase → SQL Editor → paste `supabase/migrations/20261002170000_s6_stay_rewards.sql` → **Run** → "Success".
 
+4p. **Reminders backup (F20)** (any time after 4a): Supabase → SQL Editor → paste `supabase/migrations/20261002180000_f20_reminders.sql` → **Run** → "Success". Until then reminders still work; they just stay on the phone.
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials

@@ -59,6 +59,7 @@ extension LoginActions on AppState {
       });
       startLive();
       syncPushToken();
+      restoreRemFromServer();
       return;
     }
     // Never hide why: the real code is shown and sent to Crashlytics.
