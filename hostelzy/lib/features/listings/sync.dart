@@ -3,7 +3,10 @@ part of '../../state.dart';
 // F13 backend
 mixin _SyncData {
 
-  String delReason = '', delOtp = '';
+  String delReason = '';
+
+  /// C: deleting (Google confirm + server) is in progress.
+  bool deleting = false;
 }
 
 extension SyncActions on AppState {
@@ -26,10 +29,31 @@ extension SyncActions on AppState {
 
   bool isDark(Brightness phone) => theme == 'dark' || (theme == 'system' && phone == Brightness.dark);
 
-  /// Deletes the account. With no backend yet, everything lives on this
-  /// phone, so this clears it here; with F13 it also deletes it on the server.
-  void deleteAccount() {
-    if (delOtp.length != 6) return toastMsg('Enter the 6-digit code.');
+  /// C: delete account v2. Signed in with Google: confirm with Google, delete
+  /// the server data, then the Firebase user. Either way, this phone forgets
+  /// everything. Nothing is said to be deleted unless it was.
+  Future<void> confirmDelete() async {
+    if (deleting) return;
+    if (account != null && signIn.available) {
+      update(() => deleting = true);
+      final fail = await signIn.reauth();
+      if (fail != null) {
+        update(() => deleting = false);
+        return toastMsg(switch (fail) {
+          SignInFail.cancelled => 'Not deleted. You closed Google.',
+          SignInFail.otherAccount => 'That’s a different Google account. Pick ${account!.email}.',
+          _ => 'Couldn’t check with Google. Check your internet and try again.',
+        });
+      }
+      try {
+        await data.deleteMyAccount();
+        await signIn.deleteUser();
+      } catch (e) {
+        update(() => deleting = false);
+        final m = '$e';
+        return toastMsg(m.contains('Owners:') ? 'Owners: ask Hostelzy to close or hand over your hostel first.' : 'Couldn’t delete it on the server. Check your internet and try again.');
+      }
+    }
     final me = myPhone;
     update(() {
       enquiries = enquiries.where((e) => e.phone != me).toList();
@@ -43,10 +67,12 @@ extension SyncActions on AppState {
       signedIn = false;
       account = null;
       delReason = '';
+      deleting = false;
       screen = 'delDone';
       hist = [];
       sheet = null;
     });
+    store.clear();
   }
 
   /// F18: logging out forgets everything this phone kept about the user.

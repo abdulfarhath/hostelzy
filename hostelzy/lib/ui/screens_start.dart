@@ -99,7 +99,7 @@ class LoginScreen extends StatelessWidget {
             Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)),
             const _StepHead(step: 'Step 1 of 2', title: 'Sign in', sub: 'With your Google account. No passwords, no codes.'),
             const Spacer(),
-            Cta(s.signingIn ? 'Opening Google…' : 'Continue with Google', icon: 'user', onTap: s.continueWithGoogle, iconSize: 20, opacity: s.signingIn ? .6 : 1),
+            GoogleButton(s.signingIn ? 'Opening Google…' : 'Continue with Google', busy: s.signingIn, onTap: s.continueWithGoogle),
             const SizedBox(height: 10),
             OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
             const SizedBox(height: 8),

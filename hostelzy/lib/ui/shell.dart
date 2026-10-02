@@ -412,7 +412,7 @@ class _AppBody extends StatelessWidget {
     'oTeam' => const TeamScreen(),
     'settings' => const SettingsScreen(),
     'delAcc' => const DeleteAccountScreen(),
-    'delOtp' => const DeleteOtpScreen(),
+    'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
     'gate' => const GateScreen(),

@@ -1272,18 +1272,49 @@ void main() {
     await tap(tester, find.text('Delete account'));
     expect(find.text('Delete your account?'), findsOneWidget);
     await tap(tester, find.text('Continue'));
-    expect(s.screen, 'delOtp');
-    await tap(tester, find.text('Delete my account'));
-    expect(s.screen, 'delOtp'); // needs the code
-    await tester.pump(const Duration(seconds: 3));
-    await tester.enterText(find.byType(TextField), '123456');
-    await tester.pump();
-    await tap(tester, find.text('Delete my account'));
+    expect(s.screen, 'delConfirm');
+    // Not signed in with Google: only this phone's data exists, and goes.
+    expect(find.text('Delete from this phone'), findsOneWidget);
+    await tap(tester, find.text('Delete from this phone'));
     expect((s.screen, s.phone, s.signedIn, s.level), ('delDone', '', false, 'none'));
     expect(find.text('Your account is deleted'), findsOneWidget);
-    await tap(tester, find.text('Close'));
+    expect(find.text('We removed your name, phone, Google sign-in, holds, saved hostels and rewards. Reviews stay as “Former resident”.'), findsOneWidget);
+    await tap(tester, find.text('Close Hostelzy'));
     expect(s.screen, 'welcome');
     s.dispose();
+
+    // Signed in with Google: confirm with Google, then the server, then Firebase.
+    final g = AppState(start: 'delConfirm', role: 'tenant');
+    final gs = _FakeSignIn(null);
+    final gd = _FakeData();
+    g.signIn = gs;
+    g.data = gd;
+    g.update(() => g.account = (uid: 'fb-asha', name: 'Asha Kiran', email: 'asha@gmail.com'));
+    await pumpApp(tester, g);
+    expect(find.text('Confirm it’s you'), findsOneWidget);
+    expect(find.text('AK'), findsOneWidget);
+    expect(find.text('asha@gmail.com'), findsOneWidget);
+    gs.reauthFail = SignInFail.cancelled;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, g.toast, gd.deleted), ('delConfirm', 'Not deleted. You closed Google.', false));
+    await tester.pump(const Duration(seconds: 3));
+    gs.reauthFail = SignInFail.otherAccount;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect(g.toast, 'That’s a different Google account. Pick asha@gmail.com.');
+    await tester.pump(const Duration(seconds: 3));
+    gs.reauthFail = null;
+    gd.deleteError = 'P0001: Owners: ask Hostelzy to close or hand over your hostel first.';
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, g.toast, gs.userDeleted), ('delConfirm', 'Owners: ask Hostelzy to close or hand over your hostel first.', false));
+    await tester.pump(const Duration(seconds: 3));
+    gd.deleteError = null;
+    await tap(tester, find.text('Confirm with Google'));
+    await tester.pump();
+    expect((g.screen, gd.deleted, gs.userDeleted, g.account), ('delDone', true, true, null));
+    g.dispose();
 
     // Owners with an unpaid plan can't delete yet.
     final o = AppState(start: 'delAcc', role: 'owner', plan: 'late5');
@@ -2237,6 +2268,12 @@ class _FakeSignIn implements SignIn {
   Account? get current => null;
   @override
   Future<void> signOut() async => signedOut = true;
+  SignInFail? reauthFail;
+  bool userDeleted = false;
+  @override
+  Future<SignInFail?> reauth() async => reauthFail;
+  @override
+  Future<void> deleteUser() async => userDeleted = true;
 }
 
 class _FakeData extends SampleRepo {
@@ -2246,6 +2283,13 @@ class _FakeData extends SampleRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+  bool deleted = false;
+  String? deleteError;
+  @override
+  Future<void> deleteMyAccount() async {
+    if (deleteError != null) throw Exception(deleteError);
+    deleted = true;
+  }
 }
 
 class _FakeLocator implements Locator {

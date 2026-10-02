@@ -26,6 +26,10 @@ abstract class HostelRepo {
 
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
+
+  /// C: deletes the signed-in user's data on the server (keeps others'
+  /// records without their identity). Throws with the server's reason.
+  Future<void> deleteMyAccount();
 }
 
 class SampleRepo implements HostelRepo {
@@ -38,6 +42,8 @@ class SampleRepo implements HostelRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
   @override
   Future<void> savePushToken(String token) async {}
+  @override
+  Future<void> deleteMyAccount() async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -51,6 +57,9 @@ class SupabaseRepo implements HostelRepo {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseRepo(Supabase.instance.client);
   }
+
+  @override
+  Future<void> deleteMyAccount() => db.rpc('delete_my_account');
 
   @override
   Future<Listings?> listings() async {
