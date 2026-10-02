@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
 import 'data.dart';
+import 'poster.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -49,7 +50,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -472,6 +473,112 @@ class AppState extends ChangeNotifier {
     screen = editor ? 'aLayout' : 'oLayout';
     sheet = null;
   });
+
+  // ------------------------------------------------------------ F14 rooms after go-live
+
+  /// Add-a-room sheet draft.
+  int nrFloor = 1, nrShare = 3;
+  bool nrAc = false;
+  String nrLabel = '';
+
+  /// Why a room can't be removed (a resident or a hold on it), or null.
+  String? roomBlock(String hid, int n) {
+    final r = rooms[hid]!.firstWhere((r) => r.n == n);
+    final busy = r.beds.where((b) => b.state != 'free' || residents.any((x) => x.bed == b.id) || holds.any((h) => h.hid == hid && h.bed == b.id && h.status != 'released')).toList();
+    if (busy.isEmpty) return null;
+    return residents.any((x) => busy.any((b) => b.id == x.bed)) || busy.any((b) => b.state == 'booked') ? 'Has a resident' : 'Has a hold';
+  }
+
+  void openAddRoom(String hid, int floor) {
+    final onFloor = rooms[hid]!.where((r) => r.floor == floor).map((r) => r.n).toList();
+    var n = floor * 100 + 1;
+    while (onFloor.contains(n) || rooms[hid]!.any((r) => r.label == '$n')) {
+      n++;
+    }
+    update(() {
+      nrFloor = floor;
+      nrLabel = '$n';
+      nrShare = 3;
+      nrAc = false;
+      sheet = 'addRoom';
+    });
+  }
+
+  void addRoom(String hid) {
+    final label = nrLabel.trim().toUpperCase();
+    if (label.isEmpty) return toastMsg('Give the room a number.');
+    if (rooms[hid]!.any((r) => r.label == label)) return toastMsg('Room $label already exists.');
+    final rs = rooms[hid]!;
+    var n = nrFloor * 100 + 1;
+    while (rs.any((r) => r.n == n)) {
+      n++;
+    }
+    final rent = rates[hid]?[rateKey(nrAc, nrShare)] ?? 0;
+    if (rent == 0) return toastMsg('Add a price for $nrShare sharing ${nrAc ? 'AC' : 'Non-AC'} in Manage → Rates first.');
+    update(() {
+      rs.add(Room(
+        n: n,
+        floor: nrFloor,
+        share: nrShare,
+        ac: nrAc,
+        rent: rent,
+        bath: 'Attached',
+        name: label == '$n' ? null : label,
+        beds: [for (var k = 0; k < nrShare; k++) Bed(id: '$label-${'ABCD'[k]}', letter: 'ABCD'[k], room: n, floor: nrFloor, spot: spots[nrShare]![k], state: 'free', soon: '')],
+      ));
+      rs.sort((a, b) => a.floor != b.floor ? a.floor - b.floor : a.n - b.n);
+      sheet = null;
+    });
+    toastMsg('Room $label added with $nrShare free beds. Hostelzy draws its layout on the next visit.');
+  }
+
+  void removeRoom(String hid, int n) {
+    final why = roomBlock(hid, n);
+    final r = rooms[hid]!.firstWhere((r) => r.n == n);
+    if (why != null) return toastMsg('Room ${r.label} can’t be removed: ${why.toLowerCase()}.');
+    update(() {
+      rooms[hid]!.removeWhere((x) => x.n == n);
+      layouts[hid]?.remove(n);
+    });
+    toastMsg('Room ${r.label} removed.');
+  }
+
+  /// A new floor above the top one, starting with one room.
+  void addFloor(String hid) {
+    final top = rooms[hid]!.fold<int>(0, (a, r) => r.floor > a ? r.floor : a);
+    openAddRoom(hid, top + 1);
+  }
+
+  void removeFloor(String hid, int floor) {
+    final rs = rooms[hid]!.where((r) => r.floor == floor).toList();
+    final blocked = rs.where((r) => roomBlock(hid, r.n) != null).toList();
+    if (blocked.isNotEmpty) return toastMsg('Floor $floor can’t be removed: room ${blocked.map((r) => r.label).join(', ')} ${blocked.length == 1 ? 'has' : 'have'} a resident or hold.');
+    update(() {
+      rooms[hid]!.removeWhere((r) => r.floor == floor);
+      for (final r in rs) {
+        layouts[hid]?.remove(r.n);
+      }
+    });
+    toastMsg('Floor $floor removed.');
+  }
+
+  // ------------------------------------------------------------ F14 team members
+
+  /// The Hostelzy team (team mode). Invites stay pending until real team
+  /// accounts exist (F13).
+  final List<({String name, String phone, String role, bool joined})> teamMembers = [(name: 'Founder', phone: '9000000100', role: 'Everything', joined: true)];
+  String tmName = '', tmPhone = '', tmRole = 'Visits';
+
+  void addTeamMember() {
+    final ph = tmPhone.replaceAll(RegExp(r'\D'), '');
+    if (tmName.trim().isEmpty || ph.length != 10) return toastMsg('Add a name and a 10-digit number.');
+    update(() {
+      teamMembers.add((name: tmName.trim(), phone: ph, role: tmRole, joined: false));
+      tmName = '';
+      tmPhone = '';
+    });
+    toastMsg('Invite pending. Team accounts come with the backend (F13).');
+  }
 
   // ------------------------------------------------------------ layout editor
 
@@ -1592,6 +1699,19 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       copyText(text);
       toastMsg('Sharing isn’t available here. The text is copied.');
+    }
+  }
+
+  /// F14: the resident QR poster as an A4 PDF, shared through the share sheet
+  /// (print it, or send it to a print shop on WhatsApp).
+  int? lastPosterBytes;
+  Future<void> sharePoster(String link) async {
+    final bytes = await residentPoster(hostel: hostelById(ownHid).name, link: link);
+    lastPosterBytes = bytes.length;
+    try {
+      await SharePlus.instance.share(ShareParams(files: [XFile.fromData(bytes, mimeType: 'application/pdf', name: 'hostelzy-poster.pdf')], text: 'Hostelzy resident poster (A4)'));
+    } catch (_) {
+      toastMsg('Sharing isn’t available here.');
     }
   }
 
