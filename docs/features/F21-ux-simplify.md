@@ -59,7 +59,7 @@ Plain words, one verb per flow, real data only.
 **Design ready · 2026-10-02, waiting for the founder’s approval.** Demo for the founder, 7 before → after pairs with a one-line "what changed" each: https://claude.ai/artifact/DNTXZPEsMZTRSisLqvpAhG. Full set: "Hostelzy · F21 Simpler UI" https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7. The All screens canvas gets the "Updated" tags only after approval.
 Phone boards 390×844, with dark copies of Explore, the hostel page and owner Today. Same tokens; green only for the Hostelzy price.
 
-**W1 (agreements):** The two agreement screens replace the fake SMS codes:
+**W1 (agreements): cleared to build now** (Ideas chat, 2026-10-02: these are honesty fixes; W2–W4 wait for the founder). The two agreement screens replace the fake SMS codes:
 - `Agree`: owner "Fair Play rules" with 3 numbered bullets, "Full rules: Settings → Fair Play ›", an **I agree** checkbox row, then "Agree and continue".
 - `Stay`: resident "Confirm your stay" with bed, rent and advance bullets, a **This is correct** checkbox, "Yes, that’s right" and "Something wrong? Message Srinivas ›".
 - Avatar initials come from the user's name (as in all boards).
