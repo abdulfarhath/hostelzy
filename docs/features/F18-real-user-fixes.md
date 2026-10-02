@@ -1,6 +1,6 @@
 # F18 · Real-user bug fixes (from the founder's phone test, apk-29)
 
-**Stage:** Spec ready · 2026-10-02 · no design needed (follow existing screens; F17 rules apply)
+**Stage:** Design approved · 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
 
 Founder found on a real phone: back button exits/jumps to start, login forgotten after reopening,
 dummy numbers on code screens, name prefilled, no "use my location" / area picker, owner can't edit
@@ -49,6 +49,20 @@ Owner confirms holds/payments from their phone (D1, D2), server HZ codes, shared
 (E4), real codes for confirm-stay/Fair Play/delete (E2, F13, H7 — delete must re-auth with Google
 and delete the Firebase user + server data), notifications (H6), real admin accounts (G1),
 `DATA=supabase` release once real hostels exist (C6).
+
+## Design
+
+**Design approved · 2026-10-02** (standing approval). Canvas "Hostelzy · Real app v2": https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
+Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team console 1440×900.
+
+1. **Sign in:** Main (Continue with Google; use the official Google button asset), Profile (name from Google, editable; phone +91 "Not verified"; role), ResidentGate ("Ask your owner to add you"), OwnerGate ("List your hostel": request a visit, WhatsApp Hostelzy +91 90597 90014), ProfileDark.
+2. **Empty states:** Empty (tweak: no hostels in this area / no holds / no saved hostels / no residents / no enquiries / no complaints).
+3. **Map v2:** Map ("Search this area" chip after a pan), Location (Use my location + permission explainer), Areas (area picker sheet), List (hostels in this area), MapDark.
+4. **Owner layout editor:** Rooms (pick a room), Create (no layout yet: Create layout, or Ask Hostelzy to help), Editor (edit room; safety rules stay), Published ("Live for tenants"), EditorDark.
+5. **Photos and saved:** Photos (owner upload: pick, order, cover, progress, failed + retry), Crop, Gallery (tenant), Saved (saved hostels).
+6. **Delete account v2:** Delete (tweak: Confirm with Google / Deleted).
+7. **Team web console (1440):** Console (sign in with Google), ConsoleOnboarding (tracker + add hostel), ConsolePayments (UTR check), ConsoleCases (Fair Play cases + layout help queue).
+8. **Small UX:** BackExit ("Press back again to exit" toast), Demo (DEMO banner while on sample data), KeyboardUtr and KeyboardAdd (sheets stay above the keyboard, CTA visible).
 
 ## Build
 _Not started._
