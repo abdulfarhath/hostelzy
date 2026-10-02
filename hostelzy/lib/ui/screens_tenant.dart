@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
-import 'deals.dart';
 import 'fairplay.dart';
 import 'kit.dart';
 import 'photos.dart';
@@ -86,63 +85,34 @@ class ExploreScreen extends StatelessWidget {
     final results = filtered(s);
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
-    const sorts = [('rec', 'Recommended'), ('near', 'Nearest'), ('price', 'Lowest price'), ('deals', 'Best deals')];
+    // F21 W2: one search bar, one row of filters; sort lives in Filters.
     final chips = [
-      ChipBtn('All', on: s.fG == 'Any' && s.fR == 'Any', onTap: () => set(() {
-        s.fG = 'Any';
-        s.fR = 'Any';
-      })),
-      ChipBtn('AC', on: s.fR == 'AC', onTap: () => set(() => s.fR = s.fR == 'AC' ? 'Any' : 'AC')),
-      ChipBtn('Non-AC', on: s.fR == 'Non-AC', onTap: () => set(() => s.fR = s.fR == 'Non-AC' ? 'Any' : 'Non-AC')),
-      ChipBtn('Women', on: s.fG == 'Women', onTap: () => set(() => s.fG = 'Women')),
-      ChipBtn('Men', on: s.fG == 'Men', onTap: () => set(() => s.fG = 'Men')),
-      ChipBtn('Co-living', on: s.fG == 'Co-living', onTap: () => set(() => s.fG = 'Co-living')),
-      ChipBtn('Food included', on: s.fFood, onTap: () => set(() => s.fFood = !s.fFood)),
-      ChipBtn('Under ₹8,000', on: s.fB == '8k', onTap: () => set(() => s.fB = s.fB == '8k' ? 'Any' : '8k')),
+      for (final g in const ['Men', 'Women', 'Co-living']) ChipBtn(g, on: s.fG == g, onTap: () => set(() => s.fG = s.fG == g ? 'Any' : g), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+      ChipBtn('AC', on: s.fR == 'AC', onTap: () => set(() => s.fR = s.fR == 'AC' ? 'Any' : 'AC'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+      ChipBtn('Under ₹8,000', on: s.fB == '8k', onTap: () => set(() => s.fB = s.fB == '8k' ? 'Any' : '8k'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
     ];
     return Scroll(
       key: ValueKey('explore${s.scrollEpoch}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // F20: the first-time reminders offer, once after sign-in.
+          // F20: the reminders offer, from the 3rd app open (F21 W2).
           OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-            child: VGap(
-              gap: 14,
-              children: [
-                PageHead(kicker: '${results.length} hostels · $totalFree beds free now', title: 'Beds near ${s.lm}'),
-                if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
-                Tap(
-                  onTap: () => set(() => s.sheet = 'search'),
-                  child: Container(
-                    height: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: box(w: 2, c: p.tx),
-                    child: Row(
-                      children: [
-                        const Ic('search', size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: T(searchSummary(s), s: 14, w: 600, ell: true)),
-                        const SizedBox(width: 10),
-                        T('Edit', s: 12, w: 600, c: p.ad),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+          if (!s.signedIn)
+            Container(
+              color: p.sf,
+              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
+              child: Row(children: [Expanded(child: T('Browsing as a guest', s: 13, w: 600, c: p.mu)), Tap(onTap: () => s.startSignIn(), child: const T('Sign in', s: 13, w: 800, underline: true))]),
             ),
-          ),
-          Scroll(
-            horizontal: true,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Row(
-                children: [
-                  for (var i = 0; i < sorts.length; i++) ...[if (i > 0) const SizedBox(width: 6), ChipBtn(sorts[i].$2, on: s.sortBy == sorts[i].$1, onTap: () => set(() => s.sortBy = sorts[i].$1))],
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: VGap(
+              gap: 12,
+              children: [
+                PageHead(kicker: 'Hyderabad · $totalFree beds free now', title: 'Find a bed', gap: 2),
+                if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
+                WhereBar(onTap: s.openWhere),
+              ],
             ),
           ),
           Scroll(
@@ -151,27 +121,20 @@ class ExploreScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(
                 children: [
-                  for (var i = 0; i < chips.length; i++) ...[if (i > 0) const SizedBox(width: 6), chips[i]],
+                  FiltersBtn(onTap: () => set(() => s.sheet = 'search')),
+                  for (final c in chips) ...[const SizedBox(width: 6), c],
                 ],
               ),
             ),
           ),
-          if (s.sortBy == 'rec')
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              child: Wrap(
-                children: [
-                  T('Ranked mostly by verified reviews, then reply speed, beds kept up to date, complaints resolved and a complete listing. Fair Play strikes lower the rank. ', s: 12, c: p.mu, lh: 1.45),
-                  Tap(onTap: () => set(() => s.sheet = 'rank'), child: T('How it works', s: 12, w: 800, c: p.ad, lh: 1.45)),
-                ],
-              ),
-            ),
           Container(
+            padding: const EdgeInsets.only(top: 16),
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final h in results) HostelCard(h),
+                // F21 W2: the rank shows once, on the first card.
+                for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   Padding(
@@ -181,7 +144,7 @@ class ExploreScreen extends StatelessWidget {
                       children: [
                         T(s.mapArea != null ? 'No hostels in ${s.mapArea} yet' : 'No hostels in this area yet', w: 800, s: 20),
                         T('Hostelzy is adding hostels area by area, after a visit to each one. Check back soon, or try another area.', s: 14, c: p.mu, lh: 1.45),
-                        Align(alignment: Alignment.centerLeft, child: Tap(onTap: () => s.update(() => s.sheet = 'areas'), child: Container(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14), decoration: box(w: 2, c: p.tx), child: const T('Pick another area', w: 800, s: 14)))),
+                        Align(alignment: Alignment.centerLeft, child: Tap(onTap: s.openWhere, child: Container(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14), decoration: box(w: 2, c: p.tx), child: const T('Pick another area', w: 800, s: 14)))),
                       ],
                     ),
                   )
@@ -196,13 +159,7 @@ class ExploreScreen extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Tap(
-                            onTap: () => set(() {
-                              s.fG = 'Any';
-                              s.fS = 'Any';
-                              s.fB = 'Any';
-                              s.fFood = false;
-                              s.fR = 'Any';
-                            }),
+                            onTap: s.clearFilters,
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                               decoration: box(w: 2, c: p.tx),
@@ -222,22 +179,89 @@ class ExploreScreen extends StatelessWidget {
   }
 }
 
-class HostelCard extends StatelessWidget {
-  const HostelCard(this.h, {super.key});
-  final Hostel h;
+/// F21 W2: the one "Where?" field, on Explore and the Map.
+class WhereBar extends StatelessWidget {
+  const WhereBar({super.key, required this.onTap, this.height = 50});
+  final VoidCallback onTap;
+  final double height;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    // F16: one line per room type, filtered like the list. F03: covered
-    // types show the Hostelzy price with the walk-in price struck through.
-    final deal = s.dealsOf(h.id);
-    final lines = [
-      for (final ac in [true, false])
-        if (s.fR == 'Any' || (s.fR == 'AC') == ac)
-          if (s.typeSummary(h.id, ac) case final t?) (ac: ac, from: t.from, hz: deal.covers(ac) && deal.on.contains('monthly') ? t.from - monthlyOff : t.from, free: t.free),
-    ];
+    final set = s.mapArea != null || s.areaCenter != null || s.myPos != null || s.lm != landmarks.first;
+    return Tap(
+      key: const ValueKey('whereBar'),
+      onTap: onTap,
+      child: Container(
+        height: height,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: box(bg: p.bg, w: 2, c: p.tx),
+        child: Row(
+          children: [
+            const Ic('search', size: 18),
+            const SizedBox(width: 10),
+            Expanded(child: set ? T(s.whereLabel, s: 15, w: 800, ell: true) : T('Where? Area, landmark or hostel', s: 15, c: p.mu, ell: true)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Filters" with a count badge; opens the Filters sheet (sort is in there).
+class FiltersBtn extends StatelessWidget {
+  const FiltersBtn({super.key, required this.onTap});
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final n = s.filterCount;
+    return Tap(
+      key: const ValueKey('filtersBtn'),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: box(w: 2, c: p.tx),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Ic('sliders', size: 16),
+            const SizedBox(width: 8),
+            const T('Filters', s: 13, w: 800, nowrap: true),
+            if (n > 0) ...[const SizedBox(width: 6), Container(color: p.ac, padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), child: T('$n', s: 12, w: 800, c: p.ai))],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// F21 W2: the real cost of a hostel's cheapest bed that fits the filters.
+({int fee, int move, int? hz})? cardCost(AppState s, Hostel h) {
+  final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
+  if (rs.isEmpty) return null;
+  rs.sort((a, b) => a.rent.compareTo(b.rent));
+  final q = s.quote(h.id, rs.first.ac, rs.first.share);
+  return (fee: q.fee, move: q.move, hz: q.hzFee < q.fee ? q.hzFee : null);
+}
+
+/// Photo-first hostel card (F21 W2): photo, save heart, rank once, a green
+/// Hostelzy price only when there's a deal, then the real cost.
+class HostelCard extends StatelessWidget {
+  const HostelCard(this.h, {super.key, this.first = false});
+  final Hostel h;
+  final bool first;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final photos = s.photosOf[h.id] ?? const [];
+    final saved = s.saved[h.id] ?? false;
+    final cost = cardCost(s, h);
     final best = s.bestQuote(h.id, f: s.fR);
+    final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
+    final free = s.freeOf(h.id).f;
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -245,129 +269,66 @@ class HostelCard extends StatelessWidget {
         s.sheet = null;
         s.hid = h.id;
         s.dealAc = null;
+        s.rulesOpen = false;
       }),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: 108,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Stripes(
-                    step: 6,
-                    height: 118,
-                    border: Border.all(width: 1, color: p.hl),
-                    child: Stack(
-                      children: [
-                        Container(
-                          alignment: Alignment.bottomLeft,
-                          padding: const EdgeInsets.all(6),
-                          child: T('facade', s: 10, mono: true, c: p.mu),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 168,
+              child: CustomPaint(
+                painter: Hatch(p.sf, 8, 16, base: p.bg),
+                child: Container(
+                  decoration: box(w: 1, c: p.hl),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
+                      if (first)
+                        Positioned(left: 8, top: 8, child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T('#1 near you', s: 13, w: 800, c: p.bg))),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Tap(
+                          key: ValueKey('save-${h.id}'),
+                          onTap: () {
+                            s.update(() => s.saved[h.id] = !saved);
+                            s.toastMsg(saved ? 'Removed from saved' : 'Saved on this phone.');
+                          },
+                          child: Container(width: 40, height: 40, alignment: Alignment.center, color: p.bg, child: Ic('heart', size: 18, color: saved ? p.ad : p.tx)),
                         ),
-                        if (s.sortBy == 'rec')
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6), child: T('#${s.rankOf(h.id)}', s: 13, w: 800, c: p.bg)),
-                          ),
-                        if (best != null)
-                          Positioned(
-                            left: -1,
-                            right: -1,
-                            bottom: -1,
-                            child: Container(color: p.gn, padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6), child: T(best.ribbon, s: 11, w: 800, c: p.ai)),
-                          ),
-                      ],
-                    ),
+                      ),
+                      Positioned(left: 8, bottom: 8, child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6), child: T(photos.isEmpty ? 'No photos yet' : '1 / ${photos.length}', s: 12, c: p.mu))),
+                      if (ribbon != null)
+                        Positioned(right: 0, bottom: 0, child: Container(color: p.gb, padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8), child: T(ribbon, s: 13, w: 800, c: p.gn))),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Css(
-                      s: 11,
-                      w: 600,
-                      lh: 1.3,
-                      child: Row(
-                        children: [
-                          Expanded(child: T('${h.gender} · ${h.area}', ls: .08, upper: true, c: p.ad, ell: true)),
-                          const SizedBox(width: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Ic('star', size: 11, color: p.tx),
-                              const SizedBox(width: 3),
-                              T(h.reviews == 0 ? 'New' : '${jsNum(h.rating)} · ${h.reviews}', ls: .08, c: p.tx),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    T(h.name, w: 800, s: 17, lh: 1.15),
-                    const SizedBox(height: 4),
-                    T('${kmLabel(s.kmFor(h))} ${s.kmFrom} · ${featOf(h)}', s: 13, c: p.mu),
-                    // F08: rank and its reasons, never the score number.
-                    const SizedBox(height: 3),
-                    Rich([sp(context, '#${s.rankOf(h.id)} near ${s.lm}', w: 800, c: p.tx), sp(context, ' · ${s.rankReasons(h.id)}')], s: 12, c: p.mu, lh: 1.35),
-                    if (best != null) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: [
-                          for (final id in dealMenu.where(deal.on.contains))
-                            Container(color: p.gb, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6), child: T(dealPerk(id), s: 11, w: 600, c: p.gn)),
-                        ],
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 4),
-                      T('No Hostelzy deal yet', s: 12, c: p.mu),
-                    ],
-                    const Spacer(),
-                    const SizedBox(height: 10),
-                    for (final l in lines) ...[
-                      if (l != lines.first) const SizedBox(height: 3),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [RoomTypeTag(l.ac), const SizedBox(width: 6), Flexible(child: T('${l.free} free', s: 12, c: p.mu, ell: true))],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              if (l.hz == l.from) T('from ', s: 12, c: p.mu),
-                              if (l.hz < l.from) ...[
-                                Text(fmt(l.from), style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
-                                const SizedBox(width: 4),
-                              ],
-                              Rich([sp(context, fmt(l.hz), s: 16, w: 800), sp(context, '/mo', s: 12, c: p.mu)]),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: T(h.name, w: 800, s: 18, lh: 1.2)),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('star', size: 13, color: p.tx), const SizedBox(width: 3), T(h.reviews == 0 ? 'New' : jsNum(h.rating), s: 14, w: 800)]),
                 ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            T('${h.gender} · ${h.area} · ${kmLabel(s.kmFor(h))} ${s.kmFrom} · $free free', s: 14, c: p.mu),
+            if (cost != null) ...[
+              const SizedBox(height: 4),
+              Rich([
+                sp(context, '${fmt(cost.fee)}/mo', w: 800, c: p.tx),
+                sp(context, ' · ${fmt(cost.move)} to move in · electricity ${h.terms.electricityExtra ? 'extra' : 'included'}'),
+              ], s: 14, c: p.mu),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -599,10 +560,10 @@ class DetailScreen extends StatelessWidget {
     final free = s.freeOf(h.id).f;
     final photos = s.photosOf[h.id] ?? const [];
     final saved = s.saved[h.id] ?? false;
-    // F03: the deal table's room type drives the bottom bar.
-    final dv = dealView(s, h);
-    final dq = s.quote(h.id, dv.ac, dv.share);
     final deal = s.dealsOf(h.id);
+    // F21 W2: the cheapest bed sets "From … · … to move in" and the advance line.
+    final low = ([...rs]..sort((a, b) => a.rent.compareTo(b.rent))).first;
+    final q0 = s.quote(h.id, low.ac, low.share);
     // F16: sharing × room type grid; one column per type the hostel has.
     final kinds = [if (h.hasNon) false, if (h.ac) true];
     ({int price, int free})? cell(int n, bool ac) {
@@ -737,7 +698,7 @@ class DetailScreen extends StatelessWidget {
                                 ),
                               ),
                               T('${kmLabel(s.kmFor(h))} ${s.kmFrom}'),
-                              T(h.instant ? 'Instant booking' : 'Owner confirms holds'),
+                              if (s.visited[h.id] != null) const T('Visited by Hostelzy'),
                             ],
                           ),
                         ),
@@ -745,25 +706,16 @@ class DetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                // F14: Visited by Hostelzy + whether the owner confirmed the free beds.
-                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VisitedBlock(h)),
-                DealBlock(h),
-                // F18: any number of tags (new hostels may have fewer than four).
-                if (h.tags.isNotEmpty)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: p.hl,
-                      border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv)),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < h.tags.length; i += 2) ...[if (i > 0) const SizedBox(height: 1), tagRow(i)]]),
-                  ),
+                // F21 W2: one table. The Hostelzy price sits in it, walk-in struck through.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [const Kicker('Rent by room type'), T('per month', s: 12, c: p.mu)],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 96, child: Kicker('Rent per month')),
+                      const SizedBox(width: 12),
+                      Expanded(child: T('Advance ${fmt(q0.hzAdv)} · ${fmt(q0.hzBack)} back when you leave', s: 13, w: 600, c: p.mu, lh: 1.35)),
+                    ],
                   ),
                 ),
                 Container(
@@ -784,7 +736,7 @@ class DetailScreen extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                                     decoration: BoxDecoration(border: Border(left: bs(1, p.hl))),
-                                    child: T(ac ? 'AC' : 'Non-AC', s: 11, w: 800, ls: .06, upper: true),
+                                    child: T(ac ? 'AC' : 'Non-AC', s: 12, w: 800, ls: .06, upper: true),
                                   ),
                                 ),
                             ],
@@ -813,14 +765,13 @@ class DetailScreen extends StatelessWidget {
                                         decoration: BoxDecoration(color: cell(n, ac) != null && deal.covers(ac) ? p.gb : null, border: Border(left: bs(1, p.hl))),
                                         child: () {
                                           final c = cell(n, ac);
-                                          // F03: rooms the deal covers show the Hostelzy price, walk-in struck through.
                                           final hz = c != null ? s.quote(h.id, ac, n) : null;
                                           final off = hz != null && hz.hzFee < hz.fee;
                                           return Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              T(c != null ? fmt(off ? hz.hzFee : c.price) : '—', w: 800, s: 17, c: c == null ? p.mu : (off ? p.gn : p.tx)),
-                                              if (off) Text(fmt(c!.price), style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
+                                              T(c != null ? fmt(off ? hz.hzFee : c.price) : '—', w: 800, s: 18, c: c == null ? p.mu : (off ? p.gn : p.tx)),
+                                              if (off) Text('${fmt(c!.price)} walk in', style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
                                               const SizedBox(height: 1),
                                               T(c != null ? (c.free > 0 ? '${c.free} free' : 'Full right now') : 'Not offered', s: 12, c: p.mu),
                                             ],
@@ -836,41 +787,53 @@ class DetailScreen extends StatelessWidget {
                         Container(
                           color: p.gb,
                           padding: const EdgeInsets.all(10),
-                          child: T('Hostelzy deal: ${deal.summary} · ${deal.targetText}', s: 13, w: 800, c: p.gn),
+                          child: T(dealLine(deal), s: 13, w: 800, c: p.gn),
                         ),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: VGap(
-                    gap: 4,
-                    children: [
-                      T('Every bed in a room type costs the same. Window or door, upper or lower.', s: 12, c: p.mu, lh: 1.4),
-                      T('${h.food ? 'Food included. ' : ''}Electricity ${h.terms.electricityExtra ? "extra, by the room's meter" : 'included'}.', s: 12, c: p.mu, lh: 1.4),
-                    ],
+                  child: T('Same price for every bed of a type.${h.food ? ' Food included.' : ''} Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}.', s: 13, c: p.mu, lh: 1.4),
+                ),
+                // F21 W2: rules folded under one row.
+                Tap(
+                  key: const ValueKey('houseRules'),
+                  onTap: () => s.update(() => s.rulesOpen = !s.rulesOpen),
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv), bottom: bs(s.rulesOpen ? 0 : 2, p.dv))),
+                    child: Row(children: [const Expanded(child: T('House rules', w: 800, s: 16)), Ic(s.rulesOpen ? 'chevD' : 'chev', size: 18)]),
                   ),
                 ),
-                Container(
-                  margin: const EdgeInsets.only(top: 14),
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
-                  decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
-                  child: const Kicker('House rules'),
-                ),
-                for (final r in rules)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
-                    child: Css(
-                      s: 14,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(width: 130, child: T(r[0], c: p.mu)),
-                          const SizedBox(width: 12),
-                          Expanded(child: T(r[1], w: 600)),
-                        ],
+                if (s.rulesOpen)
+                  for (final r in rules)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 28),
+                      child: Css(
+                        s: 14,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(width: 120, child: T(r[0], c: p.mu)),
+                            const SizedBox(width: 12),
+                            Expanded(child: T(r[1], w: 600)),
+                          ],
+                        ),
                       ),
                     ),
+                const SizedBox(height: 16),
+                // F14: Visited by Hostelzy + whether the owner confirmed the free beds.
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VisitedBlock(h)),
+                // F18: any number of tags (new hostels may have fewer than four).
+                if (h.tags.isNotEmpty)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: p.hl,
+                      border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv)),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < h.tags.length; i += 2) ...[if (i > 0) const SizedBox(height: 1), tagRow(i)]]),
                   ),
                 // F07: the owner's number shows only after a hold.
                 OwnerContact(h),
@@ -890,22 +853,17 @@ class DetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (dq.any) ...[
-                      Text('${fmt(dq.move)} walk in', style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
-                      T('${fmt(dq.hzMove)} to move in', w: 800, s: 18),
-                    ] else ...[
-                      Rich([sp(context, 'From ${fmt(s.fromOf(h))}'), sp(context, '/mo', s: 12, w: 400, c: p.mu)], w: 800, s: 18),
-                      T('$free beds free right now', s: 12, c: p.mu),
-                    ],
+                    Rich([sp(context, 'From ${fmt(q0.hzFee)}'), sp(context, '/mo', s: 13, w: 400, c: p.mu)], w: 800, s: 19),
+                    T('${fmt(q0.hzMove)} to move in · $free free', s: 13, c: p.mu),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Cta(
-                dq.any ? 'Book with deal' : 'Pick a bed',
+                'Pick a bed',
                 onTap: () {
+                  s.holdOpt = 'free';
                   s.openPicker();
-                  if (dq.any && h.ac && h.hasNon) s.pickRoomType(dv.ac ? 'AC' : 'Non-AC');
                 },
                 height: 50,
                 px: 18,
@@ -918,6 +876,13 @@ class DetailScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// "Hostelzy price: ₹200 off every month · ₹500 exit" (F21 W2 table footer).
+String dealLine(Deals d) {
+  final rest = [for (final id in dealMenu.where((x) => x != 'monthly' && d.on.contains(x))) dealPerk(id)];
+  final parts = [if (d.on.contains('monthly')) '${fmt(monthlyOff)} off every month', ...rest, if (d.target != 'all') d.targetText];
+  return '${d.on.contains('monthly') ? 'Hostelzy price' : 'Hostelzy deal'}: ${parts.join(' · ')}';
 }
 
 // ------------------------------------------------------------ picker
@@ -933,9 +898,10 @@ class PickerScreen extends StatelessWidget {
     final room = rs.where((r) => r.n == s.room).firstOrNull ?? rs[0];
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final hasSel = sb != null && sb.b != null;
-    // F12: Room sits beside Plan; Plan stays the default.
-    const modes = [('plan', 'Plan'), ('room', 'Room'), ('list', 'List'), ('building', 'Building')];
-    final locked = s.floorLocked(h.id) && (s.mode == 'plan' || s.mode == 'building');
+    // F12: Room sits beside Plan; Plan stays the default. F21 W2: Building
+    // folds into Plan's floors; the list is a "See cheapest beds" link.
+    const modes = [('plan', 'Plan'), ('room', 'Room')];
+    final locked = s.floorLocked(h.id) && s.mode == 'plan';
 
     Widget body;
     if (locked) {
@@ -944,10 +910,8 @@ class PickerScreen extends StatelessWidget {
       body = RoomMode(rooms: rs, room: room);
     } else if (s.mode == 'plan') {
       body = _PlanMode(rooms: rs, room: room);
-    } else if (s.mode == 'list') {
-      body = _ListMode(rooms: rs);
     } else {
-      body = _BuildingMode(rooms: rs, room: room);
+      body = _ListMode(rooms: rs);
     }
 
     return Column(
@@ -990,6 +954,17 @@ class PickerScreen extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Tap(
+              key: const ValueKey('cheapest'),
+              onTap: () => s.update(() => s.mode = s.mode == 'list' ? 'plan' : 'list'),
+              child: T(s.mode == 'list' ? '‹ Back to the plan' : 'See cheapest beds ›', s: 14, w: 800, c: p.ad),
+            ),
           ),
         ),
         if (h.ac && h.hasNon)
@@ -1366,135 +1341,6 @@ class _ListMode extends StatelessWidget {
   }
 }
 
-class _BuildingMode extends StatelessWidget {
-  const _BuildingMode({required this.rooms, required this.room});
-  final List<Room> rooms;
-  final Room room;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    Widget floorRow(int f) {
-      final rs = rooms.where((r) => r.floor == f).toList();
-      return Container(
-        decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(border: Border(right: bs(2, p.tx))),
-                child: T('F$f', w: 800, s: 14),
-              ),
-              for (var i = 0; i < rs.length; i++)
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: rs[i].n == room.n && s.bed != null ? p.sf : transparent,
-                      border: i > 0 ? Border(left: bs(1, p.hl)) : null,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        T('${rs[i].n}', s: 11, w: 600, c: p.mu),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 3,
-                          runSpacing: 3,
-                          children: [
-                            for (final b in rs[i].beds)
-                              () {
-                                final l = lookOf(p, b, s.bed);
-                                return Tap(
-                                  enabled: l.can,
-                                  onTap: () => s.pickBed(b),
-                                  child: BedBox(look: l.look, width: 16, height: 26),
-                                );
-                              }(),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Kicker('Cross-section · tap any free bed'),
-          const SizedBox(height: 10),
-          LayoutBuilder(
-            builder: (context, c) => Container(
-              height: 14,
-              margin: EdgeInsets.symmetric(horizontal: c.maxWidth * .1),
-              decoration: BoxDecoration(
-                color: p.sf,
-                border: Border(top: bs(2, p.tx), left: bs(2, p.tx), right: bs(2, p.tx)),
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: bs(2, p.tx), left: bs(2, p.tx), right: bs(2, p.tx)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final f in floorsOf(rooms).reversed) floorRow(f),
-                Container(
-                  decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          width: 40,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(border: Border(right: bs(2, p.tx))),
-                          child: const T('G', w: 800, s: 14),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: T('Reception · dining hall · bike parking', s: 12, c: p.mu),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // `height:8px;margin-inline:-6px`: base slab wider than the building.
-          SizedBox(
-            height: 8,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [Positioned(left: -6, right: -6, top: 0, bottom: 0, child: Container(color: p.tx))],
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Legend(items: pickerLegend),
-        ],
-      ),
-    );
-  }
-}
-
-// ------------------------------------------------------------ hold status
-
 class HoldScreen extends StatelessWidget {
   const HoldScreen({super.key});
   @override
@@ -1518,15 +1364,15 @@ class HoldScreen extends StatelessWidget {
       final m = switch (st) {
         // F17: a booking stays "paying" until the owner confirms the money.
         'paying' => switch (pay?.status) {
-          'waiting' => ['Waiting for ${i.hh.owner}', amt, 'Payment sent · ${i.hh.owner} needs to see $amt with UTR $utr in their account. Until then the bed is not booked yet.', 'sf', 'tx'],
-          'missing' => ['Not received', amt, '${i.hh.owner} says the payment didn’t arrive. Check UTR $utr in your UPI app. If the money left your account, send ${i.hh.owner} the UPI receipt on WhatsApp, or ask your bank.', 'sf', 'tx'],
+          'waiting' => ['Waiting for ${i.hh.owner}', amt, 'Payment sent · ${i.hh.owner} needs to see $amt with UPI reference $utr in their account. Until then the bed is not booked yet.', 'sf', 'tx'],
+          'missing' => ['Not received', amt, '${i.hh.owner} says the payment didn’t arrive. Check UPI reference $utr in your UPI app. If the money left your account, send ${i.hh.owner} the UPI receipt on WhatsApp, or ask your bank.', 'sf', 'tx'],
           _ => ['Pay the advance', amt, 'Pay ${i.hh.owner} by UPI, then enter the UTR. The bed is held for you meanwhile; it says Booked only after ${i.hh.owner} confirms.', 'sf', 'tx'],
         },
-        'booked' when pay?.done != null => ['Booked', 'Yours.', '${i.hh.owner} confirmed $amt on ${pay!.done}. Show ${hold.ref ?? 'your HZ code'} at the hostel on move-in day.', 'gn', 'ai'],
+        'booked' when pay?.done != null => ['Booked', 'Yours.', '${i.hh.owner} confirmed $amt on ${pay!.done}. Show booking code ${hold.ref ?? ''} at the hostel on move-in day.', 'gn', 'ai'],
         'waiting' => ['Free hold', cd(i.left), 'left on your free hold. ${i.hh.owner} doesn’t know yet: tell them on WhatsApp so they keep the bed.', 'sf', 'tx'],
         'confirmed' => ['Confirmed by ${i.hh.owner}', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
         'held' => ['Held for you', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
-        'booked' => ['Booked', 'Yours.', 'Advance paid to ${i.hh.owner}. Show ${hold.ref ?? 'your HZ code'} when you move in; your deal is locked.', 'gn', 'ai'],
+        'booked' => ['Booked', 'Yours.', 'Advance paid to ${i.hh.owner}. Show booking code ${hold.ref ?? ''} when you move in. Your price is fixed.', 'gn', 'ai'],
         _ when s.expiredHolds.contains(hold.id) => ['Hold expired', '0:00', 'Your hold has ended. Bed ${hold.bed} is free for everyone again. You can hold it again if it’s still free.', 'sf', 'tx'],
         _ => ['Released', '—', 'The hold ended. You paid nothing.', 'sf', 'tx'],
       };
@@ -1546,7 +1392,7 @@ class HoldScreen extends StatelessWidget {
         ('Room', '${i.r.n} · ${i.r.share} sharing · Floor ${i.r.floor}'),
         ('Rent', '${fmt(q.hzFee)} a month'),
         ('Hold type', o.title),
-        if (hold.opt == 'book') ...[(st == 'booked' ? 'Paid to ${i.hh.owner}' : 'Advance to ${i.hh.owner}', fmt(hold.paid)), if (pay?.utr != null) ('UTR', utr), ('HZ code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Deal locked', hold.perks.join(' · '))] else ('Paid now', '₹0'),
+        if (hold.opt == 'book') ...[(st == 'booked' ? 'Paid to ${i.hh.owner}' : 'Advance to ${i.hh.owner}', fmt(hold.paid)), if (pay?.utr != null) ('UPI reference', utr), ('Booking code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Your price is fixed', hold.perks.join(' · '))] else ('Paid now', '₹0'),
       ];
       steps = [
         TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),

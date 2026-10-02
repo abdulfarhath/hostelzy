@@ -7,7 +7,7 @@ import '../map_config.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
-import 'screens_tenant.dart' show filtered;
+import 'screens_tenant.dart' show WhereBar, filtered;
 
 // F17 board 9 + F18 "Map v2": a real map (OpenStreetMap tiles, attribution
 // shown) with price pins for the hostels that match the filters, an area
@@ -118,16 +118,8 @@ class MapScreen extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Tap(
-                  key: const ValueKey('mapArea'),
-                  onTap: () => s.update(() => s.sheet = 'areas'),
-                  child: Container(
-                    height: 46,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: box(bg: p.bg, w: 2, c: p.tx),
-                    child: Row(children: [const Ic('pin', size: 16), const SizedBox(width: 8), Expanded(child: T(s.mapAreaLabel, s: 15, w: 800, ell: true)), Ic('chevD', size: 16, color: p.tx)]),
-                  ),
-                ),
+                // F21 W2: the same "Where?" field as Explore.
+                child: KeyedSubtree(key: const ValueKey('mapArea'), child: WhereBar(onTap: s.openWhere, height: 46)),
               ),
               const SizedBox(width: 8),
               Tap(
@@ -194,7 +186,7 @@ class MapScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       T('Hostelzy is adding hostels area by area. Try another area or clear the filters.', s: 13, c: p.mu),
                       const SizedBox(height: 10),
-                      OutlineCta('Pick another area', icon: 'pin', height: 46, fs: 14, onTap: () => s.update(() => s.sheet = 'areas')),
+                      OutlineCta('Pick another area', icon: 'pin', height: 46, fs: 14, onTap: s.openWhere),
                     ],
                   ),
                 )

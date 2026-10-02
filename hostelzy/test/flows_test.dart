@@ -68,7 +68,7 @@ void main() {
     final s = AppState();
     await pumpApp(tester, s);
     expect(find.text('See the'), findsOneWidget);
-    await tap(tester, find.text('Get started'));
+    await tap(tester, find.text('Sign in'));
     expect(s.screen, 'login');
     // No Google sign-in in tests: it says so, and the local fallback works.
     await tap(tester, find.text('Continue with Google'));
@@ -88,7 +88,7 @@ void main() {
     expect((s.screen, s.signedIn, s.account, s.phoneVerified, s.meName, s.meShort), ('role', true, null, false, 'Asha Kumari', 'Asha K.'));
     await tap(tester, find.text('I need a bed'));
     expect(s.screen, 'explore');
-    expect(find.text('Beds near Hitec City'), findsOneWidget);
+    expect(find.text('Find a bed'), findsOneWidget);
     s.dispose();
   });
 
@@ -97,14 +97,14 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Anjani Residency'));
     expect(s.screen, 'detail');
-    await tap(tester, find.text('Book with deal'));
+    await tap(tester, find.text('Pick a bed'));
     expect(s.screen, 'picker');
     await tap(tester, find.text('FREE').first);
     expect(s.bed, isNotNull);
     final bed = s.bed!;
     await tap(tester, find.text('Hold bed'));
-    expect(find.text('Book bed $bed'), findsOneWidget);
-    await tap(tester, find.text('Hold free'));
+    expect((s.sheet, s.holdOpt), ('hold', 'free'));
+    await tap(tester, find.text('Hold bed $bed free'));
     expect(s.screen, 'hold');
     expect(find.text('FREE HOLD'), findsOneWidget);
     expect(find.text('Tell Srinivas on WhatsApp'), findsOneWidget);
@@ -119,13 +119,15 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('bed picker list and building modes', (tester) async {
+  testWidgets('bed picker: Plan and Room, cheapest beds as a link (F21 W2)', (tester) async {
     final s = AppState(start: 'picker', role: 'tenant');
     await pumpApp(tester, s);
-    await tap(tester, find.text('List'));
+    expect(find.text('Building'), findsNothing);
+    expect(find.text('List'), findsNothing);
+    await tap(tester, find.text('See cheapest beds ›'));
     expect(find.textContaining('beds you can take'.toUpperCase()), findsOneWidget);
-    await tap(tester, find.text('Building'));
-    expect(find.text('CROSS-SECTION · TAP ANY FREE BED'), findsOneWidget);
+    await tap(tester, find.text('‹ Back to the plan'));
+    expect(s.mode, 'plan');
     s.dispose();
   });
 
@@ -253,6 +255,9 @@ void main() {
     // Tenant: hostel page rules and the hold steps.
     final s = AppState(start: 'detail', role: 'tenant');
     await pumpApp(tester, s);
+    // F21 W2: the refund sits next to the rent; rules are folded.
+    expect(find.text('Advance ₹3,000 · ₹2,500 back when you leave'), findsOneWidget);
+    await tap(tester, find.text('House rules'));
     expect(find.text('₹3,000 + first month at move-in'), findsOneWidget);
     expect(find.text('₹1,000 kept from the advance'), findsOneWidget);
     expect(find.textContaining("2 months"), findsNothing);
@@ -409,20 +414,26 @@ void main() {
     expect(s.fR, 'AC');
     expect(find.text('Sai Sri Ladies Hostel'), findsNothing);
     expect(find.text('NON-AC'), findsNothing);
+    // F21 W2: Non-AC lives in the Filters sheet.
+    await tap(tester, find.byKey(const ValueKey('filtersBtn')));
     await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
+    expect(s.fR, 'Non-AC');
+    await tap(tester, find.textContaining('Show '));
     expect(find.text('Nest 42 Co-living'), findsNothing);
     expect(find.text('Sai Sri Ladies Hostel'), findsOneWidget);
-    await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
+    s.clearFilters();
     expect(s.fR, 'Any');
+    await tester.pump();
 
-    // Hostel page: sharing × type grid.
+    // Hostel page: sharing × type grid, the Hostelzy price with walk-in struck through.
     await tap(tester, find.text('Anjani Residency'));
     expect(find.text('Not offered'), findsOneWidget);
-    expect(find.text('₹11,000'), findsOneWidget);
-    expect(find.text('Every bed in a room type costs the same. Window or door, upper or lower.'), findsOneWidget);
+    expect(find.text('₹10,800'), findsOneWidget);
+    expect(find.text('₹11,000 walk in'), findsOneWidget);
+    expect(find.text('Same price for every bed of a type. Food included. Electricity extra, by meter.'), findsOneWidget);
 
     // Picker: AC filter skips non-AC rooms.
-    await tap(tester, find.text('Book with deal'));
+    await tap(tester, find.text('Pick a bed'));
     await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
     expect(s.findBed('anjani', '${s.room}-A').r!.ac, isFalse);
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
@@ -456,21 +467,18 @@ void main() {
   testWidgets('Hostelzy deals: Explore badges, deal table, owner picks deals (F03)', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     await pumpApp(tester, s);
-    expect(find.text('Save ₹1,200 in 6 mo'), findsWidgets);
+    // F21 W2: the green ribbon shows the Hostelzy price (or the deal's headline).
+    expect(find.textContaining('Hostelzy price ₹'), findsWidgets);
     expect(find.text('₹1,000 less upfront'), findsOneWidget);
-    await tap(tester, find.widgetWithText(ChipBtn, 'Best deals'));
+    s.update(() => s.sortBy = 'deals');
     expect(filtered(s).first.id, 'anjani');
     expect(s.bestQuote(filtered(s).last.id), isNull);
+    s.update(() => s.sortBy = 'rec');
 
-    // Hostel page: With Hostelzy vs Walk in, 6-month headline.
+    // Hostel page: the deal sits in the rent table.
     await tap(tester, find.text('Anjani Residency'));
-    expect(find.text('Hostelzy deal · Non-AC'), findsOneWidget);
-    expect(find.text('YOU SAVE IN THE FIRST 6 MONTHS'), findsOneWidget);
-    expect(find.text('₹200 less to move in + ₹200/month'), findsOneWidget);
-    expect(find.text('Plus ₹500 more'), findsOneWidget);
-    expect(find.text('Free laundry weekly'), findsOneWidget);
-    expect(find.text('Book with deal'), findsOneWidget);
-    expect(find.text('Hostelzy deal: ₹200 off every month · all rooms'), findsOneWidget);
+    expect(find.text('Hostelzy price: ₹200 off every month · ₹500 exit · Free laundry'), findsOneWidget);
+    expect(find.text('Pick a bed'), findsOneWidget);
 
     // Owner: max 3 deals, AC rooms only.
     s.jump('oMore', 'owner');
@@ -487,13 +495,10 @@ void main() {
     expect(s.dealsOf('anjani').on, {'exit', 'monthly', 'first'});
     expect(s.dealsOf('anjani').covers(false), isFalse);
 
-    // Tenant: the non-AC table now points to the AC deal.
+    // Tenant: the table says the deal is for AC rooms only.
     s.jump('detail', 'tenant');
-    s.update(() => s.dealAc = false);
     await tester.pump();
-    expect(find.text('No Hostelzy deal on non-AC rooms'), findsOneWidget);
-    await tap(tester, find.text('See the deal on AC rooms'));
-    expect(find.text('Hostelzy deal · AC'), findsOneWidget);
+    expect(find.text('Hostelzy price: ₹200 off every month · ₹500 exit · ₹500 off first month · AC rooms only'), findsOneWidget);
     s.dispose();
   });
 
@@ -510,27 +515,30 @@ void main() {
     final s = AppState(start: 'detail', role: 'tenant');
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    await tap(tester, find.text('Book with deal'));
+    await tap(tester, find.text('Pick a bed'));
     expect(s.screen, 'picker');
     await tap(tester, find.text('FREE').first);
     final bed = s.bed!;
     final r = s.findBed('anjani', bed).r!;
     await tap(tester, find.text('Hold bed'));
-    expect(find.text('Book bed $bed'), findsOneWidget);
-    expect(find.text('Pay Srinivas today'), findsOneWidget);
-    expect(find.text('Your deal is locked'), findsOneWidget);
-    expect(find.text('${fmt(r.rent - 200)} monthly'), findsOneWidget);
-    expect(find.text('₹500 exit only'), findsOneWidget);
-    expect(find.text('1 hour · 2 h for Members'), findsOneWidget);
+    // F21 W2: two equal options, free hold picked first.
+    expect((s.sheet, s.holdOpt), ('hold', 'free'));
+    expect(find.text('Hold free · 1 hour'), findsOneWidget);
+    expect(find.text('Hold bed $bed free'), findsOneWidget);
+    await tap(tester, find.byKey(const ValueKey('opt-book')));
+    expect(find.text('Pay ₹3,000 to book'), findsNWidgets(2));
+    expect(find.text('Your price is fixed'), findsOneWidget);
+    expect(find.textContaining('${fmt(r.rent - 200)} monthly'), findsOneWidget);
+    expect(find.textContaining('₹500 exit only'), findsOneWidget);
     expect(find.textContaining('₹299'), findsNothing);
     final ref = s.peekRef;
-    await tap(tester, find.text('Pay advance'));
+    await tap(tester, find.byKey(const ValueKey('holdGo')));
     // F17: not booked until Srinivas confirms the advance arrived.
     var h = s.holds.single;
     expect((h.opt, h.status, h.ref, h.paid, s.sheet), ('book', 'paying', ref, 3000, 'payAdv'));
     expect(s.findBed('anjani', bed).b!.state, 'held');
     expect(find.text('Srinivas · sample.owner@upi'), findsOneWidget);
-    await tap(tester, find.text('I’ve already paid · enter UTR').last);
+    await tap(tester, find.text('I’ve paid · enter UPI reference').last);
     expect(s.sheet, 'payUtr');
     await tester.enterText(find.byType(TextField).last, '402188341297');
     await tester.pump();
@@ -577,9 +585,6 @@ void main() {
     for (final n in [301, 302, 303, 304, 305]) {
       expect(find.text('$n'), findsOneWidget);
     }
-    await tap(tester, find.text('Building'));
-    expect(find.text('F2'), findsNothing);
-    expect(find.text('F3'), findsOneWidget);
     s.dispose();
 
     // Owner bed map: Sai Sri has 3, 5 and 2 rooms per floor.
@@ -604,7 +609,7 @@ void main() {
     expect(filtered(s).first.id, 'anjani');
     expect(s.rankOf('anjani'), 1);
     expect(s.rankReasons('anjani'), 'Quick replies, beds kept up to date');
-    expect(find.text('#1'), findsOneWidget);
+    expect(find.text('#1 near you'), findsOneWidget);
     expect(s.rankReasons('nest42'), startsWith('Few reviews yet'));
 
     // Hostel page → Reviews.
@@ -663,6 +668,7 @@ void main() {
   testWidgets('Fair Play: rules, owner number after a hold, case, strikes (F07)', (tester) async {
     // A new owner accepts the rules with "I agree" (F21: no fake SMS code).
     final s = AppState(start: 'role');
+    s.signedIn = true; // the role picker comes after sign-in
     await pumpApp(tester, s);
     await tap(tester, find.text('I run a hostel'));
     expect(s.screen, 'oRules');
@@ -748,8 +754,10 @@ void main() {
       s.sheet = 'hold';
     });
     await tester.pump();
-    expect(find.text('2 hours · Member perk'), findsOneWidget);
-    await tap(tester, find.text('Pay advance'));
+    expect(find.text('Hold free · 2 hours'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4)); // the reward toast goes
+    await tap(tester, find.byKey(const ValueKey('opt-book')));
+    await tap(tester, find.byKey(const ValueKey('holdGo')));
     final hold = s.holds.single;
     s.confirmPayment(s.payOfHold(hold.id)!, true); // the owner saw the money
     s.update(() => s.sheet = null);
@@ -1149,9 +1157,10 @@ void main() {
     s.update(() {
       s.bed = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;
       s.sheet = 'hold';
+      s.holdOpt = 'book';
     });
     await tester.pump();
-    await tap(tester, find.text('Pay advance'));
+    await tap(tester, find.byKey(const ValueKey('holdGo')));
     final h = s.holds.single;
     final pay = s.payOfHold(h.id)!;
     await tap(tester, find.text('Pay ₹3,000 by UPI').last);
@@ -1205,7 +1214,7 @@ void main() {
     final w = AppState(start: 'explore', role: 'tenant');
     await tester.pumpWidget(MaterialApp(home: AppScope(state: w, child: const HostelzyShell())));
     await tester.pump();
-    expect(find.text('Beds near Hitec City'), findsOneWidget);
+    expect(find.text('Find a bed'), findsOneWidget);
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
     expect(find.text('9:41'), findsNothing);
     expect(find.textContaining('Mobile prototype'), findsNothing);
@@ -1226,6 +1235,7 @@ void main() {
       s.hid = 'anjani';
     });
     await tester.pump();
+    await tap(tester, find.text('House rules'));
     expect(find.text('11 pm'), findsOneWidget);
     s.dispose();
 
@@ -1697,9 +1707,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('rail-holds')));
     await tester.pump();
     expect(w.screen, 'holds');
-    await tester.tap(find.byKey(const ValueKey('rail-action')));
+    await tester.tap(find.byKey(const ValueKey('rail-saved')));
     await tester.pump();
-    expect(w.sheet, 'search');
+    expect(w.screen, 'saved');
     // No rail on screens without tabs.
     w.update(() {
       w.sheet = null;
@@ -1831,7 +1841,7 @@ void main() {
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
     await tap(tester, find.text('Pick another area'));
-    expect(e.sheet, 'areas');
+    expect(e.screen, 'where');
     e.dispose();
     resetSampleData();
   });
@@ -2095,16 +2105,18 @@ void main() {
   testWidgets('map v2: area picker, search this area, use my location (F18)', (tester) async {
     final s = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, s);
-    expect(find.text('All areas'), findsOneWidget);
+    // F21 W2: the same "Where?" field as Explore.
+    expect(find.text('Where? Area, landmark or hostel'), findsOneWidget);
     // Pick an area: only hostels there, on the map and in Explore.
     await tap(tester, find.byKey(const ValueKey('mapArea')));
-    expect(s.sheet, 'areas');
-    expect(find.text('Soon'), findsWidgets); // areas with no hostels yet
-    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('areaQ')), matching: find.byType(TextField)), 'kond');
+    expect(s.screen, 'where');
+    expect(find.text('Coming soon'), findsWidgets); // areas with no hostels yet
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('whereQ')), matching: find.byType(TextField)), 'kond');
     await tester.pump();
     expect(find.text('Ameerpet'), findsNothing);
-    await tap(tester, find.text('Kondapur'));
-    expect((s.mapArea, s.sheet), ('Kondapur', null));
+    await tap(tester, find.byKey(const ValueKey('area-Kondapur')));
+    expect((s.mapArea, s.screen), ('Kondapur', 'map'));
+    expect(find.text('Kondapur'), findsWidgets);
     expect(filtered(s).map((h) => h.area).toSet(), {'Kondapur'});
     expect(find.text(fmt(hostelById('anjani').from)), findsNothing); // Madhapur pin hidden
     s.tab('explore');
@@ -2441,7 +2453,7 @@ void main() {
     expect((s.screen, s.toast), ('oToday', 'HZ-9999 isn’t in this account. Sign in with the account that sent or got it.'));
     r.go('/r?c=nonsense');
     await tester.pumpAndSettle();
-    expect(s.toast, 'That link has no HZ code.');
+    expect(s.toast, 'That link has no booking code.');
     // A resident invite is kept for sign-up.
     r.go('/j?c=anj-7q2');
     await tester.pumpAndSettle();
@@ -3260,20 +3272,22 @@ void main() {
     s.update(() => s.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
     s.watchPushToken();
     await pumpApp(tester, s);
-    // First home after a Google sign-in: the explainer, once.
+    // F21 W2: no prompt on arrival; tenants are asked after their first hold, once.
     s.pickRole('tenant');
     await tester.pump();
     await tester.pump();
-    expect((s.screen, s.permKind, s.pushAsked), ('perm', 'notifications', true));
+    expect((s.screen, s.pushAsked), ('explore', false));
+    await s.askPushAfterHold();
+    await tester.pump();
+    expect((s.sheet, s.pushAsked), ('holdNotify', true));
+    expect(find.text('Turn on notifications so the owner’s reply reaches you.'), findsOneWidget);
     await tap(tester, find.text('Not now'));
-    expect((s.screen, fp.asked), ('explore', 0));
+    expect((s.sheet, fp.asked), (null, 0));
     expect(data.tokens, isEmpty);
     // "Not now" is remembered, also on the phone.
     expect(s.snapshot()['pushAsked'], isTrue);
-    s.pickRole('tenant');
-    await tester.pump();
-    await tester.pump();
-    expect(s.screen, 'explore');
+    await s.askPushAfterHold();
+    expect(s.sheet, isNull);
     // Settings shows the switch off while Android has it off; tapping asks right away.
     s.update(() => s.screen = 'settings');
     await tester.pump();

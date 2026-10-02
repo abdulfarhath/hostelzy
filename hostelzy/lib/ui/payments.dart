@@ -18,7 +18,7 @@ class PaySteps4 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = PalScope.of(context);
-    final steps = ['Pay by UPI', 'Enter UTR', 'Owner confirms', p.kind == 'rent' ? 'Paid' : 'Booked'];
+    final steps = ['Pay by UPI', 'UPI reference', 'Owner confirms', p.kind == 'rent' ? 'Paid' : 'Booked'];
     final cur = at ??
         switch (p.status) {
           'waiting' || 'missing' => 2,
@@ -95,7 +95,7 @@ class PayAdvSheet extends StatelessWidget {
           ),
           _shieldNote(context, [sp(context, 'You pay ${h.owner} directly. Hostelzy never holds your money. The bed says '), sp(context, 'Booked', w: 800, c: p.tx), sp(context, ' only after ${h.owner} confirms the money arrived.')]),
           Cta('Pay ${fmt(pay.amt)} by UPI', height: 54, px: 16, fs: 15, onTap: () => s.payByUpi(pay)),
-          OutlineCta('I’ve already paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(pay)),
+          OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(pay)),
         ],
       ),
     );
@@ -121,11 +121,17 @@ class PayUtrSheet extends StatelessWidget {
           VGap(
             gap: 6,
             children: [
-              const T('12-digit UTR from your UPI app', w: 800, s: 13),
+              // F21 W2: plain words, with a picture of where it is.
+              const T('UPI reference', w: 800, s: 15),
+              T('12 digits, in your UPI app under the payment', s: 13, c: p.mu),
               Field(
                 value: s.payUtr,
                 numeric: true,
                 placeholder: '4021 8834 1297',
+                height: 56,
+                fs: 22,
+                w: 800,
+                ls: .04,
                 onChanged: (v) => s.update(() {
                   final d = v.replaceAll(RegExp(r'\D'), '');
                   s.payUtr = d.length > 12 ? d.substring(0, 12) : d;
@@ -133,13 +139,57 @@ class PayUtrSheet extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            color: p.sf,
-            child: Rich([sp(context, 'Where to find it:', w: 800), sp(context, ' open the payment in your UPI app → details → '), sp(context, 'UTR', w: 800), sp(context, ' or '), sp(context, 'UPI Ref. No.', w: 800)], s: 13, lh: 1.45),
-          ),
+          UpiRefHint(amount: pay.amt, to: owner),
           _shieldNote(context, [sp(context, '$owner checks this number in their bank or UPI app. No screenshots needed.')]),
           Cta('Send to $owner', height: 54, px: 16, fs: 15, opacity: s.payUtr.length == 12 ? 1 : .4, onTap: s.sendPayUtr),
+        ],
+      ),
+    );
+  }
+}
+
+/// F21 W2: a drawing of a UPI receipt with the reference boxed, and the
+/// three names apps use for it.
+class UpiRefHint extends StatelessWidget {
+  const UpiRefHint({super.key, required this.amount, required this.to});
+  final int amount;
+  final String to;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: box(w: 1, c: p.hl),
+      child: Row(
+        children: [
+          Container(
+            width: 120,
+            color: p.sf,
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                T('${fmt(amount)} paid', s: 12, w: 800),
+                T('To $to', s: 11, c: p.mu, ell: true),
+                const SizedBox(height: 8),
+                T('UPI Ref. No.', s: 11, c: p.mu),
+                const SizedBox(height: 2),
+                Container(padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4), decoration: box(w: 2, c: p.ac), child: const T('4021 8834 1297', s: 11, w: 800, nowrap: true)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Rich([
+              sp(context, 'Open the payment in your UPI app. It’s called '),
+              sp(context, 'UPI Ref. No.', w: 800),
+              sp(context, ', '),
+              sp(context, 'UTR', w: 800),
+              sp(context, ' or '),
+              sp(context, 'Transaction ID', w: 800),
+              sp(context, '.'),
+            ], s: 13, lh: 1.45),
+          ),
         ],
       ),
     );
@@ -189,7 +239,7 @@ class PaymentsToCheck extends StatelessWidget {
                             ],
                           ),
                         ),
-                        KV('UTR', utrSpaced(x.utr ?? ''), keyWidth: 70),
+                        KV('UPI ref.', utrSpaced(x.utr ?? ''), keyWidth: 70),
                         KV('UPI note', x.note, keyWidth: 70),
                         Padding(
                           padding: const EdgeInsets.all(12),
@@ -206,7 +256,7 @@ class PaymentsToCheck extends StatelessWidget {
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _shieldNote(context, [sp(context, 'Open your bank or UPI app and look for this UTR. Tap “Yes, received” only when you see the money. The tenant sees “Booked” or “Paid” only after that.')]),
+                  child: _shieldNote(context, [sp(context, 'Open your bank or UPI app and look for this UPI reference. Tap “Yes, received” only when you see the money. The tenant sees “Booked” or “Paid” only after that.')]),
                 ),
               ],
             ),

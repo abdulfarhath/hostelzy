@@ -42,6 +42,7 @@ extension OnPhoneActions on AppState {
     ],
     'fairAccepted': fairAccepted,
     'pushAsked': pushAsked,
+    'opens': opens,
     // F20: reminders ring from this phone.
     'rem': remJson(),
     // F18 (F5): the owner's house rules and menu stay on the phone.

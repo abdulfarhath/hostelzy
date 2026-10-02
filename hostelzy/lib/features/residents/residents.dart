@@ -274,8 +274,10 @@ extension ResidentsActions on AppState {
   void placeHold([String? how]) {
     final b = findBed(hid, bed).b;
     if (b == null) return;
-    if (activeHolds >= AppState.maxHolds) return toastMsg('You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.');
+    // F21 W2: guests sign in here, then the hold goes ahead.
     final opt = how ?? holdOpt;
+    if (!needSignIn(opt == 'book' ? 'book' : 'hold', () => placeHold(opt))) return;
+    if (activeHolds >= AppState.maxHolds) return toastMsg('You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.');
     final r = findBed(hid, bed).r!;
     final h0 = hostelById(hid);
     final q = quote(hid, r.ac, r.share);
@@ -305,7 +307,10 @@ extension ResidentsActions on AppState {
       sheet = pay != null ? 'payAdv' : null;
       payId = pay?.id;
     });
-    if (pay == null) toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
+    if (pay == null) {
+      toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
+      askPushAfterHold();
+    }
   }
 
   /// S2: the owner adds a resident (or a booking) on the server; the list,
@@ -401,6 +406,9 @@ extension ResidentsActions on AppState {
       sheet = res.payId != null ? 'payAdv' : null;
       payId = res.payId;
     });
-    if (res.payId == null) toastMsg('Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification.');
+    if (res.payId == null) {
+      toastMsg('Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification.');
+      askPushAfterHold();
+    }
   }
 }

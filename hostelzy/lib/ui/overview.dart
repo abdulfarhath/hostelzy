@@ -43,7 +43,6 @@ class OverviewPage extends StatelessWidget {
       [
         ('A · Floor plan of one room', {'start': 'picker', 'role': 'tenant', 'mode': 'plan'}),
         ('B · List of every open bed', {'start': 'picker', 'role': 'tenant', 'mode': 'list'}),
-        ('C · Building cross-section', {'start': 'picker', 'role': 'tenant', 'mode': 'building'}),
         ('Hold options', {'start': 'picker', 'role': 'tenant', 'sheet': 'hold'}),
         ('Hold status', {'start': 'hold', 'role': 'tenant'}),
         ('D · Room layout (F12)', {'start': 'picker', 'role': 'tenant', 'mode': 'room'}),

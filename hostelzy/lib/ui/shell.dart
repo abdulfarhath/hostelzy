@@ -6,6 +6,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'fairplay.dart';
+import 'guest.dart';
 import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
@@ -373,6 +374,7 @@ class _AppBody extends StatelessWidget {
     'welcome' => const WelcomeScreen(),
     'login' => const LoginScreen(),
     'saved' => const SavedScreen(),
+    'where' => const WhereScreen(),
     'roleGate' => const RoleGateScreen(),
     'oCreate' => const CreateLayoutScreen(),
     'oPublished' => const LayoutPublishedScreen(),
@@ -441,24 +443,20 @@ class _AppBody extends StatelessWidget {
 }
 
 const _tabs = {
-  'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('*', 'Search', 'search'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
+  'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('saved', 'Saved', 'heart'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
   'resident': [('rHome', 'Home', 'home'), ('food', 'Food', 'utensils'), ('rPay', 'Pay rent', 'wallet'), ('help', 'Help', 'wrench'), ('me', 'Me', 'user')],
   'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Booking', 'plus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
 };
 
 void _openTab(AppState s, String k) {
   if (k != '*') return s.tab(k);
-  if (s.role == 'tenant') {
-    s.update(() => s.sheet = 'search');
-  } else {
-    s.update(() {
-      s.sheet = 'add';
-      s.addName = '';
-      s.addPhone = '';
-      s.addBed = null;
-      s.addDate = 'Today';
-    });
-  }
+  s.update(() {
+    s.sheet = 'add';
+    s.addName = '';
+    s.addPhone = '';
+    s.addBed = null;
+    s.addDate = 'Today';
+  });
 }
 
 /// F17 board 11: tablets and desktop get the tabs as a left rail.
@@ -481,7 +479,7 @@ class _Rail extends StatelessWidget {
           for (var i = 0; i < list.length; i++)
             () {
               final t = list[i];
-              final center = i == 2, act = s.screen == t.$1;
+              final center = t.$1 == '*', act = s.screen == t.$1;
               return Tap(
                 key: ValueKey('rail-${t.$1 == '*' ? 'action' : t.$1}'),
                 onTap: () => _openTab(s, t.$1),
@@ -527,7 +525,7 @@ class _TabBar extends StatelessWidget {
           for (var i = 0; i < list.length; i++)
             () {
               final t = list[i];
-              final center = i == 2, act = s.screen == t.$1;
+              final center = t.$1 == '*', act = s.screen == t.$1;
               return Expanded(
                 child: Tap(
                   onTap: () => _openTab(s, t.$1),
@@ -569,10 +567,16 @@ class _Sheet extends StatelessWidget {
     final p = PalScope.of(context);
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
-      'search' => 'Search',
+      'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
+      'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
       'areas' => 'Pick an area',
-      'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
+      'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
+      'signIn' => switch (s.afterSignIn) {
+        'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
+        'book' => 'Sign in to book this bed',
+        _ => 'Sign in to hold this bed',
+      },
       'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
@@ -587,7 +591,7 @@ class _Sheet extends StatelessWidget {
       'team' => 'Hostelzy team',
       'addRoom' => 'Add a room',
       'payAdv' => 'Pay the advance',
-      'payUtr' => 'Enter the UTR',
+      'payUtr' => 'Enter the UPI reference',
       'manager' => 'Add a manager',
       'photo' => 'This photo',
       'fixLock' => 'Fix this room?',
@@ -612,6 +616,12 @@ class _Sheet extends StatelessWidget {
       'manager' => '${hostelById(s.ownHid).name} · team',
       'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
       'water' => 'Reminders',
+      'hold' => hostelById(s.hid).name,
+      'signIn' => s.afterSignIn == 'enquiry' ? hostelById(s.hid).name : sb?.b != null ? 'Bed ${sb!.b!.id} · ${s.afterSignIn == 'book' ? 'pay the advance to book' : 'free ${s.isMember ? '2-hour' : '1-hour'} hold'}' : null,
+      'holdNotify' => () {
+        final h = s.holds.where((h) => h.id == s.holdId).firstOrNull;
+        return h == null ? null : 'Held · ${cd(s.holdSecs - (s.now - h.start) / 1000)} left';
+      }(),
       'addRem' => 'My reminders',
       'waterOffer' => 'New in Hostelzy · stay on track',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
@@ -621,6 +631,8 @@ class _Sheet extends StatelessWidget {
     };
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
+      'holdNotify' => const HoldNotifySheet(),
+      'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
       'areas' => const AreasSheet(),
       'hold' => const _HoldSheet(),
@@ -651,7 +663,11 @@ class _Sheet extends StatelessWidget {
       'waterOffer' => const WaterOfferSheet(),
       _ => const SizedBox(),
     };
-    void close() => s.update(() => s.sheet = null);
+    void close() => s.update(() {
+      // F21 W2: closing "Sign in to hold" drops the hold it was for.
+      if (s.sheet == 'signIn') s.afterSignIn = null;
+      s.sheet = null;
+    });
     return Container(
       color: const Color.fromRGBO(20, 18, 17, .55),
       child: LayoutBuilder(
@@ -692,6 +708,7 @@ class _Sheet extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Tap(
+                                  key: const ValueKey('sheetClose'),
                                   onTap: close,
                                   child: Container(
                                     width: 36,
@@ -726,67 +743,68 @@ class _SearchSheet extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final count = filtered(s).length;
-    Widget group(String label, Widget child) => VGap(gap: 8, children: [Kicker(label), child]);
-    const segPad = EdgeInsets.symmetric(vertical: 10, horizontal: 8);
-    Widget lmChip(String l) => Expanded(
-      child: ChipBtn(l, on: l == s.lm, onTap: () => s.update(() => s.lm = l), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12), fs: 14),
-    );
+    // F21 W2: Filters sheet. Sort lives here; same labels as the Explore chips.
+    Widget group(String label, Widget child) => VGap(gap: 8, children: [T(label, w: 800, s: 15), child]);
+    const segPad = EdgeInsets.symmetric(vertical: 11, horizontal: 6);
+    const chipPad = EdgeInsets.symmetric(vertical: 10, horizontal: 12);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 18,
         children: [
+          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
+          group('For', Seg(opts: const [('Any', 'Anyone'), ('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad, center: true)),
           group(
-            'Near',
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            'Room',
+            wrap(6, [
+              for (final n in ['2', '3', '4']) ChipBtn('$n sharing', on: s.fS == n, pad: chipPad, onTap: () => s.update(() => s.fS = s.fS == n ? 'Any' : n)),
+              for (final r in ['AC', 'Non-AC']) ChipBtn(r, on: s.fR == r, pad: chipPad, onTap: () => s.update(() => s.fR = s.fR == r ? 'Any' : r)),
+            ]),
+          ),
+          group(
+            'Budget',
+            wrap(6, [
+              for (final (k, l) in const [('Any', 'Any'), ('6k', 'Under ₹6,000'), ('8k', 'Under ₹8,000'), ('10k', 'Under ₹10,000')]) ChipBtn(l, on: s.fB == k, pad: chipPad, onTap: () => s.update(() => s.fB = k)),
+            ]),
+          ),
+          Tap(
+            key: const ValueKey('foodToggle'),
+            onTap: () => s.update(() => s.fFood = !s.fFood),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(children: [lmChip(landmarks[0]), const SizedBox(width: 6), lmChip(landmarks[1])]),
-                const SizedBox(height: 6),
-                Row(children: [lmChip(landmarks[2]), const SizedBox(width: 6), lmChip(landmarks[3])]),
+                const T('Food included', s: 15, w: 800),
+                Container(
+                  width: 44,
+                  height: 24,
+                  padding: const EdgeInsets.all(2),
+                  decoration: box(bg: s.fFood ? p.ac : transparent, w: 2, c: p.tx),
+                  alignment: s.fFood ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(width: 16, height: 16, color: s.fFood ? p.ai : p.tx),
+                ),
               ],
             ),
           ),
-          group('Who is it for', Seg(opts: const [('Any', 'Any'), ('Women', 'Women'), ('Men', 'Men'), ('Co-living', 'Co-ed')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad)),
-          group('Sharing', Seg(opts: same(['Any', '2', '3', '4']), cur: s.fS, onPick: (v) => s.update(() => s.fS = v), pad: segPad)),
-          group('Room', Seg(opts: same(['Any', 'AC', 'Non-AC']), cur: s.fR, onPick: (v) => s.update(() => s.fR = v), pad: segPad)),
-          group('Monthly budget', Seg(opts: const [('Any', 'Any'), ('6k', '<6k'), ('8k', '<8k'), ('10k', '<10k')], cur: s.fB, onPick: (v) => s.update(() => s.fB = v), pad: segPad)),
-          Tap(
-            onTap: () => s.update(() => s.fFood = !s.fFood),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                border: Border(top: bs(1, p.hl), bottom: bs(1, p.hl)),
+          Row(
+            children: [
+              Tap(key: const ValueKey('clearAll'), onTap: s.clearFilters, child: const Padding(padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4), child: T('Clear all', w: 800, s: 15, underline: true))),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Cta(
+                  'Show $count hostels',
+                  height: 54,
+                  px: 16,
+                  fs: 15,
+                  onTap: () {
+                    if (s.screen != 'explore' && s.screen != 'map') {
+                      s.tab('explore');
+                    } else {
+                      s.update(() => s.sheet = null);
+                    }
+                  },
+                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const T('Food included', s: 15, w: 600),
-                  Container(
-                    width: 44,
-                    height: 24,
-                    padding: const EdgeInsets.all(2),
-                    decoration: box(bg: s.fFood ? p.ac : transparent, w: 2, c: p.tx),
-                    alignment: s.fFood ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(width: 16, height: 16, color: s.fFood ? p.ai : p.tx),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Cta(
-            'Show $count hostels',
-            parts: ['Show', '$count', 'hostels'],
-            height: 54,
-            px: 16,
-            fs: 15,
-            onTap: () {
-              if (s.screen != 'explore' && s.screen != 'map') {
-                s.tab('explore');
-              } else {
-                s.update(() => s.sheet = null);
-              }
-            },
+            ],
           ),
         ],
       ),
@@ -794,8 +812,8 @@ class _SearchSheet extends StatelessWidget {
   }
 }
 
-/// F04 board 3: book by paying the advance straight to the owner (deal
-/// locked, HZ code), or hold free for an hour.
+/// F21 W2: two equal ways to take a bed: hold free for an hour (picked
+/// first) or pay the advance to book. One button, one verb.
 class _HoldSheet extends StatelessWidget {
   const _HoldSheet();
   @override
@@ -808,137 +826,75 @@ class _HoldSheet extends StatelessWidget {
     final b = sb!.b!, r = sb.r!;
     final q = s.quote(h.id, r.ac, r.share);
     final perks = s.lockedPerks(q, h);
-    Widget line(String k, Widget v, {Color? bg, Color? fg}) => Container(
-      color: bg,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: null,
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [T(k, s: 14, c: fg ?? p.mu), v]),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-          child: T('${h.name} · Room ${r.n} · ${r.share} sharing${h.ac ? ' · ${r.type}' : ''} · ${b.spot}', s: 13, c: p.mu),
-        ),
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          decoration: box(w: 2, c: p.tx),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: const Kicker('Pay the owner to book'),
-              ),
-              Container(
-                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: line('Advance (refundable)', T(fmt(q.hzAdv), s: 14, w: 800)),
-              ),
-              Container(
-                color: p.tx,
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [T('Pay ${h.owner} today', w: 800, s: 15, c: p.bg), T(fmt(q.hzAdv), w: 800, s: 26, c: p.bg)],
-                ),
-              ),
-              const Padding(padding: EdgeInsets.fromLTRB(12, 10, 12, 4), child: Kicker('Pay at the hostel on move-in')),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+    final book = s.holdOpt == 'book';
+    Widget card(String opt, String title, String sub, List<String> ticks) {
+      final on = s.holdOpt == opt;
+      return Expanded(
+        child: Tap(
+          key: ValueKey('opt-$opt'),
+          onTap: () => s.update(() => s.holdOpt = opt),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: box(bg: on ? p.ab : null, w: 2, c: on ? p.ac : p.tx),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    T('First month fee', s: 14, c: p.mu),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        if (q.hzFirst < q.fee) ...[
-                          Text(fmt(q.fee), style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
-                          const SizedBox(width: 4),
-                        ],
-                        T(fmt(q.hzFirst), s: 14, w: 800),
-                      ],
-                    ),
+                    Expanded(child: T(title, w: 800, s: 17, lh: 1.2)),
+                    const SizedBox(width: 6),
+                    Container(width: 18, height: 22, decoration: box(w: 2, c: p.tx), padding: const EdgeInsets.all(3), child: on ? Container(color: p.tx) : null),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          padding: const EdgeInsets.all(12),
-          color: q.any ? p.gb : p.sf,
-          child: q.any
-              ? VGap(
-                  gap: 8,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [T('Your deal is locked', w: 800, s: 15, c: p.gn), T(s.peekRef, s: 12, w: 800, ls: .04, c: p.gn)],
-                    ),
-                    LayoutBuilder(
-                      builder: (context, c) => Wrap(
-                        runSpacing: 6,
-                        children: [
-                          for (final k in perks)
-                            SizedBox(
-                              width: c.maxWidth / 2,
-                              child: Row(children: [Ic('check', size: 14, color: p.gn), const SizedBox(width: 6), Flexible(child: T(k, s: 13))]),
-                            ),
-                        ],
-                      ),
-                    ),
-                    T('Show this code at the hostel. The owner sees the same deal in their app.', s: 12, c: p.mu, lh: 1.4),
-                  ],
-                )
-              : T('No Hostelzy deal on this room type. Exit rules are still locked: ${fmt(q.hzExit)} maintenance, ${h.terms.noticeDays} days notice.', s: 13, c: p.mu, lh: 1.4),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [T('Back when you leave', s: 13, c: p.mu), Rich([sp(context, fmt(q.hzBack), w: 800), sp(context, ' of your ${fmt(q.hzAdv)}', c: p.mu)], s: 13)],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(
-            children: [
-              Expanded(child: Cta('Pay advance', height: 56, px: 14, fs: 15, onTap: () => s.placeHold('book'))),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Tap(
-                  onTap: () => s.placeHold('free'),
-                  child: Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: box(w: 2, c: p.tx),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [const T('Hold free', w: 800, s: 15), T(s.isMember ? '2 hours · Member perk' : '1 hour · 2 h for Members', s: 11, w: 600, c: p.mu)],
-                    ),
+                const SizedBox(height: 6),
+                T(sub, s: 13, c: p.mu),
+                const SizedBox(height: 8),
+                for (final t in ticks)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Padding(padding: EdgeInsets.only(top: 2), child: Ic('check', size: 13)), const SizedBox(width: 6), Expanded(child: T(t, s: 13, lh: 1.35))]),
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: T('You pay ${fmt(q.hzAdv)} by UPI straight to ${h.owner}. Hostelzy never holds your money; we keep the record and your deal.', s: 12, c: p.mu, lh: 1.4),
-        ),
-      ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: VGap(
+        gap: 12,
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                card('free', 'Hold free · ${s.isMember ? '2 hours' : '1 hour'}', 'Go and see it first', const ['₹0 now', 'Bed kept for you', 'Ends on its own']),
+                const SizedBox(width: 10),
+                card('book', 'Pay ${fmt(q.hzAdv)} to book', 'Sure already', ['Bed is yours once ${h.owner} confirms', 'Your price is fixed']),
+              ],
+            ),
+          ),
+          Container(
+            color: p.sf,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            child: Rich([
+              sp(context, 'Bed ${b.id} · ${fmt(q.hzFee)}/mo', w: 800, c: p.tx),
+              sp(context, ' · ${r.share} sharing${h.ac ? ' · ${r.type}' : ''} · Advance ${fmt(q.hzAdv)} · ${fmt(q.hzBack)} back when you leave'),
+            ], s: 13, c: p.mu, lh: 1.45),
+          ),
+          if (book && q.any)
+            Container(
+              color: p.gb,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              child: Rich([sp(context, 'Hostelzy deal: ', w: 800), sp(context, perks.join(' · ')), sp(context, ' · booking code ${s.peekRef}', w: 800)], s: 13, c: p.gn, lh: 1.45),
+            ),
+          Cta(book ? 'Pay ${fmt(q.hzAdv)} to book' : 'Hold bed ${b.id} free', key: const ValueKey('holdGo'), height: 56, px: 16, fs: 15, onTap: () => s.placeHold(s.holdOpt)),
+          T(book ? 'You pay by UPI straight to ${h.owner}. Hostelzy never holds your money.' : 'If ${h.owner} doesn’t keep it within the hour, the bed is free again. You pay nothing.', s: 12, c: p.mu, lh: 1.4),
+        ],
+      ),
     );
   }
 }

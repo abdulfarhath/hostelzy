@@ -50,8 +50,17 @@ class WelcomeScreen extends StatelessWidget {
               child: VGap(
                 gap: 12,
                 children: [
-                  Cta('Get started', onTap: () => s.go(phoneOtpLogin ? 'phone' : 'login'), bg: p.ai, fg: p.ac, iconSize: 20),
-                  const T('For tenants, residents and hostel owners.', s: 14, w: 600),
+                  // F21 W2: look around first; sign-in comes at the first hold.
+                  Cta('Find a bed', key: const ValueKey('findBed'), onTap: s.browse, bg: p.ai, fg: p.ac, iconSize: 20),
+                  const T('No sign-in needed to look around.', s: 14, w: 600),
+                  Wrap(
+                    spacing: 18,
+                    runSpacing: 8,
+                    children: [
+                      for (final (k, l) in const [('owner', 'I run a PG'), ('resident', 'I live in a PG'), (null, 'Sign in')])
+                        Tap(onTap: () => s.startSignIn(k), child: T(l, s: 14, w: 800, underline: true)),
+                    ],
+                  ),
                 ],
               ),
             ),

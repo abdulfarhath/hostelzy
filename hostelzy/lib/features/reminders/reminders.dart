@@ -336,9 +336,10 @@ extension RemindersActions on AppState {
     };
   }
 
-  /// First-time offer, once after sign-in, where reminders can ring.
+  /// First-time offer, once after sign-in, where reminders can ring. F21 W2:
+  /// not on first arrival, only from the 3rd app open.
   void maybeOfferReminders() {
-    if (!rem.available || remOffered || !signedIn || sheet != null || screen != homeOf[role]) return;
+    if (!rem.available || remOffered || opens < 3 || !signedIn || sheet != null || screen != homeOf[role]) return;
     update(() {
       remOffered = true;
       sheet = 'waterOffer';

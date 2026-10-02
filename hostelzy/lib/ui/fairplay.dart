@@ -259,7 +259,7 @@ class OwnerContact extends StatelessWidget {
                   decoration: box(w: 2, c: p.tx),
                   child: Row(
                     children: [
-                      Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [const T('Ask on WhatsApp', w: 800, s: 14), T('Saved on Hostelzy with an HZ code', s: 11, w: 600, c: p.mu)])),
+                      Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [const T('Ask on WhatsApp', w: 800, s: 14), T('Saved on Hostelzy with a booking code', s: 11, w: 600, c: p.mu)])),
                       const Ic('msg', size: 18),
                     ],
                   ),

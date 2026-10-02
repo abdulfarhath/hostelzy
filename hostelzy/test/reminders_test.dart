@@ -185,7 +185,13 @@ void main() {
     final s = AppState(start: 'explore', role: 'tenant');
     final rem = NoReminders(available: true);
     await s.startReminders(rem);
+    // F21 W2: not on first arrival; from the 3rd app open.
+    s.opens = 2;
     await _pump(tester, s);
+    await tester.pump();
+    expect(s.sheet, isNull);
+    s.opens = 3;
+    s.maybeOfferReminders(); // what Explore does each time it shows
     await tester.pump();
     expect(s.sheet, 'waterOffer');
     expect(find.text('Want water reminders?'), findsOneWidget);

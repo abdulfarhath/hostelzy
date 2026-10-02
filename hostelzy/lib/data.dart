@@ -789,7 +789,7 @@ const planTiers = <({int upTo, String label, int price, String note})>[
   (upTo: 1 << 30, label: '80+ beds', price: 1499, note: 'Plus a featured spot in your area'),
 ];
 int planTierOf(int beds) => planTiers.indexWhere((t) => beds <= t.upTo);
-const planIncluded = 'Verified enquiries with HZ codes · holds · residents app for rent and complaints · deals · Hostelzy score.';
+const planIncluded = 'Verified enquiries with booking codes · holds · residents app for rent and complaints · deals · Hostelzy score.';
 
 /// Reminder after 5 days late; deals paused after 15.
 const remindAfterDays = 5, pauseAfterDays = 15;

@@ -265,9 +265,9 @@ class RentPayScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
               child: Row(children: [Expanded(child: T(switch (rent.status) {
                 'waiting' => 'Waiting for $owner',
-                'missing' => '$owner couldn’t find this UTR',
+                'missing' => '$owner couldn’t find this UPI reference',
                 _ => dueNote(terms, st.joinDay),
-              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UTR ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to $owner', s: 12, c: p.mu)]),
+              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UPI reference ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to $owner', s: 12, c: p.mu)]),
             ),
             if (sample) ...[
               const LineRow('Rent, bed 204-B', '₹7,600'),
@@ -287,13 +287,13 @@ class RentPayScreen extends StatelessWidget {
                 children: [
                   if (rent.status == 'due') ...[
                     Cta('Pay ${fmt(rent.amt)} by UPI', onTap: s.payMyRent),
-                    if (started) OutlineCta('I’ve paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(rent)),
+                    if (started) OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(rent)),
                   ],
                   if (rent.status == 'waiting')
-                    Cta('Remind $owner on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, I paid ${fmt(rent.amt)} rent for bed ${st.bed} by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
+                    Cta('Remind $owner on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, I paid ${fmt(rent.amt)} rent for bed ${st.bed} by UPI. UPI reference ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
                   if (rent.status == 'missing') ...[
-                    Cta('Fix the UTR', onTap: () => s.openPayUtr(rent)),
-                    OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, about my rent for bed ${st.bed}: UTR ${utrSpaced(rent.utr ?? '')}.')),
+                    Cta('Fix the UPI reference', onTap: () => s.openPayUtr(rent)),
+                    OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, about my rent for bed ${st.bed}: UPI reference ${utrSpaced(rent.utr ?? '')}.')),
                   ],
                   T(upi.isEmpty ? '$owner hasn’t added a UPI ID yet. Hostelzy never holds the money.' : 'You pay $upi directly. Hostelzy never holds the money; $owner confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
                 ],
@@ -327,7 +327,7 @@ class RentPayScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     T('${monthYear(appToday)} · $owner confirmed on ${rent.done}', s: 14, w: 600),
                     const SizedBox(height: 12),
-                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · ${h.name} · bed ${st.bed} · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by $owner on ${rent.done}')),
+                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · ${h.name} · bed ${st.bed} · ${monthYear(appToday)} · ${fmt(rent.amt)} · UPI ref. ${utrSpaced(rent.utr ?? '')} · confirmed by $owner on ${rent.done}')),
                   ],
                 ),
               ),
