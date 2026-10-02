@@ -111,6 +111,39 @@ Invoice invoiceFromRow(Map<String, dynamic> r) => Invoice(
   key: r['id'] as String,
 );
 
+/// S4: a review from the server. The id is the server's.
+Review reviewFromRow(Map<String, dynamic> r) {
+  final at = DateTime.parse(r['created_at'] as String).toLocal();
+  return Review(
+    id: r['id'] as String,
+    hid: r['hostel_id'] as String,
+    name: r['author_name'] as String? ?? 'Resident',
+    stars: r['stars'] as int,
+    text: r['body'] as String? ?? '',
+    stay: '${r['kind'] == 'exit' ? 'Left' : 'Posted'} ${dayMon(at)}',
+    kind: r['kind'] == 'exit' ? 'exit' : '30-day',
+    cats: {for (final e in ((r['cats'] as Map?) ?? const {}).entries) '${e.key}': (e.value as num).toInt()},
+    layout: r['layout'] as String?,
+    advance: r['advance'] as String?,
+    again: r['again'] as String?,
+    reply: r['reply'] as String?,
+    replyWhen: r['replied_at'] == null ? null : 'replied ${dayMon(DateTime.parse(r['replied_at'] as String).toLocal())}',
+    fresh: r['reply'] == null,
+  );
+}
+
+/// S4: a hostel's review aggregates, from its reviews: category averages,
+/// advance returned in full of those who left, layout accurate % (Mostly = half).
+ReviewStats statsOf(List<Review> rs) {
+  double avg(String c) {
+    final v = [for (final r in rs) if (r.cats[c] != null) r.cats[c]!];
+    return v.isEmpty ? 0 : v.reduce((a, b) => a + b) / v.length;
+  }
+  final exits = rs.where((r) => r.kind == 'exit' && r.advance != null).toList();
+  final lay = [for (final r in rs) if (r.layout != null) r.layout == 'Yes' ? 1.0 : r.layout == 'Mostly' ? .5 : 0.0];
+  return ReviewStats([for (final c in reviewCats) avg(c)], exits.where((r) => r.advance == 'all').length, exits.length, lay.isEmpty ? 0 : (100 * lay.reduce((a, b) => a + b) / lay.length).round());
+}
+
 /// Complaint ids are uuids on the server; the app keys them by a stable int.
 int complaintKey(String uuid) => int.parse(uuid.replaceAll('-', '').substring(0, 8), radix: 16);
 

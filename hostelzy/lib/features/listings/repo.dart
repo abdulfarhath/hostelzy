@@ -15,7 +15,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -109,6 +109,11 @@ abstract class HostelRepo {
   /// it paid or not received (`paid` | `missing`).
   Future<void> sendInvoiceUtr(String key, String utr);
   Future<void> checkInvoice(String key, String status);
+
+  /// S4: a resident's review of the hostel they stay at (the server checks
+  /// the confirmed stay), and the owner's reply.
+  Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
+  Future<void> replyReview(String id, String reply);
 }
 
 class SampleRepo implements HostelRepo {
@@ -177,6 +182,10 @@ class SampleRepo implements HostelRepo {
   Future<void> sendInvoiceUtr(String key, String utr) async {}
   @override
   Future<void> checkInvoice(String key, String status) async {}
+  @override
+  Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {}
+  @override
+  Future<void> replyReview(String id, String reply) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -333,6 +342,13 @@ class SupabaseRepo implements HostelRepo {
   Future<void> checkInvoice(String key, String status) => db.from('invoices').update({'status': status, if (status == 'paid') 'late': 0}).eq('id', key);
 
   @override
+  Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) =>
+      db.from('reviews').insert({'hostel_id': hid, 'author_name': name, 'kind': kind, 'stars': stars, 'body': body, 'cats': cats, 'layout': layout, 'advance': advance, 'again': again});
+
+  @override
+  Future<void> replyReview(String id, String reply) => db.from('reviews').update({'reply': reply}).eq('id', id);
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -347,7 +363,7 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
-    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*)');
+    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)');
     return listingsFromRows(rows);
   }
 
@@ -371,7 +387,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
   final deals = <String, Deals>{}, rules = <String, List<Rule>>{};
+  final reviews = <String, List<Review>>{};
   for (final h in rows) {
+    // S4: verified residents' reviews, newest first; the rating comes from them.
+    final revRows = (h['reviews'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
+    final revs = reviews[h['id'] as String] = [for (final r in revRows) reviewFromRow(r)];
     final id = h['id'] as String;
     final rs = <Room>[
       for (final r in (h['rooms'] as List? ?? const []).cast<Map<String, dynamic>>())
@@ -415,9 +435,9 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
         gender: h['gender'] as String,
         area: area,
         from: prices.isEmpty ? 0 : prices.reduce((a, b) => a < b ? a : b),
-        // Ratings come from verified reviews (F08); none read yet.
-        rating: 0,
-        reviews: 0,
+        // Ratings come from verified reviews (F08).
+        rating: revs.isEmpty ? 0 : double.parse((revs.fold<int>(0, (a, r) => a + r.stars) / revs.length).toStringAsFixed(1)),
+        reviews: revs.length,
         food: h['food'] as bool? ?? false,
         ac: h['ac'] as bool? ?? false,
         onlyAc: h['only_ac'] as bool? ?? false,
@@ -452,7 +472,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
