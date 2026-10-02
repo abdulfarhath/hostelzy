@@ -57,16 +57,18 @@ also fun, and it keeps residents coming back to the app.
 ## Design
 
 **Design approved · 2026-10-02** (standing approval). Canvas "Hostelzy · F19 Residents fix their room layout": https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR
-Phone boards 390×844 (light; dark copies at the end of rows); console 1440×900. Same look as the owner layout editor (aLayout).
+Phone boards 390×844 (light; dark copies at the end of rows); console 1440×900. Same look as the owner layout editor (aLayout). Updated 2026-10-02 for the founder's change: any room in the hostel, plus a join nudge for non-residents. The example is Rahul, who lives in 204, fixing Room 207.
 
-1. **Resident, My room** (`Main`): their own room's layout only, with "Edit my room". Women's PG privacy: never the floor.
+0. **Non-resident lock sheet** (`Lock`, `LockDark`): the Room tab shows **Edit room** to everyone. For non-residents it opens "Only residents of Anjani Residency can fix room layouts" / "Stay here to help others see the real room.", with **Book a bed** (red), **See beds** and "Already staying here? Ask your owner for your invite code."
+
+1. **Resident, any room in their hostel** (`Main`): Room 207's layout with **Edit room**, and "Residents of Anjani Residency can see and fix every room here." Women's PG floor privacy still applies to outsiders.
 2. **Suggestion editor** (`Edit`, `EditDark`): dark banner "Only you see this until you send it", the room map with the moved item outlined in red, the selection line with nudge arrows, Turn / Reset / Undo / Redo, Status (working / not working), room size, "Checks before sending", and "Send to owner".
 3. **A check fails** (`EditCheck`): "Bed A has a resident · it can’t be deleted"; Send is off and a toast explains why.
 4. **Send sheet** (`Send`): a change summary, an optional note for the owner, "Tenants never see who sent it", and Send.
 5. **After sending** (`After`, tweak): Waiting for owner (Change my suggestion / Withdraw it) · Approved ("Checked by a resident · 2 Oct") · Not approved (owner's reason, Edit my room again).
 6. **Tenant badge** (`Checked`): "Checked by a resident · 2 Oct" on the Room tab; the resident's name is never shown.
-7. **Owner push** (`Push`): "Rahul (Room 204) suggested a layout fix".
-8. **Owner Today card** (`Today`): "Layout fix from Room 204" with the note and "Compare and decide".
+7. **Owner push** (`Push`): "Rahul (lives in 204) suggested a fix for Room 207".
+8. **Owner Today card** (`Today`): "Layout fix for Room 207", from "Rahul V. · lives in 204-B" with the note and "Compare and decide".
 9. **Compare** (`Compare`, `CompareDark`): Now v1 | Suggested, side by side, changes outlined in red, "What changed", the resident's name and note (owner only), then Approve & publish / Reject.
 10. **Reject sheet** (`Reject`): an optional reason with chips, "The current layout stays live".
 11. **Approved** (`Approved`): "Live for tenants", v2 "fix by a resident", v1 kept in history, the tenant badge, and "Undo publish".
