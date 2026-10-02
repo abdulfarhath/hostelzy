@@ -6,7 +6,10 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes});
+/// S6: the signed-in user's Stay Rewards from the server (ledger + profile).
+typedef Rewards = ({bool member, String since, String? code, bool referred, int balance, int friends, bool used, List<({String hid, String what, int amt})> ownerCredits});
+
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
 const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases', 'layout_fixes'];
@@ -165,6 +168,27 @@ FairCase caseFromRow(Map<String, dynamic> r) {
   );
 }
 
+/// S6: Stay Rewards from the profile row and the ledger the user may read
+/// (their own entries, and owner credits for hostels they run).
+Rewards rewardsFrom(Map<String, dynamic>? p, List<Map<String, dynamic>> ledger, {String? me}) {
+  final mine = [for (final e in ledger) if (e['user_id'] == me) e];
+  final since = p?['member_since'] == null ? '' : 'Since ${dayMon(DateTime.parse(p!['member_since'] as String).toLocal())} · first stay via Hostelzy';
+  return (
+    member: p?['member'] as bool? ?? false,
+    since: since,
+    code: p?['ref_code'] as String?,
+    referred: p?['referred_by'] != null,
+    balance: mine.fold<int>(0, (a, e) => a + (e['amount'] as int)),
+    friends: mine.where((e) => e['kind'] == 'referral_referrer').length,
+    used: mine.any((e) => e['kind'] == 'spend'),
+    ownerCredits: [
+      for (final e in ledger)
+        if (e['hostel_id'] != null && (e['kind'] == 'owner_credit' || e['kind'] == 'reversal'))
+          (hid: e['hostel_id'] as String, what: e['kind'] == 'reversal' ? e['reason'] as String? ?? 'Reversed' : 'Member reward · ${e['reason'] ?? ''}', amt: e['amount'] as int),
+    ],
+  );
+}
+
 /// F19: a resident's layout fix from the server.
 LayoutFix fixFromRow(Map<String, dynamic> r, {String? me}) => LayoutFix(
   id: r['id'] as String,
@@ -200,7 +224,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   key: r['id'] as String,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], int? now}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], int? now}) => (
   holds: [
     for (final r in holds)
       holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
@@ -216,6 +240,7 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.
   // S8: the hostels this user runs (owner or manager), and the owners' manager invites.
   myHostels: [for (final r in staff) if (r['user_id'] == me) r['hostel_id'] as String],
+  rewards: profile == null ? null : rewardsFrom(profile.firstOrNull, ledger, me: me),
   managers: [for (final r in managers) (hid: r['hostel_id'] as String, name: r['name'] as String, phone: r['phone'] as String? ?? '', joined: r['used_by'] != null)],
   fixes: [for (final r in fixes) fixFromRow(r, me: me)],
   cases: [for (final r in cases) caseFromRow(r)]..sort((a, b) => (b.openedAt ?? 0).compareTo(a.openedAt ?? 0)),

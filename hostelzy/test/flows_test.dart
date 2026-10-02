@@ -2919,6 +2919,56 @@ void main() {
     s.dispose();
   });
 
+  test('S6: on Supabase, Stay Rewards come from the server ledger; nothing is granted by the phone', () async {
+    final r = rewardsFrom({'member': true, 'member_since': '2026-09-01T10:00:00Z', 'ref_code': 'ASHA-4K7Q', 'referred_by': null}, [
+      {'id': 'l1', 'kind': 'member', 'user_id': 'fb-asha', 'amount': 100},
+      {'id': 'l2', 'kind': 'referral_referrer', 'user_id': 'fb-asha', 'amount': 100},
+      {'id': 'l3', 'kind': 'spend', 'user_id': 'fb-asha', 'amount': -100},
+      {'id': 'l4', 'kind': 'owner_credit', 'hostel_id': 'h1', 'amount': 100, 'reason': 'given at move-in'},
+      {'id': 'l5', 'kind': 'member', 'user_id': 'fb-other', 'amount': 100},
+    ], me: 'fb-asha');
+    expect((r.member, r.code, r.balance, r.friends, r.used, r.referred), (true, 'ASHA-4K7Q', 100, 1, true, false));
+    expect(r.ownerCredits.single.amt, 100);
+    expect(r.since, startsWith('Since '));
+
+    // A new tenant: not a Member yet; their code comes from the server; a friend's code is used once.
+    final s = AppState(start: 'rewards', role: 'tenant');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-ravi', profile: [{'member': false, 'ref_code': null, 'referred_by': null}]));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-ravi', name: 'Ravi', email: 'r@gmail.com'));
+    await s.startLive();
+    expect((s.isMember, s.referralCode), (false, '…'));
+    await s.loadReferralCode();
+    await s.loadReferralCode(); // asked once
+    expect((s.referralCode, fake.calls.where((c) => c == 'refcode').length), ('ASHA-4K7Q', 1));
+    s.update(() => s.friendCode = 'nope');
+    await s.useFriendCode();
+    expect(s.toast, 'Enter your friend’s code, like ASHA-4K7Q.');
+    fake.friendError = 'that code isn\'t valid';
+    s.update(() => s.friendCode = 'ABCD-1234');
+    await s.useFriendCode();
+    expect(s.toast, 'That code isn’t valid. Check it with your friend.');
+    fake.friendError = null;
+    await s.useFriendCode();
+    expect((fake.calls.last, s.referred), ('usecode ABCD-1234', true));
+    expect(s.toast, 'Code saved. You and Ravi each get ${fmt(referralReward)} after your first month at a Hostelzy hostel.');
+    // "Yes, I joined" and "I've moved in" never grant a reward from the phone.
+    s.answerJoined('yes');
+    expect((s.isMember, s.toast), (false, 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'));
+    s.moveIn(Hold(id: 'x', hid: 'anjani', bed: '101-A', room: 101, opt: 'book', start: 0, status: 'booked'));
+    expect((s.role, s.rewardUsed), ('tenant', false));
+    // The server says: Member now, ₹100 balance; the owner's credit shows on their plan.
+    fake.rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-ravi', profile: [{'member': true, 'member_since': '2026-10-02T10:00:00Z', 'ref_code': 'ASHA-4K7Q', 'referred_by': 'fb-asha'}], ledger: [
+      {'id': 'l1', 'kind': 'member', 'user_id': 'fb-ravi', 'amount': 100},
+      {'id': 'l9', 'kind': 'owner_credit', 'hostel_id': 'anjani', 'amount': 100, 'reason': 'given at move-in'},
+    ]);
+    await s.refreshLive();
+    expect((s.isMember, s.rewardBalance, s.referred), (true, 100, true));
+    expect(s.planCredit, 100); // ownHid is anjani in the sample
+    s.stopLive();
+    s.dispose();
+  });
+
   testWidgets('F19: residents fix room layouts; others see the residents-only sheet; the owner compares and decides', (tester) async {
     final owner = hostelById('anjani').owner;
     // A tenant browsing Anjani: Edit room → only residents can fix it.
@@ -3407,7 +3457,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards);
     return 'HZ-5009';
   }
 
@@ -3436,11 +3486,25 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
 
+  // S6: Stay Rewards.
+  String? friendError;
+  @override
+  Future<String> referralCode() async {
+    await _rec('refcode');
+    return 'ASHA-4K7Q';
+  }
+
+  @override
+  Future<String> useReferralCode(String code) async {
+    if (friendError != null) throw Exception(friendError);
+    await _rec('usecode $code');
+    return 'Ravi';
+  }
   // F19: layout fixes.
   @override
   Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async {
@@ -3523,14 +3587,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards);
   }
 }
 

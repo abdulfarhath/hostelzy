@@ -45,6 +45,20 @@ extension SyncActions on AppState {
     // newest one (or the trial, before the first is issued).
     invoices = l.invoices;
     cases = l.cases;
+    // S6: Stay Rewards from the server.
+    final rw = l.rewards;
+    if (rw != null) {
+      member = rw.member;
+      memberSince = rw.since;
+      rewardUsed = rw.used;
+      friendsJoined = rw.friends;
+      rewardBalance = rw.balance;
+      referred = rw.referred;
+      serverRefCode = rw.code ?? serverRefCode;
+      ownerCredits
+        ..clear()
+        ..addAll(rw.ownerCredits);
+    }
     fixes = l.fixes;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
