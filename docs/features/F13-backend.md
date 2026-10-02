@@ -293,7 +293,7 @@ Not needed.
   - The resident gate has "Have an invite code?" and **Ask to join**; the code is filled in when the invite link opened the app (go_router `j/`).
   - Server reasons are shown in plain words.
   - Sample data never pretends to send it.
-- **Next:** with B6's live rows, the owner's "Waiting for you" list reads `invite_signups`, and Approve / Remove call `decide_signup`.
+- **Done later (C · server sign-ups):** the owner's "Waiting for you" list reads `invite_signups`, and Approve / Remove call `decide_signup`.
 
 **C · live writes · 2026-10-02** (branch `feature/c-live-writes`):
 - Signed in on Supabase with live rows (`AppState.onServer`), these actions write to the server first, then refetch. Realtime updates the other phone.
@@ -305,4 +305,10 @@ Not needed.
 - Sample data and the demo APK are unchanged (local only).
 - `Complaint.key` keeps the server id. `LiveRows.myHostel` is the resident's hostel.
 - Test: `C: on Supabase, enquiries, payments and complaints are written to the server`.
-- Still local-only: holds (they need bed ids from the listings) and the owner's sign-up approvals (after #46).
+- Still local-only: holds (they need bed ids from the listings).
+
+**C · server sign-ups · 2026-10-02** (branch `feature/c-server-signups`):
+- On Supabase, the owner's Invite "Waiting for you" list comes from `invite_signups` (pending, not their own), and updates live (migration `20261002090000_c_signups_realtime.sql`).
+- **Approve** calls `decide_signup(id, true)`: the server makes the stay; the app says "<name> is now a resident here." only after it succeeded. **Remove** calls `decide_signup(id, false)`.
+- If it fails it says "Couldn’t save it…". Sample data and the demo are unchanged.
+- Test: `C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server`.

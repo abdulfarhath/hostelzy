@@ -6,10 +6,10 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
-const liveTables = ['holds', 'enquiries', 'payments', 'complaints'];
+const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups'];
 
 int _ms(Object? t) => t == null ? 0 : DateTime.parse(t as String).millisecondsSinceEpoch;
 
@@ -85,7 +85,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   key: r['id'] as String,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const []}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], int? now}) => (
   holds: [for (final r in holds) holdFromRow(r)],
   enquiries: [for (final r in enquiries) enquiryFromRow(r)],
   payments: [for (final r in payments) paymentFromRow(r)],
@@ -93,4 +93,10 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   expired: {for (final r in holds) if (r['status'] == 'expired') r['id'] as String},
   // The hostel this user lives in (a confirmed, current stay), for complaints.
   myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
+  // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
+  signups: [
+    for (final r in signups)
+      if (r['status'] == 'pending' && r['user_id'] != me)
+        Signup(r['id'] as String, r['name'] as String, r['phone'] as String, r['bed'] as String? ?? '', ago((now ?? DateTime.now().millisecondsSinceEpoch) - _ms(r['created_at']))),
+  ],
 );

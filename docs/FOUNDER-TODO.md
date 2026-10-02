@@ -41,6 +41,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Google Cloud → APIs & Services → Credentials → the new **Browser key** (team console) → Application restrictions: **Websites** → add `https://farhath.me/*` and `https://hostelzy.firebaseapp.com/*` → API restrictions: **Identity Toolkit API** and **Token Service API** → Save.
 4c. **Account deletion (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002070000_c_delete_account.sql` → **Run** → "Success".
 4d. **Resident invites (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002080000_c_invites.sql` → **Run** → "Success".
+4f. **Live sign-up list (C)** (after 4d): Supabase → SQL Editor → paste `supabase/migrations/20261002090000_c_signups_realtime.sql` → **Run** → "Success".
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
