@@ -99,3 +99,27 @@ Also on the canvas:
 
 Brand chat view: **B2-a** or **B2-c** (the H gives the room a letter, reads at 32 px).
 B1-b is the simplest. B3 is best kept for posters/splash, not the icon.
+
+---
+
+# Round 3: founder picked B3-a "Full room, fan on" (2026-10-02)
+
+Founder: use B3-a, improve it, try dotted lines, fan, AC, washroom; show a few, founder decides.
+Canvas page **"B3-a improved"**: https://claude.ai/artifact/7AQacMXpVCZUFpDn89ET4D
+
+| Code | What's new on top of B3-a |
+|---|---|
+| **B3-a1** | Real fan (3 blades) + **dotted circle** = where the fan reaches (like F12's coverage layer) |
+| **B3-a2** | **AC unit** on the top wall with **dotted air lines**, + fan |
+| **B3-a3** | **Attached washroom** in the corner (partition, door, commode), + fan |
+| **B3-a4** | **Dotted red path** from the door to your bed ("we take you to your bed"), + fan |
+| **B3-a5** | **Everything**: window, AC + air, fan + dotted reach, washroom, dotted path |
+| **B3-a6** | **Balanced**: window, fan, dotted path, 3 beds (no AC, no washroom) |
+
+All keep: window (double line), bunk, your bed red, others grey, square corners.
+Icon sizes (≤48 px) auto-simplify: fan becomes a dot, path becomes 3 red squares,
+AC a bar, washroom just its walls.
+
+Brand chat view: **B3-a6** or **B3-a4** for the app icon (the red path + red bed tells the story
+at a glance); **B3-a5** for the splash screen and posters (the full room).
+Still **no final files** until the founder picks a code.
