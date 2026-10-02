@@ -130,8 +130,11 @@ const spots = <int, List<String>>{
 const soonDates = ['8 Oct', '12 Oct', '15 Oct', '20 Oct'];
 
 class Bed {
-  Bed({required this.id, required this.letter, required this.room, required this.floor, required this.spot, required this.state, required this.soon});
+  Bed({required this.id, required this.letter, required this.room, required this.floor, required this.spot, required this.state, required this.soon, this.key});
   final String id, letter, spot;
+
+  /// S1: the bed's id on the server (null on sample data).
+  final String? key;
   final int room, floor;
 
   /// free | held | soon | booked
@@ -506,6 +509,7 @@ class Hold {
   /// waiting | confirmed | held | booked | released
   final String status;
   Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks);
+  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p);
 }
 
 /// Countdown text, `cd()` in the prototype.

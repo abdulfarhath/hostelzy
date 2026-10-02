@@ -22,7 +22,9 @@ extension SyncActions on AppState {
   /// replace the lists. Never mixed with samples: on Supabase the lists start
   /// empty (AppState.samples is false).
   void applyLive(LiveRows l) => update(() {
-    holds = l.holds;
+    // S1: the locked deal is shown from what this phone saw when booking.
+    final perks = {for (final h in holds) if (h.perks.isNotEmpty) h.id: h.perks};
+    holds = [for (final h in l.holds) perks[h.id] == null ? h : h.withPerks(perks[h.id]!)];
     enquiries = l.enquiries;
     payments = l.payments;
     complaints = l.complaints;

@@ -318,3 +318,17 @@ Not needed.
 - If the Google token fails, every pending row gets the reason in `push_outbox.error` and stays pending, so it is retried next minute. A row that throws gets its reason, and the other rows still go.
 - A private key pasted with literal `\n` still works.
 - Tests: three new ones in `supabase/functions/tests/fcm.test.ts`.
+
+**S1 · holds and bookings on the server · 2026-10-02** (branch `feature/s1-server-holds`):
+- Listings carry each bed's server id (`Bed.key`).
+- Signed in on Supabase, **Hold free** and **Pay advance** insert the hold on the server. The server checks that the bed is free, allows at most 2 open holds, sets the 1-hour expiry and issues the HZ code. A booking also starts its advance payment (`note` = HZ code). The pay sheet opens on the server's payment.
+- The owner gets the "New hold" push from the server. Plain reasons are shown: "Someone just took this bed", "You can hold 2 beds at a time".
+- **Release:** the tenant's release sets the hold to `released` and cancels its unconfirmed advance; the bed frees itself on the server. An owner's release only releases the hold.
+- Server holds don't expire on the phone; the server's every-minute job ends them and Realtime updates the screen.
+- An advance hold waiting for the owner shows as "Advance · owner to confirm", with its amount from the payment. The locked deal is kept from what this phone showed when booking (it isn't stored on the server).
+- **Migration `20261002100000_s1_holds.sql`:**
+  - A confirmed (`booked`) hold books its bed.
+  - The payer can no longer change a paid or cancelled payment (guard fix). The account-deletion exception is kept.
+  - Tests: `supabase/tests/holds_test.sql`.
+- Sample data and the demo are unchanged.
+- Test: `S1: on Supabase, holds and bookings are placed on the server`.

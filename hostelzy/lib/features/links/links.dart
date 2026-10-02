@@ -126,6 +126,8 @@ extension LinksActions on AppState {
   Hold? get endedHold => holds.where((h) => h.status == 'released').lastOrNull;
 
   bool _expireHolds(int n) {
+    // S1: on Supabase the server ends holds (every minute) and Realtime says so.
+    if (onServer) return false;
     final out = holds.where((h) => const ['waiting', 'confirmed', 'held'].contains(h.status) && holdSecs - (n - h.start) / 1000 <= 0).toList();
     if (out.isEmpty) return false;
     now = n;
