@@ -53,16 +53,15 @@ class StarPicker extends StatelessWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag(this.text, {this.dark = false});
+  const _Tag(this.text);
   final String text;
-  final bool dark;
   @override
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
-      color: dark ? p.tx : p.sf,
-      child: T(text, s: 11, w: 800, ls: .05, upper: true, nowrap: true, c: dark ? p.bg : p.tx),
+      color: p.sf,
+      child: T(text, s: 11, w: 800, ls: .05, upper: true, nowrap: true, c: p.tx),
     );
   }
 }
@@ -95,16 +94,20 @@ class ReviewCard extends StatelessWidget {
       child: VGap(
         gap: 4,
         children: [
-          Row(children: [Expanded(child: T(r.name, w: 800, s: 15)), const _Tag('Verified stay', dark: true)]),
-          Row(children: [Stars(r.stars), const SizedBox(width: 8), Expanded(child: T(ownerView ? '${r.stay} · ${r.kind == 'exit' ? 'exit review' : '30-day review'}' : r.stay, s: 12, c: p.mu))]),
-          if (r.text.isNotEmpty) T(r.text, s: 14, lh: 1.45),
+          // F22 Area 1: who and how long, stars on the right; the kind and when below.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [Expanded(child: T(r.name, w: 800, s: 15)), const SizedBox(width: 8), Stars(r.stars)],
+          ),
+          T('${r.kind == 'exit' ? 'Exit review' : '30-day review'} · ${r.stay}', s: 12, c: p.mu),
+          if (r.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: T(r.text, s: 15, lh: 1.45)),
           if (r.advance != null) T(r.advance == 'all' ? 'Got the advance back in full.' : r.advance == 'part' ? 'Got only part of the advance back.' : 'Advance not back yet.', s: 13, c: p.mu),
           if (r.reply != null)
             Container(
-              margin: const EdgeInsets.only(top: 8),
+              margin: const EdgeInsets.only(top: 6),
               padding: const EdgeInsets.all(10),
               color: p.sf,
-              child: Rich([sp(context, '${h.owner}, owner', w: 800), sp(context, ' · ${r.replyWhen}\n', c: p.mu), sp(context, r.reply!)], s: 13, lh: 1.45),
+              child: Rich([sp(context, '${h.owner} replied: ', w: 800), sp(context, r.reply!), if (r.replyWhen != null) sp(context, ' · ${r.replyWhen}', c: p.mu)], s: 13, lh: 1.45),
             )
           else if (ownerView && !open)
             Padding(
@@ -148,13 +151,6 @@ class ReviewsScreen extends StatelessWidget {
     final h = hostelById(s.hid);
     final st = s.stats[h.id]!;
     final list = s.reviews.where((r) => r.hid == h.id).toList();
-    Widget tile(String k, String v, String sub) => Expanded(
-      child: Container(
-        color: p.bg,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Kicker(k), const SizedBox(height: 2), T(v, w: 800, s: 22), T(sub, s: 12, c: p.mu)]),
-      ),
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -165,60 +161,55 @@ class ReviewsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // F22 Area 1: the score and the category bars side by side.
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      T(jsNum(h.rating), w: 800, s: 64, lh: .9, ls: -.04),
-                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [T(jsNum(h.rating), w: 800, s: 52, lh: 1, ls: -.04), T('${h.reviews} verified stays', s: 13, c: p.mu)],
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Stars(h.rating.round(), size: 16), const SizedBox(height: 4), T('${h.reviews} verified residents · recent stays count more', s: 13, c: p.mu)]),
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < reviewCats.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 3),
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 5, child: T(reviewCats[i], s: 12, c: p.mu, ell: true)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 4,
+                                      child: Container(
+                                        height: 10,
+                                        decoration: box(w: 2, c: p.tx),
+                                        child: LayoutBuilder(builder: (context, c) => Row(children: [Container(width: c.maxWidth * st.cats[i] / 5, color: p.tx)])),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    T(st.cats[i].toStringAsFixed(1), s: 12, w: 800),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < reviewCats.length; i++)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                          child: Row(
-                            children: [
-                              SizedBox(width: 120, child: T(reviewCats[i], s: 13, c: p.mu)),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Container(
-                                  height: 8,
-                                  decoration: box(w: 2, c: p.tx),
-                                  child: LayoutBuilder(builder: (context, c) => Row(children: [Container(width: c.maxWidth * st.cats[i] / 5, color: p.tx)])),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              SizedBox(width: 30, child: T(st.cats[i].toStringAsFixed(1), s: 13, w: 800, align: TextAlign.right)),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
                 Container(
-                  decoration: BoxDecoration(color: p.hl, border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv))),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [tile('Advance back in full', '${st.advFull} of ${st.advLeft}', 'who left'), const SizedBox(width: 1), tile('Layout accurate', '${st.layoutPct}%', 'of residents say yes')],
-                    ),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: T('Advance back in full: ${st.advFull} of ${st.advLeft} who left · Layout accurate: ${st.layoutPct}%', s: 12, c: p.mu, lh: 1.4),
                 ),
                 for (final r in list) ReviewCard(r),
                 if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Reviews from residents with a confirmed stay show up here.', s: 14, c: p.mu)),
+                Padding(padding: const EdgeInsets.all(16), child: T('Only people who stayed here can review. Owners can reply, not delete.', s: 12, c: p.mu, lh: 1.4)),
               ],
             ),
           ),

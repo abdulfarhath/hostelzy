@@ -37,6 +37,12 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
   await tester.pump();
 }
 
+/// F22: the first free bed on the picker's floor.
+Finder freeBed(AppState s) {
+  final b = s.rooms[s.hid]!.where((r) => r.floor == s.floor && AppState.fits(r, s.pR)).expand((r) => r.beds).firstWhere((b) => b.state == 'free' && !b.mine);
+  return find.byKey(ValueKey('bed-${b.id}'));
+}
+
 void main() {
   mapTiles = false;
 
@@ -103,9 +109,9 @@ void main() {
 
     // First hold: sign in now, then the hold goes ahead by itself.
     await _tap(tester, find.text('Pick a bed'));
-    await _tap(tester, find.text('FREE').first);
+    await _tap(tester, freeBed(s));
     final bed = s.bed!;
-    await _tap(tester, find.text('Hold bed'));
+    await _tap(tester, find.byKey(const ValueKey('pickContinue')));
     await _tap(tester, find.text('Hold bed $bed free'));
     expect((s.sheet, s.holds.length), ('signIn', 0));
     expect(find.text('Sign in to hold this bed'), findsOneWidget);

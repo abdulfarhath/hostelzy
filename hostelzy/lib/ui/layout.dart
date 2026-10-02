@@ -346,25 +346,6 @@ class RoomMode extends StatelessWidget {
     final l = s.liveLayout(h.id, room.n);
     final focus = roomFocus(s, room);
     final fb = room.beds.where((b) => b.letter == focus).firstOrNull;
-    final picker = Scroll(
-      horizontal: true,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: Row(
-          children: [
-            for (final r in rooms.where((r) => AppState.fits(r, s.pR))) ...[
-              ChipBtn(r.label, on: r.n == room.n, onTap: () => s.update(() {
-                s.room = r.n;
-                s.floor = r.floor;
-                s.bed = null;
-                s.roomBed = null;
-              })),
-              const SizedBox(width: 6),
-            ],
-          ],
-        ),
-      ),
-    );
     Widget body;
     if (!s.signedIn) {
       body = VGap(
@@ -384,24 +365,17 @@ class RoomMode extends StatelessWidget {
         ],
       );
     } else {
+      final ck = s.checkedLabel(h.id, room.n);
       body = VGap(
         gap: 10,
         children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              ChipBtn('Show fan reach', on: s.showFan, onTap: () => s.update(() => s.showFan = !s.showFan)),
-              if (l.ac != null) ChipBtn('Show AC airflow', on: s.showAc, onTap: () => s.update(() => s.showAc = !s.showAc)),
-              if (room.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length >= 2) ChipBtn('Compare beds', on: false, onTap: s.openCompare),
-            ],
-          ),
+          // F22 Area 1: fan reach and AC airflow are always drawn.
           LayoutMap(
             l: l,
             room: room,
             focus: focus,
-            fan: s.showFan,
-            ac: s.showAc,
+            fan: true,
+            ac: true,
             onPick: (k) {
               final b = room.beds.firstWhere((x) => x.letter == k);
               s.update(() {
@@ -411,54 +385,59 @@ class RoomMode extends StatelessWidget {
             },
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              T('${l.w.round()} × ${l.h.round()} ft · 1 square = 1 ft', s: 11, c: p.mu),
+              Expanded(child: T('${l.w.round()} × ${l.h.round()} ft', s: 12, c: p.mu)),
               // F19: residents' approved fixes; their names are never shown.
-              if (s.checkedLabel(h.id, room.n) case final ck?)
-                Row(mainAxisSize: MainAxisSize.min, children: [Ic('shieldOk', size: 14, color: p.tx), const SizedBox(width: 4), T(ck, s: 11, w: 800)])
+              if (ck != null)
+                Row(mainAxisSize: MainAxisSize.min, children: [Ic('shieldOk', size: 14, color: p.tx), const SizedBox(width: 4), T(ck, s: 12, w: 800)])
               else
-                T(AppState.samples ? 'Sample layout · real ones after a visit' : 'Layout v${l.version}', s: 11, c: p.mu),
+                T(AppState.samples ? 'Sample layout' : 'Layout v${l.version}', s: 12, c: p.mu),
             ],
           ),
           if (fb != null)
             Container(
-              padding: const EdgeInsets.only(top: 10),
-              decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+              key: const ValueKey('bedFacts'),
+              padding: const EdgeInsets.all(12),
+              decoration: box(w: 2, c: p.tx),
               child: VGap(
-                gap: 8,
+                gap: 6,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [Expanded(child: T('Bed ${fb.id} · ${const {'free': 'Free', 'held': 'On hold', 'soon': 'Free soon'}[fb.state] ?? 'Taken'}', w: 800, s: 17)), T('Same price as every bed here', s: 12, c: p.mu)],
-                  ),
-                  Wrap(spacing: 6, runSpacing: 6, children: [for (final f in bedFacts(l, room, fb.letter)) Container(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), color: p.sf, child: T(f, s: 12, w: 600))]),
+                  T('Bed ${fb.letter} · ${const {'free': 'free', 'held': 'on hold', 'soon': 'free soon'}[fb.state] ?? 'taken'}', w: 800, s: 17),
+                  T(bedFacts(l, room, fb.letter).join(' · '), s: 14, c: p.mu, lh: 1.4),
                 ],
               ),
             ),
+          if (room.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length >= 2)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(key: const ValueKey('compareLink'), onTap: s.openCompare, child: const T('Compare with another bed ›', s: 14, w: 800, underline: true)),
+            ),
+          // F19: anyone can suggest a fix; only residents of this hostel can send one.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Tap(
+              onTap: () => s.openFixEditor(s.hid, room.n),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('pencil', size: 14, color: p.mu), const SizedBox(width: 6), T('Edit room', s: 13, w: 600, c: p.mu)]),
+            ),
+          ),
         ],
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        picker,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-          child: VGap(
-            gap: 10,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [Expanded(child: T('Room ${room.label}', w: 800, s: 20)), Rich([sp(context, '${room.share} sharing · ${room.type} · ${fmt(room.rent)}'), sp(context, '/mo', w: 400, c: p.mu)], s: 13, w: 600)],
-              ),
-              body,
-            ],
-          ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (room.ac && room.acRepair)
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              color: p.ab,
+              child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+            ),
+          body,
+        ],
+      ),
     );
   }
 }
@@ -474,26 +453,36 @@ class RoomBar extends StatelessWidget {
     if (!s.signedIn) {
       return Cta('Verify my phone', height: 54, px: 16, fs: 15, onTap: () => s.go('phone'));
     }
-    final l = s.liveLayout(s.hid, room.n);
     final focus = roomFocus(s, room);
     final b = room.beds.where((x) => x.letter == focus).firstOrNull;
     final can = b != null && (b.state == 'free' || b.state == 'soon') && !b.mine;
-    final hold = can
-        ? Cta('Hold bed ${b.letter}', height: 54, px: 16, fs: 15, onTap: () => s.update(() {
-            s.bed = b.id;
-            s.sheet = 'hold';
-          }))
-        : Cta(b == null ? 'Pick a bed' : 'Taken', height: 54, px: 16, fs: 15, bg: p.tk, fg: p.tx, onTap: () => s.toastMsg('Pick a free bed first.'));
-    if (l == null) return hold;
-    // F19: "Edit room" for everyone; only residents of this hostel can send a fix.
     return Row(
       children: [
-        Tap(
-          onTap: () => s.openFixEditor(s.hid, room.n),
-          child: Container(height: 54, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('pencil', size: 18, color: p.tx), const SizedBox(width: 8), const T('Edit room', w: 800, s: 15)])),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              T(can ? 'Bed ${b.id} · ${fmt(room.rent)}/mo' : (b == null ? 'No bed picked' : 'Bed ${b.id} is taken'), w: 800, s: 17, lh: 1.25),
+              T(can ? 'Same price for every bed here' : 'Tap a free bed', s: 12, c: p.mu, ell: true),
+            ],
+          ),
         ),
-        const SizedBox(width: 8),
-        Expanded(child: hold),
+        const SizedBox(width: 12),
+        Cta(
+          'Continue',
+          key: const ValueKey('roomContinue'),
+          height: 50,
+          px: 18,
+          fs: 15,
+          expand: false,
+          opacity: can ? 1 : .4,
+          onTap: () => can
+              ? s.update(() {
+                  s.bed = b.id;
+                  s.sheet = 'hold';
+                })
+              : s.toastMsg('Pick a free bed first.'),
+        ),
       ],
     );
   }

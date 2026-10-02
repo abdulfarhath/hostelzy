@@ -58,7 +58,8 @@ void main() {
     await _pump(tester, s);
     expect(rem.applied, isEmpty); // off by default
 
-    await _tap(tester, find.text('Reminders · off'));
+    expect(find.text('Off'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('me-Reminders')));
     expect(s.screen, 'reminders');
     expect(find.text('Every 30 min · 8 am – 10 pm'), findsOneWidget);
     expect(find.text('Reminders ring from this phone, even offline. Nothing rings outside your awake hours.'), findsOneWidget);

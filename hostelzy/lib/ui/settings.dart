@@ -25,9 +25,9 @@ class _Head extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row(this.label, {this.icon, this.value, this.red = false, required this.onTap});
+  const _Row(this.label, {this.value, this.red = false, required this.onTap});
   final String label;
-  final String? icon, value;
+  final String? value;
   final bool red;
   final VoidCallback onTap;
   @override
@@ -41,7 +41,6 @@ class _Row extends StatelessWidget {
         decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
         child: Row(
           children: [
-            if (icon != null) ...[Ic(icon!, size: 18, color: c), const SizedBox(width: 10)],
             Expanded(child: T(label, s: 15, w: 600, c: c)),
             if (value != null) ...[T(value!, s: 13, c: p.mu), const SizedBox(width: 8)],
             Ic('chev', size: 18, color: p.mu),
@@ -78,7 +77,7 @@ class SettingsScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final name = s.meName.isNotEmpty ? s.meName : (s.role == 'owner' ? hostelById(s.ownHid).owner : 'Add your name');
-    final phone = '+91 ${phoneSpaced(s.myPhone)}';
+    final phone = s.myPhone.isEmpty ? 'Add your number' : '+91 ${phoneSpaced(s.myPhone)}';
     Widget toggle(String k, String t, String sub) => Tap(
       onTap: () => s.toggleNotif(k),
       child: Padding(
@@ -86,51 +85,48 @@ class SettingsScreen extends StatelessWidget {
         child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notifOn(k))]),
       ),
     );
+    Widget group(String label, List<Widget> rows) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(padding: const EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker(label)),
+        Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows)),
+      ],
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Head('$name · $phone', 'Settings'),
+        _Head(s.myPhone.isEmpty ? name : '$name · $phone', 'Settings'),
         Expanded(
           child: Scroll(
             key: ValueKey('settings${s.scrollEpoch}'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 6), child: Kicker('Account')),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _Row('Name', icon: 'user', value: name, onTap: () => s.toastMsg('Editing your name comes with your account online (F13).')),
-                      _Row('Phone', icon: 'phone', value: phone, onTap: () => s.toastMsg('To change your number, log out and sign in with the new one.')),
-                    ],
+                // F22 Area 1: You · Notifications · App, then Log out and Delete account.
+                group('You', [
+                  _Row('Name', value: name, onTap: () => s.toastMsg('Editing your name comes with your account online (F13).')),
+                  _Row('Phone', value: phone, onTap: () => s.toastMsg('To change your number, log out and sign in with the new one.')),
+                ]),
+                group('Notifications', [
+                  toggle('hold', 'Holds and bookings', 'When the owner confirms or replies'),
+                  toggle('rent', 'Rent reminders', '3 days before'),
+                  toggle('beds', 'New free beds', 'In areas you searched'),
+                ]),
+                group('App', [
+                  _Row('Language', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(children: [const Expanded(child: T('Look', s: 15, w: 600)), Expanded(flex: 2, child: Seg(opts: const [('light', 'Light'), ('dark', 'Dark'), ('system', 'Auto')], cur: s.theme, onPick: (v) => s.update(() => s.theme = v), center: true, pad: const EdgeInsets.symmetric(vertical: 9, horizontal: 6)))]),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                  child: VGap(gap: 8, children: [const Kicker('Appearance'), Seg(opts: const [('light', 'Light'), ('dark', 'Dark'), ('system', 'Phone setting')], cur: s.theme, onPick: (v) => s.update(() => s.theme = v), center: true)]),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      toggle('hold', 'Hold updates', 'Owner confirms, hold ending'),
-                      toggle('rent', 'Rent reminders', '3 days before the due date'),
-                      toggle('beds', 'New free beds', 'In areas you searched'),
-                    ],
-                  ),
-                ),
-                _Row('Language', icon: 'globe', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),
-                _Row('Privacy policy', icon: 'doc', onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser')),
-                _Row('Terms', icon: 'doc', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
-                if (s.role == 'owner') _Row('Fair Play rules', icon: 'shield', onTap: () => s.go('oRules')),
-                _Row('Help on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
-                _Row('Hostelzy team', icon: 'lock', value: s.teamUnlocked ? 'Unlocked' : null, onTap: s.openTeam),
-                _Row('Log out', onTap: s.logOut),
-                _Row('Delete account', icon: 'trash', red: true, onTap: () => s.go('delAcc')),
+                  _Row('Privacy policy', onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser')),
+                  _Row('Terms', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
+                  if (s.role == 'owner') _Row('Fair Play rules', onTap: () => s.go('oRules')),
+                  _Row('Hostelzy team', value: s.teamUnlocked ? 'Unlocked' : null, onTap: s.openTeam),
+                ]),
+                const SizedBox(height: 18),
+                Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), child: _Row('Log out', onTap: s.logOut)),
+                _Row('Delete account', red: true, onTap: () => s.go('delAcc')),
                 Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild) · Made in Hyderabad', s: 12, c: p.mu)),
               ],
             ),
@@ -314,9 +310,9 @@ class PermissionScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final (icon, title, sub, uses, yes, no) = switch (s.permKind) {
-      'location' => ('pin', 'Use your location?', 'Optional. We use it only to show hostels near you.', ['Distance to hostels from where you are', 'Never shared with owners', 'Or just pick an area: Ameerpet, Hitec City…'], 'Use my location', 'Pick an area instead'),
+      'location' => ('pin', 'Use your location?', 'Optional. We use it only to show hostels near you.', ['Distance to hostels from where you are', 'Never shared with owners', 'Or just pick an area: Ameerpet, Hitec City…'], 'Use my location', 'Type an area instead'),
       'camera' => ('camera', 'Allow camera and photos?', 'Needed only when you add a photo.', ['A photo for a complaint (leaking tap, broken fan)', 'Owners: photos of rooms and layout changes', 'We never open your camera on our own'], 'Allow', 'Not now'),
-      _ => ('bell', 'Turn on notifications?', 'Only for things you’d want to know straight away.', ['When the owner confirms your hold', 'When your hold is about to end', 'Rent reminders, 3 days before'], 'Turn on', 'Not now'),
+      _ => ('bell', 'Turn on notifications?', 'Only for things you’d want to know straight away.', ['When the owner confirms your hold', 'Rent reminders, 3 days before'], 'Turn on', 'Not now'),
     };
     void allow() {
       s.back();
@@ -362,7 +358,7 @@ class PermissionScreen extends StatelessWidget {
             const SizedBox(height: 8),
             OutlineCta(no, icon: 'x', onTap: () {
               s.back();
-              if (s.permKind == 'location') s.update(() => s.sheet = 'search');
+              if (s.permKind == 'location') s.openWhere();
             }),
             const SizedBox(height: 10),
             T('Your phone asks next. You can change this in Settings.', s: 12, c: p.mu),

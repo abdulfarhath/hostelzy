@@ -67,13 +67,14 @@ extension MapAreaActions on AppState {
       });
       return toastMsg('Showing hostels by distance from you.');
     }
-    update(() => sheet = 'areas');
+    // F22 Area 1: no position is invented; the user types an area instead.
+    openWhere();
     toastMsg(switch (fail) {
-      LocateFail.off => 'Location is switched off on this phone. Pick an area instead.',
-      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or pick an area.',
-      LocateFail.denied => 'No problem. Pick an area instead.',
-      LocateFail.unavailable => 'Location works in the Android app. Pick an area instead.',
-      _ => 'Couldn’t find your location. Pick an area instead.',
+      LocateFail.off => 'Location is switched off on this phone. Type an area instead.',
+      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or type an area.',
+      LocateFail.denied => 'No problem. Type an area instead.',
+      LocateFail.unavailable => 'Location works in the Android app. Type an area instead.',
+      _ => 'Couldn’t find your location. Type an area instead.',
     });
   }
 
@@ -165,5 +166,5 @@ extension MapAreaActions on AppState {
   }
 
   /// Full message the tenant sends: their text plus the ref line.
-  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef';
+  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nBooking code $waRef';
 }

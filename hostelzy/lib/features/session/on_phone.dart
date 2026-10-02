@@ -146,7 +146,7 @@ extension OnPhoneActions on AppState {
     final was = saved[hid] ?? false;
     update(() => saved[hid] = !was);
     if (was) {
-      toastWithUndo('Removed from saved', () => update(() => saved[hid] = true));
+      toastWithUndo('Removed ${hostels.any((h) => h.id == hid) ? hostelById(hid).name : 'from saved'}', () => update(() => saved[hid] = true));
     } else {
       toastMsg('Saved on this phone.');
     }
