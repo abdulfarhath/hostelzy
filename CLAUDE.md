@@ -4,7 +4,7 @@ Hostelzy is a Hyderabad PG/hostel app: tenants find and hold beds, residents
 manage their stay, owners run their hostel. The Flutter app is in `hostelzy/`.
 The original Claude Design handoff is in `project/` and `chats/`.
 
-Five chats work on this repo at the same time. Each has one role.
+Six chats work on this repo at the same time. Each has one role.
 
 | Chat | Role | Writes to |
 |---|---|---|
@@ -13,6 +13,7 @@ Five chats work on this repo at the same time. Each has one role.
 | **Hostelzy · Build** | Developer: builds design-approved features | `hostelzy/` code, `docs/features/*` (Build section), `docs/BOARD.md` status |
 | **Hostelzy · Marketing** | Marketing partner: owner pitch, tenant growth, reels, posters, launch plan | `docs/marketing/` only |
 | **Hostelzy · Brand** | Brand partner: app name (with trademark screening) and logo | `docs/brand/` only, artifacts |
+| **Hostelzy · Finance & Growth** | Money partner: budget, pricing, rewards caps, bills, cheap/free growth, hiring marketing help | `docs/finance/` only |
 
 ## Always, first
 
