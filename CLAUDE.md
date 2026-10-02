@@ -39,6 +39,10 @@ chats decide designs, product details and merges themselves. Only things the fou
 do (accounts, keys, SQL runs, payments setup) or that change money amounts already in DECISIONS.md go
 to the founder.
 
+## Talking to the founder
+- APK links: always give the **GitHub release page** (https://github.com/abdulfarhath/hostelzy/releases/tag/apk-N),
+  never a direct .apk download link (founder, 2026-10-02).
+
 ## Feature stages (`docs/BOARD.md`)
 
 `Idea → Spec ready → Designing → Design ready → Design approved → Building → Built → Shipped`
