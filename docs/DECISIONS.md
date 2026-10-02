@@ -183,5 +183,15 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   sends the OTP SMS itself; Supabase trusts Firebase sign-ins via its Third-party Auth. Needs the
   Firebase Blaze (pay-as-you-go) plan with a budget alert, and a stable app signing key (SHA-1).
 
+**Owner edits layouts + map location** — founder, 2026-10-02
+- **Owners edit their own room layouts directly** (move beds, fans, AC, windows, doors, washroom;
+  add/remove items) and publish **without Hostelzy approval**. The Hostelzy team can still draw or
+  fix layouts for owners who want help. Replaces "Hostelzy team draws every layout" (2026-10-02).
+  Safety rules stay: AC room needs an AC unit, bed count = sharing, a bed with a resident can't be
+  deleted, no gates/CCTV/exits.
+- **Map:** "Use my location" (location permission) and **pick an area** (Ameerpet, SR Nagar,
+  Madhapur, Hitec City, Kondapur, Gachibowli…) to see all hostels there.
+- **The user enters their own name** (never prefilled with sample names).
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
