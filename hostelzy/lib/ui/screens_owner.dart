@@ -1348,6 +1348,21 @@ class _Residents extends StatelessWidget {
             ],
           ),
         ),
+        // F19 extras: residents whose layout suggestions are off.
+        if (s.mutedHere.isNotEmpty) ...[
+          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Layout suggestions off')),
+          for (final m in s.mutedHere)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
+              child: Row(
+                children: [
+                  Expanded(child: T(m.name.isEmpty ? 'A resident' : m.name, w: 800, s: 15)),
+                  Tap(onTap: () => s.unmuteFixAuthor(m), child: Container(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10), decoration: box(w: 2, c: p.tx), child: const T('Turn on', w: 800, s: 12))),
+                ],
+              ),
+            ),
+        ],
       ],
     );
   }
