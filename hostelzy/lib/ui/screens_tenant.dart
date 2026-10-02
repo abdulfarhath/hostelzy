@@ -10,6 +10,7 @@ import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
 import 'onboarding.dart';
+import 'reminders.dart';
 
 // ------------------------------------------------------------ derived values
 
@@ -104,12 +105,15 @@ class ExploreScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // F20: the first-time reminders offer, once after sign-in.
+          OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
             child: VGap(
               gap: 14,
               children: [
                 PageHead(kicker: '${results.length} hostels · $totalFree beds free now', title: 'Beds near ${s.lm}'),
+                if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 Tap(
                   onTap: () => set(() => s.sheet = 'search'),
                   child: Container(
@@ -508,6 +512,7 @@ class MeScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final isOwner = s.role == 'owner';
     final rows = <(String, VoidCallback, Color)>[
+      ('Reminders · ${s.remSummary}', s.openReminders, p.tx),
       if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
       ('Saved hostels · ${s.saved.values.where((v) => v).length}', () => s.go('saved'), p.tx),
       ('Settings', () => s.go('settings'), p.tx),

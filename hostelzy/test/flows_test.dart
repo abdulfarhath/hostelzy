@@ -3081,6 +3081,36 @@ void main() {
     s.dispose();
   });
 
+  test('sign-in errors: the real code is shown and sent to Crashlytics, never hidden', () async {
+    final s = AppState(start: 'login', role: 'tenant');
+    final gs = _FakeSignIn(SignInFail.failed);
+    final push = _FakePush(false);
+    s
+      ..signIn = gs
+      ..push = push;
+    // No code known: the plain message, nothing reported.
+    await s.continueWithGoogle();
+    expect(s.toast, 'Couldn’t sign in. Check your internet and try again.');
+    expect(push.reported, isEmpty);
+    // A real code: in the toast and in Crashlytics.
+    gs.lastError = 'firebase: internal-error · Requests from this Android client application app.hostelzy.hostelzy.demo are blocked.';
+    await s.continueWithGoogle();
+    expect(s.toast, 'Couldn’t sign in (${gs.lastError}). Try again.');
+    expect(push.reported.single, contains('app.hostelzy.hostelzy.demo are blocked'));
+    gs
+      ..fail = SignInFail.notSetUp
+      ..lastError = 'google: clientConfigurationError';
+    await s.continueWithGoogle();
+    expect(s.toast, 'Google sign-in isn’t set up for this app (google: clientConfigurationError). Use Hostelzy on this phone for now.');
+    // Closing Google isn't an error.
+    gs
+      ..fail = SignInFail.cancelled
+      ..lastError = 'google: canceled';
+    await s.continueWithGoogle();
+    expect((s.toast, push.reported.length), ('Sign-in cancelled.', 2));
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -3256,6 +3286,9 @@ class _FakePush implements Push {
   Future<void> deleteToken() async => deleted++;
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
+  final reported = <String>[];
+  @override
+  void report(Object error, {String? reason}) => reported.add('$reason $error');
 }
 
 class _FakeSignIn implements SignIn {
@@ -3281,6 +3314,8 @@ class _FakeSignIn implements SignIn {
   Future<SignInFail?> reauth() async => reauthFail;
   @override
   Future<void> deleteUser() async => userDeleted = true;
+  @override
+  String? lastError;
 }
 
 class _FakeData extends SampleRepo {

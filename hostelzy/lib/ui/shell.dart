@@ -13,6 +13,7 @@ import 'layout_fixes.dart';
 import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
+import 'reminders.dart';
 import 'settings.dart';
 import 'team.dart';
 import 'rooms.dart';
@@ -424,6 +425,7 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
+    'reminders' => const RemindersScreen(),
     'gate' => const GateScreen(),
     'aHome' => const TeamHomeScreen(),
     'oLayouts' => const OwnerLayoutsScreen(),
@@ -592,6 +594,9 @@ class _Sheet extends StatelessWidget {
       'fixLimit' => 'Can’t send yet',
       'fixSend' => 'Send your fix',
       'fixReject' => 'Reject this fix?',
+      'water' => 'Drink water',
+      'addRem' => s.remEdit == null ? 'Add a reminder' : 'Edit reminder',
+      'waterOffer' => 'Want water reminders?',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
@@ -606,6 +611,9 @@ class _Sheet extends StatelessWidget {
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
       'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
+      'water' => 'Reminders',
+      'addRem' => 'My reminders',
+      'waterOffer' => 'New in Hostelzy · stay on track',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
@@ -638,6 +646,9 @@ class _Sheet extends StatelessWidget {
       'fixLimit' => const FixLimitSheet(),
       'fixSend' => const FixSendSheet(),
       'fixReject' => const FixRejectSheet(),
+      'water' => const WaterSheet(),
+      'addRem' => const AddReminderSheet(),
+      'waterOffer' => const WaterOfferSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
