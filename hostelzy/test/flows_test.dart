@@ -371,6 +371,8 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('Invite QR'));
     expect(s.screen, 'oInvite');
+    await tester.pump();
+    await tester.pump();
     expect(find.text('farhath.me/hostelzy/app/j/?c=ANJ-7Q2'), findsOneWidget);
     expect(find.text('2 to approve'), findsOneWidget);
     await tap(tester, find.text('Approve').first);
@@ -2449,6 +2451,56 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('C: server invite codes: owner gets one, a resident asks to join', (tester) async {
+    // Owner on Supabase: the code comes from the server; a new one replaces it.
+    final o = AppState(start: 'oInvite', role: 'owner');
+    final od = _FakeInvites();
+    o.data = od;
+    await pumpApp(tester, o);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('farhath.me/hostelzy/app/j/?c=VAS-7Q2'), findsOneWidget);
+    await tap(tester, find.text('Make a new code (the old link stops working)'));
+    await tester.pump();
+    expect((o.inviteCode, o.toast), ('VAS-K9P', 'New code VAS-K9P. The old link and poster stop working.'));
+    o.dispose();
+
+    // Resident gate: the code from the invite link is filled in; joining needs Google.
+    final r = AppState(start: 'roleGate', role: 'tenant');
+    r.data = od;
+    r.update(() {
+      r.roleGate = 'resident';
+      r.pendingInvite = 'VAS-K9P';
+      r.myName = 'Kiran Rao';
+      r.phone = '9876543210';
+    });
+    await pumpApp(tester, r);
+    expect(find.text('Have an invite code?'), findsOneWidget);
+    await tap(tester, find.text('Ask to join'));
+    expect(r.toast, 'Sign in with Google to join with a code.');
+    await tester.pump(const Duration(seconds: 3));
+    r.update(() => r.account = (uid: 'fb-kiran', name: 'Kiran Rao', email: 'k@gmail.com'));
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(od.joined, ('VAS-K9P', 'Kiran Rao', '9876543210'));
+    expect((r.toast, r.pendingInvite), ('Asked to join Vasavi Boys Hostel. Your owner approves it, then your stay opens here.', null));
+    await tester.pump(const Duration(seconds: 3));
+    // A retired code: the server's reason, in plain words.
+    od.joinError = 'P0001: that invite code isn\'t valid any more; ask your owner for the new one';
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('inviteCode')), matching: find.byType(TextField)), 'vas-7q2');
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(r.toast, 'That code isn’t valid any more. Ask your owner for the new one.');
+    await tester.pump(const Duration(seconds: 3));
+    // Sample data never pretends to send it.
+    r.data = const SampleRepo();
+    await tap(tester, find.text('Ask to join'));
+    await tester.pump();
+    expect(r.toast, 'Invites work in the real Hostelzy app. This is sample data.');
+    await tester.pump(const Duration(seconds: 3));
+    r.dispose();
+  });
+
   testWidgets('push fix: after sign-in the app offers once, saves the token every start, and says when it fails', (tester) async {
     final s = AppState(start: 'role', role: 'tenant');
     final data = _FakeData();
@@ -2642,6 +2694,21 @@ class _FakeLive extends SampleRepo {
 
   @override
   Stream<String> changes() => ctrl.stream;
+}
+
+/// C: server invites stand-in.
+class _FakeInvites extends SampleRepo {
+  int calls = 0;
+  (String, String, String)? joined;
+  String? joinError;
+  @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => renew ? 'VAS-K9P' : 'VAS-7Q2';
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) async {
+    if (joinError != null) throw Exception(joinError);
+    joined = (code, name, phone);
+    return 'Vasavi Boys Hostel';
+  }
 }
 
 class _FakeLocator implements Locator {

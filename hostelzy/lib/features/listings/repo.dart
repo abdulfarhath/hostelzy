@@ -34,6 +34,17 @@ abstract class HostelRepo {
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
 
+  /// C: the hostel's invite code from the server ([renew]: a new one, the old
+  /// link stops working). Null on sample data.
+  Future<String?> inviteCode(String hid, {bool renew = false});
+
+  /// C: asks to join the hostel with [code]; returns the hostel's name.
+  /// Throws [UnsupportedError] on sample data, or with the server's reason.
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''});
+
+  /// C: the owner approves or rejects an invite sign-up.
+  Future<void> decideSignup(String id, bool approve);
+
   /// Removes this phone's token (sign-out, account deleted).
   Future<void> removePushToken(String token);
 
@@ -73,6 +84,12 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> savePushToken(String token) async {}
   @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => null;
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> decideSignup(String id, bool approve) async {}
+  @override
   Future<void> removePushToken(String token) async {}
   @override
   Future<void> deleteMyAccount() async {}
@@ -103,6 +120,16 @@ class SupabaseRepo implements HostelRepo {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseRepo(Supabase.instance.client);
   }
+
+  @override
+  Future<String?> inviteCode(String hid, {bool renew = false}) async => await db.rpc(renew ? 'new_hostel_invite' : 'hostel_invite', params: {'h': hid}) as String?;
+
+  @override
+  Future<String> joinWithInvite(String code, {required String name, required String phone, String bed = ''}) async =>
+      await db.rpc('join_with_invite', params: {'p_code': code, 'p_name': name, 'p_phone': phone, 'p_bed': bed}) as String;
+
+  @override
+  Future<void> decideSignup(String id, bool approve) => db.rpc('decide_signup', params: {'p_id': id, 'p_approve': approve});
 
   @override
   Future<void> deleteMyAccount() => db.rpc('delete_my_account');
