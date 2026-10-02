@@ -80,10 +80,10 @@ class SettingsScreen extends StatelessWidget {
     final name = s.meName.isNotEmpty ? s.meName : (s.role == 'owner' ? hostelById(s.ownHid).owner : 'Add your name');
     final phone = '+91 ${phoneSpaced(s.myPhone)}';
     Widget toggle(String k, String t, String sub) => Tap(
-      onTap: () => s.notif[k]! ? s.update(() => s.notif[k] = false) : s.openPerm('notifications'),
+      onTap: () => s.toggleNotif(k),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notif[k]!)]),
+        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notifOn(k))]),
       ),
     );
     return Column(

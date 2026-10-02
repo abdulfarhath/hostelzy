@@ -1252,12 +1252,10 @@ void main() {
     expect(s.theme, 'system');
     expect(s.isDark(Brightness.dark), isTrue);
     expect(s.isDark(Brightness.light), isFalse);
-    // Turning a notification on shows the explainer first.
+    // No push on this device (tests, web): turning one on says so honestly.
     await tap(tester, find.text('New free beds'));
-    expect((s.screen, s.permKind), ('perm', 'notifications'));
-    expect(find.text('Turn on notifications?'), findsOneWidget);
-    await tap(tester, find.text('Turn on'));
-    expect(s.screen, 'settings');
+    await tester.pump();
+    expect((s.screen, s.toast), ('settings', 'Saved. Notifications work in the Android app.'));
     await tester.pump(const Duration(seconds: 3));
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
@@ -1833,7 +1831,7 @@ void main() {
     resetSampleData();
   });
 
-  testWidgets('push: explainer, then Android asks; allowed gets a token, denied says how to fix (F13)', (tester) async {
+  testWidgets('push: the Settings switch asks Android right away; allowed or denied is said honestly (F13)', (tester) async {
     for (final allow in [true, false]) {
       final s = AppState(start: 'settings', role: 'tenant');
       final fake = _FakePush(allow);
@@ -1841,16 +1839,14 @@ void main() {
       s.update(() => s.notif.updateAll((k, v) => false));
       await pumpApp(tester, s);
       await tap(tester, find.text('Rent reminders').first);
-      expect(find.text('Turn on notifications?'), findsOneWidget);
-      expect(fake.asked, 0); // the app's explainer comes before Android's prompt
-      await tap(tester, find.text('Turn on'));
       await tester.pump();
       expect(fake.asked, 1);
       if (allow) {
-        expect((s.pushToken, s.notif['rent'], s.notif['beds']), ('fcm-token', true, false));
-        expect(s.toast, 'Notifications allowed. Hostelzy starts sending them once your account is online.');
+        expect((s.osPushAllowed, s.notif['rent'], s.notif['beds']), (true, true, false));
+        // Not signed in with Google: allowed, but nothing to send to yet.
+        expect((s.pushToken, s.toast), (null, 'Notifications allowed. Sign in with Google to get them.'));
       } else {
-        expect((s.pushToken, s.notif['rent']), (null, false));
+        expect((s.osPushAllowed, s.notifOn('rent')), (false, false));
         expect(s.toast, 'Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
       }
       await tester.pump(const Duration(seconds: 3));
@@ -1892,12 +1888,16 @@ void main() {
     await tester.pump();
     expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
-    s.push = _FakePush(true);
+    final fp = _FakePush(true);
+    s.push = fp;
     await s.enablePush();
     expect(data.tokens, ['fcm-token']);
-    // Log out signs out of Google too.
+    expect(s.toast, 'Notifications are on for this phone.');
+    // Log out: the server forgets this phone's token, then Google signs out.
     s.logOut();
-    expect(((s.signIn as _FakeSignIn).signedOut, s.account), (true, null));
+    await tester.pump();
+    expect(data.removed, ['fcm-token']);
+    expect((fp.deleted, (s.signIn as _FakeSignIn).signedOut, s.account), (1, true, null));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
   });
@@ -2448,20 +2448,94 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
   });
+
+  testWidgets('push fix: after sign-in the app offers once, saves the token every start, and says when it fails', (tester) async {
+    final s = AppState(start: 'role', role: 'tenant');
+    final data = _FakeData();
+    final fp = _FakePush(true);
+    s
+      ..data = data
+      ..push = fp
+      ..signIn = _FakeSignIn(null);
+    s.update(() => s.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
+    s.watchPushToken();
+    await pumpApp(tester, s);
+    // First home after a Google sign-in: the explainer, once.
+    s.pickRole('tenant');
+    await tester.pump();
+    await tester.pump();
+    expect((s.screen, s.permKind, s.pushAsked), ('perm', 'notifications', true));
+    await tap(tester, find.text('Not now'));
+    expect((s.screen, fp.asked), ('explore', 0));
+    expect(data.tokens, isEmpty);
+    // "Not now" is remembered, also on the phone.
+    expect(s.snapshot()['pushAsked'], isTrue);
+    s.pickRole('tenant');
+    await tester.pump();
+    await tester.pump();
+    expect(s.screen, 'explore');
+    // Settings shows the switch off while Android has it off; tapping asks right away.
+    s.update(() => s.screen = 'settings');
+    await tester.pump();
+    expect(s.notifOn('hold'), isFalse);
+    await tap(tester, find.text('Hold updates'));
+    await tester.pump();
+    expect((fp.asked, s.notifOn('hold')), (1, true));
+    expect(data.tokens, ['fcm-token']);
+    await tester.pump(const Duration(seconds: 3));
+    // Allowed some other way (phone settings): the next start just saves the token.
+    final again = AppState(start: 'explore', role: 'tenant');
+    final d2 = _FakeData();
+    again
+      ..data = d2
+      ..push = _FakePush(false, granted: true);
+    again.update(() => again.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
+    expect(await again.syncPushToken(), isTrue);
+    expect(d2.tokens, ['fcm-token']);
+    // FCM rotates the token: the server gets the new one.
+    fp.refresh.add('fcm-token-2');
+    await tester.pump();
+    expect(data.tokens.last, 'fcm-token-2');
+    // A failed save is said out loud, never silent.
+    d2.failTokens = true;
+    expect(await again.syncPushToken(force: true), isFalse);
+    expect(again.toast, 'Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app.');
+    // Not signed in: no prompt, nothing saved.
+    final anon = AppState(start: 'role', role: 'tenant');
+    anon.push = _FakePush(true);
+    anon.pickRole('tenant');
+    await tester.pump();
+    expect(anon.screen, 'explore');
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+    again.dispose();
+    anon.dispose();
+  });
 }
 
 class _FakePush implements Push {
-  _FakePush(this.allow);
+  _FakePush(this.allow, {this.granted = false});
   final bool allow;
-  int asked = 0;
+
+  /// Android's permission right now.
+  bool granted;
+  int asked = 0, deleted = 0;
+  final refresh = StreamController<String>.broadcast();
   @override
   Future<PushAsk> ask() async {
     asked++;
+    if (allow) granted = true;
     return allow ? PushAsk.allowed : PushAsk.denied;
   }
 
   @override
   Future<String?> token() async => 'fcm-token';
+  @override
+  Future<bool?> allowed() async => granted;
+  @override
+  Stream<String> get tokenRefresh => refresh.stream;
+  @override
+  Future<void> deleteToken() async => deleted++;
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
 }
@@ -2493,11 +2567,19 @@ class _FakeSignIn implements SignIn {
 
 class _FakeData extends SampleRepo {
   ({String name, String email, String phone, String role})? profile;
-  final tokens = <String>[];
+  @override
+  bool get remote => true;
+  final tokens = <String>[], removed = <String>[];
+  bool failTokens = false;
+  @override
+  Future<void> removePushToken(String token) async => removed.add(token);
   @override
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
-  Future<void> savePushToken(String token) async => tokens.add(token);
+  Future<void> savePushToken(String token) async {
+    if (failTokens) throw Exception('offline');
+    tokens.add(token);
+  }
   bool deleted = false;
   String? deleteError;
   @override

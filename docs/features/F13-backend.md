@@ -266,3 +266,13 @@ Not needed.
   - `guard_payment` and `guard_review` allow only that change during the deletion;
   - tests: `supabase/tests/delete_test.sql`.
 - Done screen copy from the design, and **Close Hostelzy**. The web delete page now says the app deletes server data.
+
+**Push fix · 2026-10-02** (branch `feature/push-fix`, from the founder's phone test: no prompt, then no push):
+- **Offer once after sign-in:** the first time a Google-signed-in user lands on a home screen, the notifications explainer shows, then Android's prompt. "Not now" is remembered on the phone (`pushAsked`).
+- **Token saved every time:** on every app start (after Supabase connects), after Google sign-in, and when FCM rotates the token (`onTokenRefresh`). If Android already allows notifications and there's an account, `push_tokens` gets this phone's token. It also works when permission was given in the phone's settings or an earlier install.
+- **Honest Settings switch:** it shows on only if Android allows notifications too. When Android has them off, tapping asks Android right away, with no second tap.
+- **Sign-out and account deletion** remove this phone's token from the server and FCM.
+- **Failures show a toast** ("Couldn't turn on notifications for this phone…") instead of a hidden debug line. In the demo APK the message says no server sends anything.
+- Tests:
+  - `push fix: after sign-in the app offers once…`;
+  - the Settings switch test and the sign-in test are updated.
