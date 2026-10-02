@@ -199,6 +199,7 @@ class OwnerTodayScreen extends StatelessWidget {
             ),
           ),
           const _Enquiries(),
+          const _RankCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -287,6 +288,39 @@ class OwnerTodayScreen extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F08: the owner's rank and new reviews, linking to both screens.
+class _RankCard extends StatelessWidget {
+  const _RankCard();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final fresh = s.reviews.where((r) => r.hid == h.id && r.fresh && r.reply == null).length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+      child: VGap(
+        gap: 8,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [const Kicker('Reviews and ranking'), T(fresh > 0 ? '$fresh to reply' : 'All replied', s: 12, w: 800, c: p.ad)],
+          ),
+          Row(
+            children: [
+              Expanded(child: Cta('Your rank #${s.rankOf(h.id)}', icon: 'chart', height: 48, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oRank'))),
+              const SizedBox(width: 8),
+              Expanded(child: Cta('Reviews · ${jsNum(h.rating)}', icon: 'chev', height: 48, px: 12, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oReviews'))),
+            ],
           ),
         ],
       ),

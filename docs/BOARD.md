@@ -12,7 +12,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Shipped** · merged 2026-10-02 | Build | PR #2 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Shipped** · merged 2026-10-02 | Build | PR #3 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Fair Play canvas |
-| F08 | Verified-resident reviews + Hostelzy score ranking | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Reviews canvas |
+| F08 | Verified-resident reviews + Hostelzy score ranking | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f08-reviews`. Rank shown as #N with reasons, never a number |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Stay Rewards canvas |
 | F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Owner Plan canvas |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |

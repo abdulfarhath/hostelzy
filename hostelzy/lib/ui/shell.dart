@@ -5,6 +5,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
+import 'reviews.dart';
 import 'screens_owner.dart';
 import 'screens_resident.dart';
 import 'screens_start.dart';
@@ -307,6 +308,11 @@ class _AppBody extends StatelessWidget {
     'help' => const HelpScreen(),
     'move' => const MoveScreen(),
     'rConfirm' => const ConfirmStayScreen(),
+    'rReview' => const ResidentReviewScreen(),
+    'rExit' => const ExitReviewScreen(),
+    'reviews' => const ReviewsScreen(),
+    'oReviews' => const OwnerReviewsScreen(),
+    'oRank' => const OwnerRankScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -400,6 +406,7 @@ class _Sheet extends StatelessWidget {
       'wa' => 'Continue on WhatsApp',
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
+      'rank' => 'How the ranking works',
       'bed' => 'Bed ${s.obed ?? ''}',
       _ => '',
     };
@@ -412,6 +419,7 @@ class _Sheet extends StatelessWidget {
       'bed' => const _BedSheet(),
       'enq' => const _EnquirySheet(),
       'addR' => const _AddResidentSheet(),
+      'rank' => const RankSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);

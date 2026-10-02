@@ -512,6 +512,70 @@ void main() {
     o.dispose();
   });
 
+  testWidgets('verified reviews, ranking and owner replies (F08)', (tester) async {
+    // Explore: Recommended is the default sort; rank and reasons, never a score.
+    final s = AppState(start: 'explore', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(s.sortBy, 'rec');
+    expect(filtered(s).first.id, 'anjani');
+    expect(s.rankOf('anjani'), 1);
+    expect(s.rankReasons('anjani'), 'Quick replies, beds kept up to date');
+    expect(find.text('#1'), findsOneWidget);
+    expect(s.rankReasons('nest42'), startsWith('Few reviews yet'));
+
+    // Hostel page → Reviews.
+    await tap(tester, find.text('Anjani Residency'));
+    await tap(tester, find.text('verified reviews'));
+    expect(s.screen, 'reviews');
+    expect(find.text('35 of 36'), findsOneWidget);
+    expect(find.text('92%'), findsOneWidget);
+    expect(find.text('Thanks Naveen. We’re fitting a booster pump on 10 Oct.', findRichText: true), findsNothing);
+
+    // Resident: 30-day review.
+    s.jump('rHome', 'resident');
+    await tester.pump();
+    await tap(tester, find.textContaining('How is your stay so far?', findRichText: true));
+    expect(s.screen, 'rReview');
+    await tap(tester, find.text('Post review'));
+    expect(s.screen, 'rReview');
+    await tester.pump(const Duration(seconds: 3)); // the "Tap the stars" toast goes
+    await tap(tester, find.bySemanticsLabel('4 stars'));
+    await tester.enterText(find.byType(EditableText).first, 'Food is good.');
+    await tester.pump();
+    await tap(tester, find.text('Yes'));
+    await tap(tester, find.text('Post review'));
+    final mine = s.reviews.first;
+    expect((mine.name, mine.stars, mine.text, mine.layout), ('Rahul V.', 4, 'Food is good.', 'Yes'));
+
+    // Resident: exit review feeds the "advance returned" record.
+    s.jump('rExit', 'resident');
+    await tester.pump();
+    expect(find.text('₹2,000'), findsWidgets);
+    await tap(tester, find.text('Not yet'));
+    await tap(tester, find.bySemanticsLabel('3 stars'));
+    await tap(tester, find.text('Post review'));
+    expect((s.stats['anjani']!.advFull, s.stats['anjani']!.advLeft), (35, 37));
+
+    // Owner: ranking and replying.
+    s.jump('oRank', 'owner');
+    await tester.pump();
+    expect(find.text('0 · rank not lowered'), findsOneWidget);
+    s.jump('oReviews', 'owner');
+    await tester.pump();
+    expect(find.text('New 4'), findsOneWidget);
+    await tap(tester, find.text('Reply').first);
+    await tester.enterText(find.byType(EditableText).first, 'Thanks Rahul.');
+    await tester.pump();
+    await tap(tester, find.text('Post reply'));
+    expect(s.reviews.where((r) => r.reply == 'Thanks Rahul.').length, 1);
+    expect(find.text('New 3'), findsOneWidget);
+
+    // Fair Play strikes lower the rank.
+    s.strikes['anjani'] = 2;
+    expect(s.rankOf('anjani'), greaterThan(1));
+    s.dispose();
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');

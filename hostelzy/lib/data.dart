@@ -11,6 +11,7 @@ class Hostel {
   final double x, y;
   final List<String> tags;
   final Terms terms;
+  // F08: [rating] and [reviews] are the verified-review star rating and count.
 
   /// F16: [ac] = has AC rooms; [onlyAc] = every room is AC.
   final bool onlyAc;
@@ -59,12 +60,12 @@ String dueLeft(Terms t, int joinDay) {
 }
 
 const hostels = <Hostel>[
-  Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 212, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
-  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 340, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
-  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 96, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
-  Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 158, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
-  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 187, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
-  Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 410, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
+  Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 38, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
+  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 52, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
+  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 14, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
+  Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 22, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
+  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 31, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
+  Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 47, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
 ];
 
 /// Number as JavaScript prints it (`4.0` → `4`).
@@ -565,3 +566,74 @@ class DealQuote {
       ? '${fmt(moreBack)} more back'
       : 'Hostelzy deal';
 }
+
+// ------------------------------------------------------------ F08 reviews
+
+const reviewCats = ['Food', 'Cleanliness', 'Safety', 'Water and power', 'Owner'];
+
+/// A review from a resident with a confirmed stay (one per stay).
+class Review {
+  Review({required this.id, required this.hid, required this.name, required this.stars, required this.text, required this.stay, this.kind = '30-day', this.cats = const {}, this.layout, this.advance, this.again, this.reply, this.replyWhen, this.fresh = false});
+  final String id, hid, name, text, stay, kind;
+  final int stars;
+  final Map<String, int> cats;
+
+  /// "Is the room layout accurate?" Yes | Mostly | No (F12).
+  final String? layout;
+
+  /// Exit review: did the advance come back? all | part | not.
+  final String? advance, again;
+  String? reply, replyWhen;
+
+  /// Not yet seen by the owner.
+  bool fresh;
+}
+
+List<Review> seedReviews() => [
+  Review(id: 'r1', hid: 'anjani', name: 'Karthik M.', stars: 5, text: 'Clean rooms, good food on weekdays. Got my ₹2,000 back the day I left.', stay: 'Stayed 8 months · left Aug 2026', kind: 'exit', advance: 'all', again: 'Yes'),
+  Review(id: 'r2', hid: 'anjani', name: 'Naveen G.', stars: 3, text: 'Water pressure drops after 9 pm on the 2nd floor.', stay: 'Staying since Jun 2026', reply: 'Thanks Naveen. We’re fitting a booster pump on 10 Oct.', replyWhen: 'replied 3 days later'),
+  Review(id: 'r3', hid: 'anjani', name: 'Teja N.', stars: 4, text: 'Room not swept for a few days in September, fixed after I complained.', stay: 'Staying since Sep 2026', fresh: true),
+  Review(id: 'r4', hid: 'anjani', name: 'Arjun R.', stars: 5, text: 'Got my advance back the same day. Would stay again.', stay: 'Left Sep 2026', kind: 'exit', advance: 'all', again: 'Yes', fresh: true),
+];
+
+/// Per-hostel review aggregates from the sample data (category averages,
+/// advance returned in full of those who left, layout accurate %).
+class ReviewStats {
+  const ReviewStats(this.cats, this.advFull, this.advLeft, this.layoutPct);
+  final List<double> cats;
+  final int advFull, advLeft, layoutPct;
+}
+
+const seedStats = <String, ReviewStats>{
+  'anjani': ReviewStats([4.5, 3.9, 4.7, 4.1, 4.4], 35, 36, 92),
+  'saisri': ReviewStats([4.6, 4.8, 4.9, 4.5, 4.7], 41, 41, 95),
+  'nest42': ReviewStats([3.6, 4.5, 4.4, 4.6, 4.0], 9, 10, 88),
+  'greenview': ReviewStats([4.2, 3.8, 4.3, 3.9, 4.2], 17, 19, 81),
+  'orchid': ReviewStats([4.5, 4.4, 4.8, 4.2, 4.6], 24, 25, 90),
+  'lakshmi': ReviewStats([4.1, 3.7, 4.2, 3.8, 4.0], 38, 44, 76),
+};
+
+/// F08 ranking factors and weights (DECISIONS 2026-10-02): verified reviews
+/// 50%, reply speed 15%, beds kept up to date 15%, complaints resolved 10%,
+/// listing complete 10%. Fair Play strikes lower the rank. The number itself
+/// is never shown.
+const rankWeights = <String, double>{'reviews': .5, 'reply': .15, 'fresh': .15, 'complaints': .1, 'listing': .1};
+
+const rankLabel = {'reviews': 'Verified reviews', 'reply': 'Reply speed', 'fresh': 'Beds kept up to date', 'complaints': 'Complaints resolved', 'listing': 'Listing complete'};
+
+/// Sample values (0–1) for the factors not derived from reviews or reply time.
+const seedFactors = <String, Map<String, double>>{
+  'anjani': {'fresh': .8, 'complaints': .7, 'listing': .8},
+  'saisri': {'fresh': .6, 'complaints': .85, 'listing': .5},
+  'nest42': {'fresh': .9, 'complaints': .75, 'listing': .9},
+  'greenview': {'fresh': .75, 'complaints': .9, 'listing': .9},
+  'orchid': {'fresh': .6, 'complaints': .7, 'listing': .7},
+  'lakshmi': {'fresh': .5, 'complaints': .6, 'listing': .5},
+};
+
+/// Owner tips per factor.
+const rankTips = {'fresh': 'Confirm free beds when we ask, every 3 days', 'complaints': 'Fix complaints within 3 days', 'listing': 'Add layouts for every room type'};
+
+String rankWord(double v) => v >= .85 ? 'Strong' : v >= .7 ? 'Good' : 'Can improve';
+
+const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh': 'beds kept up to date', 'complaints': 'complaints resolved fast', 'listing': 'full listing'};

@@ -25,12 +25,18 @@ List<Hostel> filtered(AppState s) {
     return q == null ? -1 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
   }
 
+  int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
+  final score = {for (final h in out) h.id: s.rankScore(h.id)};
+
   out.sort((a, b) {
-    // F03 "Best deals": biggest 6-month saving first.
-    if (s.bestDeals) {
-      final d = saving(b).compareTo(saving(a));
-      if (d != 0) return d;
-    }
+    // F08 Recommended (Hostelzy rank), F03 Best deals, or Lowest price; then nearest.
+    final d = switch (s.sortBy) {
+      'rec' => score[b.id]!.compareTo(score[a.id]!),
+      'deals' => saving(b).compareTo(saving(a)),
+      'price' => cheapest(a).compareTo(cheapest(b)),
+      _ => 0,
+    };
+    if (d != 0) return d;
     final c = a.mins[s.lm]!.compareTo(b.mins[s.lm]!);
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
@@ -70,8 +76,8 @@ class ExploreScreen extends StatelessWidget {
     final results = filtered(s);
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
+    const sorts = [('rec', 'Recommended'), ('near', 'Nearest'), ('price', 'Lowest price'), ('deals', 'Best deals')];
     final chips = [
-      ChipBtn('Best deals', on: s.bestDeals, onTap: () => set(() => s.bestDeals = !s.bestDeals)),
       ChipBtn('All', on: s.fG == 'Any' && s.fR == 'Any', onTap: () => set(() {
         s.fG = 'Any';
         s.fR = 'Any';
@@ -118,6 +124,17 @@ class ExploreScreen extends StatelessWidget {
           Scroll(
             horizontal: true,
             child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  for (var i = 0; i < sorts.length; i++) ...[if (i > 0) const SizedBox(width: 6), ChipBtn(sorts[i].$2, on: s.sortBy == sorts[i].$1, onTap: () => set(() => s.sortBy = sorts[i].$1))],
+                ],
+              ),
+            ),
+          ),
+          Scroll(
+            horizontal: true,
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(
                 children: [
@@ -126,6 +143,16 @@ class ExploreScreen extends StatelessWidget {
               ),
             ),
           ),
+          if (s.sortBy == 'rec')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Wrap(
+                children: [
+                  T('Ranked mostly by verified reviews, then reply speed, beds kept up to date, complaints resolved and a complete listing. Fair Play strikes lower the rank. ', s: 12, c: p.mu, lh: 1.45),
+                  Tap(onTap: () => set(() => s.sheet = 'rank'), child: T('How it works', s: 12, w: 800, c: p.ad, lh: 1.45)),
+                ],
+              ),
+            ),
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
             child: Column(
@@ -215,6 +242,12 @@ class HostelCard extends StatelessWidget {
                           padding: const EdgeInsets.all(6),
                           child: T('facade', s: 10, mono: true, c: p.mu),
                         ),
+                        if (s.sortBy == 'rec')
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6), child: T('#${s.rankOf(h.id)}', s: 13, w: 800, c: p.bg)),
+                          ),
                         if (best != null)
                           Positioned(
                             left: -1,
@@ -245,7 +278,7 @@ class HostelCard extends StatelessWidget {
                             children: [
                               Ic('star', size: 11, color: p.tx),
                               const SizedBox(width: 3),
-                              T(jsNum(h.rating), ls: .08, c: p.tx),
+                              T('${jsNum(h.rating)} · ${h.reviews}', ls: .08, c: p.tx),
                             ],
                           ),
                         ],
@@ -255,6 +288,9 @@ class HostelCard extends StatelessWidget {
                     T(h.name, w: 800, s: 17, lh: 1.15),
                     const SizedBox(height: 4),
                     T('${h.mins[s.lm]} min to ${s.lm} · ${featOf(h)}', s: 13, c: p.mu),
+                    // F08: rank and its reasons, never the score number.
+                    const SizedBox(height: 3),
+                    Rich([sp(context, '#${s.rankOf(h.id)} near ${s.lm}', w: 800, c: p.tx), sp(context, ' · ${s.rankReasons(h.id)}')], s: 12, c: p.mu, lh: 1.35),
                     if (best != null) ...[
                       const SizedBox(height: 6),
                       Wrap(
@@ -812,14 +848,18 @@ class DetailScreen extends StatelessWidget {
                             runSpacing: 14,
                             children: [
                               // Each `{{ }}` is its own flex item, so the pieces sit 4px apart.
-                              Css(
-                                c: p.tx,
-                                w: 600,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    for (final (i, w) in [const Ic('star', size: 13), T(jsNum(h.rating)), const T('·'), T('${h.reviews}'), const T('stayed')].indexed) ...[if (i > 0) const SizedBox(width: 4), w],
-                                  ],
+                              // F08: verified reviews; tap for the Reviews screen.
+                              Tap(
+                                onTap: () => s.go('reviews'),
+                                child: Css(
+                                  c: p.tx,
+                                  w: 600,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (final (i, w) in [const Ic('star', size: 13), T(jsNum(h.rating)), const T('·'), T('${h.reviews}'), const T('verified reviews'), T('›', c: p.ad)].indexed) ...[if (i > 0) const SizedBox(width: 4), w],
+                                    ],
+                                  ),
                                 ),
                               ),
                               T('${h.mins[s.lm]} min to ${s.lm}'),
