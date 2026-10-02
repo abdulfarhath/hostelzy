@@ -915,9 +915,9 @@ void main() {
     // Owner: Beds → room 204 → mark a fan not working → approve.
     final w = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, w);
-    await tap(tester, find.text('Approve layout'));
+    await tap(tester, find.text('New layout'));
     expect((w.screen, w.lRoom), ('oLayout', 204));
-    expect(find.text('Check it and approve to go live'), findsOneWidget);
+    expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
     final l = w.layoutOf('anjani', 204)!;
     expect(l.live, isTrue); // tenants keep seeing v1 until approval
     await tap(tester, find.text('Not working').last);
@@ -925,12 +925,12 @@ void main() {
     expect(w.complaints.first.text, 'Fan 2 in room 204 marked not working.');
     expect(find.text('FAN · NOT WORKING'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('Approve layout'));
+    await tap(tester, find.text('Publish v2'));
     expect(l.pending, isFalse);
-    expect(find.text('Approved · live for tenants'), findsOneWidget);
+    expect(find.text('Live for tenants'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    // Request a change: saved as pending (no backend yet).
-    await tap(tester, find.text('Request a change'));
+    // Ask Hostelzy for help: saved as pending (no backend yet).
+    await tap(tester, find.text('Ask Hostelzy'));
     expect(w.sheet, 'layoutReq');
     await tap(tester, find.text('Send request'));
     expect(l.request, isNull);
@@ -939,7 +939,7 @@ void main() {
     await tap(tester, find.text('Send request'));
     expect(l.request?.text, 'Bed C is against the washroom wall.');
     expect(l.request?.added, {'photo'});
-    expect(find.text('Change requested · new version within 48 h'), findsOneWidget);
+    expect(find.text('Help requested · Hostelzy replies within 48 h'), findsOneWidget);
 
     // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
     w.update(() => w.screen = 'aLayout');
@@ -949,7 +949,7 @@ void main() {
     await tap(tester, find.text('Mirror ↔'));
     expect(l.bedRect('A').left, l.w - before.right);
     await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('Send to owner for approval'));
+    await tap(tester, find.text('Send to owner'));
     expect((l.version, l.pending, l.request), (3, true, null));
     w.dispose();
   });
@@ -1313,7 +1313,7 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('Layouts'));
     expect(o.screen, 'oLayouts');
-    expect(find.text('WAITING FOR APPROVAL'), findsOneWidget); // room 204, v2
+    expect(find.text('DRAFT'), findsOneWidget); // room 204: Hostelzy's v2 to publish
     expect(find.text('LIVE'), findsWidgets);
     await tap(tester, find.text('Room 201'));
     expect((o.screen, o.lRoom), ('oLayout', 201));
@@ -1381,7 +1381,7 @@ void main() {
     o.edSelect('fan1');
     await tap(tester, find.byKey(const ValueKey('nudge-left')));
     expect(o.liveLayout('anjani', 204)!.w, w0 + 1); // published copy taken before this edit
-    await tap(tester, find.text('Send to owner for approval'));
+    await tap(tester, find.text('Send to owner'));
     expect((l.pending, l.version), (true, 3));
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, isNot(l.items.firstWhere((i) => i.id == 'fan1').x));
     await tester.pump(const Duration(seconds: 3));
@@ -1394,8 +1394,8 @@ void main() {
       o.obFloor = 2;
     });
     await tester.pump();
-    await tap(tester, find.text('Approve layout'));
-    await tap(tester, find.text('Approve layout').last);
+    await tap(tester, find.text('New layout'));
+    await tap(tester, find.text('Publish v3'));
     expect(l.pending, isFalse);
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, l.items.firstWhere((i) => i.id == 'fan1').x);
     o.dispose();
@@ -2032,6 +2032,53 @@ void main() {
     await tap(tester, find.text('Search this area'));
     expect((s.mapAreaLabel, s.mapMoved), ('This area', false));
     expect(filtered(s).map((h) => h.id), ['lakshmi']);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
+
+  testWidgets('owner edits and publishes layouts without approval (F18)', (tester) async {
+    final s = AppState(start: 'oLayouts', role: 'owner');
+    final room = s.rooms['anjani']!.last;
+    s.layouts['anjani']!.remove(room.n);
+    await pumpApp(tester, s);
+    expect(find.text('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.'), findsOneWidget);
+    await tap(tester, find.text('No layout 1'));
+    expect(find.text('Room ${room.label}'), findsOneWidget);
+    // No layout yet → Create a layout.
+    await tap(tester, find.text('Room ${room.label}'));
+    expect(s.screen, 'oCreate');
+    expect(find.text('Create a layout'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '3');
+    await tap(tester, find.text('Start drawing'));
+    expect(s.toast, 'Enter the room size in feet (6 to 60).');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '16');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Start drawing'));
+    final l = s.layoutOf('anjani', room.n)!;
+    expect((s.screen, s.edOwner, l.w, l.live), ('aLayout', true, 16.0, false));
+    expect(s.liveLayout('anjani', room.n), isNull); // tenants: "Layout coming soon"
+    // Publish: live straight away, no approval.
+    await tap(tester, find.text('Publish'));
+    expect((s.screen, l.live, l.pending), ('oPublished', true, false));
+    expect(find.text('Live for tenants'), findsOneWidget);
+    expect(s.liveLayout('anjani', room.n), isNotNull);
+    // Undo: hidden again.
+    await tap(tester, find.text('Undo publish · hide it again'));
+    expect((l.live, s.liveLayout('anjani', room.n)), (false, null));
+    await tester.pump(const Duration(seconds: 3));
+
+    // Editing a live layout: tenants keep v1 until the owner publishes v2.
+    final r101 = s.layoutOf('anjani', 101)!;
+    expect((r101.live, r101.pending), (true, false));
+    s.openLayout(101, editor: true, owner: true);
+    await tester.pump();
+    final w0 = r101.w;
+    await tap(tester, find.byKey(const ValueKey('w+')));
+    expect(s.liveLayout('anjani', 101)!.w, w0);
+    await tap(tester, find.text('Publish'));
+    expect((r101.version, s.liveLayout('anjani', 101)!.w), (2, w0 + 1));
+    await tap(tester, find.text('Undo publish · go back to v1'));
+    expect((r101.version, r101.w, s.liveLayout('anjani', 101)!.w), (1, w0, w0));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
   });

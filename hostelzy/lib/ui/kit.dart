@@ -583,6 +583,7 @@ const _svgIcons = <String, String>{
   'arrow': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   'chevD': '<path d="m6 9 6 6 6-6"/>',
+  'copy': '<path d="M8 8h12v12H8z"/><path d="M4 16V4h12"/>',
   'check': '<path d="M20 6 9 17l-5-5"/>',
   'msg': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
   'clock': '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',

@@ -871,6 +871,22 @@ class RoomLayout {
   Rect bedRect(String letter) => Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH);
   Rect itemRect(LItem i) => i.rect;
 
+  /// F18 Create a layout: resize the starting rectangle to [len] × [wid] ft,
+  /// keeping beds and items inside the walls.
+  void mirrorTo(double len, double wid) {
+    final sx = len / w, sy = wid / h;
+    for (final k in beds.keys.toList()) {
+      beds[k] = Offset((beds[k]!.dx * sx).roundToDouble().clamp(0, len - 3), (beds[k]!.dy * sy).roundToDouble().clamp(0, wid - 6));
+    }
+    for (final i in items) {
+      i
+        ..x = (i.x * sx).clamp(0, len - i.w)
+        ..y = (i.y * sy).clamp(0, wid - i.h);
+    }
+    w = len;
+    h = wid;
+  }
+
   LayoutSnap snap() => (w: w, h: h, beds: Map.of(beds), items: [for (final i in items) i.copy()], bunks: Map.of(bunks));
   void restore(LayoutSnap s) {
     w = s.w;

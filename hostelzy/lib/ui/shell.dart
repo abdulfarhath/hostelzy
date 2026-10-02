@@ -370,6 +370,8 @@ class _AppBody extends StatelessWidget {
     'welcome' => const WelcomeScreen(),
     'login' => const LoginScreen(),
     'roleGate' => const RoleGateScreen(),
+    'oCreate' => const CreateLayoutScreen(),
+    'oPublished' => const LayoutPublishedScreen(),
     'phone' => const PhoneScreen(),
     'otp' => const OtpScreen(),
     'role' => const RoleScreen(),
