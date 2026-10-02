@@ -127,6 +127,7 @@ class SettingsScreen extends StatelessWidget {
                 _Row('Terms', icon: 'doc', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
                 if (s.role == 'owner') _Row('Fair Play rules', icon: 'shield', onTap: () => s.go('oRules')),
                 _Row('Help on WhatsApp', icon: 'msg', onTap: () => supportWhatsApp.isEmpty ? s.toastMsg('Hostelzy’s WhatsApp number is coming soon.') : s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
+                _Row('Hostelzy team', icon: 'lock', value: s.teamUnlocked ? 'Unlocked' : null, onTap: s.openTeam),
                 _Row('Log out', onTap: s.logOut),
                 _Row('Delete account', icon: 'trash', red: true, onTap: () => s.go('delAcc')),
                 Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild) · Made in Hyderabad', s: 12, c: p.mu)),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -47,7 +48,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -347,7 +348,7 @@ class AppState extends ChangeNotifier {
   /// What tenants see: the last approved version.
   RoomLayout? liveLayout(String hid, int n) {
     final l = layoutOf(hid, n);
-    return l != null && l.live ? l : null;
+    return l != null && l.live ? l.forTenants : null;
   }
 
   /// Women's PGs: whole-floor plans only after a hold here.
@@ -385,6 +386,10 @@ class AppState extends ChangeNotifier {
     };
     update(() {
       i.working = ok;
+      // Working / not working shows to tenants right away, also on the live copy.
+      for (final x in l.published?.items ?? const <LItem>[]) {
+        if (x.id == i.id) x.working = ok;
+      }
       if (i.kind == 'ac') r.acRepair = !ok;
       if (!ok) {
         final id = complaints.fold<int>(0, (a, c) => c.id > a ? c.id : a) + 1;
@@ -398,7 +403,8 @@ class AppState extends ChangeNotifier {
     update(() {
       l
         ..pending = false
-        ..live = true;
+        ..live = true
+        ..published = null;
     });
     toastMsg('Room ${l.room} layout approved. Tenants see it now.');
   }
@@ -419,6 +425,240 @@ class AppState extends ChangeNotifier {
       sheet = null;
     });
     toastMsg('Request saved. It reaches the Hostelzy team once the app is online (F13).');
+  }
+
+  // ------------------------------------------------------------ team mode
+
+  /// Hostelzy team tools are unlocked on this phone (temporary passcode
+  /// until F13 adds real admin accounts).
+  bool teamUnlocked = false;
+  String teamCode = '';
+
+  void openTeam() {
+    if (teamUnlocked) return go('aHome');
+    update(() {
+      teamCode = '';
+      sheet = 'team';
+    });
+  }
+
+  void unlockTeam() {
+    if (teamCode != teamPasscode) return toastMsg('Wrong passcode.');
+    update(() {
+      teamUnlocked = true;
+      sheet = null;
+      hist = [...hist, screen];
+      screen = 'aHome';
+    });
+  }
+
+  void openLayout(int n, {bool editor = false}) => update(() {
+    lRoom = n;
+    edSel = null;
+    hist = [...hist, screen];
+    screen = editor ? 'aLayout' : 'oLayout';
+    sheet = null;
+  });
+
+  // ------------------------------------------------------------ layout editor
+
+  /// Selected thing in the editor: an item id, or `bed:A`.
+  String? edSel;
+  final List<LayoutSnap> _undo = [], _redo = [];
+  Offset _dragStart = Offset.zero, _dragTotal = Offset.zero;
+  String? _dragId;
+  bool get canUndo => _undo.isNotEmpty;
+  bool get canRedo => _redo.isNotEmpty;
+
+  void _remember(RoomLayout l) {
+    // The first edit of a live layout keeps a copy for tenants until the
+    // owner approves the new version.
+    if (!l.pending) l.published ??= l.snap();
+    _undo.add(l.snap());
+    if (_undo.length > 50) _undo.removeAt(0);
+    _redo.clear();
+  }
+
+  Rect? _selRect(RoomLayout l) {
+    final id = edSel;
+    if (id == null) return null;
+    if (id.startsWith('bed:')) return l.beds.containsKey(id.substring(4)) ? l.bedRect(id.substring(4)) : null;
+    return l.items.where((i) => i.id == id).firstOrNull?.rect;
+  }
+
+  /// Move the selected thing so its top-left is [to] (feet), on the 1-ft
+  /// grid and inside the room.
+  void _place(RoomLayout l, Offset to) {
+    final r = _selRect(l);
+    if (r == null) return;
+    final x = to.dx.roundToDouble().clamp(0, l.w - r.width).toDouble();
+    final y = to.dy.roundToDouble().clamp(0, l.h - r.height).toDouble();
+    final id = edSel!;
+    if (id.startsWith('bed:')) {
+      l.beds[id.substring(4)] = Offset(x, y);
+    } else {
+      final i = l.items.firstWhere((i) => i.id == id);
+      i
+        ..x = x
+        ..y = y;
+    }
+  }
+
+  void edSelect(String id) => update(() => edSel = id);
+
+  /// Drag from the editor map: [d] in feet since the last update.
+  void edDrag(RoomLayout l, String id, Offset d) {
+    if (_dragId != id) {
+      _dragId = id;
+      edSel = id;
+      _remember(l);
+      _dragStart = _selRect(l)!.topLeft;
+      _dragTotal = Offset.zero;
+    }
+    _dragTotal += d;
+    update(() => _place(l, _dragStart + _dragTotal));
+  }
+
+  /// Ends a drag (the next drag starts a new undo step).
+  void edDragEnd() => _dragId = null;
+
+  void edNudge(RoomLayout l, double dx, double dy) {
+    final r = _selRect(l);
+    if (r == null) return toastMsg('Tap a bed or an item first.');
+    _remember(l);
+    update(() => _place(l, r.topLeft + Offset(dx, dy)));
+  }
+
+  void edAdd(RoomLayout l, Room room, String kind) {
+    if (kind == 'bed') {
+      final missing = room.beds.map((b) => b.letter).where((x) => !l.beds.containsKey(x)).firstOrNull;
+      if (missing == null) return toastMsg('All ${room.share} beds are placed. A new bed changes the sharing: the owner confirms the price first.');
+      _remember(l);
+      update(() {
+        l.beds[missing] = Offset(((l.w - bedW) / 2).roundToDouble(), ((l.h - bedH) / 2).roundToDouble());
+        edSel = 'bed:$missing';
+      });
+      return;
+    }
+    final n = l.items.where((i) => i.kind == kind).length + 1;
+    var id = '$kind$n';
+    while (l.items.any((i) => i.id == id)) {
+      id = '${id}x';
+    }
+    final (w, h, x, y) = switch (kind) {
+      'ac' => (.5, 1.8, l.w - .5, (l.h / 2).roundToDouble()),
+      'window' => (4.0, .3, ((l.w - 4) / 2).roundToDouble(), 0.0),
+      'door' => (3.0, .2, ((l.w - 3) / 2).roundToDouble(), l.h - .2),
+      'wash' => (5.0, 4.0, 0.0, l.h - 4),
+      'pillar' => (1.5, 1.5, ((l.w - 1.5) / 2).roundToDouble(), ((l.h - 1.5) / 2).roundToDouble()),
+      _ => (1.0, 1.0, (l.w / 2).roundToDouble(), (l.h / 2).roundToDouble()),
+    };
+    _remember(l);
+    update(() {
+      l.items.add(LItem(id, kind, x, y, w, h, facing: kind == 'window' ? 'street' : null));
+      edSel = id;
+    });
+  }
+
+  void edDelete(RoomLayout l, Room room) {
+    final id = edSel;
+    if (id == null) return toastMsg('Tap a bed or an item first.');
+    if (id.startsWith('bed:')) {
+      final bedId = '${room.label}-${id.substring(4)}';
+      if (residents.any((r) => r.bed == bedId) || findBed(l.hid, bedId).b?.state == 'booked') return toastMsg('Bed $bedId has a resident. It can’t be deleted.');
+    }
+    _remember(l);
+    update(() {
+      if (id.startsWith('bed:')) {
+        l.beds.remove(id.substring(4));
+      } else {
+        l.items.removeWhere((i) => i.id == id);
+      }
+      edSel = null;
+    });
+  }
+
+  /// AC, window and door go to the next wall (top → right → bottom → left);
+  /// a washroom zone or pillar turns 90°.
+  void edRotate(RoomLayout l) {
+    final id = edSel;
+    final i = id == null ? null : l.items.where((x) => x.id == id).firstOrNull;
+    if (i == null) return toastMsg('Tap an AC, window, door, washroom or pillar to turn it.');
+    _remember(l);
+    update(() {
+      if (const ['ac', 'window', 'door'].contains(i.kind)) {
+        const order = ['top', 'right', 'bottom', 'left'];
+        final next = order[(order.indexOf(wallOf(i.rect, l.w, l.h) ?? 'left') + 1) % 4];
+        final len = math.max(i.w, i.h), thick = math.min(i.w, i.h);
+        switch (next) {
+          case 'top' || 'bottom':
+            i
+              ..w = len
+              ..h = thick
+              ..x = ((l.w - len) / 2).roundToDouble()
+              ..y = next == 'top' ? 0 : l.h - thick;
+          default:
+            i
+              ..w = thick
+              ..h = len
+              ..y = ((l.h - len) / 2).roundToDouble()
+              ..x = next == 'left' ? 0 : l.w - thick;
+        }
+      } else {
+        final w0 = i.w;
+        i
+          ..w = i.h
+          ..h = w0
+          ..x = i.x.clamp(0, math.max(0, l.w - i.w)).toDouble()
+          ..y = i.y.clamp(0, math.max(0, l.h - i.h)).toDouble();
+      }
+    });
+  }
+
+  /// Room size in feet (8 to 30), keeping everything inside the walls.
+  void edResize(RoomLayout l, double dw, double dh) {
+    final w = (l.w + dw).clamp(8, 30).toDouble(), h = (l.h + dh).clamp(8, 30).toDouble();
+    if (w == l.w && h == l.h) return;
+    _remember(l);
+    update(() {
+      final oldW = l.w, oldH = l.h;
+      l
+        ..w = w
+        ..h = h;
+      for (final i in l.items) {
+        // Items on the right / bottom wall stay on it.
+        if (i.x + i.w >= oldW - .5) i.x = w - i.w;
+        if (i.y + i.h >= oldH - .5) i.y = h - i.h;
+        i
+          ..x = i.x.clamp(0, math.max(0, w - i.w)).toDouble()
+          ..y = i.y.clamp(0, math.max(0, h - i.h)).toDouble();
+      }
+      for (final k in l.beds.keys.toList()) {
+        final b = l.beds[k]!;
+        l.beds[k] = Offset(b.dx.clamp(0, w - bedW).toDouble(), b.dy.clamp(0, h - bedH).toDouble());
+      }
+    });
+  }
+
+  void edUndo(RoomLayout l) {
+    if (_undo.isEmpty) return;
+    update(() {
+      _redo.add(l.snap());
+      l.restore(_undo.removeLast());
+    });
+  }
+
+  void edRedo(RoomLayout l) {
+    if (_redo.isEmpty) return;
+    update(() {
+      _undo.add(l.snap());
+      l.restore(_redo.removeLast());
+    });
+  }
+
+  void edMirror(RoomLayout l, {bool vertical = false}) {
+    _remember(l);
+    update(() => l.mirror(vertical: vertical));
   }
 
   /// Admin: send the new version to the owner for approval.
