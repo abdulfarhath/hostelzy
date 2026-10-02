@@ -1,6 +1,6 @@
 # F23 · Floor amenities (fridge, washing machine, water purifier…) + layout-first view
 
-**Stage:** Spec ready · founder idea 2026-10-02 · **this feature needs the founder's approval of the
+**Stage:** Design ready · demo for the founder: https://claude.ai/artifact/PjkPGAojZgLXFLWP56yvFf · waiting for the founder’s approval · founder idea 2026-10-02 · **this feature needs the founder's approval of the
 design before building** (founder's explicit exception to the "no approvals" rule).
 
 ## Problem
@@ -41,6 +41,15 @@ secondary toggle. Applies to the tenant bed picker, resident "My room", owner La
 4. Add sheet (owner and resident): icon grid → count → Working / Not working → Save.
 5. Owner Manage → Layouts → Floor 2 → Shared things.
 6. Filters with the 3 new chips.
+
+## Design
+**Design ready · 2026-10-02, waiting for the founder’s approval** (demo: https://claude.ai/artifact/PjkPGAojZgLXFLWP56yvFf). Not added to All screens and not handed to Build until the founder approves in the Design chat.
+1. **Hostel page** (`Main`, `DetailDark`): an "On each floor" block, one row per floor with icon chips (Lift, Fridge, RO water, Washing machine, Geyser ×2…). A broken item is struck through and grey with a red "NOT WORKING" tag. Header note: "Updated by residents · 1 Oct".
+2. **Room plan first** (`Room`): room chips 203 / 204 / 205, with **Floor view** as an outlined secondary button. A slim grey **On floor 2** strip of icon chips sits above the plan; tapping it opens the floor sheet.
+3. **Floor sheet** (`Floor`): rows with icon, count (×2), note and a Working / Not working tag ("Added by a resident · 1 Oct · owner told"), plus Add a thing / Something broke.
+4. **Add sheet** (`Add`): ① a 5-column icon grid of 15 items (Other last), ② a − 1 + stepper, ③ a Working / Not working seg, then Save ("Save · Washing machine on floor 2").
+5. **Owner** (`Owner`): Floor 2 with seg Rooms | Shared things, floor chips, a "A resident changed this floor" banner, rows with who/when and an edit button, "Add a shared thing", and a note that broken things go to Today as a repair.
+6. **Filters** (`Filters`): "On the floor" chips with icons: Washing machine, Fridge, RO water.
 
 ## Rules
 - Residents: max 20 edits a day per hostel; the owner can mute a resident's edits (same as F19).
