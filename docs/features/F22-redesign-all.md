@@ -134,6 +134,18 @@ exit review offers Yes / Only part of it / Not yet; Add tenant has no "How did t
 tenants are linked by phone); Plan's Late state says deals pause from day 15 and Paid offers Share
 receipt; go-live checklist has the team tick Fair Play after reading the rules with the owner.
 
+**Canvas ↔ app audit (2026-10-02, Main design v21).** New row "Added: screens in the app that were
+missing here, plus the hostel-page Food menu".
+- **Added** (already in the app, now drawn): `utr` I've paid ₹999 · UPI reference; `addR` Add a resident;
+  `addRoom` Add a room; Add a manager; `rank` How the ranking works; `lang` Settings › Language;
+  `cPhoto` complaint photo; Me (owner) "Looking for a bed, or live in a PG? Switch role ›"; `where` full screen.
+- **New** (for Build to add): hostel page **Food menu › peek** (today: breakfast / lunch / dinner with
+  times, then "Whole week ›") and the **Food menu** week sheet (day chips, three meals).
+- **Updated:** owner Food menu has a real **Save Monday** button (no "saved as you type") and a
+  "New hostel" state that starts empty ("No menu yet. Tenants see “Menu not added yet”…"; Save disabled).
+- **Removed:** `permL` and `permC`: the app never opens them (Near me chip and the photo picker replace
+  them). The `oReviews + oRank` frame is now just **oRank** (same screen).
+
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
