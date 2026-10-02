@@ -316,7 +316,7 @@ void main() {
     });
     await tester.pump();
     final rent = o.findBed('anjani', '102-A').r!.rent;
-    expect(find.text(fmt(3000 + rent)), findsOneWidget);
+    expect(find.textContaining('due at move-in ${fmt(3000 + rent)} (advance ₹3,000, ₹1,000 kept on exit)'), findsOneWidget);
     o.dispose();
   });
 
@@ -361,15 +361,16 @@ void main() {
     await tap(tester, find.text('Add resident'));
     expect(s.sheet, 'addR');
     expect(s.rBed, '103-A');
-    await tester.enterText(find.byType(EditableText).at(0), 'Rahul Varma');
-    await tester.enterText(find.byType(EditableText).at(1), '90000 00001');
+    // F22: the Residents search field comes first.
+    await tester.enterText(find.byType(EditableText).at(1), 'Rahul Varma');
+    await tester.enterText(find.byType(EditableText).at(2), '90000 00001');
     await tester.pump();
     expect(find.textContaining('Joined via Hostelzy.'), findsOneWidget);
     expect(find.textContaining('($ref)'), findsOneWidget);
-    await tester.enterText(find.byType(EditableText).at(1), '9000000000');
+    await tester.enterText(find.byType(EditableText).at(2), '9000000000');
     await tester.pump();
     expect(find.textContaining('No Hostelzy enquiry, hold or booking from this number in the last 60 days.'), findsOneWidget);
-    await tester.enterText(find.byType(EditableText).at(1), '9000000001');
+    await tester.enterText(find.byType(EditableText).at(2), '9000000001');
     await tester.pump();
     await tap(tester, find.text('Add resident').last);
     expect(s.sheet, isNull);
@@ -400,12 +401,12 @@ void main() {
   testWidgets('invite QR: owner approves or removes sign-ups (F06)', (tester) async {
     final s = AppState(start: 'oMore', role: 'owner', moreTab: 'residents');
     await pumpApp(tester, s);
-    await tap(tester, find.text('Invite QR'));
+    await tap(tester, find.byKey(const ValueKey('inviteQr')));
     expect(s.screen, 'oInvite');
     await tester.pump();
     await tester.pump();
     expect(find.text('farhath.me/hostelzy/app/j/?c=ANJ-7Q2'), findsOneWidget);
-    expect(find.text('2 to approve'), findsOneWidget);
+    expect(find.text('WAITING FOR YOU · 2'), findsOneWidget);
     await tap(tester, find.text('Approve').first);
     final r = s.residents.first;
     expect(r.name, 'Abhishek P');
@@ -469,7 +470,7 @@ void main() {
     // Owner: edit the rate card and a room's type.
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    await tap(tester, find.text('Rooms and rent'));
+    await tap(tester, find.text('Rooms and rates ›'));
     expect((o.screen, o.moreTab), ('oMore', 'rates'));
     await tester.enterText(find.bySemanticsLabel('Walk-in price, 3 sharing AC'), '9500');
     await tester.pump();
@@ -616,12 +617,12 @@ void main() {
     final o = AppState(start: 'oBeds', role: 'owner');
     o.ownHid = 'saisri';
     await pumpApp(tester, o);
-    await tap(tester, find.text('Floor 2'));
-    expect(find.text('205'), findsOneWidget);
-    await tap(tester, find.text('All floors'));
-    expect(find.text('Room 305'), findsNothing);
-    expect(find.text('Room 302'), findsOneWidget);
+    await tap(tester, find.byKey(const ValueKey('obFloor-2')));
     expect(find.text('Room 205'), findsOneWidget);
+    expect(find.text('Room 302'), findsNothing);
+    await tap(tester, find.byKey(const ValueKey('obFloor-3')));
+    expect(find.text('Room 302'), findsOneWidget);
+    expect(find.text('Room 205'), findsNothing);
     o.dispose();
   });
 
@@ -1383,11 +1384,13 @@ void main() {
   });
 
   testWidgets('layout access: owner Beds + Manage, team passcode, editor moves a fan, approval', (tester) async {
-    // Owner: a visible Room layout button on each room in Beds.
+    // Owner: Beds → a bed → "Room … layout ›" (F22: in the bed sheet).
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    expect(find.text('Room layout'), findsWidgets);
-    await tap(tester, find.text('Room layout').first);
+    final first = o.rooms['anjani']!.firstWhere((r) => r.floor == o.obFloor || o.obFloor == 0);
+    await tap(tester, find.byKey(ValueKey('obed-${first.beds.first.id}')));
+    expect(o.sheet, 'bed');
+    await tap(tester, find.byKey(const ValueKey('bedLayout')));
     expect(o.screen, 'oLayout');
     // ...and Manage → Layouts lists every room with its state.
     o.tab('oMore');
@@ -3258,7 +3261,7 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(find.text('farhath.me/hostelzy/app/j/?c=VAS-7Q2'), findsOneWidget);
-    await tap(tester, find.text('Make a new code (the old link stops working)'));
+    await tap(tester, find.text('Make a new code (the old one stops working)'));
     await tester.pump();
     expect((o.inviteCode, o.toast), ('VAS-K9P', 'New code VAS-K9P. The old link and poster stop working.'));
     o.dispose();

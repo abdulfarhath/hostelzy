@@ -992,25 +992,12 @@ class _EnquirySheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        KV('Phone', '${phoneSpaced(e.phone)} · not verified', keyWidth: 110),
-        KV('Asked about', e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed', keyWidth: 110),
-        KV('When', clockTime(e.at), keyWidth: 110),
-        KV('From', e.from, keyWidth: 110),
+        // F22 Area 3 (board `enquiry`): the booking code first, then two actions.
+        Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 2), child: Kicker(e.contacted ? 'Enquiry from the app · contacted' : 'Enquiry from the app')),
+        KV('Booking code', e.ref, keyWidth: 110),
+        KV('Phone', '+91 ${phoneSpaced(e.phone)} · not verified', keyWidth: 110),
+        KV('Asked about', '${e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed'} · ${clockTime(e.at)}', keyWidth: 110),
         KV('Message', '“${e.msg}”', keyWidth: 110),
-        KV('Status', e.contacted ? 'Contacted' : 'New · not replied yet', keyWidth: 110),
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-          padding: const EdgeInsets.all(12),
-          color: p.sf,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(padding: EdgeInsets.only(top: 1), child: Ic('userPlus', size: 18)),
-              const SizedBox(width: 10),
-              Expanded(child: Rich([sp(context, 'If $first joins, add them in '), sp(context, 'Manage → Residents', w: 800), sp(context, " with this number. They'll show as "), sp(context, 'Joined via Hostelzy', w: 800), sp(context, '.')], s: 13, lh: 1.4)),
-            ],
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
           child: Row(
@@ -1021,9 +1008,13 @@ class _EnquirySheet extends StatelessWidget {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: T('If $first moves in, add them with this phone number so it counts.', s: 13, c: p.mu, lh: 1.4),
+        ),
         if (!e.contacted)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Tap(
@@ -1162,22 +1153,31 @@ class _AddSheet extends StatelessWidget {
           VGap(
             gap: 6,
             children: [
-              label('Tenant name'),
-              Field(value: s.addName, onChanged: (v) => s.update(() => s.addName = v), placeholder: 'Full name'),
+              label('Name'),
+              Field(key: const ValueKey('addName'), value: s.addName, onChanged: (v) => s.update(() => s.addName = v), placeholder: 'Full name'),
             ],
           ),
           VGap(
             gap: 6,
             children: [
-              label('WhatsApp number'),
-              Field(
-                value: s.addPhone,
-                onChanged: (v) => s.update(() {
-                  final d = v.replaceAll(RegExp(r'\D'), '');
-                  s.addPhone = d.length > 10 ? d.substring(0, 10) : d;
-                }),
-                placeholder: '10 digits',
-                numeric: true,
+              label('Phone'),
+              Row(
+                children: [
+                  Container(height: 46, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('+91', w: 800, s: 15)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Field(
+                      key: const ValueKey('addPhone'),
+                      value: s.addPhone,
+                      onChanged: (v) => s.update(() {
+                        final d = v.replaceAll(RegExp(r'\D'), '');
+                        s.addPhone = d.length > 10 ? d.substring(0, 10) : d;
+                      }),
+                      placeholder: 'WhatsApp number, 10 digits',
+                      numeric: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1191,46 +1191,21 @@ class _AddSheet extends StatelessWidget {
           VGap(
             gap: 6,
             children: [
-              label('Moving in'),
+              label('Moves in'),
               Seg(opts: same(['Today', 'Tomorrow', dayMon(appToday.add(const Duration(days: 4)))]), cur: s.addDate, onPick: (v) => s.update(() => s.addDate = v), pad: const EdgeInsets.all(10)),
             ],
           ),
+          T(sel?.r != null ? 'Rent ${fmt(sel!.r!.rent)} a month · due at move-in ${fmt(terms.advance + sel.r!.rent)} (advance ${fmt(terms.advance)}, ${fmt(terms.maintenance)} kept on exit)' : 'Pick a bed to see the rent.', s: 13, c: p.mu, lh: 1.45),
+          // F22: the board asks "How did they find you?" and a booking code; the
+          // server already links a tenant who came from the app by phone number.
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
-            child: Css(
-              s: 14,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  T('Monthly rent', c: p.mu),
-                  T(sel?.r != null ? fmt(sel!.r!.rent) : 'Pick a bed', w: 800),
-                ],
-              ),
-            ),
-          ),
-          Css(
-            s: 14,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                T('Advance', c: p.mu),
-                T('${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', w: 800),
-              ],
-            ),
-          ),
-          Css(
-            s: 14,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                T('Due at move-in', c: p.mu),
-                T(sel?.r != null ? fmt(terms.advance + sel!.r!.rent) : 'Pick a bed', w: 800),
-              ],
-            ),
+            padding: const EdgeInsets.all(12),
+            color: p.sf,
+            child: T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
           ),
           Cta(
-            'Add booking',
+            'Add tenant',
+            key: const ValueKey('addGo'),
             icon: 'check',
             height: 54,
             px: 16,
@@ -1294,8 +1269,10 @@ class _BedSheet extends StatelessWidget {
       s.toastMsg(m);
     }
 
-    final actions = <(String, VoidCallback, bool)>[];
+    final first = res?.name.split(' ').first ?? '';
+    final actions = <(String, VoidCallback, bool, String)>[];
     if (b.state == 'booked') {
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), true, 'msg'));
       actions.add((
         'Mark as leaving $leave',
         () {
@@ -1303,9 +1280,9 @@ class _BedSheet extends StatelessWidget {
           b.soon = leave;
           done('Bed ${b.id} is listed as free from $leave.');
         },
-        true,
+        false,
+        'logout',
       ));
-      actions.add(('Message resident', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), false));
     } else if (b.state == 'held') {
       actions.add((
         'Release hold',
@@ -1314,15 +1291,17 @@ class _BedSheet extends StatelessWidget {
           done('Bed ${b.id} is ${b.state == 'soon' ? 'free soon' : 'free'} again.');
         },
         true,
+        'x',
       ));
     } else {
       actions.add((
-        'Add booking for this bed',
+        'Add tenant to this bed',
         () => s.update(() {
           s.sheet = 'add';
           s.addBed = b.id;
         }),
         true,
+        'plus',
       ));
       actions.add((
         'Hold for a walk-in',
@@ -1331,30 +1310,40 @@ class _BedSheet extends StatelessWidget {
           done('Bed ${b.id} held for 1 hour. It frees itself after that.');
         },
         false,
+        'clock',
       ));
     }
+    // F22 Area 3 (board `bedSheet`): who's in it, the room, the rent, since
+    // when and how they came; then one main action.
+    final via = res == null ? null : residentTag(p, res.tag).label.toLowerCase();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        KV('Room', '${r.n} · Floor ${r.floor} · ${r.share} sharing', keyWidth: 110),
-        KV('Position', b.spot, keyWidth: 110),
+        Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 2), child: Kicker(stl)),
+        if (b.state == 'booked') KV('Resident', res != null ? '${res.name} · rent ${res.status == 'Overdue' ? 'late' : res.status.toLowerCase()}' : 'Not added yet', keyWidth: 110),
+        KV('Room', '${r.label} · ${r.share} sharing · ${b.spot}', keyWidth: 110),
         KV('Rent', '${fmt(r.rent)} a month', keyWidth: 110),
+        if (res != null) KV('Since', [res.since.replaceFirst('Joined ', '').replaceFirst('Added ', ''), ?via].join(' · '), keyWidth: 110),
         KV('Advance', '${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', keyWidth: 110),
-        KV('Status', stl, keyWidth: 110),
-        KV(
-          'Resident',
-          res != null
-              ? '${res.name} · rent ${res.status.toLowerCase()}'
-              : b.state == 'booked'
-              ? 'Offline tenant'
-              : 'None',
-          keyWidth: 110,
-        ),
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
           child: VGap(
             gap: 8,
-            children: [for (final a in actions) Cta(a.$1, height: 50, px: 16, fs: 15, onTap: a.$2, bg: a.$3 ? p.ac : transparent, fg: a.$3 ? p.ai : p.tx, border: a.$3 ? p.ac : p.tx)],
+            children: [for (final a in actions) a.$3 ? Cta(a.$1, icon: a.$4, height: 54, px: 16, fs: 15, onTap: a.$2, bg: p.tx, fg: p.bg, border: p.tx) : OutlineCta(a.$1, icon: a.$4, onTap: a.$2)],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Tap(
+              key: const ValueKey('bedLayout'),
+              onTap: () {
+                s.update(() => s.sheet = null);
+                s.ownerLayout(r.n);
+              },
+              child: T('Room ${r.label} layout ›', s: 14, w: 800),
+            ),
           ),
         ),
       ],
