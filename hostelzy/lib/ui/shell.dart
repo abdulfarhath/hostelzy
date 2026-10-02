@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../state.dart';
 import 'amenities.dart';
+import 'refunds.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
@@ -433,6 +434,8 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
+    'oRefund' => const OwnerRefundScreen(),
+    'rRefund' => const ResidentRefundScreen(),
     'reminders' => const RemindersScreen(),
     'gate' => const GateScreen(),
     'aHome' => const TeamHomeScreen(),
@@ -1283,11 +1286,11 @@ class _BedSheet extends StatelessWidget {
       actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), true, 'msg'));
       actions.add((
         'Mark as leaving $leave',
-        () {
+        () => res != null ? s.markLeaving(res, b, leaveDays(terms).first) : () {
           b.state = 'soon';
           b.soon = leave;
           done('Bed ${b.id} is listed as free from $leave.');
-        },
+        }(),
         false,
         'logout',
       ));
@@ -1301,6 +1304,10 @@ class _BedSheet extends StatelessWidget {
         true,
         'x',
       ));
+    } else if (b.state == 'soon' && res != null) {
+      // F24: leaving: when they've gone, the bed frees and the refund is due.
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), false, 'msg'));
+      actions.add(('${first.isEmpty ? 'They' : first} moved out', () => s.movedOut(res, b), true, 'logout'));
     } else {
       actions.add((
         'Add tenant to this bed',

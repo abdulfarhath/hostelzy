@@ -9,10 +9,10 @@ import '../../data.dart';
 /// S6: the signed-in user's Stay Rewards from the server (ledger + profile).
 typedef Rewards = ({bool member, String since, String? code, bool referred, int balance, int friends, bool used, List<({String hid, String what, int amt})> ownerCredits});
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards, List<({String hid, String uid, String name})> mutes, Resident? myStay});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards, List<({String hid, String uid, String name})> mutes, Resident? myStay, List<MoveReq> moves, List<Refund> refunds, Refund? myRefund});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
-const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases', 'layout_fixes'];
+const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases', 'layout_fixes', 'move_requests'];
 
 int _ms(Object? t) => t == null ? 0 : DateTime.parse(t as String).millisecondsSinceEpoch;
 
@@ -98,8 +98,42 @@ Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> paym
     joinAt: joined.millisecondsSinceEpoch,
     lateDays: r['late_days'] as int? ?? 0,
     key: r['id'] as String,
+  )..leavingOn = _day(r['leaving_on']);
+}
+
+DateTime? _day(Object? d) => d == null ? null : DateTime.parse(d as String);
+
+/// F24: a notice or move request (with the resident's name and bed when staff read it).
+MoveReq moveFromRow(Map<String, dynamic> r) {
+  final st = r['stays'] as Map<String, dynamic>?;
+  return MoveReq(
+    id: r['id'] as String,
+    hid: r['hostel_id'] as String,
+    stayKey: r['stay_id'] as String? ?? '',
+    kind: r['kind'] as String,
+    status: r['status'] as String,
+    name: st?['name'] as String? ?? '',
+    bed: bedLabel(st?['beds'] as Map<String, dynamic>?),
+    lastDay: _day(r['last_day']),
+    toBed: r['to_bed'] as String? ?? '',
+    reason: r['reason'] as String? ?? '',
+    at: _ms(r['created_at']),
   );
 }
+
+/// F24: a former resident's refund.
+Refund refundFromRow(Map<String, dynamic> r) => Refund(
+  stayKey: r['id'] as String,
+  hid: r['hostel_id'] as String,
+  name: r['name'] as String? ?? '',
+  phone: r['phone'] as String? ?? '',
+  bed: bedLabel(r['beds'] as Map<String, dynamic>?),
+  advance: r['advance'] as int? ?? 0,
+  amt: r['refund_amount'] as int? ?? 0,
+  status: r['refund_status'] as String,
+  utr: r['refund_utr'] as String? ?? '',
+  leftOn: _day(r['left_on'])!,
+);
 
 /// S7: an owner-plan invoice from the server.
 Invoice invoiceFromRow(Map<String, dynamic> r) => Invoice(
@@ -233,7 +267,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>> mutes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], int? now}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>> mutes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], List<Map<String, dynamic>> moves = const [], int? now}) => (
   holds: [
     for (final r in holds)
       holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
@@ -260,6 +294,11 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
   trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},
   residents: [for (final r in stays) if (r['left_on'] == null && r['user_id'] != me && r['name'] != null) residentFromRow(r, payments)],
+  // F24: notices and moves (staff: their hostels'; a resident: their own), newest first.
+  moves: [for (final r in moves) moveFromRow(r)],
+  // F24: refunds still open for residents who moved out (staff see their hostels').
+  refunds: [for (final r in stays) if (r['left_on'] != null && r['user_id'] != me && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)],
+  myRefund: [for (final r in stays) if (r['user_id'] == me && r['left_on'] != null && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)].firstOrNull,
   signups: [
     for (final r in signups)
       if (r['status'] == 'pending' && r['user_id'] != me)

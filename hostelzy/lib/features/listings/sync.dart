@@ -62,6 +62,10 @@ extension SyncActions on AppState {
     }
     fixes = l.fixes;
     fixMutes = l.mutes;
+    // F24: notices, moves and refunds.
+    moves = l.moves;
+    refunds = l.refunds;
+    myRefund = l.myRefund;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
     final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];

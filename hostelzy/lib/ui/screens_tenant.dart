@@ -544,6 +544,8 @@ class MeScreen extends StatelessWidget {
     final nSaved = s.saved.values.where((v) => v).length;
     final rows = <(String, String, VoidCallback)>[
       // F22 Area 2: the resident's stay is one row; its actions live in My stay.
+      // F24: an advance refund still open after moving out.
+      if (s.myRefund case final r?) ('Your refund', '${fmt(r.amt)} · ${r.status == 'sent' ? 'did it arrive?' : r.status == 'not_received' ? 'not received' : 'due ${dayMon(r.due)}'}', s.openMyRefund),
       if (s.role == 'resident') ('My stay', s.myStay == null ? 'Not on Hostelzy yet' : [if (s.myStay!.bed.isNotEmpty) 'Bed ${s.myStay!.bed}', s.stayHostel.name].join(' · '), () => s.go('rStay')),
       if (!isOwner) ('Saved', nSaved == 0 ? 'Nothing yet' : '$nSaved hostel${nSaved == 1 ? '' : 's'}', () => s.go('saved')),
       if (!isOwner) ('Holds', live.isEmpty ? 'None right now' : [if (held > 0) '$held held', if (booked > 0) '$booked booked'].join(' · '), () => s.tab('holds')),

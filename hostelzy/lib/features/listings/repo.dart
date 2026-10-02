@@ -193,7 +193,19 @@ abstract class HostelRepo {
   Future<String> joinAsOwner(String code);
   Future<bool> ownerLinked(String hid);
   Future<void> goLive(String hid);
+
+  /// F24 item 5: notice, moves, moving out and the refund.
+  Future<void> giveNotice(DateTime lastDay, String reason);
+  Future<void> askMove(String toBedKey);
+  Future<void> withdrawMove(String id);
+  Future<void> answerMove(String id, bool accept);
+  Future<void> markLeaving(String stayKey, DateTime day);
+  Future<void> movedOut(String stayKey);
+  Future<void> sendRefund(String stayKey, String utr);
+  Future<void> confirmRefund(String stayKey, bool got);
 }
+
+String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
 class SampleRepo implements HostelRepo {
   const SampleRepo();
@@ -343,6 +355,22 @@ class SampleRepo implements HostelRepo {
   Future<bool> ownerLinked(String hid) async => false;
   @override
   Future<void> goLive(String hid) => throw UnsupportedError('sample data');
+  @override
+  Future<void> giveNotice(DateTime lastDay, String reason) async {}
+  @override
+  Future<void> askMove(String toBedKey) async {}
+  @override
+  Future<void> withdrawMove(String id) async {}
+  @override
+  Future<void> answerMove(String id, bool accept) async {}
+  @override
+  Future<void> markLeaving(String stayKey, DateTime day) async {}
+  @override
+  Future<void> movedOut(String stayKey) async {}
+  @override
+  Future<void> sendRefund(String stayKey, String utr) async {}
+  @override
+  Future<void> confirmRefund(String stayKey, bool got) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -408,7 +436,7 @@ class SupabaseRepo implements HostelRepo {
       db.from('enquiries').select().order('created_at', ascending: false),
       db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
       db.from('complaints').select().order('created_at', ascending: false),
-      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').isFilter('left_on', null).order('joined_on', ascending: false),
+      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').or('left_on.is.null,refund_status.in.(due,sent,not_received)').order('joined_on', ascending: false),
       db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
       db.from('invoices').select(),
       db.from('owner_plans').select('hostel_id, trial_ends'),
@@ -419,8 +447,10 @@ class SupabaseRepo implements HostelRepo {
       db.from('reward_ledger').select().order('created_at'),
       db.from('layout_fixes').select().neq('status', 'withdrawn').order('created_at'),
       db.from('layout_fix_mutes').select('hostel_id, user_id, name'),
+      // F24: notices and moves; empty before its SQL runs.
+      db.from('move_requests').select('*, stays(name, beds(letter, rooms(number, label)))').neq('status', 'withdrawn').order('created_at', ascending: false).limit(100).then((v) => v, onError: (_) => <Map<String, dynamic>>[]),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], mutes: r[14], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], mutes: r[14], moves: r[15], me: me);
   }
 
   @override
@@ -704,6 +734,22 @@ class SupabaseRepo implements HostelRepo {
   Future<bool> ownerLinked(String hid) async => (await db.from('hostel_staff').select('user_id').eq('hostel_id', hid).eq('role', 'owner').limit(1)).isNotEmpty;
   @override
   Future<void> goLive(String hid) => db.rpc('go_live', params: {'h': hid});
+  @override
+  Future<void> giveNotice(DateTime lastDay, String reason) => db.rpc('give_notice', params: {'p_last_day': _ymd(lastDay), 'p_reason': reason});
+  @override
+  Future<void> askMove(String toBedKey) => db.rpc('ask_move', params: {'p_to_bed': toBedKey});
+  @override
+  Future<void> withdrawMove(String id) => db.rpc('withdraw_move', params: {'p_id': id});
+  @override
+  Future<void> answerMove(String id, bool accept) => db.rpc('answer_move', params: {'p_id': id, 'p_accept': accept});
+  @override
+  Future<void> markLeaving(String stayKey, DateTime day) => db.rpc('mark_leaving', params: {'p_stay': stayKey, 'p_day': _ymd(day)});
+  @override
+  Future<void> movedOut(String stayKey) => db.rpc('moved_out', params: {'p_stay': stayKey});
+  @override
+  Future<void> sendRefund(String stayKey, String utr) => db.rpc('send_refund', params: {'p_stay': stayKey, 'p_utr': utr});
+  @override
+  Future<void> confirmRefund(String stayKey, bool got) => db.rpc('confirm_refund', params: {'p_stay': stayKey, 'p_got': got});
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
