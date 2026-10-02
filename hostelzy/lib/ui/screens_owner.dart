@@ -862,6 +862,8 @@ class OwnerManageScreen extends StatelessWidget {
       body = const _Residents();
     } else if (s.moreTab == 'deals') {
       body = const OwnerDeals();
+    } else if (s.moreTab == 'rates') {
+      body = const RateCard();
     } else if (s.moreTab == 'complaints') {
       final sorted = s.complaints.asMap().entries.toList()
         ..sort((x, y) {
@@ -1024,7 +1026,7 @@ class OwnerManageScreen extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: PageHead(kicker: 'Anjani Residency', title: 'Manage'),
         ),
-        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
+        Seg(opts: const [('residents', 'Residents'), ('complaints', 'Complaints'), ('deals', 'Deals'), ('rates', 'Rates'), ('menu', 'Menu'), ('rules', 'Rules')], cur: s.moreTab, onPick: (v) => v == 'deals' ? s.openDeals() : v == 'rates' ? s.openRates() : s.update(() => s.moreTab = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), byLabel: true, margin: const EdgeInsets.symmetric(horizontal: 16)),
         const SizedBox(height: 14),
         Expanded(
           child: Container(
@@ -1343,8 +1345,9 @@ class _QrPainter extends CustomPainter {
 // ------------------------------------------------------------ F16 rate card
 
 /// F16 board 5: rate card (sharing × AC / non-AC) and each room's type.
-class OwnerRatesScreen extends StatelessWidget {
-  const OwnerRatesScreen({super.key});
+/// Lives in Manage → Rates (DECISIONS 2026-10-02, design follow-ups).
+class RateCard extends StatelessWidget {
+  const RateCard({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -1357,25 +1360,6 @@ class OwnerRatesScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BackBtn(onTap: s.back),
-              const SizedBox(width: 12),
-              const Expanded(child: PageHead(kicker: 'Anjani Residency · Beds', title: 'Rooms and rent', size: 28)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Scroll(
-              key: ValueKey('oRates${s.scrollEpoch}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     child: Row(
@@ -1526,13 +1510,8 @@ class OwnerRatesScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: T('AC rooms need an AC unit in the layout. The Hostelzy team adds it within 48 hours.', s: 12, c: p.mu, lh: 1.4),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Cta('Save rate card', icon: 'check', height: 52, px: 16, fs: 15, onTap: s.saveRates),
         ),
       ],

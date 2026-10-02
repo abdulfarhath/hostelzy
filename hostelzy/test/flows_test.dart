@@ -377,7 +377,7 @@ void main() {
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
     await tap(tester, find.text('Rooms and rent'));
-    expect(o.screen, 'oRates');
+    expect((o.screen, o.moreTab), ('oMore', 'rates'));
     await tester.enterText(find.bySemanticsLabel('Walk-in price, 3 sharing AC'), '9500');
     await tester.pump();
     final r204 = o.rooms['anjani']!.firstWhere((x) => x.n == 204);
@@ -387,6 +387,7 @@ void main() {
     await tap(tester, find.text('+ Add'));
     expect(o.rateDraft![rateKey(true, 4)], 7600 + 1200);
     o.setRoomAc(r204, true);
+    await tester.pump(const Duration(seconds: 3)); // let the "Add a price first" toast go
     await tap(tester, find.text('Save rate card'));
     expect(o.rooms['anjani']!.firstWhere((x) => x.n == 201).rent, 9500);
     expect(r204.ac, isTrue);

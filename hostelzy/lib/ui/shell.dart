@@ -311,7 +311,6 @@ class _AppBody extends StatelessWidget {
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
-    'oRates' => const OwnerRatesScreen(),
     'oInvite' => const OwnerInviteScreen(),
     _ => const SizedBox(),
   };
