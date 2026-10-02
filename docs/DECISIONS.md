@@ -165,5 +165,11 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   `docs/features/F17-production-ready.md`. Payment flow: UPI to the owner → tenant enters UTR →
   "waiting for owner" → owner confirms → booked.
 
+**Real map** — founder, 2026-10-02
+- The map must look like Google Maps: real streets, pan/zoom, every hostel at its real location with
+  a red price pin (same look as today). Now: `flutter_map` + OpenStreetMap tiles (no key, testing
+  traffic only). At launch: switch to Google Maps (or a keyed tile provider) when the founder adds
+  an API key. Distances come from real coordinates.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
