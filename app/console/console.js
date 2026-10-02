@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges } from './logic.js';
 
 const app = document.getElementById('app');
 
@@ -66,6 +66,7 @@ const NAV = [
   ['payments', 'Payments'],
   ['cases', 'Fair Play'],
   ['layout', 'Layout help'],
+  ['fixes', 'Layout fixes'],
   ['hostels', 'Hostels'],
 ];
 
@@ -204,6 +205,61 @@ const VIEWS = {
 
   async layout(db, again) {
     return VIEWS.cases(db, again);
+  },
+
+  // F19 board 12: residents' layout fixes, oldest first. Owners decide
+  // first; after 7 days the team can approve or reject.
+  async fixes(db, again) {
+    const [fixes, leads] = await Promise.all([
+      db.from('layout_fixes').select('*, hostels(name, owner_name)').eq('status', 'pending').order('created_at').then(ok),
+      db.from('hostel_leads').select('hostel_id, owner_phone').then(ok),
+    ]);
+    const phone = Object.fromEntries(leads.map((l) => [l.hostel_id, l.owner_phone]));
+    const silent = fixes.filter((f) => waitedDays(f.created_at) >= 7).length;
+    let sel = fixes[0];
+    const detail = el('section', { class: 'add' });
+    const decide = async (f, approve) => {
+      const reason = approve ? '' : (prompt('Why? (optional, the resident sees it)') ?? null);
+      if (reason === null) return;
+      ok(await db.rpc('decide_layout_fix', { p_id: f.id, p_approve: approve, p_reason: reason }));
+      toast(approve ? 'Published. The resident is told.' : 'Rejected. The current layout stays live.');
+      again();
+    };
+    const drawDetail = async () => {
+      if (!sel) return detail.replaceChildren(el('p', { class: 'empty' }, 'No layout fixes waiting.'));
+      const days = waitedDays(sel.created_at);
+      const owner = sel.hostels?.owner_name || 'The owner';
+      const live = await db.from('layouts').select('w, h, beds, items').eq('hostel_id', sel.hostel_id).eq('room', sel.room).eq('stage', 'published').maybeSingle().then(ok);
+      const changes = layoutChanges(live, sel.layout);
+      const wa = waLink(phone[sel.hostel_id], `Hi ${owner}, a resident sent a layout fix for room ${sel.room} ${days} days ago. Please approve or reject it in the Hostelzy app → Today.`);
+      detail.replaceChildren(
+        el('h2', {}, `${sel.hostels?.name ?? ''} · Room ${sel.room}`),
+        el('p', { class: 'mu', style: 'margin:0' }, days >= 7 ? `${owner} hasn’t answered in ${days} days. The team can decide now.` : `With ${owner} for ${days} ${days === 1 ? 'day' : 'days'}. Owners decide first.`),
+        el('div', { class: 'kick' }, `${changes.length} ${changes.length === 1 ? 'change' : 'changes'}`),
+        el('ul', {}, changes.map((c) => el('li', {}, c))),
+        sel.note ? el('p', {}, `“${sel.note}”`) : null,
+        el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, `${sel.author_name}${sel.author_bed ? ' · lives in ' + sel.author_bed : ''}`),
+        el('button', { class: 'btn primary cta', disabled: days < 7, onclick: () => decide(sel, true) }, 'Approve & publish', '✓'),
+        el('button', { class: 'btn full', disabled: days < 7, onclick: () => decide(sel, false) }, 'Reject'),
+        wa ? el('a', { class: 'btn full', href: wa, target: '_blank', rel: 'noopener' }, `Remind ${owner} on WhatsApp`) : null,
+        el('p', { class: 'note' }, 'Owners decide first. After 7 days the team can approve or reject. The resident’s name is shown only to the owner and the team.'),
+      );
+    };
+    const row = (f) => {
+      const days = waitedDays(f.created_at);
+      const [t, kind] = fixStatus(days);
+      return el('button', { class: 'tr' + (f === sel ? ' hi' : ''), onclick: () => { sel = f; drawDetail(); } },
+        el('div', {}, f.hostels?.name ?? ''), el('div', {}, String(f.room)), el('div', {}, `${f.author_name}${f.author_bed ? ' · lives in ' + f.author_bed : ''}`),
+        el('div', {}, f.note ? `“${f.note}”` : '—'), el('div', {}, `${days} ${days === 1 ? 'day' : 'days'}`), el('div', {}, el('span', { class: 'tag ' + kind }, t)));
+    };
+    drawDetail();
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Layout fixes'), el('span', { class: 'mu', style: 'font-size:13px' }, `From residents · oldest first${silent ? ` · ${silent} waiting over 7 days` : ''}`)),
+      el('div', { class: 'board' },
+        el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Room', 'From', 'Note', 'Waiting', 'Status'].map((h) => el('div', {}, h))),
+          fixes.length ? fixes.map(row) : el('p', { class: 'empty' }, 'No layout fixes waiting.')),
+        detail),
+    ];
   },
 
   async hostels(db, again) {

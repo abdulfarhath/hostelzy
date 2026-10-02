@@ -64,6 +64,19 @@ extension OwnerLayoutsActions on AppState {
 
   /// Owner publishes: tenants see this version now, no approval needed.
   void publishLayout(RoomLayout l) {
+    if (onServer) {
+      // F19 server: owners publish their own layouts (the server checks them).
+      _write(() => data.publishLayout(l.hid, l.room, layoutJson(l.snap()))).then((ok) async {
+        if (!ok) return;
+        await refreshListings();
+        update(() {
+          edOwner = false;
+          screen = 'oPublished';
+          sheet = null;
+        });
+      });
+      return;
+    }
     final wasLive = l.live;
     update(() {
       lastPublish = (room: l.room, snap: wasLive ? (l.published ?? l.snap()) : null, version: l.version);

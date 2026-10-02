@@ -45,6 +45,7 @@ extension SyncActions on AppState {
     // newest one (or the trial, before the first is issued).
     invoices = l.invoices;
     cases = l.cases;
+    fixes = l.fixes;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
     final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];

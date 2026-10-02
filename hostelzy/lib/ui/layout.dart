@@ -141,7 +141,7 @@ class _RoomPainter extends CustomPainter {
 /// How a bed looks on the map. [mode]: tenant | compare | plain | edit. In
 /// edit mode items and beds can be selected and dragged ([onDrag] gets feet).
 class LayoutMap extends StatelessWidget {
-  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick, this.selected, this.onSelect, this.onDrag, this.onDragEnd});
+  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick, this.selected, this.onSelect, this.onDrag, this.onDragEnd, this.marked = const {}});
   final RoomLayout l;
   final Room room;
   final String mode;
@@ -153,6 +153,9 @@ class LayoutMap extends StatelessWidget {
   final ValueChanged<String>? onSelect;
   final void Function(String id, Offset deltaFt)? onDrag;
   final VoidCallback? onDragEnd;
+
+  /// F19: things outlined in red (what a resident's fix changed).
+  final Set<String> marked;
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +237,7 @@ class LayoutMap extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(children: [T(b.letter, w: 800, s: note == null ? 22 : 16, lh: 1), if (note != null) ...[const SizedBox(width: 4), Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(note, s: 8, w: 800, upper: true, nowrap: true)))]]),
+                  Row(children: [Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(b.letter, w: 800, s: note == null ? 22 : 16, lh: 1))), if (note != null) ...[const SizedBox(width: 4), Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(note, s: 8, w: 800, upper: true, nowrap: true)))]]),
                   FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.bottomLeft, child: T(tag, s: 9, w: 800, ls: .06, upper: true, nowrap: true)),
                 ],
               ),
@@ -283,6 +286,12 @@ class LayoutMap extends StatelessWidget {
           for (final b in l.beds.keys.where((b) => !l.bunks.containsKey(b))) {
             handles.add(handle('bed:$b', l.bedRect(b)));
           }
+        }
+        for (final id in marked) {
+          final ft = id.startsWith('bed:') ? (l.beds.containsKey(id.substring(4)) ? l.bedRect(id.substring(4)) : null) : l.items.where((i) => i.id == id).firstOrNull?.rect;
+          if (ft == null) continue;
+          final r = sc(ft).inflate(3);
+          handles.add(Positioned.fromRect(rect: r, child: IgnorePointer(child: Container(decoration: BoxDecoration(border: Border.all(color: p.ac, width: 2))))));
         }
         return Semantics(
           label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet',
@@ -377,10 +386,13 @@ class RoomMode extends StatelessWidget {
       body = VGap(
         gap: 10,
         children: [
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               ChipBtn('Show fan reach', on: s.showFan, onTap: () => s.update(() => s.showFan = !s.showFan)),
-              if (l.ac != null) ...[const SizedBox(width: 6), ChipBtn('Show AC airflow', on: s.showAc, onTap: () => s.update(() => s.showAc = !s.showAc))],
+              if (l.ac != null) ChipBtn('Show AC airflow', on: s.showAc, onTap: () => s.update(() => s.showAc = !s.showAc)),
+              if (room.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length >= 2) ChipBtn('Compare beds', on: false, onTap: s.openCompare),
             ],
           ),
           LayoutMap(
@@ -397,7 +409,17 @@ class RoomMode extends StatelessWidget {
               });
             },
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T('${l.w.round()} × ${l.h.round()} ft · 1 square = 1 ft', s: 11, c: p.mu), T('Sample layout · real ones after a visit', s: 11, c: p.mu)]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              T('${l.w.round()} × ${l.h.round()} ft · 1 square = 1 ft', s: 11, c: p.mu),
+              // F19: residents' approved fixes; their names are never shown.
+              if (s.checkedLabel(h.id, room.n) case final ck?)
+                Row(mainAxisSize: MainAxisSize.min, children: [Ic('shieldOk', size: 14, color: p.tx), const SizedBox(width: 4), T(ck, s: 11, w: 800)])
+              else
+                T(AppState.samples ? 'Sample layout · real ones after a visit' : 'Layout v${l.version}', s: 11, c: p.mu),
+            ],
+          ),
           if (fb != null)
             Container(
               padding: const EdgeInsets.only(top: 10),
@@ -462,11 +484,12 @@ class RoomBar extends StatelessWidget {
           }))
         : Cta(b == null ? 'Pick a bed' : 'Taken', height: 54, px: 16, fs: 15, bg: p.tk, fg: p.tx, onTap: () => s.toastMsg('Pick a free bed first.'));
     if (l == null) return hold;
+    // F19: "Edit room" for everyone; only residents of this hostel can send a fix.
     return Row(
       children: [
         Tap(
-          onTap: s.openCompare,
-          child: Container(height: 54, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('Compare beds', w: 800, s: 15)),
+          onTap: () => s.openFixEditor(s.hid, room.n),
+          child: Container(height: 54, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('pencil', size: 18, color: p.tx), const SizedBox(width: 8), const T('Edit room', w: 800, s: 15)])),
         ),
         const SizedBox(width: 8),
         Expanded(child: hold),

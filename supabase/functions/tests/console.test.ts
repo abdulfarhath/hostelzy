@@ -28,3 +28,16 @@ test('payments helpers', () => {
   assert.equal(waLink('', 'Hi'), null);
   assert.equal(rupees(999), '₹999');
 });
+
+test('layout fixes: days waited, owner silent after 7, what changed', async () => {
+  // @ts-ignore plain JS module
+  const { waitedDays, fixStatus, layoutChanges } = await import('../../../app/console/logic.js');
+  const now = Date.parse('2026-10-10T12:00:00Z');
+  assert.equal(waitedDays('2026-10-01T10:00:00Z', now), 9);
+  assert.deepEqual(fixStatus(9), ['Owner silent', 'red']);
+  assert.deepEqual(fixStatus(2), ['With owner', 'neutral']);
+  const before = { w: 18, h: 15, beds: { A: [1, 1], B: [5, 1] }, items: [{ id: 'fan1', kind: 'fan', x: 8, y: 7, w: 1, h: 1 }, { id: 'ac1', kind: 'ac', x: 17, y: 6, w: 0.5, h: 1.8 }] };
+  const after = { w: 18, h: 16, beds: { A: [1, 1], B: [6, 1] }, items: [{ id: 'fan1', kind: 'fan', x: 2, y: 7, w: 1, h: 1 }, { id: 'ac1', kind: 'ac', x: 17, y: 6, w: 0.5, h: 1.8, working: false }, { id: 'window1', kind: 'window', x: 0, y: 0, w: 4, h: 0.3 }] };
+  assert.deepEqual(layoutChanges(before, after), ['Fan moved', 'AC unit not working', 'Window added', 'Bed B moved', 'Size 18 × 15 → 18 × 16 ft']);
+  assert.deepEqual(layoutChanges(null, { w: 10, h: 10, beds: {}, items: [] }), ['Size 0 × 0 → 10 × 10 ft']);
+});

@@ -1824,7 +1824,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -2919,6 +2919,168 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('F19: residents fix room layouts; others see the residents-only sheet; the owner compares and decides', (tester) async {
+    final owner = hostelById('anjani').owner;
+    // A tenant browsing Anjani: Edit room → only residents can fix it.
+    final t = AppState(start: 'picker', role: 'tenant');
+    await pumpApp(tester, t);
+    t.update(() {
+      t.hid = 'anjani';
+      t.room = 203;
+      t.floor = 2;
+      t.mode = 'room';
+    });
+    await tester.pump();
+    await tap(tester, find.text('Edit room'));
+    expect(t.sheet, 'fixLock');
+    expect(find.text('Only residents of Anjani Residency can fix room layouts'), findsOneWidget);
+    expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
+    t.dispose();
+
+    // A resident: their room screen → Edit room → the suggestion editor.
+    final r = AppState(start: 'rHome', role: 'resident');
+    await pumpApp(tester, r);
+    await tap(tester, find.textContaining('Room layouts.', findRichText: true));
+    expect((r.screen, r.fixHid, r.fixRoom), ('rRoom', 'anjani', 204));
+    await tap(tester, find.text('203'));
+    expect(find.text('Something in the wrong place?'), findsOneWidget);
+    await tap(tester, find.text('Edit room'));
+    expect(r.screen, 'rFix');
+    expect(find.text('Only you see this until you send it'), findsOneWidget);
+    final live = r.liveLayout('anjani', 203)!;
+    final v0 = live.version;
+    // Nothing changed yet: not sent.
+    await tap(tester, find.text('Send to owner'));
+    expect(r.toast, 'Nothing changed yet. Move things to where they really are.');
+    // Move the fan one foot and mark it not working; the live layout doesn't change.
+    final fan = r.fixLayout!.of('fan').first;
+    r.edSelect(fan.id);
+    await tester.pump();
+    final x0 = fan.x;
+    await tap(tester, find.byKey(const ValueKey('fix-right')));
+    final moved = fan.x;
+    expect(moved, isNot(x0)); // on the 1-ft grid
+    expect(live.of('fan').first.x, x0);
+    await tap(tester, find.text('Not working'));
+    expect(fan.working, isFalse);
+    expect(live.of('fan').first.working, isTrue);
+    // The draft stays on this phone when leaving, and comes back.
+    r.leaveFixEditor();
+    expect(r.snapshot()['fixDrafts'], contains('anjani|203'));
+    r.openFixEditor('anjani', 203);
+    expect(r.fixLayout!.of('fan').first.x, moved);
+    // Send: what changed, an optional note, then "Waiting for owner".
+    await tester.pump();
+    await tap(tester, find.text('Send to owner'));
+    expect(r.sheet, 'fixSend');
+    expect(find.textContaining('not working'), findsWidgets);
+    r.update(() => r.fixNote = 'Fan is over bed A');
+    await tap(tester, find.text('Send to owner').last);
+    await tester.pump();
+    expect((r.screen, r.sheet), ('rRoom', null));
+    expect(r.toast, 'Sent to $owner. You get a notification when they decide.');
+    expect(find.text('Waiting for $owner'), findsOneWidget);
+    expect(r.fixDrafts.containsKey('anjani|203'), isFalse);
+    final mine = r.myFixFor('anjani', 203)!;
+    expect((mine.status, mine.note), ('pending', 'Fan is over bed A'));
+    // 3 waiting at once is the most.
+    for (final n in [301, 302]) {
+      r.fixes.add(LayoutFix(id: 'x$n', hid: 'anjani', room: n, snap: live.snap(), at: 0, mine: true));
+    }
+    r.openFixEditor('anjani', 304);
+    expect(r.sheet, 'fixLimit');
+    await tester.pump();
+    expect(find.text('You have 3 fixes waiting at Anjani Residency'), findsOneWidget);
+    // Withdraw it.
+    r.update(() => r.sheet = null);
+    await r.withdrawFix(mine);
+    expect((mine.status, r.toast), ('withdrawn', 'Withdrawn. Nothing changes for tenants.'));
+    r.dispose();
+
+    // The owner: Today card → compare side by side → approve & publish.
+    final o = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, o);
+    expect(find.text('LAYOUT FIXES FROM RESIDENTS'), findsOneWidget);
+    expect(find.text('Layout fix for Room 203'), findsOneWidget);
+    await tap(tester, find.text('Compare and decide'));
+    expect(o.screen, 'oFix');
+    expect(find.text('SUGGESTED'), findsOneWidget);
+    expect(find.textContaining('WHAT CHANGED'), findsOneWidget);
+    final ol = o.layoutOf('anjani', 203)!;
+    final ov = ol.version;
+    await tap(tester, find.text('Approve & publish'));
+    await tester.pump();
+    expect(o.screen, 'oFixDone');
+    expect(find.text('Live for tenants'), findsOneWidget);
+    expect(ol.version, ov + 1);
+    expect(o.checkedLabel('anjani', 203), 'Checked by a resident · ${dayMon(appToday)}');
+    expect(o.fixesWaiting, isEmpty);
+    // Undo publish goes back; the check is taken away again.
+    await tap(tester, find.textContaining('Undo publish'));
+    expect(ol.version, ov);
+    expect(o.checkedLabel('anjani', 203), isNull);
+    // Reject with a reason the resident sees.
+    final f2 = LayoutFix(id: 'fx9', hid: 'anjani', room: 203, snap: ol.snap(), at: 0, author: 'Teja N.', authorBed: '201-A');
+    o.update(() => o.fixes = [...o.fixes, f2]);
+    o.openFix(f2);
+    await tester.pump();
+    await tap(tester, find.text('Reject'));
+    expect(o.sheet, 'fixReject');
+    await tap(tester, find.text('It was moved back'));
+    await tap(tester, find.text('Reject the fix'));
+    expect((f2.status, f2.reason), ('rejected', 'It was moved back'));
+    expect(o.toast, 'Rejected. The current layout stays live. Teja can send a new fix.');
+    expect(v0, isNonZero);
+    o.dispose();
+  });
+
+  test('F19: on Supabase, fixes go to the server; owners publish their own layouts there', () async {
+    // Rows from the server, and the public "checked" counts.
+    final row = {'id': 'lf-1', 'hostel_id': 'h1', 'room': 101, 'author_id': 'fb-rahul', 'author_name': 'Rahul Varma', 'author_bed': '204-B', 'layout': {'w': 18, 'h': 15, 'beds': {'A': [1, 1]}, 'items': [{'id': 'fan1', 'kind': 'fan', 'x': 2, 'y': 7, 'w': 1, 'h': 1}]}, 'note': 'Fan', 'status': 'pending', 'base_version': 1, 'created_at': '2026-10-02T10:00:00Z'};
+    final f = fixFromRow(row, me: 'fb-rahul');
+    expect((f.author, f.mine, f.snap.items.single.x, f.snap.beds['A']), ('Rahul V.', true, 2.0, const Offset(1, 1)));
+    expect(fixFromRow(row, me: 'fb-owner').mine, isFalse);
+    expect(listingsFromRows(const [], checks: {'h1': {101: (3, '2 Oct')}}).checks['h1']![101], (3, '2 Oct'));
+    final j = layoutJson(f.snap);
+    expect(snapFromJson(j).items.single.id, 'fan1');
+
+    final s = AppState(start: 'rHome', role: 'resident');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-rahul', stays: [
+      {'id': 'st1', 'hostel_id': 'anjani', 'user_id': 'fb-rahul', 'name': 'Rahul Varma', 'confirmed': true, 'left_on': null, 'joined_on': '2026-09-01'},
+    ]));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-rahul', name: 'Rahul', email: 'r@gmail.com'));
+    await s.startLive();
+    expect(s.myHostel, 'anjani');
+    s.openFixEditor('anjani', 203);
+    final fan = s.fixLayout!.of('fan').first;
+    s.edSelect(fan.id);
+    s.edNudge(s.fixLayout!, 1, 0);
+    s.openSendFix();
+    s.update(() => s.fixNote = 'Fan moved');
+    await s.sendFix();
+    expect(fake.calls.single, startsWith('fix anjani 203 '));
+    expect(s.screen, 'rRoom');
+    // The owner decides on the server.
+    s.update(() {
+      s.role = 'owner';
+      s.fixes = [LayoutFix(id: 'lf-2', hid: 'anjani', room: 203, snap: s.layoutOf('anjani', 203)!.snap(), at: 0, author: 'Rahul V.')];
+    });
+    await s.approveFix(s.fixes.single);
+    expect(fake.calls.last, 'fixdecide lf-2 true ');
+    expect(s.screen, 'oFixDone');
+    s.update(() => s.fixReason = 'Not accurate');
+    await s.rejectFix(LayoutFix(id: 'lf-3', hid: 'anjani', room: 203, snap: s.layoutOf('anjani', 203)!.snap(), at: 0, author: 'Rahul V.'));
+    expect(fake.calls.last, 'fixdecide lf-3 false Not accurate');
+    // Owners publish their own edits straight to the server.
+    s.publishLayout(s.layoutOf('anjani', 204)!);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'publish anjani 204');
+    s.stopLive();
+    s.dispose();
+  });
+
   test('sign-in errors: the real code is shown and sent to Crashlytics, never hidden', () async {
     final s = AppState(start: 'login', role: 'tenant');
     final gs = _FakeSignIn(SignInFail.failed);
@@ -3245,7 +3407,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
     return 'HZ-5009';
   }
 
@@ -3274,10 +3436,26 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
+
+  // F19: layout fixes.
+  @override
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async {
+    await _rec('fix $hid $room ${(layout['items'] as List).length} $note');
+    return 'lf-1';
+  }
+
+  @override
+  Future<void> withdrawLayoutFix(String id) => _rec('fixwithdraw $id');
+  @override
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) => _rec('fixdecide $id $approve $reason');
+  @override
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) => _rec('publish $hid $room');
+  @override
+  Future<void> undoLayoutPublish(String hid, int room) => _rec('undo $hid $room');
 
   // S8: managers.
   @override
@@ -3345,14 +3523,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes);
   }
 }
 

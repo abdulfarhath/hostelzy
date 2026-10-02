@@ -30,6 +30,7 @@ part 'features/layouts/owner_layouts.dart';
 part 'features/onboarding/rooms_live.dart';
 part 'features/team/team_members.dart';
 part 'features/layouts/layout_editor.dart';
+part 'features/layouts/layout_fixes.dart';
 part 'features/onboarding/onboarding.dart';
 part 'features/reviews/reviews.dart';
 part 'features/session/on_phone.dart';
@@ -50,7 +51,7 @@ part 'features/reminders/reminders.dart';
 /// B4: split by area. Each `lib/features/<area>/*.dart` part holds that
 /// area's fields (a `_XData` mixin) and actions (an `XActions` extension).
 /// This file keeps the shared core: navigation, `update`, statics, restore.
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _LayoutFixesData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -102,7 +103,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -271,6 +272,9 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     restoreRem(m['rem'] as Map<String, dynamic>?);
     final ru = m['rules'] as List?;
     if (ru != null && ru.isNotEmpty) rules = [for (final r in ru.cast<List>()) Rule(r[0] as String, r[1] as String)];
+    for (final e in ((m['fixDrafts'] as Map?) ?? const {}).entries) {
+      fixDrafts[e.key as String] = snapFromJson((e.value as Map).cast<String, dynamic>());
+    }
     final me = m['menu'] as List?;
     if (me != null && me.length == menu.length) menu = [for (final d in me.cast<List>()) DayMenu(d[0] as String, d[1] as String, d[2] as String)];
     // A Google account counts only while Firebase still has it signed in.
@@ -512,6 +516,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;
+      if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
     }
     // S4: the live hostels' reviews replace any earlier copy of them.
