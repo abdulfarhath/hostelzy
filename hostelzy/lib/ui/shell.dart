@@ -88,7 +88,7 @@ class _JumpPanel extends StatelessWidget {
       VGap(
         gap: 6,
         children: [
-          const T('hostelzy', w: 800, s: 26, ls: -.02),
+          const Row(children: [BrandMark(size: 22), SizedBox(width: 7), T('hostelzy', w: 800, s: 26, ls: -.02)]),
           T('Mobile prototype. Everything is clickable. Use the list below to jump straight to any screen.', s: 13, c: p.mu, lh: 1.45),
           _Link('Open all screens →', onTap: onOpenOverview),
         ],

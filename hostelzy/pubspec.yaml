@@ -57,6 +57,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # The Hostelzy room mark (logo B3-a2, docs/brand/assets).
+  assets:
+    - assets/brand/
+
   fonts:
     - family: Archivo
       fonts:

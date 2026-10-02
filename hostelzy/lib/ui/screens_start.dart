@@ -27,7 +27,7 @@ class WelcomeScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: const [T('hostelzy', w: 800, s: 20, ls: -.02), T('Hyderabad', s: 12, w: 600, ls: .1, upper: true)]),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Row(children: [BrandMark(size: 17, mono: p.ai), const SizedBox(width: 6), const T('hostelzy', w: 800, s: 20, ls: -.02)]), const T('Hyderabad', s: 12, w: 600, ls: .1, upper: true)]),
             ),
             Expanded(
               child: Padding(

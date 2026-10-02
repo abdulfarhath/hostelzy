@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
+import 'package:hostelzy/ui/kit.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
 
@@ -759,6 +760,23 @@ void main() {
     await tap(tester, find.text('Fix the UTR'));
     expect((m.sheet, m.utrDraft), ('utr', '402188341297'));
     m.dispose();
+  });
+
+  testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
+    final s = AppState();
+    await pumpApp(tester, s);
+    expect(find.byType(BrandMark), findsOneWidget);
+    s.dispose();
+    for (final f in [
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml',
+      'android/app/src/main/res/values/ic_launcher_background.xml',
+      for (final d in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) ...['android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png', 'android/app/src/main/res/mipmap-$d/ic_launcher_monochrome.png'],
+      'assets/brand/mark-light.svg',
+      'assets/brand/mark-dark.svg',
+    ]) {
+      expect(File(f).existsSync(), isTrue, reason: f);
+    }
   });
 
   test('data helpers match the prototype', () {
