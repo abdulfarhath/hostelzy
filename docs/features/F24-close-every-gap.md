@@ -145,3 +145,14 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Removed dead code:** the `oReviews` route (Manage goes to oRank), the `areas` sheet, the `joined` sheet (Holds has the inline "Did you join?" card) and the `rConfirm` screen.
 - **Not in this PR:** "meal reminders use the menu's real times". `menus` has no times yet, and reminders use the fixed meal times shown in Food.
 - **Tests:** `test/food_test.dart` (resident, owner on a fake server, an empty new hostel, the tenant peek and week sheet, 2× text). PR #77. Updated: flows, owner_manage, resident, start, tenant.
+
+**Wave A item 1: owner phone.** Branch `feature/f24-owner-phone`.
+- **Server.** `owner_contacts(hostels[])` gives the owner's number: the owner's profile phone, else `hostel_leads.owner_phone`.
+  - It only answers for hostels where the caller holds or enquired in the last 60 days, stays (or left in the last 60 days), or is staff or the team. That follows DECISIONS F07: the number shows after a hold.
+  - SQL: `20261002231000_f24_owner_phone.sql` (FOUNDER-TODO **4w**). Tests: `supabase/tests/owner_phone_test.sql`.
+- **App.** After live rows load, it fetches numbers for this user's held, enquired and stay hostels.
+  - An enquiry fetches the number right after it is recorded, so the WhatsApp sheet opens with it.
+  - Residents' Message owner, Remind and Talk to all use it.
+  - A held hostel whose owner has no number says "Number not added yet".
+  - Residents' phones stay with staff through `stays`, as before.
+- **Tests:** `test/owner_phone_test.dart`.

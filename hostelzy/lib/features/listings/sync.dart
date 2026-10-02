@@ -90,7 +90,22 @@ extension SyncActions on AppState {
       if (trial != null) planStart = trial.subtract(const Duration(days: trialDays));
       invoice = mine ?? Invoice(ref: 'First invoice', hid: ownHid, beds: planBeds, amt: planPrice, due: trialEnd.add(const Duration(days: 1)));
     }
+    // F24: owners' numbers for the hostels this user holds at, asked or lives in.
+    final want = {for (final h in l.holds) h.hid, for (final e in l.enquiries) if (e.phone == myPhone) e.hid, ?l.myHostel};
+    if (want.any((h) => !ownerPhones.containsKey(h))) Future.microtask(() => loadOwnerPhones(want));
   });
+
+  /// F24: fetches owners' numbers the server lets this user see.
+  Future<void> loadOwnerPhones(Iterable<String> hids) async {
+    final ask = hids.toSet().toList();
+    if (ask.isEmpty || !data.remote) return;
+    try {
+      final got = await data.ownerContacts(ask);
+      if (got.isNotEmpty) update(() => ownerPhones.addAll(got));
+    } catch (e) {
+      debugPrint('owner phone: $e');
+    }
+  }
 
   /// C: signed in on Supabase with live rows: actions write to the server.
   bool get onServer => _liveSub != null;
@@ -144,6 +159,8 @@ extension SyncActions on AppState {
         return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
       }
     }
+    // The enquiry is recorded, so the server now gives this owner's number.
+    if (!ownerPhones.containsKey(hid)) await loadOwnerPhones([hid]);
     update(() {
       sheet = 'wa';
       waTo = hostelById(hid).owner;
