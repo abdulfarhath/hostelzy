@@ -73,7 +73,9 @@ numbers (₹9,000 / ₹7,000 / ₹6,000 · ₹11,000 / ₹8,200) so rents alread
 rate card; the rate card's Hostelzy column shows "Same as walk-in" until deals exist. Board 6
 belongs to F03. Residents' room type comes from their room (F06 is a separate PR).
 
-**Design defaults:** rate card lives under Beds; electricity note follows F02 terms (no separate
+**Follow-up (2026-10-02, DECISIONS "Design follow-ups"):** the rate card moved to **Manage → Rates** (Beds → "Rooms and rent" opens it there).
+
+**Design defaults:** rate card lived under Beds at first; electricity note follows F02 terms (no separate
 AC power line).
 
 **Tests:** `test/flows_test.dart` → "AC / non-AC: filter, price grid, picker, owner rate card".

@@ -35,7 +35,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRates'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -194,7 +194,7 @@ class AppState extends ChangeNotifier {
   }
 
   void _prep() {
-    if (screen == 'oRates' && rateDraft == null) {
+    if (screen == 'oMore' && moreTab == 'rates' && rateDraft == null) {
       rateDraft = Map.of(rates['anjani']!);
       acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
     }
@@ -451,7 +451,12 @@ class AppState extends ChangeNotifier {
     rateDraft = Map.of(rates['anjani']!);
     acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
     rcFloor = 2;
-    go('oRates');
+    // Manage → Rates (DECISIONS 2026-10-02).
+    screen = 'oMore';
+    hist = [];
+    sheet = null;
+    moreTab = 'rates';
+    update(() {});
   }
 
   void setRoomAc(Room r, bool ac) {
