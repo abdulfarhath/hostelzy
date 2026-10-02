@@ -204,5 +204,7 @@ Shipped in parts (Build chat).
 - **Owner screens follow the selected hostel:** Manage header, Invite residents (title and share text), rates and room types, deals, hold requests, enquiries (and the WhatsApp reply text), rent reminders and the owner's Me card use the hostel picked in the switcher. Switching drops unsaved rate/deal drafts. Residents, rent rows and complaints are sample data for Anjani only, so other hostels show them empty until F13.
 - Test: `wide screens get a left rail; owner screens follow the selected hostel (F17)`.
 
+**Founder details · 2026-10-02** (branch `feature/f13-founder-details`): Hostelzy's UPI ID `9059790014@axl` and support WhatsApp `90597 90014` are in `lib/app_config.dart`. The plan invoice QR and **Open UPI app** pay Hostelzy for real (no "Sample QR" warning), and **Help on WhatsApp** / **WhatsApp Hostelzy** open that chat.
+
 **Still open:** group B (real OTP, sync, server HZ codes, ledger, per-hostel residents) waits for F13.
 

@@ -126,7 +126,7 @@ class SettingsScreen extends StatelessWidget {
                 _Row('Privacy policy', icon: 'doc', onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser')),
                 _Row('Terms', icon: 'doc', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
                 if (s.role == 'owner') _Row('Fair Play rules', icon: 'shield', onTap: () => s.go('oRules')),
-                _Row('Help on WhatsApp', icon: 'msg', onTap: () => supportWhatsApp.isEmpty ? s.toastMsg('Hostelzy’s WhatsApp number is coming soon.') : s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
+                _Row('Help on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
                 _Row('Hostelzy team', icon: 'lock', value: s.teamUnlocked ? 'Unlocked' : null, onTap: s.openTeam),
                 _Row('Log out', onTap: s.logOut),
                 _Row('Delete account', icon: 'trash', red: true, onTap: () => s.go('delAcc')),
@@ -375,7 +375,7 @@ class GateScreen extends StatelessWidget {
           if (update)
             Cta('Update on Google Play', height: 54, px: 16, fs: 15, onTap: () => s.openLink(Uri.parse('https://play.google.com/store/apps/details?id=app.hostelzy.hostelzy'), 'Google Play'))
           else
-            OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => supportWhatsApp.isEmpty ? s.toastMsg('Hostelzy’s WhatsApp number is coming soon.') : s.whatsapp(supportWhatsApp, 'Hi Hostelzy, is the app back?')),
+            OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, is the app back?')),
         ],
       ),
     );

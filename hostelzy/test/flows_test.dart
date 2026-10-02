@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey;
+import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp;
 import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
@@ -763,11 +763,17 @@ void main() {
     expect(find.text('− ₹100'), findsOneWidget);
     expect(s.invoiceAmt, 899);
 
-    // Invoice: UPI QR with the placeholder UPI ID until the founder sets it.
+    // Invoice: a real UPI QR to Hostelzy's UPI ID (DECISIONS 2026-10-02).
     await tap(tester, find.text('HZ-INV-1024 · due 1 Nov'));
     expect(s.screen, 'oInvoice');
     expect(find.text('₹899 due 1 Nov'), findsOneWidget);
-    expect(find.text('Hostelzy · $hostelzyUpiId'), findsOneWidget);
+    expect((hostelzyUpiId, supportWhatsApp), ('9059790014@axl', '9059790014'));
+    expect(find.text('Hostelzy · 9059790014@axl'), findsOneWidget);
+    expect(find.textContaining('Sample QR'), findsNothing);
+    await tap(tester, find.text('Open UPI app'));
+    expect(s.lastLink?.queryParameters['pa'], '9059790014@axl');
+    expect(s.lastLink?.queryParameters['am'], '899');
+    await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('I’ve paid'));
     expect(s.sheet, 'utr');
     await tap(tester, find.text('Send UTR'));
@@ -1217,6 +1223,10 @@ void main() {
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
     expect(s.lastLink.toString(), 'https://hostelzy.in/privacy');
+    await tester.pump(const Duration(seconds: 3));
+    // Help opens WhatsApp to Hostelzy's support number.
+    await tap(tester, find.text('Help on WhatsApp'));
+    expect(s.lastLink.toString(), startsWith('https://wa.me/919059790014?text='));
     await tester.pump(const Duration(seconds: 3));
 
     // Delete account: blocked while a hold is open.

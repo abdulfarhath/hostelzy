@@ -741,10 +741,6 @@ List<FairCase> seedCases() => [
 
 // ------------------------------------------------------------ F10 owner plan
 
-/// PLACEHOLDER (F10): Hostelzy's UPI ID for owner invoices. The founder has
-/// not chosen it yet; replace this before owners are billed.
-const hostelzyUpiId = '[HOSTELZY UPI ID]';
-
 /// Flat plans by hostel size (DECISIONS 2026-10-02). No commission.
 const planTiers = <({int upTo, String label, int price, String note})>[
   (upTo: 30, label: 'Up to 30 beds', price: 499, note: 'Everything below'),
