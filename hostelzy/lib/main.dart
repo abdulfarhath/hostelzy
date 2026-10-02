@@ -6,18 +6,22 @@ import 'package:flutter/material.dart';
 import 'app_config.dart';
 import 'backend.dart';
 import 'push.dart';
+import 'sign_in.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  push = await startFirebase();
+  final (p, a) = await startFirebase();
+  push = p;
+  signIn = a;
   runApp(const HostelzyApp());
 }
 
-/// F13: Firebase push on Android, [NoPush] elsewhere.
+/// F13: Firebase push and Google sign-in on Android; no-ops elsewhere.
 Push push = const NoPush();
+SignIn signIn = const NoSignIn();
 
 /// Root. On the web, query parameters pick a start state, the same props the
 /// design exposes: `?start=picker&role=tenant&mode=list&theme=dark`, and
@@ -52,6 +56,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
   void initState() {
     super.initState();
     state.push = push;
+    state.signIn = signIn;
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     if (dataSource == 'supabase') _goLive();
   }
@@ -59,7 +64,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
   /// F13: live hostels and remote switches from Supabase.
   Future<void> _goLive() async {
     try {
-      final db = await SupabaseData.connect();
+      final db = await SupabaseData.connect(idToken: signIn.available ? signIn.idToken : null);
+      state.data = db;
       final s = await db.settings();
       if (s != null) state.applySettings(s);
       final l = await db.listings();

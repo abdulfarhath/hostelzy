@@ -31,7 +31,21 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter test
+      # F13: fixed test signing key from GitHub secrets (never in the repo),
+      # so Google sign-in keeps working. Skipped when the secret isn't set.
+      - name: Test signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.HZ_TEST_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/hostelzy-test.jks"
+            echo "HZ_TEST_KEYSTORE=$RUNNER_TEMP/hostelzy-test.jks" >> "$GITHUB_ENV"
+          else
+            echo "No HZ_TEST_KEYSTORE_BASE64 secret: signing with a throwaway debug key."
+          fi
       - run: flutter build apk --release
+        env:
+          HZ_TEST_KEYSTORE_PASSWORD: ${{ secrets.HZ_TEST_KEYSTORE_PASSWORD }}
       - run: cp build/app/outputs/flutter-apk/app-release.apk hostelzy.apk
       - uses: actions/upload-artifact@v4
         with:

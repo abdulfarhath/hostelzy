@@ -760,7 +760,7 @@ class _GoLive extends StatelessWidget {
     final d = s.draft;
     final taken = d.takenBeds;
     final items = <(bool, String, String, VoidCallback?)>[
-      (d.ownerVerified, 'Owner phone verified by OTP', d.ownerVerified ? '${phoneSpaced(d.ownerPhone)} · ${d.ownerName}' : 'Owner types the code sent to their phone', null),
+      (d.ownerVerified, 'Owner phone checked by a call', d.ownerVerified ? '${phoneSpaced(d.ownerPhone)} · ${d.ownerName}' : 'Call the number on the visit; the owner’s phone should ring', null),
       (d.fairPlay, 'Fair Play rules accepted', d.fairPlay ? 'Read together on ${dayMon(appToday)}' : 'Read the rules (F07) out loud together, then tick', () => s.update(() => d.fairPlay = !d.fairPlay)),
       (d.photoCount >= HostelDraft.minPhotos, 'At least ${HostelDraft.minPhotos} photos', d.photoCount >= HostelDraft.minPhotos ? '${d.photoCount} of ${HostelDraft.minPhotos}' : '${d.photoCount} of ${HostelDraft.minPhotos} · add ${d.photoSlots.where((x) => !d.photos.contains(x)).take(2).join(' and ')}', () => s.update(() => s.addStep = 4)),
       (d.missingPrices.isEmpty, 'Every room type priced', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
@@ -814,26 +814,22 @@ class _GoLive extends StatelessWidget {
             child: VGap(
               gap: 8,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Field(key: const ValueKey('ownerPhone'), value: d.ownerPhone, numeric: true, placeholder: 'Owner phone', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), ''))),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: Field(key: const ValueKey('ownerOtp'), value: s.draftOtp, numeric: true, placeholder: 'Code', onChanged: (v) => s.update(() => s.draftOtp = v.replaceAll(RegExp(r'\D'), ''))),
-                    ),
-                  ],
+                Field(key: const ValueKey('ownerPhone'), value: d.ownerPhone, numeric: true, placeholder: 'Owner phone', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), ''))),
+                // No SMS codes yet (DECISIONS 2026-10-02): call it on the visit.
+                OutlineCta(
+                  'Call it',
+                  icon: 'phone',
+                  height: 46,
+                  fs: 14,
+                  onTap: () => d.ownerPhone.length != 10 ? s.toastMsg('Enter the 10-digit phone.') : s.call(d.ownerPhone),
                 ),
                 OutlineCta(
-                  'Verify owner',
-                  icon: 'shield',
+                  'The owner’s phone rang',
+                  icon: 'check',
                   height: 46,
                   fs: 14,
                   onTap: () {
-                    if (d.ownerPhone.length != 10 || s.draftOtp.length != 6) return s.toastMsg('10-digit phone and the 6-digit code.');
+                    if (d.ownerPhone.length != 10) return s.toastMsg('Enter the 10-digit phone.');
                     s.update(() => d.ownerVerified = true);
                   },
                 ),
