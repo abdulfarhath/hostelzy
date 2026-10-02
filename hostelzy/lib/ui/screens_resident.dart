@@ -5,6 +5,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
+import 'payments.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
   const ResidentHomeScreen({super.key});
@@ -229,7 +230,8 @@ class RentPayScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final terms = hostelById('anjani').terms;
-    final history = [if (s.paid) ('October 2026', '₹8,020', 'Paid 1 Oct by ${s.payM}'), ('September 2026', '₹8,040', 'Paid 3 Sep by UPI'), ('August 2026', '₹7,980', 'Paid 4 Aug by UPI'), ('July 2026', '₹8,110', 'Paid 2 Jul by Card')];
+    final rent = s.myRent;
+    final history = [('September 2026', '₹8,040', 'Confirmed by Srinivas on 3 Sep'), ('August 2026', '₹7,980', 'Confirmed by Srinivas on 4 Aug'), ('July 2026', '₹8,110', 'Confirmed by Srinivas on 2 Jul')];
     return Scroll(
       key: ValueKey('rPay${s.scrollEpoch}'),
       child: Column(
@@ -240,45 +242,46 @@ class RentPayScreen extends StatelessWidget {
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
             child: const PageHead(kicker: 'Bed 204-B · Anjani Residency', title: 'Pay rent'),
           ),
-          if (!s.paid) ...[
+          // F17: pay Srinivas by UPI → UTR → Srinivas confirms → Paid.
+          Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 4), child: PaySteps4(rent)),
+          if (rent.status != 'paid') ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+              child: Row(children: [Expanded(child: T(switch (rent.status) {
+                'waiting' => 'Waiting for Srinivas',
+                'missing' => 'Srinivas couldn’t find this UTR',
+                _ => dueNote(terms, residentJoinDay),
+              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UTR ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to Srinivas', s: 12, c: p.mu)]),
+            ),
             const LineRow('Rent, bed 204-B', '₹7,600'),
-            const LineRow('Electricity, September share', '₹420'),
+            const LineRow('Electricity · by meter, from Srinivas', '₹420'),
             const LineRow('Late fee', '₹0'),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-              child: const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [T('Total for October', w: 800, s: 16), T('₹8,020', w: 800, s: 26)]),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [const T('Pay Srinivas', w: 800, s: 16), T(fmt(rent.amt), w: 800, s: 26)]),
             ),
-            const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 8), child: Kicker('Pay with')),
-            Seg(opts: same(['UPI', 'Card', 'Net banking']), cur: s.payM, onPick: (v) => s.update(() => s.payM = v), pad: const EdgeInsets.all(12), fs: 14, margin: const EdgeInsets.symmetric(horizontal: 16)),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: VGap(
+                gap: 8,
                 children: [
-                  Cta(
-                    'Pay ₹8,020 by ${s.payM}',
-                    parts: ['Pay', '₹8,020', 'by', s.payM],
-                    onTap: () {
-                      s.update(() {
-                        s.paid = true;
-                        for (final r in s.residents) {
-                          if (r.bed == '204-B') {
-                            r.status = 'Paid';
-                            r.note = 'Paid 1 Oct';
-                          }
-                        }
-                      });
-                      s.toastMsg('Paid ₹8,020. Receipt sent on WhatsApp.');
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  T('${dueNote(terms, residentJoinDay)}. The owner gets a receipt on WhatsApp.', s: 12, c: p.mu),
+                  if (rent.status == 'due') ...[
+                    Cta('Pay ${fmt(rent.amt)} by UPI', onTap: () => s.payByUpi(rent)),
+                    OutlineCta('I’ve paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(rent)),
+                  ],
+                  if (rent.status == 'waiting')
+                    Cta('Remind Srinivas on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, I paid ${fmt(rent.amt)} rent for bed 204-B by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
+                  if (rent.status == 'missing') ...[
+                    Cta('Fix the UTR', onTap: () => s.openPayUtr(rent)),
+                    OutlineCta('Talk to Srinivas on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, about my rent for bed 204-B: UTR ${utrSpaced(rent.utr ?? '')}.')),
+                  ],
+                  T('You pay ${s.ownerUpi['anjani']!.id} directly. Hostelzy never holds the money; Srinivas confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
                 ],
               ),
             ),
           ],
-          if (s.paid)
+          if (rent.status == 'paid')
             Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               decoration: BoxDecoration(
@@ -301,9 +304,11 @@ class RentPayScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const T('₹8,020 paid', w: 800, s: 40, ls: -.03, lh: 1),
+                    T('${fmt(rent.amt)} paid', w: 800, s: 40, ls: -.03, lh: 1),
                     const SizedBox(height: 8),
-                    const T('October 2026 · Receipt HZ-2610-0482', s: 14, w: 600),
+                    T('October 2026 · Srinivas confirmed on ${rent.done}', s: 14, w: 600),
+                    const SizedBox(height: 12),
+                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.whatsapp('', 'Rent receipt · Anjani Residency · bed 204-B · October 2026 · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
                   ],
                 ),
               ),

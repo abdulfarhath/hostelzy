@@ -766,7 +766,8 @@ class AppState extends ChangeNotifier {
   String lm = 'Hitec City', fG = 'Any', fS = 'Any', fB = 'Any';
   bool fFood = false;
   String mapSel = 'anjani';
-  bool paid = false;
+  /// This month's rent is paid once Srinivas confirms it (F17).
+  bool get paid => myRent.status == 'paid';
   String payM = 'UPI';
   int day = 3;
   String? rated;
@@ -1221,25 +1222,122 @@ class AppState extends ChangeNotifier {
     if (opt == 'book') {
       ref = _record(hid, 'Booked bed ${b.id} with the advance.', bed: b.id, from: 'Book · Pay advance').ref;
     }
-    b.state = opt == 'book' ? 'booked' : 'held';
+    // F17: a booking is "paying" until the owner confirms the advance arrived.
+    b.state = 'held';
     b.mine = true;
     final t = DateTime.now().millisecondsSinceEpoch;
     final id = 'h$t';
-    final h = Hold(id: id, hid: hid, bed: b.id, room: b.room, opt: opt, start: t, status: opt == 'free' ? 'waiting' : 'booked', ref: ref, paid: opt == 'book' ? q.hzAdv : 0, perks: opt == 'book' && q.any ? lockedPerks(q, h0) : const []);
+    final h = Hold(id: id, hid: hid, bed: b.id, room: b.room, opt: opt, start: t, status: opt == 'free' ? 'waiting' : 'paying', ref: ref, paid: opt == 'book' ? q.hzAdv : 0, perks: opt == 'book' && q.any ? lockedPerks(q, h0) : const []);
+    final pay = opt == 'book' ? Payment(id: 'pay$t', kind: 'advance', hid: hid, who: 'Rahul V.', what: 'Advance for bed ${b.id}', bed: b.id, amt: q.hzAdv, note: ref!, holdId: id) : null;
     update(() {
       holds = [...holds, h];
+      if (pay != null) payments = [...payments, pay];
       holdId = id;
-      sheet = null;
       bed = null;
       hist = [...hist, screen];
       screen = 'hold';
+      sheet = pay != null ? 'payAdv' : null;
+      payId = pay?.id;
     });
-    toastMsg(opt == 'free' ? 'Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.' : 'Paid ${fmt(q.hzAdv)} to ${h0.owner}. Your deal is locked: $ref.');
+    if (pay == null) toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
   }
 
   void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
 
   void copyText(String s) => Clipboard.setData(ClipboardData(text: s));
+
+  // ------------------------------------------------------------ F17 payments
+
+  /// Where tenants pay each owner. Sample IDs are clearly fake until the
+  /// owner types theirs in Manage → Rates.
+  late final Map<String, ({String id, String name})> ownerUpi = {for (final h in hostels) h.id: (id: h.id == 'anjani' ? 'sample.owner@upi' : 'sample.${h.id}@upi', name: h.owner)};
+
+  List<Payment> payments = seedPayments();
+
+  /// The payment a pay / UTR sheet is about, and the UTR being typed.
+  String? payId;
+  String payUtr = '';
+  Payment? get pay => payments.where((x) => x.id == payId).firstOrNull;
+  Payment? payOfHold(String holdId) => payments.where((x) => x.holdId == holdId).lastOrNull;
+
+  /// This resident's rent for the month (Rahul, bed 204-B).
+  Payment get myRent => payments.firstWhere((x) => x.id == 'rent204B');
+
+  /// Opens the UPI app with the owner's ID, amount and note filled in.
+  void payByUpi(Payment p) {
+    final u = ownerUpi[p.hid]!;
+    openLink(upiUri(id: u.id, name: u.name, amt: p.amt, note: p.note), 'a UPI app');
+    update(() {
+      payId = p.id;
+      payUtr = p.utr ?? '';
+      sheet = 'payUtr';
+    });
+  }
+
+  void openPayUtr(Payment p) => update(() {
+    payId = p.id;
+    payUtr = p.utr ?? '';
+    sheet = 'payUtr';
+  });
+
+  void sendPayUtr() {
+    final p = pay;
+    if (p == null) return;
+    if (payUtr.length != 12) return toastMsg('The UTR has 12 digits.');
+    final h = hostelById(p.hid);
+    update(() {
+      p
+        ..utr = payUtr
+        ..sent = '${dayName(appToday)}, ${clockTime(DateTime.now().millisecondsSinceEpoch)}'
+        ..status = 'waiting';
+      if (p.kind == 'rent') {
+        for (final r in residents.where((r) => r.bed == p.bed)) {
+          r.status = 'Waiting';
+          r.note = 'UTR sent · ${h.owner} to confirm';
+        }
+      }
+      sheet = null;
+    });
+    toastMsg('Saved. ${h.owner} confirms once they see the money.');
+  }
+
+  /// Owner: checked the bank. Only now is the bed Booked or the rent Paid.
+  void confirmPayment(Payment p, bool received) {
+    final first = p.who.split(' ').first;
+    update(() {
+      p.status = received ? 'paid' : 'missing';
+      if (received) p.done = dayMon(appToday);
+      if (p.kind == 'advance' && p.holdId != null) {
+        final h = holds.where((x) => x.id == p.holdId).firstOrNull;
+        if (h != null && received) {
+          holds = holds.map((x) => x.id == h.id ? x.withStatus('booked') : x).toList();
+          findBed(h.hid, h.bed).b?.state = 'booked';
+        }
+      }
+      if (p.kind == 'rent') {
+        for (final r in residents.where((r) => r.bed == p.bed)) {
+          r.status = received ? 'Paid' : 'Due';
+          r.note = received ? 'Confirmed ${dayMon(appToday)}' : 'UTR not found';
+        }
+      }
+    });
+    toastMsg(received ? 'Confirmed. $first sees it as ${p.kind == 'rent' ? 'paid' : 'booked'}.' : 'Marked not received. $first is asked to check the UTR.');
+  }
+
+  /// Tenant gives up on a booking whose payment didn't arrive.
+  void cancelBooking(Hold h) {
+    update(() {
+      final b = findBed(h.hid, h.bed).b;
+      if (b != null) {
+        b.state = 'free';
+        b.mine = false;
+      }
+      holds = holds.map((x) => x.id == h.id ? x.withStatus('released') : x).toList();
+      payments = payments.where((x) => x.holdId != h.id).toList();
+    });
+    update(() => hid = h.hid);
+    openPicker();
+  }
 
   // ------------------------------------------------------------ F17 links
 

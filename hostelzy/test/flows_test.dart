@@ -102,11 +102,28 @@ void main() {
   });
 
   testWidgets('resident pays rent; owner rent list updates', (tester) async {
+    // F17: pay Srinivas by UPI → UTR → Srinivas confirms → Paid.
     final s = AppState(start: 'rPay', role: 'resident');
     await pumpApp(tester, s);
-    await tap(tester, find.text('by'));
-    expect(find.text('₹8,020 paid'), findsOneWidget);
+    await tap(tester, find.text('Pay ₹8,020 by UPI'));
+    expect(s.lastLink.toString(), 'upi://pay?pa=sample.owner%40upi&pn=Srinivas&am=8020&tn=Rent+Oct+%C2%B7+204-B&cu=INR');
+    expect(s.sheet, 'payUtr');
+    await tester.pump(const Duration(seconds: 3));
+    await tester.enterText(find.byType(TextField).last, '4021 9910 2299');
+    await tester.pump();
+    await tap(tester, find.text('Send to Srinivas'));
+    expect((s.myRent.status, s.paid), ('waiting', false));
+    expect(find.text('Waiting for Srinivas'), findsOneWidget);
+    expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Waiting');
+    await tester.pump(const Duration(seconds: 3));
+    s.jump('oToday', 'owner');
+    await tester.pump();
+    expect(find.text('Received ₹8,020?'), findsOneWidget);
+    await tap(tester, find.text('Yes, received').first);
     expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Paid');
+    s.jump('rPay', 'resident');
+    await tester.pump();
+    expect(find.text('₹8,020 paid'), findsOneWidget);
     s.dispose();
   });
 
@@ -218,7 +235,7 @@ void main() {
     // Resident: Pay rent shows the advance and what comes back.
     final r = AppState(start: 'rPay', role: 'resident');
     await pumpApp(tester, r);
-    expect(find.text('Due 14 Oct. The owner gets a receipt on WhatsApp.'), findsOneWidget);
+    expect(find.text('Due 14 Oct'), findsOneWidget);
     expect(find.text('₹2,000 BACK WHEN YOU LEAVE'), findsOneWidget);
     expect(find.textContaining('₹15,200'), findsNothing);
 
@@ -474,8 +491,32 @@ void main() {
     expect(find.textContaining('₹299'), findsNothing);
     final ref = s.peekRef;
     await tap(tester, find.text('Pay advance'));
-    final h = s.holds.single;
-    expect((h.opt, h.status, h.ref, h.paid), ('book', 'booked', ref, 3000));
+    // F17: not booked until Srinivas confirms the advance arrived.
+    var h = s.holds.single;
+    expect((h.opt, h.status, h.ref, h.paid, s.sheet), ('book', 'paying', ref, 3000, 'payAdv'));
+    expect(s.findBed('anjani', bed).b!.state, 'held');
+    expect(find.text('Srinivas · sample.owner@upi'), findsOneWidget);
+    await tap(tester, find.text('I’ve already paid · enter UTR').last);
+    expect(s.sheet, 'payUtr');
+    await tester.enterText(find.byType(TextField).last, '402188341297');
+    await tester.pump();
+    await tap(tester, find.text('Send to Srinivas'));
+    expect(s.payOfHold(h.id)!.status, 'waiting');
+    expect(find.text('WAITING FOR SRINIVAS'), findsOneWidget);
+    expect(find.textContaining('not booked yet'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    s.jump('oToday', 'owner');
+    await tester.pump();
+    expect(find.text('Received ₹3,000?'), findsOneWidget);
+    await tap(tester, find.text('Yes, received').last);
+    s.jump('holds', 'tenant');
+    s.update(() {
+      s.screen = 'hold';
+      s.holdId = h.id;
+    });
+    await tester.pump();
+    h = s.holds.single;
+    expect(h.status, 'booked');
     expect(s.findBed('anjani', bed).b!.state, 'booked');
     expect(find.text('BOOKED'), findsOneWidget);
     expect(find.text(ref), findsOneWidget);
@@ -674,6 +715,9 @@ void main() {
     expect(find.text('2 hours · Member perk'), findsOneWidget);
     await tap(tester, find.text('Pay advance'));
     final hold = s.holds.single;
+    s.confirmPayment(s.payOfHold(hold.id)!, true); // the owner saw the money
+    s.update(() => s.sheet = null);
+    await tester.pump(const Duration(seconds: 3));
 
     // Move-in: ₹100 off the first month, credited to the owner.
     await tap(tester, find.text('Moving in · see what to pay'));
@@ -1040,6 +1084,45 @@ void main() {
     await tester.pump();
     expect(find.text('Resend code'), findsOneWidget);
     l.dispose();
+  });
+
+  testWidgets('payments: owner says not received; tenant fixes or cancels; owner UPI ID (F17)', (tester) async {
+    final s = AppState(start: 'picker', role: 'tenant');
+    await pumpApp(tester, s);
+    s.update(() {
+      s.bed = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;
+      s.sheet = 'hold';
+    });
+    await tester.pump();
+    await tap(tester, find.text('Pay advance'));
+    final h = s.holds.single;
+    final pay = s.payOfHold(h.id)!;
+    await tap(tester, find.text('Pay ₹3,000 by UPI').last);
+    expect(s.lastLink!.scheme, 'upi');
+    expect(s.lastLink!.queryParameters, {'pa': 'sample.owner@upi', 'pn': 'Srinivas', 'am': '3000', 'tn': h.ref, 'cu': 'INR'});
+    s.update(() => s.payUtr = '402188341297');
+    s.sendPayUtr();
+    s.confirmPayment(pay, false);
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('NOT RECEIVED'), findsOneWidget);
+    expect(h.status, 'paying');
+    expect(s.findBed('anjani', h.bed).b!.state, 'held');
+    await tap(tester, find.text('Cancel and pick another bed'));
+    expect(s.screen, 'picker');
+    expect(s.findBed('anjani', h.bed).b!.state, 'free');
+    expect(s.payments.where((x) => x.holdId == h.id), isEmpty);
+    s.dispose();
+
+    // Owner: Manage → Rates has "Where tenants pay you".
+    final o = AppState(start: 'oMore', role: 'owner', moreTab: 'rates');
+    await pumpApp(tester, o);
+    expect(find.text('This is a sample ID. Type your own before tenants pay you.'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('upiId')), matching: find.byType(TextField)), 'srinivas.anjani@okbank');
+    await tester.pump();
+    expect(o.ownerUpi['anjani']!.id, 'srinivas.anjani@okbank');
+    await tap(tester, find.text('Test with ₹1'));
+    expect(o.lastLink!.queryParameters['am'], '1');
+    o.dispose();
   });
 
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {

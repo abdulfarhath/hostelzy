@@ -6,6 +6,7 @@ import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
+import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
 import 'screens_resident.dart' show WeekTable;
@@ -204,6 +205,7 @@ class OwnerTodayScreen extends StatelessWidget {
           ),
           const _FairPlayCard(),
           const FreeBedsCard(),
+          const PaymentsToCheck(),
           const _Enquiries(),
           const _RankCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
@@ -1488,6 +1490,8 @@ class RateCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+                  // F17: where tenants pay the owner.
+                  const UpiCard(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     child: Row(
