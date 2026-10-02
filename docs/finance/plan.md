@@ -16,6 +16,7 @@ Rates used: $1 ≈ ₹95 (Sept 2026). Foreign tools add 18% GST + ~3.5% card fee
 | Q2 | Rewards cap **₹5,000/month** (see §6)? | PROPOSED, not live until you say yes. |
 | Q3 | Founding-20 offer: Marketing README says "3 months free, then ₹299 for life". DECISIONS says 30-day trial, ₹499/₹999/₹1,499. Which one? | DECISIONS wins. See §4 for why. |
 
+| Q4 | Marketing's guarantee "No enquiry in 30 days → you never pay"? It's open-ended. Safer: "No enquiry during your 30-day trial → your next month is free too" (costs at most one month, ~₹750 per hostel). | Not promised to anyone until you say yes. |
 ---
 
 ## 1. Monthly budget
