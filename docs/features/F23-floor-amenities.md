@@ -78,7 +78,7 @@ After approval, F23 goes into the main canvas, renamed **"Hostelzy · Main desig
 - Every change is logged (who, when) and visible to the owner and team.
 
 ## Build
-**Built 2026-10-02** (branch `feature/f23-amenities`). Server: `supabase/migrations/20261002220000_f23_amenities.sql` (FOUNDER-TODO **4u**).
+**Built 2026-10-02** (merged, #75). Server: `supabase/migrations/20261002220000_f23_amenities.sql` (FOUNDER-TODO **4u**).
 - **Data:** `amenities` (hostel, floor, kind, name for "Other", count, working, place = floor / room washroom / room, rooms) and `amenity_log` (who changed what, when; staff and team only). No names in `amenities`, so tenants never see who added something.
 - **Who can change it:** owners, managers and the team (staff), and residents with a confirmed stay in that hostel. Residents: at most 20 changes a day; residents muted in F19 can't; the owner gets a push for every resident change. Everything goes through `save_amenity` / `remove_amenity`. SQL tests: `supabase/tests/amenities_test.sql`.
 - **Hostel page:** "On each floor", one row per floor with icon chips; broken things struck through with NOT WORKING; room items read "Geyser in 2 of 4 rooms"; "Updated by residents · date" when a resident changed something. A row opens the floor sheet.
