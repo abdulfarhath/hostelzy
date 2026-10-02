@@ -202,3 +202,28 @@ Good as extra web addresses that point to the app, not as the brand name.
 
 Same honesty rule: no IP India search done here; lawyer must check (classes 9, 42, 43, 36).
 "Hostel" is a common word, so the lawyer must confirm the whole name can be registered.
+
+---
+
+# FindHostel / GetHostel as the brand name? (2026-10-02)
+
+Founder: "findhostel, gethostel: aren't these simple and great?"
+
+| Check | FindHostel | GetHostel |
+|---|---|---|
+| .in | free (founder checked) | free (founder checked) |
+| .com | ❌ taken | ❌ taken |
+| .app | ❌ taken | ✅ free |
+| Same field | ⚠️ **FindMyHostel**: Indian hostel finder since 2020 (findmyhostel.com taken) | Nothing found |
+| Trademark | Plain words. Indian law (Trade Marks Act 1999, s.9(1)(b)) refuses names that only describe the service. | Same |
+
+## Honest view
+- 👍 Simple, clear, great for Google search and for a web address.
+- 👎 **Can't own it.** No trademark, so anyone can open "FindHostels" or "GetHostelNow" and we can't stop them.
+- 👎 FindHostel is very close to FindMyHostel (same business, India).
+- 👎 Hard to stand out in the Play Store: it looks like a search phrase, not a brand.
+- Exception: a plain name can be protected after years of heavy use (like Booking.com), but that is slow and costly.
+
+## Best of both (Brand chat's suggestion)
+**Brand name** = a name we can own (Hostelmila / Hostelji).
+**Web addresses** = findhostel.in and gethostel.in point to it, so search and ads still get the simple words.
