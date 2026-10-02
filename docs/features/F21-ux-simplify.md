@@ -106,7 +106,7 @@ Phone boards 390×844, with dark copies of Explore, the hostel page and owner To
 ## Build
 One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Today queue, offline state.
 
-### Wave 1 · Built · 2026-10-02 (branch `feature/f21-honesty`)
+### Wave 1 · Built · 2026-10-02 (merged, #65)
 - **Resident screens show the resident's real stay.** On the server, Home, Pay rent, Food, Help, Move out / swap and the review headers use the user's own confirmed stay: hostel, room, bed, rent, join day, owner. Demo builds still show the Anjani sample.
   - Server data: `liveFromRows` now returns `myStay`, the user's own stay row.
   - The "Room 204 board" is gone everywhere.
