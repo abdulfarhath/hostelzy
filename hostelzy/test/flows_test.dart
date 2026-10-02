@@ -482,7 +482,7 @@ void main() {
     expect(o.rateDraft![rateKey(true, 4)], 7600 + 1200);
     o.setRoomAc(r204, true);
     await tester.pump(const Duration(seconds: 3)); // let the "Add a price first" toast go
-    await tap(tester, find.text('Save rate card'));
+    await tap(tester, find.byKey(const ValueKey('saveRates')));
     expect(o.rooms['anjani']!.firstWhere((x) => x.n == 201).rent, 9500);
     expect(r204.ac, isTrue);
     expect(r204.rent, 8800);
@@ -516,7 +516,7 @@ void main() {
     s.toggleDeal('first');
     await tester.pump(const Duration(seconds: 3)); // let the "Pick up to 3" toast go
     await tap(tester, find.text('AC only'));
-    await tap(tester, find.text('Publish deals'));
+    await tap(tester, find.text('Save deals'));
     expect(s.dealsOf('anjani').on, {'exit', 'monthly', 'first'});
     expect(s.dealsOf('anjani').covers(false), isFalse);
 
@@ -676,16 +676,19 @@ void main() {
     // Owner: ranking and replying.
     s.jump('oRank', 'owner');
     await tester.pump();
-    expect(find.text('0 · rank not lowered'), findsOneWidget);
+    // F22 Area 3: one page; no strikes, so no strike tip.
+    expect(find.textContaining('To rank higher: '), findsOneWidget);
+    expect(find.textContaining('Fair Play strikes'), findsNothing);
     s.jump('oReviews', 'owner');
     await tester.pump();
-    expect(find.text('New 4'), findsOneWidget);
+    final waiting = s.reviews.where((r) => r.hid == 'anjani' && r.reply == null).length;
+    expect(find.text('Reply'), findsNWidgets(waiting));
     await tap(tester, find.text('Reply').first);
     await tester.enterText(find.byType(EditableText).first, 'Thanks Rahul.');
     await tester.pump();
     await tap(tester, find.text('Post reply'));
     expect(s.reviews.where((r) => r.reply == 'Thanks Rahul.').length, 1);
-    expect(find.text('New 3'), findsOneWidget);
+    expect(find.text('Reply'), findsNWidgets(waiting - 1));
 
     // Fair Play strikes lower the rank.
     s.strikes['anjani'] = 2;
@@ -821,8 +824,10 @@ void main() {
     await tap(tester, find.text('Your plan'));
     expect(s.screen, 'oPlan');
     expect(find.text('${s.trialLeft} days left'), findsOneWidget);
-    expect(find.text('You have 36 beds'), findsOneWidget);
+    expect(find.text('36 beds · ₹999 a month'), findsOneWidget);
     expect(s.planPrice, 999);
+    // F22 Area 3: the trial has nothing to pay yet.
+    expect(find.byKey(const ValueKey('planPay')), findsNothing);
 
     // A Member reward given at move-in (F09) comes off the invoice.
     s.update(() => s.ownerCredits.add((hid: 'anjani', what: 'Member reward · 204-B', amt: 100)));
@@ -830,26 +835,32 @@ void main() {
     expect(find.text('− ₹100'), findsOneWidget);
     expect(s.invoiceAmt, 899);
 
-    // Invoice: a real UPI QR to Hostelzy's UPI ID (DECISIONS 2026-10-02).
-    await tap(tester, find.text('HZ-INV-1024 · due 1 Nov'));
-    expect(s.screen, 'oInvoice');
-    expect(find.text('₹899 due 1 Nov'), findsOneWidget);
+    // The invoice is due: the same screen (also at 'oInvoice') pays it by UPI
+    // to Hostelzy's UPI ID (DECISIONS 2026-10-02), with a real QR.
+    s.update(() => s.invoice.status = 'due');
+    s.go('oInvoice');
+    await tester.pump();
+    expect(find.text('Your plan'), findsOneWidget);
+    expect(find.text('₹899'), findsOneWidget);
+    expect(find.text('Due 1 Nov · pay to Hostelzy by UPI'), findsOneWidget);
     expect((hostelzyUpiId, supportWhatsApp), ('9059790014@axl', '9059790014'));
-    expect(find.text('Hostelzy · 9059790014@axl'), findsOneWidget);
+    expect(find.text('9059790014@axl'), findsOneWidget);
+    await tap(tester, find.byKey(const ValueKey('planQr')));
+    expect(find.byType(QrImageView), findsOneWidget);
     expect(find.textContaining('Sample QR'), findsNothing);
-    await tap(tester, find.text('Open UPI app'));
+    await tap(tester, find.text('Pay ₹899 by UPI'));
     expect(s.lastLink?.queryParameters['pa'], '9059790014@axl');
     expect(s.lastLink?.queryParameters['am'], '899');
     await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('I’ve paid'));
+    await tap(tester, find.text('I’ve paid · enter UPI reference'));
     expect(s.sheet, 'utr');
     await tap(tester, find.text('Send UPI reference'));
-    expect(s.invoice.status, 'upcoming'); // needs all 12 digits
+    expect(s.invoice.status, 'due'); // needs all 12 digits
     await tester.enterText(find.byType(TextField).last, '4021 8834 1297');
     await tester.pump();
     await tap(tester, find.text('Send UPI reference'));
     expect((s.screen, s.sheet, s.invoice.status, s.invoice.utr, s.invoice.amt), ('oPayStatus', null, 'checking', '402188341297', 899));
-    expect(find.text('Checking your payment'), findsOneWidget);
+    expect(find.text('CHECKING YOUR PAYMENT'), findsOneWidget);
     s.dispose();
 
     // Founder: match the UTR in the bank, mark paid or not received.
@@ -887,7 +898,7 @@ void main() {
     // Not received: the owner fixes the UTR.
     final m = AppState(start: 'oPayStatus', role: 'owner', plan: 'missing');
     await pumpApp(tester, m);
-    expect(find.text('We couldn’t find this payment'), findsOneWidget);
+    expect(find.textContaining('We couldn’t find a payment with UPI reference 4021 8834 1297'), findsOneWidget);
     await tap(tester, find.text('Fix the UPI reference'));
     expect((m.sheet, m.utrDraft), ('utr', '402188341297'));
     m.dispose();
@@ -1631,7 +1642,7 @@ void main() {
   testWidgets('after go-live: add / remove rooms and floors, poster PDF, team members (F14)', (tester) async {
     final s = AppState(start: 'oMore', role: 'owner', moreTab: 'rates');
     await pumpApp(tester, s);
-    await tap(tester, find.text('Rooms · add or remove rooms and floors'));
+    await tap(tester, find.text('Rooms and floors ›'));
     expect(s.screen, 'oRooms');
     final rs = s.rooms['anjani']!;
     final n0 = rs.length;

@@ -187,8 +187,10 @@ void main() {
     expect(s.moreTab, 'home');
     await _tap(tester, find.byKey(const ValueKey('manage-Reviews and ranking')));
     expect(s.screen, 'oRank');
-    await _tap(tester, find.byKey(const ValueKey('readReviews')));
-    expect(s.screen, 'oReviews');
+    // F22 Area 3: reviews and ranking are one page; the reviews and Reply are on it.
+    expect(find.text('Reviews and ranking'), findsOneWidget);
+    await _tap(tester, find.text('Reply').first);
+    expect(find.text('Post reply'), findsOneWidget);
     s.dispose();
   });
 }

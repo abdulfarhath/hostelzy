@@ -377,7 +377,9 @@ class ExitReviewScreen extends StatelessWidget {
   }
 }
 
-/// F08 board 6: the owner reads and replies to reviews.
+/// F08 boards 5 and 6, F22 Area 3: Reviews and ranking on one page: the
+/// rating and rank tiles, what would raise the rank, then every review with
+/// Reply ('oRank' and 'oReviews' both show it).
 class OwnerReviewsScreen extends StatelessWidget {
   const OwnerReviewsScreen({super.key});
   @override
@@ -386,116 +388,72 @@ class OwnerReviewsScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);
     final all = s.reviews.where((r) => r.hid == h.id).toList();
-    final fresh = all.where((r) => r.fresh && r.reply == null).toList();
-    final low = all.where((r) => r.stars <= 3).toList();
-    final list = switch (s.revF) {
-      'new' => fresh,
-      'low' => low,
-      _ => all,
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _head(context, '${h.name} · ${jsNum(h.rating)} · ${h.reviews} verified', 'Reviews', size: 28),
-        Seg(opts: [('new', 'New ${fresh.length}'), ('all', 'All ${all.length}'), ('low', 'Low rating ${low.length}')], cur: s.revF, onPick: (v) => s.update(() => s.revF = v), pad: const EdgeInsets.all(10), margin: const EdgeInsets.fromLTRB(16, 0, 16, 12)),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-            child: Scroll(
-              key: ValueKey('oReviews${s.scrollEpoch}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final r in list) ReviewCard(r, ownerView: true),
-                  if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing here right now.', s: 14, c: p.mu)),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: T('You can reply once to each review. Reviews can’t be removed; report one only if it breaks the rules (abuse, personal details).', s: 12, c: p.mu, lh: 1.4),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// F08 board 5: the owner's ranking and what moves it. No number shown.
-class OwnerRankScreen extends StatelessWidget {
-  const OwnerRankScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final h = hostelById(s.ownHid);
+    // Waiting for a reply first.
+    final list = [...all.where((r) => r.reply == null), ...all.where((r) => r.reply != null)];
+    final waiting = all.where((r) => r.reply == null).length;
     final f = s.factors(h.id);
     final strikes = s.strikes[h.id] ?? 0;
-    String tip(String k) => switch (k) {
-      'reviews' => 'Rated ${jsNum(h.rating)} by ${h.reviews} verified residents',
-      'reply' => 'Usually replies in ${h.reply} min',
-      _ => f[k]! >= .85 ? '' : rankTips[k]!,
-    };
+    String low(String t) => t[0].toLowerCase() + t.substring(1);
+    final tips = [
+      if (waiting > 0) 'reply to ${waiting == 1 ? 'the review' : 'the $waiting reviews'} waiting',
+      if (f['reply']! < .85) 'answer enquiries faster',
+      for (final k in const ['fresh', 'complaints', 'listing'])
+        if (f[k]! < .85) low(rankTips[k]!),
+      if (strikes > 0) 'avoid Fair Play strikes ($strikes now lower${strikes == 1 ? 's' : ''} your rank)',
+    ];
+    Widget tile(String big, String sub, {Key? key, VoidCallback? onTap, bool left = false}) {
+      final w = Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(border: left ? Border(left: bs(1, p.hl)) : null),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(big, w: 800, s: 30, lh: 1.2), T(sub, s: 13, c: p.mu)]),
+      );
+      return Expanded(child: onTap == null ? w : Tap(key: key, onTap: onTap, child: w));
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, '${h.name} · Manage', 'Your ranking', size: 28),
-        // F21 W3: one Manage row for reviews and ranking; reviews open from here.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: Align(alignment: Alignment.centerLeft, child: Tap(key: const ValueKey('readReviews'), onTap: () => s.go('oReviews'), child: T('Read and reply to reviews ›', s: 14, w: 800, c: p.ad))),
-        ),
+        _head(context, '${h.name} · Manage', 'Reviews and ranking', size: 30),
         Expanded(
           child: Scroll(
-            key: ValueKey('oRank${s.scrollEpoch}'),
+            key: ValueKey('${s.screen}${s.scrollEpoch}'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-                  decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      T('#${s.rankOf(h.id)}', w: 800, s: 64, lh: .9, ls: -.04),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [T('of ${browsable.length} near ${s.lm}', w: 800, s: 16), const SizedBox(height: 2), T('Tenants see: ${s.rankReasons(h.id).toLowerCase()}', s: 12, c: p.mu)],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                for (final k in rankWeights.keys)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: VGap(
-                      gap: 6,
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  decoration: box(w: 2, c: p.tx),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [Flexible(child: T('${rankLabel[k]} · ${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)), const SizedBox(width: 8), Flexible(child: T(rankWord(f[k]!), w: 800, s: 13, c: f[k]! >= .7 ? p.tx : p.ad, align: TextAlign.right))],
-                        ),
-                        Container(
-                          height: 8,
-                          decoration: box(w: 2, c: p.tx),
-                          child: LayoutBuilder(builder: (context, c) => Row(children: [Container(width: c.maxWidth * f[k]!, color: p.tx)])),
-                        ),
-                        if (tip(k).isNotEmpty) T(tip(k), s: 12, c: p.mu),
+                        tile(h.reviews == 0 ? '–' : jsNum(h.rating), h.reviews == 0 ? 'No reviews yet' : '${h.reviews} verified stay${h.reviews == 1 ? '' : 's'}'),
+                        // How the rank is worked out (the same sheet tenants see).
+                        tile('#${s.rankOf(h.id)}', 'of ${browsable.length} near ${s.lm} ›', key: const ValueKey('rankHow'), onTap: () => s.update(() => s.sheet = 'rank'), left: true),
                       ],
                     ),
                   ),
+                ),
+                Padding(
+                  key: const ValueKey('rankTips'),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: tips.isEmpty
+                      ? T('Your rank is strong on everything that counts. Keep replying and keeping beds up to date.', s: 14, lh: 1.4)
+                      : Rich([sp(context, 'To rank higher: ', w: 800), sp(context, '${tips.join(', ')}.')], s: 14, lh: 1.4),
+                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Flexible(child: T('Fair Play strikes', w: 800, s: 14)), const SizedBox(width: 8), Flexible(child: T(strikes == 0 ? '0 · rank not lowered' : '$strikes · rank lowered', w: 800, s: 13, c: strikes == 0 ? p.tx : p.ad, align: TextAlign.right))]),
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final r in list) ReviewCard(r, ownerView: true),
+                      if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('No reviews yet.', s: 14, c: p.mu)),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: T('You can reply once to each review. Reviews can’t be removed; report one only if it breaks the rules (abuse, personal details).', s: 13, c: p.mu, lh: 1.4),
                 ),
               ],
             ),
@@ -504,6 +462,12 @@ class OwnerRankScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+class OwnerRankScreen extends StatelessWidget {
+  const OwnerRankScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const OwnerReviewsScreen();
 }
 
 /// "How it works" sheet behind the Recommended sort.

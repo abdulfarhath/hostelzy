@@ -274,20 +274,22 @@ class UpiCard extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final u = s.ownerUpi[s.ownHid]!;
+    // F22 Area 3: one UPI ID, the name UPI apps show, and a ₹1 test.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: VGap(
-        gap: 10,
+        gap: 8,
         children: [
-          const Kicker('Where tenants pay you'),
           VGap(gap: 6, children: [const T('Your UPI ID', w: 800, s: 13), Field(key: const ValueKey('upiId'), value: u.id, placeholder: 'name@bank', onChanged: (v) => s.setOwnerUpi(v.trim(), u.name))]),
-          VGap(gap: 6, children: [const T('Name shown in UPI', w: 800, s: 13), Field(key: const ValueKey('upiName'), value: u.name, onChanged: (v) => s.setOwnerUpi(u.id, v))]),
-          OutlineCta('Test with ₹1', icon: 'chev', height: 48, fs: 14, onTap: () => s.openLink(upiUri(id: u.id, name: u.name, amt: 1, note: 'Hostelzy test'), 'a UPI app')),
-          T('Pays you ₹1 from your own phone to check it works.', s: 12, c: p.mu),
-          _shieldNote(context, [sp(context, 'Advances and rent go straight to this UPI ID. Hostelzy never holds the money; you confirm each payment in the app.')]),
-          if (u.id.startsWith('sample.')) T('This is a sample ID. Type your own before tenants pay you.', s: 12, w: 800, c: p.ad),
           // F18 (F11): name@bank, e.g. srinivas@okaxis or 98xxxxxx10@ybl.
-          if (u.id.isNotEmpty && !validUpiId(u.id)) T('That isn’t a UPI ID. It looks like name@bank (for example srinivas@okaxis).', s: 12, w: 800, c: p.ad),
+          if (u.id.isNotEmpty && !validUpiId(u.id)) T('That isn’t a UPI ID. It looks like name@bank (for example srinivas@okaxis).', s: 13, w: 800, c: p.ad),
+          if (u.id.startsWith('sample.')) T('This is a sample ID. Type your own before tenants pay you.', s: 13, w: 800, c: p.ad),
+          T('Advances and rent go straight here. Hostelzy never holds the money; you confirm each payment in the app.', s: 13, c: p.mu, lh: 1.4),
+          const SizedBox(height: 4),
+          VGap(gap: 6, children: [const T('Name shown in UPI', w: 800, s: 13), Field(key: const ValueKey('upiName'), value: u.name, onChanged: (v) => s.setOwnerUpi(u.id, v))]),
+          const SizedBox(height: 4),
+          OutlineCta('Test with ₹1', icon: 'chev', height: 48, fs: 14, onTap: () => s.openLink(upiUri(id: u.id, name: u.name, amt: 1, note: 'Hostelzy test'), 'a UPI app')),
+          T('Pays you ₹1 from your own phone to check it works.', s: 13, c: p.mu),
         ],
       ),
     );

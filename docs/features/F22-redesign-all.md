@@ -131,6 +131,20 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
+### Area 3 · Owner: built 2026-10-02 (branch `feature/f22-owner`)
+- **Beds:** floor chips with free counts, rooms as cards with bed boxes (the open bed shows red), legend, "Rooms and rates ›". The red "New layout" button stays on a room when Hostelzy drew a version to publish.
+- **Bed sheet:** status, resident, room, rent, since and how they came, advance; Message / Mark as leaving (taken), Release hold (held), Add tenant to this bed / Hold for a walk-in (free); "Room … layout ›".
+- **Rent:** Collected and Still to come with a bar; seg All / Due / Late / Paid with counts; rows with a plain tag and a 44px bell.
+- **Residents:** search (name, phone or bed), invite QR button, filter chips, the "taken beds have no resident" banner with Add resident, short tags.
+- **Add tenant:** Name, +91 Phone, Bed, Moves in, one rent line, Add tenant. No "How did they find you?" or booking-code field: the server links an app tenant by phone number, so the sheet says to use the number they booked with.
+- **Invite:** QR next to the code, Share link / Print poster, "Waiting for you · N" with Approve / ✕, "Make a new code".
+- **Enquiry sheet:** booking code first, phone, what they asked about, the message; WhatsApp / Call; "add them with this phone number so it counts".
+- **Manage pages:** Deals (up to 3 switches, green when on, real cost per row), Rates and UPI (one table, UPI ID, Test with ₹1, "Rooms and floors ›"), Complaints (Open / Being fixed / Fixed, one action per row), Food menu (day chips, 3 fields, copy to next day; saved as you type), House rules, Reviews and ranking as one page (score and rank tiles, "To rank higher" from real data, Reply).
+- **Your plan:** one screen for Free trial / Due / Late / Checking / Paid / Not found; `oPlan`, `oInvoice` and `oPayStatus` all show it. Late says deals pause from day 15 (not earlier); Paid shares a receipt (there is no invoice download).
+- **Fair Play check:** "Reply within N hours" from the real deadline, timeline with flagged steps in red, reply box, Send my reply / Change <name> to "Came from the app". "Add a photo as proof" is gone (it did nothing).
+- **Team:** you and managers with tags, the note on what managers can't see, Add a manager.
+- Tests: `test/owner_test.dart` (Half A) and `test/owner_manage_test.dart` (Half B), older tests updated.
+
 ### Area 2 · Resident: built 2026-10-02 (merged, #72)
 - **Rent:** one amount card (dark when paid), rows Rent / Electricity / Pay to, "Paid before", the advance line, and the action at the bottom: Pay by UPI + enter UPI reference / Remind <owner> + Fix the UPI reference / Share receipt.
 - **Food:** day strip, today's meals tagged Done / Next / Later (from the clock), "How was breakfast?" Good / Okay / Poor, "Whole week ›" in the header.
