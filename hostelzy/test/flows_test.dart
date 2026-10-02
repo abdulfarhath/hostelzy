@@ -19,6 +19,7 @@ import 'package:hostelzy/ui/kit.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:hostelzy/router.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
   for (final (family, files) in [
@@ -2195,6 +2196,43 @@ void main() {
     o.unlockTeam();
     expect(o.teamUnlocked, isFalse);
     o.dispose();
+  });
+
+  testWidgets('go_router deep links: enquiry and invite links open the right place', (tester) async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final r = appRouter(s, (_) => const HostelzyShell(bare: true));
+    addTearDown(r.dispose);
+    await _loadFonts(tester);
+    tester.view.physicalSize = const Size(410, 864);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: r, builder: (c, child) => AppScope(state: s, child: child!)));
+    await tester.pump();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    // An owner opens a tenant's enquiry link: Today, with that enquiry open.
+    s.update(() => s.screen = 'oRent');
+    r.go('/r?c=hz-4821');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.sheet, s.enqRef), ('oToday', 'enq', 'HZ-4821'));
+    expect(r.routerDelegate.currentConfiguration.uri.path, '/');
+    // Not this account's code: say so, stay put.
+    s.update(() => s.sheet = null);
+    r.go('/hostelzy/app/r?c=HZ-9999');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.toast), ('oToday', 'HZ-9999 isn’t in this account. Sign in with the account that sent or got it.'));
+    r.go('/r?c=nonsense');
+    await tester.pumpAndSettle();
+    expect(s.toast, 'That link has no HZ code.');
+    // A resident invite is kept for sign-up.
+    r.go('/j?c=anj-7q2');
+    await tester.pumpAndSettle();
+    expect((s.pendingInvite, s.toast), ('ANJ-7Q2', 'Invite ANJ-7Q2 saved. Sign in and pick “I live in a Hostelzy PG”.'));
+    // Any other link just opens the app.
+    r.go('/somewhere/else');
+    await tester.pumpAndSettle();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
   });
 }
 
