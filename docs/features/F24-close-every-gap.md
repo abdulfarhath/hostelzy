@@ -105,6 +105,9 @@ poster (“Sign in · With Google, one tap”; “never asks for your password o
 (“Signed in to Hostelzy”), aAdd 5 (“confirms by joining with the invite code”), layout-coming-soon,
 Add a manager. Picker frame: Floor view opens first only for guests or rooms with no layout (F23).
 
+**v23 (after #77 merged):** owner Food menu button "Save menu" (all 7 days); removed `r-stay`
+(rConfirm, retired) and `r-where` (old Where sheet; the app has only the full-screen Where?). **204 boards.**
+
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
