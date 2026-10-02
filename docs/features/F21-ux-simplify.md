@@ -123,3 +123,10 @@ One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Tod
 - **Avatar initials** come from the user's name (they were "SR" / "RV").
 - **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
 
+
+## Decisions during build (Ideas chat, 2026-10-02)
+- Welcome language row appears only in W4 when Telugu/Hindi really exist (no fake options).
+- Notify sheet promises only what's real; tenants get a server push when the owner keeps/declines a hold.
+- Tenants are asked for notifications after their first hold; owners/residents after sign-in.
+- "UPI reference" everywhere, including the owner plan invoice (shown once as "UPI reference (UTR)").
+- "Best deals" sort removed; a "Hostelzy deals only" filter chip stays.
