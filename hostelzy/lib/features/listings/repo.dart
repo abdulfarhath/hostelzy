@@ -1,19 +1,22 @@
-// F13: where the app's data comes from. `SampleData` keeps the built-in
-// sample hostels (offline, tests); `SupabaseData` reads live hostels from the
+// F13: where the app's data comes from. `SampleRepo` keeps the built-in
+// sample hostels (offline, tests); `SupabaseRepo` reads live hostels from the
 // database. Row Level Security decides what each user may read or write.
+
+import 'dart:ui' show Offset;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'app_config.dart';
-import 'data.dart';
+import '../../app_config.dart';
+import '../../data.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi});
+/// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
 
-abstract class HostelData {
+abstract class HostelRepo {
   /// Live hostels, or null to keep the built-in sample data.
   Future<Listings?> listings();
   Future<RemoteSettings?> settings();
@@ -25,8 +28,8 @@ abstract class HostelData {
   Future<void> savePushToken(String token);
 }
 
-class SampleData implements HostelData {
-  const SampleData();
+class SampleRepo implements HostelRepo {
+  const SampleRepo();
   @override
   Future<Listings?> listings() async => null;
   @override
@@ -37,22 +40,22 @@ class SampleData implements HostelData {
   Future<void> savePushToken(String token) async {}
 }
 
-class SupabaseData implements HostelData {
-  SupabaseData(this.db);
+class SupabaseRepo implements HostelRepo {
+  SupabaseRepo(this.db);
   final SupabaseClient db;
 
   /// Connects with the public anon key from `app_config.dart`. Signed-in
   /// users send their Firebase ID token ([idToken]); Supabase checks it
   /// (Third-party Auth) and the database rules use its uid.
-  static Future<SupabaseData> connect({Future<String?> Function()? idToken}) async {
+  static Future<SupabaseRepo> connect({Future<String?> Function()? idToken}) async {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
-    return SupabaseData(Supabase.instance.client);
+    return SupabaseRepo(Supabase.instance.client);
   }
 
   @override
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
-    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*)');
+    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*)');
     return listingsFromRows(rows);
   }
 
@@ -71,6 +74,7 @@ class SupabaseData implements HostelData {
 Listings listingsFromRows(List<Map<String, dynamic>> rows) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
+  final lays = <String, Map<int, RoomLayout>>{};
   for (final h in rows) {
     final id = h['id'] as String;
     final rs = <Room>[
@@ -140,8 +144,24 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
     rates[id] = rate;
     if (h['lat'] != null && h['lng'] != null) pos[id] = ((h['lat'] as num).toDouble(), (h['lng'] as num).toDouble());
     upi[id] = (id: h['upi_id'] as String? ?? '', name: h['upi_name'] as String? ?? '');
+    lays[id] = {
+      for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
+    };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays);
+}
+
+/// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
+/// feet; items `[{id, kind, x, y, w, h, facing, working}]`; bunks `{upper: lower}`.
+RoomLayout layoutFromRow(String hid, Map<String, dynamic> r) {
+  num n(Object? v) => v as num? ?? 0;
+  final beds = <String, Offset>{for (final e in (r['beds'] as Map? ?? const {}).entries) e.key as String: Offset(n((e.value as List)[0]).toDouble(), n(e.value[1]).toDouble())};
+  final items = [
+    for (final i in (r['items'] as List? ?? const []).cast<Map>()) LItem(i['id'] as String, i['kind'] as String, n(i['x']).toDouble(), n(i['y']).toDouble(), n(i['w']).toDouble(), n(i['h']).toDouble(), facing: i['facing'] as String?, working: i['working'] as bool? ?? true),
+  ];
+  final at = DateTime.tryParse(r['updated_at'] as String? ?? '');
+  return RoomLayout(hid: hid, room: r['room'] as int, w: n(r['w']).toDouble(), h: n(r['h']).toDouble(), beds: beds, items: items, version: r['version'] as int? ?? 1, drawn: at == null ? '' : dayMon(at), verified: at == null ? '' : dayMon(at))
+    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String});
 }
 
 RemoteSettings settingsFromRows(List<Map<String, dynamic>> rows) {

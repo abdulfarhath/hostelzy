@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
 import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp;
-import 'package:hostelzy/backend.dart';
+import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
@@ -1723,8 +1723,25 @@ void main() {
           },
           {'number': 101, 'label': '101A', 'floor': 1, 'share': 2, 'rent': 9000, 'ac': false, 'bath': 'Shared', 'beds': []},
         ],
+        'layouts': [
+          {
+            'room': 102, 'stage': 'published', 'version': 3, 'w': 12, 'h': 10, 'updated_at': '2026-09-30T10:00:00Z',
+            'beds': {'A': [2, 3], 'B': [8, 3], 'C': [8, 3]},
+            'items': [
+              {'id': 'd1', 'kind': 'door', 'x': 0, 'y': 4, 'w': 0.5, 'h': 3, 'facing': 'E'},
+              {'id': 'f1', 'kind': 'fan', 'x': 6, 'y': 5, 'w': 1, 'h': 1, 'working': false},
+            ],
+            'bunks': {'C': 'B'},
+          },
+          {'room': 101, 'stage': 'draft', 'version': 1, 'w': 10, 'h': 10, 'beds': {}, 'items': []},
+        ],
       },
     ]);
+    final lay = l.layouts.values.single;
+    expect(lay.keys, [102]); // drafts never reach tenants
+    final r102 = lay[102]!;
+    expect((r102.version, r102.w, r102.beds['A'], r102.upperOn('B'), r102.drawn), (3, 12.0, const Offset(2, 3), 'C', '30 Sep'));
+    expect(r102.items.map((i) => '${i.kind} ${i.working}'), ['door true', 'fan false']);
     final h = l.hostels.single;
     expect((h.name, h.from, h.owner, h.terms.advance, h.terms.dueOnJoining, h.rating), ('Real Test PG', 7500, 'Imran', 5000, false, 0.0));
     final rs = l.rooms[h.id]!;
@@ -1751,6 +1768,17 @@ void main() {
     s.dispose();
     resetSampleData();
     expect(browsable.length, 6);
+
+    // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
+    final e = AppState(start: 'explore', role: 'tenant');
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}));
+    await pumpApp(tester, e);
+    expect(find.text('No hostels in this area yet'), findsOneWidget);
+    expect(find.text('Anjani Residency'), findsNothing);
+    await tap(tester, find.text('Pick another area'));
+    expect(e.sheet, 'areas');
+    e.dispose();
+    resetSampleData();
   });
 
   testWidgets('push: explainer, then Android asks; allowed gets a token, denied says how to fix (F13)', (tester) async {
@@ -1893,7 +1921,11 @@ void main() {
   testWidgets('gated roles, no fake contacts, small phones, crash guards (F18)', (tester) async {
     // Play Store build: no sample people, and roles that need someone else are gated.
     AppState.samples = false;
-    addTearDown(() => AppState.samples = true);
+    AppState.demoBanner = true;
+    addTearDown(() {
+      AppState.samples = true;
+      AppState.demoBanner = false;
+    });
     final s = AppState(start: 'role', role: 'tenant');
     expect([s.residents, s.enquiries, s.cases, s.signups, s.payments, s.complaints, s.reqs].map((l) => l.length), [0, 0, 0, 0, 0, 0, 0]);
     await pumpApp(tester, s);
@@ -1924,8 +1956,11 @@ void main() {
     await tap(tester, find.text('I live in a Hostelzy PG'));
     await tap(tester, find.text('Not in a PG yet? Find a bed'));
     expect((s.screen, s.role), ('explore', 'tenant'));
-    // The Play Store build says it is on sample listings.
+    // The demo APK says it is on sample listings; the real one never does.
     expect(find.text('Sample data. Nothing you do here is real.'), findsOneWidget);
+    s.update(() => AppState.demoBanner = false);
+    await tester.pump();
+    expect(find.text('Sample data. Nothing you do here is real.'), findsNothing);
     // Team mode opens the owner screens.
     s.update(() => s.teamUnlocked = true);
     expect(s.canOwner, isTrue);
@@ -2195,7 +2230,7 @@ class _FakeSignIn implements SignIn {
   Future<void> signOut() async => signedOut = true;
 }
 
-class _FakeData extends SampleData {
+class _FakeData extends SampleRepo {
   ({String name, String email, String phone, String role})? profile;
   final tokens = <String>[];
   @override

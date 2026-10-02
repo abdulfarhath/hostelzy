@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
-import 'backend.dart';
+import 'features/listings/repo.dart';
 import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
@@ -15,7 +15,8 @@ import 'ui/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final (p, a) = await startFirebase();
+  // B3: the demo APK has no Firebase (see android/app/build.gradle.kts).
+  final (p, a) = AppState.demoBanner ? (const NoPush(), const NoSignIn()) : await startFirebase();
   push = p;
   signIn = a;
   // F18: stay logged in: what this phone kept from last time.
@@ -74,15 +75,16 @@ class _HostelzyAppState extends State<HostelzyApp> {
   /// F13: live hostels and remote switches from Supabase.
   Future<void> _goLive() async {
     try {
-      final db = await SupabaseData.connect(idToken: signIn.available ? signIn.idToken : null);
+      final db = await SupabaseRepo.connect(idToken: signIn.available ? signIn.idToken : null);
       state.data = db;
       final s = await db.settings();
       if (s != null) state.applySettings(s);
       final l = await db.listings();
       if (l != null) state.applyListings(l);
     } catch (e) {
-      // Say so instead of quietly showing sample hostels as if they were live.
-      state.toastMsg('Couldn’t reach Hostelzy. Showing sample hostels. Check your internet.');
+      // Never show sample hostels as if they were live: an honest empty list.
+      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}));
+      state.toastMsg('Couldn’t reach Hostelzy. Check your internet and open the app again.');
       debugPrint('Supabase: $e');
     }
   }

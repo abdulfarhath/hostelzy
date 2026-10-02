@@ -1,9 +1,18 @@
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    id("com.google.gms.google-services") apply false
+    id("com.google.firebase.crashlytics") apply false
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// B3: HZ_DEMO=1 builds the demo APK (sample data, DEMO banner). It installs
+// next to the real app (".demo" id) and has no Firebase: its package isn't in
+// google-services.json, so Google sign-in and push stay off there.
+val demo = System.getenv("HZ_DEMO") == "1"
+if (!demo) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 android {
@@ -29,6 +38,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        if (demo) applicationIdSuffix = ".demo"
+        manifestPlaceholders["appLabel"] = if (demo) "Hostelzy Demo" else "Hostelzy"
     }
 
     // F13: test APKs need a fixed signing key (stable SHA-1) for Google

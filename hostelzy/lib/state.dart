@@ -15,7 +15,7 @@ import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
-import 'backend.dart' show HostelData, Listings, RemoteSettings, SampleData;
+import 'features/listings/repo.dart' show HostelRepo, Listings, RemoteSettings, SampleRepo;
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -1659,8 +1659,12 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  /// F18: sample owner / resident data only in debug builds and tests.
-  static bool samples = kDebugMode;
+  /// F18: sample owner / resident data only in debug builds, tests and the
+  /// demo APK (DATA=sample). The real APK (DATA=supabase) starts with none.
+  static bool samples = kDebugMode || dataSource == 'sample';
+
+  /// The demo APK says so on every screen (design "Demo").
+  static bool demoBanner = !kDebugMode && dataSource == 'sample';
 
   /// Owner screens: sample data in debug; in release only for the Hostelzy
   /// team (team mode) or hostels the team put live on a visit, until owner
@@ -2291,7 +2295,7 @@ class AppState extends ChangeNotifier {
   SignIn signIn = const NoSignIn();
 
   /// Where data is saved: sample (on this phone) or Supabase.
-  HostelData data = const SampleData();
+  HostelRepo data = const SampleRepo();
 
   /// The signed-in Google account; null when using Hostelzy on this phone only.
   Account? account;
@@ -2413,6 +2417,7 @@ class AppState extends ChangeNotifier {
       ownerUpi[h.id] = l.upi[h.id]!;
       stats[h.id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
       confirmed[h.id] = 0;
+      layouts[h.id] = l.layouts[h.id] ?? {};
     }
   });
 
