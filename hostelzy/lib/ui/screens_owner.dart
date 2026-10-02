@@ -623,6 +623,15 @@ class OwnerBedsScreen extends StatelessWidget {
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
               T('${r.bath} bath · ${fmt(r.rent)}', s: 11, c: p.mu),
+              // F12: the room's layout; a new version waits for approval.
+              Tap(
+                onTap: () => s.update(() {
+                  s.lRoom = r.n;
+                  s.hist = [...s.hist, s.screen];
+                  s.screen = 'oLayout';
+                }),
+                child: T(s.layoutOf(s.ownHid, r.n)?.pending == true ? 'Approve layout ›' : 'Layout ›', s: 11, w: 800, c: s.layoutOf(s.ownHid, r.n)?.pending == true ? p.ad : p.tx),
+              ),
             ],
           ),
         ),
