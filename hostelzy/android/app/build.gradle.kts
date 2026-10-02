@@ -35,6 +35,7 @@ android {
         versionName = flutter.versionName
         if (demo) applicationIdSuffix = ".demo"
         manifestPlaceholders["appLabel"] = if (demo) "Hostelzy Demo" else "Hostelzy"
+        manifestPlaceholders["linkScheme"] = if (demo) "hostelzy-demo" else "hostelzy"
     }
 
     // F13: test APKs need a fixed signing key (stable SHA-1) for Google

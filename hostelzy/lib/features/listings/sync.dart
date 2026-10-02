@@ -7,9 +7,53 @@ mixin _SyncData {
 
   /// C: deleting (Google confirm + server) is in progress.
   bool deleting = false;
+
+  /// B6: Realtime subscription and its debounce.
+  StreamSubscription<String>? _liveSub;
+  Timer? _liveWait;
 }
 
 extension SyncActions on AppState {
+
+  /// B6: the signed-in user's live holds, enquiries, payments and complaints
+  /// replace the lists. Never mixed with samples: on Supabase the lists start
+  /// empty (AppState.samples is false).
+  void applyLive(LiveRows l) => update(() {
+    holds = l.holds;
+    enquiries = l.enquiries;
+    payments = l.payments;
+    complaints = l.complaints;
+    expiredHolds
+      ..clear()
+      ..addAll(l.expired);
+  });
+
+  Future<void> refreshLive() async {
+    try {
+      final l = await data.live(me: account?.uid);
+      if (l != null) applyLive(l);
+    } catch (e) {
+      debugPrint('live: $e');
+    }
+  }
+
+  /// Signed in on Supabase: load the live rows, then refetch whenever one of
+  /// them changes (Realtime), at most once per 400 ms.
+  Future<void> startLive() async {
+    if (account == null) return;
+    await refreshLive();
+    await _liveSub?.cancel();
+    _liveSub = data.changes().listen((_) {
+      _liveWait?.cancel();
+      _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
+    });
+  }
+
+  void stopLive() {
+    _liveSub?.cancel();
+    _liveSub = null;
+    _liveWait?.cancel();
+  }
 
   /// Why the account can't be deleted yet, or null.
   ({String title, String body, String cta, VoidCallback go})? get deleteBlock {
@@ -54,6 +98,7 @@ extension SyncActions on AppState {
         return toastMsg(m.contains('Owners:') ? 'Owners: ask Hostelzy to close or hand over your hostel first.' : 'Couldn’t delete it on the server. Check your internet and try again.');
       }
     }
+    stopLive();
     final me = myPhone;
     update(() {
       enquiries = enquiries.where((e) => e.phone != me).toList();
@@ -78,6 +123,7 @@ extension SyncActions on AppState {
   /// F18: logging out forgets everything this phone kept about the user.
   void logOut() {
     signIn.signOut();
+    stopLive();
     final me = phone;
     update(() {
       for (final h in holds.where((h) => h.status != 'released')) {

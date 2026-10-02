@@ -18,13 +18,17 @@
   <p class="mu">This tenant found your hostel on Hostelzy. Keep this code: when they move in, add them in the app within 3 days.</p>
 </div>
 <p id="none" class="mu" hidden>This link has no HZ code. Ask the sender for the full link.</p>
-<a class="cta" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
-<p class="mu">Already have Hostelzy? Open it: owners find this enquiry on <b>Today</b>, tenants under <b>Holds</b>.</p>
+<a class="cta" id="open" href="#" hidden>Open in Hostelzy</a>
+<a class="cta ghost" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
+<p class="mu">"Open in Hostelzy" works when the app is installed: owners land on <b>Today</b> with this enquiry, tenants on <b>Holds</b>. If nothing happens, get the app first.</p>
 <script>
   const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
   if (/^HZ-[0-9]{3,8}$/.test(c)) {
     document.getElementById('code').textContent = c;
     document.getElementById('box').hidden = false;
+    const o = document.getElementById('open');
+    o.href = 'hostelzy://app/r?c=' + encodeURIComponent(c);
+    o.hidden = false;
     document.title = c + ' · Hostelzy';
   } else {
     document.getElementById('none').hidden = false;

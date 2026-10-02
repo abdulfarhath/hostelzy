@@ -184,5 +184,13 @@ select test.blocked($$update public.app_settings set value = '9'$$);
 select test.blocked($$insert into public.enquiries (hostel_id, ref, name, phone) values ('10000000-0000-0000-0000-000000000001', 'HZ9', 'x', 'x')$$);
 
 reset role;
+
+-- ------------------------------------------------------------ B6 Realtime publication
+do $$ begin
+  if (select string_agg(tablename, ',' order by tablename) from pg_publication_tables where pubname = 'supabase_realtime') is distinct from 'complaints,enquiries,holds,payments' then
+    raise exception 'Realtime publication is missing tables';
+  end if;
+end $$;
+
 \o
 select 'ALL RLS TESTS PASSED';

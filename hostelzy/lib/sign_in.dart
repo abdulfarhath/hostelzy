@@ -26,6 +26,10 @@ abstract class SignIn {
   /// The account Firebase still has signed in from last time, if any.
   Account? get current;
 
+  /// B7: the signed-in account has the `team: true` claim (set only by the
+  /// founder's "Team member" GitHub action, never by the app).
+  Future<bool> isTeam();
+
   Future<void> signOut();
 
   /// C: confirms it's still you (Google again), before deleting the account.
@@ -48,6 +52,8 @@ class NoSignIn implements SignIn {
   Future<(Account?, SignInFail?)> google() async => (null, SignInFail.notSetUp);
   @override
   Future<String?> idToken() async => null;
+  @override
+  Future<bool> isTeam() async => false;
   @override
   Account? get current => null;
   @override
@@ -91,6 +97,17 @@ class FirebaseSignIn implements SignIn {
 
   @override
   Future<String?> idToken() async => _auth.currentUser?.getIdToken();
+
+  @override
+  Future<bool> isTeam() async {
+    try {
+      // Forces a fresh token, so a claim added a minute ago counts.
+      final r = await _auth.currentUser?.getIdTokenResult(true);
+      return r?.claims?['team'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Account? get current {
