@@ -13,6 +13,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
 - [x] Firebase key locked to the Android app
 - [x] Supabase v2 SQL (firebase ids)
+- [x] SQL: B6 realtime, B7 photos, B7 console (checked 2026-10-02)
 - [x] B5: pg_cron + pg_net, server rules SQL, FCM key, push secret, SUPABASE_ACCESS_TOKEN
 
 ## Now
