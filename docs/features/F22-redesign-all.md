@@ -131,7 +131,7 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
-### Area 3 · Owner: built 2026-10-02 (branch `feature/f22-owner`)
+### Area 3 · Owner: built 2026-10-02 (merged, #73)
 - **Beds:** floor chips with free counts, rooms as cards with bed boxes (the open bed shows red), legend, "Rooms and rates ›". The red "New layout" button stays on a room when Hostelzy drew a version to publish.
 - **Bed sheet:** status, resident, room, rent, since and how they came, advance; Message / Mark as leaving (taken), Release hold (held), Add tenant to this bed / Hold for a walk-in (free); "Room … layout ›".
 - **Rent:** Collected and Still to come with a bar; seg All / Due / Late / Paid with counts; rows with a plain tag and a 44px bell.
