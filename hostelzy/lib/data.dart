@@ -437,15 +437,25 @@ const meals = [
   ['l', 'Lunch', '12:30 – 2:00'],
   ['n', 'Dinner', '8:00 – 10:00'],
 ];
-const weekDays = [
-  ['Mon', '28'],
-  ['Tue', '29'],
-  ['Wed', '30'],
-  ['Thu', '1'],
-  ['Fri', '2'],
-  ['Sat', '3'],
-  ['Sun', '4'],
-];
+/// F21: this week (Monday first) as [day, date, month], from [appToday].
+List<List<String>> get weekDays {
+  final mon = appToday.subtract(Duration(days: appToday.weekday - 1));
+  return [
+    for (var i = 0; i < 7; i++)
+      () {
+        final d = mon.add(Duration(days: i));
+        return [const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i], '${d.day}', _months[d.month - 1]];
+      }(),
+  ];
+}
+
+/// Monday = 0 … Sunday = 6.
+int get todayIdx => appToday.weekday - 1;
+
+const _dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+/// "Thursday"
+String get todayName => _dayNames[todayIdx];
 
 class Rule {
   const Rule(this.k, this.v);
@@ -1313,9 +1323,12 @@ class HostelDraft {
 /// their bank and confirms. [kind]: advance | rent. [status]: due | waiting |
 /// paid | missing (owner says it didn't arrive).
 class Payment {
-  Payment({required this.id, required this.kind, required this.hid, required this.who, required this.what, required this.bed, required this.amt, required this.note, this.holdId, this.status = 'due', this.utr, this.sent, this.done});
+  Payment({required this.id, required this.kind, required this.hid, required this.who, required this.what, required this.bed, required this.amt, required this.note, this.holdId, this.status = 'due', this.utr, this.sent, this.done, this.at = 0});
   final String id, kind, hid, who, what, bed, note;
   final int amt;
+
+  /// When it was started (ms; 0 for samples).
+  final int at;
   final String? holdId;
   String status;
   String? utr, sent, done;

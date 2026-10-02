@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -84,27 +83,14 @@ class _Timeline extends StatelessWidget {
   }
 }
 
-/// F07 board 1: Fair Play rules, accepted with a code (owner sign-up).
+/// F07 board 1: Fair Play rules, accepted with "I agree" (owner sign-up).
+/// F21: no SMS code (nothing sends one); the rules stay in Settings.
 class OwnerRulesScreen extends StatelessWidget {
   const OwnerRulesScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final cells = <Widget>[];
-    for (var i = 0; i < 6; i++) {
-      if (i > 0) cells.add(const SizedBox(width: 8));
-      cells.add(
-        Expanded(
-          child: Container(
-            height: 52,
-            alignment: Alignment.center,
-            decoration: box(w: 2, c: i == s.fpOtp.length ? p.ac : p.tx),
-            child: T(i < s.fpOtp.length ? s.fpOtp[i] : '', w: 800, s: 22),
-          ),
-        ),
-      );
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -148,27 +134,18 @@ class OwnerRulesScreen extends StatelessWidget {
                     child: VGap(
                       gap: 8,
                       children: [
-                        T('Type the code sent to ${phoneSpaced(ownerPhones[s.ownHid] ?? '')} to accept', w: 800, s: 13),
-                        Stack(
-                          children: [
-                            Row(children: cells),
-                            Positioned.fill(
-                              child: Field(
-                                value: s.fpOtp,
-                                onChanged: (v) => s.update(() {
-                                  final d = v.replaceAll(RegExp(r'\D'), '');
-                                  s.fpOtp = d.length > 6 ? d.substring(0, 6) : d;
-                                }),
-                                numeric: true,
-                                border: false,
-                                height: null,
-                                pad: EdgeInsets.zero,
-                                hiddenText: true,
-                              ),
-                            ),
-                          ],
+                        Tap(
+                          key: const ValueKey('fpAgree'),
+                          onTap: () => s.update(() => s.fpAgree = !s.fpAgree),
+                          child: Row(
+                            children: [
+                              Container(width: 24, height: 24, alignment: Alignment.center, decoration: box(bg: s.fpAgree ? p.tx : transparent, w: 2, c: p.tx), child: s.fpAgree ? Ic('check', size: 16, color: p.bg) : null),
+                              const SizedBox(width: 10),
+                              const Expanded(child: T('I agree to the Fair Play rules', w: 800, s: 15)),
+                            ],
+                          ),
                         ),
-                        if (kDebugMode) Tap(onTap: () => s.update(() => s.fpOtp = '553014'), child: T('Paste code from SMS', s: 12, w: 600, c: p.ad)),
+                        T('You can read them again any time in Settings → Fair Play rules.', s: 12, c: p.mu),
                       ],
                     ),
                   )
@@ -181,7 +158,7 @@ class OwnerRulesScreen extends StatelessWidget {
         if (!s.fairAccepted)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Cta('I accept the Fair Play rules', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.acceptFairPlay),
+            child: Cta('I accept the Fair Play rules', icon: 'check', height: 54, px: 16, fs: 15, opacity: s.fpAgree ? 1 : .4, onTap: s.acceptFairPlay),
           ),
       ],
     );

@@ -68,7 +68,6 @@ mixin _ReviewsData {
   String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
   String? rBed;
   int rPickBack = 3;
-  String cOtp = '';
 
   /// Bed of the resident on the confirm-your-stay screen.
   String? cBed;
@@ -301,5 +300,5 @@ extension ReviewsActions on AppState {
     toastMsg(msg);
   }
   /// This month's rent is paid once Srinivas confirms it (F17).
-  bool get paid => myRent.status == 'paid';
+  bool get paid => myRentPay?.status == 'paid';
 }

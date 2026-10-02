@@ -60,3 +60,21 @@ Redraw only the screens that change; update the All screens canvas with "Updated
 
 ## Build
 One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Today queue, offline state.
+
+### Wave 1 · Built · 2026-10-02 (branch `feature/f21-honesty`)
+- **Resident screens show the resident's real stay.** On the server, Home, Pay rent, Food, Help, Move out / swap and the review headers use the user's own confirmed stay: hostel, room, bed, rent, join day, owner. Demo builds still show the Anjani sample.
+  - Server data: `liveFromRows` now returns `myStay`, the user's own stay row.
+  - The "Room 204 board" is gone everywhere.
+  - Today's food uses today's weekday. Meal tags (Done / Next / Later) follow the clock.
+  - Until the menu is on the server, a resident sees "<owner> hasn’t put the menu on Hostelzy yet". The sample menu is never shown on the server.
+- **Rent on the server is real.** "Pay ₹X by UPI" first starts this month's rent payment (`payments`, kind `rent`, with `stay_id`), then UPI → UTR → owner confirms, the same as advances.
+  - This also fixes a crash: the old code looked up the sample payment `rent204B`, which doesn't exist on the server.
+  - The sample history and the electricity line show only in demo builds.
+- **Notice and swap on the server go to the owner on WhatsApp.** The app no longer says "Saved on Hostelzy" when nothing is saved there.
+- **No fake codes.**
+  - Fair Play: "I agree to the Fair Play rules" checkbox; the rules stay under Settings → Fair Play rules.
+  - Confirm stay: "Yes, this is me" in demo builds. On the server it's "Enter the invite code", the real confirmation path, where the owner's approval links the stay.
+  - Add resident: "Add resident" (it was "Add and send code"), and the "Waiting OTP" filter is now "Not confirmed".
+- **Avatar initials** come from the user's name (they were "SR" / "RV").
+- **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
+

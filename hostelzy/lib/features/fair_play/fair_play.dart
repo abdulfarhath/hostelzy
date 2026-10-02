@@ -7,7 +7,10 @@ mixin _FairPlayData {
 
   /// The owner accepted the Fair Play rules (by code) when signing up.
   bool fairAccepted = false;
-  String fpOtp = '', fpReply = '';
+  String fpReply = '';
+
+  /// F21: the owner ticks "I agree" (no fake SMS code).
+  bool fpAgree = false;
 
   /// Owner mistakes fixed within 48 hours; 3 in 6 months = 1 warning.
   int ownerFixes = 0;
@@ -32,10 +35,10 @@ extension FairPlayActions on AppState {
   bool heldAt(String hid) => holds.any((h) => h.hid == hid && h.status != 'released');
 
   void acceptFairPlay() {
-    if (fpOtp.length != 6) return toastMsg('Enter the 6-digit code.');
+    if (!fpAgree) return toastMsg('Tick “I agree” first.');
     update(() {
       fairAccepted = true;
-      fpOtp = '';
+      fpAgree = false;
       screen = 'oToday';
       hist = [];
     });
