@@ -41,7 +41,7 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 
 ## Links
 - **F18 Real app v2 (sign in, role gates, empty states, map v2, owner layout editor, photos, saved, delete v2, team console, small UX; Design approved · 2026-10-02):** https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
-- **All screens (master canvas, every screen as it will ship, F01–F17 + brand; Design approved · 2026-10-02, standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+- **All screens (the app as it is today, redrawn from the code 2026-10-02 after F18 and #37–#51: 146 screens by role (Onboarding · Tenant · Resident · Owner · Hostelzy team · Web), 35 Updated, 38 New, light + dark; Design approved · standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
