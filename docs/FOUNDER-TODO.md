@@ -11,10 +11,11 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] UPI ID `9059790014@axl`, support WhatsApp `9059790014`
 - [x] Firebase SHA-1 / SHA-256 added, new google-services.json
 - [x] GitHub secrets HZ_TEST_KEYSTORE_BASE64 / HZ_TEST_KEYSTORE_PASSWORD
-- [x] Google login tested setup; Firebase key locked to the Android app
-- [x] Supabase v2 SQL (firebase ids)
+- [x] Firebase key locked to the Android app
 
 ## Now
+0. **Supabase v2 SQL** (if not done yet): Supabase → SQL Editor → New query → paste
+   `supabase/migrations/20261002020000_f13_firebase_ids.sql` (Copy raw file on GitHub) → Run → "Success".
 1. **Test the F18 APK** (back button, stay logged in, own name/phone, map: my location + area picker,
    owner layout editing). Tell the Ideas chat ✅ / ❌ with screenshots.
 2. *(Optional)* Google login in the demo APK: Firebase → Add app → Android →
