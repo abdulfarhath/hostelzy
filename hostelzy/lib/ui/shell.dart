@@ -293,7 +293,8 @@ class _FullScreen extends StatelessWidget {
         color: p.bg,
         child: _AppBody(
           top: Container(height: mq.padding.top, color: sbBg),
-          bottom: Container(height: mq.padding.bottom, color: sbBg),
+          // F18: the keyboard pushes the screen up instead of covering inputs.
+          bottom: Container(height: mq.viewInsets.bottom > mq.padding.bottom ? mq.viewInsets.bottom : mq.padding.bottom, color: sbBg),
           toastBottom: (rail ? 12 : 76) + mq.padding.bottom,
           tabs: !rail,
         ),
@@ -313,7 +314,7 @@ class _AppBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final showTabs = tabs && AppState.tabScreens.contains(s.screen);
+    final showTabs = tabs && AppState.tabScreens.contains(s.screen) && MediaQuery.viewInsetsOf(context).bottom == 0;
     // Material installs its own DefaultTextStyle; put the design's back.
     return Material(
       type: MaterialType.transparency,
@@ -325,12 +326,26 @@ class _AppBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 top,
+                // F18 design "Demo": the Play Store build says when it's on sample listings.
+                if (!AppState.samples && !liveListings && !const ['welcome', 'login', 'phone', 'otp', 'role', 'roleGate', 'gate'].contains(s.screen))
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    color: p.tx,
+                    child: Row(
+                      children: [
+                        Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), color: p.ac, child: T('DEMO', w: 800, s: 12, c: p.ai)),
+                        const SizedBox(width: 8),
+                        Expanded(child: T('Sample data. Nothing you do here is real.', w: 800, s: 12, c: p.bg)),
+                      ],
+                    ),
+                  ),
                 Expanded(child: _screen(s.screen)),
                 if (showTabs) const _TabBar(),
                 bottom,
               ],
             ),
-            if (s.sheet != null) const Positioned.fill(child: _Sheet()),
+            // F18: sheets sit above the keyboard.
+            if (s.sheet != null) Positioned(left: 0, top: 0, right: 0, bottom: MediaQuery.viewInsetsOf(context).bottom, child: const _Sheet()),
             if (s.toast != null)
               Positioned(
                 left: 16,
@@ -354,6 +369,7 @@ class _AppBody extends StatelessWidget {
   Widget _screen(String k) => switch (k) {
     'welcome' => const WelcomeScreen(),
     'login' => const LoginScreen(),
+    'roleGate' => const RoleGateScreen(),
     'phone' => const PhoneScreen(),
     'otp' => const OtpScreen(),
     'role' => const RoleScreen(),

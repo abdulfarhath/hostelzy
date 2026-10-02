@@ -148,7 +148,7 @@ class OwnerRulesScreen extends StatelessWidget {
                     child: VGap(
                       gap: 8,
                       children: [
-                        T('Type the code sent to ${phoneSpaced(ownerPhones[s.ownHid]!)} to accept', w: 800, s: 13),
+                        T('Type the code sent to ${phoneSpaced(ownerPhones[s.ownHid] ?? '')} to accept', w: 800, s: 13),
                         Stack(
                           children: [
                             Row(children: cells),
@@ -199,7 +199,7 @@ class OwnerContact extends StatelessWidget {
     final p = PalScope.of(context);
     final held = s.heldAt(h.id);
     final hold = s.holds.where((x) => x.hid == h.id && x.status != 'released').lastOrNull;
-    final phone = ownerPhones[h.id]!;
+    final phone = ownerPhones[h.id] ?? '';
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: box(w: 2, c: p.tx),
@@ -210,7 +210,7 @@ class OwnerContact extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(h.owner.substring(0, 2).toUpperCase(), w: 800)),
+                Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(initials(h.owner.isEmpty ? h.name : h.owner), w: 800)),
                 const SizedBox(width: 12),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T('Usually replies in ~${h.reply} min', s: 12, c: p.mu)])),
               ],

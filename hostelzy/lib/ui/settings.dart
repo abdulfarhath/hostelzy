@@ -315,40 +315,42 @@ class PermissionScreen extends StatelessWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(alignment: Alignment.centerLeft, child: Container(width: 64, height: 64, color: p.sf, alignment: Alignment.center, child: Ic(icon, size: 30, color: p.tx))),
-          const SizedBox(height: 14),
-          T(title, w: 800, s: 32, lh: 1.02, ls: -.025),
-          const SizedBox(height: 14),
-          T(sub, s: 15, c: p.mu, lh: 1.5),
-          const SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Column(
-              children: [
-                for (final u in uses)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.only(top: 2), child: Ic('check', size: 16, color: p.tx)), const SizedBox(width: 10), Expanded(child: T(u, s: 14))]),
-                  ),
-              ],
+    return FillScroll(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(alignment: Alignment.centerLeft, child: Container(width: 64, height: 64, color: p.sf, alignment: Alignment.center, child: Ic(icon, size: 30, color: p.tx))),
+            const SizedBox(height: 14),
+            T(title, w: 800, s: 32, lh: 1.02, ls: -.025),
+            const SizedBox(height: 14),
+            T(sub, s: 15, c: p.mu, lh: 1.5),
+            const SizedBox(height: 20),
+            Container(
+              decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+              child: Column(
+                children: [
+                  for (final u in uses)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.only(top: 2), child: Ic('check', size: 16, color: p.tx)), const SizedBox(width: 10), Expanded(child: T(u, s: 14))]),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const Spacer(),
-          Cta(yes, height: 54, px: 16, fs: 15, onTap: allow),
-          const SizedBox(height: 8),
-          OutlineCta(no, icon: 'x', onTap: () {
-            s.back();
-            if (s.permKind == 'location') s.update(() => s.sheet = 'search');
-          }),
-          const SizedBox(height: 10),
-          T('Your phone asks next. You can change this in Settings.', s: 12, c: p.mu),
-        ],
+            const Spacer(),
+            Cta(yes, height: 54, px: 16, fs: 15, onTap: allow),
+            const SizedBox(height: 8),
+            OutlineCta(no, icon: 'x', onTap: () {
+              s.back();
+              if (s.permKind == 'location') s.update(() => s.sheet = 'search');
+            }),
+            const SizedBox(height: 10),
+            T('Your phone asks next. You can change this in Settings.', s: 12, c: p.mu),
+          ],
+        ),
       ),
     );
   }

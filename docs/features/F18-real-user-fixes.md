@@ -81,3 +81,37 @@ Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team co
   - The resident's stay (Anjani 204-B) is still sample data in debug builds; group 4 gates it in release.
 - Test: `back button, stay logged in, own name and phone (F18)`. Sample-flow tests now sign in a named user first.
 
+**Groups 4–7 · gated roles, no fake contacts, keyboard + small phones, crashes** (branch `feature/f18-roles-contacts-crashes`):
+- **Gated roles (4):**
+  - `AppState.samples` (debug builds and tests only) seeds sample residents, hold requests, enquiries, sign-ups, cases, complaints and payments; the Play Store build starts with none.
+  - Picking **I live in a Hostelzy PG** or **I run a hostel** without access opens the design's gate screens, with the user's own name in the header:
+    - **ResidentGate:** "Ask your owner to add you" shows your number with "Send it to your owner on WhatsApp", the invite-QR row ("Scan the invite QR" says to use the phone camera; no in-app scanner yet) and "Not in a PG yet? Find a bed".
+    - **OwnerGate:** "List your hostel" has 3 steps, the hostel name, area chips, **Request a visit** (a WhatsApp to Hostelzy with name, area and phone) and "WhatsApp Hostelzy · +91 90597 90014".
+  - Owners get in through team mode or a hostel the team put live; residents wait for the backend (F13 part 2).
+  - The design's **DEMO** banner ("Sample data. Nothing you do here is real.") shows in the Play Store build while the listings are samples.
+- **No fake contacts (5):**
+  - In the Play Store build, WhatsApp and calls to sample numbers (`90000…`) and UPI to `sample.*@upi` are blocked with an honest toast.
+  - The owner's enquiry reply WhatsApp now carries the tenant's phone.
+  - "Message warden" (a made-up Ravi) becomes **Message owner** with the hostel's number.
+- **Keyboard + small phones (6):**
+  - The bottom inset follows the keyboard (tabs hide while typing) and sheets sit above it.
+  - Login, About you, OTP, Role and Permission screens scroll (`FillScroll`) when they don't fit.
+  - Manage's six tabs scroll sideways under 460 px, and its header hides while typing.
+  - Text follows the phone's size, capped at 1.3×.
+- **Crash guards (7):**
+  - hostels with fewer than 4 tags (D4);
+  - a missing owner phone or a blank owner name (D5, plus `maskPhone` on an empty number);
+  - hostels or floors with no rooms (D6: rate card floor, add-rate fallback, compare with no eligible room);
+  - the layout editor on a room with no layout, which now creates a starting layout (G2);
+  - go-live with no rooms, which is blocked by a new "At least one room with beds" check (G3);
+  - 0 beds or 0 expected rent shows 0% instead of NaN (F2, F3);
+  - `hostelById` for an unknown id returns "Hostel no longer listed" (H9);
+  - `appToday` is now a getter, so the date moves on overnight (H8).
+
+  Rate drafts after a hostel switch (F6) were already cleared in F17.
+- Test: `gated roles, no fake contacts, small phones, crash guards (F18)` covers:
+  - the release gates and DEMO banner;
+  - blocked sample WhatsApp, call and UPI;
+  - Login, About you, Role, Permission and Manage at 320×568 with the keyboard open (no overflow);
+  - a one-tag hostel, an unknown hostel id, an editor on a room without a layout, and the go-live check.
+

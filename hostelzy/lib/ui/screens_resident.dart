@@ -38,7 +38,7 @@ class ResidentHomeScreen extends StatelessWidget {
         }),
       ),
       ('Raise complaint', 'wrench', () => s.tab('help')),
-      ('Message warden', 'msg', () => s.openWA('Ravi, warden', 'Hi Ravi, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from room 204.')),
+      ('Message owner', 'msg', () => s.openWA(hostelById('anjani').owner, 'Hi ${hostelById('anjani').owner}, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from room 204.', phone: ownerPhones['anjani'] ?? '')),
     ];
     Widget quickBtn((String, String, VoidCallback) q) => Expanded(
       child: Tap(
@@ -271,10 +271,10 @@ class RentPayScreen extends StatelessWidget {
                     OutlineCta('I’ve paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(rent)),
                   ],
                   if (rent.status == 'waiting')
-                    Cta('Remind Srinivas on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, I paid ${fmt(rent.amt)} rent for bed 204-B by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
+                    Cta('Remind Srinivas on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, I paid ${fmt(rent.amt)} rent for bed 204-B by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
                   if (rent.status == 'missing') ...[
                     Cta('Fix the UTR', onTap: () => s.openPayUtr(rent)),
-                    OutlineCta('Talk to Srinivas on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, about my rent for bed 204-B: UTR ${utrSpaced(rent.utr ?? '')}.')),
+                    OutlineCta('Talk to Srinivas on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, about my rent for bed 204-B: UTR ${utrSpaced(rent.utr ?? '')}.')),
                   ],
                   T('You pay ${s.ownerUpi['anjani']!.id} directly. Hostelzy never holds the money; Srinivas confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
                 ],
@@ -772,7 +772,7 @@ class MoveScreen extends StatelessWidget {
                       Kicker('Notice given', c: p.ad),
                       T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
                       T('Saved on Hostelzy. Tell Srinivas on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
-                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
+                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
                     ],
                   ),
                 ),

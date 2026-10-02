@@ -68,7 +68,7 @@ void main() {
     expect(s.toast, 'Google sign-in works in the Android app. Use Hostelzy on this phone for now.');
     await tester.pump(const Duration(seconds: 3)); // toast gone
     await tap(tester, find.text('Use on this phone only'));
-    expect(find.text('Your mobile number'), findsOneWidget);
+    expect(find.text('About you'), findsOneWidget);
     // F18: no sample name; the user types their own.
     expect(s.myName, '');
     await tap(tester, find.text('Debug: fill a test number'));
@@ -1883,6 +1883,107 @@ void main() {
     expect(find.textContaining('90000 00001'), findsNothing);
     expect(find.text('Rahul Varma'), findsNothing);
     c.dispose();
+  });
+
+  testWidgets('gated roles, no fake contacts, small phones, crash guards (F18)', (tester) async {
+    // Play Store build: no sample people, and roles that need someone else are gated.
+    AppState.samples = false;
+    addTearDown(() => AppState.samples = true);
+    final s = AppState(start: 'role', role: 'tenant');
+    expect([s.residents, s.enquiries, s.cases, s.signups, s.payments, s.complaints, s.reqs].map((l) => l.length), [0, 0, 0, 0, 0, 0, 0]);
+    await pumpApp(tester, s);
+    await tap(tester, find.text('I live in a Hostelzy PG'));
+    expect((s.screen, s.roleGate), ('roleGate', 'resident'));
+    expect(find.text('Ask your owner to add you'), findsOneWidget);
+    s.update(() => s.phone = '9876543210');
+    await tester.pump();
+    expect(find.text('+91 98765 43210'), findsOneWidget);
+    await tap(tester, find.text('Send it to your owner on WhatsApp'));
+    expect(s.lastLink.toString(), contains('98765%2043210'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tap(tester, find.text('I run a hostel'));
+    expect(find.text('List your hostel'), findsOneWidget);
+    await tap(tester, find.text('Request a visit').last);
+    expect(s.toast, 'Enter your hostel’s name.');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('gateHostel')), matching: find.byType(TextField)), 'Sri Sai Men’s PG');
+    await tap(tester, find.text('Kondapur'));
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Request a visit').last);
+    expect(s.lastLink.toString(), startsWith('https://wa.me/919059790014'));
+    expect(Uri.decodeComponent(s.lastLink.toString()), contains('Area: Kondapur'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tap(tester, find.text('I live in a Hostelzy PG'));
+    await tap(tester, find.text('Not in a PG yet? Find a bed'));
+    expect((s.screen, s.role), ('explore', 'tenant'));
+    // The Play Store build says it is on sample listings.
+    expect(find.text('Sample data. Nothing you do here is real.'), findsOneWidget);
+    // Team mode opens the owner screens.
+    s.update(() => s.teamUnlocked = true);
+    expect(s.canOwner, isTrue);
+
+    // No WhatsApp, calls or UPI to sample numbers / IDs.
+    s.lastLink = null;
+    s.whatsapp(ownerPhones['anjani']!, 'Hi');
+    expect((s.lastLink, s.toast), (null, 'This is a sample listing, so there’s no real number yet.'));
+    s.call(ownerPhones['saisri']!);
+    expect(s.lastLink, isNull);
+    s.payByUpi(Payment(id: 'x', kind: 'advance', hid: 'anjani', who: 'You', what: 'Advance', bed: '204-D', amt: 3000, note: 'HZ'));
+    expect((s.lastLink, s.toast), (null, 'This is a sample listing, so it has no real UPI ID. Don’t pay it.'));
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+    AppState.samples = true;
+
+    // Small phone with the keyboard open: sign-up, role and permission screens scroll.
+    HostelzyShell.prototypeFrame = false;
+    addTearDown(() => HostelzyShell.prototypeFrame = true);
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    for (final start in ['phone', 'login', 'role', 'perm', 'oMore']) {
+      final m = AppState(start: start, role: start == 'oMore' ? 'owner' : 'tenant');
+      await tester.pumpWidget(MaterialApp(home: AppScope(state: m, child: const HostelzyShell())));
+      await tester.pump();
+      final err = tester.takeException();
+      expect(err == null ? null : '$start: $err', isNull);
+      m.dispose();
+    }
+    tester.view.resetViewInsets();
+    tester.view.reset();
+
+    // Crash guards.
+    final c = AppState(start: 'explore', role: 'tenant');
+    expect(hostelById('gone').name, 'Hostel no longer listed');
+    hostels.add(Hostel(id: 'tagless', name: 'Tagless PG', gender: 'Men', area: 'Ameerpet', from: 5000, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: const {}, x: 50, y: 50, tags: const ['Wi-Fi']));
+    c.rooms['tagless'] = mkRooms(hostels.last, 6);
+    c.rates['tagless'] = seedRates(hostels.last);
+    c.stats['tagless'] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
+    await pumpApp(tester, c);
+    c.update(() {
+      c.hid = 'tagless';
+      c.screen = 'detail';
+    });
+    await tester.pump();
+    expect(find.text('Wi-Fi'), findsOneWidget); // one tag, no RangeError
+    // Owner opens the editor for a room that has no layout yet: one is made.
+    final room = c.rooms['anjani']!.last;
+    c.layouts['anjani']!.remove(room.n);
+    c.update(() => c.role = 'owner');
+    c.openLayout(room.n, editor: true);
+    await tester.pump();
+    expect((c.screen, c.layoutOf('anjani', room.n) != null), ('aLayout', true));
+    // Go live needs at least one room with beds.
+    c.openAddHostel();
+    expect(c.goLiveLeft, isNot(contains('At least one room with beds')));
+    for (final f in c.draft.floors) {
+      f.noBeds = true;
+    }
+    expect(c.goLiveLeft, contains('At least one room with beds'));
+    c.dispose();
+    resetSampleData();
   });
 }
 

@@ -611,7 +611,7 @@ class DetailScreen extends StatelessWidget {
           ),
           const SizedBox(width: 1),
           Expanded(
-            child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), child: T(h.tags[i + 1], s: 14, w: 600)),
+            child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), child: T(i + 1 < h.tags.length ? h.tags[i + 1] : '', s: 14, w: 600)),
           ),
         ],
       ),
@@ -707,13 +707,15 @@ class DetailScreen extends StatelessWidget {
                 // F14: Visited by Hostelzy + whether the owner confirmed the free beds.
                 Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VisitedBlock(h)),
                 DealBlock(h),
-                Container(
-                  decoration: BoxDecoration(
-                    color: p.hl,
-                    border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv)),
+                // F18: any number of tags (new hostels may have fewer than four).
+                if (h.tags.isNotEmpty)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: p.hl,
+                      border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv)),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < h.tags.length; i += 2) ...[if (i > 0) const SizedBox(height: 1), tagRow(i)]]),
                   ),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tagRow(0), const SizedBox(height: 1), tagRow(2)]),
-                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(

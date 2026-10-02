@@ -43,7 +43,8 @@ class Terms {
 
 /// "Today": the real date in India in the Play Store build (F17); the sample
 /// data's day (1 Oct 2026) in debug builds and tests, so the samples line up.
-final appToday = const bool.fromEnvironment('dart.vm.product') ? _todayIst() : DateTime(2026, 10, 1);
+/// F18: a getter, so the date moves on while the app stays open overnight.
+DateTime get appToday => const bool.fromEnvironment('dart.vm.product') ? _todayIst() : DateTime(2026, 10, 1);
 
 DateTime _todayIst() {
   final n = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
@@ -87,7 +88,9 @@ final hostels = <Hostel>[
 /// Number as JavaScript prints it (`4.0` → `4`).
 String jsNum(num n) => n == n.roundToDouble() ? n.round().toString() : n.toString();
 
-Hostel hostelById(String id) => hostels.firstWhere((h) => h.id == id);
+/// F18: an id that is no longer listed (removed hostel, stale saved hold)
+/// gets a placeholder instead of a crash.
+Hostel hostelById(String id) => hostels.firstWhere((h) => h.id == id, orElse: () => Hostel(id: id, name: 'Hostel no longer listed', gender: 'Co-living', area: 'Hyderabad', from: 0, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: const {}, x: 50, y: 50, tags: const []));
 
 const landmarks = ['Hitec City', 'Gachibowli', 'Ameerpet', 'JNTU'];
 const landmarkXY = <String, List<double>>{
@@ -683,7 +686,7 @@ const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh
 final ownerPhones = <String, String>{'anjani': '9000000101', 'saisri': '9000000102', 'nest42': '9000000103', 'greenview': '9000000104', 'orchid': '9000000105', 'lakshmi': '9000000106'};
 
 /// "98••• •••••"
-String maskPhone(String p) => '${p.substring(0, 2)}••• •••••';
+String maskPhone(String p) => p.length < 2 ? '••••• •••••' : '${p.substring(0, 2)}••• •••••';
 
 const fairRules = [
   ('Add every resident within 3 days', 'Name and phone. That is how a stay counts as Via Hostelzy or Direct.'),
@@ -1036,6 +1039,8 @@ Map<String, Map<int, RoomLayout>> seedLayouts(Map<String, List<Room>> rooms) {
 // ------------------------------------------------------------ F14 onboarding
 
 const _seedIds = ['anjani', 'saisri', 'nest42', 'greenview', 'orchid', 'lakshmi'];
+
+bool isSeedHostel(String id) => _seedIds.contains(id);
 
 /// Drop hostels added in an earlier session (data lives in memory until F13).
 void resetSampleData() {
