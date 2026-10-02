@@ -61,7 +61,9 @@ String dueLeft(Terms t, int joinDay) {
   return n <= 0 ? 'due today' : '$n day${n == 1 ? '' : 's'} left';
 }
 
-const hostels = <Hostel>[
+/// The sample hostels plus any the Hostelzy team put live with Add hostel
+/// (F14). In memory only until the backend (F13): [resetSampleData] trims it.
+final hostels = <Hostel>[
   Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 38, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
   Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 52, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
   Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 14, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
@@ -124,8 +126,12 @@ class Bed {
 }
 
 class Room {
-  Room({required this.n, required this.floor, required this.share, required this.rent, required this.bath, required this.beds, this.ac = false, this.acRepair = false});
+  Room({required this.n, required this.floor, required this.share, required this.rent, required this.bath, required this.beds, this.ac = false, this.acRepair = false, this.name});
   final int n, floor, share;
+
+  /// The owner's own room number when it isn't a plain number ("204A", F14).
+  final String? name;
+  String get label => name ?? '$n';
   final String bath;
   final List<Bed> beds;
 
@@ -655,7 +661,7 @@ const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh
 // ------------------------------------------------------------ F07 Fair Play
 
 /// Owners' phone numbers: tenants see them only after a hold (DECISIONS).
-const ownerPhones = {'anjani': '9848011223', 'saisri': '9849022314', 'nest42': '9000433125', 'greenview': '9866544216', 'orchid': '9440655327', 'lakshmi': '9959766418'};
+final ownerPhones = <String, String>{'anjani': '9848011223', 'saisri': '9849022314', 'nest42': '9000433125', 'greenview': '9866544216', 'orchid': '9440655327', 'lakshmi': '9959766418'};
 
 /// "98••• •••••"
 String maskPhone(String p) => '${p.substring(0, 2)}••• •••••';
@@ -928,4 +934,128 @@ Map<String, Map<int, RoomLayout>> seedLayouts(Map<String, List<Room>> rooms) {
     ..pending = true
     ..drawn = '1 Oct';
   return out;
+}
+
+// ------------------------------------------------------------ F14 onboarding
+
+const _seedIds = ['anjani', 'saisri', 'nest42', 'greenview', 'orchid', 'lakshmi'];
+
+/// Drop hostels added in an earlier session (data lives in memory until F13).
+void resetSampleData() {
+  hostels.removeWhere((h) => !_seedIds.contains(h.id));
+  ownerPhones.removeWhere((k, _) => !_seedIds.contains(k));
+}
+
+/// The owner is asked to confirm free beds every 3 days; after 7 days
+/// tenants see "Availability not confirmed" and the hostel ranks lower.
+const confirmEveryDays = 3, staleAfterDays = 7;
+
+/// Days since each owner last confirmed their free beds (sample).
+const seedConfirmed = {'anjani': 3, 'saisri': 1, 'nest42': 0, 'greenview': 9, 'orchid': 2, 'lakshmi': 5};
+
+/// "Visited by Hostelzy" dates (sample: the hostels the founder visited).
+const seedVisited = {'anjani': '1 Oct 2026', 'saisri': '28 Sep 2026', 'nest42': '29 Sep 2026'};
+
+const amenityList = ['Wi-Fi', 'Power backup', 'Washing machine', 'Hot water', 'Parking', 'Gym', 'Lift'];
+const foodOpts = ['3 meals', '2 meals', 'No food'];
+
+/// First clusters (DECISIONS 2026-10-02).
+const clusters = ['Ameerpet / SR Nagar', 'Madhapur / Hitec City / Kondapur'];
+const areaCluster = {'Ameerpet': 0, 'SR Nagar': 0, 'KPHB': 0, 'Madhapur': 1, 'Hitec City': 1, 'Kondapur': 1, 'Gachibowli': 1};
+const onboardStages = ['Lead', 'Visited', 'Signed up', 'Data complete', 'Live', 'Trial', 'Paying'];
+
+/// Map spots and minutes to landmarks by area, for hostels added on a visit.
+const areaSpot = <String, ({double x, double y, Map<String, int> mins})>{
+  'Madhapur': (x: 40, y: 40, mins: {'Hitec City': 7, 'Gachibowli': 12, 'Ameerpet': 22, 'JNTU': 16}),
+  'Kondapur': (x: 52, y: 32, mins: {'Hitec City': 9, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 17}),
+  'Hitec City': (x: 34, y: 44, mins: {'Hitec City': 4, 'Gachibowli': 9, 'Ameerpet': 24, 'JNTU': 18}),
+  'Ameerpet': (x: 78, y: 62, mins: {'Hitec City': 25, 'Gachibowli': 33, 'Ameerpet': 5, 'JNTU': 14}),
+  'SR Nagar': (x: 74, y: 56, mins: {'Hitec City': 22, 'Gachibowli': 30, 'Ameerpet': 6, 'JNTU': 12}),
+};
+
+/// One row on the founder's onboarding tracker.
+class Lead {
+  Lead(this.name, this.area, this.next, this.stage, {this.hid});
+  final String name, area;
+  String next;
+  int stage;
+  final String? hid;
+  int get cluster => areaCluster[area] ?? 1;
+}
+
+List<Lead> seedLeads() => [
+  Lead('Sri Sai PG', 'SR Nagar', 'Call Mon', 0),
+  Lead('Vasavi Boys Hostel', 'Ameerpet', 'Visit Tue 11 am', 0),
+  Lead("Greenview Men's PG", 'Kondapur', 'Owner to decide by Fri', 1, hid: 'greenview'),
+  Lead("Orchid Women's PG", 'KPHB', 'Photos missing', 2, hid: 'orchid'),
+  Lead('Lakshmi Students PG', 'Ameerpet', 'Go live Thu', 3, hid: 'lakshmi'),
+  Lead('Nest 42 Co-living', 'Gachibowli', 'Check bed status', 4, hid: 'nest42'),
+  Lead('Anjani Residency', 'Madhapur', 'Trial ends 31 Oct', 5, hid: 'anjani'),
+  Lead('Sai Sri Ladies Hostel', 'Kondapur', 'Trial ends 28 Oct', 5, hid: 'saisri'),
+];
+
+/// A room in the Add hostel wizard: the owner's own number, sharing, AC.
+class DraftRoom {
+  DraftRoom(this.label, this.share, this.ac);
+  String label;
+  int share;
+  bool ac;
+  DraftRoom copy() => DraftRoom(label, share, ac);
+}
+
+/// A floor: its own room count, or no beds (kitchen, office) and hidden.
+class DraftFloor {
+  DraftFloor(this.name, this.rooms, {this.noBeds = false, this.note = ''});
+  final String name;
+  final List<DraftRoom> rooms;
+  bool noBeds;
+  String note;
+}
+
+String floorName(int i) => switch (i) {
+  0 => 'Ground floor',
+  1 => '1st floor',
+  2 => '2nd floor',
+  3 => '3rd floor',
+  _ => '${i}th floor',
+};
+
+/// Everything the founder fills in on the visit (Add hostel, 6 steps).
+class HostelDraft {
+  String name = 'Anjani Annex', gender = 'Men', area = 'Kondapur', food = '3 meals', gate = '10:30 pm';
+  bool pinChecked = false;
+  Set<String> amenities = {'Wi-Fi', 'Power backup', 'Washing machine', 'Hot water'};
+  int defShare = 3;
+  bool defAc = false;
+
+  /// Sample from the design: Ground 0, 1st 3, 2nd 5, 3rd 2 = 10 rooms, 29 beds.
+  final List<DraftFloor> floors = [
+    DraftFloor('Ground floor', [], noBeds: true, note: 'Kitchen and office'),
+    DraftFloor('1st floor', [DraftRoom('101', 3, false), DraftRoom('102', 3, false), DraftRoom('105', 2, false)], note: 'Owner numbers: 103, 104 skipped'),
+    DraftFloor('2nd floor', [DraftRoom('201', 3, true), DraftRoom('202', 4, false), DraftRoom('203', 3, true), DraftRoom('204', 3, false), DraftRoom('204A', 2, false)], note: 'Copied from 1st, then changed'),
+    DraftFloor('3rd floor', [DraftRoom('301', 3, false), DraftRoom('302', 3, false)]),
+  ];
+  final Map<String, int> prices = {'non2': 8100, 'non3': 7000, 'ac3': 8200};
+  int advance = 3000, kept = 1000, notice = 30;
+  bool dueOnJoining = true;
+  final Set<String> photos = {'Front', 'Washroom', 'Food', 'Common area'};
+  final Set<String> sketches = {};
+  final List<({String name, String phone, String bed})> residents = [];
+  String ownerName = 'Srinivas', ownerPhone = '';
+  bool ownerVerified = false, fairPlay = false, bedsChecked = false;
+
+  Iterable<DraftRoom> get allRooms => floors.where((f) => !f.noBeds).expand((f) => f.rooms);
+  int get roomCount => allRooms.length;
+  int get bedCount => allRooms.fold(0, (a, r) => a + r.share);
+
+  /// Room types used, e.g. `non3`, `ac3`, in a stable order.
+  List<String> get types => {for (final r in allRooms) rateKey(r.ac, r.share)}.toList()..sort((a, b) => a.compareTo(b));
+  String typeLabel(String k) => '${k.substring(k.length - 1)} sharing${k.startsWith('ac') ? ' AC' : ''}';
+  List<String> get missingPrices => [for (final k in types) if ((prices[k] ?? 0) <= 0) k];
+
+  /// Front, each room type, washroom, food, common area, gate sticker.
+  List<String> get photoSlots => ['Front', for (final k in types) typeLabel(k), 'Washroom', 'Food', 'Common area', 'Gate sticker'];
+  int get photoCount => photos.where(photoSlots.contains).length;
+  static const minPhotos = 8;
+  int get takenBeds => residents.length;
 }

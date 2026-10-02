@@ -18,7 +18,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f12-room-layouts`. Sample layouts are labelled as samples until real visits (F13/F14) |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
-| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
+| F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f14-onboarding`. In memory until F13 (backend) |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
 | F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Design approved** · 2026-10-02 (standing approval) | Build | Full list in the feature file. Build right after F10, before the app icon and F12 |

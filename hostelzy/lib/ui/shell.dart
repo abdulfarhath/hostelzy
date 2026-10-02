@@ -7,6 +7,7 @@ import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
 import 'layout.dart';
+import 'onboarding.dart';
 import 'plan.dart';
 import 'reviews.dart';
 import 'rewards.dart';
@@ -330,6 +331,9 @@ class _AppBody extends StatelessWidget {
     'compare' => const CompareScreen(),
     'oLayout' => const OwnerLayoutScreen(),
     'aLayout' => const AdminLayoutScreen(),
+    'aAdd' => const AddHostelScreen(),
+    'aTrack' => const TrackerScreen(),
+    'oTeam' => const TeamScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -430,6 +434,8 @@ class _Sheet extends StatelessWidget {
       'bed' => 'Bed ${s.obed ?? ''}',
       'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
       'layoutReq' => 'Request a change',
+      'switch' => 'Switch hostel',
+      'manager' => 'Add a manager',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
@@ -437,6 +443,8 @@ class _Sheet extends StatelessWidget {
       'joined' => 'One quick question',
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom}',
+      'switch' => 'Your hostels',
+      'manager' => '${hostelById(s.ownHid).name} · team',
       'report' => 'Anjani Residency · private',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       _ => null,
@@ -455,6 +463,8 @@ class _Sheet extends StatelessWidget {
       'trusted' => const TrustedSheet(),
       'utr' => const UtrSheet(),
       'layoutReq' => const LayoutRequestSheet(),
+      'switch' => const SwitchSheet(),
+      'manager' => const ManagerSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
