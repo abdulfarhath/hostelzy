@@ -61,6 +61,7 @@ extension SyncActions on AppState {
         ..addAll(rw.ownerCredits);
     }
     fixes = l.fixes;
+    fixMutes = l.mutes;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
     final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];

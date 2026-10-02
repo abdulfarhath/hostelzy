@@ -9,7 +9,7 @@ import '../../data.dart';
 /// S6: the signed-in user's Stay Rewards from the server (ledger + profile).
 typedef Rewards = ({bool member, String since, String? code, bool referred, int balance, int friends, bool used, List<({String hid, String what, int amt})> ownerCredits});
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards, Resident? myStay});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards, List<({String hid, String uid, String name})> mutes, Resident? myStay});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
 const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases', 'layout_fixes'];
@@ -208,6 +208,12 @@ LayoutFix fixFromRow(Map<String, dynamic> r, {String? me}) => LayoutFix(
   decidedAt: r['decided_at'] == null ? null : _ms(r['decided_at']),
   mine: me != null && r['author_id'] == me,
   baseVersion: r['base_version'] as int? ?? 1,
+  kind: r['kind'] as String? ?? 'layout',
+  issue: r['issue'] as String?,
+  item: r['item'] as String?,
+  photo: r['photo'] as String?,
+  repair: r['repair'] as String?,
+  authorId: r['author_id'] as String? ?? '',
 );
 
 /// Complaint ids are uuids on the server; the app keys them by a stable int.
@@ -227,7 +233,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], int? now}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>> mutes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], int? now}) => (
   holds: [
     for (final r in holds)
       holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
@@ -248,6 +254,8 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   rewards: profile == null ? null : rewardsFrom(profile.firstOrNull, ledger, me: me),
   managers: [for (final r in managers) (hid: r['hostel_id'] as String, name: r['name'] as String, phone: r['phone'] as String? ?? '', joined: r['used_by'] != null)],
   fixes: [for (final r in fixes) fixFromRow(r, me: me)],
+  // F19 extras: residents whose suggestions are off (staff see their hostel's; a resident sees their own).
+  mutes: [for (final r in mutes) (hid: r['hostel_id'] as String, uid: r['user_id'] as String, name: r['name'] as String? ?? '')],
   cases: [for (final r in cases) caseFromRow(r)]..sort((a, b) => (b.openedAt ?? 0).compareTo(a.openedAt ?? 0)),
   invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
   trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},

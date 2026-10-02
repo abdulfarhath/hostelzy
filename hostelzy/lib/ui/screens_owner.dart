@@ -9,6 +9,7 @@ import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
 import 'layout.dart' show ConfirmLayoutsCard;
+import 'layout_fixes.dart' show FixPhotoThumb;
 import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
@@ -142,7 +143,7 @@ class NeedsYouNow extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);
-    final items = <({String key, String icon, String title, String sub, String right, bool urgent, List<(String, String, VoidCallback)> btns, Widget? badge})>[
+    final items = <({String key, String icon, String title, String sub, String right, bool urgent, List<(String, String, VoidCallback)> btns, Widget? badge, Widget? extra})>[
       for (final r in [...allRequests(s)]..sort((a, b) => (a.secs - (s.now - a.start) / 1000).compareTo(b.secs - (s.now - b.start) / 1000)))
         (
           key: 'hold-${r.id}',
@@ -161,6 +162,7 @@ class NeedsYouNow extends StatelessWidget {
                   child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
                 )
               : null,
+          extra: null,
         ),
       for (final x in s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting'))
         (
@@ -172,6 +174,7 @@ class NeedsYouNow extends StatelessWidget {
           urgent: false,
           btns: [('Yes, received', 'check', () => s.confirmPayment(x, true)), ('Not received', 'x', () => s.confirmPayment(x, false))],
           badge: null,
+          extra: null,
         ),
       for (final e in s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted))
         (
@@ -192,17 +195,24 @@ class NeedsYouNow extends StatelessWidget {
             ),
           ],
           badge: null,
+          extra: null,
         ),
       for (final f in s.fixesWaiting)
+        // F19 extras: a repair, a quick fix, or a layout fix to compare.
         (
           key: 'fix-${f.id}',
-          icon: 'grid',
-          title: 'Layout fix for Room ${f.room}',
-          sub: ['From ${f.author}', if (f.note.isNotEmpty) '“${f.note}”'].join(' · '),
+          icon: f.broken ? 'wrench' : 'grid',
+          title: f.broken ? 'Broken: ${f.item}, Room ${f.room}' : f.quick ? 'Quick fix: ${f.quickLine}, Room ${f.room}' : 'Layout fix for Room ${f.room}',
+          sub: [f.broken ? 'From a resident’s quick fix' : 'From ${f.author}', if (f.note.isNotEmpty) '“${f.note}”', if (f.photo != null) '1 photo'].join(' · '),
           right: ago(DateTime.now().millisecondsSinceEpoch - f.at),
           urgent: false,
-          btns: [('Compare', 'arrow', () => s.openFix(f))],
+          btns: f.broken
+              ? [('Start work', 'wrench', () => s.setRepair(f, 'working')), ('Not broken', 'x', () => s.setRepair(f, 'not_broken'))]
+              : f.quick
+              ? [('Got it', 'check', () => s.ackQuickFix(f, true)), ('Not right', 'x', () => s.ackQuickFix(f, false))]
+              : [('Compare', 'arrow', () => s.openFix(f))],
           badge: null,
+          extra: f.photo != null ? FixPhotoThumb(f, size: 96) : null,
         ),
     ];
     return Column(
@@ -243,6 +253,7 @@ class NeedsYouNow extends StatelessWidget {
                           T(it.right, w: 800, s: 14, tab: true, c: it.urgent ? p.ad : p.mu),
                         ],
                       ),
+                      ?it.extra,
                       Row(
                         children: [
                           for (final (i, b) in it.btns.indexed) ...[
@@ -1269,6 +1280,21 @@ class _Residents extends StatelessWidget {
             ],
           ),
         ),
+        // F19 extras: residents whose layout suggestions are off.
+        if (s.mutedHere.isNotEmpty) ...[
+          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Layout suggestions off')),
+          for (final m in s.mutedHere)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
+              child: Row(
+                children: [
+                  Expanded(child: T(m.name.isEmpty ? 'A resident' : m.name, w: 800, s: 15)),
+                  Tap(onTap: () => s.unmuteFixAuthor(m), child: Container(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10), decoration: box(w: 2, c: p.tx), child: const T('Turn on', w: 800, s: 12))),
+                ],
+              ),
+            ),
+        ],
       ],
     );
   }

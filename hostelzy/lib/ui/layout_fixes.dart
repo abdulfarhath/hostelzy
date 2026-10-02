@@ -33,6 +33,7 @@ class ResidentRoomScreen extends StatelessWidget {
     final show = f != null && (f.status == 'pending' || !s.fixSeen.contains(f.id));
     final owner = h.owner.isEmpty ? 'your owner' : h.owner;
     final checked = room == null ? null : s.checkedLabel(s.fixHid, room.n);
+    final muted = s.mutedAt(s.fixHid);
     Widget card(List<Widget> kids, {bool green = false}) => Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
@@ -97,7 +98,14 @@ class ResidentRoomScreen extends StatelessWidget {
                 if (room == null || l == null)
                   const Padding(padding: EdgeInsets.all(16), child: LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'The owner or the Hostelzy team draws this room first. Then you can fix it.'))
                 else ...[
-                  Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true)),
+                  // F19 extras: tap an item for a quick fix.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true, onSelect: muted ? null : (id) {
+                      final i = l.items.where((x) => x.id == id).firstOrNull;
+                      if (i != null) s.openQuickFix('${_what(i)}${wallOf(i.rect, l.w, l.h) == null ? '' : ' · ${wallOf(i.rect, l.w, l.h)} wall'}');
+                    }),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                     child: Row(
@@ -109,11 +117,17 @@ class ResidentRoomScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  state ??
-                      card([
-                        const T('Something in the wrong place?', w: 800, s: 15),
-                        T('You live in ${h.name}, so you can fix any room here. Move things to where they really are and send it to $owner.', s: 13, c: p.mu, lh: 1.45),
-                      ]),
+                  if (muted)
+                    card([
+                      const T('Suggestions are off for this hostel', w: 800, s: 15),
+                      T('You can still see every room here.', s: 13, c: p.mu, lh: 1.45),
+                    ])
+                  else
+                    state ??
+                        card([
+                          const T('Something in the wrong place?', w: 800, s: 15),
+                          T('You live in ${h.name}, so you can fix any room here. Tap an item for a quick fix, or move things in the editor and send it to $owner.', s: 13, c: p.mu, lh: 1.45),
+                        ]),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
                     child: Row(
@@ -126,7 +140,7 @@ class ResidentRoomScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (room != null && l != null && !(show && f.status == 'pending'))
+        if (room != null && l != null && !muted && !(show && f.status == 'pending'))
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -189,18 +203,25 @@ class FixEditorScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Rich([sp(context, 'Edit room · '), sp(context, 'Room ${room.label}', c: p.ac)], w: 800, s: 15),
-                    T('Suggestion${s.myRoomLabel.isEmpty ? '' : ' · you live in ${s.myRoomLabel}'} · draft saved on this phone', s: 12, c: p.mu, ell: true),
+                    T(s.fixTry ? 'You don’t live here · leaving discards your try' : 'Suggestion${s.myRoomLabel.isEmpty ? '' : ' · you live in ${s.myRoomLabel}'} · draft saved on this phone', s: 12, c: p.mu, ell: true),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        Container(
-          color: p.tx,
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
-          child: Row(children: [Ic('lock', size: 16, color: p.bg), const SizedBox(width: 8), Expanded(child: T('Only you see this until you send it', s: 13, w: 800, c: p.bg))]),
-        ),
+        if (s.fixTry)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
+            decoration: BoxDecoration(color: p.sf, border: Border(bottom: bs(1, p.hl))),
+            child: Row(children: [Ic('eye', size: 16, color: p.tx), const SizedBox(width: 8), const Expanded(child: T('Try mode · play freely, nothing is saved', s: 13, w: 800))]),
+          )
+        else
+          Container(
+            color: p.tx,
+            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
+            child: Row(children: [Ic('lock', size: 16, color: p.bg), const SizedBox(width: 8), Expanded(child: T('Only you see this until you send it', s: 13, w: 800, c: p.bg))]),
+          ),
         Container(
           color: p.sf,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
@@ -272,7 +293,9 @@ class FixEditorScreen extends StatelessWidget {
         Container(
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Cta('Send to owner', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.openSendFix),
+          child: s.fixTry
+              ? OutlineCta('Send · residents only', icon: 'lock', height: 54, fs: 15, onTap: s.openSendFix)
+              : Cta('Send to owner', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.openSendFix),
         ),
       ],
     );
@@ -388,6 +411,7 @@ class FixSendSheet extends StatelessWidget {
           ),
           T('A note for $owner (optional)', w: 800, s: 13),
           Field(value: s.fixNote, onChanged: (v) => s.update(() => s.fixNote = v), placeholder: 'The cupboard is on the left wall, next to the window.', maxLines: 3, height: null),
+          FixPhotoRow(owner: owner),
           T('$owner sees your name${s.myRoomLabel.isEmpty ? '' : ' and that you live in ${s.myRoomLabel}'}. Tenants never see who sent it.', s: 12, c: p.mu, lh: 1.45),
           Cta('Send to owner', height: 54, px: 16, fs: 15, onTap: s.sendFix),
         ],
@@ -396,7 +420,9 @@ class FixSendSheet extends StatelessWidget {
   }
 }
 
-/// Board 8: owner Today, residents' fixes waiting.
+/// Board 8: owner Today, residents' fixes waiting. F19 extras: a Broken quick
+/// fix is a repair card (Start work / Not broken); other quick fixes are
+/// noted (Got it / Not right) and change no layout.
 class OwnerFixCards extends StatelessWidget {
   const OwnerFixCards({super.key});
   @override
@@ -405,34 +431,209 @@ class OwnerFixCards extends StatelessWidget {
     final p = PalScope.of(context);
     final list = s.fixesWaiting;
     if (list.isEmpty) return const SizedBox();
+    final repairs = list.where((f) => f.broken).toList();
+    final fixes = list.where((f) => !f.broken).toList();
+    String from(LayoutFix f) => [f.author, if (f.authorBed.isNotEmpty) 'lives in ${f.authorBed}', if (f.since.isNotEmpty) 'resident since ${f.since}', ago(DateTime.now().millisecondsSinceEpoch - f.at)].join(' · ');
+    Widget cardBox(List<Widget> kids) => Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(gap: 6, children: kids),
+    );
+    Widget two(Widget a, Widget b) => Row(children: [Expanded(child: a), const SizedBox(width: 8), Expanded(child: b)]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [const Kicker('Layout fixes from residents'), T('${list.length} new', s: 12, w: 800, c: p.ad)],
-          ),
-        ),
-        for (final f in list)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            padding: const EdgeInsets.all(12),
-            decoration: box(w: 2, c: p.tx),
-            child: VGap(
-              gap: 6,
-              children: [
-                Row(children: [Expanded(child: T('Layout fix for Room ${f.room}', w: 800, s: 15)), Tag('New', bg: p.ab, fg: p.ad)]),
-                T([f.author, if (f.authorBed.isNotEmpty) 'lives in ${f.authorBed}', if (f.since.isNotEmpty) 'resident since ${f.since}', ago(DateTime.now().millisecondsSinceEpoch - f.at)].join(' · '), s: 12, c: p.mu),
-                if (f.note.isNotEmpty) T('“${f.note}”', s: 14, w: 600, lh: 1.4),
-                Cta('Compare and decide', height: 46, px: 14, fs: 14, onTap: () => s.openFix(f)),
-              ],
+        if (fixes.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [const Kicker('Layout fixes from residents'), T('${fixes.length} new', s: 12, w: 800, c: p.ad)],
             ),
           ),
+          for (final f in fixes)
+            if (f.quick)
+              cardBox([
+                Row(children: [Expanded(child: T('Quick fix: ${f.quickLine}, Room ${f.room}', w: 800, s: 15)), Tag('New', bg: p.ab, fg: p.ad)]),
+                T(from(f), s: 12, c: p.mu),
+                if (f.note.isNotEmpty) T('“${f.note}”', s: 14, w: 600, lh: 1.4),
+                if (f.photo != null) FixPhotoThumb(f, size: 96),
+                two(
+                  Cta('Got it', icon: 'check', height: 44, px: 12, fs: 14, onTap: () => s.ackQuickFix(f, true)),
+                  OutlineCta('Not right', icon: 'x', height: 44, px: 12, fs: 14, onTap: () => s.ackQuickFix(f, false)),
+                ),
+              ])
+            else
+              cardBox([
+                Row(children: [Expanded(child: T('Layout fix for Room ${f.room}', w: 800, s: 15)), Tag('New', bg: p.ab, fg: p.ad)]),
+                T(from(f), s: 12, c: p.mu),
+                if (f.note.isNotEmpty) T('“${f.note}”', s: 14, w: 600, lh: 1.4),
+                Cta('Compare and decide', height: 46, px: 14, fs: 14, onTap: () => s.openFix(f)),
+              ]),
+        ],
+        for (final f in repairs) ...[
+          const SizedBox(height: 10),
+          cardBox([
+            Row(children: [Expanded(child: T('Broken: ${f.item}, Room ${f.room}', w: 800, s: 15)), Tag('Repair', bg: p.ab, fg: p.ad)]),
+            T(['From a resident’s quick fix', if (f.note.isNotEmpty) '“${f.note}”', if (f.photo != null) '1 photo'].join(' · '), s: 12, c: p.mu),
+            if (f.photo != null) FixPhotoThumb(f, size: 96),
+            two(
+              Cta('Start work', icon: 'wrench', height: 44, px: 12, fs: 14, onTap: () => s.setRepair(f, 'working')),
+              OutlineCta('Not broken', icon: 'x', height: 44, px: 12, fs: 14, onTap: () => s.setRepair(f, 'not_broken')),
+            ),
+          ]),
+        ],
       ],
+    );
+  }
+}
+
+/// The fix photo, loaded on this phone or from the private bucket.
+class FixPhotoThumb extends StatelessWidget {
+  const FixPhotoThumb(this.f, {super.key, this.size = 96});
+  final LayoutFix f;
+  final double size;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FutureBuilder<ImageProvider?>(
+        future: s.fixPhotoOf(f),
+        builder: (context, snap) => Container(
+          width: size,
+          height: size * .75,
+          decoration: box(bg: p.sf, w: 1, c: p.hl),
+          child: snap.data == null ? Center(child: Ic('camera', size: 18, color: p.mu)) : Image(image: snap.data!, fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }
+}
+
+/// "1 photo (optional)": add or remove the photo for a fix.
+class FixPhotoRow extends StatelessWidget {
+  const FixPhotoRow({super.key, required this.owner});
+  final String owner;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final ph = s.fixPhoto;
+    return Row(
+      children: [
+        Tap(
+          key: const ValueKey('fixPhoto'),
+          onTap: ph == null ? s.pickFixPhoto : () => s.update(() => s.fixPhoto = null),
+          child: Container(
+            width: 64,
+            height: 48,
+            decoration: box(bg: p.sf, w: 2, c: p.tx),
+            child: ph == null ? const Center(child: Ic('camera', size: 20)) : Image.memory(ph, fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              T(ph == null ? '1 photo (optional)' : '1 photo · tap to remove', w: 800, s: 13),
+              T('Only $owner and the Hostelzy team see it.', s: 12, c: p.mu),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F19 extras (design `QuickFix`): what's wrong with one item, a word, a photo.
+class QuickFixSheet extends StatelessWidget {
+  const QuickFixSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final owner = hostelById(s.fixHid).owner.isEmpty ? 'your owner' : hostelById(s.fixHid).owner;
+    final name = s.qfItem.split(' · ').first;
+    final opts = [
+      ('wrong_place', 'arrow', 'Wrong place', 'It’s somewhere else in the room'),
+      ('missing', 'x', 'Missing', 'There’s no ${lowerName(name)} in this room'),
+      ('broken', 'wrench', 'Broken', 'Also goes to $owner as a repair'),
+      ('not_here', 'warn', 'Not in this room', 'Take it off the layout'),
+    ];
+    final probe = LayoutFix(id: '', hid: '', room: 0, snap: (w: 0, h: 0, beds: const {}, items: const [], bunks: const {}), at: 0, kind: 'quick', issue: s.qfIssue, item: name);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (k, icon, t, sub) in opts)
+          Tap(
+            key: ValueKey('qf-$k'),
+            onTap: () => s.update(() => s.qfIssue = k),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(color: s.qfIssue == k ? p.sf : null, border: Border(bottom: bs(1, p.hl))),
+              child: Row(
+                children: [
+                  Container(width: 36, height: 36, alignment: Alignment.center, decoration: box(w: s.qfIssue == k ? 2 : 1, c: s.qfIssue == k ? p.tx : p.dv), child: Ic(icon, size: 18)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])),
+                  Ic('chev', size: 16, color: p.mu),
+                ],
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: VGap(
+            gap: 10,
+            children: [
+              Field(value: s.qfNote, onChanged: (v) => s.qfNote = v, placeholder: 'Add a word (optional): “AC doesn’t cool”'),
+              Row(
+                children: [
+                  Expanded(child: Cta(s.qfIssue == null ? 'Pick what’s wrong' : 'Send: ${probe.quickLine}', height: 54, px: 16, fs: 15, opacity: s.qfIssue == null ? .4 : 1, onTap: s.sendQuickFix)),
+                  const SizedBox(width: 8),
+                  Tap(
+                    key: const ValueKey('qfPhoto'),
+                    onTap: s.fixPhoto == null ? s.pickFixPhoto : () => s.update(() => s.fixPhoto = null),
+                    child: Container(width: 54, height: 54, decoration: box(w: 2, c: p.tx), child: s.fixPhoto == null ? const Center(child: Ic('camera', size: 20)) : Image.memory(s.fixPhoto!, fit: BoxFit.cover)),
+                  ),
+                ],
+              ),
+              T(s.fixPhoto == null ? 'Bigger change? Close this and move things in the editor.' : '1 photo · only $owner and the Hostelzy team see it. Tap it to remove.', s: 12, c: p.mu),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F19 extras (design `Mute`): turn off a resident's suggestions.
+class FixMuteSheet extends StatelessWidget {
+  const FixMuteSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final f = s.openFixItem;
+    if (f == null) return const SizedBox();
+    final first = f.author.split(' ').first;
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: VGap(
+        gap: 12,
+        children: [
+          T('You won’t get $first’s layout fixes or notifications. Waiting ones are closed. $first isn’t told who muted them; they see “Suggestions are off for this hostel”.', s: 15, c: p.mu, lh: 1.5),
+          Cta('Mute $first’s suggestions', icon: 'x', height: 54, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.muteFixAuthor(f)),
+          OutlineCta('Cancel', icon: 'back', onTap: () => s.update(() => s.sheet = null)),
+          T('Unmute any time in Manage → Residents.', s: 12, c: p.mu),
+        ],
+      ),
     );
   }
 }
@@ -485,7 +686,9 @@ class OwnerFixScreen extends StatelessWidget {
                       children: [
                         T([f.author, if (f.authorBed.isNotEmpty) 'lives in ${f.authorBed}'].join(' · '), w: 800, s: 14),
                         if (f.note.isNotEmpty) T('“${f.note}”', s: 14, lh: 1.4),
-                        T('Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))} · only you see who sent it', s: 12, c: p.mu),
+                        if (f.photo != null) FixPhotoThumb(f, size: 120),
+                        T('${f.photo != null ? '1 photo · ' : ''}Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))} · only you see who sent it', s: 12, c: p.mu),
+                        Tap(key: const ValueKey('muteLink'), onTap: () => s.update(() => s.sheet = 'fixMute'), child: Padding(padding: const EdgeInsets.only(top: 4), child: T('Mute $first’s suggestions', s: 13, w: 800))),
                       ],
                     ),
                   ),
