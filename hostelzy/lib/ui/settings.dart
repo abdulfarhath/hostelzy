@@ -302,15 +302,17 @@ class PermissionScreen extends StatelessWidget {
       _ => ('bell', 'Turn on notifications?', 'Only for things you’d want to know straight away.', ['When the owner confirms your hold', 'When your hold is about to end', 'Rent reminders, 3 days before'], 'Turn on', 'Not now'),
     };
     void allow() {
-      if (s.permKind == 'notifications') s.update(() => s.notif.updateAll((k, v) => k == 'beds' ? v : true));
       s.back();
-      // Android's own prompt comes with the feature that needs it (push with
-      // F13, location and camera later); nothing is switched on behind it.
-      s.toastMsg(switch (s.permKind) {
-        'location' => 'Location comes in a later update. Showing distances from ${s.lm}.',
-        'camera' => 'Photos come in a later update.',
-        _ => 'Saved. Android asks for permission when notifications go live.',
-      });
+      // F13: notifications ask Android now. Location and camera come later;
+      // nothing is switched on behind the user's back.
+      switch (s.permKind) {
+        case 'location':
+          s.toastMsg('Location comes in a later update. Showing distances from ${s.lm}.');
+        case 'camera':
+          s.toastMsg('Photos come in a later update.');
+        default:
+          s.enablePush();
+      }
     }
 
     return Padding(

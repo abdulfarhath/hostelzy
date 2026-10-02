@@ -13,7 +13,6 @@ Supabase (Mumbai): multi-hostel schema, row-level security, phone OTP (MSG91), r
 
 ## Open questions
 - SMS provider for phone OTP (MSG91 or Twilio): founder sets it up, then part 2.
-- Firebase (push, Crashlytics), package `app.hostelzy.hostelzy`: founder is creating it.
 
 ## Founder steps · Supabase (do these once)
 
@@ -38,6 +37,32 @@ Leave as they are (defaults are right):
 - Table Editor: every table shows **RLS enabled**. If one ever says "RLS disabled", tell the Build chat.
 
 Later, when phone login is ready (part 2), you'll get 3 more short steps for the SMS provider.
+
+## Founder steps · Firebase
+
+Nothing to do now. Push and crash reports are already in the app.
+
+Lock the Firebase key to the app (do this **after** the app has its real signing key, F15):
+1. Play Console → your app → Test and release → App integrity → App signing.
+2. Copy the **SHA-1** of the app signing key.
+3. Open https://console.cloud.google.com/apis/credentials?project=hostelzy
+4. Click **Android key (auto created by Firebase)**.
+5. Application restrictions → **Android apps**.
+6. Add: package `app.hostelzy.hostelzy` + the SHA-1.
+7. Save.
+
+Why wait: today's test APKs are signed with a throwaway key that changes every build. A SHA-1 lock now would break push in them. The key in `google-services.json` is meant to be in the app; the lock stops other apps from using it.
+
+To let Hostelzy **send** pushes (part 2, when the Build chat asks):
+1. Firebase console → ⚙ Project settings → **Service accounts**.
+2. Click **Generate new private key** → a `.json` file downloads.
+3. Do NOT put this file in GitHub, chat or email.
+4. Supabase dashboard → **Edge Functions** → **Secrets**.
+5. Add secret: name `FCM_SERVICE_ACCOUNT`, value = open the file, copy everything, paste.
+6. Save. Delete the downloaded file.
+7. Tell the Build chat "FCM secret added".
+
+Play Store form (Data safety), when you fill it: say the app collects **crash logs** and **device or other IDs** (the push token), for app functionality and analytics, not shared, not sold.
 
 ## Design
 Not needed.
@@ -77,6 +102,22 @@ Not needed.
 - **Why sample is still the default:** the database is empty until the team adds real hostels, and writes (holds, enquiries, payments) need phone login (part 2).
 - Tests: `backend config: sample data by default, only the public anon key (F13)` (also fails if a service_role key is ever pasted in) and `live hostels from Supabase replace the samples for tenants (F13)`.
 
+**Firebase · push + Crashlytics · merged 2026-10-02** (branch `feature/f13-firebase`):
+- `android/app/google-services.json` (project `hostelzy`, app `app.hostelzy.hostelzy`).
+- Gradle plugins: `com.google.gms.google-services` 4.4.4 and `com.google.firebase.crashlytics` 3.0.6.
+- Packages: `firebase_core`, `firebase_messaging` and `firebase_crashlytics`.
+- `POST_NOTIFICATIONS` permission.
+- `lib/push.dart`:
+  - `startFirebase()` runs on Android only. It turns on Crashlytics in release builds (Flutter and platform errors are reported as fatal) and returns `FirebasePush`. On other platforms, or if Firebase fails to start, it returns `NoPush`, so web, desktop and tests run without it.
+  - Turning on notifications in Settings shows the F15 explainer first, then Android's own prompt.
+    - Allowed: the FCM token is kept in `AppState.pushToken` and the toast says sending starts once the account is online.
+    - Denied: the toast says where to turn notifications on.
+    - Messages that arrive while the app is open show as a toast.
+- Migration `20261002010000_f13_push_tokens.sql`: a `push_tokens` table. Each user sees and manages only their own tokens; the send function reads them with the service role. RLS tests are extended.
+- CI: the new `.github/workflows/android-check.yml` runs analyze, test and `build apk` on every pull request without publishing anything, so Gradle changes are checked before they reach `main`.
+- Test: `push: explainer, then Android asks; allowed gets a token, denied says how to fix (F13)`.
+- **Not yet:** saving the token to `push_tokens` (needs phone login) and the `send-push` Edge Function (needs the founder's FCM secret, steps above).
+
 **Part 2 (next):**
 - phone OTP through Supabase Auth plus MSG91 or Twilio;
 - owner, resident and team screens read and write their tables;
@@ -84,4 +125,4 @@ Not needed.
 - photo storage;
 - switch the default to `supabase`;
 - staging and production projects.
-- Then Firebase: push and Crashlytics.
+- Save push tokens and add the `send-push` Edge Function (FCM HTTP v1).

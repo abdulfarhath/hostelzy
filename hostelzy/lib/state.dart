@@ -10,6 +10,7 @@ import 'app_config.dart';
 import 'backend.dart' show Listings, RemoteSettings;
 import 'data.dart';
 import 'poster.dart';
+import 'push.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -1822,6 +1823,29 @@ class AppState extends ChangeNotifier {
 
   /// Notification choices (sent once notifications are live, F13).
   final Map<String, bool> notif = {'hold': true, 'rent': true, 'beds': false};
+
+  /// F13 push: Firebase on Android ([NoPush] in tests, web, desktop).
+  Push push = const NoPush();
+
+  /// This phone's FCM token once notifications are allowed. Saved to the
+  /// backend (`push_tokens`) once phone login works.
+  String? pushToken;
+
+  /// After the explainer: Android's own prompt, then the token.
+  Future<void> enablePush() async {
+    final r = await push.ask();
+    switch (r) {
+      case PushAsk.allowed:
+        pushToken = await push.token();
+        update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
+        toastMsg('Notifications allowed. Hostelzy starts sending them once your account is online.');
+      case PushAsk.denied:
+        toastMsg('Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
+      case PushAsk.unavailable:
+        update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
+        toastMsg('Saved. Notifications work in the Android app.');
+    }
+  }
 
   /// Permission explainer shown: notifications | location | camera.
   String permKind = 'notifications';
