@@ -35,7 +35,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -54,8 +54,98 @@ class AppState extends ChangeNotifier {
   String dealTarget = 'all';
   bool? dealAc;
 
-  /// F03 Explore sort: Best deals first.
-  bool bestDeals = false;
+  /// Explore sort: rec (Recommended, F08) | near | price | deals (F03).
+  String sortBy = 'rec';
+  bool get bestDeals => sortBy == 'deals';
+
+  // ------------------------------------------------------------ F08 reviews
+
+  List<Review> reviews = seedReviews();
+  final Map<String, ReviewStats> stats = Map.of(seedStats);
+
+  /// Fair Play strikes per hostel (F07); each lowers the rank.
+  final Map<String, int> strikes = {};
+
+  /// Resident review forms (30-day and exit) and the owner's reply screen.
+  int rvStars = 0, exStars = 0;
+  Map<String, int> rvCats = {};
+  String? rvLayout, exAdv, exAgain;
+  String rvText = '', revF = 'new';
+  String? replyFor;
+  String replyText = '';
+
+  /// Ranking factors (0–1) for a hostel.
+  Map<String, double> factors(String hid) {
+    final h = hostelById(hid);
+    final f = seedFactors[hid] ?? const {'fresh': .5, 'complaints': .5, 'listing': .5};
+    return {
+      'reviews': (h.rating / 5 - (h.reviews < 20 ? .1 : 0)).clamp(0, 1).toDouble(),
+      'reply': (1 - h.reply / 120).clamp(0, 1).toDouble(),
+      'fresh': f['fresh']!,
+      'complaints': f['complaints']!,
+      'listing': f['listing']!,
+    };
+  }
+
+  double rankScore(String hid) {
+    final f = factors(hid);
+    return rankWeights.entries.fold<double>(0, (a, e) => a + e.value * f[e.key]!) - (strikes[hid] ?? 0) * .1;
+  }
+
+  /// All hostels, best rank first.
+  List<String> get rankOrder => (hostels.map((h) => h.id).toList()..sort((a, b) => rankScore(b).compareTo(rankScore(a))));
+  int rankOf(String hid) => rankOrder.indexOf(hid) + 1;
+
+  /// What tenants see as the reason for the rank: the two strongest factors.
+  String rankReasons(String hid) {
+    final f = factors(hid);
+    final keys = ['reply', 'fresh', 'complaints', 'listing']..sort((a, b) => f[b]!.compareTo(f[a]!));
+    final parts = [if (hostelById(hid).reviews < 20) 'few reviews yet', ...keys.take(2).map((k) => rankReason[k]!)];
+    final t = parts.join(', ');
+    return t[0].toUpperCase() + t.substring(1);
+  }
+
+  void postReview() {
+    if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    update(() {
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: 'Rahul V.', stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
+      rvStars = 0;
+      rvCats = {};
+      rvLayout = null;
+      rvText = '';
+    });
+    back();
+    toastMsg('Review posted as Rahul V. · verified resident.');
+  }
+
+  /// Exit review: the advance answer feeds the "advance returned" record.
+  void postExitReview() {
+    final adv = exAdv;
+    if (adv == null) return toastMsg('Tell us if you got your advance back.');
+    if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    final st = stats['anjani']!;
+    update(() {
+      stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: 'Rahul V.', stars: exStars, text: '', stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
+      exAdv = null;
+      exStars = 0;
+      exAgain = null;
+    });
+    back();
+    toastMsg(adv == 'not' ? 'Thanks. We remind the owner and check in a week.' : 'Thanks. Your review is posted.');
+  }
+
+  void postReply(Review r) {
+    if (replyText.trim().isEmpty) return toastMsg('Write a reply first.');
+    update(() {
+      r.reply = replyText.trim();
+      r.replyWhen = 'replied today';
+      r.fresh = false;
+      replyFor = null;
+      replyText = '';
+    });
+    toastMsg('Reply posted under ${r.name.split(' ')[0]}’s review.');
+  }
 
   Deals dealsOf(String hid) => deals[hid] ?? const Deals();
 

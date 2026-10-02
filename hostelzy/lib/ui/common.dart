@@ -89,7 +89,7 @@ typedef Opt = (String value, String label);
 
 /// Segmented control: 2px frame, active segment inverted.
 class Seg extends StatelessWidget {
-  const Seg({super.key, required this.opts, required this.cur, required this.onPick, this.pad = const EdgeInsets.symmetric(vertical: 10, horizontal: 12), this.fs = 13, this.margin, this.dividers = false, this.byLabel = false});
+  const Seg({super.key, required this.opts, required this.cur, required this.onPick, this.pad = const EdgeInsets.symmetric(vertical: 10, horizontal: 12), this.fs = 13, this.margin, this.dividers = false, this.byLabel = false, this.center = false});
   final List<Opt> opts;
   final String? cur;
   final ValueChanged<String> onPick;
@@ -100,6 +100,9 @@ class Seg extends StatelessWidget {
 
   /// Share the width by label length instead of equally (many options).
   final bool byLabel;
+
+  /// Centre each label (short options like 1–5).
+  final bool center;
   @override
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
@@ -121,7 +124,7 @@ class Seg extends StatelessWidget {
                       color: opts[i].$1 == cur ? p.tx : transparent,
                       border: dividers && i > 0 ? Border(left: bs(1, p.hl)) : null,
                     ),
-                    child: T(opts[i].$2, s: fs, w: 600, c: opts[i].$1 == cur ? p.bg : p.tx),
+                    child: T(opts[i].$2, s: fs, w: center ? 800 : 600, c: opts[i].$1 == cur ? p.bg : p.tx, align: center ? TextAlign.center : null),
                   ),
                 ),
               ),

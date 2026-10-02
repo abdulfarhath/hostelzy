@@ -88,6 +88,24 @@ class ResidentHomeScreen extends StatelessWidget {
               ],
             ),
           ),
+          // F08: the 30-day review (one per stay).
+          if (!s.reviews.any((r) => r.name == 'Rahul V.' && r.kind == '30-day'))
+            Tap(
+              onTap: () => s.go('rReview'),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                decoration: box(w: 1, c: p.dv),
+                child: Row(
+                  children: [
+                    const Ic('star', size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(child: Rich([sp(context, 'How is your stay so far? ', w: 800), sp(context, 'Rate Anjani for other tenants.', c: p.mu)], s: 14, lh: 1.35)),
+                    const Ic('chev', size: 18),
+                  ],
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 6),
             child: Row(
@@ -771,6 +789,11 @@ class MoveScreen extends StatelessWidget {
                       child: T('Withdraw notice', w: 600, s: 14, c: p.ad),
                     ),
                   ),
+                ),
+                // F08: exit review with the advance check.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  child: OutlineCta('Review your stay', icon: 'star', height: 52, fs: 14, onTap: () => s.go('rExit')),
                 ),
               ],
             );

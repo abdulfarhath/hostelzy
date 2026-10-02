@@ -25,11 +25,11 @@ exposes:
 
 | Param | Values |
 | --- | --- |
-| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `rConfirm` `oToday` `oBeds` `oRent` `oMore` `oInvite` |
+| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `rConfirm` `oToday` `oBeds` `oRent` `oMore` `oInvite` `rReview` `rExit` `reviews` `oReviews` `oRank` |
 | `role` | `tenant` `resident` `owner` |
 | `theme` | `light` `dark` |
 | `mode` | `plan` `list` `building` (bed picker) |
-| `sheet` | `search` `hold` `wa` `add` `bed` `enq` `addR` |
+| `sheet` | `search` `hold` `wa` `add` `bed` `enq` `addR` `rank` |
 | `moveTab` / `moreTab` | `vacate` `swap` / `residents` `complaints` `deals` `rates` `menu` `rules` |
 | `bare` | `true`: phone frame only |
 | `page` | `overview`: all screens |

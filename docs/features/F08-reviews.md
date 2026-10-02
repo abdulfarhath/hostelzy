@@ -1,6 +1,6 @@
 # F08 · Verified reviews and Hostelzy score
 
-**Stage:** Design approved · 2026-10-02 (founder: "approve all")
+**Stage:** Shipped · 2026-10-02
 
 ## Problem
 Google reviews can be faked; tenants trust reviews from real residents.
@@ -33,4 +33,37 @@ Canvas https://claude.ai/artifact/SrKtvDbCkUG4ThnkdXsZ7F. **Design approved by t
 - Board 5 (owner) is now "Your ranking": #1 of 9, factor bars with the weights (reviews 50%, reply speed 15%, beds kept up to date 15%, complaints resolved 10%, listing complete 10%) rated Strong / Good / Can improve; strikes lower the rank. No number shown.
 
 ## Build
-_Not started._
+Branch `feature/f08-reviews` (2026-10-02), boards 1–6 with the 2026-10-02 follow-ups.
+
+**Model.** `Review` (verified stay, stars, categories, layout answer, exit advance answer, owner
+reply, new flag) with sample reviews for Anjani; `ReviewStats` per hostel (category averages,
+advance back in full of those who left, layout accurate %). `Hostel.rating` / `reviews` are now the
+verified-review rating and count (Anjani ★ 4.4 · 38). Ranking: `factors()` gives each hostel's
+verified reviews (rating, minus a little under 20 reviews), reply speed (from reply minutes), beds
+kept up to date, complaints resolved and listing complete (sample values); weights 50 / 15 / 15 /
+10 / 10 (DECISIONS); each Fair Play strike lowers it. The score number is never shown: tenants see
+"#N near Hitec City" and the two strongest reasons ("Quick replies, beds kept up to date").
+
+**Screens**
+1. Resident · 30-day review (`rReview`, from a card on Home): overall stars, 1–5 per category,
+   layout accurate Yes / Mostly / No, optional text, "Shows as Rahul V. · verified resident".
+2. Resident · exit review (`rExit`, from "Review your stay" after giving notice): advance paid,
+   maintenance, "You should get back" (F02 terms), Yes all / Only part / Not yet, stars, stay again.
+   The answer updates the hostel's "advance back in full" record.
+3. Tenant · Reviews (`reviews`, tap "★ 4.4 · 38 verified reviews ›" on the hostel page): big rating,
+   category bars, "Advance back in full" and "Layout accurate" tiles, review cards with Verified
+   stay, stay length, advance answer and the owner's reply.
+4. Tenant · Explore: sort chips Recommended (default) / Nearest / Lowest price / Best deals (F03's
+   toggle became a sort), the ranking explanation with "How it works" (sheet `rank`), "#N" on the
+   photo, "★ 4.4 · 38" and "#1 near Hitec City · reasons" on each card.
+5. Owner · Your ranking (`oRank`, from "Reviews and ranking" on Today): #N of 6 near Hitec City,
+   what tenants see, one bar per factor with its weight, Strong / Good / Can improve and a tip,
+   Fair Play strikes.
+6. Owner · Reviews (`oReviews`): New / All / Low rating, Reply → reply box → Post reply (one reply,
+   reviews can't be removed).
+
+**Notes.** The ranking is among the 6 sample hostels "near Hitec City" (no areas yet). "Report for
+abuse" is the rule text only. Live review data and real factor values come with F13.
+
+**Tests:** `test/flows_test.dart` → "verified reviews, ranking and owner replies". `flutter analyze`
+clean, `flutter test` 21/21.
