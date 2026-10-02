@@ -1,6 +1,6 @@
 # F09 · Stay Rewards
 
-**Stage:** Design approved · 2026-10-02 (founder: "approve all")
+**Stage:** Shipped · 2026-10-02
 
 ## Problem
 Make tenants want every stay recorded on Hostelzy, so collusion costs them.
@@ -34,4 +34,24 @@ Canvas https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja. **Design approved by t
 - F10 board 1 shows the matching credit line ("Credit · ₹100 · comes off your first invoice").
 
 ## Build
-_Not started._
+Branch `feature/f09-stay-rewards` (2026-10-02), boards 1–4 with the 2026-10-02 follow-ups.
+
+**Model.** Tenant `level` none → member → trusted. A tenant becomes a **Member** after a first stay
+through Hostelzy: answering "Yes, I joined" (F07) or moving in from a Hostelzy hold or booking.
+Members get 2-hour free holds (`holdSecs`, everyone else 1 hour) and ₹100 off the next hostel's
+first month, used once at move-in. The owner gives the ₹100 off and Hostelzy records a ₹100 credit
+for that owner's next invoice (`ownerCredits`, used by F10); no cash moves from Hostelzy.
+Trusted-tenant progress shows months on time out of 6. Referral code `RAHUL-100`, ₹100 each.
+
+**Screens**
+1. Tenant · Me → **Stay Rewards** (`rewards`): level card, perks (Member / Trusted / not a member
+   yet), Trusted tenant progress for Members, invite a friend with the code and Share.
+2. Owner · hold request with a **Trusted tenant** tag (sample: Karthik M); tap → sheet `trusted`
+   with the four checks, "we don't share which hostels…", Confirm hold.
+3. Tenant · hold sheet: "Hold free · 2 hours · Member perk" for Members (F04's sheet).
+4. Tenant · **Your move-in** (`moveIn`, from "Moving in · see what to pay" on a hold): advance,
+   first month, green "Member reward −₹100", Pay at move-in, the owner-credit note, Your reward,
+   "I've moved in · open My stay".
+
+**Tests:** `test/flows_test.dart` → "Stay Rewards: Member, 2-hour holds, ₹100 at move-in, Trusted
+badge". `flutter analyze` clean, `flutter test` 23/23.

@@ -7,6 +7,7 @@ import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
 import 'reviews.dart';
+import 'rewards.dart';
 import 'screens_owner.dart';
 import 'screens_resident.dart';
 import 'screens_start.dart';
@@ -318,6 +319,8 @@ class _AppBody extends StatelessWidget {
     'oCase' => const OwnerCaseScreen(),
     'oStrike' => const StrikeScreen(),
     'aCases' => const AdminCasesScreen(),
+    'rewards' => const RewardsScreen(),
+    'moveIn' => const MoveInScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -414,6 +417,7 @@ class _Sheet extends StatelessWidget {
       'rank' => 'How the ranking works',
       'joined' => 'Did you join Anjani Residency?',
       'report' => 'Tell us what happened',
+      'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
       _ => '',
     };
@@ -421,6 +425,7 @@ class _Sheet extends StatelessWidget {
     final kicker = switch (s.sheet) {
       'joined' => 'One quick question',
       'report' => 'Anjani Residency · private',
+      'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -434,6 +439,7 @@ class _Sheet extends StatelessWidget {
       'rank' => const RankSheet(),
       'joined' => const JoinedSheet(),
       'report' => const ReportSheet(),
+      'trusted' => const TrustedSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
@@ -711,7 +717,7 @@ class _HoldSheet extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [const T('Hold free', w: 800, s: 15), T('1 hour · 2 h for Members', s: 11, w: 600, c: p.mu)],
+                      children: [const T('Hold free', w: 800, s: 15), T(s.isMember ? '2 hours · Member perk' : '1 hour · 2 h for Members', s: 11, w: 600, c: p.mu)],
                     ),
                   ),
                 ),

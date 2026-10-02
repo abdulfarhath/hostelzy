@@ -639,6 +639,56 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('Stay Rewards: Member, 2-hour holds, ₹100 at move-in, Trusted badge (F09)', (tester) async {
+    final s = AppState(start: 'me', role: 'tenant');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('Stay Rewards · not a member yet'));
+    expect(find.text('Not a member yet'), findsOneWidget);
+    expect(s.holdSecs, 3600);
+
+    // "Yes, I joined" (F07) makes the tenant a Member.
+    s.update(() => s.sheet = 'joined');
+    await tester.pump();
+    await tap(tester, find.text('Yes, I joined'));
+    expect(s.level, 'member');
+    expect(s.holdSecs, 7200);
+    await tester.pump();
+    expect(find.text('Member'), findsOneWidget);
+    expect(find.text('RAHUL-100'), findsOneWidget);
+
+    // A Member's free hold lasts 2 hours.
+    s.update(() {
+      s.hid = 'greenview';
+      s.bed = s.rooms['greenview']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;
+      s.sheet = 'hold';
+    });
+    await tester.pump();
+    expect(find.text('2 hours · Member perk'), findsOneWidget);
+    await tap(tester, find.text('Pay advance'));
+    final hold = s.holds.single;
+
+    // Move-in: ₹100 off the first month, credited to the owner.
+    await tap(tester, find.text('Moving in · see what to pay'));
+    expect(s.screen, 'moveIn');
+    expect(find.text('− ₹100'), findsOneWidget);
+    final r = s.findBed('greenview', hold.bed).r!;
+    final q = s.quote('greenview', r.ac, r.share);
+    expect(find.text(fmt(q.hzFirst - 100)), findsOneWidget);
+    await tap(tester, find.text("I've moved in · open My stay"));
+    expect((s.rewardUsed, s.role, s.ownerCredits.single.amt, s.ownerCredits.single.hid), (true, 'resident', 100, 'greenview'));
+    s.dispose();
+
+    // Owner: Trusted tenant badge on a hold request.
+    final o = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, o);
+    await tap(tester, find.text('TRUSTED TENANT'));
+    expect(o.sheet, 'trusted');
+    expect(find.text('Karthik M is a Trusted tenant'), findsOneWidget);
+    await tap(tester, find.text('Confirm hold').last); // the sheet's button, above the cards
+    expect(o.reqs.any((x) => x.id == 'k1'), isFalse);
+    o.dispose();
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');

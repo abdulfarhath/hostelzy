@@ -549,7 +549,7 @@ class _GridPainter extends CustomPainter {
 ({Hostel hh, Room r, double left}) holdInfo(AppState s, Hold h) {
   final hh = hostelById(h.hid);
   final r = s.findBed(h.hid, h.bed).r!;
-  const secs = freeHoldSecs;
+  final secs = s.holdSecs;
   return (hh: hh, r: r, left: secs - (s.now - h.start) / 1000);
 }
 
@@ -677,6 +677,7 @@ class MeScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final isOwner = s.role == 'owner';
     final rows = <(String, VoidCallback, Color)>[
+      if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
       ('Saved hostels', () => s.toastMsg('${s.saved.values.where((v) => v).length} saved'), p.tx),
       ('Notifications', () => s.toastMsg('Notifications go to WhatsApp and here.'), p.tx),
       ('Switch role', () => s.tab('role'), p.tx),
@@ -1726,20 +1727,7 @@ class HoldScreen extends StatelessWidget {
                     gap: 8,
                     children: [
                       if (canMoveIn)
-                        Cta(
-                          "I've moved in · open My stay",
-                          height: 52,
-                          px: 16,
-                          fs: 15,
-                          onTap: () {
-                            s.update(() {
-                              s.role = 'resident';
-                              s.screen = 'rHome';
-                              s.hist = [];
-                            });
-                            s.toastMsg('Welcome home. This is your stay now.');
-                          },
-                        ),
+                        Cta("Moving in · see what to pay", height: 52, px: 16, fs: 15, onTap: () => s.go('moveIn')),
                       Cta('WhatsApp $owner', parts: ['WhatsApp', owner], icon: 'msg', height: 52, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: wa),
                       OutlineCta('Directions', icon: 'pin', onTap: () => s.toastMsg('Opening Maps…')),
                       if (canCancel)

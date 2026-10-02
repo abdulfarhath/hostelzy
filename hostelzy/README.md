@@ -25,11 +25,11 @@ exposes:
 
 | Param | Values |
 | --- | --- |
-| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `rConfirm` `oToday` `oBeds` `oRent` `oMore` `oInvite` `rReview` `rExit` `reviews` `oReviews` `oRank` `oRules` `oCase` `oStrike` `aCases` |
+| `start` | `welcome` `phone` `otp` `role` `explore` `map` `holds` `me` `detail` `picker` `hold` `rHome` `rPay` `food` `help` `move` `rConfirm` `oToday` `oBeds` `oRent` `oMore` `oInvite` `rReview` `rExit` `reviews` `oReviews` `oRank` `oRules` `oCase` `oStrike` `aCases` `rewards` `moveIn` |
 | `role` | `tenant` `resident` `owner` |
 | `theme` | `light` `dark` |
 | `mode` | `plan` `list` `building` (bed picker) |
-| `sheet` | `search` `hold` `wa` `add` `bed` `enq` `addR` `rank` `joined` `report` |
+| `sheet` | `search` `hold` `wa` `add` `bed` `enq` `addR` `rank` `joined` `report` `trusted` |
 | `moveTab` / `moreTab` | `vacate` `swap` / `residents` `complaints` `deals` `rates` `menu` `rules` |
 | `bare` | `true`: phone frame only |
 | `page` | `overview`: all screens |

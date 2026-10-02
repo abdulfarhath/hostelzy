@@ -35,7 +35,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -146,6 +146,7 @@ class AppState extends ChangeNotifier {
     update(() {
       joinAnswer = a;
       sheet = null;
+      if (a == 'yes') becomeMember('Anjani Residency');
     });
     toastMsg(a == 'yes' ? 'Thanks. Your ₹100 Member reward is unlocked for your next stay.' : 'Thanks. Only Hostelzy sees your answer.');
   }
@@ -160,6 +161,51 @@ class AppState extends ChangeNotifier {
       sheet = null;
     });
     toastMsg('Report sent. The owner never sees your name.');
+  }
+
+  // ------------------------------------------------------------ F09 rewards
+
+  /// none | member | trusted. Member after a first stay through Hostelzy.
+  String level = 'none';
+  String memberSince = '';
+  int monthsOnTime = 0;
+
+  /// The ₹100 Member reward has been used at a move-in.
+  bool rewardUsed = false;
+
+  /// ₹100 credits for owners' next Hostelzy invoices (F10).
+  final List<({String hid, String what, int amt})> ownerCredits = [];
+  int friendsJoined = 1;
+
+  /// Hold request whose Trusted tenant badge is open.
+  String? trustedReq;
+
+  bool get isMember => level != 'none';
+  int get holdSecs => isMember ? memberHoldSecs : freeHoldSecs;
+  String get referralCode => 'RAHUL-$referralReward';
+
+  void becomeMember(String hostelName) {
+    if (isMember) return;
+    level = 'member';
+    memberSince = 'Since ${dayMon(appToday.add(const Duration(days: 1)))} · first stay via Hostelzy at $hostelName';
+  }
+
+  /// Move-in for a booked or confirmed hold: the Member reward comes off the
+  /// first month and is credited to the owner (no cash from Hostelzy).
+  void moveIn(Hold hold) {
+    final h = hostelById(hold.hid);
+    final useReward = isMember && !rewardUsed;
+    update(() {
+      if (useReward) {
+        rewardUsed = true;
+        ownerCredits.add((hid: hold.hid, what: 'Member reward · ${hold.bed}', amt: memberReward));
+      }
+      becomeMember(h.name);
+      role = 'resident';
+      screen = 'rHome';
+      hist = [];
+    });
+    toastMsg(useReward ? 'Welcome home. ${fmt(memberReward)} Member reward used.' : 'Welcome home. This is your stay now.');
   }
 
   // ------------------------------------------------------------ F08 reviews
@@ -410,6 +456,7 @@ class AppState extends ChangeNotifier {
     if (sheet == 'bed' && obed == null) obed = '204-B';
     if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
     if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
+    if (sheet == 'trusted' && trustedReq == null) trustedReq = 'k1';
     if (screen == 'rConfirm') {
       cBed = residents.where((r) => !r.confirmed).firstOrNull?.bed;
       cOtp = '';
