@@ -36,7 +36,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Firebase → ⚙ **Project settings** → **Your apps** → **Add app** → **Web** (`</>`) → nickname `team console` → **Register app**.
    - Copy the `firebaseConfig = { … }` block it shows and send it to the Build chat (it's public, not a secret).
    - Firebase → **Authentication** → **Settings** → **Authorized domains** → **Add domain** → `farhath.me`.
-   - Then the console works at https://farhath.me/hostelzy/app/console/ (Build adds the config).
+   - Then the console works at https://farhath.me/hostelzy/app/console/ (config added by Build 2026-10-02).
+   - Google Cloud → APIs & Services → Credentials → the new **Browser key** (team console) → Application restrictions: **Websites** → add `https://farhath.me/*` and `https://hostelzy.firebaseapp.com/*` → API restrictions: **Identity Toolkit API** and **Token Service API** → Save.
 4c. **Account deletion (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002070000_c_delete_account.sql` → **Run** → "Success".
 
 ## Soon (before real hostels)
