@@ -1,6 +1,6 @@
 # F22 · Redesign every screen (F21 style)
 
-**Stage:** Designing · founder, 2026-10-02 ("I really like the after… do every screen, your own
+**Stage:** Designing · Area 1 Tenant designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
 decisions, never take my approval").
 
 ## Rules (from the approved F21 demo)
@@ -23,7 +23,42 @@ decisions, never take my approval").
 5. Leftovers: permission, gate, delete account, F19/F20 screens
 
 ## Design
-Update the **All screens** canvas in place, area by area (tag "Redesigned"). Tell Build after each area.
+The redesign goes into the **All screens** canvas in place, area by area, with each new board tagged "Redesigned": https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+
+### Area 1 · Tenant: done 2026-10-02 (founder confirmed in the Design chat)
+Board names are the frame titles on the canvas (screen id · what it shows · Redesigned).
+
+**Half A, Explore / Map / Search (build first):**
+- `explore`: One Where? bar, one filter row, photo cards, real cost
+- `explore`: Browsing as a guest
+- `where sheet`: areas, landmarks and hostels in one field
+- `filters sheet`: Sort lives here, Clear all
+- `explore`: No hostels in this area yet (empty, "Try Hitec City")
+- `explore`: Loading (skeleton) · You’re offline · Retry
+- `map`: Where? on top, one photo card (View), "Search this area" after a pan, and a location button instead of the area picker
+- `map`: Near me
+- `loc sheet`: Use your location? ("Allow location" / "Type an area instead")
+- `explore` (dark) and `map` (dark)
+
+**Half B, Hostel / Picker / Hold / Saved / Me:**
+- `detail`: photo first, one price table, House rules ›, plus dark. Deal pages are gone: the deal now lives in the price table.
+- `reviews`: score summary with 4 bars, then verified stays with owner replies
+- `picker`: Plan | Room, floor chips with free counts, room cards with bed boxes, "See cheapest beds ›", one bottom bar "Bed 204-D · ₹5,800/mo · Continue"
+- `detail · Room`: one bed with plain facts, "Checked by 3 residents", Compare link
+- `hold sheet`: Hold free · 1 hour / Pay ₹3,000 to book
+- `sign-in sheet`: at the first hold; `perm sheet`: notifications after the first hold
+- `wa sheet`: Ask Srinivas, with the booking code
+- `payAdv sheet`: ₹3,000 to the owner's UPI ID, "Pay with a UPI app", "I’ve paid · enter UPI reference"
+- `payUtr sheet`: UPI reference in plain words
+- `hold`: one status card with a tweak for Held / Waiting for owner / Booked / Not received / Ended. Each state has a big number, one line and one or two actions. This replaces the old hold, status and expired boards.
+- `holds`: one list with tags and countdowns, and "Did you join …?" inline (replaces the joined sheet); `holds` empty state; inline error with Retry and an Undo toast
+- `saved`: photo rows with an Undo toast; `saved` empty state
+- `me`: one list (Saved, Holds, Stay Rewards, Reminders, Settings, Help) plus "Switch role ›". No Log out and no theme toggle.
+- `settings`: You / Notifications / App (Language, Look Light/Dark/Auto, Privacy and terms, Hostelzy team), then Log out and Delete account; plus dark
+
+Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, report sheet, move-in reward. Delete account screens are redesigned in Area 5.
+
+The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
