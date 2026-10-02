@@ -2702,6 +2702,45 @@ void main() {
     s.dispose();
   });
 
+  test('S7: on Supabase, the owner\'s plan invoice comes from the server', () async {
+    final l = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], invoices: [
+      {'id': 'inv-1', 'ref': 'HZ-INV-1100', 'hostel_id': 'anjani', 'beds': 40, 'amount': 899, 'due': '2026-11-05', 'status': 'due', 'late': 0},
+      {'id': 'inv-0', 'ref': 'HZ-INV-1001', 'hostel_id': 'anjani', 'beds': 40, 'amount': 999, 'due': '2026-10-05', 'status': 'paid', 'late': 0},
+    ], plans: [{'hostel_id': 'anjani', 'trial_ends': '2026-10-31'}]);
+    expect(l.invoices.map((i) => '${i.ref} ${i.status} ${i.key}'), ['HZ-INV-1100 due inv-1', 'HZ-INV-1001 paid inv-0']);
+    expect(l.trialEnds['anjani'], DateTime(2026, 10, 31));
+
+    final s = AppState(start: 'oPlan', role: 'owner');
+    // Before the first invoice: the trial, and paying early isn't possible.
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', plans: [{'hostel_id': s.ownHid, 'trial_ends': '2026-10-31'}]));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    expect((s.invoice.status, s.invoice.key, s.trialEnd), ('upcoming', null, DateTime(2026, 10, 31)));
+    expect(s.invoices, isEmpty); // no sample invoices on the server
+    s.update(() => s.utrDraft = '123456789012');
+    s.sendUtr();
+    expect(s.toast, 'Your first invoice isn’t out yet. You pay once it arrives.');
+    expect(fake.calls, isEmpty);
+    // The invoice arrives: its amount is the server's; the UTR goes to the server.
+    fake.rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', invoices: [
+      {'id': 'inv-1', 'ref': 'HZ-INV-1100', 'hostel_id': s.ownHid, 'beds': 40, 'amount': 899, 'due': '2026-11-05', 'status': 'due', 'late': 0},
+    ]);
+    await s.refreshLive();
+    expect((s.invoice.ref, s.invoiceAmt), ('HZ-INV-1100', 899));
+    s.sendUtr();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UTR saved. Hostelzy checks it against the bank record.'));
+    // The team marks it paid (founder admin on the server).
+    s.markPaid(s.invoices.single);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect((fake.calls.last, s.toast), ('invcheck inv-1 paid', 'HZ-INV-1100 marked paid.'));
+    s.stopLive();
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -2993,7 +3032,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds);
     return 'HZ-5009';
   }
 
@@ -3022,10 +3061,16 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
+
+  // S7: plan invoices.
+  @override
+  Future<void> sendInvoiceUtr(String key, String utr) => _rec('invutr $key $utr');
+  @override
+  Future<void> checkInvoice(String key, String status) => _rec('invcheck $key $status');
 
   // S3: owner edits.
   @override
@@ -3046,14 +3091,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ]);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds);
   }
 }
 

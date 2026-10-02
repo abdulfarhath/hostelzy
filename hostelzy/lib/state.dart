@@ -145,8 +145,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   static final seedCaseCount = seedCases().length;
 
   // F10 owner plan
-  late final Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: trialEnd.add(const Duration(days: 1)));
-  late final List<Invoice> invoices = [invoice, ...seedInvoices()];
+  late Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: trialEnd.add(const Duration(days: 1)));
+  late List<Invoice> invoices = [invoice, ...seedInvoices()];
 
   /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.
   void openUtr() => update(() {

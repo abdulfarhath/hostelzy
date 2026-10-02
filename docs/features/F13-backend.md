@@ -357,3 +357,13 @@ Not needed.
 - No new SQL: staff could already write these tables, and the hostel guard allows rules and the UPI ID.
 - **Not here:** room layouts. On the server only the Hostelzy team edits layouts (RLS). Owner layout edits stay on the phone until the founder decides whether owners may publish layouts.
 - Test: `S3: on Supabase, owner edits (rates, deals, rules, UPI ID) are saved on the server`.
+
+**S7 · owner-plan invoices in the app · 2026-10-02** (branch `feature/s7-plan-invoices`):
+- **Plan screen:** signed in on Supabase, it reads `invoices` and the trial end (`owner_plans.trial_ends`) from the server.
+- **Before the first invoice:** the screen shows the trial. Paying early says "Your first invoice isn’t out yet". There are no sample invoices on the server.
+- **Once an invoice exists:** the amount and UPI note come from the server's invoice. "I’ve paid" saves the UTR on the server (`checking`). The team marks it paid or not received, from the app's founder admin or the web console. Invoices update live.
+- **Migration `20261002120000_s7_invoices.sql`:**
+  - The owner can't change an invoice that is already paid (guard fix).
+  - `invoices` is added to Realtime.
+  - Tests: `supabase/tests/invoices_test.sql`.
+- Test: `S7: on Supabase, the owner's plan invoice comes from the server`.

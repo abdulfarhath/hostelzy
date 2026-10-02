@@ -6,10 +6,10 @@
 
 import '../../data.dart';
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
-const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays'];
+const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices'];
 
 int _ms(Object? t) => t == null ? 0 : DateTime.parse(t as String).millisecondsSinceEpoch;
 
@@ -97,6 +97,20 @@ Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> paym
   );
 }
 
+/// S7: an owner-plan invoice from the server.
+Invoice invoiceFromRow(Map<String, dynamic> r) => Invoice(
+  ref: r['ref'] as String,
+  hid: r['hostel_id'] as String,
+  beds: r['beds'] as int? ?? 0,
+  amt: r['amount'] as int? ?? 0,
+  due: DateTime.parse(r['due'] as String),
+  status: r['status'] as String? ?? 'due',
+  utr: r['utr'] as String?,
+  late: r['late'] as int? ?? 0,
+  checked: r['status'] == 'paid' ? 'confirmed' : null,
+  key: r['id'] as String,
+);
+
 /// Complaint ids are uuids on the server; the app keys them by a stable int.
 int complaintKey(String uuid) => int.parse(uuid.replaceAll('-', '').substring(0, 8), radix: 16);
 
@@ -112,7 +126,7 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   key: r['id'] as String,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], int? now}) => (
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], int? now}) => (
   holds: [
     for (final r in holds)
       holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
@@ -125,6 +139,9 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
   // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
   // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
+  // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.
+  invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
+  trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},
   residents: [for (final r in stays) if (r['left_on'] == null && r['user_id'] != me && r['name'] != null) residentFromRow(r, payments)],
   signups: [
     for (final r in signups)

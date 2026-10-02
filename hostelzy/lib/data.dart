@@ -778,8 +778,11 @@ const trialDays = 30;
 /// An owner's monthly Hostelzy invoice. [status]: upcoming | due | checking |
 /// paid | missing (UTR not found in the bank record).
 class Invoice {
-  Invoice({required this.ref, required this.hid, required this.beds, required this.amt, required this.due, this.status = 'upcoming', this.utr, this.sent, this.late = 0, this.checked});
+  Invoice({required this.ref, required this.hid, required this.beds, required this.amt, required this.due, this.status = 'upcoming', this.utr, this.sent, this.late = 0, this.checked, this.key});
   final String ref, hid;
+
+  /// S7: the invoice's id on the server (null on sample data).
+  final String? key;
   final int beds;
   int amt;
   final DateTime due;

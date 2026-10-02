@@ -15,3 +15,4 @@ $P -d hz_rls_test -f tests/delete_test.sql
 $P -d hz_rls_test -f tests/invites_test.sql
 $P -d hz_rls_test -f tests/holds_test.sql
 $P -d hz_rls_test -f tests/residents_test.sql
+$P -d hz_rls_test -f tests/invoices_test.sql
