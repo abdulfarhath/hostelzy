@@ -66,36 +66,35 @@ class PayAdvSheet extends StatelessWidget {
     if (pay == null) return const SizedBox();
     final h = hostelById(pay.hid);
     final upi = s.ownerUpi[pay.hid]!;
-    Widget line(String k, String v) => Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-      child: Row(children: [T(k, s: 14, c: p.mu), const SizedBox(width: 12), Expanded(child: T(v, s: 14, w: 800, align: TextAlign.right))]),
-    );
+    final q = s.findBed(pay.hid, pay.bed).r;
+    final fee = q == null ? null : s.quote(pay.hid, q.ac, q.share);
+    // F22 Area 1: one amount, the owner's UPI ID, one action.
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
         gap: 12,
         children: [
-          PaySteps4(pay),
           Container(
             decoration: box(w: 2, c: p.tx),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                line('Advance (refundable)', fmt(pay.amt)),
-                line('Pay to', '${upi.name} · ${upi.id}'),
-                line('UPI note', pay.note),
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  color: p.tx,
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Expanded(child: T('Pay ${h.owner}', w: 800, s: 15, c: p.bg)), T(fmt(pay.amt), w: 800, s: 26, c: p.bg)]),
+                  padding: const EdgeInsets.all(14),
+                  color: p.sf,
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Expanded(child: T('Pay to ${h.owner}', w: 800, s: 15)), T(fmt(pay.amt), w: 800, s: 30)]),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  child: Row(children: [T('UPI ID', s: 14, c: p.mu), const SizedBox(width: 12), Expanded(child: T(upi.id, s: 14, w: 800, align: TextAlign.right))]),
                 ),
               ],
             ),
           ),
-          _shieldNote(context, [sp(context, 'You pay ${h.owner} directly. Hostelzy never holds your money. The bed says '), sp(context, 'Booked', w: 800, c: p.tx), sp(context, ' only after ${h.owner} confirms the money arrived.')]),
-          Cta('Pay ${fmt(pay.amt)} by UPI', height: 54, px: 16, fs: 15, onTap: () => s.payByUpi(pay)),
+          T(fee == null ? 'Booked once ${h.owner} confirms the money arrived.' : '${fmt(fee.hzBack)} back when you leave. Your price ${fmt(fee.hzFee)} is fixed once ${h.owner} confirms.', s: 14, lh: 1.45),
+          Cta('Pay with a UPI app', height: 54, px: 16, fs: 15, onTap: () => s.payByUpi(pay)),
           OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(pay)),
+          T('Hostelzy never holds your money. It goes straight to the owner.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
@@ -429,7 +430,7 @@ class HoldsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Confirmed', 'held': 'Held', 'paying': 'Advance · owner to confirm', 'booked': 'Booked · advance confirmed', 'released': 'Released'};
+    const lab = {'waiting': 'Waiting for owner', 'confirmed': 'Held', 'held': 'Held', 'paying': 'Waiting for owner', 'booked': 'Booked', 'released': 'Released'};
     return Scroll(
       key: ValueKey('holds${s.scrollEpoch}'),
       child: Column(
@@ -438,31 +439,19 @@ class HoldsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: const PageHead(kicker: "Beds you're holding", title: 'Holds'),
+            child: const T('Holds', s: 30, w: 800, lh: 1.02, ls: -.025),
           ),
           // F21 W4: an inline error with Retry, never a silent empty list.
           if (s.liveFailed && s.onServer) InlineError('Couldn’t load your holds', onRetry: s.refreshLive),
-          // F07 board 3: asked after one of your holds ends (the 102-B sample
-          // shows in debug builds only, F17).
-          if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
-            Tap(
-              onTap: () => s.update(() => s.sheet = 'joined'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: Row(
-                  children: [
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(s.endedHold != null ? '${hostelById(s.endedHold!.hid).name} · ${s.endedHold!.bed}' : 'Anjani Residency · 102-B', w: 800, s: 15), T('Hold ended${s.endedHold != null ? '' : ' 11 Sep'} · Did you join? One tap', s: 12, c: p.mu)])),
-                    Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('Ended', s: 11, w: 800, ls: .05, upper: true, c: p.mu)),
-                  ],
-                ),
-              ),
-            ),
+          // F22 Area 1: one list; "Did you join …?" is asked right here (F07).
           for (final h in s.holds.reversed.where((h) => !s.releasing.contains(h.id)))
             () {
               final i = holdInfo(s, h);
               final timed = const ['waiting', 'confirmed', 'held'].contains(h.status);
+              final ended = s.expiredHolds.contains(h.id) || h.status == 'released';
+              final tag = ended ? (h.status == 'released' ? 'Released' : 'Ended') : (lab[h.status] ?? h.status);
               return Tap(
+                key: ValueKey('holdRow-${h.id}'),
                 onTap: () => s.update(() {
                   s.hist = [...s.hist, s.screen];
                   s.screen = 'hold';
@@ -476,61 +465,60 @@ class HoldsScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            T(s.expiredHolds.contains(h.id) ? 'Expired' : lab[h.status]!, s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.ad),
-                            const SizedBox(height: 3),
+                            Tag(tag, bg: ended ? p.sf : (h.status == 'booked' ? p.gb : p.ab), fg: ended ? p.mu : (h.status == 'booked' ? p.gn : p.ad)),
+                            const SizedBox(height: 6),
                             T('Bed ${h.bed}', w: 800, s: 18),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 2),
                             T('${i.hh.name} · ${fmt(i.r.rent)}/mo', s: 13, c: p.mu),
                           ],
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          T(
-                            timed
-                                ? cd(i.left)
-                                : h.status == 'booked'
-                                ? 'Booked'
-                                : '—',
-                            w: 800,
-                            s: 22,
-                            tab: true,
-                          ),
-                          T(
-                            timed
-                                ? 'left'
-                                : h.status == 'booked'
-                                ? 'move-in'
-                                : '',
-                            s: 11,
-                            c: p.mu,
-                          ),
-                        ],
-                      ),
+                      if (timed && !ended)
+                        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [T(cd(i.left), w: 800, s: 22, tab: true), T('left', s: 12, c: p.mu)])
+                      else
+                        Ic('chev', size: 18, color: p.mu),
                     ],
                   ),
                 ),
               );
             }(),
+          if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
+            Container(
+              key: const ValueKey('joinedAsk'),
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.all(14),
+              decoration: box(w: 2, c: p.tx),
+              child: VGap(
+                gap: 8,
+                children: [
+                  T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
+                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair, and a yes unlocks your ₹100 Member reward.', s: 13, c: p.mu, lh: 1.4),
+                  Row(
+                    children: [
+                      Expanded(child: Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes'))),
+                      const SizedBox(width: 8),
+                      Expanded(child: OutlineCta('No', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('no'))),
+                    ],
+                  ),
+                  Tap(onTap: () => s.update(() => s.sheet = 'report'), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: T('The owner asked me to skip the app ›', s: 13, w: 800, c: p.ad))),
+                ],
+              ),
+            ),
           if (s.holds.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-              child: VGap(
-                gap: 10,
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+              child: Column(
                 children: [
-                  const T('No holds yet.', w: 800, s: 22, lh: 1.1),
-                  T('Pick a bed in any hostel and hold it free for an hour while you go and see it.', s: 14, c: p.mu, lh: 1.45),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Cta('Find a bed', onTap: () => s.tab('explore'), height: null, vpad: 12, px: 16, fs: 14, iconSize: 14, expand: false, gap: 10),
-                    ),
-                  ),
+                  Container(width: 64, height: 64, alignment: Alignment.center, color: p.sf, child: const Ic('clock', size: 30)),
+                  const SizedBox(height: 12),
+                  const T('No holds yet', w: 800, s: 22, align: TextAlign.center),
+                  const SizedBox(height: 8),
+                  T('Hold any free bed for 1 hour while you go and see it. It costs nothing.', s: 15, c: p.mu, lh: 1.5, align: TextAlign.center),
+                  const SizedBox(height: 14),
+                  Cta('Find a bed', height: 50, px: 16, fs: 15, expand: false, onTap: () => s.tab('explore')),
                 ],
               ),
             ),
@@ -561,13 +549,32 @@ class MeScreen extends StatelessWidget {
       ('Swap bed', () => move('swap'), p.tx),
       ('Give notice', () => move('vacate'), p.tx),
     ];
-    final rows = <(String, VoidCallback, Color)>[
-      ('Reminders · ${s.remSummary}', s.openReminders, p.tx),
-      if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
-      ('Saved hostels · ${s.saved.values.where((v) => v).length}', () => s.go('saved'), p.tx),
-      ('Settings', () => s.go('settings'), p.tx),
-      ('Switch role', () => s.tab('role'), p.tx),
+    // F22 Area 1: one list, each row with a one-line status.
+    final live = s.holds.where((h) => !const ['released', 'expired'].contains(h.status)).toList();
+    final held = live.where((h) => h.status != 'booked').length, booked = live.where((h) => h.status == 'booked').length;
+    final nSaved = s.saved.values.where((v) => v).length;
+    final rows = <(String, String, VoidCallback)>[
+      if (!isOwner) ('Saved', nSaved == 0 ? 'Nothing yet' : '$nSaved hostel${nSaved == 1 ? '' : 's'}', () => s.go('saved')),
+      if (!isOwner) ('Holds', live.isEmpty ? 'None right now' : [if (held > 0) '$held held', if (booked > 0) '$booked booked'].join(' · '), () => s.tab('holds')),
+      if (!isOwner) ('Stay Rewards', const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'Not a member yet', () => s.go('rewards')),
+      ('Reminders', s.remSummary[0].toUpperCase() + s.remSummary.substring(1), s.openReminders),
+      ('Settings', 'Language, notifications, log out', () => s.go('settings')),
+      ('Help on WhatsApp', 'Ask the Hostelzy team', () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
     ];
+    Widget row((String, String, VoidCallback) r) => Tap(
+      key: ValueKey('me-${r.$1}'),
+      onTap: r.$3,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+        decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+        child: Row(
+          children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(r.$1, s: 16, w: 800), T(r.$2, s: 13, c: p.mu)])),
+            Ic('chev', size: 18, color: p.mu),
+          ],
+        ),
+      ),
+    );
     return Scroll(
       key: ValueKey('me${s.scrollEpoch}'),
       child: Column(
@@ -583,7 +590,7 @@ class MeScreen extends StatelessWidget {
                   height: 64,
                   color: p.ac,
                   alignment: Alignment.center,
-                  child: T(initials(s.meName.isNotEmpty ? s.meName : (isOwner ? hostelById(s.ownHid).owner : '')), w: 800, s: 24, c: p.ai),
+                  child: s.meName.isEmpty && !isOwner ? Ic('user', size: 28, color: p.ai) : T(initials(s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner), w: 800, s: 24, c: p.ai),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -592,14 +599,13 @@ class MeScreen extends StatelessWidget {
                     children: [
                       T(s.meName.isNotEmpty ? s.meName : (isOwner ? hostelById(s.ownHid).owner : 'Add your name'), w: 800, s: 24, lh: 1.05),
                       const SizedBox(height: 3),
-                      T('${s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : 'Add your number'} · ${{'tenant': 'Looking for a bed', 'resident': 'Resident', 'owner': 'Owner, ${hostelById(s.ownHid).name}'}[s.role]}', s: 13, c: p.mu),
+                      T(s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)} · not verified' : (s.signedIn ? 'Add your number' : 'Browsing as a guest'), s: 13, c: p.mu),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          // F21 W4: theme and Log out live in Settings only.
           if (s.role == 'resident') ...[
             const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('My stay')),
             for (final r in stay)
@@ -609,29 +615,24 @@ class MeScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(border: Border(top: r == stay.first ? bs(2, p.dv) : BorderSide.none, bottom: bs(1, p.hl))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(r.$1, s: 15, w: 600), Ic('chev', size: 18, color: p.mu)]),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Flexible(child: T(r.$1, s: 15, w: 600)), Ic('chev', size: 18, color: p.mu)]),
                 ),
               ),
             const SizedBox(height: 12),
           ],
-          for (final r in rows)
-            Tap(
-              onTap: r.$2,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(child: T(r.$1, s: 15, w: 600, c: r.$3)),
-                    Ic('chev', size: 18, color: p.mu),
-                  ],
-                ),
-              ),
+          for (final r in rows) row(r),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Row(
+              children: [
+                Expanded(child: T(isOwner ? 'Looking for a bed, or live in a PG?' : 'Live in a PG or run one?', s: 14, c: p.mu)),
+                Tap(key: const ValueKey('switchRole'), onTap: () => s.tab('role'), child: T('Switch role ›', s: 14, w: 800, c: p.ad)),
+              ],
             ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: T('Hostelzy 1.0 · Made in Hyderabad', s: 12, c: p.mu),
+            child: T('Hostelzy $appVersion · Made in Hyderabad', s: 12, c: p.mu),
           ),
         ],
       ),
@@ -1015,7 +1016,10 @@ class PickerScreen extends StatelessWidget {
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(h.name, ell: true), const T('Pick a bed', w: 800, s: 22, lh: 1.1)]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: s.mode == 'room' ? [Kicker('${h.name} · ${room.share} sharing', ell: true), T('Room ${room.label}', w: 800, s: 26, lh: 1.1)] : [Kicker(h.name, ell: true), const T('Pick a bed', w: 800, s: 26, lh: 1.1)],
+                ),
               ),
             ],
           ),
@@ -1047,18 +1051,19 @@ class PickerScreen extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Tap(
-              key: const ValueKey('cheapest'),
-              onTap: () => s.update(() => s.mode = s.mode == 'list' ? 'plan' : 'list'),
-              child: T(s.mode == 'list' ? '‹ Back to the plan' : 'See cheapest beds ›', s: 14, w: 800, c: p.ad),
+        if (s.mode == 'list')
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(
+                key: const ValueKey('cheapest'),
+                onTap: () => s.update(() => s.mode = 'plan'),
+                child: T('‹ Back to the plan', s: 14, w: 800, c: p.ad),
+              ),
             ),
           ),
-        ),
-        if (h.ac && h.hasNon)
+        if (h.ac && h.hasNon && s.mode != 'room')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Wrap(
@@ -1090,13 +1095,13 @@ class PickerScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    T(hasSel ? 'Bed ${sb.b!.id}' : 'No bed picked', w: 800, s: 17),
-                    T(hasSel ? '${sb.b!.spot} · ${sb.r!.share} sharing · ${sb.r!.type} · ${fmt(sb.r!.rent)}/mo' : 'Tap a free bed to hold it', s: 12, c: p.mu, ell: true),
+                    T(hasSel ? 'Bed ${sb.b!.id} · ${fmt(sb.r!.rent)}/mo' : 'No bed picked', w: 800, s: 17, lh: 1.25),
+                    T(hasSel ? sb.b!.spot : 'Tap a free bed', s: 12, c: p.mu, ell: true),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Cta('Hold bed', onTap: () => s.bed == null ? s.toastMsg('Pick a free bed first.') : s.update(() => s.sheet = 'hold'), height: 50, px: 18, fs: 15, expand: false, opacity: hasSel ? 1 : .4),
+              Cta('Continue', key: const ValueKey('pickContinue'), icon: 'arrow', onTap: () => s.bed == null ? s.toastMsg('Pick a free bed first.') : s.update(() => s.sheet = 'hold'), height: 50, px: 18, fs: 15, expand: false, opacity: hasSel ? 1 : .4),
             ],
           ),
         ),
@@ -1105,7 +1110,7 @@ class PickerScreen extends StatelessWidget {
   }
 }
 
-const pickerLegend = [('Free', 'free'), ('Free soon', 'soon'), ('On hold', 'held'), ('Taken', 'booked'), ('Selected', 'sel')];
+const pickerLegend = [('Free', 'free'), ('Free soon', 'soon'), ('On hold', 'held'), ('Taken', 'booked')];
 
 /// Floor tabs: label + "n free", bottom bar on the active one.
 class FloorTabs extends StatelessWidget {
@@ -1145,6 +1150,8 @@ class FloorTabs extends StatelessWidget {
   }
 }
 
+/// F22 Area 1: floors as chips, then every room on the floor as a card with
+/// its beds as boxes. A bed tap picks it; the room name opens the Room view.
 class _PlanMode extends StatelessWidget {
   const _PlanMode({required this.rooms, required this.room});
   final List<Room> rooms;
@@ -1157,194 +1164,130 @@ class _PlanMode extends StatelessWidget {
       for (final f in floorsOf(rooms)) (f, rooms.where((r) => r.floor == f && AppState.fits(r, s.pR)).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
     ];
     final tiles = rooms.where((r) => r.floor == s.floor).toList();
-    final cols = room.share == 3 ? 3 : 2;
-    final beds = room.beds;
-    final rows = <Widget>[];
-    for (var i = 0; i < beds.length; i += cols) {
-      if (i > 0) rows.add(const SizedBox(height: 10));
-      final cells = <Widget>[];
-      for (var j = 0; j < cols; j++) {
-        if (j > 0) cells.add(const SizedBox(width: 10));
-        cells.add(Expanded(child: i + j < beds.length ? _PlanBed(beds[i + j]) : const SizedBox()));
-      }
-      rows.add(
-        IntrinsicHeight(
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: cells),
-        ),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FloorTabs(
-          items: floors,
-          cur: s.floor,
-          onPick: (f) {
-            final fit = rooms.where((r) => r.floor == f && AppState.fits(r, s.pR));
-            final r = fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
-            s.update(() {
-              s.floor = f;
-              s.room = r.n;
-              s.bed = null;
-            });
-          },
-        ),
-        // F14 uneven floors: tiles wrap into rows of 4, however many rooms.
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          child: LayoutBuilder(
-            builder: (context, c) => Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (var i = 0; i < tiles.length; i++)
-                  () {
-                    final r = tiles[i];
-                    final fr = r.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length;
-                    final fits = AppState.fits(r, s.pR);
-                    return Tap(
-                      enabled: fits,
-                      // F12: tapping a room opens it in the Room tab.
-                      onTap: () => s.openRoom(r.n),
-                      child: Opacity(
-                        opacity: !fits ? .35 : (fr > 0 ? 1 : .5),
-                        child: Container(
-                          width: (c.maxWidth - 24) / 4,
-                          padding: const EdgeInsets.all(10),
-                          decoration: box(w: 2, c: r.n == room.n ? p.ac : p.hl),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              T(r.label, w: 800, s: 19),
-                              const SizedBox(height: 3),
-                              Align(alignment: Alignment.centerLeft, child: RoomTypeTag(r.ac)),
-                              const SizedBox(height: 3),
-                              T('${r.share} sharing', s: 12, c: p.mu),
-                              const SizedBox(height: 2),
-                              T(fr > 0 ? '$fr open' : 'Full', s: 12, w: 600),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }(),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    Widget card(Room r) {
+      final fits = AppState.fits(r, s.pR);
+      return Opacity(
+        key: ValueKey('roomCard-${r.n}'),
+        opacity: fits ? 1 : .35,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: box(w: 2, c: r.beds.any((b) => b.id == s.bed) ? p.ac : p.tx),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+              Tap(
+                enabled: fits,
+                // F12: the room name opens it in the Room view.
+                onTap: () => s.openRoom(r.n),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(child: T('Room ${r.label}', w: 800, s: 15, lh: 1.2)),
+                    const SizedBox(width: 8),
+                    Expanded(child: T('${r.share} sharing${r.ac ? ' AC' : ''} · ${fmt(r.rent)}', s: 12, c: p.mu, lh: 1.3)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
                 children: [
-                  T('Room ${room.n}', w: 800, s: 20, nowrap: true),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Rich([sp(context, '${room.share} sharing · ${room.type} · ${fmt(room.rent)}'), sp(context, '/mo', w: 400, c: p.mu)], s: 13, w: 600, align: TextAlign.right),
-                  ),
+                  for (final b in r.beds)
+                    () {
+                      final l = lookOf(p, b, s.bed);
+                      return Tap(
+                        key: ValueKey('bed-${b.id}'),
+                        enabled: fits && l.can,
+                        onTap: () => s.pickBed(b),
+                        child: Semantics(
+                          label: 'Bed ${b.id}, ${l.tag}',
+                          child: BedBox(
+                            look: l.look,
+                            width: 54,
+                            height: 48,
+                            child: Center(child: T(b.letter, w: 800, s: 17)),
+                          ),
+                        ),
+                      );
+                    }(),
                 ],
               ),
-              if (room.ac && room.acRepair)
-                Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                  color: p.ab,
-                  child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
-                ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: box(w: 2, c: p.tx),
-                child: LayoutBuilder(
-                  builder: (context, c) {
-                    final w = c.maxWidth;
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 36, 14, 38),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
-                        ),
-                        Positioned(
-                          top: -2,
-                          left: w * .22,
-                          width: w * .56,
-                          height: 6,
-                          child: Container(color: p.tx),
-                        ),
-                        Positioned(top: 10, left: w * .22, child: const _PlanLabel('Window')),
-                        if (room.ac)
-                          Positioned(
-                            top: 8,
-                            right: 10,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 6),
-                              decoration: box(w: 1, c: p.tx),
-                              child: const T('AC UNIT', s: 10, w: 800, ls: .08),
-                            ),
-                          ),
-                        Positioned(bottom: -2, right: 20, width: 64, height: 2, child: Container(color: p.bg)),
-                        const Positioned(bottom: 10, right: 20, child: _PlanLabel('Door')),
-                        if (room.bath == 'Attached') const Positioned(bottom: 10, left: 14, child: _PlanLabel('Attached bath ↙')),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Legend(items: pickerLegend),
             ],
           ),
         ),
-      ],
-    );
-  }
-}
+      );
+    }
 
-class _PlanLabel extends StatelessWidget {
-  const _PlanLabel(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) => Kicker(text, s: 10);
-}
-
-class _PlanBed extends StatelessWidget {
-  const _PlanBed(this.b);
-  final Bed b;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final l = lookOf(p, b, s.bed);
-    return Tap(
-      enabled: l.can,
-      onTap: () => s.pickBed(b),
-      child: BedBox(
-        look: l.look,
-        minHeight: 118,
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                T(b.letter, w: 800, s: 28, lh: 1),
-                Opacity(
-                  opacity: .55,
-                  child: Container(width: 16, height: 24, decoration: box(w: 1.5, c: l.look.fg)),
+    final grid = <Widget>[];
+    for (var i = 0; i < tiles.length; i += 2) {
+      if (i > 0) grid.add(const SizedBox(height: 10));
+      grid.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Expanded(child: card(tiles[i])), const SizedBox(width: 10), Expanded(child: i + 1 < tiles.length ? card(tiles[i + 1]) : const SizedBox())],
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              for (var i = 0; i < floors.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: Tap(
+                    key: ValueKey('floor-${floors[i].$1}'),
+                    onTap: () {
+                      final f = floors[i].$1;
+                      final fit = rooms.where((r) => r.floor == f && AppState.fits(r, s.pR));
+                      final r = fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
+                      s.update(() {
+                        s.floor = f;
+                        s.room = r.n;
+                        s.bed = null;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                      decoration: box(bg: floors[i].$1 == s.floor ? p.tx : transparent, w: 1, c: floors[i].$1 == s.floor ? p.tx : p.mu),
+                      child: T('Floor ${floors[i].$1} · ${floors[i].$2} free', s: 13, w: 800, c: floors[i].$1 == s.floor ? p.bg : p.tx, lh: 1.2),
+                    ),
+                  ),
                 ),
               ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...grid,
+          for (final r in tiles.where((r) => r.ac && r.acRepair))
+            Container(
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              color: p.ab,
+              child: T('Room ${r.label}: AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
-            const SizedBox(height: 6),
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(b.spot, s: 12, lh: 1.25), const SizedBox(height: 4), T(l.tag, s: 10, w: 600, ls: .08, upper: true, lh: 1.3)]),
-          ],
-        ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              const Legend(items: pickerLegend),
+              Tap(
+                key: const ValueKey('cheapest'),
+                onTap: () => s.update(() => s.mode = 'list'),
+                child: T('See cheapest beds ›', s: 13, w: 800, underline: true),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1432,6 +1375,9 @@ class _ListMode extends StatelessWidget {
   }
 }
 
+/// F22 Area 1: one status card for a hold: Held / Waiting for owner / Booked /
+/// Not received / Ended. A big number, one line, a few facts and one or two
+/// actions.
 class HoldScreen extends StatelessWidget {
   const HoldScreen({super.key});
   @override
@@ -1439,169 +1385,164 @@ class HoldScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final hold = s.holds.where((h) => h.id == s.holdId).firstOrNull ?? s.holds.lastOrNull;
-    var hostel = '', bed = '', label = '', big = '', sub = '', owner = '';
-    var bg = p.sf, fg = p.tx;
-    var rows = <(String, String)>[];
-    var steps = <TimelineStep>[];
-    var canSim = false, canCancel = false, canMoveIn = false, expired = false;
-    Payment? pay;
-    VoidCallback wa = () {};
-    if (hold != null) {
-      final i = holdInfo(s, hold);
-      final st = hold.status;
-      pay = hold.opt == 'book' ? s.payOfHold(hold.id) : null;
-      final amt = fmt(pay?.amt ?? hold.paid);
-      final utr = utrSpaced(pay?.utr ?? '');
-      final m = switch (st) {
-        // F17: a booking stays "paying" until the owner confirms the money.
-        'paying' => switch (pay?.status) {
-          'waiting' => ['Waiting for ${i.hh.owner}', amt, 'Payment sent · ${i.hh.owner} needs to see $amt with UPI reference $utr in their account. Until then the bed is not booked yet.', 'sf', 'tx'],
-          'missing' => ['Not received', amt, '${i.hh.owner} says the payment didn’t arrive. Check UPI reference $utr in your UPI app. If the money left your account, send ${i.hh.owner} the UPI receipt on WhatsApp, or ask your bank.', 'sf', 'tx'],
-          _ => ['Pay the advance', amt, 'Pay ${i.hh.owner} by UPI, then enter the UTR. The bed is held for you meanwhile; it says Booked only after ${i.hh.owner} confirms.', 'sf', 'tx'],
-        },
-        'booked' when pay?.done != null => ['Booked', 'Yours.', '${i.hh.owner} confirmed $amt on ${pay!.done}. Show booking code ${hold.ref ?? ''} at the hostel on move-in day.', 'gn', 'ai'],
-        'waiting' => ['Free hold', cd(i.left), 'left on your free hold. ${i.hh.owner} doesn’t know yet: tell them on WhatsApp so they keep the bed.', 'sf', 'tx'],
-        'confirmed' => ['Confirmed by ${i.hh.owner}', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
-        'held' => ['Held for you', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
-        'booked' => ['Booked', 'Yours.', 'Advance paid to ${i.hh.owner}. Show booking code ${hold.ref ?? ''} when you move in. Your price is fixed.', 'gn', 'ai'],
-        _ when s.expiredHolds.contains(hold.id) => ['Hold expired', '0:00', 'Your hold has ended. Bed ${hold.bed} is free for everyone again. You can hold it again if it’s still free.', 'sf', 'tx'],
-        _ => ['Released', '—', 'The hold ended. You paid nothing.', 'sf', 'tx'],
-      };
-      expired = st == 'released' && s.expiredHolds.contains(hold.id);
-      final done = st != 'waiting' && st != 'released' && st != 'paying';
-      hostel = i.hh.name;
-      bed = hold.bed;
-      label = m[0];
-      big = m[1];
-      sub = m[2];
-      bg = m[3] == 'gn' ? p.gn : p.sf;
-      fg = m[4] == 'ai' ? p.ai : p.tx;
-      owner = i.hh.owner;
-      final o = holdOptions[hold.opt]!;
-      final q = s.quote(hold.hid, i.r.ac, i.r.share);
-      rows = [
-        ('Room', '${i.r.n} · ${i.r.share} sharing · Floor ${i.r.floor}'),
-        ('Rent', '${fmt(q.hzFee)} a month'),
-        ('Hold type', o.title),
-        if (hold.opt == 'book') ...[(st == 'booked' ? 'Paid to ${i.hh.owner}' : 'Advance to ${i.hh.owner}', fmt(hold.paid)), if (pay?.utr != null) ('UPI reference', utr), ('Booking code', hold.ref ?? '—'), if (hold.perks.isNotEmpty) ('Your price is fixed', hold.perks.join(' · '))] else ('Paid now', '₹0'),
-      ];
-      steps = [
-        TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),
-        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Owner confirms the advance', d: hold.opt == 'free' ? (done ? 'Confirmed by ${i.hh.owner}' : 'After you tell ${i.hh.owner} on WhatsApp') : (st == 'booked' ? 'Confirmed by ${i.hh.owner}' : 'After you send the UTR'), bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
-        TimelineStep(t: 'Visit and move in', d: hold.opt == 'book' ? 'Pay the first month (${fmt(q.hzFirst)}) at move-in. Show ${hold.ref}.' : 'Pay ${fmt(q.hzAdv)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
-      ];
-      // Demo only: never in the Play Store build (F17).
-      canSim = st == 'waiting' && kDebugMode;
-      canCancel = st == 'waiting' || st == 'confirmed' || st == 'held';
-      canMoveIn = st == 'confirmed' || st == 'booked' || st == 'held';
-      wa = () => s.enquire(hold.hid, "Hi ${i.hh.owner}, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed, from: 'Hold · WhatsApp owner');
+    if (hold == null) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Padding(padding: const EdgeInsets.fromLTRB(16, 6, 16, 12), child: Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back))), Padding(padding: const EdgeInsets.all(16), child: T('This hold isn’t on this phone any more.', s: 15, c: p.mu))]);
     }
+    final i = holdInfo(s, hold);
+    final st = hold.status;
+    final owner = i.hh.owner;
+    final pay = hold.opt == 'book' ? s.payOfHold(hold.id) : null;
+    final amt = fmt(pay?.amt ?? hold.paid);
+    final utr = utrSpaced(pay?.utr ?? '');
+    final q = s.quote(hold.hid, i.r.ac, i.r.share);
+    final expired = s.expiredHolds.contains(hold.id);
+    final code = hold.ref;
+    void wa() => s.enquire(hold.hid, "Hi $owner, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed, from: 'Hold · WhatsApp owner');
+    void again() {
+      final b = s.findBed(hold.hid, hold.bed).b;
+      if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');
+      s.update(() => s.hid = hold.hid);
+      s.openPicker();
+      s.update(() {
+        s.bed = hold.bed;
+        s.holdOpt = 'free';
+        s.sheet = 'hold';
+      });
+    }
+
+    void others() {
+      s.update(() => s.hid = hold.hid);
+      s.openPicker();
+    }
+
+    // (label, big, line, rows, primary, secondary, link, green)
+    final ({String label, String big, String line, List<(String, String)> rows, (String, String, VoidCallback)? main, (String, String, VoidCallback)? alt, bool green}) v = switch (st) {
+      'paying' when pay?.status == 'waiting' => (
+        label: 'Waiting for $owner',
+        big: amt,
+        line: 'You sent the UPI reference. It says Booked only after $owner sees the money, so it’s not booked yet.',
+        rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!), if (code != null) ('Booking code', code)],
+        main: ('Remind $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}. Please confirm on Hostelzy.')),
+        alt: ('Fix the UPI reference', 'chev', () => s.openPayUtr(pay!)),
+        green: false,
+      ),
+      'paying' when pay?.status == 'missing' => (
+        label: 'Not received',
+        big: amt,
+        line: '$owner didn’t see this payment. Check the UPI reference in your UPI app. If the money left your account, send $owner the UPI receipt on WhatsApp.',
+        rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!)],
+        main: ('Fix the UPI reference', 'arrow', () => s.openPayUtr(pay!)),
+        alt: ('Talk to $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, about my advance for bed ${pay.bed}: UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}.')),
+        green: false,
+      ),
+      'paying' => (
+        label: 'Pay to book',
+        big: amt,
+        line: 'Pay $owner by UPI, then enter the UPI reference. The bed is kept for you meanwhile; it says Booked once $owner sees the money.',
+        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(q.hzFee)} a month')],
+        main: pay == null ? null : ('Pay $amt by UPI', 'arrow', () => s.payByUpi(pay)),
+        alt: pay == null ? null : ('I’ve paid · enter UPI reference', 'chev', () => s.openPayUtr(pay)),
+        green: false,
+      ),
+      'booked' => (
+        label: 'Booked',
+        big: 'Yours.',
+        line: pay?.done != null ? '$owner confirmed $amt on ${pay!.done}. Show ${code ?? 'your booking code'} when you move in.' : 'Advance paid to $owner. Show ${code ?? 'your booking code'} when you move in.',
+        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
+        main: ('Moving in · see what to pay', 'arrow', () => s.go('moveIn')),
+        alt: ('Directions', 'pin', () => s.directions(i.hh)),
+        green: true,
+      ),
+      'waiting' || 'confirmed' || 'held' => (
+        label: st == 'waiting' ? 'Held for you · free' : 'Held · $owner confirmed',
+        big: cd(i.left),
+        line: st == 'waiting' ? 'Go and see it. $owner doesn’t know yet: tell them you’re coming so they keep it.' : 'Go and see it before the timer ends to keep the bed.',
+        rows: [('Rent', '${fmt(q.hzFee)} a month'), ('To move in', '${fmt(q.hzMove)} · advance ${fmt(q.hzAdv)} + first month'), if (code != null) ('Booking code', code)],
+        main: st == 'waiting' ? ('Tell $owner on WhatsApp', 'msg', wa) : ('Moving in · see what to pay', 'arrow', () => s.go('moveIn')),
+        alt: st == 'waiting' ? ('Directions', 'pin', () => s.directions(i.hh)) : ('WhatsApp $owner', 'msg', wa),
+        green: st != 'waiting',
+      ),
+      _ => (
+        label: expired ? 'Hold ended' : 'Released',
+        big: expired ? '0:00' : '—',
+        line: 'Bed ${hold.bed} is free for everyone again. Nothing was charged.',
+        rows: [('Bed', '${hold.bed} · ${i.r.share} sharing'), ('Rent', '${fmt(q.hzFee)} a month')],
+        main: ('Hold it again', 'arrow', again),
+        alt: ('See other beds', 'chev', others),
+        green: false,
+      ),
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
+        Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
           child: Row(
             children: [
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(hostel), T('Bed $bed', w: 800, s: 22, lh: 1.1)]),
-              ),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(i.hh.name), T('Bed ${hold.bed}', w: 800, s: 22, lh: 1.1)])),
             ],
           ),
         ),
         Expanded(
           child: Scroll(
             key: ValueKey('hold${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: bg,
-                    border: Border(bottom: bs(2, p.tx)),
-                  ),
-                  child: Css(
-                    c: fg,
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(label, s: 11, w: 600, ls: .1, upper: true), const SizedBox(height: 6), T(big, w: 800, s: 64, lh: 1, ls: -.03, tab: true), const SizedBox(height: 8), T(sub, s: 14, lh: 1.4)]),
-                  ),
-                ),
-                for (final r in rows) KV(r.$1, r.$2, keyWidth: 120),
-                const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('What happens next')),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: steps),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: VGap(
-                    gap: 8,
-                    children: [
-                      if (canMoveIn)
-                        Cta("Moving in · see what to pay", height: 52, px: 16, fs: 15, onTap: () => s.go('moveIn')),
-                      if (pay != null && hold?.status == 'paying') ...[
-                        if (pay.status == 'due') ...[
-                          Cta('Pay ${fmt(pay.amt)} by UPI', height: 52, px: 16, fs: 15, onTap: () => s.payByUpi(pay!)),
-                          OutlineCta('I’ve already paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(pay!)),
-                        ],
-                        if (pay.status == 'waiting') ...[
-                          Cta('Remind $owner on WhatsApp', icon: 'msg', height: 52, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UTR ${utrSpaced(pay.utr ?? '')}, note ${pay.note}. Please confirm on Hostelzy.')),
-                          OutlineCta('Fix the UTR', icon: 'chev', onTap: () => s.openPayUtr(pay!)),
-                        ],
-                        if (pay.status == 'missing') ...[
-                          Cta('Fix the UTR', height: 52, px: 16, fs: 15, onTap: () => s.openPayUtr(pay!)),
-                          OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, about my advance for bed ${pay.bed}: UTR ${utrSpaced(pay.utr ?? '')}, note ${pay.note}.')),
-                          Tap(onTap: () => s.cancelBooking(hold!), child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: T('Cancel and pick another bed', w: 600, s: 14, c: p.ad))),
-                        ],
-                      ] else if (expired) ...[
-                        Cta('Hold ${hold!.bed} again', height: 52, px: 16, fs: 15, onTap: () {
-                          final b = s.findBed(hold.hid, hold.bed).b;
-                          if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');
-                          s.update(() {
-                            s.hid = hold.hid;
-                            s.bed = hold.bed;
-                          });
-                          s.openPicker();
-                          s.update(() {
-                            s.bed = hold.bed;
-                            s.sheet = 'hold';
-                          });
-                        }),
-                        OutlineCta('See other beds', onTap: () {
-                          s.update(() => s.hid = hold.hid);
-                          s.openPicker();
-                        }),
-                      ] else
-                        Cta(hold?.status == 'waiting' ? 'Tell $owner on WhatsApp' : 'WhatsApp $owner', icon: 'msg', height: 52, px: 16, fs: 15, bg: hold?.status == 'waiting' ? p.ac : p.tx, fg: hold?.status == 'waiting' ? p.ai : p.bg, onTap: wa),
-                      OutlineCta('Directions', icon: 'pin', onTap: () => s.directions(hostelById(hold?.hid ?? s.hid))),
-                      if (canCancel)
-                        Tap(
-                          onTap: () => s.releaseWithUndo(hold!),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: T('Release this hold', w: 600, s: 14, c: p.ad),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    key: const ValueKey('holdCard'),
+                    decoration: box(w: 2, c: p.tx),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          color: v.green ? p.gb : p.sf,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Kicker(v.label, c: v.green ? p.gn : p.ad),
+                              const SizedBox(height: 4),
+                              T(v.big, w: 800, s: 56, lh: 1, ls: -.03, tab: true, c: v.green ? p.gn : p.tx),
+                              const SizedBox(height: 8),
+                              T(v.line, s: 14, lh: 1.45),
+                            ],
                           ),
                         ),
-                      if (canSim)
-                        Tap(
-                          onTap: () {
-                            s.setHold(hold!.id, 'confirmed');
-                            s.toastMsg('$owner confirmed on WhatsApp.');
-                          },
-                          child: Dashed(
-                            color: p.dv,
-                            width: 1,
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                            child: T('Demo: simulate the owner confirming', s: 12, c: p.mu),
+                        for (final r in v.rows) KV(r.$1, r.$2, keyWidth: 120),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: VGap(
+                            gap: 8,
+                            children: [
+                              if (v.main case final m?) Cta(m.$1, icon: m.$2, height: 52, px: 16, fs: 15, onTap: m.$3),
+                              if (v.alt case final a?) OutlineCta(a.$1, icon: a.$2, onTap: a.$3),
+                            ],
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  if (st == 'paying' && pay?.status == 'missing')
+                    Tap(onTap: () => s.cancelBooking(hold), child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: T('Cancel and pick another bed', w: 600, s: 14, c: p.ad))),
+                  if (st == 'waiting' || st == 'confirmed' || st == 'held')
+                    Tap(onTap: () => s.releaseWithUndo(hold), child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: T('Release this hold', w: 600, s: 14, c: p.ad))),
+                  // Demo only: never in the Play Store build (F17).
+                  if (st == 'waiting' && kDebugMode)
+                    Tap(
+                      onTap: () {
+                        s.setHold(hold.id, 'confirmed');
+                        s.toastMsg('$owner confirmed on WhatsApp.');
+                      },
+                      child: Dashed(color: p.dv, width: 1, padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12), child: T('Demo: simulate the owner confirming', s: 12, c: p.mu)),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1618,55 +1559,84 @@ class SavedScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final list = [for (final e in s.saved.entries) if (e.value && hostels.any((h) => h.id == e.key)) hostelById(e.key)];
+    // F22 Area 1: photo rows; removing one can be undone.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
+        Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: 'Me · ${list.length} saved', title: 'Saved hostels', size: 28))]),
+          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+          child: Row(children: [if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)], const T('Saved', s: 30, w: 800, lh: 1.02, ls: -.025)]),
         ),
         Expanded(
           child: list.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      T('Nothing saved yet. Tap Save on a hostel to keep it here.', s: 15, c: p.mu, lh: 1.5),
+                      Container(width: 64, height: 64, alignment: Alignment.center, color: p.sf, child: const Ic('heart', size: 30)),
+                      const SizedBox(height: 12),
+                      const T('Nothing saved yet', w: 800, s: 22, align: TextAlign.center),
+                      const SizedBox(height: 8),
+                      T('Tap the heart on any hostel to keep it here.', s: 15, c: p.mu, lh: 1.5, align: TextAlign.center),
                       const SizedBox(height: 14),
-                      Cta('Explore hostels', onTap: () => s.tab('explore')),
+                      Cta('Find a bed', height: 50, px: 16, fs: 15, expand: false, onTap: () => s.tab('explore')),
                     ],
                   ),
                 )
               : Scroll(
-                  child: Container(
-                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final h in list)
-                          Tap(
+                  key: ValueKey('saved${s.scrollEpoch}'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final h in list)
+                        () {
+                          final photos = s.photosOf[h.id] ?? const [];
+                          final cost = cardCost(s, h);
+                          return Tap(
+                            key: ValueKey('savedRow-${h.id}'),
                             onTap: () => s.update(() {
                               s.hist = [...s.hist, s.screen];
                               s.screen = 'detail';
                               s.hid = h.id;
                               s.dealAc = null;
+                              s.rulesOpen = false;
                             }),
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                               decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                               child: Row(
                                 children: [
-                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(h.name, w: 800, s: 15), T('${h.gender} · ${h.area} · ${kmLabel(s.kmFor(h))} ${s.kmFrom}', s: 12, c: p.mu)])),
-                                  Rich([sp(context, fmt(s.fromOf(h))), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
-                                  const SizedBox(width: 8),
-                                  Tap(onTap: () => s.update(() => s.saved[h.id] = false), child: Ic('x', size: 18, color: p.mu)),
+                                  SizedBox(
+                                    width: 96,
+                                    height: 72,
+                                    child: CustomPaint(
+                                      painter: Hatch(p.sf, 8, 16, base: p.bg),
+                                      child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        T(h.name, w: 800, s: 16),
+                                        T('${h.gender} · ${h.area} · ${s.freeOf(h.id).f} free', s: 13, c: p.mu),
+                                        if (cost != null) T('${fmt(cost.fee)}/mo', s: 14, w: 800),
+                                      ],
+                                    ),
+                                  ),
+                                  Tap(
+                                    key: ValueKey('unsave-${h.id}'),
+                                    onTap: () => s.toggleSaved(h.id),
+                                    child: Semantics(label: 'Remove from saved', child: SizedBox(width: 44, height: 44, child: Center(child: Ic('heart', size: 20, color: p.ad)))),
+                                  ),
                                 ],
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                          );
+                        }(),
+                    ],
                   ),
                 ),
         ),

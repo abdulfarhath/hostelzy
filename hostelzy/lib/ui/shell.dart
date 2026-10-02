@@ -588,7 +588,7 @@ class _Sheet extends StatelessWidget {
         'book' => 'Sign in to book this bed',
         _ => 'Sign in to hold this bed',
       },
-      'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
+      'wa' => 'Ask ${s.waTo ?? 'the owner'}',
       'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
@@ -926,45 +926,23 @@ class _WaSheet extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final ref = s.waRef;
-    final to = s.waTo ?? '';
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 12,
         children: [
-          // F17: honest. Nothing tells the owner except the tenant's own message.
-          if (ref != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              color: p.sf,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(padding: const EdgeInsets.only(top: 1), child: Ic('msg', size: 20, color: p.tx)),
-                  const SizedBox(width: 10),
-                  Expanded(child: Rich([sp(context, 'Send this on WhatsApp', w: 800, c: p.tx), sp(context, ' so $to knows you came from Hostelzy. Your enquiry code is '), sp(context, ref, w: 800, c: p.tx), sp(context, '.')], s: 14, lh: 1.45)),
-                ],
-              ),
-            ),
+          // F22 Area 1: the message with the booking code; nothing is sent from here.
           Container(
             padding: const EdgeInsets.all(14),
-            color: p.sf,
-            child: VGap(
-              gap: 10,
-              children: [
-                T(s.waMsg ?? '', s: 15, lh: 1.45),
-                if (ref != null) Rich([sp(context, 'Ref '), sp(context, ref, w: 800)], s: 14, lh: 1.45),
-              ],
-            ),
+            decoration: box(w: 2, c: p.tx),
+            child: T(s.waFull, s: 15, lh: 1.45),
           ),
           Cta(
-            'Send on WhatsApp',
+            'Open WhatsApp',
             icon: 'msg',
             height: 54,
             px: 16,
             fs: 15,
-            bg: p.tx,
-            fg: p.bg,
             onTap: () {
               final text = s.waFull, phone = s.waPhone;
               s.update(() => s.sheet = null);
@@ -981,6 +959,7 @@ class _WaSheet extends StatelessWidget {
               s.toastMsg('Message copied.');
             },
           ),
+          if (ref != null) T('The booking code keeps your Hostelzy price.', s: 12, c: p.mu, lh: 1.45),
           T('Nothing is sent until you press send in WhatsApp.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),

@@ -166,5 +166,5 @@ extension MapAreaActions on AppState {
   }
 
   /// Full message the tenant sends: their text plus the ref line.
-  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef';
+  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nBooking code $waRef';
 }

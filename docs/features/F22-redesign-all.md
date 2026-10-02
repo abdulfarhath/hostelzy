@@ -62,3 +62,21 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
+
+### Area 1 · Tenant: built 2026-10-02 (branch `feature/f22-tenant`)
+- **Map:** Where bar + location button on top, "Search this area", one hostel card at the bottom (photo, cost to move in, View). Location off or failing goes to typing an area.
+- **Explore empty:** "No hostels in X yet" with "Try <nearest area with hostels>".
+- **Me:** one list with a status on each row (Saved, Holds, Stay Rewards, Reminders, Settings, Help on WhatsApp), "Switch role ›".
+- **Settings:** You / Notifications / App groups; Look is Light / Dark / Auto; Log out and Delete account at the end. Help moved to Me.
+- **Saved:** photo rows with an unsave heart (Undo for 5 s); empty state with "Find a bed".
+- **Holds:** one row per hold with a plain label (Waiting for owner, Held, Booked); "Did you join X?" asked inline with the report link; empty state.
+- **Hold status:** one card per state (Held for you · free, Held · owner confirmed, Pay to book, Waiting for owner, Not received, Booked, Hold ended) with one main and one other action.
+- **Pay sheet:** "Pay to <owner>", UPI ID, what comes back, "Hostelzy never holds your money".
+- **WhatsApp sheet:** the whole message shown, Open WhatsApp / Copy message, "The booking code keeps your Hostelzy price". The message ends "Booking code HZ-…".
+- **Picker:** floor chips with free counts, rooms as cards with bed boxes, legend + "See cheapest beds ›", bottom bar "Bed 204-D · ₹X/mo" + Continue.
+- **Room view:** room in the title, fan and AC airflow always drawn, one bed's facts, "Compare with another bed ›", Edit room (F19), bottom bar "Same price for every bed here" + Continue.
+- **Reviews:** score beside the category bars, the advance/layout facts in one line, stays with "<owner> replied:", the "Owners can reply, not delete" rule.
+- **Notifications ask:** only what the app does (owner confirms your hold, rent reminders); "hold about to end" is not promised.
+- Kept from the data model: the five review categories the server stores (not the board's four), so nothing on the server changes.
+- Tests: `test/tenant_test.dart` (6 flows) plus the older flow tests updated to the new words.
+

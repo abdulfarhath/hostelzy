@@ -82,7 +82,7 @@ void main() {
     expect((s.saved['anjani'], s.toast), (true, 'Saved on this phone.'));
     await tester.pump(const Duration(seconds: 3));
     await _tap(tester, find.byKey(const ValueKey('save-anjani')));
-    expect((s.saved['anjani'], s.toast), (false, 'Removed from saved'));
+    expect((s.saved['anjani'], s.toast), (false, 'Removed Anjani Residency'));
     await _tap(tester, find.byKey(const ValueKey('undo')));
     expect(s.saved['anjani'], isTrue);
     s.dispose();
@@ -192,7 +192,7 @@ void main() {
     expect(find.text('APPEARANCE'), findsNothing);
     await _tap(tester, find.text('Settings'));
     expect(find.text('Log out'), findsOneWidget);
-    expect(find.text('Phone setting'), findsOneWidget);
+    expect(find.text('Auto'), findsOneWidget);
     expect(hostelById(s.ownHid).name, isNotEmpty);
     s.dispose();
   });
