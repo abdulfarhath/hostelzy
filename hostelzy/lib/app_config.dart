@@ -22,3 +22,19 @@ const minSupportedBuild = 0;
 /// F13 adds real admin accounts. Change it before sharing builds widely.
 const teamPasscode = '2580';
 const maintenanceUntil = ''; // e.g. '6:30 pm'; empty = no maintenance
+
+/// F13 backend: Supabase (Mumbai). The anon key is public by design: it can
+/// only do what the Row Level Security rules in `supabase/migrations/` allow.
+/// NEVER put the service_role key in the app or the repo. Override per build:
+/// `--dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…`.
+const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://oafiaczotlilomlvhphp.supabase.co');
+const supabaseAnonKey = String.fromEnvironment(
+  'SUPABASE_ANON_KEY',
+  defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZmlhY3pvdGxpbG9tbHZocGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTk4NjMsImV4cCI6MjEwNjQ5NTg2M30.pG_zORLu3ww6vxVNl4aNNekNirwGAWVC0KTRYAipKYo',
+);
+
+/// Where the app's data comes from: `sample` (default: the built-in sample
+/// hostels, works offline and in tests) or `supabase` (live hostels from the
+/// database; `--dart-define=DATA=supabase`). Stays `sample` until real
+/// hostels are in the database and phone login works (F13 part 2).
+const dataSource = String.fromEnvironment('DATA', defaultValue: 'sample');

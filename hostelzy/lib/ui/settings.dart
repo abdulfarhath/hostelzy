@@ -369,7 +369,7 @@ class GateScreen extends StatelessWidget {
           const SizedBox(height: 14),
           T(update ? 'Update Hostelzy to continue' : 'Back in a few minutes', w: 800, s: 32, lh: 1.02, ls: -.025),
           const SizedBox(height: 14),
-          T(update ? 'This version is too old to work with Hostelzy any more. The update is free and takes a minute.' : 'We’re making Hostelzy better. Your holds, payments and data are safe.${maintenanceUntil.isEmpty ? '' : ' Expected back by $maintenanceUntil.'}', s: 15, c: p.mu, lh: 1.5),
+          T(update ? 'This version is too old to work with Hostelzy any more. The update is free and takes a minute.' : 'We’re making Hostelzy better. Your holds, payments and data are safe.${s.maintUntil.isEmpty ? '' : ' Expected back by ${s.maintUntil}.'}', s: 15, c: p.mu, lh: 1.5),
           if (update) ...[const SizedBox(height: 10), T('Your version: $appVersion ($appBuild) · Needed: build $minSupportedBuild or newer', s: 13, c: p.mu)],
           const Spacer(),
           if (update)

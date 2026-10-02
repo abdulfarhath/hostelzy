@@ -484,7 +484,7 @@ class OwnerRankScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [T('of ${hostels.length} near ${s.lm}', w: 800, s: 16), const SizedBox(height: 2), T('Tenants see: ${s.rankReasons(h.id).toLowerCase()}', s: 12, c: p.mu)],
+                            children: [T('of ${browsable.length} near ${s.lm}', w: 800, s: 16), const SizedBox(height: 2), T('Tenants see: ${s.rankReasons(h.id).toLowerCase()}', s: 12, c: p.mu)],
                           ),
                         ),
                       ),
