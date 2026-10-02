@@ -39,6 +39,7 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 18. ~~F14 questions~~ **Decided 2026-10-02 (see DECISIONS.md).**
 
 ## Links
+- **All screens (master canvas, every screen as it will ship, F01–F17 + brand; Design approved · 2026-10-02, standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
