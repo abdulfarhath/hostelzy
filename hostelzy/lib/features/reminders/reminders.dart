@@ -60,7 +60,8 @@ extension RemindersActions on AppState {
     rem = r;
     r.onOpen(_openFromReminder);
     await refreshGlasses();
-    await _reschedule();
+    // Not a change by the user: never overwrite the backup from here.
+    await rem.apply(rings);
   }
 
   void _openFromReminder(String kind) {
@@ -153,7 +154,35 @@ extension RemindersActions on AppState {
     return 'From the food menu · ${m.map((x) => '${x.$2.toLowerCase()} ${clock(x.$3).replaceAll(RegExp(r' [ap]m'), '')}').join(', ')}';
   }
 
-  Future<void> _reschedule() => rem.apply(rings);
+  Future<void> _reschedule() async {
+    await rem.apply(rings);
+    _backupRem();
+  }
+
+  /// Signed in on the server: the settings are backed up on the profile.
+  Future<void> _backupRem() async {
+    final a = account;
+    if (!data.remote || a == null) return;
+    try {
+      await data.saveReminders(a.uid, remJson());
+    } catch (e) {
+      debugPrint('Reminders backup: $e');
+    }
+  }
+
+  /// A new phone (nothing set here yet) gets the backed-up settings back.
+  Future<void> restoreRemFromServer() async {
+    final a = account;
+    if (!data.remote || a == null || water.on || myRems.isNotEmpty) return;
+    try {
+      final m = await data.loadReminders(a.uid);
+      if (m == null || water.on || myRems.isNotEmpty) return;
+      update(() => restoreRem(m));
+      await rem.apply(rings);
+    } catch (e) {
+      debugPrint('Reminders restore: $e');
+    }
+  }
 
   /// Next glass after [now] (minute of the day), null when off or done for today.
   int? nextGlass([DateTime? now]) {

@@ -53,6 +53,8 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Under Application restrictions → Android apps, the list has only `app.hostelzy.hostelzy`. **Add** `app.hostelzy.hostelzy.demo` with the same SHA-1 (`46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`) → Save.
    - The next APK's toast shows the real code (for example "firebase: … blocked") if it is still something else.
 
+4p. **Reminders backup (F20)** (any time after 4a): Supabase → SQL Editor → paste `supabase/migrations/20261002180000_f20_reminders.sql` → **Run** → "Success". Until then reminders still work; they just stay on the phone.
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
