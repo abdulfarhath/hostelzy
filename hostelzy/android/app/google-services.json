@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640096243458",
+    "project_id": "hostelzy",
+    "storage_bucket": "hostelzy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640096243458:android:7e1d8d85cefc02334bbc1b",
+        "android_client_info": {
+          "package_name": "app.hostelzy.hostelzy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9kDMzW8rmWFwmtLzzYwuFDVLgvTYzX1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

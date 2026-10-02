@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey;
 import 'package:hostelzy/backend.dart';
+import 'package:hostelzy/push.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -1708,4 +1709,45 @@ void main() {
     resetSampleData();
     expect(browsable.length, 6);
   });
+
+  testWidgets('push: explainer, then Android asks; allowed gets a token, denied says how to fix (F13)', (tester) async {
+    for (final allow in [true, false]) {
+      final s = AppState(start: 'settings', role: 'tenant');
+      final fake = _FakePush(allow);
+      s.push = fake;
+      s.update(() => s.notif.updateAll((k, v) => false));
+      await pumpApp(tester, s);
+      await tap(tester, find.text('Rent reminders').first);
+      expect(find.text('Turn on notifications?'), findsOneWidget);
+      expect(fake.asked, 0); // the app's explainer comes before Android's prompt
+      await tap(tester, find.text('Turn on'));
+      await tester.pump();
+      expect(fake.asked, 1);
+      if (allow) {
+        expect((s.pushToken, s.notif['rent'], s.notif['beds']), ('fcm-token', true, false));
+        expect(s.toast, 'Notifications allowed. Hostelzy starts sending them once your account is online.');
+      } else {
+        expect((s.pushToken, s.notif['rent']), (null, false));
+        expect(s.toast, 'Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
+      }
+      await tester.pump(const Duration(seconds: 3));
+      s.dispose();
+    }
+  });
+}
+
+class _FakePush implements Push {
+  _FakePush(this.allow);
+  final bool allow;
+  int asked = 0;
+  @override
+  Future<PushAsk> ask() async {
+    asked++;
+    return allow ? PushAsk.allowed : PushAsk.denied;
+  }
+
+  @override
+  Future<String?> token() async => 'fcm-token';
+  @override
+  Stream<(String, String)> get foreground => const Stream.empty();
 }

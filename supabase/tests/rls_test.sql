@@ -157,6 +157,16 @@ select test.rows('select count(*) from public.hostels', 2);          -- live + o
 select test.rows('select count(*) from public.enquiries', 0);
 select test.blocked($$update public.hostels set status = 'live'$$);  -- the team puts it live
 
+-- ------------------------------------------------------------ push tokens
+select test.act('authenticated', '00000000-0000-0000-0000-00000000000a');
+select test.rows($$insert into public.push_tokens (token) values ('tok-tenant')$$, 1);
+select test.act('authenticated', '00000000-0000-0000-0000-00000000000b');
+select test.rows('select count(*) from public.push_tokens', 0);     -- not even the owner
+select test.blocked($$update public.push_tokens set user_id = auth.uid()$$);
+select test.blocked($$insert into public.push_tokens (token, user_id) values ('x', '00000000-0000-0000-0000-00000000000a')$$);
+select test.act('anon', null);
+select test.rows('select count(*) from public.push_tokens', 0);
+
 -- ------------------------------------------------------------ Hostelzy team
 select test.act('authenticated', '00000000-0000-0000-0000-00000000000e', true);
 select test.rows('select count(*) from public.hostels', 2);

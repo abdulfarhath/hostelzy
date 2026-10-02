@@ -1,13 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
 import 'backend.dart';
+import 'push.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
 
-void main() => runApp(const HostelzyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  push = await startFirebase();
+  runApp(const HostelzyApp());
+}
+
+/// F13: Firebase push on Android, [NoPush] elsewhere.
+Push push = const NoPush();
 
 /// Root. On the web, query parameters pick a start state, the same props the
 /// design exposes: `?start=picker&role=tenant&mode=list&theme=dark`, and
@@ -36,10 +46,13 @@ class _HostelzyAppState extends State<HostelzyApp> {
     plan: _pick(q['plan'], const ['late5', 'late15', 'checking', 'paid', 'missing']),
   );
   late bool overview = q['page'] == 'overview';
+  late final StreamSubscription<(String, String)> _pushSub;
 
   @override
   void initState() {
     super.initState();
+    state.push = push;
+    _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     if (dataSource == 'supabase') _goLive();
   }
 
@@ -62,6 +75,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
 
   @override
   void dispose() {
+    _pushSub.cancel();
     state.dispose();
     super.dispose();
   }
