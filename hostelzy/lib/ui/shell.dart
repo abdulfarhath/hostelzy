@@ -12,6 +12,7 @@ import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
 import 'settings.dart';
+import 'team.dart';
 import 'plan.dart';
 import 'reviews.dart';
 import 'rewards.dart';
@@ -380,6 +381,8 @@ class _AppBody extends StatelessWidget {
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
     'gate' => const GateScreen(),
+    'aHome' => const TeamHomeScreen(),
+    'oLayouts' => const OwnerLayoutsScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
@@ -481,6 +484,7 @@ class _Sheet extends StatelessWidget {
       'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
       'layoutReq' => 'Request a change',
       'switch' => 'Switch hostel',
+      'team' => 'Hostelzy team',
       'payAdv' => 'Pay the advance',
       'payUtr' => 'Enter the UTR',
       'manager' => 'Add a manager',
@@ -515,6 +519,7 @@ class _Sheet extends StatelessWidget {
       'utr' => const UtrSheet(),
       'layoutReq' => const LayoutRequestSheet(),
       'switch' => const SwitchSheet(),
+      'team' => const TeamSheet(),
       'payAdv' => const PayAdvSheet(),
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),

@@ -545,7 +545,7 @@ class AdminCasesScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Rich([sp(context, 'Hostelzy '), sp(context, 'admin', c: p.ac)], w: 800, s: 20),
+              Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Rich([sp(context, 'Hostelzy '), sp(context, 'team', c: p.ac)], w: 800, s: 20)]),
               const SizedBox(height: 2),
               T('Fair Play cases · Strikes: 1 warning · 2 deals hidden 30 days · 3 removed. No fines.', s: 12, c: p.mu),
             ],

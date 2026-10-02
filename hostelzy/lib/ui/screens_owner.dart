@@ -629,15 +629,19 @@ class OwnerBedsScreen extends StatelessWidget {
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
               T('${r.bath} bath · ${fmt(r.rent)}', s: 11, c: p.mu),
-              // F12: the room's layout; a new version waits for approval.
-              Tap(
-                onTap: () => s.update(() {
-                  s.lRoom = r.n;
-                  s.hist = [...s.hist, s.screen];
-                  s.screen = 'oLayout';
-                }),
-                child: T(s.layoutOf(s.ownHid, r.n)?.pending == true ? 'Approve layout ›' : 'Layout ›', s: 11, w: 800, c: s.layoutOf(s.ownHid, r.n)?.pending == true ? p.ad : p.tx),
-              ),
+              // F12: the room's layout; red when a new version waits for approval.
+              () {
+                final wait = s.layoutOf(s.ownHid, r.n)?.pending == true;
+                return Tap(
+                  onTap: () => s.openLayout(r.n),
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: box(bg: wait ? p.ac : null, w: 2, c: wait ? p.ac : p.tx),
+                    child: Row(children: [Ic('room', size: 14, color: wait ? p.ai : p.tx), const SizedBox(width: 6), Expanded(child: T(wait ? 'Approve layout' : 'Room layout', s: 12, w: 800, c: wait ? p.ai : p.tx, ell: true))]),
+                  ),
+                );
+              }(),
             ],
           ),
         ),
@@ -1132,7 +1136,16 @@ class OwnerManageScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Expanded(child: PageHead(kicker: 'Anjani Residency', title: 'Manage')),
-              // F14: managers. F10: the owner's Hostelzy plan and invoices.
+              // Room layouts (F12), managers (F14), the Hostelzy plan (F10).
+              Tap(
+                onTap: () => s.go('oLayouts'),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                  decoration: box(w: 2, c: p.tx),
+                  child: const T('Layouts', w: 800, s: 13),
+                ),
+              ),
               Tap(
                 onTap: () => s.go('oTeam'),
                 child: Container(

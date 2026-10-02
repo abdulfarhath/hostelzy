@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hostelzy/app_config.dart' show teamPasscode;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -887,7 +888,7 @@ void main() {
     // Owner: Beds → room 204 → mark a fan not working → approve.
     final w = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, w);
-    await tap(tester, find.text('Approve layout ›'));
+    await tap(tester, find.text('Approve layout'));
     expect((w.screen, w.lRoom), ('oLayout', 204));
     expect(find.text('Check it and approve to go live'), findsOneWidget);
     final l = w.layoutOf('anjani', 204)!;
@@ -918,7 +919,7 @@ void main() {
     await tester.pump();
     expect(find.text('“Bed C is against the washroom wall.”'), findsOneWidget);
     final before = l.bedRect('A');
-    await tap(tester, find.text('Mirror'));
+    await tap(tester, find.text('Mirror ↔'));
     expect(l.bedRect('A').left, l.w - before.right);
     await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('Send to owner for approval'));
@@ -1254,6 +1255,106 @@ void main() {
     await tap(tester, find.text('Pick an area instead'));
     expect((m.screen, m.sheet), ('map', 'search'));
     m.dispose();
+  });
+
+  testWidgets('layout access: owner Beds + Manage, team passcode, editor moves a fan, approval', (tester) async {
+    // Owner: a visible Room layout button on each room in Beds.
+    final o = AppState(start: 'oBeds', role: 'owner');
+    await pumpApp(tester, o);
+    expect(find.text('Room layout'), findsWidgets);
+    await tap(tester, find.text('Room layout').first);
+    expect(o.screen, 'oLayout');
+    // ...and Manage → Layouts lists every room with its state.
+    o.tab('oMore');
+    await tester.pump();
+    await tap(tester, find.text('Layouts'));
+    expect(o.screen, 'oLayouts');
+    expect(find.text('WAITING FOR APPROVAL'), findsOneWidget); // room 204, v2
+    expect(find.text('LIVE'), findsWidgets);
+    await tap(tester, find.text('Room 201'));
+    expect((o.screen, o.lRoom), ('oLayout', 201));
+
+    // Team mode: Settings → Hostelzy team → passcode → team home.
+    o.update(() => o.screen = 'settings');
+    await tester.pump();
+    await tap(tester, find.text('Hostelzy team'));
+    expect(o.sheet, 'team');
+    await tester.enterText(find.byType(TextField).last, '1111');
+    await tester.pump();
+    await tap(tester, find.text('Open team tools'));
+    expect(o.teamUnlocked, isFalse);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.enterText(find.byType(TextField).last, teamPasscode);
+    await tester.pump();
+    await tap(tester, find.text('Open team tools'));
+    expect((o.teamUnlocked, o.screen), (true, 'aHome'));
+    expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
+    for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
+      expect(find.text(t), findsOneWidget);
+    }
+
+    // Layout editor: room 204 (Anjani, 4 sharing). Move fan 1 next to bed A.
+    o.update(() => o.lRoom = 204);
+    await tap(tester, find.text('Layout editor'));
+    expect(o.screen, 'aLayout');
+    final l = o.layoutOf('anjani', 204)!;
+    final room = o.rooms['anjani']!.firstWhere((r) => r.n == 204);
+    expect(bedTraits(l, room, 'A').fan, 'No fan overhead');
+    final before = l.items.firstWhere((i) => i.id == 'fan1').x;
+    final k = 390 / l.w; // map width ≈ phone width − gutters; only the sign matters
+    await tester.drag(find.byKey(const ValueKey('ed-fan1')), Offset(-9 * k, 0));
+    await tester.pump();
+    final after = l.items.firstWhere((i) => i.id == 'fan1').x;
+    expect(after, lessThan(before - 5));
+    expect(after, after.roundToDouble()); // on the 1-ft grid
+    expect(o.edSel, 'fan1');
+    expect(bedTraits(l, room, 'A').fan, 'Under a fan');
+    expect(find.textContaining('Under a fan'), findsWidgets); // live bed facts
+    // Nudge, then undo / redo.
+    await tap(tester, find.byKey(const ValueKey('nudge-right')));
+    expect(l.items.firstWhere((i) => i.id == 'fan1').x, after + 1);
+    await tap(tester, find.text('Undo'));
+    expect(l.items.firstWhere((i) => i.id == 'fan1').x, after);
+    await tap(tester, find.text('Redo'));
+    expect(l.items.firstWhere((i) => i.id == 'fan1').x, after + 1);
+    // A bed with a resident can't be deleted.
+    o.edSelect('bed:A');
+    await tap(tester, find.text('Delete'));
+    expect(l.beds.containsKey('A'), isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    // Add a pillar, turn it, delete it; resize the room.
+    await tap(tester, find.text('+ Pillar'));
+    expect(l.of('pillar').length, 1);
+    await tap(tester, find.text('Delete'));
+    expect(l.of('pillar'), isEmpty);
+    final w0 = l.w;
+    await tap(tester, find.byKey(const ValueKey('w+')));
+    expect(l.w, w0 + 1);
+
+    // Send to the owner: tenants keep the old version until it's approved.
+    l.pending = false; // pretend v2 was approved earlier, so this is v3
+    l.published = null;
+    o.edSelect('fan1');
+    await tap(tester, find.byKey(const ValueKey('nudge-left')));
+    expect(o.liveLayout('anjani', 204)!.w, w0 + 1); // published copy taken before this edit
+    await tap(tester, find.text('Send to owner for approval'));
+    expect((l.pending, l.version), (true, 3));
+    expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, isNot(l.items.firstWhere((i) => i.id == 'fan1').x));
+    await tester.pump(const Duration(seconds: 3));
+
+    // Owner approves on Beds; tenants now see it.
+    o.update(() {
+      o.teamUnlocked = false;
+      o.screen = 'oBeds';
+      o.hist = [];
+      o.obFloor = 2;
+    });
+    await tester.pump();
+    await tap(tester, find.text('Approve layout'));
+    await tap(tester, find.text('Approve layout').last);
+    expect(l.pending, isFalse);
+    expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, l.items.firstWhere((i) => i.id == 'fan1').x);
+    o.dispose();
   });
 
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {

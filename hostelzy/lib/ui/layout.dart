@@ -38,8 +38,8 @@ class _RoomPainter extends CustomPainter {
       ..color = p.tx
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    if (l.wash != null) {
-      final w = sc(l.itemRect(l.wash!));
+    for (final wz in l.of('wash')) {
+      final w = sc(wz.rect);
       canvas.save();
       canvas.clipRect(w);
       canvas.drawRect(w, Paint()..color = p.bg);
@@ -52,25 +52,47 @@ class _RoomPainter extends CustomPainter {
       canvas.restore();
       canvas.drawRect(w, ink);
     }
+    for (final pl in l.of('pillar')) {
+      final r = sc(pl.rect);
+      canvas.drawRect(r, Paint()..color = p.tk);
+      canvas.drawRect(r, ink);
+    }
     final air = l.airflow;
     if (ac && air != null && l.ac != null) {
+      // Stripes fan out from the AC's wall into the room.
       final a = sc(air);
-      final unit = sc(l.itemRect(l.ac!));
-      final right = unit.center.dx > a.center.dx;
-      final near = right ? a.right : a.left, far = right ? a.left : a.right;
-      final path = Path()
-        ..moveTo(near, a.top + a.height * .22)
-        ..lineTo(near, a.top + a.height * .52)
-        ..lineTo(far, a.bottom)
-        ..lineTo(far, a.top)
-        ..close();
+      final side = wallOf(l.ac!.rect, l.w, l.h) ?? 'right';
+      final path = Path();
+      switch (side) {
+        case 'left' || 'right':
+          final near = side == 'right' ? a.right : a.left, far = side == 'right' ? a.left : a.right;
+          path
+            ..moveTo(near, a.top + a.height * .3)
+            ..lineTo(near, a.top + a.height * .7)
+            ..lineTo(far, a.bottom)
+            ..lineTo(far, a.top);
+        default:
+          final near = side == 'bottom' ? a.bottom : a.top, far = side == 'bottom' ? a.top : a.bottom;
+          path
+            ..moveTo(a.left + a.width * .3, near)
+            ..lineTo(a.left + a.width * .7, near)
+            ..lineTo(a.right, far)
+            ..lineTo(a.left, far);
+      }
+      path.close();
       canvas.save();
       canvas.clipPath(path);
       final st = Paint()
         ..color = p.dv
         ..strokeWidth = 1;
-      for (var x = a.left; x < a.right; x += 6) {
-        canvas.drawLine(Offset(x, a.top), Offset(x, a.bottom), st);
+      if (side == 'left' || side == 'right') {
+        for (var x = a.left; x < a.right; x += 6) {
+          canvas.drawLine(Offset(x, a.top), Offset(x, a.bottom), st);
+        }
+      } else {
+        for (var y = a.top; y < a.bottom; y += 6) {
+          canvas.drawLine(Offset(a.left, y), Offset(a.right, y), st);
+        }
       }
       canvas.restore();
     }
@@ -80,7 +102,7 @@ class _RoomPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
       for (final f in l.of('fan')) {
-        final c = sc(l.itemRect(f)).center;
+        final c = sc(f.rect).center;
         final r = fanReach * k;
         const n = 36;
         for (var i = 0; i < n; i += 2) {
@@ -89,17 +111,25 @@ class _RoomPainter extends CustomPainter {
       }
     }
     canvas.drawRect((Offset.zero & size).deflate(1), ink);
-    if (l.window != null) {
-      final w = sc(l.itemRect(l.window!));
-      canvas.drawRect(Rect.fromLTWH(w.left, w.center.dy < size.height / 2 ? 0 : size.height - 6, w.width, 6), Paint()..color = p.tx);
+    // Windows are a bar on their wall, doors a gap in it.
+    Rect onWall(LItem i, double t) {
+      final r = sc(i.rect);
+      return switch (wallOf(i.rect, l.w, l.h)) {
+        'bottom' => Rect.fromLTWH(r.left, size.height - t, r.width, t),
+        'left' => Rect.fromLTWH(0, r.top, t, r.height),
+        'right' => Rect.fromLTWH(size.width - t, r.top, t, r.height),
+        _ => Rect.fromLTWH(r.left, 0, r.width, t),
+      };
     }
-    if (l.door != null) {
-      final d = sc(l.itemRect(l.door!));
-      canvas.drawRect(Rect.fromLTWH(d.left, d.center.dy > size.height / 2 ? size.height - 4 : 0, d.width, 4), Paint()..color = p.bg);
+
+    for (final w in l.of('window')) {
+      canvas.drawRect(onWall(w, 6), Paint()..color = w.working ? p.tx : p.ad);
     }
-    if (l.ac != null) {
-      final u = sc(l.itemRect(l.ac!));
-      canvas.drawRect(u, Paint()..color = l.ac!.working ? p.tx : p.ad);
+    for (final d in l.of('door')) {
+      canvas.drawRect(onWall(d, 4), Paint()..color = p.bg);
+    }
+    for (final a in l.of('ac')) {
+      canvas.drawRect(sc(a.rect), Paint()..color = a.working ? p.tx : p.ad);
     }
   }
 
@@ -107,9 +137,10 @@ class _RoomPainter extends CustomPainter {
   bool shouldRepaint(_RoomPainter o) => true;
 }
 
-/// How a bed looks on the map. [mode]: tenant | compare | plain.
+/// How a bed looks on the map. [mode]: tenant | compare | plain | edit. In
+/// edit mode items and beds can be selected and dragged ([onDrag] gets feet).
 class LayoutMap extends StatelessWidget {
-  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick});
+  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick, this.selected, this.onSelect, this.onDrag, this.onDragEnd});
   final RoomLayout l;
   final Room room;
   final String mode;
@@ -117,11 +148,16 @@ class LayoutMap extends StatelessWidget {
   final List<String> cmp;
   final bool fan, ac;
   final ValueChanged<String>? onPick;
+  final String? selected;
+  final ValueChanged<String>? onSelect;
+  final void Function(String id, Offset deltaFt)? onDrag;
+  final VoidCallback? onDragEnd;
 
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final edit = mode == 'edit';
     Widget label(String t, {Color? c, String? icon}) => Container(
       padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
       color: p.bg,
@@ -134,33 +170,54 @@ class LayoutMap extends StatelessWidget {
         Rect sc(Rect r) => Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k);
         final kids = <Widget>[Positioned.fill(child: CustomPaint(painter: _RoomPainter(l, p, fan: fan, ac: ac)))];
         final labels = <Widget>[];
-        if (l.wash != null) {
-          final w = sc(l.itemRect(l.wash!));
+        for (final wz in l.of('wash')) {
+          final w = sc(wz.rect);
           labels.add(Positioned(left: w.left + 6, top: w.bottom - 22, child: label('Washroom')));
         }
-        if (l.window != null) {
-          final w = sc(l.itemRect(l.window!));
-          final top = w.center.dy < hgt / 2;
-          labels.add(Positioned(left: w.left, top: top ? 9 : null, bottom: top ? null : 9, child: label('Window · ${l.window!.facing}', c: l.window!.working ? null : p.ad)));
+        for (final wi in l.of('window')) {
+          final w = sc(wi.rect);
+          final txt = label('Window · ${wi.facing}', c: wi.working ? null : p.ad);
+          labels.add(switch (wallOf(wi.rect, l.w, l.h)) {
+            'bottom' => Positioned(left: w.left, bottom: 9, child: txt),
+            'left' => Positioned(left: 9, top: w.top, child: txt),
+            'right' => Positioned(right: 9, top: w.top, child: txt),
+            _ => Positioned(left: w.left, top: 9, child: txt),
+          });
         }
-        if (l.door != null) {
-          final d = sc(l.itemRect(l.door!));
-          labels.add(Positioned(left: d.left + 12, top: d.center.dy > hgt / 2 ? d.top - 20 : 8, child: T('Door', s: 10, w: 800, ls: .08, upper: true, c: p.mu)));
+        for (final dr in l.of('door')) {
+          final d = sc(dr.rect);
+          final wall = wallOf(dr.rect, l.w, l.h);
+          labels.add(Positioned(
+            left: wall == 'right' ? null : (wall == 'left' ? 8 : d.left + 12),
+            right: wall == 'right' ? 8 : null,
+            top: wall == 'bottom' ? d.top - 20 : (wall == 'top' ? 8 : d.top + 4),
+            child: T('Door', s: 10, w: 800, ls: .08, upper: true, c: p.mu),
+          ));
         }
-        if (l.ac != null) {
-          final u = sc(l.itemRect(l.ac!));
-          final right = u.center.dx > c.maxWidth / 2;
-          labels.add(Positioned(left: right ? null : u.right + 4, right: right ? c.maxWidth - u.left + 4 : null, top: u.bottom + 4, child: label(l.ac!.working && !room.acRepair ? 'AC unit' : 'AC · under repair', c: l.ac!.working && !room.acRepair ? null : p.ad)));
+        for (final a in l.of('ac')) {
+          final u = sc(a.rect);
+          final ok = a.working && !room.acRepair;
+          final txt = label(ok ? 'AC unit' : 'AC · under repair', c: ok ? null : p.ad);
+          labels.add(switch (wallOf(a.rect, l.w, l.h)) {
+            'left' => Positioned(left: u.right + 4, top: u.bottom + 4, child: txt),
+            'top' => Positioned(left: u.left, top: u.bottom + 4, child: txt),
+            'bottom' => Positioned(left: u.left, top: u.top - 22, child: txt),
+            _ => Positioned(right: c.maxWidth - u.left + 4, top: u.bottom + 4, child: txt),
+          });
+        }
+        for (final pl in l.of('pillar')) {
+          final r = sc(pl.rect);
+          labels.add(Positioned(left: r.right + 3, top: r.top, child: label('Pillar')));
         }
         for (final f in l.of('fan')) {
-          final ct = sc(l.itemRect(f)).center;
+          final ct = sc(f.rect).center;
           labels.add(Positioned(left: ct.dx - 11, top: ct.dy - 10, child: label(f.working ? 'Fan' : 'Fan · not working', icon: 'fan', c: f.working ? null : p.ad)));
         }
         for (final b in room.beds) {
           if (!l.beds.containsKey(b.letter)) continue;
           final r = sc(l.bedRect(b.letter));
           final (look, tag) = switch (mode) {
-            'plain' => (BedLook(p.sf, p.tx, p.tx, '3 × 6 ft'), '3 × 6 ft'),
+            'plain' || 'edit' => (BedLook(p.sf, p.tx, p.tx, '3 × 6 ft'), '3 × 6 ft'),
             'compare' when cmp.isNotEmpty && b.letter == cmp[0] => (bedState(p, 'sel'), 'Selected'),
             'compare' when cmp.length > 1 && b.letter == cmp[1] => (BedLook(p.ab, p.ac, p.ad, 'Compare'), 'Compare'),
             _ => () {
@@ -189,9 +246,36 @@ class LayoutMap extends StatelessWidget {
             ),
           );
         }
+        // Edit mode: a touch target per bed and item (at least 32 px), and
+        // the selected one outlined in red.
+        final handles = <Widget>[];
+        if (edit) {
+          Widget handle(String id, Rect ftRect) {
+            final r = sc(ftRect);
+            final hit = Rect.fromCenter(center: r.center, width: math.max(r.width, 32), height: math.max(r.height, 32));
+            return Positioned.fromRect(
+              rect: hit,
+              child: GestureDetector(
+                key: ValueKey('ed-$id'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onSelect?.call(id),
+                onPanUpdate: (d) => onDrag?.call(id, d.delta / k),
+                onPanEnd: (_) => onDragEnd?.call(),
+                child: Container(decoration: id == selected ? BoxDecoration(border: Border.all(color: p.ac, width: 2)) : null),
+              ),
+            );
+          }
+
+          for (final i in l.items) {
+            handles.add(handle(i.id, i.rect));
+          }
+          for (final b in l.beds.keys) {
+            handles.add(handle('bed:$b', l.bedRect(b)));
+          }
+        }
         return Semantics(
           label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet',
-          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: [...kids, ...labels])),
+          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: [...kids, ...labels, ...handles])),
         );
       },
     );
@@ -680,9 +764,9 @@ class LayoutRequestSheet extends StatelessWidget {
   }
 }
 
-/// Board 6: the Hostelzy team's layout editor. The design is a 1440 px
-/// laptop screen with drag and drop; in the app it is one column with the
-/// same panels (shape, items, selected item, beds, checks, owner request).
+/// Board 6: the Hostelzy team's layout editor. Tap a bed or item to select
+/// it, drag it on the 1-ft grid or nudge it; add, delete, turn, resize the
+/// room, undo / redo. Bed facts update as things move.
 class AdminLayoutScreen extends StatelessWidget {
   const AdminLayoutScreen({super.key});
   @override
@@ -693,13 +777,33 @@ class AdminLayoutScreen extends StatelessWidget {
     final rs = s.rooms[h.id]!;
     final room = rs.firstWhere((r) => r.n == s.lRoom);
     final l = s.layoutOf(h.id, room.n)!;
-    int n(String k) => l.of(k).length;
+    final sel = s.edSel;
+    final selItem = sel == null || sel.startsWith('bed:') ? null : l.items.where((i) => i.id == sel).firstOrNull;
+    final selName = sel == null
+        ? 'Tap a bed or an item'
+        : sel.startsWith('bed:')
+        ? 'Bed ${room.label}-${sel.substring(4)}'
+        : selItem == null
+        ? 'Tap a bed or an item'
+        : '${const {'fan': 'Fan', 'ac': 'AC unit', 'window': 'Window', 'door': 'Door', 'wash': 'Washroom zone', 'pillar': 'Pillar'}[selItem.kind]}${selItem.kind == 'ac' || selItem.kind == 'window' || selItem.kind == 'door' ? ' · ${wallOf(selItem.rect, l.w, l.h) ?? 'inside'} wall' : ''}';
     final checks = <(bool, String)>[
-      if (room.ac) (l.ac != null, l.ac != null ? 'AC room has an AC unit' : 'AC room has no AC unit') else (true, 'Non-AC room · no AC unit needed'),
-      (l.beds.length == room.share, '${l.beds.length} beds = ${room.share} sharing'),
-      (l.window?.facing != null, 'Window facing set: ${l.window?.facing ?? '—'}'),
+      if (room.ac) (l.ac != null, l.ac != null ? 'AC room has an AC unit' : 'AC room needs an AC unit') else (true, 'Non-AC room · no AC unit needed'),
+      (l.beds.length == room.share, '${l.beds.length} beds placed · ${room.share} sharing'),
+      (l.window == null || l.window!.facing != null, 'Window facing: ${l.window?.facing ?? 'no window'}'),
       (true, 'No gates, CCTV or exits drawn'),
     ];
+    Widget sq(String icon, VoidCallback on, {String? label, Key? key}) => Tap(
+      key: key,
+      onTap: on,
+      child: Container(
+        height: 36,
+        constraints: const BoxConstraints(minWidth: 36),
+        padding: EdgeInsets.symmetric(horizontal: label == null ? 0 : 10),
+        alignment: Alignment.center,
+        decoration: box(w: 2, c: p.tx),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Ic(icon, size: 16, color: p.tx), if (label != null) ...[const SizedBox(width: 6), T(label, s: 13, w: 800)]]),
+      ),
+    );
     Widget section(String t, List<Widget> kids) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: VGap(gap: 8, children: [Kicker(t), ...kids]),
@@ -709,110 +813,148 @@ class AdminLayoutScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Row(
             children: [
-              Rich([sp(context, 'Hostelzy '), sp(context, 'admin', c: p.ac)], w: 800, s: 20),
-              const SizedBox(height: 2),
-              T('Layouts / ${h.name} / Floor ${room.floor} / Room ${room.n}', s: 12, c: p.mu),
-              const SizedBox(height: 2),
-              T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live', s: 12, w: 800),
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Rich([sp(context, 'Layout editor · '), sp(context, '${h.name} · Room ${room.label}', c: p.ac)], w: 800, s: 15),
+                    T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live · edits make a new version', s: 12, c: p.mu),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Scroll(
+          horizontal: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(children: [for (final r in rs) ...[ChipBtn(r.label, on: r.n == room.n, onTap: () => s.update(() {
+              s.lRoom = r.n;
+              s.edSel = null;
+            })), const SizedBox(width: 6)]]),
+          ),
+        ),
+        // The map stays out of the scroll so dragging never scrolls the page.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: LayoutMap(l: l, room: room, mode: 'edit', fan: true, ac: true, selected: sel, onSelect: s.edSelect, onDrag: (id, d) => s.edDrag(l, id, d), onDragEnd: s.edDragEnd),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Expanded(child: T(selName, s: 13, w: 800, c: sel == null ? p.mu : p.tx, ell: true)),
+              sq('back', () => s.edNudge(l, -1, 0), key: const ValueKey('nudge-left')),
+              const SizedBox(width: 4),
+              Transform.rotate(angle: math.pi / 2, child: sq('back', () => s.edNudge(l, 0, -1), key: const ValueKey('nudge-up'))),
+              const SizedBox(width: 4),
+              Transform.rotate(angle: -math.pi / 2, child: sq('back', () => s.edNudge(l, 0, 1), key: const ValueKey('nudge-down'))),
+              const SizedBox(width: 4),
+              sq('chev', () => s.edNudge(l, 1, 0), key: const ValueKey('nudge-right')),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+          child: Row(
+            children: [
+              sq('swap', () => s.edRotate(l), label: 'Turn'),
+              const SizedBox(width: 6),
+              sq('trash', () => s.edDelete(l, room), label: 'Delete'),
+              const Spacer(),
+              Opacity(opacity: s.canUndo ? 1 : .35, child: sq('back', () => s.edUndo(l), label: 'Undo')),
+              const SizedBox(width: 6),
+              Opacity(opacity: s.canRedo ? 1 : .35, child: sq('arrow', () => s.edRedo(l), label: 'Redo')),
             ],
           ),
         ),
         Expanded(
-          child: Scroll(
-            key: ValueKey('aLayout${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Scroll(
-                  horizontal: true,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Row(children: [for (final r in rs) ...[ChipBtn('${r.n}', on: r.n == room.n, onTap: () => s.update(() => s.lRoom = r.n)), const SizedBox(width: 6)]]),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      ChipBtn('Copy to rooms…', on: false, onTap: () => s.toastMsg('Copy to rooms is in the laptop editor.')),
-                      ChipBtn('Mirror', on: l.mirrored, onTap: () => s.update(() => l.mirrored = !l.mirrored)),
-                      ChipBtn('Flip', on: l.flipped, onTap: () => s.update(() => l.flipped = !l.flipped)),
-                      ChipBtn('History', on: false, onTap: () => s.toastMsg('v1 drawn 28 Sep${l.version > 1 ? ' · v2 drawn ${l.drawn}' : ''}')),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: VGap(
-                    gap: 6,
-                    children: [
-                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T('${l.w.round()} × ${l.h.round()} ft · grid 1 ft', s: 12, w: 800), T('Room type ${room.type} · ${room.share} sharing', s: 12, c: p.mu)]),
-                      LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true),
-                    ],
-                  ),
-                ),
-                section('Room shape', [
-                  Wrap(spacing: 6, runSpacing: 6, children: [for (final sh in layoutShapes) ChipBtn(sh, on: l.shape == sh, onTap: () => s.update(() => l.shape = sh))]),
-                  T('Drag walls to resize in 1 ft steps on the laptop editor.', s: 12, c: p.mu),
-                ]),
-                section('Items', [
-                  for (final (k, v) in [('Bed', '${l.beds.length} placed'), ('Bunk bed (2 beds)', ''), ('Window', '${n('window')}'), ('Door', '${n('door')}'), ('Fan', '${n('fan')}'), ('AC', '${n('ac')}'), ('Washroom zone', '${n('wash')}'), ('Pillar', '')])
-                    Row(children: [Expanded(child: T(k, s: 14, w: 600)), T(v == '0' ? '' : v, s: 13, c: p.mu)]),
-                  T('Never draw gates, CCTV or exits. Power sockets come in phase 2.', s: 12, c: p.ad, lh: 1.4),
-                ]),
-                if (l.ac != null)
-                  section('Selected · AC unit', [
-                    for (final (k, opts) in const [('Wall', ['Top', 'Right', 'Bottom', 'Left']), ('Blows', ['Left', 'Down', 'Up']), ('Reach', ['6 ft', '8 ft', '10 ft']), ('Status', ['Working', 'Not working'])])
-                      Row(
-                        children: [
-                          SizedBox(width: 60, child: T(k, s: 13, c: p.mu)),
-                          Expanded(child: Seg(opts: [for (final o in opts) (o, o)], cur: k == 'Status' ? (l.ac!.working ? 'Working' : 'Not working') : s.acProps[k]!, onPick: (v) => k == 'Status' ? s.setWorking(l, l.ac!, v == 'Working') : s.update(() => s.acProps[k] = v), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 4), fs: 12, center: true)),
-                        ],
-                      ),
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+            child: Scroll(
+              key: ValueKey('aLayout${s.scrollEpoch}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  section('Add', [
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      for (final (k, t) in const [('bed', '+ Bed'), ('fan', '+ Fan'), ('ac', '+ AC'), ('window', '+ Window'), ('door', '+ Door'), ('wash', '+ Washroom'), ('pillar', '+ Pillar')]) ChipBtn(t, on: false, onTap: () => s.edAdd(l, room, k)),
+                    ]),
+                    T('Never draw gates, CCTV or exits. Power sockets come in phase 2.', s: 12, c: p.ad, lh: 1.4),
                   ]),
-                section('Beds · linked to the bed map', [
-                  for (final b in room.beds)
+                  if (selItem?.kind == 'window')
+                    section('Window faces', [Seg(opts: const [('street', 'Street'), ('courtyard', 'Courtyard'), ('building', 'Building')], cur: selItem!.facing ?? 'street', onPick: (v) => s.update(() => selItem.facing = v), center: true)]),
+                  if (selItem != null && const ['fan', 'ac', 'window'].contains(selItem.kind))
+                    section('Status', [Seg(opts: const [('ok', 'Working'), ('bad', 'Not working')], cur: selItem.working ? 'ok' : 'bad', onPick: (v) => s.setWorking(l, selItem, v == 'ok'), center: true)]),
+                  section('Room size · ${l.w.round()} × ${l.h.round()} ft', [
                     Row(
                       children: [
-                        SizedBox(width: 60, child: T(b.id, w: 800, s: 14)),
-                        Expanded(child: T(s.residents.any((x) => x.bed == b.id) ? 'Has a resident · can’t delete' : const {'free': 'Free', 'held': 'On hold', 'soon': 'Free soon'}[b.state] ?? 'Taken', s: 13, c: p.mu)),
+                        Expanded(child: Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1', key: const ValueKey('w-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1', key: const ValueKey('w+'))])),
+                        const SizedBox(width: 16),
+                        Expanded(child: Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1', key: const ValueKey('h-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1', key: const ValueKey('h+'))])),
                       ],
                     ),
-                ]),
-                section('Checks before sending', [
-                  for (final (ok, t) in checks) Row(children: [Ic(ok ? 'check' : 'warn', size: 16, color: ok ? p.gn : p.ad), const SizedBox(width: 8), Expanded(child: T(t, s: 13))]),
-                ]),
-                if (req != null)
-                  section('Owner request', [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: box(bg: p.ab, w: 2, c: p.ad),
-                      child: VGap(
-                        gap: 4,
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      ChipBtn('Mirror ↔', on: false, onTap: () => s.edMirror(l)),
+                      ChipBtn('Flip ↕', on: false, onTap: () => s.edMirror(l, vertical: true)),
+                      ChipBtn('History', on: false, onTap: () => s.toastMsg('v1 drawn 28 Sep${l.version > 1 ? ' · v${l.version} drawn ${l.drawn}' : ''}')),
+                    ]),
+                  ]),
+                  section('Bed facts · update as you move things', [
+                    for (final b in l.beds.keys.toList()..sort())
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          T('31 h left of 48', w: 800, s: 14, c: p.ad),
-                          T('${h.owner} · ${req.at}', s: 12, c: p.mu),
-                          if (req.text.isNotEmpty) T('“${req.text}”', s: 14, w: 600, lh: 1.4),
-                          T([for (final a in req.added) const {'photo': 'Room photo', 'sketch': 'Paper sketch', 'voice': 'Voice note 0:18', 'more': 'More photos'}[a], if (req.size.isNotEmpty) req.size].join(' · '), s: 12, c: p.mu),
+                          SizedBox(width: 60, child: T('${room.label}-$b', w: 800, s: 13)),
+                          Expanded(child: T(bedFacts(l, room, b).join(' · '), s: 12, c: p.mu, lh: 1.4)),
                         ],
                       ),
-                    ),
                   ]),
-                const SizedBox(height: 20),
-              ],
+                  section('Beds · linked to the bed map', [
+                    for (final b in room.beds)
+                      Row(
+                        children: [
+                          SizedBox(width: 60, child: T(b.id, w: 800, s: 14)),
+                          Expanded(child: T(s.residents.any((x) => x.bed == b.id) || b.state == 'booked' ? 'Has a resident · can’t delete' : const {'free': 'Free', 'held': 'On hold', 'soon': 'Free soon'}[b.state] ?? 'Taken', s: 13, c: p.mu)),
+                          if (!l.beds.containsKey(b.letter)) T('Not placed', s: 12, w: 800, c: p.ad),
+                        ],
+                      ),
+                  ]),
+                  section('Checks before sending', [
+                    for (final (ok, t) in checks) Row(children: [Ic(ok ? 'check' : 'warn', size: 16, color: ok ? p.gn : p.ad), const SizedBox(width: 8), Expanded(child: T(t, s: 13))]),
+                  ]),
+                  if (req != null)
+                    section('Owner request', [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: box(bg: p.ab, w: 2, c: p.ad),
+                        child: VGap(
+                          gap: 4,
+                          children: [
+                            T('Redraw within 48 hours', w: 800, s: 14, c: p.ad),
+                            T('${h.owner} · ${req.at}', s: 12, c: p.mu),
+                            if (req.text.isNotEmpty) T('“${req.text}”', s: 14, w: 600, lh: 1.4),
+                            T([for (final a in req.added) const {'photo': 'Room photo', 'sketch': 'Paper sketch', 'voice': 'Voice note 0:18', 'more': 'More photos'}[a], if (req.size.isNotEmpty) req.size].join(' · '), s: 12, c: p.mu),
+                          ],
+                        ),
+                      ),
+                    ]),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: Cta('Send to owner for approval', height: 54, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Cta('Send to owner for approval', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
         ),
       ],
     );

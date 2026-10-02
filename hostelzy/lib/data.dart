@@ -798,17 +798,32 @@ const layoutShapes = ['Rectangle', 'L shape', 'T shape', 'U shape', 'Angled corn
 /// Hostels whose rooms Hostelzy has drawn. The rest show "Layout coming soon".
 const layoutHostels = ['anjani', 'saisri', 'nest42', 'orchid'];
 
-/// One drawn item. [kind]: fan | ac | window | door | wash. Feet from the
-/// room's top-left corner.
+/// One drawn item. [kind]: fan | ac | window | door | wash | pillar. Feet
+/// from the room's top-left corner; the team moves them in the editor.
 class LItem {
   LItem(this.id, this.kind, this.x, this.y, this.w, this.h, {this.facing, this.working = true});
   final String id, kind;
-  final double x, y, w, h;
+  double x, y, w, h;
 
   /// Window: street | courtyard | building.
-  final String? facing;
+  String? facing;
   bool working;
+
+  Rect get rect => Rect.fromLTWH(x, y, w, h);
+  LItem copy() => LItem(id, kind, x, y, w, h, facing: facing, working: working);
 }
+
+/// Which wall an item sits on: top | bottom | left | right (null = inside).
+String? wallOf(Rect r, double w, double h) {
+  if (r.top < .5) return 'top';
+  if (r.bottom > h - .5) return 'bottom';
+  if (r.left < .5) return 'left';
+  if (r.right > w - .5) return 'right';
+  return null;
+}
+
+/// A saved state of a layout, for undo / redo in the editor.
+typedef LayoutSnap = ({double w, double h, Map<String, Offset> beds, List<LItem> items});
 
 /// A room's layout, drawn by the Hostelzy team. Layout beds are the bed-map
 /// beds (same letters). [live]: a version tenants see. [pending]: a newer
@@ -817,32 +832,70 @@ class RoomLayout {
   RoomLayout({required this.hid, required this.room, required this.w, required this.h, required this.beds, required this.items, this.version = 1, this.live = true, this.pending = false, this.drawn = '28 Sep', this.verified = '28 Sep'});
   final String hid;
   final int room;
-  final double w, h;
+  double w, h;
   final Map<String, Offset> beds;
   final List<LItem> items;
   int version;
   bool live, pending;
   String drawn, verified;
   String shape = 'Rectangle';
-  bool mirrored = false, flipped = false;
+
+  /// What tenants see while the team edits a new version (null = this).
+  LayoutSnap? published;
+
+  /// The layout tenants see: the last approved version.
+  RoomLayout get forTenants {
+    final p = published;
+    if (p == null) return this;
+    return RoomLayout(hid: hid, room: room, w: p.w, h: p.h, beds: Map.of(p.beds), items: [for (final i in p.items) i.copy()], version: version - 1, live: true, drawn: drawn, verified: verified);
+  }
 
   /// The owner's open change request (F12 board 5).
   ({String text, Set<String> added, String size, String at})? request;
 
-  Rect _flip(Rect r) => Rect.fromLTWH(mirrored ? w - r.right : r.left, flipped ? h - r.bottom : r.top, r.width, r.height);
-  Rect bedRect(String letter) => _flip(Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH));
-  Rect itemRect(LItem i) => _flip(Rect.fromLTWH(i.x, i.y, i.w, i.h));
+  Rect bedRect(String letter) => Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH);
+  Rect itemRect(LItem i) => i.rect;
+
+  LayoutSnap snap() => (w: w, h: h, beds: Map.of(beds), items: [for (final i in items) i.copy()]);
+  void restore(LayoutSnap s) {
+    w = s.w;
+    h = s.h;
+    beds
+      ..clear()
+      ..addAll(s.beds);
+    items
+      ..clear()
+      ..addAll([for (final i in s.items) i.copy()]);
+  }
+
+  /// Mirror left ↔ right (or flip top ↔ bottom) for a room drawn the other way.
+  void mirror({bool vertical = false}) {
+    for (final k in beds.keys.toList()) {
+      final b = beds[k]!;
+      beds[k] = vertical ? Offset(b.dx, h - b.dy - bedH) : Offset(w - b.dx - bedW, b.dy);
+    }
+    for (final i in items) {
+      vertical ? i.y = h - i.y - i.h : i.x = w - i.x - i.w;
+    }
+  }
   Iterable<LItem> of(String kind) => items.where((i) => i.kind == kind);
   LItem? get ac => of('ac').firstOrNull;
   LItem? get window => of('window').firstOrNull;
   LItem? get door => of('door').firstOrNull;
   LItem? get wash => of('wash').firstOrNull;
 
-  /// The AC blows across the room from its wall: this box, in feet.
+  /// The AC blows about 8.5 ft into the room from its wall: this box, in feet.
   Rect? get airflow {
     final a = ac;
     if (a == null) return null;
-    return _flip(Rect.fromLTWH(w - 9, 0, 9 - a.w, 6.5));
+    final r = a.rect, c = r.center;
+    double cl(double v, double max) => v.clamp(0, max).toDouble();
+    return switch (wallOf(r, w, h)) {
+      'left' => Rect.fromLTRB(r.right, cl(c.dy - 3.25, h), cl(r.right + 8.5, w), cl(c.dy + 3.25, h)),
+      'top' => Rect.fromLTRB(cl(c.dx - 3.25, w), r.bottom, cl(c.dx + 3.25, w), cl(r.bottom + 8.5, h)),
+      'bottom' => Rect.fromLTRB(cl(c.dx - 3.25, w), cl(r.top - 8.5, h), cl(c.dx + 3.25, w), r.top),
+      _ => Rect.fromLTRB(cl(r.left - 8.5, w), cl(c.dy - 3.25, h), r.left, cl(c.dy + 3.25, h)),
+    };
   }
 }
 
@@ -868,7 +921,16 @@ double _distTo(Offset p, Rect r) {
   final ac = !r.ac ? null : (r.acRepair || l.ac?.working == false ? 'AC under repair' : (air != null && air.contains(c) ? 'In the airflow' : 'Out of the airflow'));
   final wi = l.window;
   final wr = wi != null ? l.itemRect(wi) : null;
-  final win = wr != null && (wr.top < 1 ? b.top < 2 : b.bottom > l.h - 2) && b.left < wr.right && b.right > wr.left ? 'Window side · ${wi!.facing}' : 'No window';
+  final side = wr == null
+      ? false
+      : switch (wallOf(wr, l.w, l.h)) {
+          'top' => b.top < 2 && b.left < wr.right && b.right > wr.left,
+          'bottom' => b.bottom > l.h - 2 && b.left < wr.right && b.right > wr.left,
+          'left' => b.left < 2 && b.top < wr.bottom && b.bottom > wr.top,
+          'right' => b.right > l.w - 2 && b.top < wr.bottom && b.bottom > wr.top,
+          _ => false,
+        };
+  final win = side ? 'Window side · ${wi!.facing}' : 'No window';
   final dr = l.door != null ? _distTo(c, l.itemRect(l.door!)) : 99.0;
   final door = dr * .3048 < 2.2 ? 'Near the door' : _m(dr);
   final wash = l.wash == null ? 'Outside the room' : _m(_distTo(c, l.itemRect(l.wash!)));

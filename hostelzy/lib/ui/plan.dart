@@ -505,7 +505,7 @@ class AdminPaymentsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Rich([sp(context, 'Hostelzy '), sp(context, 'admin', c: p.ac)], w: 800, s: 20),
+              Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Rich([sp(context, 'Hostelzy '), sp(context, 'team', c: p.ac)], w: 800, s: 20)]),
               const SizedBox(height: 2),
               T('Owner payments · Match every UTR in the bank or merchant app. Never trust screenshots.', s: 12, c: p.mu),
             ],

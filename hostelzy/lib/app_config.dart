@@ -17,4 +17,8 @@ const supportWhatsApp = '';
 /// Remote switches (from the backend, F13). Until then they never trigger in
 /// the Play Store build: the oldest supported build, and maintenance mode.
 const minSupportedBuild = 0;
+
+/// TEMPORARY: unlocks the Hostelzy team tools (Settings → Hostelzy team) until
+/// F13 adds real admin accounts. Change it before sharing builds widely.
+const teamPasscode = '2580';
 const maintenanceUntil = ''; // e.g. '6:30 pm'; empty = no maintenance
