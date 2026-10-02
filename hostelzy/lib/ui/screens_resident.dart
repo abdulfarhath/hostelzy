@@ -664,14 +664,7 @@ class HelpScreen extends StatelessWidget {
                   height: 50,
                   px: 16,
                   fs: 15,
-                  onTap: () {
-                    if (s.cText.trim().isEmpty) return s.toastMsg('Tell us what is wrong first.');
-                    s.update(() {
-                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: '${s.meShort} · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
-                      s.cText = '';
-                    });
-                    s.toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
-                  },
+                  onTap: s.raiseComplaint,
                 ),
                 T('Not fixed? Raise it again, or WhatsApp Srinivas.', s: 12, c: p.mu),
               ],

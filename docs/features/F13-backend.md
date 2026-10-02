@@ -247,3 +247,15 @@ Not needed.
   - the publication check in `rls_test.sql`.
 - Founder: run the B6 SQL file once in the SQL Editor (`docs/FOUNDER-TODO.md`).
 - Still to come (C): the owner and resident screens' writes (accept a hold, confirm a payment, update a complaint) go to Supabase, and Realtime then shows them on the other phone.
+
+**C · live writes · 2026-10-02** (branch `feature/c-live-writes`):
+- Signed in on Supabase with live rows (`AppState.onServer`), these actions write to the server first, then refetch. Realtime updates the other phone.
+  - **Enquiry:** the server records it and returns the HZ code that goes into the WhatsApp message. Asking again reuses the code.
+  - **Owner marks contacted.**
+  - **Payments:** the tenant's UTR → `waiting`. The owner confirms received → `paid`, and the hold becomes `booked`; not received → `missing`.
+  - **Complaints:** a resident raises one at their hostel (from their confirmed stay); the owner moves it Open → In progress → Resolved (`Fixed`).
+- If a write fails it says so ("Couldn’t save it…"), and nothing is shown as sent.
+- Sample data and the demo APK are unchanged (local only).
+- `Complaint.key` keeps the server id. `LiveRows.myHostel` is the resident's hostel.
+- Test: `C: on Supabase, enquiries, payments and complaints are written to the server`.
+- Still local-only: holds (they need bed ids from the listings) and the owner's sign-up approvals (after #46).

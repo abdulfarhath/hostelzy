@@ -35,6 +35,17 @@ abstract class HostelRepo {
 
   /// B6: emits a table name whenever one of [liveTables] changes (Realtime).
   Stream<String> changes();
+
+  /// C: live writes. Each throws with the server's reason; the app then
+  /// refetches, and Realtime tells the other phone.
+  /// A tenant's enquiry; returns the server's HZ code.
+  Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg});
+  Future<void> markContacted(String ref);
+  Future<void> sendUtr(String paymentId, String utr);
+  /// Received + a hold: the hold becomes a booking too.
+  Future<void> confirmPayment(String paymentId, bool received, {String? holdId});
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body});
+  Future<void> updateComplaint(String key, {required String status, required String note});
 }
 
 class SampleRepo implements HostelRepo {
@@ -51,6 +62,18 @@ class SampleRepo implements HostelRepo {
   Future<LiveRows?> live({String? me}) async => null;
   @override
   Stream<String> changes() => const Stream.empty();
+  @override
+  Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> markContacted(String ref) async {}
+  @override
+  Future<void> sendUtr(String paymentId, String utr) async {}
+  @override
+  Future<void> confirmPayment(String paymentId, bool received, {String? holdId}) async {}
+  @override
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) async {}
+  @override
+  Future<void> updateComplaint(String key, {required String status, required String note}) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -72,9 +95,37 @@ class SupabaseRepo implements HostelRepo {
       db.from('enquiries').select().order('created_at', ascending: false),
       db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
       db.from('complaints').select().order('created_at', ascending: false),
+      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('hostel_id, user_id, confirmed, left_on').eq('user_id', me),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], me: me);
   }
+
+  @override
+  Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
+    // The server sets the HZ code (B5); 'new' is replaced.
+    final row = await db.from('enquiries').insert({'hostel_id': hid, 'ref': 'new', 'name': name, 'phone': phone, 'bed': bed, 'source': source, 'msg': msg}).select('ref').single();
+    return row['ref'] as String;
+  }
+
+  @override
+  Future<void> markContacted(String ref) => db.from('enquiries').update({'contacted': true}).eq('ref', ref);
+
+  @override
+  Future<void> sendUtr(String paymentId, String utr) => db.from('payments').update({'utr': utr, 'status': 'waiting'}).eq('id', paymentId);
+
+  @override
+  Future<void> confirmPayment(String paymentId, bool received, {String? holdId}) async {
+    await db.from('payments').update({'status': received ? 'paid' : 'missing'}).eq('id', paymentId);
+    if (received && holdId != null) await db.from('holds').update({'status': 'booked'}).eq('id', holdId);
+  }
+
+  @override
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) =>
+      db.from('complaints').insert({'hostel_id': hid, 'bed': bed, 'cat': cat, 'body': body});
+
+  @override
+  Future<void> updateComplaint(String key, {required String status, required String note}) =>
+      db.from('complaints').update({'status': status == 'Resolved' ? 'Fixed' : status, 'note': note}).eq('id', key);
 
   @override
   Stream<String> changes() {

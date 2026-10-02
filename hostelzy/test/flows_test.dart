@@ -2299,6 +2299,65 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
   });
+
+  test('C: on Supabase, enquiries, payments and complaints are written to the server', () async {
+    final s = AppState(start: 'explore', role: 'tenant');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [
+      {'id': 'p-uuid', 'hostel_id': 'h1', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'hold-uuid', 'status': 'pending', 'created_at': '2026-10-02T10:00:00Z'},
+    ], complaints: [], me: 'fb-asha'));
+    s.data = fake;
+    s.update(() {
+      s.account = (uid: 'fb-asha', name: 'Asha K', email: 'a@gmail.com');
+      s.myName = 'Asha K';
+      s.phone = '9876543210';
+    });
+    // Samples aren't on the server: nothing is written for them.
+    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
+    expect(fake.calls, isEmpty);
+    expect(s.waRef, isNotNull);
+    await s.startLive();
+    expect(s.onServer, isTrue);
+    // Enquiry: the server's HZ code goes into the WhatsApp message; asking again reuses it.
+    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls, ['enquiry anjani 204-A Asha K 9876543210']);
+    expect((s.sheet, s.waRef), ('wa', 'HZ-5009'));
+    s.enquire('anjani', 'Hi again', bed: '204-A', from: 'Hostel page');
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.length, 1);
+    // UTR, then the owner confirms: the hold becomes a booking on the server.
+    final p = s.payments.single;
+    s.update(() {
+      s.payId = p.id;
+      s.payUtr = '123456789012';
+    });
+    await s.sendPayUtr();
+    await s.confirmPayment(p, true);
+    expect(fake.calls.sublist(1), ['utr p-uuid 123456789012', 'confirm p-uuid true hold-uuid']);
+    s.markContacted('HZ-5009');
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'contacted HZ-5009');
+    // Complaints need a stay on the server.
+    s.update(() => s.cText = 'No water');
+    await s.raiseComplaint();
+    expect(s.toast, 'Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
+    s.update(() => s.myHostel = 'h1');
+    await s.raiseComplaint();
+    expect((fake.calls.last, s.cText), ('complaint h1 WiFi No water', ''));
+    final c = Complaint(id: 1, by: '101-A', cat: 'WiFi', text: 'Slow', status: 'Open', date: '1 Oct', note: '', key: 'c-uuid');
+    s.update(() => s.complaints = [c]);
+    await s.advanceComplaint(c);
+    expect(fake.calls.last, 'complaint c-uuid In progress'); // then the list is refetched from the server
+    // Offline: nothing is said to be sent.
+    fake.fail = true;
+    s.update(() => s.payUtr = '999999999999');
+    await s.sendPayUtr();
+    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(s.payments.single.utr, isNot('999999999999'));
+    s.stopLive();
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2358,6 +2417,32 @@ class _FakeLive extends SampleRepo {
 
   @override
   Stream<String> changes() => ctrl.stream;
+
+  // C: live writes, recorded.
+  final calls = <String>[];
+  bool fail = false;
+  Future<void> _rec(String c) async {
+    if (fail) throw Exception('offline');
+    calls.add(c);
+  }
+
+  @override
+  Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
+    await _rec('enquiry $hid $bed $name $phone');
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel);
+    return 'HZ-5009';
+  }
+
+  @override
+  Future<void> markContacted(String ref) => _rec('contacted $ref');
+  @override
+  Future<void> sendUtr(String paymentId, String utr) => _rec('utr $paymentId $utr');
+  @override
+  Future<void> confirmPayment(String paymentId, bool received, {String? holdId}) => _rec('confirm $paymentId $received $holdId');
+  @override
+  Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) => _rec('complaint $hid $cat $body');
+  @override
+  Future<void> updateComplaint(String key, {required String status, required String note}) => _rec('complaint $key $status');
 }
 
 class _FakeLocator implements Locator {

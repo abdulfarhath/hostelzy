@@ -968,7 +968,6 @@ class OwnerManageScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     const next = {'Open': 'Start work', 'In progress': 'Mark resolved'};
-    const nxs = {'Open': 'In progress', 'In progress': 'Resolved'};
     Widget body;
     if (s.moreTab == 'residents') {
       body = const _Residents();
@@ -1009,8 +1008,8 @@ class OwnerManageScreen extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Tap(
-                            onTap: () {
-                              s.update(() => s.complaints = s.complaints.map((x) => x.id == c.id ? x.copyWith(status: nxs[c.status], note: nxs[c.status] == 'Resolved' ? 'Fixed by the owner' : 'Owner is on it') : x).toList());
+                            onTap: () async {
+                              await s.advanceComplaint(c);
                               s.toastMsg('Updated. ${c.by.split(' ')[0]} sees it in the app.');
                             },
                             child: Container(

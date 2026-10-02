@@ -387,12 +387,15 @@ class HoldRequest {
 List<HoldRequest> seedRequests(int now) => [HoldRequest(id: 'k1', name: 'Karthik M', bed: '102-C', type: 'Free hold', secs: 2460, note: 'Can I visit at 6 pm today?', start: now, trusted: true), HoldRequest(id: 'v1', name: 'Vamsi Reddy', bed: '301-A', type: 'Free hold', secs: 3180, note: 'Joining Infosys on 12 Oct.', start: now)];
 
 class Complaint {
-  Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false});
+  Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false, this.key});
   final int id;
+
+  /// The server's id (uuid) for live complaints; null on sample data.
+  final String? key;
   final String by, cat, text, date;
   final bool mine;
   String status, note;
-  Complaint copyWith({String? status, String? note}) => Complaint(id: id, by: by, cat: cat, text: text, status: status ?? this.status, date: date, note: note ?? this.note, mine: mine);
+  Complaint copyWith({String? status, String? note}) => Complaint(id: id, by: by, cat: cat, text: text, status: status ?? this.status, date: date, note: note ?? this.note, mine: mine, key: key);
 }
 
 List<Complaint> seedComplaints() => [
