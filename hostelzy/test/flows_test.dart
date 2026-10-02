@@ -323,7 +323,7 @@ void main() {
     expect(find.text("Beds 103-A and 202-B. Add who's staying there by Sat 3 Oct."), findsOneWidget);
 
     // Filter chips count and filter.
-    await tap(tester, find.text('Waiting OTP 1'));
+    await tap(tester, find.text('Not confirmed 1'));
     expect(find.text('Ravi Teja'), findsOneWidget);
     expect(find.text('Rahul Varma'), findsNothing);
     await tap(tester, find.text('All 21'));
@@ -342,7 +342,7 @@ void main() {
     expect(find.textContaining('No Hostelzy enquiry, hold or booking from this number in the last 60 days.'), findsOneWidget);
     await tester.enterText(find.byType(EditableText).at(1), '9000000001');
     await tester.pump();
-    await tap(tester, find.text('Add and send code'));
+    await tap(tester, find.text('Add resident').last);
     expect(s.sheet, isNull);
     final added = s.residents.first;
     expect(added.bed, '103-A');
@@ -352,18 +352,19 @@ void main() {
     expect(s.unassignedBeds, ['202-B']);
     expect(find.text('1 taken bed has no resident'), findsOneWidget);
 
-    // Resident confirms with the WhatsApp code; now counted as Via Hostelzy.
+    // Resident checks the details and confirms (F21: no fake code); now counted as Via Hostelzy.
     s.jump('rConfirm', 'resident');
     await tester.pump();
-    expect(find.text('Srinivas added you at Anjani Residency'), findsOneWidget);
-    expect(find.text('₹1,000 kept · ₹2,000 back · 30 days notice'), findsOneWidget);
-    await tap(tester, find.text('Yes, this is me'));
-    expect(added.confirmed, isFalse);
-    await tap(tester, find.text('Paste code from WhatsApp'));
-    await tap(tester, find.text('Yes, this is me'));
+    expect(find.text('You live in Anjani Residency, bed 103-A.'), findsOneWidget);
+    expect(find.textContaining('back when you leave.'), findsOneWidget);
+    expect(find.textContaining('code'), findsNothing);
+    await tap(tester, find.text('Yes, that’s right'));
+    expect((added.confirmed, s.toast), (false, 'Tick “This is correct” first.'));
+    await tap(tester, find.byKey(const ValueKey('stayAgree')));
+    await tap(tester, find.text('Yes, that’s right'));
     expect(added.confirmed, isTrue);
     expect(added.tag, 'hz');
-    expect(find.text("You're confirmed"), findsOneWidget);
+    expect(find.text('You’re confirmed'), findsOneWidget);
     s.dispose();
   });
 
@@ -660,16 +661,17 @@ void main() {
   });
 
   testWidgets('Fair Play: rules, owner number after a hold, case, strikes (F07)', (tester) async {
-    // A new owner accepts the rules with a code.
+    // A new owner accepts the rules with "I agree" (F21: no fake SMS code).
     final s = AppState(start: 'role');
     await pumpApp(tester, s);
     await tap(tester, find.text('I run a hostel'));
     expect(s.screen, 'oRules');
-    await tap(tester, find.text('I accept the Fair Play rules'));
+    await tap(tester, find.text('Agree and continue'));
     expect(s.fairAccepted, isFalse);
-    await tester.pump(const Duration(seconds: 3)); // the "Enter the code" toast goes
-    await tap(tester, find.text('Paste code from SMS'));
-    await tap(tester, find.text('I accept the Fair Play rules'));
+    expect(s.toast, 'Tick “I agree” first.');
+    await tester.pump(const Duration(seconds: 3)); // the toast goes
+    await tap(tester, find.byKey(const ValueKey('fpAgree')));
+    await tap(tester, find.text('Agree and continue'));
     expect((s.fairAccepted, s.screen), (true, 'oToday'));
     expect(find.text('Fair Play check FP-0142'), findsOneWidget);
 
@@ -2619,13 +2621,13 @@ void main() {
     expect(fake.calls.single, 'stay ${s.ownHid} bed-key Ravi Kumar 9876500002 7000 3000');
     expect((s.residents.single.name, s.sheet, r0.beds[i].state), ('Ravi Kumar', null, 'booked'));
     expect(s.toast, 'Added. Ravi confirms by joining with your invite code.');
-    // A typed code proves nothing on the server: the resident joins with the invite instead.
+    // F21: no typed code. On the server the resident confirms by joining with the invite.
     s.update(() {
       s.cBed = '101-A';
-      s.cOtp = '123456';
+      s.cAgree = true;
     });
     s.confirmStay();
-    expect(s.toast, contains('confirms by joining with your invite code'));
+    expect(s.screen, 'roleGate');
     expect(s.residents.single.confirmed, isFalse);
     // A tenant's free hold: the owner confirms it, or declines it (no advance is touched).
     final h = Hold(id: 'hold-x', hid: s.ownHid, bed: '101-A', room: 101, opt: 'free', start: DateTime.now().millisecondsSinceEpoch, status: 'waiting', ref: 'HZ-5020');
@@ -3465,7 +3467,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
     return 'HZ-5009';
   }
 
@@ -3494,7 +3496,7 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
@@ -3595,14 +3597,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
   }
 }
 

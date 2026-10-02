@@ -128,7 +128,7 @@ class OwnerTodayScreen extends StatelessWidget {
                     height: 40,
                     color: p.ac,
                     alignment: Alignment.center,
-                    child: T('SR', w: 800, s: 14, c: p.ai),
+                    child: T(initials(s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner), w: 800, s: 14, c: p.ai),
                   ),
                 ),
               ],
@@ -1213,7 +1213,7 @@ class OwnerManageScreen extends StatelessWidget {
 ({String label, Color bg, Color fg, Color bd}) residentTag(Pal p, String k) => switch (k) {
   'hz' => (label: 'Via Hostelzy', bg: p.tx, fg: p.bg, bd: p.tx),
   'direct' => (label: 'Direct', bg: transparent, fg: p.tx, bd: p.tx),
-  'wait' => (label: 'Waiting OTP', bg: p.ab, fg: p.ad, bd: p.ab),
+  'wait' => (label: 'Not confirmed', bg: p.ab, fg: p.ad, bd: p.ab),
   _ => (label: 'Before Hostelzy', bg: transparent, fg: p.mu, bd: p.dv),
 };
 
@@ -1224,7 +1224,7 @@ class _Residents extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final missing = s.unassignedBeds;
-    const filters = [('All', null), ('Via Hostelzy', 'hz'), ('Direct', 'direct'), ('Waiting OTP', 'wait'), ('Before Hostelzy', 'before')];
+    const filters = [('All', null), ('Via Hostelzy', 'hz'), ('Direct', 'direct'), ('Not confirmed', 'wait'), ('Before Hostelzy', 'before')];
     final cur = filters.firstWhere((f) => f.$1 == s.resF).$2;
     // Waiting for their code first, then joins since Hostelzy, then the first import.
     const order = {'wait': 0, 'hz': 1, 'direct': 1, 'before': 2};

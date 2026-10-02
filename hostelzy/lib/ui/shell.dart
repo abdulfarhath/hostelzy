@@ -577,7 +577,7 @@ class _Sheet extends StatelessWidget {
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
-      'joined' => 'Did you join Anjani Residency?',
+      'joined' => 'Did you join ${hostelById(s.endedHold?.hid ?? s.stayHostel.id).name}?',
       'report' => 'Tell us what happened',
       'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
@@ -1105,7 +1105,7 @@ class _AddResidentSheet extends StatelessWidget {
           if (b.state == 'free' && !b.mine) b.id,
     ];
     final m = s.matchFor(s.rPhone, s.rJoinAt);
-    final who = s.rName.trim().isEmpty ? 'They get' : '${s.rName.trim().split(' ')[0]} gets';
+    final who = s.rName.trim().isEmpty ? 'They' : s.rName.trim().split(' ')[0];
     Widget label(String t) => T(t, w: 800, s: 13);
     Widget field(String l, String v, ValueChanged<String> on, {String? ph, bool numeric = false}) => VGap(
       gap: 6,
@@ -1180,8 +1180,8 @@ class _AddResidentSheet extends StatelessWidget {
               Expanded(child: field('Advance paid', s.rAdv.isEmpty ? '' : fmt(int.parse(s.rAdv)), (v) => s.update(() => s.rAdv = digits(v, 6)), ph: '₹', numeric: true)),
             ],
           ),
-          T('$who a WhatsApp code to confirm. They count as a resident once they confirm.', s: 12, c: p.mu, lh: 1.4),
-          Cta('Add and send code', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
+          T(s.onServer ? '$who confirms by joining with your invite code. They count as a resident once they confirm.' : '$who confirms the details in the app. They count as a resident once they confirm.', s: 12, c: p.mu, lh: 1.4),
+          Cta('Add resident', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
         ],
       ),
     );
@@ -1336,7 +1336,7 @@ class _BedSheet extends StatelessWidget {
     if (f.b == null) return const SizedBox();
     final b = f.b!, r = f.r!;
     final res = s.residents.where((x) => x.bed == b.id).firstOrNull;
-    final terms = hostelById('anjani').terms;
+    final terms = hostelById(s.ownHid).terms;
     final leave = leaveDates(terms).first;
     final stl = {'free': 'Free', 'soon': 'Free from ${b.soon}', 'held': 'On hold', 'booked': 'Taken'}[b.state]!;
     void done(String m) {

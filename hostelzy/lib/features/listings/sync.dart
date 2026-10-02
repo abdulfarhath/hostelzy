@@ -39,6 +39,7 @@ extension SyncActions on AppState {
       ..clear()
       ..addAll(l.expired);
     myHostel = l.myHostel;
+    myStayRow = l.myStay;
     signups = l.signups;
     residents = l.residents;
     // S7: the plan comes from the server: real invoices only, and the owner's

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/reminders.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
@@ -203,4 +204,57 @@ void main() {
     expect(s.snapshot()['rem']['offered'], isTrue);
     s.dispose();
   });
+
+  test('F20: signed in on the server, settings are backed up and a new phone gets them back', () async {
+    final server = _BackupRepo();
+    final s = AppState(start: 'me', role: 'tenant');
+    s.data = server;
+    s.account = (uid: 'fb-rahul', name: 'Rahul', email: 'r@gmail.com');
+    final rem = NoReminders(available: true);
+    await s.startReminders(rem);
+    await s.toggleWater();
+    s.openAddRem();
+    s.quickRem(quickRems.first);
+    await s.saveRem();
+    expect(server.saved['fb-rahul']!['water']['on'], isTrue);
+    expect((server.saved['fb-rahul']!['mine'] as List).single['name'], 'Take medicine');
+
+    // A new phone: nothing set yet, so the backup comes back and rings.
+    final phone2 = AppState(start: 'me', role: 'tenant');
+    phone2.data = server;
+    phone2.account = s.account;
+    final rem2 = NoReminders(available: true);
+    await phone2.startReminders(rem2);
+    await phone2.restoreRemFromServer();
+    expect((phone2.water.on, phone2.myRems.single.name), (true, 'Take medicine'));
+    expect(rem2.applied.where((r) => r.kind == 'water').length, 28);
+
+    // A phone that already has its own settings keeps them.
+    final phone3 = AppState(start: 'me', role: 'tenant');
+    phone3.data = server;
+    phone3.account = s.account;
+    phone3.myRems = [const MyReminder(id: 'x', name: 'Call home', at: 1140)];
+    await phone3.restoreRemFromServer();
+    expect((phone3.water.on, phone3.myRems.single.name), (false, 'Call home'));
+
+    // Not signed in on the server: nothing leaves the phone.
+    final local = AppState(start: 'me', role: 'tenant');
+    await local.startReminders(NoReminders(available: true));
+    await local.toggleWater();
+    expect(server.saved.length, 1);
+    for (final x in [s, phone2, phone3, local]) {
+      x.dispose();
+    }
+  });
+}
+
+/// The server's profile backup, in memory.
+class _BackupRepo extends SampleRepo {
+  final saved = <String, Map<String, dynamic>>{};
+  @override
+  bool get remote => true;
+  @override
+  Future<void> saveReminders(String uid, Map<String, dynamic> settings) async => saved[uid] = settings;
+  @override
+  Future<Map<String, dynamic>?> loadReminders(String uid) async => saved[uid];
 }

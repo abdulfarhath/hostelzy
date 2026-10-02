@@ -1,6 +1,6 @@
 # F21 · Simpler UI/UX (Airbnb-level clarity)
 
-**Stage:** Design ready · **waiting for founder approval** (founder asked to see a small Before → After demo first; Waves 2–4 wait; Wave 1 honesty bugs go ahead) · design: https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7 · spec ready, founder asked 2026-10-02 ("minimal, easy for all users, like Airbnb").
+**Stage:** **Design approved by the founder, 2026-10-02** (demo https://claude.ai/artifact/DNTXZPEsMZTRSisLqvpAhG) · all waves go ahead · design: https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7 · spec ready, founder asked 2026-10-02 ("minimal, easy for all users, like Airbnb").
 Source: code audit of every screen (Ideas chat, 2026-10-02). Ideas chat decides details (standing approval).
 
 ## Principle
@@ -105,3 +105,21 @@ Phone boards 390×844, with dark copies of Explore, the hostel page and owner To
 
 ## Build
 One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Today queue, offline state.
+
+### Wave 1 · Built · 2026-10-02 (branch `feature/f21-honesty`)
+- **Resident screens show the resident's real stay.** On the server, Home, Pay rent, Food, Help, Move out / swap and the review headers use the user's own confirmed stay: hostel, room, bed, rent, join day, owner. Demo builds still show the Anjani sample.
+  - Server data: `liveFromRows` now returns `myStay`, the user's own stay row.
+  - The "Room 204 board" is gone everywhere.
+  - Today's food uses today's weekday. Meal tags (Done / Next / Later) follow the clock.
+  - Until the menu is on the server, a resident sees "<owner> hasn’t put the menu on Hostelzy yet". The sample menu is never shown on the server.
+- **Rent on the server is real.** "Pay ₹X by UPI" first starts this month's rent payment (`payments`, kind `rent`, with `stay_id`), then UPI → UTR → owner confirms, the same as advances.
+  - This also fixes a crash: the old code looked up the sample payment `rent204B`, which doesn't exist on the server.
+  - The sample history and the electricity line show only in demo builds.
+- **Notice and swap on the server go to the owner on WhatsApp.** The app no longer says "Saved on Hostelzy" when nothing is saved there.
+- **No fake codes** (designs `Agree` and `Stay`).
+  - **Fair Play:** a new owner sees the 3 plain rules, "Full rules: Settings → Fair Play ›", an **I agree** checkbox and **Agree and continue**. The full rules and the strike ladder open from the link and from Settings.
+  - **Confirm stay:** 3 lines (bed, rent with its due day, advance with the refund), "Something wrong? Message <owner> ›", a **This is correct** checkbox and **Yes, that’s right**. On the server the confirmation goes through the invite code, which is the real path; the owner's approval links the stay.
+  - **Add resident:** the button says "Add resident" instead of "Add and send code". The "Waiting OTP" filter is now "Not confirmed".
+- **Avatar initials** come from the user's name (they were "SR" / "RV").
+- **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
+

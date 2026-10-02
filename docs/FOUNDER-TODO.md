@@ -58,6 +58,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 
 4o. **Stay Rewards on the server (S6)** (after 4l; run it after 4m if F19 is merged first, the order doesn't matter): Supabase → SQL Editor → paste `supabase/migrations/20261002170000_s6_stay_rewards.sql` → **Run** → "Success".
 
+4p. **Reminders backup (F20)** (any time after 4a): Supabase → SQL Editor → paste `supabase/migrations/20261002180000_f20_reminders.sql` → **Run** → "Success". Until then reminders still work; they just stay on the phone.
 4q. **Layout fix extras (F19)** (after 4m): Supabase → SQL Editor → paste `supabase/migrations/20261002190000_f19_extras.sql` → **Run** → "Success". It adds quick fixes, the private `fix-photos` bucket, repairs and muting. Until then, the app's quick fix and mute buttons say they couldn’t save.
 
 ## Soon (before real hostels)

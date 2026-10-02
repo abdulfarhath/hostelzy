@@ -95,7 +95,6 @@ extension OnPhoneActions on AppState {
     if (sheet == 'trusted' && trustedReq == null) trustedReq = 'k1';
     if (screen == 'rConfirm') {
       cBed = residents.where((r) => !r.confirmed).firstOrNull?.bed;
-      cOtp = '';
     }
     if (sheet == 'addR' && rBed == null) {
       rBed = unassignedBeds.firstOrNull;

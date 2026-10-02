@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -84,34 +83,92 @@ class _Timeline extends StatelessWidget {
   }
 }
 
-/// F07 board 1: Fair Play rules, accepted with a code (owner sign-up).
+/// F07 board 1: Fair Play rules. F21 W1 (design `Agree`): a new owner sees
+/// three plain rules and ticks "I agree" (no SMS code: nothing sends one);
+/// the full rules and strike ladder open from the link and from Settings.
 class OwnerRulesScreen extends StatelessWidget {
   const OwnerRulesScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final cells = <Widget>[];
-    for (var i = 0; i < 6; i++) {
-      if (i > 0) cells.add(const SizedBox(width: 8));
-      cells.add(
-        Expanded(
-          child: Container(
-            height: 52,
-            alignment: Alignment.center,
-            decoration: box(w: 2, c: i == s.fpOtp.length ? p.ac : p.tx),
-            child: T(i < s.fpOtp.length ? s.fpOtp[i] : '', w: 800, s: 22),
+    final hostel = hostelById(s.ownHid).name;
+    Widget numbered(int i, Widget body) => Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(width: 28, height: 28, alignment: Alignment.center, color: p.tx, child: T('$i', w: 800, s: 14, c: p.bg)),
+          const SizedBox(width: 10),
+          Expanded(child: body),
+        ],
+      ),
+    );
+    if (!s.fairAccepted && !s.fpFull) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _head(context, '$hostel · before you go live', 'Fair Play rules', size: 28, back: s.hist.isNotEmpty),
+          Expanded(
+            child: Scroll(
+              key: ValueKey('oRules${s.scrollEpoch}'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(height: 2, color: p.tx),
+                    for (final (i, r) in fairBasics.indexed) numbered(i + 1, T(r, s: 15, lh: 1.45)),
+                    const SizedBox(height: 12),
+                    Align(alignment: Alignment.centerLeft, child: Tap(onTap: () => s.update(() => s.fpFull = true), child: const T('Full rules: Settings → Fair Play ›', w: 800, s: 14))),
+                    const SizedBox(height: 20),
+                    Tap(
+                      key: const ValueKey('fpAgree'),
+                      onTap: () => s.update(() => s.fpAgree = !s.fpAgree),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Row(
+                          children: [
+                            Container(width: 28, height: 28, alignment: Alignment.center, decoration: box(bg: s.fpAgree ? p.tx : transparent, w: 2, c: p.tx), child: s.fpAgree ? Ic('check', size: 18, color: p.bg) : null),
+                            const SizedBox(width: 12),
+                            const Expanded(child: T('I agree', w: 800, s: 16)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Cta('Agree and continue', height: 54, px: 16, fs: 15, opacity: s.fpAgree ? 1 : .4, onTap: s.acceptFairPlay),
+          ),
+        ],
       );
     }
+    // The full rules: from the link above (before agreeing) or from Settings.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, '${hostelById(s.ownHid).name} · step 3 of 4', 'Fair Play rules', size: 30, back: s.fairAccepted),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BackBtn(onTap: s.fairAccepted ? s.back : () => s.update(() => s.fpFull = false)),
+              const SizedBox(width: 12),
+              Expanded(child: PageHead(kicker: s.fairAccepted ? '$hostel · Settings' : '$hostel · before you go live', title: 'Fair Play rules', size: 28)),
+            ],
+          ),
+        ),
         Expanded(
           child: Scroll(
-            key: ValueKey('oRules${s.scrollEpoch}'),
+            key: ValueKey('oRulesFull${s.scrollEpoch}'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -121,17 +178,9 @@ class OwnerRulesScreen extends StatelessWidget {
                 ),
                 Container(height: 2, color: p.tx),
                 for (var i = 0; i < fairRules.length; i++)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(width: 28, height: 28, alignment: Alignment.center, color: p.tx, child: T('${i + 1}', w: 800, s: 14, c: p.bg)),
-                        const SizedBox(width: 10),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(fairRules[i].$1, w: 800, s: 15), const SizedBox(height: 2), T(fairRules[i].$2, s: 12, c: p.mu, lh: 1.4)])),
-                      ],
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: numbered(i + 1, Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(fairRules[i].$1, w: 800, s: 15), const SizedBox(height: 2), T(fairRules[i].$2, s: 12, c: p.mu, lh: 1.4)])),
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
@@ -139,50 +188,14 @@ class OwnerRulesScreen extends StatelessWidget {
                 ),
                 const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: StrikeLadder()),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: T('You always get 48 hours to explain. Fix a mistake in that time and there is no strike. 3 fixes in 6 months = 1 warning.', s: 12, c: p.mu, lh: 1.4),
                 ),
-                if (!s.fairAccepted)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                    child: VGap(
-                      gap: 8,
-                      children: [
-                        T('Type the code sent to ${phoneSpaced(ownerPhones[s.ownHid] ?? '')} to accept', w: 800, s: 13),
-                        Stack(
-                          children: [
-                            Row(children: cells),
-                            Positioned.fill(
-                              child: Field(
-                                value: s.fpOtp,
-                                onChanged: (v) => s.update(() {
-                                  final d = v.replaceAll(RegExp(r'\D'), '');
-                                  s.fpOtp = d.length > 6 ? d.substring(0, 6) : d;
-                                }),
-                                numeric: true,
-                                border: false,
-                                height: null,
-                                pad: EdgeInsets.zero,
-                                hiddenText: true,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (kDebugMode) Tap(onTap: () => s.update(() => s.fpOtp = '553014'), child: T('Paste code from SMS', s: 12, w: 600, c: p.ad)),
-                      ],
-                    ),
-                  )
-                else
-                  Padding(padding: const EdgeInsets.all(16), child: T('Accepted when you joined Hostelzy.', s: 13, w: 800)),
+                if (s.fairAccepted) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('Accepted when you joined Hostelzy.', s: 13, w: 800)),
               ],
             ),
           ),
         ),
-        if (!s.fairAccepted)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Cta('I accept the Fair Play rules', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.acceptFairPlay),
-          ),
       ],
     );
   }

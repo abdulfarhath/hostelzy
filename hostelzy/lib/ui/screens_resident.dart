@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -14,9 +15,17 @@ class ResidentHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final terms = hostelById('anjani').terms;
-    final tm = s.menu[3];
-    final board = <(String, String?, VoidCallback?)>[('Arjun and Sai leave 8:40 am for Mindspace. Auto share, ₹40 each.', 'Join', () => s.toastMsg('Joined. Meet at the gate at 8:40.')), ('September electricity for room 204: ₹1,260, split 3 ways.', null, null), ('Water tank cleaning on Saturday, 10 am to 1 pm.', null, null)];
+    // F21: the resident's real stay (the sample one only in demo builds).
+    final st = s.myStay;
+    final h = s.stayHostel;
+    final owner = s.stayOwner;
+    final terms = h.terms;
+    final tm = s.menu[todayIdx];
+    final rentAmt = s.myRentPay?.amt ?? st?.rent ?? 0;
+    // Meals: done once they're over, the next one, then later.
+    final nowMin = DateTime.now().hour * 60 + DateTime.now().minute;
+    final mealEnds = [9 * 60 + 30, 14 * 60, 22 * 60];
+    final nextMeal = mealEnds.indexWhere((e) => nowMin < e);
     final quick = <(String, String, VoidCallback)>[
       (
         'Swap bed',
@@ -39,7 +48,7 @@ class ResidentHomeScreen extends StatelessWidget {
         }),
       ),
       ('Raise complaint', 'wrench', () => s.tab('help')),
-      ('Message owner', 'msg', () => s.openWA(hostelById('anjani').owner, 'Hi ${hostelById('anjani').owner}, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from room 204.', phone: ownerPhones['anjani'] ?? '')),
+      ('Message owner', 'msg', () => s.openWA(owner, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${s.stayRoom.isEmpty ? '' : ' from room ${s.stayRoom}'}.', phone: s.stayOwnerPhone)),
     ];
     Widget quickBtn((String, String, VoidCallback) q) => Expanded(
       child: Tap(
@@ -66,7 +75,7 @@ class ResidentHomeScreen extends StatelessWidget {
           OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: 'Anjani Residency · Room 204 · Bed B', title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
+            child: PageHead(kicker: st == null ? 'Your stay' : s.stayLine, title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
           ),
           if (s.showToday) const TodayCard(),
           Container(
@@ -82,9 +91,9 @@ class ResidentHomeScreen extends StatelessWidget {
                     children: [
                       Kicker('${monthNames[appToday.month - 1]} rent'),
                       const SizedBox(height: 4),
-                      const T('₹8,020', w: 800, s: 34, ls: -.02, lh: 1.05),
+                      T(fmt(rentAmt), w: 800, s: 34, ls: -.02, lh: 1.05),
                       const SizedBox(height: 2),
-                      T(s.paid ? 'Paid today. Thank you.' : '${dueNote(terms, residentJoinDay)} · ${dueLeft(terms, residentJoinDay)}', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
+                      T(s.paid ? 'Paid. Thank you.' : '${dueNote(terms, st?.joinDay ?? 1)} · ${dueLeft(terms, st?.joinDay ?? 1)}', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
                     ],
                   ),
                 ),
@@ -105,7 +114,7 @@ class ResidentHomeScreen extends StatelessWidget {
                   children: [
                     const Ic('star', size: 18),
                     const SizedBox(width: 10),
-                    Expanded(child: Rich([sp(context, 'How is your stay so far? ', w: 800), sp(context, 'Rate Anjani for other tenants.', c: p.mu)], s: 14, lh: 1.35)),
+                    Expanded(child: Rich([sp(context, 'How is your stay so far? ', w: 800), sp(context, 'Rate ${h.name.split(' ').first} for other tenants.', c: p.mu)], s: 14, lh: 1.35)),
                     const Ic('chev', size: 18),
                   ],
                 ),
@@ -135,7 +144,7 @@ class ResidentHomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                const Kicker("Today's food · Thursday", nowrap: true),
+                Kicker("Today's food · $todayName", nowrap: true),
                 Tap(
                   onTap: () => s.tab('food'),
                   child: T('Full week', s: 12, w: 600, c: p.ad),
@@ -148,9 +157,13 @@ class ResidentHomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // F21: the menu lives on the owner's phone until it's on the server; never show the sample one.
+                if (s.onServer)
+                  Padding(padding: const EdgeInsets.all(16), child: T('$owner hasn’t put the menu on Hostelzy yet.', s: 14, c: p.mu))
+                else
                 for (var i = 0; i < meals.length; i++)
                   Opacity(
-                    opacity: i == 0 ? .55 : 1,
+                    opacity: nextMeal == -1 || i < nextMeal ? .55 : 1,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
@@ -176,41 +189,7 @@ class ResidentHomeScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Tag(const ['Done', 'Next', 'Later'][i], bg: i == 1 ? p.ac : p.sf, fg: i == 1 ? p.ai : p.tx),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 22, 16, 6), child: Kicker('Room 204 board')),
-          Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final n in board)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Css(
-                      s: 14,
-                      lh: 1.4,
-                      child: Row(
-                        children: [
-                          Expanded(child: T(n.$1)),
-                          if (n.$2 != null) ...[
-                            const SizedBox(width: 12),
-                            Tap(
-                              onTap: n.$3,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                decoration: box(w: 2, c: p.tx),
-                                child: T(n.$2!, w: 800, s: 12),
-                              ),
-                            ),
-                          ],
+                          Tag(nextMeal == -1 || i < nextMeal ? 'Done' : (i == nextMeal ? 'Next' : 'Later'), bg: i == nextMeal ? p.ac : p.sf, fg: i == nextMeal ? p.ai : p.tx),
                         ],
                       ),
                     ),
@@ -249,9 +228,26 @@ class RentPayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final terms = hostelById('anjani').terms;
-    final rent = s.myRent;
-    final history = [('September 2026', '₹8,040', 'Confirmed by Srinivas on 3 Sep'), ('August 2026', '₹7,980', 'Confirmed by Srinivas on 4 Aug'), ('July 2026', '₹8,110', 'Confirmed by Srinivas on 2 Jul')];
+    final st = s.myStay;
+    if (st == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 18), child: PageHead(kicker: 'Your stay', title: 'Pay rent')),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('Your stay isn’t on Hostelzy yet. Once your owner adds you, your rent shows here.', s: 14, c: p.mu, lh: 1.45)),
+        ],
+      );
+    }
+    final h = s.stayHostel;
+    final owner = s.stayOwner;
+    final terms = h.terms;
+    // F21: the month's real rent; on the server nothing exists until the resident starts paying.
+    final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent, note: s.rentNote);
+    final started = rent.id.isNotEmpty;
+    final sample = !s.onServer;
+    final history = sample ? [('September 2026', '₹8,040', 'Confirmed by Srinivas on 3 Sep'), ('August 2026', '₹7,980', 'Confirmed by Srinivas on 4 Aug'), ('July 2026', '₹8,110', 'Confirmed by Srinivas on 2 Jul')] : const <(String, String, String)>[];
+    final advance = sample ? terms.advance : s.myStayRow?.advance ?? 0;
+    final upi = s.ownerUpi[st.hid]?.id ?? '';
     return Scroll(
       key: ValueKey('rPay${s.scrollEpoch}'),
       child: Column(
@@ -260,26 +256,29 @@ class RentPayScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: const PageHead(kicker: 'Bed 204-B · Anjani Residency', title: 'Pay rent'),
+            child: PageHead(kicker: '${st.bed.isEmpty ? '' : 'Bed ${st.bed} · '}${h.name}', title: 'Pay rent'),
           ),
-          // F17: pay Srinivas by UPI → UTR → Srinivas confirms → Paid.
+          // F17: pay the owner by UPI → UTR → the owner confirms → Paid.
           Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 4), child: PaySteps4(rent)),
           if (rent.status != 'paid') ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
               child: Row(children: [Expanded(child: T(switch (rent.status) {
-                'waiting' => 'Waiting for Srinivas',
-                'missing' => 'Srinivas couldn’t find this UTR',
-                _ => dueNote(terms, residentJoinDay),
-              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UTR ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to Srinivas', s: 12, c: p.mu)]),
+                'waiting' => 'Waiting for $owner',
+                'missing' => '$owner couldn’t find this UTR',
+                _ => dueNote(terms, st.joinDay),
+              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UTR ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to $owner', s: 12, c: p.mu)]),
             ),
-            const LineRow('Rent, bed 204-B', '₹7,600'),
-            const LineRow('Electricity · by meter, from Srinivas', '₹420'),
-            const LineRow('Late fee', '₹0'),
+            if (sample) ...[
+              const LineRow('Rent, bed 204-B', '₹7,600'),
+              const LineRow('Electricity · by meter, from Srinivas', '₹420'),
+              const LineRow('Late fee', '₹0'),
+            ] else
+              LineRow('Rent${st.bed.isEmpty ? '' : ', bed ${st.bed}'}', fmt(rent.amt)),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [const T('Pay Srinivas', w: 800, s: 16), T(fmt(rent.amt), w: 800, s: 26)]),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Flexible(child: T('Pay $owner', w: 800, s: 16)), const SizedBox(width: 12), T(fmt(rent.amt), w: 800, s: 26)]),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -287,16 +286,16 @@ class RentPayScreen extends StatelessWidget {
                 gap: 8,
                 children: [
                   if (rent.status == 'due') ...[
-                    Cta('Pay ${fmt(rent.amt)} by UPI', onTap: () => s.payByUpi(rent)),
-                    OutlineCta('I’ve paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(rent)),
+                    Cta('Pay ${fmt(rent.amt)} by UPI', onTap: s.payMyRent),
+                    if (started) OutlineCta('I’ve paid · enter UTR', icon: 'chev', onTap: () => s.openPayUtr(rent)),
                   ],
                   if (rent.status == 'waiting')
-                    Cta('Remind Srinivas on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, I paid ${fmt(rent.amt)} rent for bed 204-B by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
+                    Cta('Remind $owner on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, I paid ${fmt(rent.amt)} rent for bed ${st.bed} by UPI. UTR ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
                   if (rent.status == 'missing') ...[
                     Cta('Fix the UTR', onTap: () => s.openPayUtr(rent)),
-                    OutlineCta('Talk to Srinivas on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, about my rent for bed 204-B: UTR ${utrSpaced(rent.utr ?? '')}.')),
+                    OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, about my rent for bed ${st.bed}: UTR ${utrSpaced(rent.utr ?? '')}.')),
                   ],
-                  T('You pay ${s.ownerUpi['anjani']!.id} directly. Hostelzy never holds the money; Srinivas confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
+                  T(upi.isEmpty ? '$owner hasn’t added a UPI ID yet. Hostelzy never holds the money.' : 'You pay $upi directly. Hostelzy never holds the money; $owner confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
                 ],
               ),
             ),
@@ -326,55 +325,60 @@ class RentPayScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     T('${fmt(rent.amt)} paid', w: 800, s: 40, ls: -.03, lh: 1),
                     const SizedBox(height: 8),
-                    T('${monthYear(appToday)} · Srinivas confirmed on ${rent.done}', s: 14, w: 600),
+                    T('${monthYear(appToday)} · $owner confirmed on ${rent.done}', s: 14, w: 600),
                     const SizedBox(height: 12),
-                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · Anjani Residency · bed 204-B · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
+                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · ${h.name} · bed ${st.bed} · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by $owner on ${rent.done}')),
                   ],
                 ),
               ),
             ),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Advance')),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border(top: bs(2, p.dv), bottom: bs(1, p.hl)),
+          if (advance > 0) ...[
+            const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Advance')),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                border: Border(top: bs(2, p.dv), bottom: bs(1, p.hl)),
+              ),
+              child: Css(
+                s: 14,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(child: Rich([sp(context, fmt(advance), w: 800), sp(context, ' '), sp(context, sample ? 'paid $residentJoined' : 'paid when you joined', c: p.mu)])),
+                    const SizedBox(width: 8),
+                    Tag('${fmt(math.max(0, advance - terms.maintenance))} back when you leave', bg: p.sf),
+                  ],
+                ),
+              ),
             ),
-            child: Css(
-              s: 14,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ],
+          if (history.isNotEmpty) ...[
+            const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('History')),
+            Container(
+              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Rich([sp(context, fmt(terms.advance), w: 800), sp(context, ' '), sp(context, 'paid $residentJoined', c: p.mu)]),
-                  Tag('${fmt(terms.refund)} back when you leave', bg: p.sf),
+                  for (final h in history)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Css(
+                        s: 14,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: Rich([sp(context, h.$1, w: 800), sp(context, '\n'), sp(context, h.$3, s: 12, w: 600, c: p.gn)])),
+                            const SizedBox(width: 12),
+                            T(h.$2, w: 600),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('History')),
-          Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final h in history)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Css(
-                      s: 14,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: Rich([sp(context, h.$1, w: 800), sp(context, '\n'), sp(context, h.$3, s: 12, w: 600, c: p.gn)])),
-                          const SizedBox(width: 12),
-                          T(h.$2, w: 600),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -450,15 +454,15 @@ class _WeekTableState extends State<WeekTable> {
           Widget dayCell(int i) => Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
             decoration: BoxDecoration(
-              color: i == 3 ? p.ab : p.bg,
+              color: i == todayIdx ? p.ab : p.bg,
               border: Border(right: bs(1, p.hl)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                T(weekDays[i][0], w: 800, s: 14, c: i == 3 ? p.ad : p.tx),
+                T(weekDays[i][0], w: 800, s: 14, c: i == todayIdx ? p.ad : p.tx),
                 const SizedBox(height: 1),
-                T('${weekDays[i][1]}${i < 3 ? ' Sep' : ' Oct'}', s: 11, c: p.mu),
+                T('${weekDays[i][1]} ${weekDays[i][2]}', s: 11, c: p.mu),
               ],
             ),
           );
@@ -506,7 +510,7 @@ class _WeekTableState extends State<WeekTable> {
                       onTap: () => widget.onPick(i),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: i == 3 ? p.ab : transparent,
+                          color: i == todayIdx ? p.ab : transparent,
                           border: Border(bottom: bs(1, p.hl)),
                         ),
                         child: Stack(
@@ -549,10 +553,13 @@ class FoodScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: 'This week · Anjani Residency', title: 'Food'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: PageHead(kicker: 'This week · ${s.stayHostel.name}', title: 'Food'),
           ),
+          if (s.onServer && s.role == 'resident')
+            Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('${s.stayOwner} hasn’t put the menu on Hostelzy yet. It shows here once they do.', s: 14, c: p.mu, lh: 1.45))
+          else ...[
           Seg(opts: const [('day', 'By day'), ('week', 'Whole week')], cur: s.foodView, onPick: (v) => s.update(() => s.foodView = v), margin: const EdgeInsets.fromLTRB(16, 0, 16, 14)),
           if (s.foodView == 'week') ...[
             WeekTable(
@@ -586,7 +593,7 @@ class FoodScreen extends StatelessWidget {
                             ),
                             child: InsetBar(
                               edge: Edge.bottom,
-                              size: i == 3 ? 4 : 0,
+                              size: i == todayIdx ? 4 : 0,
                               color: p.ac,
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(8, 10, 0, 9),
@@ -623,7 +630,7 @@ class FoodScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            if (s.day == 3)
+            if (s.day == todayIdx)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                 child: VGap(
@@ -635,15 +642,16 @@ class FoodScreen extends StatelessWidget {
                       cur: s.rated,
                       onPick: (v) {
                         s.update(() => s.rated = v);
-                        s.toastMsg('Thanks. Saved for Srinivas and the kitchen, without your name.');
+                        s.toastMsg('Thanks. Saved for ${s.stayOwner} and the kitchen, without your name.');
                       },
                       pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
                       fs: 14,
                     ),
-                    T('Goes to Srinivas and the kitchen without your name.', s: 12, c: p.mu),
+                    T('Goes to ${s.stayOwner} and the kitchen without your name.', s: 12, c: p.mu),
                   ],
                 ),
               ),
+          ],
           ],
         ],
       ),
@@ -686,7 +694,7 @@ class HelpScreen extends StatelessWidget {
                   fs: 15,
                   onTap: s.raiseComplaint,
                 ),
-                T('Not fixed? Raise it again, or WhatsApp Srinivas.', s: 12, c: p.mu),
+                T('Not fixed? Raise it again, or WhatsApp ${s.stayOwner}.', s: 12, c: p.mu),
               ],
             ),
           ),
@@ -707,7 +715,7 @@ class HelpScreen extends StatelessWidget {
                     ],
                   ),
                   T(c.text, s: 14),
-                  T('${c.date} · ${c.note.isEmpty ? 'Sent to Srinivas' : c.note}', s: 12, c: p.mu),
+                  T('${c.date} · ${c.note.isEmpty ? 'Sent to ${s.stayOwner}' : c.note}', s: 12, c: p.mu),
                 ],
               ),
             ),
@@ -723,13 +731,18 @@ class MoveScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final terms = hostelById('anjani').terms;
+    // F21: the resident's own hostel and bed; on the server notice and swaps
+    // go to the owner on WhatsApp (nothing pretends to be saved on Hostelzy).
+    final h = s.stayHostel;
+    final owner = s.stayOwner;
+    final bed = s.myStay?.bed ?? '';
+    final terms = h.terms;
     final dates = leaveDates(terms);
-    final a = s.rooms['anjani']!;
+    final a = s.rooms[h.id] ?? const <Room>[];
     final swapBeds = <({Bed b, Room r})>[];
     for (final r in a) {
       for (final b in r.beds) {
-        if (b.state == 'free' && r.n != 204 && !b.mine && swapBeds.length < 6) swapBeds.add((b: b, r: r));
+        if (b.state == 'free' && '${r.n}' != s.stayRoom && !b.mine && swapBeds.length < 6) swapBeds.add((b: b, r: r));
       }
     }
     Widget body;
@@ -767,7 +780,11 @@ class MoveScreen extends StatelessWidget {
                     fs: 15,
                     onTap: () {
                       s.update(() => s.notice = true);
-                      s.toastMsg('Notice saved. Tell Srinivas on WhatsApp too.');
+                      if (s.onServer) {
+                        s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. I am giving notice: my last day is ${s.vDate}.');
+                      } else {
+                        s.toastMsg('Notice saved. Tell $owner on WhatsApp too.');
+                      }
                     },
                   ),
                 ),
@@ -784,8 +801,8 @@ class MoveScreen extends StatelessWidget {
                     children: [
                       Kicker('Notice given', c: p.ad),
                       T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
-                      T('Saved on Hostelzy. Tell Srinivas on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
-                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani'] ?? '', 'Hi Srinivas, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
+                      T(s.onServer ? 'Sent to $owner on WhatsApp. They mark your bed "free soon" on Hostelzy.' : 'Saved on Hostelzy. Tell $owner on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
+                      OutlineCta('Tell $owner on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. I am giving notice: my last day is ${s.vDate}.')),
                     ],
                   ),
                 ),
@@ -824,7 +841,7 @@ class MoveScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-            child: const T('Free beds in Anjani Residency. Rent changes from next month.', s: 14, lh: 1.45),
+            child: T('Free beds in ${h.name}. Rent changes from next month.', s: 14, lh: 1.45),
           ),
           for (final e in swapBeds)
             () {
@@ -876,7 +893,11 @@ class MoveScreen extends StatelessWidget {
               onTap: () {
                 if (s.swapBed == null || s.swapSent) return;
                 s.update(() => s.swapSent = true);
-                s.toastMsg('Swap request saved. Ask Srinivas on WhatsApp too.');
+                if (s.onServer) {
+                  s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. Can I move to bed ${s.swapBed}?');
+                } else {
+                  s.toastMsg('Swap request saved. Ask $owner on WhatsApp too.');
+                }
               },
             ),
           ),
@@ -892,8 +913,8 @@ class MoveScreen extends StatelessWidget {
             children: [
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
-              const Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker('Bed 204-B'), T('Move out or swap', w: 800, s: 22, lh: 1.1)]),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(bed.isEmpty ? h.name : 'Bed $bed'), const T('Move out or swap', w: 800, s: 22, lh: 1.1)]),
               ),
             ],
           ),
@@ -911,8 +932,9 @@ class MoveScreen extends StatelessWidget {
   }
 }
 
-/// F06 board 7: the resident confirms what the owner added, with the
-/// WhatsApp code. Only then do they count as a resident.
+/// F06 board 7: the resident confirms what the owner added. F21 W1 (design
+/// `Stay`): three plain lines and "This is correct", no fake code. On the
+/// server they confirm by joining with the hostel's invite code.
 class ConfirmStayScreen extends StatelessWidget {
   const ConfirmStayScreen({super.key});
   @override
@@ -920,139 +942,89 @@ class ConfirmStayScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final r = s.toConfirm;
-    final h = hostels[0];
+    final h = s.stayHostel;
     final t = h.terms;
     if (r == null) {
       return Padding(padding: const EdgeInsets.all(16), child: T('Nothing to confirm right now.', s: 14, c: p.mu));
     }
-    final room = s.findBed('anjani', r.bed).r;
+    final owner = h.owner.trim().isEmpty ? 'your owner' : h.owner;
     final joined = r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday;
+    final due = t.dueDay(joined.day);
     final done = r.confirmed;
-    final cells = <Widget>[];
-    for (var i = 0; i < 6; i++) {
-      if (i > 0) cells.add(const SizedBox(width: 8));
-      cells.add(
-        Expanded(
-          child: Container(
-            height: 52,
-            alignment: Alignment.center,
-            decoration: box(w: 2, c: i == s.cOtp.length ? p.ac : p.tx),
-            child: T(i < s.cOtp.length ? s.cOtp[i] : '', w: 800, s: 22),
-          ),
-        ),
-      );
-    }
+    final lines = [
+      'You live in ${h.name}, bed ${r.bed}.',
+      'Rent ${fmt(r.amt)} a month, due on the ${ordinal(due)}.',
+      'Advance ${fmt(r.advance)} · ${fmt(math.max(0, r.advance - t.maintenance))} back when you leave.',
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Bed ${r.bed}', title: done ? 'You’re confirmed' : 'Confirm your stay', size: 28))],
+          ),
+        ),
         Expanded(
           child: Scroll(
             key: ValueKey('rConfirm${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                  child: VGap(
-                    gap: 6,
-                    children: [
-                      Kicker('Confirm your stay', c: p.ad),
-                      T('${h.owner} added you at ${h.name}', w: 800, s: 30, lh: 1.02, ls: -.025),
-                      T("Check the details. If they're right, confirm with the code we sent on WhatsApp.", s: 14, c: p.mu),
-                    ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(height: 2, color: p.tx),
+                  for (final (i, l) in lines.indexed)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(width: 28, height: 28, alignment: Alignment.center, color: p.tx, child: T('${i + 1}', w: 800, s: 14, c: p.bg)),
+                          const SizedBox(width: 10),
+                          Expanded(child: T(l, s: 15, lh: 1.45)),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Tap(onTap: () => s.openWA(owner, 'Hi $owner, the details you added for me on Hostelzy are not right: ', phone: s.stayOwnerPhone), child: T('Something wrong? Message $owner ›', w: 800, s: 14)),
                   ),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      KV('Name', r.name, keyWidth: 130),
-                      KV('Bed', '${r.bed}${room != null ? ' · ${room.share} sharing' : ''}', keyWidth: 130),
-                      KV('Joined on', '${dayName(joined)} ${joined.year}', keyWidth: 130),
-                      KV('Monthly fee', fmt(r.amt), keyWidth: 130),
-                      KV('Advance paid', fmt(r.advance), keyWidth: 130),
-                      KV('When you leave', '${fmt(t.maintenance)} kept · ${fmt(r.advance - t.maintenance)} back · ${t.noticeDays} days notice', keyWidth: 130),
-                    ],
-                  ),
-                ),
-                if (!done)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                    child: VGap(
-                      gap: 8,
-                      children: [
-                        T('Code sent to ${phoneSpaced(r.phone)}', w: 800, s: 13),
-                        Stack(
+                  const SizedBox(height: 20),
+                  if (done)
+                    T('Pay rent, see the food menu and raise complaints from the app. The exit rules above are saved on Hostelzy.', s: 14, c: p.mu, lh: 1.45)
+                  else ...[
+                    Tap(
+                      key: const ValueKey('stayAgree'),
+                      onTap: () => s.update(() => s.cAgree = !s.cAgree),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Row(
                           children: [
-                            Row(children: cells),
-                            Positioned.fill(
-                              child: Field(
-                                value: s.cOtp,
-                                onChanged: (v) => s.update(() {
-                                  final d = v.replaceAll(RegExp(r'\D'), '');
-                                  s.cOtp = d.length > 6 ? d.substring(0, 6) : d;
-                                }),
-                                numeric: true,
-                                border: false,
-                                height: null,
-                                pad: EdgeInsets.zero,
-                                hiddenText: true,
-                              ),
-                            ),
+                            Container(width: 28, height: 28, alignment: Alignment.center, decoration: box(bg: s.cAgree ? p.tx : transparent, w: 2, c: p.tx), child: s.cAgree ? Ic('check', size: 18, color: p.bg) : null),
+                            const SizedBox(width: 12),
+                            const Expanded(child: T('This is correct', w: 800, s: 16)),
                           ],
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            if (kDebugMode) Tap(onTap: () => s.update(() => s.cOtp = '482113'), child: T('Paste code from WhatsApp', s: 12, w: 600, c: p.ad)) else const SizedBox(),
-                            T("Didn't get it? Resend in 0:24", s: 12, c: p.mu),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
-                  )
-                else
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                    padding: const EdgeInsets.all(14),
-                    decoration: box(w: 2, c: p.tx),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(width: 32, height: 32, alignment: Alignment.center, color: p.tx, child: Ic('check', size: 18, color: p.bg)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const T("You're confirmed", w: 800, s: 16),
-                              const SizedBox(height: 2),
-                              T('Pay rent, see the food menu and raise complaints from the app. The exit rules above are saved on Hostelzy.', s: 13, c: p.mu, lh: 1.4),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+                    if (s.onServer) Padding(padding: const EdgeInsets.only(top: 10), child: T('To confirm on Hostelzy, join with the invite code $owner gives you.', s: 12, c: p.mu, lh: 1.4)),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: VGap(
-            gap: 8,
-            children: [
-              if (!done) ...[
-                Cta('Yes, this is me', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.confirmStay),
-                OutlineCta('Something\'s wrong', height: 50, onTap: () => s.openWA(h.owner, 'Hi ${h.owner}, the details you added for me on Hostelzy are not right: ')),
-              ] else
-                Cta('Go to my stay', height: 54, px: 16, fs: 15, onTap: () => s.jump('rHome', 'resident')),
-              T('Only ${h.name} and Hostelzy see these details.', s: 12, c: p.mu, lh: 1.4),
-            ],
-          ),
+          child: done
+              ? Cta('Go to my stay', height: 54, px: 16, fs: 15, onTap: () => s.jump('rHome', 'resident'))
+              : Cta('Yes, that’s right', height: 54, px: 16, fs: 15, opacity: s.cAgree ? 1 : .4, onTap: s.confirmStay),
         ),
       ],
     );

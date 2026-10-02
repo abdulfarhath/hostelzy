@@ -97,6 +97,8 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       if (l != null) state.applyListings(l);
       // B6: the signed-in user's holds, enquiries, payments and complaints, live.
       await state.startLive();
+      // F20: a new phone gets its reminders back.
+      await state.restoreRemFromServer();
       // Push fix: every start, the server gets this phone's token if allowed.
       await state.syncPushToken();
     } catch (e) {
