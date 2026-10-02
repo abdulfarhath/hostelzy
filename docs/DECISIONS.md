@@ -159,5 +159,11 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   `docs/brand/assets/`; Build puts them in the app (launcher icon, splash, login). Name stays
   **Hostelzy**.
 
+**No fake behaviour** — founder, 2026-10-02
+- The app must not pretend: no demo number/OTP fill, no "Paid"/"Yours"/"Sent"/"Told"/"Verified"
+  unless it really happened, a real map, no demo tools in release builds. Full list and plan:
+  `docs/features/F17-production-ready.md`. Payment flow: UPI to the owner → tenant enters UTR →
+  "waiting for owner" → owner confirms → booked.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

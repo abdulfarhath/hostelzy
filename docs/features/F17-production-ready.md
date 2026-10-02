@@ -1,0 +1,141 @@
+# F17 · Make it real: remove every demo and fake behaviour
+
+**Stage:** Spec ready · 2026-10-02 (founder asked for the list; Ideas chat decides the plan)
+
+## Problem
+The app was built from a clickable prototype. Today nothing talks to a server or another app
+(`pubspec.yaml` has only `flutter` + `flutter_svg`). All data is seeded in `data.dart`, lives in
+memory and is lost on restart, so every "sent", "paid", "told" and "verified" message is fake.
+The founder found two examples: the demo number/OTP buttons on login, and "Pay advance" saying
+the bed is "Yours" with no payment. Audit of `main` @ `bf3b730`, 2026-10-02.
+
+## Rules from now on (all chats)
+- **No fake success.** Never say "Paid", "Sent", "Told", "Verified" or "Yours" unless it really
+  happened. Until the backend exists, say "Pending", "We'll check", or "Coming soon".
+- **No demo controls in release builds.** Dev shortcuts only under `kDebugMode`.
+- **No real-looking phone numbers** in sample data; use `+91 90000 0000x`.
+
+## The list (what is fake → what the real version needs)
+Group A = fix now (no keys needed). B = needs the backend (F13, founder's keys). C = needs a map key.
+
+### 1. Login
+| Now | Real | Group |
+|---|---|---|
+| "Fill a demo number" puts 9848012345 (`ui/screens_start.dart:122`) | Remove | A |
+| "Paste code from SMS" fills 482913 (`screens_start.dart:181`) | Android SMS autofill of the real code | B |
+| "Verify" accepts any 6 digits (`screens_start.dart:188`) | OTP checked by the server (MSG91 / Firebase) | B |
+| "Resend in 0:24" never counts down (`:184`) | Real timer + resend | A (timer) / B (resend) |
+| Anyone picks Owner; "Switch role" on Me (`screens_start.dart:216`, `screens_tenant.dart:683`) | Role from the account; owner only after onboarding | B |
+| `myPhone` falls back to the demo number (`state.dart:514`) | Logged-in user's phone | B |
+| Log out only clears a few fields (`screens_tenant.dart:684`) | Real sign-out | B |
+
+### 2. Explore and map
+| Now | Real | Group |
+|---|---|---|
+| Map is a drawn grid with 3 fake roads and a "map tiles" label (`screens_tenant.dart:356-528`) | Real map (Google Maps SDK, or flutter_map + MapTiler/OSM) | C |
+| Pins and landmarks at fixed screen % (`data.dart:63-82`) | Latitude/longitude per hostel | A (data) + C |
+| "6 min to Hitec City" hard-coded (`data.dart` `mins:`) | Distance from coordinates (straight-line now; travel time later) | A |
+| "Directions" only toasts (`screens_tenant.dart:1732`) | Open Google Maps with the hostel's location | A |
+| Photos are striped boxes "facade"/"bed" (`screens_tenant.dart:237`, `kit.dart:435`) | Real photos (founder takes them, F14) | B |
+| Rank "#2 near Hitec City" is global (`state.dart:246`) | Rank within the area | A |
+
+### 3. Hostel page, beds and holds
+| Now | Real | Group |
+|---|---|---|
+| Bed states random from a seeded generator (`data.dart:168-229`) | Owner's real rooms and live bed state | B |
+| Same window/door/AC drawing in every room (`screens_tenant.dart:1342`) | Real per-room layout (F12) | B |
+| House rules invented; owner's Manage → Rules never used (`screens_tenant.dart:785`) | Show the owner's rules | A |
+| "Hold placed. Srinivas has been told on WhatsApp." (`state.dart:804`) | "Hold placed. Tell Srinivas on WhatsApp →" (opens real WhatsApp); server lock later | A / B |
+| Hold timer is local; at 0:00 the bed stays held forever (`screens_tenant.dart:1651`) | Expire the hold at 0:00 (local now, server later) | A / B |
+| **"Demo: simulate the owner confirming"** button (`screens_tenant.dart:1749`) | Remove | A |
+| "Did you join? Anjani 102-B" shows for everyone (`screens_tenant.dart:582`) | Only for the user's real ended holds | A |
+| Move-in date always "5 Oct" (`:624`) | Pick a real date | A |
+| Owner phone "Call" only toasts (`fairplay.dart:260`) | Open the phone dialler | A |
+| "I've moved in" makes you a resident yourself (`rewards.dart:243`) | Owner confirms move-in (F06) | B |
+
+### 4. Payments
+| Now | Real | Group |
+|---|---|---|
+| **"Pay advance" books instantly: "Paid ₹X… Booked · Yours"** (`shell.dart:708`, `state.dart:812`) | Open UPI app to pay the **owner's** UPI ID with note HZ-xxxx → tenant enters UTR → status **"Payment sent · waiting for owner"** → owner taps "Received" → only then "Booked" | A (honest states + UPI link) / B (owner's UPI ID, sync) |
+| Pay rent sets Paid + "Receipt sent on WhatsApp" (`screens_resident.dart:258`) | Same UPI → UTR → owner confirms flow; receipt after confirm | A / B |
+| Rent ₹8,020 and line items, history, receipt number all hard-coded (`screens_resident.dart:80-305`) | From the owner's rate card + meter; server ledger | B |
+| Refund "within 7 days" not tracked (`screens_resident.dart:740`) | Owner marks refund with UTR, tenant confirms | B |
+| ₹100 credit "on the next Hostelzy invoice", no invoices exist (`rewards.dart:216`) | Owner billing (F10) | B |
+
+### 5. WhatsApp and enquiries
+| Now | Real | Group |
+|---|---|---|
+| **"Open WhatsApp" only toasts; WhatsApp never opens** (`shell.dart:780`) | `wa.me/91<phone>?text=…` (add `url_launcher`) | A |
+| "Srinivas has been told on Hostelzy…" (`shell.dart:764`) | Say "Send this on WhatsApp so Srinivas knows you came from Hostelzy"; server notify later | A / B |
+| Link `hostelzy.in/r/HZ-…` goes nowhere (`state.dart:544`) | Real domain + page (F15) | B |
+| HZ codes from a local counter; every enquiry named "Rahul Varma" (`state.dart:386, 528`) | Server-issued codes; the user's name | B |
+| Owner "Call"/"WhatsApp" fake (`screens_owner.dart:499`) | `tel:` and `wa.me` | A |
+| "verified by OTP" labels | Only after real OTP | B |
+
+### 6. Resident screens
+| Now | Real | Group |
+|---|---|---|
+| "Morning, Rahul · Anjani · Room 204 · Bed B" for everyone (`screens_resident.dart:65`) | From the resident's stay; greeting by time | A (greeting) / B |
+| Food: always Thursday; week fixed 28 Sep – 4 Oct (`state.dart:375`, `data.dart:401`) | Real today's date | A |
+| Meal tags always Done/Next/Later (`:157`) | From the clock | A |
+| Complaint "Sent. Srinivas has 72 hours" (`:661`) | "Saved. Srinivas will see it when you're online" + WhatsApp link; server later | A / B |
+| Give notice / swap "sent to Srinivas" (`:749, 856`) | Same honest wording; server later | A / B |
+| Confirm stay: fills 482113, any 6 digits work (`:988`) | Real code check | B |
+
+### 7. Owner screens
+| Now | Real | Group |
+|---|---|---|
+| Owner is always Srinivas / Anjani (`state.dart:418` and many `'anjani'`) | Owner's own hostels | B |
+| Header date "Thu 1 Oct", rent month "October 2026" (`screens_owner.dart:106, 839`) | Real date | A |
+| Seeded hold requests restart on each launch (`data.dart:357`) | Server | B |
+| "Confirmed. Karthik gets a WhatsApp message" / "Reminder sent" / "has been updated" toasts | Open WhatsApp with the message, or say "Saved" | A |
+| **Invite QR is a random pattern** (`screens_owner.dart:1391`) | Real QR (`qr_flutter`) of the invite link | A |
+| "Print poster" says "Poster saved as a PDF" (`:1322`) | Make a real PDF (`pdf`/`printing`) or remove | A |
+| Hold-requests tile does nothing (`:58`) | Wire it | A |
+| Deals "help you rank higher" but deals aren't in the score (`deals.dart:224`) | Fix the wording | A |
+
+### 8. Admin (founder)
+| Now | Real | Group |
+|---|---|---|
+| Fair Play cases + strike buttons open for anyone via `?start=aCases` (`fairplay.dart:523`, `main.dart:21`) | Separate admin login (web console) | A (remove from app) / B |
+| Fixed "47 h left", 6 seeded cases (`data.dart:688-713`) | Server deadlines and cases | B |
+| Fair Play OTP accepts any 6 digits (`fairplay.dart:170`) | Real OTP | B |
+
+### 9. Data
+- **Today is fixed at 1 Oct 2026** (`data.dart:41`) → use the real date (Asia/Kolkata). **A**
+- 6 sample hostels, 21 residents, enquiries, complaints, menu, reviews, cases, rewards: keep only as
+  sample data until F13; **real-looking phone numbers → replace with obvious fake ones. A**
+- Ratings, review counts, category averages, ranking factors are constants. **B**
+
+### 10. Demo and developer tools (must not be in the Play Store app)
+| Now | Real | Group |
+|---|---|---|
+| URL params `?start=…&role=owner` skip login (`main.dart:9-31`) | Debug builds only | A |
+| `?page=overview` "all screens" canvas (`ui/overview.dart`) | Debug only | A |
+| On screens ≥ 730 px: phone frame + jump list "Mobile prototype. Everything is clickable" (`shell.dart:37-219`) | Real full-screen layout on tablets/web | A |
+| Fake status bar "9:41 · 5G" (`shell.dart:150`) | Remove | A |
+| Demo state builder `_prep` (`state.dart:437`) and leftover design toggles | Debug only / remove | A |
+
+### 11. Words that promise things we don't do yet
+"Verified stay", "verified residents", "Trusted tenant" ticks, "Hostelzy checks this from real
+stays", "Notifications go to WhatsApp", "We remind the owner and check in a week", "The owner never
+sees your name", "Exit rules locked… Hostelzy steps in", "one review per stay; edit later".
+→ Keep the promise only when the feature exists; otherwise soften or hide. **A** (wording) / **B**.
+
+## Plan (Ideas chat decision)
+1. **F17-A "Honest app" (Build now, no keys):** everything marked A. New packages allowed:
+   `url_launcher`, `qr_flutter`, `share_plus`, `pdf`/`printing`. Payment becomes
+   "UPI to owner → enter UTR → waiting for owner → owner confirms". Owner's UPI ID is a field in
+   the owner's rate card (sample value clearly fake until F13).
+2. **F17-C "Real map":** flutter_map with free OpenStreetMap-based tiles for now (no key, small
+   traffic); move to a keyed provider (MapTiler or Google Maps) when the founder adds keys. Real
+   coordinates for sample hostels in Hitec City, Madhapur, Kondapur, Ameerpet.
+3. **Group B items go into F13 (backend)** when the founder adds Supabase/Firebase/MSG91 keys.
+4. Design chat: mockups only for screens that change meaning (payment pending states, honest
+   hold/enquiry sheets, map). Build F17 after F10, before the app icon and F12.
+
+## Design
+_Not started._
+
+## Build
+_Not started._

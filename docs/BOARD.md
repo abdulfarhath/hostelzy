@@ -21,6 +21,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
+| F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Spec ready** · 2026-10-02 | Design | Full list in the feature file. Build right after F10, before the app icon and F12 |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
@@ -30,7 +31,7 @@ merges its own PRs once analyze and tests pass. See DECISIONS.md.
    F09 → F10 → F14 → F15. (F16, F05, F06 done.)
 2. **Founder** reviews and approves the designs.
 3. **Build** builds approved features in this order: F02 (merged) → F05 → F06 → F16 → F03 + F04 →
-   F08 → F07 → F09 → F10 → F12 → F14 → F15, then F13 backend when the accounts exist.
+   F08 → F07 → F09 → F10 → **F17** → app icon → F12 → F14 → F15, then F13 backend when the accounts exist.
 
 ## Open questions for the founder
 All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01 and 2026-10-02).
