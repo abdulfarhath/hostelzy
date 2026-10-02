@@ -135,3 +135,36 @@ lawyer must confirm "Hostelji" as a whole can be registered (and look at HostelK
 2. Grab @hostelji on Instagram, X, YouTube.
 3. Trademark lawyer: IP India search + filing in classes 9, 42, 43, 36.
 4. Only then: Ideas chat records the name in DECISIONS.md, Build renames the app.
+
+---
+
+# Hostell = Hostel + Tell (2026-10-02)
+
+Founder's idea: **HOSTELL**: "it **tells** you about hostels around you". Wants a tagline too.
+
+## Check
+| Check | Result |
+|---|---|
+| Domains | .com ❌ taken (could not open it to see who). hostellapp.com ❌ taken. .app ✅ .co ✅ .io ✅ .net ✅ .org ✅ gethostell.com ✅ free. |
+| Close names | **The Hosteller**: big Indian hostel chain, has hostels in Hyderabad. "Hostell" sounds very close to it. **Hostelle**: hostel brand (Netherlands), trademark filed 2024 in hostel services. **Hostelz** (see round 2). |
+| Trademark | No "Hostell" mark found in web search. Official IP India search not done. |
+
+## Honest view
+- 👍 The story is great. "Hostel + tell" is clever and easy to explain.
+- 👎 **Said out loud it is just "hostel".** In a reel or by word of mouth, people search "hostel" and find everyone else.
+- 👎 A misspelt common word is hard to trademark, and The Hosteller is in the same field and city.
+- 👎 .com is taken.
+
+## Ways to keep the idea
+| Option | How | Notes |
+|---|---|---|
+| **HostelTell** | Two clear words: "hostel-tell". | hosteltell.com ✅ .app ✅ free. Nothing found. Longer, but people hear "tell". |
+| **Hostell** with "gethostell.com" | Keep it, use .app or gethostell.com. | Same risks as above. |
+| **Hostelji + "tell" tagline** | Keep the "tells you" story in the tagline. | Keeps the safer name. |
+
+## Tagline ideas (work with any name)
+- **Hostels around you. Told straight.**
+- **Every hostel near you, told true.**
+- **Know the hostel before you go.**
+- **See the bed. Hold the bed.**
+- Hindi: **Aas-paas ke hostel, sach-sach.** (hostels nearby, the truth)
