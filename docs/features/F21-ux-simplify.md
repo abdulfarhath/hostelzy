@@ -211,7 +211,7 @@ Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
   - Older flow tests were updated to the new places.
 
 
-### Wave 4 · Built · 2026-10-02 (branch `feature/f21-w4`)
+### Wave 4 · Built · 2026-10-02 (merged, #69)
 Designs `Skeleton`, `Offline`, `Error`, plus items 20–24.
 - **Languages (item 20), checked strings only** (Ideas chat, 2026-10-02).
   - Strings live in `hostelzy/assets/l10n/app_te.arb` and `app_hi.arb`, keyed by the English text. `T` looks each string up in the picked language and falls back to English, so screens need no rewiring.
