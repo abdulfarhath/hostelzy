@@ -201,9 +201,8 @@ Not needed.
 - Supabase listings now include **published** room layouts (`layouts` rows with `stage = published`; drafts never reach tenants).
 - Each `main` build publishes **two APKs**:
   - `hostelzy.apk` is the real app (`DATA=supabase`). It never shows sample hostels. With no hostels, or no internet, Explore says "No hostels in this area yet" and offers "Pick another area". Owner and resident screens stay gated until real data exists.
-  - `hostelzy-demo.apk` is sample data with the DEMO banner (`DATA=sample`, Gradle `HZ_DEMO=1`). It uses the `app.hostelzy.hostelzy.demo` id and the label "Hostelzy Demo", so it installs next to the real app. It has no Firebase (its id isn't in `google-services.json`), so there's no Google sign-in, push or Crashlytics.
+  - `hostelzy-demo.apk` is sample data with the DEMO banner (`DATA=sample`, Gradle `HZ_DEMO=1`). It uses the `app.hostelzy.hostelzy.demo` id and the label "Hostelzy Demo", so it installs next to the real app. Firebase: the founder registered the demo app (same test SHA-1) on 2026-10-02, so Google sign-in, push and Crashlytics work in it too.
   - Both are signed with the test key. The PR check builds both.
-- Optional for the founder: to get Google sign-in in the demo, register `app.hostelzy.hostelzy.demo` in Firebase with the test SHA-1 and send the new `google-services.json`.
 - Tests: the gated-roles test checks the banner appears only in the demo; the Supabase listings test covers published layouts and the empty state.
 
 **B5 · server rules and push · 2026-10-02** (branch `feature/b5-server-logic`):

@@ -46,7 +46,7 @@ jobs:
       - run: flutter build apk --release --dart-define=DATA=supabase
         env:
           HZ_TEST_KEYSTORE_PASSWORD: ${{ secrets.HZ_TEST_KEYSTORE_PASSWORD }}
-      # B3: the demo APK (sample data, ".demo" id, no Firebase) must build too.
+      # B3: the demo APK (sample data, ".demo" id) must build too.
       - run: flutter build apk --release --dart-define=DATA=sample
         env:
           HZ_DEMO: '1'

@@ -193,5 +193,12 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   Madhapur, Hitec City, Kondapur, Gachibowli…) to see all hostels there.
 - **The user enters their own name** (never prefilled with sample names).
 
+**Web address for now** — founder, 2026-10-02
+- `hostelzy.in` comes later. Until then the app's public pages live on GitHub Pages under the
+  founder's domain at **farhath.me/hostelzy/app/** (privacy policy, terms, delete-account page,
+  `r/HZ-…` enquiry links, `j/…` invite links). **farhath.me/hostelzy/** stays the old prototype
+  page; don't touch it. All URLs come from one config value so the switch to hostelzy.in is one
+  line.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
