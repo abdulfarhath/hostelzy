@@ -157,6 +157,14 @@ for name, p, k in [('web-favicon', 32, .9), ('web-Icon-192', 192, .8), ('web-Ico
                    ('web-Icon-maskable-192', 192, .56), ('web-Icon-maskable-512', 512, .56)]:
     cairosvg.svg2png(bytestring=web(p, k).encode(), write_to=f'{OUT}/{name}.png', output_width=p, output_height=p)
 
+# Splash. Android 12+ splash icon: 1152 px canvas (= 288dp at 4x), transparent; the system crops
+# it to a circle of 2/3 the width, so the room (corners included) stays inside that circle.
+for theme in ('light', 'dark'):
+    sp = 1152
+    m = round(sp * (2 / 3) / 1.414 * 0.96)
+    body = svg(sp, sp, mark((sp - m) / 2, (sp - m) / 2, m, theme, False))
+    cairosvg.svg2png(bytestring=body.encode(), write_to=f'{OUT}/splash-icon-{theme}.png', output_width=sp, output_height=sp)
+
 # Legacy square launcher icons (Android 7 and older).
 dens = [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]
 save('ic_launcher', lambda p: svg(p, p, mark(p * .1, p * .1, p * .8, 'light', p * .8 <= SMALL, 'm'), bg=WHITE),
