@@ -823,7 +823,7 @@ String? wallOf(Rect r, double w, double h) {
 }
 
 /// A saved state of a layout, for undo / redo in the editor.
-typedef LayoutSnap = ({double w, double h, Map<String, Offset> beds, List<LItem> items});
+typedef LayoutSnap = ({double w, double h, Map<String, Offset> beds, List<LItem> items, Map<String, String> bunks});
 
 /// A room's layout, drawn by the Hostelzy team. Layout beds are the bed-map
 /// beds (same letters). [live]: a version tenants see. [pending]: a newer
@@ -843,11 +843,20 @@ class RoomLayout {
   /// What tenants see while the team edits a new version (null = this).
   LayoutSnap? published;
 
+  /// Bunk beds: upper bed letter → the lower bed it stands on (same spot).
+  final Map<String, String> bunks = {};
+
+  /// Residents who answered "No" to "Is the room layout accurate?".
+  int disputes = 0;
+
+  /// The upper bunk on [lower], if any.
+  String? upperOn(String lower) => bunks.entries.where((e) => e.value == lower).firstOrNull?.key;
+
   /// The layout tenants see: the last approved version.
   RoomLayout get forTenants {
     final p = published;
     if (p == null) return this;
-    return RoomLayout(hid: hid, room: room, w: p.w, h: p.h, beds: Map.of(p.beds), items: [for (final i in p.items) i.copy()], version: version - 1, live: true, drawn: drawn, verified: verified);
+    return RoomLayout(hid: hid, room: room, w: p.w, h: p.h, beds: Map.of(p.beds), items: [for (final i in p.items) i.copy()], version: version - 1, live: true, drawn: drawn, verified: verified)..bunks.addAll(p.bunks);
   }
 
   /// The owner's open change request (F12 board 5).
@@ -856,7 +865,7 @@ class RoomLayout {
   Rect bedRect(String letter) => Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH);
   Rect itemRect(LItem i) => i.rect;
 
-  LayoutSnap snap() => (w: w, h: h, beds: Map.of(beds), items: [for (final i in items) i.copy()]);
+  LayoutSnap snap() => (w: w, h: h, beds: Map.of(beds), items: [for (final i in items) i.copy()], bunks: Map.of(bunks));
   void restore(LayoutSnap s) {
     w = s.w;
     h = s.h;
@@ -866,6 +875,9 @@ class RoomLayout {
     items
       ..clear()
       ..addAll([for (final i in s.items) i.copy()]);
+    bunks
+      ..clear()
+      ..addAll(s.bunks);
   }
 
   /// Mirror left ↔ right (or flip top ↔ bottom) for a room drawn the other way.
@@ -912,7 +924,7 @@ double _distTo(Offset p, Rect r) {
 
 /// What a bed is like, for the facts and the compare table. Never priced by
 /// position (DECISIONS 2026-10-02).
-({String fan, String? ac, String win, String door, String wash, String wall}) bedTraits(RoomLayout l, Room r, String letter) {
+({String fan, String? ac, String win, String door, String wash, String wall, String bunk}) bedTraits(RoomLayout l, Room r, String letter) {
   final b = l.bedRect(letter);
   final c = b.center;
   final fans = l.of('fan').where((f) => (l.itemRect(f).center - c).distance <= fanReach).toList();
@@ -940,13 +952,15 @@ double _distTo(Offset p, Rect r) {
     1 => 'One wall',
     _ => 'No wall',
   };
-  return (fan: fan, ac: ac, win: win, door: door, wash: wash, wall: wall);
+  final bunk = l.bunks.containsKey(letter) ? 'Upper bunk' : (l.upperOn(letter) != null ? 'Lower bunk' : 'Single bed');
+  return (fan: fan, ac: ac, win: win, door: door, wash: wash, wall: wall, bunk: bunk);
 }
 
 /// "Under a fan", "Window side · faces street", "In the AC airflow", "Door 4 m away".
 List<String> bedFacts(RoomLayout l, Room r, String letter) {
   final t = bedTraits(l, r, letter);
   return [
+    if (t.bunk != 'Single bed') t.bunk,
     if (t.wall == 'Corner') 'Corner bed · walls on two sides',
     t.fan,
     if (t.win != 'No window') t.win.replaceFirst('· ', '· faces '),
@@ -1003,6 +1017,12 @@ Map<String, Map<int, RoomLayout>> seedLayouts(Map<String, List<Room>> rooms) {
         }(),
     };
   }
+  // Sample bunk bed: Nest 42 room 101, bed D is the upper bunk over C.
+  final n101 = out['nest42']?[101];
+  if (n101 != null && n101.beds.containsKey('C') && n101.beds.containsKey('D')) {
+    n101.bunks['D'] = 'C';
+    n101.beds['D'] = n101.beds['C']!;
+  }
   out['anjani']![204]!
     ..version = 2
     ..pending = true
@@ -1025,6 +1045,11 @@ void resetSampleData() {
 const confirmEveryDays = 3, staleAfterDays = 7;
 
 /// Days since each owner last confirmed their free beds (sample).
+/// Days since each owner last confirmed their room layouts still match (F12:
+/// every 3 months).
+const seedLayoutConfirmed = {'anjani': 92, 'saisri': 20, 'nest42': 40, 'orchid': 10};
+const layoutConfirmEvery = 90;
+
 const seedConfirmed = {'anjani': 3, 'saisri': 1, 'nest42': 0, 'greenview': 9, 'orchid': 2, 'lakshmi': 5};
 
 /// "Visited by Hostelzy" dates (sample: the hostels the founder visited).

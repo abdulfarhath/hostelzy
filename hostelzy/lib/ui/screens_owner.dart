@@ -7,6 +7,7 @@ import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
+import 'layout.dart' show ConfirmLayoutsCard;
 import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
@@ -206,6 +207,7 @@ class OwnerTodayScreen extends StatelessWidget {
           ),
           const _FairPlayCard(),
           const FreeBedsCard(),
+          const ConfirmLayoutsCard(),
           const PaymentsToCheck(),
           const _Enquiries(),
           const _RankCard(),
