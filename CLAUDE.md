@@ -39,6 +39,12 @@ chats decide designs, product details and merges themselves. Only things the fou
 do (accounts, keys, SQL runs, payments setup) or that change money amounts already in DECISIONS.md go
 to the founder.
 
+## Design ↔ app consistency (founder, 2026-10-02)
+- Every screen and sheet in the app has a board in "Hostelzy · Main design", and every board is a real,
+  reachable screen in the release app. Same count both ways. No feature we discussed is left out.
+- Design adds a board for every screen Build adds; Build builds every board Design adds. Retired
+  screens are removed from both. Each PR / canvas update lists the screens it adds or removes.
+
 ## Talking to the founder
 - APK links: always give the **GitHub release page** (https://github.com/abdulfarhath/hostelzy/releases/tag/apk-N),
   never a direct .apk download link (founder, 2026-10-02).
