@@ -25,7 +25,10 @@ Waiting for the founder to pick 1–2 to refine.
 
 ---
 
-# Final: concept C "H made of beds" (2026-10-02)
+# Concept C refined (2026-10-02) · ON HOLD
+
+> **On hold:** the founder now prefers concept B "The room" (Ideas chat, 2026-10-02).
+> The C files below stay in `assets/` but are **not final**. Build: don't use them yet.
 
 Picked by the Ideas chat on the founder's delegation (DECISIONS.md "Name, logo, accounts").
 The founder can still change it.
@@ -62,3 +65,37 @@ Small PNGs are pixel-snapped so the blocks stay sharp.
 | `lockup-on-light.svg`, `lockup-on-dark.svg` (+ `@2x.png`) | Same, on the app's light / dark ground | Slides, social posts |
 
 Canvas (final board at the bottom): https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq1
+
+---
+
+# Round 2: concept B "The room", all options (2026-10-02)
+
+Asked by the founder via the Ideas chat: "design all possible ways, I will be selecting one".
+Canvas: https://claude.ai/artifact/7AQacMXpVCZUFpDn89ET4D
+**No final files until the founder picks one code.**
+
+Rules: walls ink, other beds grey (`#605D5D`, dark `#9A9696`), **only your bed is red**,
+square corners, Play icon on a white tile. Every board: big light + dark, Play icon at
+112/64/48/32 px, lockup with "hostelzy" (Archivo 800, lowercase like the app header).
+At 48 px and below, pillow lines and the fan dot drop out on their own (too small to see).
+
+| Code | What it is |
+|---|---|
+| **B1-a** | Clean room, door gap, 3 beds with pillow lines, your bed red |
+| **B1-b** | Same, 2 beds |
+| **B1-c** | Same as B1-a, no pillow lines |
+| **B2-a** | Room + H: two tall beds on the side walls, your red bed across the middle = an H. Door gap. (Ideas chat pick) |
+| **B2-b** | B2-a with the door drawn open (arc) |
+| **B2-c** | B2-a with no pillow lines (pure H) |
+| **B3-a** | Full room: window (double line on top wall), bunk, fan dot, 3 beds. Icon uses a simple version (window + 2 beds) |
+| **B3-b** | B3-a with no fan dot |
+| **B4-a** | Open door (arc) "welcome in", 3 beds |
+| **B4-b** | Open door, 2 beds |
+
+Also on the canvas:
+- **Compare**: every Play icon at 48 px, on light and dark.
+- **B2 splash storyboard** (about 0.9 s): walls draw → room ready → grey beds appear →
+  your red bed drops in → "Bed mila!".
+
+Brand chat view: **B2-a** or **B2-c** (the H gives the room a letter, reads at 32 px).
+B1-b is the simplest. B3 is best kept for posters/splash, not the icon.
