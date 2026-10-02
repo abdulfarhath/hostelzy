@@ -133,27 +133,28 @@ class LayoutMap extends StatelessWidget {
         final hgt = l.h * k;
         Rect sc(Rect r) => Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k);
         final kids = <Widget>[Positioned.fill(child: CustomPaint(painter: _RoomPainter(l, p, fan: fan, ac: ac)))];
+        final labels = <Widget>[];
         if (l.wash != null) {
           final w = sc(l.itemRect(l.wash!));
-          kids.add(Positioned(left: w.left + 6, top: w.bottom - 22, child: label('Washroom')));
+          labels.add(Positioned(left: w.left + 6, top: w.bottom - 22, child: label('Washroom')));
         }
         if (l.window != null) {
           final w = sc(l.itemRect(l.window!));
           final top = w.center.dy < hgt / 2;
-          kids.add(Positioned(left: w.left, top: top ? 9 : null, bottom: top ? null : 9, child: label('Window · ${l.window!.facing}', c: l.window!.working ? null : p.ad)));
+          labels.add(Positioned(left: w.left, top: top ? 9 : null, bottom: top ? null : 9, child: label('Window · ${l.window!.facing}', c: l.window!.working ? null : p.ad)));
         }
         if (l.door != null) {
           final d = sc(l.itemRect(l.door!));
-          kids.add(Positioned(left: d.left + 12, top: d.center.dy > hgt / 2 ? d.top - 20 : 8, child: T('Door', s: 10, w: 800, ls: .08, upper: true, c: p.mu)));
+          labels.add(Positioned(left: d.left + 12, top: d.center.dy > hgt / 2 ? d.top - 20 : 8, child: T('Door', s: 10, w: 800, ls: .08, upper: true, c: p.mu)));
         }
         if (l.ac != null) {
           final u = sc(l.itemRect(l.ac!));
           final right = u.center.dx > c.maxWidth / 2;
-          kids.add(Positioned(left: right ? null : u.right + 4, right: right ? c.maxWidth - u.left + 4 : null, top: u.bottom + 4, child: label(l.ac!.working && !room.acRepair ? 'AC unit' : 'AC · under repair', c: l.ac!.working && !room.acRepair ? null : p.ad)));
+          labels.add(Positioned(left: right ? null : u.right + 4, right: right ? c.maxWidth - u.left + 4 : null, top: u.bottom + 4, child: label(l.ac!.working && !room.acRepair ? 'AC unit' : 'AC · under repair', c: l.ac!.working && !room.acRepair ? null : p.ad)));
         }
         for (final f in l.of('fan')) {
           final ct = sc(l.itemRect(f)).center;
-          kids.add(Positioned(left: ct.dx - 11, top: ct.dy - 10, child: label(f.working ? 'Fan' : 'Fan · not working', icon: 'fan', c: f.working ? null : p.ad)));
+          labels.add(Positioned(left: ct.dx - 11, top: ct.dy - 10, child: label(f.working ? 'Fan' : 'Fan · not working', icon: 'fan', c: f.working ? null : p.ad)));
         }
         for (final b in room.beds) {
           if (!l.beds.containsKey(b.letter)) continue;
@@ -190,7 +191,7 @@ class LayoutMap extends StatelessWidget {
         }
         return Semantics(
           label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet',
-          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: kids)),
+          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: [...kids, ...labels])),
         );
       },
     );
@@ -273,7 +274,7 @@ class RoomMode extends StatelessWidget {
         gap: 14,
         children: [
           const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The Hostelzy team is drawing this room. You can still pick a bed from Plan or List, and see the photos.'),
-          OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('We’ll message you when room ${room.n} is drawn.')),
+          OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('Alerts come once the app is online. Check back here for now.')),
           T('Layouts are drawn by Hostelzy after a visit, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
@@ -301,7 +302,7 @@ class RoomMode extends StatelessWidget {
               });
             },
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T('${l.w.round()} × ${l.h.round()} ft · 1 square = 1 ft', s: 11, c: p.mu), T('Verified by Hostelzy visit · ${l.verified}', s: 11, c: p.mu)]),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T('${l.w.round()} × ${l.h.round()} ft · 1 square = 1 ft', s: 11, c: p.mu), T('Sample layout · real ones after a visit', s: 11, c: p.mu)]),
           if (fb != null)
             Container(
               padding: const EdgeInsets.only(top: 10),
@@ -455,11 +456,11 @@ class CompareScreen extends StatelessWidget {
                         cmp: [s.cmpA, s.cmpB],
                         onPick: (k) {
                           final bd = room.beds.firstWhere((x) => x.letter == k);
-                          if (bd.state != 'free' || bd.mine || k == s.cmpA) return;
+                          if (!((bd.state == 'free' || bd.state == 'soon') && !bd.mine) || k == s.cmpA) return;
                           s.update(() => s.cmpB = k);
                         },
                       ),
-                      T('Comparing two free beds. Both cost ${fmt(room.rent)} a month.', s: 12, c: p.mu),
+                      T('Comparing two open beds. Both cost ${fmt(room.rent)} a month.', s: 12, c: p.mu),
                     ],
                   ),
                 ),
@@ -740,7 +741,7 @@ class AdminLayoutScreen extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      ChipBtn('Copy to rooms…', on: false, onTap: () => s.toastMsg('Copied to the other ${room.share}-sharing rooms as drafts.')),
+                      ChipBtn('Copy to rooms…', on: false, onTap: () => s.toastMsg('Copy to rooms is in the laptop editor.')),
                       ChipBtn('Mirror', on: l.mirrored, onTap: () => s.update(() => l.mirrored = !l.mirrored)),
                       ChipBtn('Flip', on: l.flipped, onTap: () => s.update(() => l.flipped = !l.flipped)),
                       ChipBtn('History', on: false, onTap: () => s.toastMsg('v1 drawn 28 Sep${l.version > 1 ? ' · v2 drawn ${l.drawn}' : ''}')),

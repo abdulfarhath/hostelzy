@@ -185,7 +185,7 @@ class OtpScreen extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Cta('Verify', onTap: () => s.otp.length == 6 ? s.go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, opacity: s.otp.length == 6 ? 1 : .4),
+          Cta('Verify', onTap: () => s.otp.length == 6 ? (s..signedIn = true).go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, opacity: s.otp.length == 6 ? 1 : .4),
         ],
       ),
     );

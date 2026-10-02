@@ -335,9 +335,12 @@ class AppState extends ChangeNotifier {
     mode = 'room';
   });
 
+  /// A bed a tenant can hold: free, or freeing up soon.
+  static bool _open(Bed b) => (b.state == 'free' || b.state == 'soon') && !b.mine;
+
   void openCompare() {
     final r = rooms[hid]!.firstWhere((x) => x.n == room);
-    final free = r.beds.where((b) => b.state == 'free' && !b.mine).map((b) => b.letter).toList();
+    final free = r.beds.where(_open).map((b) => b.letter).toList();
     if (free.length < 2) return toastMsg('Only one free bed in this room.');
     final sel = bed != null && free.contains(bed!.split('-').last) ? bed!.split('-').last : free.first;
     cmpA = sel;
@@ -390,7 +393,7 @@ class AppState extends ChangeNotifier {
       l.request = (text: lReqText.trim(), added: Set.of(lReqAdded), size: lReqLen.isNotEmpty && lReqWid.isNotEmpty ? '$lReqLen × $lReqWid ft' : '', at: '${dayMon(appToday)}, 7:10 pm');
       sheet = null;
     });
-    toastMsg('Sent. Hostelzy redraws it free within 48 hours.');
+    toastMsg('Request saved. It reaches the Hostelzy team once the app is online (F13).');
   }
 
   /// Admin: send the new version to the owner for approval.
@@ -637,6 +640,14 @@ class AppState extends ChangeNotifier {
     if (screen == 'oMore' && moreTab == 'rates' && rateDraft == null) {
       rateDraft = Map.of(rates['anjani']!);
       acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
+    }
+    if (screen == 'compare' && cmpA.isEmpty) {
+      final r = rooms[hid]!.firstWhere((r) => layoutOf(hid, r.n) != null && r.beds.where(_open).length >= 2);
+      final free = r.beds.where(_open).toList();
+      room = r.n;
+      floor = r.floor;
+      cmpA = free[0].letter;
+      cmpB = free[1].letter;
     }
     if (screen == 'picker' || sheet == 'hold') {
       final rs = rooms[hid]!;

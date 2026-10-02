@@ -762,6 +762,116 @@ void main() {
     m.dispose();
   });
 
+  testWidgets('room layouts: Room tab, bed facts, compare, locked states, owner approval, admin (F12)', (tester) async {
+    // Plan stays the default; tapping a room opens it in Room.
+    final s = AppState(start: 'picker', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(s.mode, 'plan');
+    await tap(tester, find.text('Floor 3'));
+    await tap(tester, find.text('304'));
+    expect((s.mode, s.room), ('room', 304));
+    expect(find.text('Room 304'), findsOneWidget);
+    expect(find.text('Sample layout · real ones after a visit'), findsOneWidget);
+    // Layers are off by default; never priced by position.
+    expect(s.showFan || s.showAc, isFalse);
+    await tap(tester, find.text('Show AC airflow'));
+    expect(s.showAc, isTrue);
+    expect(find.text('Same price as every bed here'), findsOneWidget);
+    expect(find.text('Bed 304-A · Free'), findsOneWidget);
+    expect(find.text('Corner bed · walls on two sides'), findsOneWidget);
+    // Tap bed B (free soon) like a seat: its facts show.
+    await tap(tester, find.text('B').first);
+    expect(s.bed, '304-B');
+    expect(find.text('Under a fan'), findsOneWidget);
+    expect(find.text('Window side · faces courtyard'), findsOneWidget);
+    expect(find.text('In the AC airflow'), findsOneWidget);
+
+    // Compare the two open beds.
+    await tap(tester, find.text('Compare beds'));
+    expect((s.screen, s.cmpA, s.cmpB), ('compare', 'B', 'A'));
+    expect(find.text('Bed B'), findsOneWidget);
+    expect(find.text('No fan overhead'), findsOneWidget);
+    expect(find.text('₹9,900/mo'), findsNWidgets(2));
+    await tap(tester, find.text('Hold B'));
+    expect((s.sheet, s.bed), ('hold', '304-B'));
+    s.update(() => s.sheet = null);
+
+    // No layout yet: "Layout coming soon".
+    s.update(() {
+      s.hid = 'greenview';
+      s.screen = 'picker';
+      s.room = 101;
+      s.mode = 'room';
+    });
+    await tester.pump();
+    expect(find.text('Layout coming soon'), findsOneWidget);
+    expect(find.text('Compare beds'), findsNothing);
+
+    // Women's PG: floor plan only after a hold; room layouts stay.
+    s.update(() {
+      s.hid = 'saisri';
+      s.room = 102;
+      s.mode = 'plan';
+    });
+    await tester.pump();
+    expect(find.text('Floor plan shows after you hold a bed'), findsOneWidget);
+    await tap(tester, find.text('See rooms in the Room tab'));
+    expect(s.mode, 'room');
+    expect(find.text('Room 102'), findsOneWidget);
+    s.update(() => s.holds = [Hold(id: 'x', hid: 'saisri', bed: '102-A', room: 102, opt: 'free', start: s.now, status: 'waiting')]);
+    expect(s.floorLocked('saisri'), isFalse);
+    s.dispose();
+
+    // Signed out: layouts need a verified phone.
+    final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
+    await pumpApp(tester, o);
+    expect(find.text('Sign in to see room layouts'), findsOneWidget);
+    await tap(tester, find.text('Verify my phone'));
+    expect(o.screen, 'phone');
+    o.dispose();
+
+    // Owner: Beds → room 204 → mark a fan not working → approve.
+    final w = AppState(start: 'oBeds', role: 'owner');
+    await pumpApp(tester, w);
+    await tap(tester, find.text('Approve layout ›'));
+    expect((w.screen, w.lRoom), ('oLayout', 204));
+    expect(find.text('Check it and approve to go live'), findsOneWidget);
+    final l = w.layoutOf('anjani', 204)!;
+    expect(l.live, isTrue); // tenants keep seeing v1 until approval
+    await tap(tester, find.text('Not working').last);
+    expect(l.of('fan').last.working, isFalse);
+    expect(w.complaints.first.text, 'Fan 2 in room 204 marked not working.');
+    expect(find.text('FAN · NOT WORKING'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Approve layout'));
+    expect(l.pending, isFalse);
+    expect(find.text('Approved · live for tenants'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    // Request a change: saved as pending (no backend yet).
+    await tap(tester, find.text('Request a change'));
+    expect(w.sheet, 'layoutReq');
+    await tap(tester, find.text('Send request'));
+    expect(l.request, isNull);
+    await tester.enterText(find.byType(TextField).first, 'Bed C is against the washroom wall.');
+    await tap(tester, find.text('Room photo'));
+    await tap(tester, find.text('Send request'));
+    expect(l.request?.text, 'Bed C is against the washroom wall.');
+    expect(l.request?.added, {'photo'});
+    expect(find.text('Change requested · new version within 48 h'), findsOneWidget);
+
+    // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
+    w.update(() => w.screen = 'aLayout');
+    await tester.pump();
+    expect(find.text('“Bed C is against the washroom wall.”'), findsOneWidget);
+    final before = l.bedRect('A');
+    await tap(tester, find.text('Mirror'));
+    expect(l.bedRect('A').left, l.w - before.right);
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Send to owner for approval'));
+    expect((l.version, l.pending, l.request), (3, true, null));
+    w.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

@@ -21,12 +21,13 @@ class _HostelzyAppState extends State<HostelzyApp> {
     start: _pick(q['start'], AppState.screens),
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
     theme: _pick(q['theme'], const ['light', 'dark']),
-    mode: _pick(q['mode'], const ['plan', 'list', 'building']),
-    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'joined', 'report', 'trusted', 'utr']),
+    mode: _pick(q['mode'], const ['plan', 'room', 'list', 'building']),
+    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'joined', 'report', 'trusted', 'utr', 'layoutReq']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
     moreTab: _pick(q['moreTab'], const ['residents', 'complaints', 'deals', 'rates', 'menu', 'rules']),
     foodView: _pick(q['foodView'], const ['day', 'week']),
     mView: _pick(q['mView'], const ['day', 'week']),
+    auth: q['auth'],
     plan: _pick(q['plan'], const ['late5', 'late15', 'checking', 'paid', 'missing']),
   );
   late bool overview = q['page'] == 'overview';

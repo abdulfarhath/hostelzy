@@ -46,6 +46,9 @@ class OverviewPage extends StatelessWidget {
         ('C · Building cross-section', {'start': 'picker', 'role': 'tenant', 'mode': 'building'}),
         ('Hold options', {'start': 'picker', 'role': 'tenant', 'sheet': 'hold'}),
         ('Hold status', {'start': 'hold', 'role': 'tenant'}),
+        ('D · Room layout (F12)', {'start': 'picker', 'role': 'tenant', 'mode': 'room'}),
+        ('Compare two beds', {'start': 'compare', 'role': 'tenant'}),
+        ('Room layout signed out', {'start': 'picker', 'role': 'tenant', 'mode': 'room', 'auth': 'out'}),
       ],
     ),
     (
@@ -91,6 +94,9 @@ class OverviewPage extends StatelessWidget {
         ('Plan 5 days late', {'start': 'oToday', 'role': 'owner', 'plan': 'late5'}),
         ('Plan 15 days late · deals paused', {'start': 'oToday', 'role': 'owner', 'plan': 'late15'}),
         ('Founder: owner payments', {'start': 'aPay', 'role': 'owner'}),
+        ('Approve a room layout', {'start': 'oLayout', 'role': 'owner'}),
+        ('Request a layout change', {'start': 'oLayout', 'role': 'owner', 'sheet': 'layoutReq'}),
+        ('Hostelzy: layout editor', {'start': 'aLayout', 'role': 'owner'}),
         ('Rent collection', {'start': 'oRent', 'role': 'owner'}),
         ('Complaints queue', {'start': 'oMore', 'role': 'owner', 'moreTab': 'complaints'}),
         ('Edit menu', {'start': 'oMore', 'role': 'owner', 'moreTab': 'menu'}),
@@ -104,6 +110,7 @@ class OverviewPage extends StatelessWidget {
       [
         ('Explore', {'start': 'explore', 'role': 'tenant', 'theme': 'dark'}),
         ('Bed picker', {'start': 'picker', 'role': 'tenant', 'theme': 'dark'}),
+        ('Room layout', {'start': 'picker', 'role': 'tenant', 'mode': 'room', 'theme': 'dark'}),
         ('Resident home', {'start': 'rHome', 'role': 'resident', 'theme': 'dark'}),
         ('Owner today', {'start': 'oToday', 'role': 'owner', 'theme': 'dark'}),
         ('Your plan', {'start': 'oPlan', 'role': 'owner', 'theme': 'dark'}),
@@ -236,7 +243,7 @@ class _LivePhone extends StatefulWidget {
 }
 
 class _LivePhoneState extends State<_LivePhone> {
-  late final AppState state = AppState(start: widget.props['start'], role: widget.props['role'], theme: widget.props['theme'], mode: widget.props['mode'], sheet: widget.props['sheet'], moveTab: widget.props['moveTab'], moreTab: widget.props['moreTab'], plan: widget.props['plan']);
+  late final AppState state = AppState(start: widget.props['start'], role: widget.props['role'], theme: widget.props['theme'], mode: widget.props['mode'], sheet: widget.props['sheet'], moveTab: widget.props['moveTab'], moreTab: widget.props['moreTab'], plan: widget.props['plan'], auth: widget.props['auth']);
   @override
   void dispose() {
     state.dispose();

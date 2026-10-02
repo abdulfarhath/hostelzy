@@ -16,7 +16,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f09-stay-rewards`. ₹100 credits feed F10 invoices |
 | F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f10-owner-plan`. UPI ID is a placeholder until the founder gives it |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
-| F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design approved** · 2026-10-02 (standing approval) | Build | Boards 1–6 in the Room Layouts canvas |
+| F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f12-room-layouts`. Sample layouts are labelled as samples until real visits (F13/F14) |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |

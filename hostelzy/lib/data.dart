@@ -886,10 +886,10 @@ RoomLayout mkLayout(String hid, Room r, {required bool street}) {
     _ => (20.0, 15.0),
   };
   final slots = <Offset>[
-    const Offset(.8, .8),
-    if (r.share == 2) Offset(w - 3.5, .8) else Offset(w / 2, .8),
-    if (r.share >= 3) Offset(w - 3.9, h - 6.5),
-    if (r.share >= 4) Offset(w / 2 - 2.5, h - 6.5),
+    const Offset(.8, 1.4),
+    if (r.share == 2) Offset(w - 3.5, 1.4) else Offset(w / 2, 1.4),
+    if (r.share >= 3) Offset(w - 3.9, h - 7.2),
+    if (r.share >= 4) Offset(w / 2 - 2.5, h - 7.2),
   ];
   final fans = r.share == 2 ? [const Offset(4, 4.5)] : [Offset(w * .575, 7), Offset(w * .83, 10.75)];
   return RoomLayout(

@@ -6,6 +6,7 @@ import 'common.dart';
 import 'deals.dart';
 import 'fairplay.dart';
 import 'kit.dart';
+import 'layout.dart';
 
 // ------------------------------------------------------------ derived values
 
@@ -1074,10 +1075,16 @@ class PickerScreen extends StatelessWidget {
     final room = rs.where((r) => r.n == s.room).firstOrNull ?? rs[0];
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final hasSel = sb != null && sb.b != null;
-    const modes = [('plan', 'Plan', 'grid'), ('list', 'List', 'list'), ('building', 'Building', 'building')];
+    // F12: Room sits beside Plan; Plan stays the default.
+    const modes = [('plan', 'Plan'), ('room', 'Room'), ('list', 'List'), ('building', 'Building')];
+    final locked = s.floorLocked(h.id) && (s.mode == 'plan' || s.mode == 'building');
 
     Widget body;
-    if (s.mode == 'plan') {
+    if (locked) {
+      body = const FloorLocked();
+    } else if (s.mode == 'room') {
+      body = RoomMode(rooms: rs, room: room);
+    } else if (s.mode == 'plan') {
       body = _PlanMode(rooms: rs, room: room);
     } else if (s.mode == 'list') {
       body = _ListMode(rooms: rs);
@@ -1119,7 +1126,7 @@ class PickerScreen extends StatelessWidget {
                         c: s.mode == modes[i].$1 ? p.bg : p.tx,
                         s: 13,
                         w: 600,
-                        child: Row(children: [Ic(modes[i].$3, size: 15), const SizedBox(width: 6), T(modes[i].$2)]),
+                        child: T(modes[i].$2, align: TextAlign.center),
                       ),
                     ),
                   ),
@@ -1153,7 +1160,7 @@ class PickerScreen extends StatelessWidget {
             color: p.bg,
             border: Border(top: bs(2, p.tx)),
           ),
-          child: Row(
+          child: s.mode == 'room' ? RoomBar(room: room) : Row(
             children: [
               Expanded(
                 child: Column(
@@ -1272,10 +1279,8 @@ class _PlanMode extends StatelessWidget {
                     final fits = AppState.fits(r, s.pR);
                     return Tap(
                       enabled: fits,
-                      onTap: () => s.update(() {
-                        s.room = r.n;
-                        s.bed = null;
-                      }),
+                      // F12: tapping a room opens it in the Room tab.
+                      onTap: () => s.openRoom(r.n),
                       child: Opacity(
                         opacity: !fits ? .35 : (fr > 0 ? 1 : .5),
                         child: Container(
