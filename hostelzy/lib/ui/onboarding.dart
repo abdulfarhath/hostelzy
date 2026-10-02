@@ -1048,7 +1048,8 @@ class SwitchSheet extends StatelessWidget {
   }
 }
 
-/// Board 8: Manage → Team.
+/// Board 8, F22 Area 3 `oTeam`: you and your managers, what managers can't
+/// see, and Add a manager.
 class TeamScreen extends StatelessWidget {
   const TeamScreen({super.key});
   @override
@@ -1056,61 +1057,66 @@ class TeamScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);
-    Widget row(String name, String phone, Widget tag) => Container(
+    Widget pill(String t, {required Color bg, required Color fg, required Color bd}) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: box(bg: bg, w: 1, c: bd),
+      child: T(t, s: 11, w: 800, ls: .05, lh: 1.3, upper: true, c: fg, nowrap: true),
+    );
+    Widget row(String name, String sub, Widget tag) => Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
       child: Row(
         children: [
+          Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: T(initials(name).toUpperCase(), s: 13, w: 800)),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                T(name, w: 800, s: 15),
-                T(phoneSpaced(phone), s: 12, c: p.mu),
-              ],
+              children: [T(name, w: 800, s: 16), const SizedBox(height: 1), T(sub, s: 13, c: p.mu)],
             ),
           ),
+          const SizedBox(width: 12),
           tag,
         ],
       ),
     );
+    final owner = ownerPhones[h.id] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
-              Expanded(
-                child: PageHead(kicker: h.name, title: 'Team'),
-              ),
+              Expanded(child: PageHead(kicker: '${h.name} · Manage', title: 'Team', gap: 2)),
             ],
           ),
         ),
         Expanded(
-          child: Scroll(
-            key: ValueKey('oTeam${s.scrollEpoch}'),
-            child: Container(
-              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+          child: Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Scroll(
+              key: ValueKey('oTeam${s.scrollEpoch}'),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  row(h.owner, ownerPhones[h.id] ?? '', Tag('Owner', bg: p.tx, fg: p.bg)),
-                  for (final m in s.managers) row(m.name, m.phone, m.joined ? Tag('Manager', bg: p.sf, fg: p.tx) : Tag('Invite pending', bg: p.ab, fg: p.ad)),
+                  row(h.owner, owner.isEmpty ? 'Owner' : 'Owner · ${phoneSpaced(owner)}', pill('You', bg: p.tx, fg: p.bg, bd: p.tx)),
+                  for (final m in s.managers) row(m.name, 'Manager · ${phoneSpaced(m.phone)}', m.joined ? pill('Active', bg: transparent, fg: p.tx, bd: p.tx) : pill('Invite pending', bg: p.ab, fg: p.ad, bd: p.ab)),
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: T('Managers run beds, residents, enquiries, complaints and food. Only you see the plan, deals, rate card and Fair Play notices.', s: 12, c: p.mu, lh: 1.45),
+                    child: T('Managers run beds, residents, enquiries, complaints and food. Managers can’t see your plan, deals, rates or Fair Play notices.', s: 14, c: p.mu, lh: 1.5),
                   ),
                 ],
               ),
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           child: Cta('Add a manager', icon: 'userPlus', height: 54, px: 16, fs: 15, onTap: () => s.update(() => s.sheet = 'manager')),
         ),
       ],

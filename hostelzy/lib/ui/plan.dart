@@ -7,10 +7,10 @@ import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
 
-// F10 owner plan and UPI payment check: Manage → Your plan (board 1), the
-// invoice with a UPI QR (2), "I've paid" with the UTR (3, a sheet), payment
-// status (4), the overdue banners on owner Today (5) and the founder's
-// payments screen (6).
+// F10 owner plan and UPI payment check. F22 Area 3: Your plan, the invoice
+// (with its UPI QR) and the payment status are one screen; "I've paid" with
+// the UTR is a sheet; then the overdue banners on owner Today and the
+// founder's payments screen.
 
 String _period(DateTime due) {
   final end = DateTime(due.year, due.month + 1, due.day - 1);
@@ -30,15 +30,14 @@ const _monthNames = monthNames;
 };
 
 class _Head extends StatelessWidget {
-  const _Head(this.kicker, this.title, {this.size = 30});
+  const _Head(this.kicker, this.title);
   final String kicker, title;
-  final double size;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: kicker, title: title, size: size))]),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: kicker, title: title))]),
     );
   }
 }
@@ -75,29 +74,80 @@ class PaySteps extends StatelessWidget {
   }
 }
 
-/// Board 1: Manage → Your plan.
+/// F22 Area 3: Your plan and its invoice are one screen. 'oPlan', 'oInvoice'
+/// and 'oPayStatus' all show it; the state (Free trial / Due / Late /
+/// Checking / Paid / Not found) comes from the invoice.
 class PlanScreen extends StatelessWidget {
   const PlanScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const OwnerPlanScreen();
+}
+
+class InvoiceScreen extends StatelessWidget {
+  const InvoiceScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const OwnerPlanScreen();
+}
+
+class PayStatusScreen extends StatelessWidget {
+  const PayStatusScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const OwnerPlanScreen();
+}
+
+class OwnerPlanScreen extends StatefulWidget {
+  const OwnerPlanScreen({super.key});
+  @override
+  State<OwnerPlanScreen> createState() => _OwnerPlanScreenState();
+}
+
+class _OwnerPlanScreenState extends State<OwnerPlanScreen> {
+  /// Paying from another phone: the invoice's UPI QR.
+  bool qr = false;
+
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);
     final inv = s.invoice;
-    final tier = planTierOf(s.planBeds);
-    final tag = invoiceTag(p, inv);
-    final credits = s.ownerCredits.where((c) => c.hid == s.ownHid).toList();
-    final (kick, big, sub) = switch (inv.status) {
-      'upcoming' => ('Free trial', '${s.trialLeft} days left', 'Ends ${dayName(s.trialEnd)}. First invoice ${fmt(s.invoiceAmt)} on ${dayName(inv.due)}.'),
-      'checking' => (planTiers[tier].label, 'Checking your payment', 'UPI reference ${utrSpaced(inv.utr ?? '')} · usually within a day.'),
-      'paid' => (planTiers[tier].label, 'Paid for ${_monthNames[inv.due.month - 1]}', 'Next invoice on ${dayMon(DateTime(inv.due.year, inv.due.month + 1, inv.due.day))}.'),
-      'missing' => (planTiers[tier].label, 'Payment not found', 'Check the UPI reference in your UPI app, or pay again with the QR.'),
-      _ => (planTiers[tier].label, inv.late > 0 ? '${inv.late} days late' : '${fmt(s.invoiceAmt)} due', inv.pausesDeals ? 'Deals paused until you pay.' : 'Pay by ${dayName(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.'),
+    final month = _monthNames[inv.due.month - 1];
+    final utr = utrSpaced(inv.utr ?? '');
+    final upi = upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref);
+    final late = inv.status == 'due' && inv.late > 0;
+    final unpaid = inv.status == 'due' || inv.status == 'missing';
+    // The status card: kicker, big line, one sentence; colours by state.
+    final (Color bg, Color fg, String kick, String big, String sub) = switch (inv.status) {
+      'upcoming' => (p.sf, p.tx, 'Free trial', '${s.trialLeft} days left', 'Then ${fmt(s.planPrice)} a month for ${s.planBeds} beds. First invoice on ${dayMon(inv.due)}. No commission, ever.'),
+      'checking' => (p.sf, p.tx, 'Checking your payment', fmt(inv.amt), 'UPI reference $utr · we match it with our bank record, usually within a day.'),
+      'paid' => (p.tx, p.bg, 'Paid', fmt(inv.amt), '$month paid${inv.checked != null ? ' on ${inv.checked}' : ''}. Thank you.'),
+      'missing' => (p.ab, p.ad, 'Payment not found', fmt(inv.amt), 'We couldn’t find a payment with UPI reference $utr. Check the number in your UPI app, or pay again.'),
+      _ when late => (p.ab, p.ad, '${inv.late} days late', fmt(s.invoiceAmt), inv.pausesDeals ? 'Your deals are paused until it’s paid. Your listing, holds and residents keep working.' : 'Pay by ${dayMon(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.'),
+      _ => (p.sf, p.tx, '$month invoice', fmt(s.invoiceAmt), 'Due ${dayMon(inv.due)} · pay to Hostelzy by UPI'),
     };
+    Widget row(String k, String v, {Color? c, Key? key}) => Container(
+      key: key,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: Css(s: 14, child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 120, child: T(k, c: p.mu)), const SizedBox(width: 12), Expanded(child: T(v, w: 600, c: c))])),
+    );
+    final credits = s.ownerCredits.where((c) => c.hid == s.ownHid).toList();
+    final actions = <Widget>[
+      if (unpaid && inv.status == 'due') ...[
+        Cta('Pay ${fmt(s.invoiceAmt)} by UPI', key: const ValueKey('planPay'), height: 54, px: 16, fs: 15, onTap: () => s.openLink(upi, 'a UPI app')),
+        OutlineCta('I’ve paid · enter UPI reference', icon: 'check', onTap: s.openUtr),
+      ],
+      if (inv.status == 'missing') ...[
+        Cta('Fix the UPI reference', height: 54, px: 16, fs: 15, onTap: s.openUtr),
+        OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UPI reference $utr.')),
+      ],
+      if (inv.status == 'checking') OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UPI reference $utr.')),
+      if (inv.status == 'paid') OutlineCta('Share receipt', icon: 'print', onTap: () => s.share('Hostelzy receipt · ${inv.ref} · ${hostelById(inv.hid).name} · ${fmt(inv.amt)} · UPI ref. $utr · paid, checked ${inv.checked ?? ''}')),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Head('${h.name} · ${s.planBeds} beds', 'Your plan'),
+        _Head('${h.name} · Manage', 'Your plan'),
         Expanded(
           child: Scroll(
             key: ValueKey('oPlan${s.scrollEpoch}'),
@@ -105,195 +155,84 @@ class PlanScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
+                  key: const ValueKey('planCard'),
                   margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(14),
-                  color: p.tx,
-                  child: Css(
-                    c: p.bg,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Opacity(opacity: .75, child: Kicker(kick, c: p.bg)),
-                        const SizedBox(height: 4),
-                        T(big, w: 800, s: 26),
-                        const SizedBox(height: 4),
-                        Opacity(opacity: .85, child: T(sub, s: 13, lh: 1.4)),
-                      ],
+                  padding: const EdgeInsets.all(16),
+                  color: bg,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Kicker(kick, c: fg),
+                      const SizedBox(height: 4),
+                      T(big, w: 800, s: 44, lh: 1, c: fg),
+                      const SizedBox(height: 4),
+                      T(sub, s: 14, c: inv.status == 'missing' || late ? p.tx : fg, lh: 1.4),
+                    ],
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      row('Plan', '${s.planBeds} beds · ${fmt(s.planPrice)} a month'),
+                      row('Pay to', hostelzyUpiId),
+                      row('Invoice', '${inv.ref} · ${inv.status == 'upcoming' ? 'first one' : 'due'} ${dayMon(inv.due)}'),
+                      if (inv.status != 'upcoming') row('Period', _period(inv.due)),
+                      // F09: Member rewards given at move-in come off the invoice.
+                      for (final c in credits) row('Member reward', '− ${fmt(c.amt)}', c: p.gn),
+                      if (s.planCredit > 0 && unpaid) row('You pay', '${fmt(s.invoiceAmt)} after credits'),
+                    ],
+                  ),
+                ),
+                if (unpaid) ...[
+                  Tap(
+                    key: const ValueKey('planQr'),
+                    onTap: () => setState(() => qr = !qr),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Align(alignment: Alignment.centerLeft, child: T(qr ? 'Hide the QR' : 'Paying from another phone? Show the QR ›', s: 14, w: 800)),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Flexible(child: Kicker('Plans by hostel size')), SizedBox(width: 8), Flexible(child: T('No commission', s: 12, w: 800, align: TextAlign.right))]),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = 0; i < planTiers.length; i++)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: i == tier ? p.sf : null,
-                            border: Border(left: i == tier ? bs(4, p.ac) : BorderSide.none, bottom: bs(1, p.hl)),
+                  if (qr)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
+                            child: QrImageView(data: upi.toString(), size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [T(planTiers[i].label, w: 800, s: 16), if (i == tier) Tag('Your plan', bg: p.tx, fg: p.bg)]),
-                                    const SizedBox(height: 2),
-                                    T(i == tier ? 'You have ${s.planBeds} beds' : planTiers[i].note, s: 12, c: p.mu),
-                                  ],
-                                ),
-                              ),
-                              Rich([sp(context, fmt(planTiers[i].price), w: 800, s: 20), sp(context, '/mo', s: 12, c: p.mu)]),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: Rich([sp(context, '$planIncluded '), sp(context, 'Hostelzy never touches your tenants’ money.', w: 800, c: p.tx)], s: 12, c: p.mu, lh: 1.45),
-                ),
-                const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('Invoices')),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Tap(
-                        onTap: s.openInvoice,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    T('${_monthNames[inv.due.month - 1].substring(0, 3)} ${inv.due.year} · ${fmt(inv.status == 'checking' || inv.status == 'paid' ? inv.amt : s.invoiceAmt)}', w: 800, s: 15),
-                                    const SizedBox(height: 2),
-                                    T('${inv.ref} · due ${dayMon(inv.due)}', s: 12, c: p.mu),
-                                  ],
-                                ),
-                              ),
-                              Tag(tag.label, bg: tag.bg, fg: tag.fg),
-                              const SizedBox(width: 6),
-                              const Ic('chev', size: 18),
-                            ],
-                          ),
-                        ),
+                          const SizedBox(height: 10),
+                          Rich([sp(context, 'Scan with any UPI app. The amount and the note '), sp(context, inv.ref, w: 800, c: p.tx), sp(context, ' are filled in.')], s: 13, c: p.mu, align: TextAlign.center),
+                        ],
                       ),
-                      for (final c in credits)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    T('Credit · ${fmt(c.amt)}', w: 800, s: 15),
-                                    const SizedBox(height: 2),
-                                    T('Member reward you gave a tenant at move-in · comes off your next invoice', s: 12, c: p.mu, lh: 1.35),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              T('− ${fmt(c.amt)}', w: 800, s: 16, c: p.gn),
-                            ],
-                          ),
-                        ),
-                    ],
+                    ),
+                ],
+                // The trial is the only earlier period the app knows about.
+                if (inv.status != 'upcoming') ...[
+                  const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Before')),
+                  Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: row('${dayMon(s.planStart)} – ${dayMon(s.trialEnd)}', 'Free trial'),
                   ),
-                ),
+                ],
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                  child: T('You pay by UPI QR, then type the UPI reference. We check it against our bank record.', s: 12, c: p.mu, lh: 1.45),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  child: Rich([sp(context, '$planIncluded '), sp(context, 'Hostelzy never touches your tenants’ money.', w: 800, c: p.tx)], s: 13, c: p.mu, lh: 1.45),
                 ),
               ],
             ),
           ),
         ),
-      ],
-    );
-  }
-}
-
-/// Board 2: the invoice with a UPI QR (amount and invoice code filled in).
-class InvoiceScreen extends StatelessWidget {
-  const InvoiceScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final inv = s.invoice;
-    final tier = planTiers[planTierOf(s.planBeds)];
-    final amt = fmt(s.invoiceAmt);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Head('Invoice ${inv.ref}', '$amt due ${dayMon(inv.due)}', size: 28),
-        Expanded(
-          child: Container(
+        if (actions.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Scroll(
-              key: ValueKey('oInvoice${s.scrollEpoch}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
-                          child: QrImageView(data: upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref).toString(), size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
-                        ),
-                        const SizedBox(height: 12),
-                        Rich([sp(context, 'Scan with any UPI app. Amount and the note '), sp(context, inv.ref, w: 800, c: p.tx), sp(context, ' are filled in.')], s: 13, c: p.mu, align: TextAlign.center),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // The UPI ID is a placeholder until the founder sets it.
-                        const KV('Pay to', 'Hostelzy · $hostelzyUpiId', keyWidth: 80),
-                        KV('Plan', '${tier.label} · ${fmt(tier.price)}/mo', keyWidth: 80),
-                        if (s.planCredit > 0) KV('Credit', '− ${fmt(s.planCredit)} · Member reward', keyWidth: 80),
-                        KV('Period', _period(inv.due), keyWidth: 80),
-                        KV('Hostel', hostelById(inv.hid).name, keyWidth: 80),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                ],
-              ),
-            ),
+            child: VGap(gap: 8, children: actions),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: VGap(
-            gap: 8,
-            children: [
-              Cta('Open UPI app', height: 54, px: 16, fs: 15, onTap: () => s.openLink(upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref), 'a UPI app')),
-              OutlineCta('I’ve paid', icon: 'check', onTap: s.openUtr),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -344,72 +283,6 @@ class UtrSheet extends StatelessWidget {
           Cta('Send UPI reference', icon: 'check', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.sendUtr),
         ],
       ),
-    );
-  }
-}
-
-/// Board 4: Checking / Paid / Not received.
-class PayStatusScreen extends StatelessWidget {
-  const PayStatusScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final inv = s.invoice;
-    final utr = utrSpaced(inv.utr ?? '');
-    final next = DateTime(inv.due.year, inv.due.month + 1, inv.due.day);
-    final title = switch (inv.status) {
-      'paid' => 'Paid. Thank you',
-      'missing' => 'We couldn’t find this payment',
-      'checking' => 'Checking your payment',
-      _ => '${fmt(s.invoiceAmt)} due ${dayMon(inv.due)}',
-    };
-    final msg = switch (inv.status) {
-      'paid' => [sp(context, 'Received on ${inv.checked ?? dayMon(appToday)}. Next invoice on ${dayMon(next)}.')],
-      'missing' => [sp(context, 'No payment with UPI reference '), sp(context, utr, w: 800, c: p.tx), sp(context, ' reached us. Check the number in your UPI app, or pay again with the QR.')],
-      _ => [sp(context, 'We’re matching UPI reference '), sp(context, utr, w: 800, c: p.tx), sp(context, ' with our bank record. Usually within a day. Your listing stays live meanwhile.')],
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Head('Invoice ${inv.ref} · ${fmt(inv.amt)}', title, size: 28),
-        Expanded(
-          child: Scroll(
-            key: ValueKey('oPayStatus${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: PaySteps(inv.status)),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 16), child: Rich(msg, s: 14, c: p.mu, lh: 1.5)),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      KV('UPI ref.', utr, keyWidth: 70),
-                      KV('Sent', inv.sent ?? '—', keyWidth: 70),
-                      KV('Plan', planTiers[planTierOf(inv.beds)].label, keyWidth: 70),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (inv.status == 'paid')
-          Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 16), child: OutlineCta('Share receipt', icon: 'print', onTap: () => s.share('Hostelzy receipt · ${inv.ref} · ${hostelById(inv.hid).name} · ${fmt(inv.amt)} · UPI ref. ${utrSpaced(inv.utr ?? '')} · paid, checked ${inv.checked ?? ''}'))),
-        if (inv.status == 'missing')
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-            child: VGap(
-              gap: 8,
-              children: [
-                Cta('Fix the UPI reference', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.openUtr),
-                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UPI reference ${utrSpaced(inv.utr ?? '')}.')),
-              ],
-            ),
-          ),
-      ],
     );
   }
 }

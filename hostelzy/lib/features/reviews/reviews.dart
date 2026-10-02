@@ -78,6 +78,9 @@ mixin _ReviewsData {
 
   // F06: residents list, add-resident sheet, invite sign-ups, confirm stay.
   String resF = 'All';
+
+  /// F22: the Residents search (name, phone or bed).
+  String resQ = '';
   List<Signup> signups = List.of(seedSignups);
   String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
   String? rBed;
