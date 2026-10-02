@@ -111,7 +111,24 @@ Uneven floors:
 - Dark mode: board "6 in dark mode". Every phone board has a Dark tweak (the poster is for print).
 
 ## Build
-_Not started. Depends on F13 (backend)._
+**Shipped 2026-10-02** · branch `feature/f14-onboarding` (Build chat). Runs in memory on sample data: a hostel added on a visit lasts until the app restarts, then the sample data comes back (`resetSampleData`). Storing it for real is F13.
+
+- **Add hostel wizard** (`aAdd`, Hostelzy admin mode tag, 6-step bar), from the tracker's "Add hostel ›":
+  1. Basics: name, who it's for, area, map pin (tap once checked at the gate), food, gate time, total beds (counted from rooms), amenities.
+  2. Rooms floor by floor: the design's sample (Ground no beds · 1st 3 · 2nd 5 · 3rd 2 = 10 rooms, 29 beds). +/− per floor, room numbers editable (gaps and letters such as 204A), tap the sharing or AC under a number to change it, rooms that differ from "Most rooms" are red, "Copy previous floor", Add floor / Add terrace, a no-beds switch for empty floors.
+  3. Rate card: only the room types used, a missing price in red with the rooms that need it, money terms (advance, kept on leaving, notice, fee due). "Pick deals now" points to Manage → Deals after go-live.
+  4. Photos: one slot per type (front, each room type, washroom, food, common area, gate sticker), 8 minimum. **No camera yet:** the founder ticks each photo once it is in the hostel's Drive folder (the visit kit). Sketch + measurements per room type for F12.
+  5. Residents: Type one or Paste a list (name, phone, bed), tagged Before Hostelzy. Their beds become Taken.
+  6. Go-live checklist (owner OTP, Fair Play, ≥ 8 photos, every type priced, bed status, map pin); "Go live · N things left" stays locked until all six are done. The owner OTP uses the same local check as the login, which F17/F13 make real.
+  Go live builds the hostel (rooms with the owner's numbers, beds, rates, terms, Visited date, confirmed today), adds it to Explore ("New on Hostelzy · no reviews yet"), the owner's switcher and the tracker (Trial).
+- **Hostel page**: "Visited by Hostelzy · date" (sample: Anjani, Sai Sri, Nest 42) and availability: "N free beds · confirmed by the owner X days ago", or "Availability not confirmed · ask before you visit" after 7 days. Stale hostels rank lower (−0.05).
+- **Owner Today**: "Still N free beds?" card every 3 days (lists the beds; Yes, all N free / Update → bed map). The WhatsApp nudge needs the backend.
+- **Hostel switcher**: tap the hostel name on Today; each hostel with beds, free and Live / Trial; "Add another hostel" (the team visits). Owner screens follow `ownHid`; some owner screens still show Anjani's sample data (F17 item 7).
+- **Manage → Team** (`oTeam`): owner + managers; Add a manager sheet (name, WhatsApp number, what managers can do vs only the owner). Honest state: **"Invite pending"** until the manager signs in (no backend yet). Permissions are shown, not yet enforced (needs accounts, F13).
+- **Founder onboarding tracker** (`aTrack`, one column): Lead → Visited → Signed up → Data complete → Live → Trial → Paying, cluster filter, "Live N of 20 this month", move a card to the next stage.
+- **Uneven floors** (boards 13–14): picker room tiles wrap into rows of 4; room numbers show the owner's labels (`Room.label`).
+- **Not built:** the A4 resident QR poster (board 12; the existing Invite QR screen covers it, real QR/PDF is F17), Manage → Rooms add/remove after go-live, the founder's team members.
+- Test: `onboarding: add hostel on a visit, go live, switcher, free beds, managers (F14)`.
 
 **Uneven floors fix (2026-10-02, branch `feature/uneven-floors`, ahead of F14):** sample hostels
 now have uneven floors (`floorPlans` in `lib/data.dart`: Sai Sri 3 / 5 / 2 rooms, Greenview 4 / 2,

@@ -7,6 +7,7 @@ import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
 import 'plan.dart';
+import 'onboarding.dart';
 import 'screens_resident.dart' show WeekTable;
 import 'screens_tenant.dart' show FloorTabs, RoomTypeTag;
 
@@ -103,8 +104,9 @@ class OwnerTodayScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
-                  child: PageHead(kicker: 'Anjani Residency · Thu 1 Oct', title: 'Today', size: 32),
+                // F14: tap the hostel name to switch hostels.
+                Expanded(
+                  child: Tap(onTap: () => s.update(() => s.sheet = 'switch'), child: PageHead(kicker: '${hostelById(s.ownHid).name} · ${dayName(appToday)}', title: 'Today', size: 32)),
                 ),
                 const SizedBox(width: 12),
                 Tap(
@@ -201,6 +203,7 @@ class OwnerTodayScreen extends StatelessWidget {
             ),
           ),
           const _FairPlayCard(),
+          const FreeBedsCard(),
           const _Enquiries(),
           const _RankCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
@@ -616,7 +619,7 @@ class OwnerBedsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  T('${r.n}', w: 800, s: 16, nowrap: true),
+                  T(r.label, w: 800, s: 16, nowrap: true),
                   const SizedBox(width: 6),
                   T('${r.share} sharing', s: 11, c: p.mu, nowrap: true),
                 ],
@@ -1126,7 +1129,16 @@ class OwnerManageScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Expanded(child: PageHead(kicker: 'Anjani Residency', title: 'Manage')),
-              // F10: the owner's Hostelzy plan and invoices.
+              // F14: managers. F10: the owner's Hostelzy plan and invoices.
+              Tap(
+                onTap: () => s.go('oTeam'),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                  decoration: box(w: 2, c: p.tx),
+                  child: const T('Team', w: 800, s: 13),
+                ),
+              ),
               Tap(
                 onTap: () => s.go('oPlan'),
                 child: Container(

@@ -248,7 +248,7 @@ class RoomMode extends StatelessWidget {
         child: Row(
           children: [
             for (final r in rooms.where((r) => AppState.fits(r, s.pR))) ...[
-              ChipBtn('${r.n}', on: r.n == room.n, onTap: () => s.update(() {
+              ChipBtn(r.label, on: r.n == room.n, onTap: () => s.update(() {
                 s.room = r.n;
                 s.floor = r.floor;
                 s.bed = null;
@@ -334,7 +334,7 @@ class RoomMode extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
-                children: [Expanded(child: T('Room ${room.n}', w: 800, s: 20)), Rich([sp(context, '${room.share} sharing · ${room.type} · ${fmt(room.rent)}'), sp(context, '/mo', w: 400, c: p.mu)], s: 13, w: 600)],
+                children: [Expanded(child: T('Room ${room.label}', w: 800, s: 20)), Rich([sp(context, '${room.share} sharing · ${room.type} · ${fmt(room.rent)}'), sp(context, '/mo', w: 400, c: p.mu)], s: 13, w: 600)],
               ),
               body,
             ],

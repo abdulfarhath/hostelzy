@@ -872,6 +872,125 @@ void main() {
     w.dispose();
   });
 
+  testWidgets('onboarding: add hostel on a visit, go live, switcher, free beds, managers (F14)', (tester) async {
+    // Founder's tracker → Add hostel (admin mode).
+    final s = AppState(start: 'aTrack', role: 'owner');
+    await pumpApp(tester, s);
+    expect(find.text('Onboarding · Live 3 of 20 this month'), findsOneWidget);
+    await tap(tester, find.text('Add hostel ›'));
+    expect((s.screen, s.addStep), ('aAdd', 1));
+    expect(find.text('HOSTELZY ADMIN MODE'), findsOneWidget);
+    await tap(tester, find.text('Kondapur · tap when checked at the gate'));
+    expect(s.draft.pinChecked, isTrue);
+    await tap(tester, find.text('Next: rooms'));
+
+    // Uneven floors: Ground 0, 1st 3, 2nd 5, 3rd 2 = 10 rooms, 29 beds.
+    expect(find.text('10 rooms · 29 beds'), findsOneWidget);
+    expect(find.text('No beds here (kitchen, office) · hidden from tenants'), findsOneWidget);
+    await tap(tester, find.text('+').last);
+    expect(s.draft.floors[3].rooms.last.label, '303');
+    await tap(tester, find.text('−').last);
+    await tap(tester, find.text('Create 10 rooms, 29 beds'));
+
+    // Rate card: only the types used; 4 sharing is missing.
+    expect(s.draft.missingPrices, ['non4']);
+    expect(find.text('Room 202: 4 sharing Non-AC. Add its price.'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ratenon4')), matching: find.byType(TextField)), '6400');
+    await tester.pump();
+    expect(s.draft.missingPrices, isEmpty);
+    await tap(tester, find.text('Next: photos'));
+
+    // Photos: 8 minimum.
+    expect(find.text('4 of 8 minimum'), findsOneWidget);
+    for (final t in ['3 sharing', '3 sharing AC', '4 sharing', 'Gate sticker']) {
+      await tap(tester, find.text(t).first);
+    }
+    expect(s.draft.photoCount, 8);
+    await tap(tester, find.text('Next: residents'));
+
+    // Residents: grandfathered as Before Hostelzy.
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('resName')), matching: find.byType(TextField)), 'Ravi Kumar');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('resPhone')), matching: find.byType(TextField)), '9000000001');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('resBed')), matching: find.byType(TextField)), '101-a');
+    await tester.pump();
+    await tap(tester, find.text('Add resident'));
+    expect(s.draft.residents.single.bed, '101-A');
+    await tap(tester, find.text('Next: go live'));
+
+    // Go live stays locked until all six are done.
+    expect(find.text('Go live · 3 things left'), findsOneWidget);
+    await tap(tester, find.text('Go live · 3 things left'));
+    expect(s.screen, 'aAdd');
+    await tap(tester, find.text('Fair Play rules accepted'));
+    await tap(tester, find.text('Bed status checked on the visit'));
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone')), matching: find.byType(TextField)), '9000000009');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerOtp')), matching: find.byType(TextField)), '123456');
+    await tester.pump();
+    await tap(tester, find.text('Verify owner'));
+    expect(s.goLiveLeft, isEmpty);
+    await tap(tester, find.text('Go live'));
+    final h = hostels.last;
+    expect((s.screen, h.name, h.area, h.reviews), ('aTrack', 'Anjani Annex', 'Kondapur', 0));
+    final rs = s.rooms[h.id]!;
+    expect((rs.length, rs.fold<int>(0, (a, r) => a + r.beds.length)), (10, 29));
+    expect(rs.firstWhere((r) => r.label == '204A').share, 2);
+    expect(s.findBed(h.id, '101-A').b!.state, 'booked');
+    expect(floorsOf(rs), [1, 2, 3]); // the Ground floor is hidden from tenants
+    expect(s.visited[h.id], '1 Oct 2026');
+    expect(s.leads.last.stage, 5);
+    await tester.pump(const Duration(seconds: 3));
+
+    // Tenants see it in Explore as new.
+    expect(filtered(s).any((x) => x.id == h.id), isTrue);
+
+    // Owner: switch hostels.
+    s.update(() {
+      s.role = 'owner';
+      s.screen = 'oToday';
+      s.ownerHostels.remove(h.id);
+      s.ownerHostels.add(h.id);
+    });
+    await tester.pump();
+    await tap(tester, find.text('ANJANI RESIDENCY · THU 1 OCT'));
+    expect(s.sheet, 'switch');
+    expect(find.text('Anjani Annex'), findsOneWidget);
+    await tap(tester, find.text('Anjani Annex'));
+    expect(s.ownHid, h.id);
+    s.dispose();
+    // A new session starts from the sample data again (no backend yet).
+    AppState().dispose();
+    expect(hostels.any((x) => x.name == 'Anjani Annex'), isFalse);
+
+    // Tenant: Visited badge and availability.
+    final t = AppState(start: 'detail', role: 'tenant');
+    await pumpApp(tester, t);
+    expect(find.text('Visited by Hostelzy · 1 Oct 2026'), findsOneWidget);
+    expect(t.stale('greenview'), isTrue);
+    expect(t.rankOf('greenview'), greaterThan(t.rankOf('anjani')));
+    t.dispose();
+
+    // Owner: "Still 9 free beds?" every 3 days.
+    final o = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, o);
+    expect(find.text('Still 9 free beds?'), findsOneWidget);
+    await tap(tester, find.text('Yes, all 9 free'));
+    expect(o.confirmed['anjani'], 0);
+    expect(find.text('Still 9 free beds?'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+
+    // Manage → Team → add a manager: the invite is pending until they sign in.
+    o.update(() => o.screen = 'oTeam');
+    await tester.pump();
+    await tap(tester, find.text('Add a manager'));
+    await tester.enterText(find.byType(TextField).first, 'Prakash');
+    await tester.enterText(find.byType(TextField).last, '90000 00002');
+    await tester.pump();
+    await tap(tester, find.text('Send invite'));
+    expect(o.managers.single, (name: 'Prakash', phone: '9000000002', joined: false));
+    expect(find.text('INVITE PENDING'), findsOneWidget);
+    o.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

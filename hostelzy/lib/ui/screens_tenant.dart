@@ -7,6 +7,7 @@ import 'deals.dart';
 import 'fairplay.dart';
 import 'kit.dart';
 import 'layout.dart';
+import 'onboarding.dart';
 
 // ------------------------------------------------------------ derived values
 
@@ -282,7 +283,7 @@ class HostelCard extends StatelessWidget {
                             children: [
                               Ic('star', size: 11, color: p.tx),
                               const SizedBox(width: 3),
-                              T('${jsNum(h.rating)} · ${h.reviews}', ls: .08, c: p.tx),
+                              T(h.reviews == 0 ? 'New' : '${jsNum(h.rating)} · ${h.reviews}', ls: .08, c: p.tx),
                             ],
                           ),
                         ],
@@ -877,7 +878,7 @@ class DetailScreen extends StatelessWidget {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      for (final (i, w) in [const Ic('star', size: 13), T(jsNum(h.rating)), const T('·'), T('${h.reviews}'), const T('verified reviews'), T('›', c: p.ad)].indexed) ...[if (i > 0) const SizedBox(width: 4), w],
+                                      for (final (i, w) in (h.reviews == 0 ? [const T('New on Hostelzy · no reviews yet')] : [const Ic('star', size: 13), T(jsNum(h.rating)), const T('·'), T('${h.reviews}'), const T('verified reviews'), T('›', c: p.ad)]).indexed) ...[if (i > 0) const SizedBox(width: 4), w],
                                     ],
                                   ),
                                 ),
@@ -891,6 +892,8 @@ class DetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // F14: Visited by Hostelzy + whether the owner confirmed the free beds.
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VisitedBlock(h)),
                 DealBlock(h),
                 Container(
                   decoration: BoxDecoration(
@@ -1265,14 +1268,15 @@ class _PlanMode extends StatelessWidget {
             });
           },
         ),
-        Scroll(
-          horizontal: true,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            child: Row(
+        // F14 uneven floors: tiles wrap into rows of 4, however many rooms.
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          child: LayoutBuilder(
+            builder: (context, c) => Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                for (var i = 0; i < tiles.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 8),
+                for (var i = 0; i < tiles.length; i++)
                   () {
                     final r = tiles[i];
                     final fr = r.beds.where((b) => (b.state == 'free' || b.state == 'soon') && !b.mine).length;
@@ -1284,13 +1288,13 @@ class _PlanMode extends StatelessWidget {
                       child: Opacity(
                         opacity: !fits ? .35 : (fr > 0 ? 1 : .5),
                         child: Container(
-                          width: 86,
+                          width: (c.maxWidth - 24) / 4,
                           padding: const EdgeInsets.all(10),
                           decoration: box(w: 2, c: r.n == room.n ? p.ac : p.hl),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              T('${r.n}', w: 800, s: 19),
+                              T(r.label, w: 800, s: 19),
                               const SizedBox(height: 3),
                               Align(alignment: Alignment.centerLeft, child: RoomTypeTag(r.ac)),
                               const SizedBox(height: 3),
@@ -1303,7 +1307,6 @@ class _PlanMode extends StatelessWidget {
                       ),
                     );
                   }(),
-                ],
               ],
             ),
           ),
