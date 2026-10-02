@@ -8,7 +8,7 @@ import 'data.dart';
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
 class AppState extends ChangeNotifier {
-  AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView}) {
+  AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan}) {
     for (var i = 0; i < hostels.length; i++) {
       rooms[hostels[i].id] = mkRooms(hostels[i], i);
       rates[hostels[i].id] = seedRates(hostels[i]);
@@ -26,6 +26,7 @@ class AppState extends ChangeNotifier {
     this.mView = mView ?? 'day';
     reqs = seedRequests(n);
     enquiries = seedEnquiries(n);
+    _planDemo(plan);
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (const ['hold', 'holds', 'oToday'].contains(screen)) {
@@ -35,7 +36,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -208,6 +209,86 @@ class AppState extends ChangeNotifier {
     toastMsg(useReward ? 'Welcome home. ${fmt(memberReward)} Member reward used.' : 'Welcome home. This is your stay now.');
   }
 
+  // ------------------------------------------------------------ F10 owner plan
+
+  /// The signed-in owner's next invoice (Anjani), then everyone else's.
+  late final Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: firstInvoiceDue);
+  late final List<Invoice> invoices = [invoice, ...seedInvoices()];
+
+  /// UTR being typed on "I've paid".
+  String utrDraft = '';
+
+  /// Founder payments filter: check | late | paid | trial | all.
+  String payTab = 'check';
+
+  int get planBeds => rooms[ownHid]!.fold(0, (a, r) => a + r.beds.length);
+  int get planPrice => planTiers[planTierOf(planBeds)].price;
+  int get planCredit => ownerCredits.where((c) => c.hid == ownHid).fold(0, (a, c) => a + c.amt);
+
+  /// What the owner pays on [invoice]: the plan less any Member-reward credits.
+  int get invoiceAmt => (planPrice - planCredit).clamp(0, planPrice);
+  int get trialLeft => invoice.status == 'upcoming' ? trialEnd.difference(appToday).inDays : 0;
+  bool dealsPaused(String hid) => invoices.any((i) => i.hid == hid && i.pausesDeals);
+
+  /// Demo states for the overview and `?plan=`: late5 | late15 | checking | paid | missing.
+  void _planDemo(String? plan) {
+    if (plan == null) return;
+    if (plan.startsWith('late')) {
+      invoice
+        ..status = 'due'
+        ..late = int.parse(plan.substring(4));
+    } else {
+      invoice
+        ..status = plan
+        ..utr = '402188341297'
+        ..sent = '${dayName(appToday)}, 10:14 am';
+      if (plan == 'paid') invoice.checked = dayMon(appToday);
+    }
+  }
+
+  void openInvoice() {
+    go(const ['checking', 'paid'].contains(invoice.status) ? 'oPayStatus' : 'oInvoice');
+  }
+
+  /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.
+  void openUtr() => update(() {
+    utrDraft = invoice.status == 'missing' ? invoice.utr ?? '' : '';
+    sheet = 'utr';
+  });
+
+  void sendUtr() {
+    if (utrDraft.length != 12) return toastMsg('The UTR has 12 digits.');
+    update(() {
+      invoice
+        ..amt = invoiceAmt
+        ..utr = utrDraft
+        ..sent = '${dayName(appToday)}, 10:14 am'
+        ..status = 'checking';
+      sheet = null;
+      screen = 'oPayStatus';
+    });
+    toastMsg('UTR sent. We’ll check it against our bank record.');
+  }
+
+  /// Founder admin: the UTR is in the bank record.
+  void markPaid(Invoice i) {
+    update(() {
+      i
+        ..status = 'paid'
+        ..late = 0
+        ..checked = dayMon(appToday);
+    });
+    toastMsg('${i.ref} marked paid. ${hostelById(i.hid).owner} gets a receipt.');
+  }
+
+  /// Founder admin: no payment with that UTR reached the bank.
+  void notReceived(Invoice i) {
+    update(() => i.status = 'missing');
+    toastMsg('${hostelById(i.hid).owner} is asked to check the UTR.');
+  }
+
+  void sendReminder(Invoice i) => toastMsg('Reminder sent to ${hostelById(i.hid).owner} on WhatsApp.');
+
   // ------------------------------------------------------------ F08 reviews
 
   List<Review> reviews = seedReviews();
@@ -298,7 +379,9 @@ class AppState extends ChangeNotifier {
   }
 
   /// Strike 2+ hides the hostel's deals (F07).
-  Deals dealsOf(String hid) => (strikes[hid] ?? 0) >= 2 ? const Deals() : deals[hid] ?? const Deals();
+  /// Deals are hidden at 2 Fair Play strikes (F07) and paused while the
+  /// owner's plan is 15+ days late (F10).
+  Deals dealsOf(String hid) => (strikes[hid] ?? 0) >= 2 || dealsPaused(hid) ? const Deals() : deals[hid] ?? const Deals();
 
   /// Walk-in vs Hostelzy quote for a room type ([ac], [share]) at [hid].
   DealQuote quote(String hid, bool ac, int share) {

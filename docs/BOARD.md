@@ -14,7 +14,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f07-fair-play`. Founder case queue is one column in the app |
 | F08 | Verified-resident reviews + Hostelzy score ranking | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f08-reviews`. Rank shown as #N with reasons, never a number |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f09-stay-rewards`. ₹100 credits feed F10 invoices |
-| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Owner Plan canvas |
+| F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f10-owner-plan`. UPI ID is a placeholder until the founder gives it |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design approved** · 2026-10-02 (standing approval) | Build | Boards 1–6 in the Room Layouts canvas |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |

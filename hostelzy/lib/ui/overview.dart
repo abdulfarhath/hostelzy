@@ -83,6 +83,14 @@ class OverviewPage extends StatelessWidget {
         ('Fair Play case', {'start': 'oCase', 'role': 'owner'}),
         ('Strike notice', {'start': 'oStrike', 'role': 'owner'}),
         ('Founder: Fair Play cases', {'start': 'aCases', 'role': 'owner'}),
+        ('Your plan', {'start': 'oPlan', 'role': 'owner'}),
+        ('Plan invoice · UPI QR', {'start': 'oInvoice', 'role': 'owner'}),
+        ('I’ve paid · UTR', {'start': 'oInvoice', 'role': 'owner', 'sheet': 'utr'}),
+        ('Payment checking', {'start': 'oPayStatus', 'role': 'owner', 'plan': 'checking'}),
+        ('Payment not received', {'start': 'oPayStatus', 'role': 'owner', 'plan': 'missing'}),
+        ('Plan 5 days late', {'start': 'oToday', 'role': 'owner', 'plan': 'late5'}),
+        ('Plan 15 days late · deals paused', {'start': 'oToday', 'role': 'owner', 'plan': 'late15'}),
+        ('Founder: owner payments', {'start': 'aPay', 'role': 'owner'}),
         ('Rent collection', {'start': 'oRent', 'role': 'owner'}),
         ('Complaints queue', {'start': 'oMore', 'role': 'owner', 'moreTab': 'complaints'}),
         ('Edit menu', {'start': 'oMore', 'role': 'owner', 'moreTab': 'menu'}),
@@ -98,6 +106,8 @@ class OverviewPage extends StatelessWidget {
         ('Bed picker', {'start': 'picker', 'role': 'tenant', 'theme': 'dark'}),
         ('Resident home', {'start': 'rHome', 'role': 'resident', 'theme': 'dark'}),
         ('Owner today', {'start': 'oToday', 'role': 'owner', 'theme': 'dark'}),
+        ('Your plan', {'start': 'oPlan', 'role': 'owner', 'theme': 'dark'}),
+        ('Plan invoice', {'start': 'oInvoice', 'role': 'owner', 'theme': 'dark'}),
       ],
     ),
   ];
@@ -226,7 +236,7 @@ class _LivePhone extends StatefulWidget {
 }
 
 class _LivePhoneState extends State<_LivePhone> {
-  late final AppState state = AppState(start: widget.props['start'], role: widget.props['role'], theme: widget.props['theme'], mode: widget.props['mode'], sheet: widget.props['sheet'], moveTab: widget.props['moveTab'], moreTab: widget.props['moreTab']);
+  late final AppState state = AppState(start: widget.props['start'], role: widget.props['role'], theme: widget.props['theme'], mode: widget.props['mode'], sheet: widget.props['sheet'], moveTab: widget.props['moveTab'], moreTab: widget.props['moreTab'], plan: widget.props['plan']);
   @override
   void dispose() {
     state.dispose();

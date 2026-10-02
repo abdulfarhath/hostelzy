@@ -689,6 +689,78 @@ void main() {
     o.dispose();
   });
 
+  testWidgets('owner plan: trial, invoice QR, UTR, founder check, overdue pauses deals (F10)', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('Your plan'));
+    expect(s.screen, 'oPlan');
+    expect(find.text('${s.trialLeft} days left'), findsOneWidget);
+    expect(find.text('You have 36 beds'), findsOneWidget);
+    expect(s.planPrice, 999);
+
+    // A Member reward given at move-in (F09) comes off the invoice.
+    s.update(() => s.ownerCredits.add((hid: 'anjani', what: 'Member reward · 204-B', amt: 100)));
+    await tester.pump();
+    expect(find.text('− ₹100'), findsOneWidget);
+    expect(s.invoiceAmt, 899);
+
+    // Invoice: UPI QR with the placeholder UPI ID until the founder sets it.
+    await tap(tester, find.text('HZ-INV-1024 · due 1 Nov'));
+    expect(s.screen, 'oInvoice');
+    expect(find.text('₹899 due 1 Nov'), findsOneWidget);
+    expect(find.text('Hostelzy · $hostelzyUpiId'), findsOneWidget);
+    await tap(tester, find.text('I’ve paid'));
+    expect(s.sheet, 'utr');
+    await tap(tester, find.text('Send UTR'));
+    expect(s.invoice.status, 'upcoming'); // needs all 12 digits
+    await tester.enterText(find.byType(TextField).last, '4021 8834 1297');
+    await tester.pump();
+    await tap(tester, find.text('Send UTR'));
+    expect((s.screen, s.sheet, s.invoice.status, s.invoice.utr, s.invoice.amt), ('oPayStatus', null, 'checking', '402188341297', 899));
+    expect(find.text('Checking your payment'), findsOneWidget);
+    s.dispose();
+
+    // Founder: match the UTR in the bank, mark paid or not received.
+    final a = AppState(start: 'aPay', role: 'owner');
+    await pumpApp(tester, a);
+    expect(find.text('Check 2'), findsOneWidget);
+    await tap(tester, find.text('Mark paid').first);
+    expect(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-1019').status, 'paid');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Not received'));
+    expect(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-1016').status, 'missing');
+    // Orchid is 15 days late: its deals are paused, the listing stays.
+    expect(a.dealsOf('orchid').on, isEmpty);
+    expect(a.dealsPaused('orchid'), isTrue);
+    a.markPaid(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-0998'));
+    expect(a.dealsOf('orchid').on, {'monthly'});
+    a.dispose();
+
+    // Owner Today: reminder at 5 days late, deals paused at 15.
+    final l5 = AppState(start: 'oToday', role: 'owner', plan: 'late5');
+    await pumpApp(tester, l5);
+    expect(find.text('Your Hostelzy plan is 5 days late'), findsOneWidget);
+    expect(l5.dealsOf('anjani').on, isNotEmpty);
+    l5.dispose();
+    final l15 = AppState(start: 'oToday', role: 'owner', plan: 'late15');
+    await pumpApp(tester, l15);
+    expect(find.text('Deals paused: plan 15 days late'), findsOneWidget);
+    expect(l15.dealsOf('anjani').on, isEmpty);
+    await tap(tester, find.text('Pay ₹999 by UPI'));
+    expect(l15.screen, 'oInvoice');
+    l15.markPaid(l15.invoice);
+    expect(l15.dealsOf('anjani').on, isNotEmpty);
+    l15.dispose();
+
+    // Not received: the owner fixes the UTR.
+    final m = AppState(start: 'oPayStatus', role: 'owner', plan: 'missing');
+    await pumpApp(tester, m);
+    expect(find.text('We couldn’t find this payment'), findsOneWidget);
+    await tap(tester, find.text('Fix the UTR'));
+    expect((m.sheet, m.utrDraft), ('utr', '402188341297'));
+    m.dispose();
+  });
+
   test('data helpers match the prototype', () {
     expect(fmt(7600), '₹7,600');
     expect(fmt(1234567), '₹12,34,567');

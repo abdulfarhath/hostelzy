@@ -711,3 +711,54 @@ List<FairCase> seedCases() => [
   FairCase(id: 'FP-0138', hid: 'nest42', title: 'Holds declined while beds fill', signal: 'Declining holds while occupancy rises', status: 'new'),
   FairCase(id: 'FP-0137', hid: 'saisri', title: 'Joined but never added', signal: 'Tenant said “Yes, I joined”, never added', status: 'new'),
 ];
+
+// ------------------------------------------------------------ F10 owner plan
+
+/// PLACEHOLDER (F10): Hostelzy's UPI ID for owner invoices. The founder has
+/// not chosen it yet; replace this before owners are billed.
+const hostelzyUpiId = '[HOSTELZY UPI ID]';
+
+/// Flat plans by hostel size (DECISIONS 2026-10-02). No commission.
+const planTiers = <({int upTo, String label, int price, String note})>[
+  (upTo: 30, label: 'Up to 30 beds', price: 499, note: 'Everything below'),
+  (upTo: 80, label: '31 to 80 beds', price: 999, note: 'Everything below'),
+  (upTo: 1 << 30, label: '80+ beds', price: 1499, note: 'Plus a featured spot in your area'),
+];
+int planTierOf(int beds) => planTiers.indexWhere((t) => beds <= t.upTo);
+const planIncluded = 'Verified enquiries with HZ codes · holds · residents app for rent and complaints · deals · Hostelzy score.';
+
+/// Reminder after 5 days late; deals paused after 15.
+const remindAfterDays = 5, pauseAfterDays = 15;
+
+/// Anjani's 30-day trial started when the listing went live (1 Oct).
+final trialEnd = DateTime(2026, 10, 31);
+final firstInvoiceDue = DateTime(2026, 11, 1);
+
+/// An owner's monthly Hostelzy invoice. [status]: upcoming | due | checking |
+/// paid | missing (UTR not found in the bank record).
+class Invoice {
+  Invoice({required this.ref, required this.hid, required this.beds, required this.amt, required this.due, this.status = 'upcoming', this.utr, this.sent, this.late = 0, this.checked});
+  final String ref, hid;
+  final int beds;
+  int amt;
+  final DateTime due;
+  String status;
+  String? utr, sent, checked;
+
+  /// Days past [due] while unpaid.
+  int late;
+
+  bool get pausesDeals => status != 'paid' && late >= pauseAfterDays;
+}
+
+/// Other owners' invoices on the founder's payments screen.
+List<Invoice> seedInvoices() => [
+  Invoice(ref: 'HZ-INV-1019', hid: 'greenview', beds: 24, amt: 499, due: DateTime(2026, 10, 1), status: 'checking', utr: '402177100532', sent: '1 Oct, 9:02 am'),
+  Invoice(ref: 'HZ-INV-1016', hid: 'lakshmi', beds: 96, amt: 1499, due: DateTime(2026, 9, 30), status: 'checking', utr: '402099214418', sent: '30 Sep, 8:40 pm'),
+  Invoice(ref: 'HZ-INV-0998', hid: 'orchid', beds: 28, amt: 499, due: DateTime(2026, 9, 16), status: 'due', late: 15),
+  Invoice(ref: 'HZ-INV-0990', hid: 'saisri', beds: 40, amt: 999, due: DateTime(2026, 9, 20), status: 'paid', utr: '401922107781', sent: '20 Sep', checked: '21 Sep'),
+  Invoice(ref: 'HZ-INV-0987', hid: 'nest42', beds: 18, amt: 499, due: DateTime(2026, 9, 18), status: 'paid', utr: '401811902265', sent: '18 Sep', checked: '18 Sep'),
+];
+
+/// "4021 8834 1297".
+String utrSpaced(String u) => [for (var i = 0; i < u.length; i += 4) u.substring(i, i + 4 > u.length ? u.length : i + 4)].join(' ');
