@@ -1,6 +1,8 @@
 // Sample data and pure helpers, ported 1:1 from the Claude Design prototype
 // (project/HostelzyApp.dc.html).
 
+import 'dart:ui' show Offset, Rect;
+
 class Hostel {
   const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false});
   final String id, name, gender, area, owner;
@@ -762,3 +764,168 @@ List<Invoice> seedInvoices() => [
 
 /// "4021 8834 1297".
 String utrSpaced(String u) => [for (var i = 0; i < u.length; i += 4) u.substring(i, i + 4 > u.length ? u.length : i + 4)].join(' ');
+
+// ------------------------------------------------------------ F12 room layouts
+
+/// A bed on a layout is 2.7 × 5.4 ft ("3 × 6 ft" with its gap).
+const bedW = 2.7, bedH = 5.4;
+
+/// A fan covers about 4 ft around it ("Under a fan").
+const fanReach = 4.0;
+
+/// Room shapes in the Hostelzy team's library (phase 1: the sample rooms are
+/// rectangles).
+const layoutShapes = ['Rectangle', 'L shape', 'T shape', 'U shape', 'Angled corner', 'Narrow end', 'Alcove', 'Custom'];
+
+/// Hostels whose rooms Hostelzy has drawn. The rest show "Layout coming soon".
+const layoutHostels = ['anjani', 'saisri', 'nest42', 'orchid'];
+
+/// One drawn item. [kind]: fan | ac | window | door | wash. Feet from the
+/// room's top-left corner.
+class LItem {
+  LItem(this.id, this.kind, this.x, this.y, this.w, this.h, {this.facing, this.working = true});
+  final String id, kind;
+  final double x, y, w, h;
+
+  /// Window: street | courtyard | building.
+  final String? facing;
+  bool working;
+}
+
+/// A room's layout, drawn by the Hostelzy team. Layout beds are the bed-map
+/// beds (same letters). [live]: a version tenants see. [pending]: a newer
+/// version waiting for the owner's approval.
+class RoomLayout {
+  RoomLayout({required this.hid, required this.room, required this.w, required this.h, required this.beds, required this.items, this.version = 1, this.live = true, this.pending = false, this.drawn = '28 Sep', this.verified = '28 Sep'});
+  final String hid;
+  final int room;
+  final double w, h;
+  final Map<String, Offset> beds;
+  final List<LItem> items;
+  int version;
+  bool live, pending;
+  String drawn, verified;
+  String shape = 'Rectangle';
+  bool mirrored = false, flipped = false;
+
+  /// The owner's open change request (F12 board 5).
+  ({String text, Set<String> added, String size, String at})? request;
+
+  Rect _flip(Rect r) => Rect.fromLTWH(mirrored ? w - r.right : r.left, flipped ? h - r.bottom : r.top, r.width, r.height);
+  Rect bedRect(String letter) => _flip(Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH));
+  Rect itemRect(LItem i) => _flip(Rect.fromLTWH(i.x, i.y, i.w, i.h));
+  Iterable<LItem> of(String kind) => items.where((i) => i.kind == kind);
+  LItem? get ac => of('ac').firstOrNull;
+  LItem? get window => of('window').firstOrNull;
+  LItem? get door => of('door').firstOrNull;
+  LItem? get wash => of('wash').firstOrNull;
+
+  /// The AC blows across the room from its wall: this box, in feet.
+  Rect? get airflow {
+    final a = ac;
+    if (a == null) return null;
+    return _flip(Rect.fromLTWH(w - 9, 0, 9 - a.w, 6.5));
+  }
+}
+
+String _m(double ft) {
+  final m = (ft * .3048 * 2).round() / 2;
+  return m == m.roundToDouble() ? '${m.round()} m' : '$m m';
+}
+
+double _distTo(Offset p, Rect r) {
+  final dx = p.dx < r.left ? r.left - p.dx : (p.dx > r.right ? p.dx - r.right : 0.0);
+  final dy = p.dy < r.top ? r.top - p.dy : (p.dy > r.bottom ? p.dy - r.bottom : 0.0);
+  return Offset(dx, dy).distance;
+}
+
+/// What a bed is like, for the facts and the compare table. Never priced by
+/// position (DECISIONS 2026-10-02).
+({String fan, String? ac, String win, String door, String wash, String wall}) bedTraits(RoomLayout l, Room r, String letter) {
+  final b = l.bedRect(letter);
+  final c = b.center;
+  final fans = l.of('fan').where((f) => (l.itemRect(f).center - c).distance <= fanReach).toList();
+  final fan = fans.isEmpty ? 'No fan overhead' : (fans.any((f) => f.working) ? 'Under a fan' : 'Fan not working');
+  final air = l.airflow;
+  final ac = !r.ac ? null : (r.acRepair || l.ac?.working == false ? 'AC under repair' : (air != null && air.contains(c) ? 'In the airflow' : 'Out of the airflow'));
+  final wi = l.window;
+  final wr = wi != null ? l.itemRect(wi) : null;
+  final win = wr != null && (wr.top < 1 ? b.top < 2 : b.bottom > l.h - 2) && b.left < wr.right && b.right > wr.left ? 'Window side · ${wi!.facing}' : 'No window';
+  final dr = l.door != null ? _distTo(c, l.itemRect(l.door!)) : 99.0;
+  final door = dr * .3048 < 2.2 ? 'Near the door' : _m(dr);
+  final wash = l.wash == null ? 'Outside the room' : _m(_distTo(c, l.itemRect(l.wash!)));
+  final walls = (b.left < 1.5 || b.right > l.w - 1.5 ? 1 : 0) + (b.top < 1.5 || b.bottom > l.h - 1.5 ? 1 : 0);
+  final wall = switch (walls) {
+    2 => 'Corner',
+    1 => 'One wall',
+    _ => 'No wall',
+  };
+  return (fan: fan, ac: ac, win: win, door: door, wash: wash, wall: wall);
+}
+
+/// "Under a fan", "Window side · faces street", "In the AC airflow", "Door 4 m away".
+List<String> bedFacts(RoomLayout l, Room r, String letter) {
+  final t = bedTraits(l, r, letter);
+  return [
+    if (t.wall == 'Corner') 'Corner bed · walls on two sides',
+    t.fan,
+    if (t.win != 'No window') t.win.replaceFirst('· ', '· faces '),
+    if (t.ac != null) t.ac == 'AC under repair' ? t.ac! : t.ac!.replaceFirst('the airflow', 'the AC airflow'),
+    t.door == 'Near the door' ? t.door : 'Door ${t.door} away',
+    t.wash == 'Outside the room' ? 'Common washroom outside' : 'Washroom ${t.wash} away',
+  ];
+}
+
+/// The sample layout the Hostelzy team drew for room [r]: beds along the
+/// walls, window on the top wall, door bottom right, attached washroom bottom
+/// left, fans, and an AC unit on the right wall of AC rooms.
+RoomLayout mkLayout(String hid, Room r, {required bool street}) {
+  final (w, h) = switch (r.share) {
+    2 => (14.0, 12.0),
+    3 => (18.0, 15.0),
+    _ => (20.0, 15.0),
+  };
+  final slots = <Offset>[
+    const Offset(.8, .8),
+    if (r.share == 2) Offset(w - 3.5, .8) else Offset(w / 2, .8),
+    if (r.share >= 3) Offset(w - 3.9, h - 6.5),
+    if (r.share >= 4) Offset(w / 2 - 2.5, h - 6.5),
+  ];
+  final fans = r.share == 2 ? [const Offset(4, 4.5)] : [Offset(w * .575, 7), Offset(w * .83, 10.75)];
+  return RoomLayout(
+    hid: hid,
+    room: r.n,
+    w: w,
+    h: h,
+    beds: {for (var i = 0; i < r.beds.length && i < slots.length; i++) r.beds[i].letter: slots[i]},
+    items: [
+      LItem('win', 'window', w * .42, 0, w * .41, .3, facing: street ? 'street' : 'courtyard'),
+      LItem('door', 'door', w - 4.5, h - .2, 3, .2),
+      if (r.bath == 'Attached') LItem('wash', 'wash', 0, h - 4, 5, 4),
+      for (var i = 0; i < fans.length; i++) LItem('fan${i + 1}', 'fan', fans[i].dx - .5, fans[i].dy - .5, 1, 1),
+      if (r.ac) LItem('ac', 'ac', w - .5, 1.3, .5, 1.8),
+    ],
+  );
+}
+
+/// Layouts for every room of the hostels Hostelzy has drawn. Rooms on the
+/// first half of each floor face the street. Anjani 204 has a v2 waiting for
+/// the owner's approval.
+Map<String, Map<int, RoomLayout>> seedLayouts(Map<String, List<Room>> rooms) {
+  final out = <String, Map<int, RoomLayout>>{};
+  for (final hid in layoutHostels) {
+    final rs = rooms[hid]!;
+    out[hid] = {
+      for (final r in rs)
+        r.n: () {
+          final floor = rs.where((x) => x.floor == r.floor).toList();
+          return mkLayout(hid, r, street: floor.indexOf(r) < (floor.length + 1) ~/ 2);
+        }(),
+    };
+  }
+  out['anjani']![204]!
+    ..version = 2
+    ..pending = true
+    ..drawn = '1 Oct';
+  return out;
+}

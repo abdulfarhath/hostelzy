@@ -8,7 +8,7 @@ import 'data.dart';
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
 class AppState extends ChangeNotifier {
-  AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan}) {
+  AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     for (var i = 0; i < hostels.length; i++) {
       rooms[hostels[i].id] = mkRooms(hostels[i], i);
       rates[hostels[i].id] = seedRates(hostels[i]);
@@ -27,6 +27,7 @@ class AppState extends ChangeNotifier {
     reqs = seedRequests(n);
     enquiries = seedEnquiries(n);
     _planDemo(plan);
+    signedIn = auth != 'out';
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (const ['hold', 'holds', 'oToday'].contains(screen)) {
@@ -36,7 +37,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -288,6 +289,121 @@ class AppState extends ChangeNotifier {
   }
 
   void sendReminder(Invoice i) => toastMsg('Reminder sent to ${hostelById(i.hid).owner} on WhatsApp.');
+
+  // ------------------------------------------------------------ F12 room layouts
+
+  /// Layouts drawn by the Hostelzy team, by hostel and room number.
+  late final Map<String, Map<int, RoomLayout>> layouts = seedLayouts(rooms);
+
+  /// Room tab layer toggles: off by default (DECISIONS 2026-10-02).
+  bool showFan = false, showAc = false;
+
+  /// Layouts are only for people who verified their phone by OTP.
+  bool signedIn = true;
+
+  /// The two beds on Compare beds (letters in [room]).
+  String cmpA = '', cmpB = '';
+
+  /// The bed whose facts show in the Room tab (a letter), when not picked.
+  String? roomBed;
+
+  /// Owner (Beds → room layout) and the Hostelzy admin editor: which room.
+  int lRoom = 204;
+
+  /// Request-a-change sheet draft.
+  String lReqText = '', lReqLen = '', lReqWid = '';
+  Set<String> lReqAdded = {};
+
+  /// Admin editor: the selected AC unit's properties.
+  final Map<String, String> acProps = {'Wall': 'Right', 'Blows': 'Left', 'Reach': '8 ft', 'Status': 'Working'};
+
+  RoomLayout? layoutOf(String hid, int n) => layouts[hid]?[n];
+
+  /// What tenants see: the last approved version.
+  RoomLayout? liveLayout(String hid, int n) {
+    final l = layoutOf(hid, n);
+    return l != null && l.live ? l : null;
+  }
+
+  /// Women's PGs: whole-floor plans only after a hold here.
+  bool floorLocked(String hid) => hostelById(hid).gender == 'Women' && !heldAt(hid);
+
+  /// Tapping a room in Plan opens it in Room.
+  void openRoom(int n) => update(() {
+    room = n;
+    bed = null;
+    mode = 'room';
+  });
+
+  void openCompare() {
+    final r = rooms[hid]!.firstWhere((x) => x.n == room);
+    final free = r.beds.where((b) => b.state == 'free' && !b.mine).map((b) => b.letter).toList();
+    if (free.length < 2) return toastMsg('Only one free bed in this room.');
+    final sel = bed != null && free.contains(bed!.split('-').last) ? bed!.split('-').last : free.first;
+    cmpA = sel;
+    cmpB = free.firstWhere((x) => x != sel);
+    go('compare');
+  }
+
+  /// Owner marks a fan, the AC or the window Working / Not working. Broken
+  /// items show honestly to tenants and raise a complaint.
+  void setWorking(RoomLayout l, LItem i, bool ok) {
+    if (i.working == ok) return;
+    final r = rooms[l.hid]!.firstWhere((x) => x.n == l.room);
+    final name = switch (i.kind) {
+      'fan' => 'Fan ${i.id.substring(3)}',
+      'ac' => 'AC unit',
+      _ => 'Window',
+    };
+    update(() {
+      i.working = ok;
+      if (i.kind == 'ac') r.acRepair = !ok;
+      if (!ok) {
+        final id = complaints.fold<int>(0, (a, c) => c.id > a ? c.id : a) + 1;
+        complaints = [Complaint(id: id, by: 'Layout · ${l.room}', cat: i.kind == 'ac' ? 'AC' : i.kind == 'fan' ? 'Fan' : 'Window', text: '$name in room ${l.room} marked not working.', status: 'Open', date: dayMon(appToday), note: ''), ...complaints];
+      }
+    });
+    toastMsg(ok ? '$name working again.' : '$name marked not working. A complaint is raised.');
+  }
+
+  void approveLayout(RoomLayout l) {
+    update(() {
+      l
+        ..pending = false
+        ..live = true;
+    });
+    toastMsg('Room ${l.room} layout approved. Tenants see it now.');
+  }
+
+  void openLayoutRequest() => update(() {
+    lReqText = '';
+    lReqLen = '';
+    lReqWid = '';
+    lReqAdded = {};
+    sheet = 'layoutReq';
+  });
+
+  void sendLayoutRequest() {
+    final l = layoutOf(ownHid, lRoom)!;
+    if (lReqText.trim().isEmpty && lReqAdded.isEmpty) return toastMsg('Say what’s different, or add a photo.');
+    update(() {
+      l.request = (text: lReqText.trim(), added: Set.of(lReqAdded), size: lReqLen.isNotEmpty && lReqWid.isNotEmpty ? '$lReqLen × $lReqWid ft' : '', at: '${dayMon(appToday)}, 7:10 pm');
+      sheet = null;
+    });
+    toastMsg('Sent. Hostelzy redraws it free within 48 hours.');
+  }
+
+  /// Admin: send the new version to the owner for approval.
+  void sendLayoutToOwner(RoomLayout l) {
+    update(() {
+      l
+        ..version += l.pending ? 0 : 1
+        ..pending = true
+        ..drawn = dayMon(appToday)
+        ..request = null;
+    });
+    toastMsg('v${l.version} sent to ${hostelById(l.hid).owner} for approval.');
+  }
 
   // ------------------------------------------------------------ F08 reviews
 
