@@ -188,7 +188,7 @@ reset role;
 
 -- ------------------------------------------------------------ B6 Realtime publication
 do $$ begin
-  if (select string_agg(tablename, ',' order by tablename) from pg_publication_tables where pubname = 'supabase_realtime') is distinct from 'complaints,enquiries,fair_cases,holds,invite_signups,invoices,layout_fixes,payments,stays' then
+  if (select string_agg(tablename, ',' order by tablename) from pg_publication_tables where pubname = 'supabase_realtime') is distinct from 'amenities,complaints,enquiries,fair_cases,holds,invite_signups,invoices,layout_fixes,payments,stays' then
     raise exception 'Realtime publication is missing tables';
   end if;
 end $$;

@@ -239,6 +239,9 @@ extension ResidentsActions on AppState {
       floor = r.floor;
       room = r.n;
       bed = null;
+      // F23 (founder): the room plan comes first; the floor view is one tap
+      // away. Guests and rooms without a drawn layout start on the floor view.
+      mode = signedIn && liveLayout(hid, r.n) != null ? 'room' : 'plan';
     });
   }
 

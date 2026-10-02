@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
+import 'amenities.dart';
 import 'common.dart';
 import 'kit.dart';
 
@@ -174,9 +175,11 @@ class LayoutMap extends StatelessWidget {
         Rect sc(Rect r) => Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k);
         final kids = <Widget>[Positioned.fill(child: CustomPaint(painter: _RoomPainter(l, p, fan: fan, ac: ac)))];
         final labels = <Widget>[];
+        // F23: a geyser in this room's washroom shows on the plan.
+        final geyser = s.inRoom(l.hid, room.n).any((a) => a.kind == 'geyser' && a.place == 'washroom');
         for (final wz in l.of('wash')) {
           final w = sc(wz.rect);
-          labels.add(Positioned(left: w.left + 6, top: w.bottom - 22, child: label('Washroom')));
+          labels.add(Positioned(left: w.left + 6, top: w.bottom - 22, child: geyser ? label('Washroom · Geyser', icon: 'geyser') : label('Washroom')));
         }
         for (final wi in l.of('window')) {
           final w = sc(wi.rect);
@@ -369,6 +372,8 @@ class RoomMode extends StatelessWidget {
       body = VGap(
         gap: 10,
         children: [
+          // F23: the shared things on this floor, above the plan.
+          FloorStrip(hid: h.id, floor: room.floor),
           // F22 Area 1: fan reach and AC airflow are always drawn.
           LayoutMap(
             l: l,
@@ -404,6 +409,8 @@ class RoomMode extends StatelessWidget {
                 children: [
                   T('Bed ${fb.letter} · ${const {'free': 'free', 'held': 'on hold', 'soon': 'free soon'}[fb.state] ?? 'taken'}', w: 800, s: 17),
                   T(bedFacts(l, room, fb.letter).join(' · '), s: 14, c: p.mu, lh: 1.4),
+                  // F23: what the room itself has (a geyser in its washroom…).
+                  for (final x in roomThingLines(s, h.id, room.n)) Row(children: [Ic(x.startsWith('Geyser') ? 'geyser' : 'check', size: 18, color: p.tx), const SizedBox(width: 6), Expanded(child: T(x, s: 14, w: 800))]),
                 ],
               ),
             ),
@@ -423,11 +430,52 @@ class RoomMode extends StatelessWidget {
         ],
       );
     }
+    // F23: layout first. The rooms on this floor as chips, the floor view one tap away.
+    final onFloor = rooms.where((r) => r.floor == room.floor && AppState.fits(r, s.pR)).toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final r in onFloor)
+                      Tap(
+                        key: ValueKey('roomChip-${r.n}'),
+                        onTap: () => s.update(() {
+                          s.room = r.n;
+                          s.bed = null;
+                          s.roomBed = null;
+                        }),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 40),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          decoration: box(bg: r.n == room.n ? p.tx : transparent, w: r.n == room.n ? 2 : 1, c: r.n == room.n ? p.tx : p.dv),
+                          child: T(r.label, w: 800, s: 14, c: r.n == room.n ? p.bg : p.tx),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Tap(
+                key: const ValueKey('floorView'),
+                onTap: () => s.update(() => s.mode = 'plan'),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: box(w: 2, c: p.tx),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('bed', size: 16, color: p.tx), const SizedBox(width: 6), const T('Floor view', w: 800, s: 13)]),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           if (room.ac && room.acRepair)
             Container(
               margin: const EdgeInsets.only(bottom: 10),

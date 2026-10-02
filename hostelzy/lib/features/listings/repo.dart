@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'dart:ui' show Offset;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_config.dart';
@@ -15,7 +16,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -163,6 +164,11 @@ abstract class HostelRepo {
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''});
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
+
+  /// F23: add or change a floor / room amenity (staff or a resident of the
+  /// hostel); returns the row id. Residents: at most 20 changes a day.
+  Future<String> saveAmenity(Amenity a);
+  Future<void> removeAmenity(String key);
 }
 
 class SampleRepo implements HostelRepo {
@@ -284,6 +290,12 @@ class SampleRepo implements HostelRepo {
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
+
+  @override
+  Future<String> saveAmenity(Amenity a) async => a.key ?? a.id;
+
+  @override
+  Future<void> removeAmenity(String key) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -530,6 +542,22 @@ class SupabaseRepo implements HostelRepo {
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
 
   @override
+  Future<String> saveAmenity(Amenity a) async => await db.rpc('save_amenity', params: {
+    'p_hostel': a.hid,
+    'p_id': a.key,
+    'p_floor': a.floor,
+    'p_kind': a.kind,
+    'p_name': a.name,
+    'p_qty': a.qty,
+    'p_working': a.working,
+    'p_place': a.place,
+    'p_rooms': a.rooms,
+  }) as String;
+
+  @override
+  Future<void> removeAmenity(String key) => db.rpc('remove_amenity', params: {'p_id': key});
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -544,7 +572,16 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
-    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)');
+    const base = '*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)';
+    List<Map<String, dynamic>> rows;
+    try {
+      rows = await db.from('hostels').select('$base, amenities(*)');
+    } on PostgrestException catch (e) {
+      // F23: until the amenities migration has run (FOUNDER-TODO 4u), load
+      // the hostels without them instead of failing.
+      debugPrint('listings without amenities: ${e.message}');
+      rows = await db.from('hostels').select(base);
+    }
     // S5: strike counts are public (they hide deals and listings).
     final st = await db.rpc('strike_counts') as List;
     // F19: "Checked by N residents · date" per room.
@@ -674,7 +711,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks);
+  // F23: floor and room amenities, oldest first.
+  final ams = <String, List<Amenity>>{
+    for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
+  };
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
@@ -694,3 +735,19 @@ RemoteSettings settingsFromRows(List<Map<String, dynamic>> rows) {
   final m = {for (final r in rows) r['key'] as String: r['value'] as String? ?? ''};
   return (minBuild: int.tryParse(m['min_supported_build'] ?? '') ?? 0, maintenanceUntil: m['maintenance_until'] ?? '');
 }
+
+/// F23: an `amenities` row → [Amenity].
+Amenity amenityFromRow(Map<String, dynamic> r) => Amenity(
+  id: r['id'] as String,
+  key: r['id'] as String,
+  hid: r['hostel_id'] as String,
+  floor: r['floor'] as int,
+  kind: r['kind'] as String,
+  name: r['name'] as String? ?? '',
+  qty: r['qty'] as int? ?? 1,
+  working: r['working'] as bool? ?? true,
+  place: r['place'] as String? ?? 'floor',
+  rooms: [for (final x in (r['rooms'] as List? ?? const [])) x as int],
+  byResident: r['by_role'] == 'resident',
+  at: DateTime.parse(r['updated_at'] as String? ?? r['created_at'] as String).millisecondsSinceEpoch,
+);

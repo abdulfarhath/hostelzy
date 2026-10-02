@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data.dart';
 import '../state.dart';
+import 'amenities.dart';
 import 'common.dart';
 import 'kit.dart';
 
@@ -141,8 +142,24 @@ class OwnerLayoutsScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Beds', title: 'Room layouts', size: 28))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Layouts', title: s.amOwnerTab == 'things' ? s.floorName(s.amFloor) : 'Room layouts', size: 28))]),
         ),
+        // F23: the floors' shared things sit beside the room layouts.
+        Seg(
+          key: const ValueKey('layoutsTab'),
+          opts: [('rooms', 'Rooms'), ('things', 'Shared things ${s.amenities.where((a) => a.hid == h.id).length}')],
+          cur: s.amOwnerTab,
+          onPick: (v) => s.update(() {
+            s.amOwnerTab = v;
+            s.amHid = h.id;
+            if (!floorsOf(rs).contains(s.amFloor) && !s.amenityFloors(h.id).contains(s.amFloor)) s.amFloor = floorsOf(rs).first;
+          }),
+          pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          fs: 13,
+          center: true,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        ),
+        if (s.amOwnerTab == 'things') const Expanded(child: OwnerSharedThings()) else ...[
         Scroll(
           horizontal: true,
           child: Padding(
@@ -196,6 +213,7 @@ class OwnerLayoutsScreen extends StatelessWidget {
             ),
           ),
         ),
+        ],
       ],
     );
   }

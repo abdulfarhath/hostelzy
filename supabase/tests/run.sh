@@ -25,3 +25,4 @@ $P -d hz_rls_test -f tests/reminders_test.sql
 $P -d hz_rls_test -f tests/fixextras_test.sql
 $P -d hz_rls_test -f tests/holdpush_test.sql
 $P -d hz_rls_test -f tests/complaintphoto_test.sql
+$P -d hz_rls_test -f tests/amenities_test.sql

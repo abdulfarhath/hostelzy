@@ -109,6 +109,8 @@ void main() {
 
     // First hold: sign in now, then the hold goes ahead by itself.
     await _tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await _tap(tester, find.byKey(const ValueKey('floorView')));
     await _tap(tester, freeBed(s));
     final bed = s.bed!;
     await _tap(tester, find.byKey(const ValueKey('pickContinue')));

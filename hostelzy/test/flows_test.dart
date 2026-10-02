@@ -104,6 +104,8 @@ void main() {
     await tap(tester, find.text('Anjani Residency'));
     expect(s.screen, 'detail');
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.screen, 'picker');
     await tap(tester, freeBed(s));
     expect(s.bed, isNotNull);
@@ -459,6 +461,8 @@ void main() {
 
     // Picker: AC filter skips non-AC rooms.
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
     expect(s.findBed('anjani', '${s.room}-A').r!.ac, isFalse);
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
@@ -541,6 +545,8 @@ void main() {
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.screen, 'picker');
     await tap(tester, freeBed(s));
     final bed = s.bed!;
@@ -1879,7 +1885,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../state.dart';
+import 'amenities.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
@@ -577,6 +578,8 @@ class _Sheet extends StatelessWidget {
     final p = PalScope.of(context);
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
+      'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
+      'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
       'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
@@ -643,6 +646,8 @@ class _Sheet extends StatelessWidget {
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
+      'amFloor' => hostelById(s.amHid).name,
+      'amAdd' => 'Shared things',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -681,6 +686,8 @@ class _Sheet extends StatelessWidget {
       'water' => const WaterSheet(),
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
+      'amFloor' => const AmenityFloorSheet(),
+      'amAdd' => const AmenityAddSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {
@@ -788,6 +795,11 @@ class _SearchSheet extends StatelessWidget {
             ]),
           ),
           group('Deals', wrap(6, [ChipBtn('Hostelzy deals only', on: s.fDeals, pad: chipPad, onTap: () => s.update(() => s.fDeals = !s.fDeals))])),
+          // F23: things on the floor (working), and a geyser in the room's washroom.
+          group('On the floor', wrap(6, [
+            for (final k in const [('washer', 'Washing machine'), ('fridge', 'Fridge'), ('ro', 'RO water'), ('geyser', 'Geyser in my washroom')])
+              ChipBtn(k.$2, key: ValueKey('fAm-${k.$1}'), on: s.fAm.contains(k.$1), pad: chipPad, onTap: () => s.update(() => s.fAm = s.fAm.contains(k.$1) ? (Set.of(s.fAm)..remove(k.$1)) : {...s.fAm, k.$1})),
+          ])),
           Tap(
             key: const ValueKey('foodToggle'),
             onTap: () => s.update(() => s.fFood = !s.fFood),
