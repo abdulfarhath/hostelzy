@@ -42,6 +42,8 @@ mixin _ReviewsData {
   String mapSel = 'anjani';
   String payM = 'UPI';
   /// Food: today's weekday first (E1).
+  /// F21: "This is correct" on Confirm stay.
+  bool cAgree = false;
   int day = appToday.weekday - 1;
   String? rated;
   List<Complaint> complaints = seedComplaints();
@@ -68,7 +70,6 @@ mixin _ReviewsData {
   String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
   String? rBed;
   int rPickBack = 3;
-  String cOtp = '';
 
   /// Bed of the resident on the confirm-your-stay screen.
   String? cBed;
@@ -301,5 +302,5 @@ extension ReviewsActions on AppState {
     toastMsg(msg);
   }
   /// This month's rent is paid once Srinivas confirms it (F17).
-  bool get paid => myRent.status == 'paid';
+  bool get paid => myRentPay?.status == 'paid';
 }

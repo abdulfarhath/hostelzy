@@ -534,7 +534,7 @@ class MeScreen extends StatelessWidget {
                   height: 64,
                   color: p.ac,
                   alignment: Alignment.center,
-                  child: T(isOwner ? 'SR' : 'RV', w: 800, s: 24, c: p.ai),
+                  child: T(initials(s.meName.isNotEmpty ? s.meName : (isOwner ? hostelById(s.ownHid).owner : '')), w: 800, s: 24, c: p.ai),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

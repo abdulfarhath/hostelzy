@@ -61,7 +61,7 @@ extension ResidentsActions on AppState {
     return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
   }
 
-  /// "Add and send code": the resident is listed as Waiting OTP until they
+  /// "Add resident": the resident is listed as Not confirmed until they
   /// confirm with the WhatsApp code.
   void addResident() {
     final name = rName.trim();
@@ -114,16 +114,23 @@ extension ResidentsActions on AppState {
   void confirmStay() {
     final r = toConfirm;
     if (r == null) return;
-    // S2: on Supabase nothing checks a typed code, so the resident confirms by
-    // joining with the hostel's invite code (approving links this entry).
-    if (onServer) return toastMsg('${r.name.split(' ')[0]} confirms by joining with your invite code. Share it from Invite; approving it links this entry.');
-    if (cOtp.length != 6) return toastMsg('Enter the 6-digit code.');
+    if (!cAgree) return toastMsg('Tick “This is correct” first.');
+    // F21: no typed code (nothing sends one). On the server the resident
+    // confirms by joining with the hostel's invite code; approving links it.
+    if (onServer) {
+      return update(() {
+        roleGate = 'resident';
+        hist = [...hist, screen];
+        screen = 'roleGate';
+      });
+    }
     update(() {
       cBed = r.bed;
       r.confirmed = true;
       r.since = 'Joined ${dayMon(r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday)}';
-      cOtp = '';
+      cAgree = false;
     });
+    toastMsg('Confirmed. Welcome to your stay.');
   }
 
   /// F16: cheapest rent and free beds for one room type at a hostel, or

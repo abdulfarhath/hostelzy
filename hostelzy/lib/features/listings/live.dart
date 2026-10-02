@@ -9,7 +9,7 @@ import '../../data.dart';
 /// S6: the signed-in user's Stay Rewards from the server (ledger + profile).
 typedef Rewards = ({bool member, String since, String? code, bool referred, int balance, int friends, bool used, List<({String hid, String what, int amt})> ownerCredits});
 
-typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards});
+typedef LiveRows = ({List<Hold> holds, List<Enquiry> enquiries, List<Payment> payments, List<Complaint> complaints, Set<String> expired, String? myHostel, List<Signup> signups, List<Resident> residents, List<Invoice> invoices, Map<String, DateTime> trialEnds, List<FairCase> cases, List<String> myHostels, List<({String hid, String name, String phone, bool joined})> managers, List<LayoutFix> fixes, Rewards? rewards, Resident? myStay});
 
 /// Tables the app listens to (they are in the `supabase_realtime` publication).
 const liveTables = ['holds', 'enquiries', 'payments', 'complaints', 'invite_signups', 'stays', 'invoices', 'fair_cases', 'layout_fixes'];
@@ -72,6 +72,7 @@ Payment paymentFromRow(Map<String, dynamic> r) {
     utr: r['utr'] as String?,
     sent: r['utr'] == null ? null : dayMon(DateTime.parse(r['created_at'] as String).toLocal()),
     done: r['confirmed_at'] == null ? null : dayMon(DateTime.parse(r['confirmed_at'] as String).toLocal()),
+    at: _ms(r['created_at']),
   );
 }
 
@@ -235,6 +236,8 @@ LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<
   expired: {for (final r in holds) if (r['status'] == 'expired') r['id'] as String},
   // The hostel this user lives in (a confirmed, current stay), for complaints.
   myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
+  // F21: the user's own confirmed stay (bed, rent, joined), for the resident screens.
+  myStay: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) residentFromRow(r, payments)].firstOrNull,
   // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
   // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
   // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.

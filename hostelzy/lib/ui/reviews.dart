@@ -238,7 +238,7 @@ class ResidentReviewScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, 'Anjani Residency · 30-day review', 'How is your stay so far?'),
+        _head(context, '${s.stayHostel.name} · 30-day review', 'How is your stay so far?'),
         Expanded(
           child: Scroll(
             key: ValueKey('rReview${s.scrollEpoch}'),
@@ -342,7 +342,7 @@ class ExitReviewScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, 'Leaving Anjani Residency · ${s.vDate}', 'Did you get your advance back?'),
+        _head(context, 'Leaving ${s.stayHostel.name} · ${s.vDate}', 'Did you get your advance back?'),
         Expanded(
           child: Scroll(
             key: ValueKey('rExit${s.scrollEpoch}'),

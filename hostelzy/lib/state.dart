@@ -44,6 +44,7 @@ part 'features/listings/sync.dart';
 part 'features/links/links.dart';
 part 'features/photos/photos.dart';
 part 'features/reminders/reminders.dart';
+part 'features/residents/my_stay.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -51,7 +52,7 @@ part 'features/reminders/reminders.dart';
 /// B4: split by area. Each `lib/features/<area>/*.dart` part holds that
 /// area's fields (a `_XData` mixin) and actions (an `XActions` extension).
 /// This file keeps the shared core: navigation, `update`, statics, restore.
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _LayoutFixesData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {

@@ -31,6 +31,10 @@ abstract class HostelRepo {
   /// The signed-in user's profile. The phone is typed, never marked verified.
   Future<void> saveProfile({required String name, required String email, required String phone, required String role});
 
+  /// F21: starts this month's rent payment for the resident's own stay
+  /// (then UPI → UTR → the owner confirms, as for advances).
+  Future<void> startRent({required String hid, required String stayKey, required int amount, required String note});
+
   /// F20: the user's reminder settings, backed up on their profile so a new
   /// phone gets them back. Null on sample data or when nothing is saved.
   Future<void> saveReminders(String uid, Map<String, dynamic> settings);
@@ -157,6 +161,8 @@ class SampleRepo implements HostelRepo {
   Future<RemoteSettings?> settings() async => null;
   @override
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
+  @override
+  Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) => throw UnsupportedError('sample data');
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) async {}
   @override
@@ -492,6 +498,10 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) =>
       db.from('profiles').upsert({'name': name, 'email': email, 'phone': phone, 'role': role}, onConflict: 'id');
+
+  @override
+  Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) =>
+      db.from('payments').insert({'hostel_id': hid, 'stay_id': stayKey, 'kind': 'rent', 'amount': amount, 'note': note});
 
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) => db.from('profiles').update({'reminders': settings}).eq('id', uid);
