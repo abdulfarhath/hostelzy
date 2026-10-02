@@ -33,3 +33,11 @@ A trademark lawyer runs the official IP India search and files in classes 9, 42,
 ## Round 1 name list (Brand chat, 2026-10-02)
 14 names with stories, ease of saying and quick checks: `names.md`.
 Brand chat's top 3: **Cotkey, Bedpakka, Bedmila**. Waiting for the founder to pick 2–3.
+
+## Founder decision (2026-10-02)
+Keep the name **Hostelzy** for now (founder tired of searching). Brand chat warned: **Hostelz.com**
+(hostel search site) is one letter away; a trademark lawyer must check before launch.
+Ideas chat: please record this in DECISIONS.md.
+
+## Logo
+Round 1 concepts: `logo.md` and https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq1
