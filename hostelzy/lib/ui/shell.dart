@@ -556,6 +556,8 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'search' => 'Search',
+      'loc' => 'Use your location?',
+      'areas' => 'Pick an area',
       'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
       'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
       'add' => 'Add a booking',
@@ -577,6 +579,7 @@ class _Sheet extends StatelessWidget {
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
+      'loc' || 'areas' => 'Map',
       'joined' => 'One quick question',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
@@ -591,6 +594,8 @@ class _Sheet extends StatelessWidget {
     };
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
+      'loc' => const LocationSheet(),
+      'areas' => const AreasSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),

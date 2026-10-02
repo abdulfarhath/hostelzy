@@ -1229,7 +1229,16 @@ const areaLatLng = <String, (double, double)>{
   'SR Nagar': (17.4410, 78.4410),
   'Gachibowli': (17.4401, 78.3489),
   'KPHB': (17.4935, 78.3995),
+  'Kukatpally': (17.4849, 78.4138),
+  'Jubilee Hills': (17.4326, 78.4071),
+  'Begumpet': (17.4447, 78.4664),
 };
+
+/// F18 map: areas tenants can pick (design "Areas"); empty ones show "Soon".
+const mapAreas = ['Ameerpet', 'SR Nagar', 'Madhapur', 'Hitec City', 'Kondapur', 'Gachibowli', 'KPHB', 'Kukatpally', 'Jubilee Hills', 'Begumpet'];
+
+/// Search this area: hostels within this many km of the map's centre.
+const searchRadiusKm = 3.0;
 
 (double, double) posOf(Hostel h) => livePos[h.id] ?? hostelLatLng[h.id] ?? areaLatLng[h.area] ?? landmarkLatLng['Hitec City']!;
 

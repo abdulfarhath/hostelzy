@@ -10,6 +10,7 @@ import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
+import 'package:hostelzy/locate.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -1174,7 +1175,7 @@ void main() {
     expect(find.text('Gachibowli'), findsOneWidget); // other landmarks are labelled
     final mh = hostelById(s.mapSel);
     expect(find.text('${kmLabel(kmTo(mh, 'Hitec City'))} from Hitec City · rated ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
-    await tap(tester, find.text('₹${(hostelById('greenview').from / 1000).toStringAsFixed(1)}k'));
+    await tap(tester, find.text(fmt(hostelById('greenview').from)));
     expect(s.mapSel, 'greenview');
     await tap(tester, find.text('Directions'));
     expect(s.lastLink.toString(), 'https://www.google.com/maps/dir/?api=1&destination=17.464,78.356');
@@ -1292,10 +1293,11 @@ void main() {
     // The map's my-location button explains before asking; it never fakes a spot.
     final m = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, m);
-    await tap(tester, find.byWidgetPredicate((w) => w is Ic && w.name == 'pin' && w.size == 20).first);
-    expect((m.screen, m.permKind), ('perm', 'location'));
+    await tap(tester, find.text('Use my location'));
+    expect((m.screen, m.sheet), ('map', 'loc'));
+    expect(find.text('Use your location?'), findsOneWidget);
     await tap(tester, find.text('Pick an area instead'));
-    expect((m.screen, m.sheet), ('map', 'search'));
+    expect((m.screen, m.sheet, m.myPos), ('map', 'areas', null));
     m.dispose();
   });
 
@@ -1985,6 +1987,54 @@ void main() {
     c.dispose();
     resetSampleData();
   });
+
+  testWidgets('map v2: area picker, search this area, use my location (F18)', (tester) async {
+    final s = AppState(start: 'map', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('All areas'), findsOneWidget);
+    // Pick an area: only hostels there, on the map and in Explore.
+    await tap(tester, find.byKey(const ValueKey('mapArea')));
+    expect(s.sheet, 'areas');
+    expect(find.text('Soon'), findsWidgets); // areas with no hostels yet
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('areaQ')), matching: find.byType(TextField)), 'kond');
+    await tester.pump();
+    expect(find.text('Ameerpet'), findsNothing);
+    await tap(tester, find.text('Kondapur'));
+    expect((s.mapArea, s.sheet), ('Kondapur', null));
+    expect(filtered(s).map((h) => h.area).toSet(), {'Kondapur'});
+    expect(find.text(fmt(hostelById('anjani').from)), findsNothing); // Madhapur pin hidden
+    s.tab('explore');
+    await tester.pump();
+    expect(find.text('Anjani Residency'), findsNothing);
+    s.tab('map');
+    await tester.pump();
+
+    // Use my location: explainer first, then the map centres on you and sorts by distance.
+    final loc = _FakeLocator((17.4610, 78.3610));
+    s.locator = loc;
+    await tap(tester, find.text('Use my location'));
+    expect((s.sheet, loc.asked), ('loc', 0));
+    await tap(tester, find.text('Allow location'));
+    await tester.pump();
+    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'near', 'Near me'));
+    expect(find.byKey(const ValueKey('youAreHere')), findsOneWidget);
+    expect(find.textContaining('km from you'), findsWidgets);
+    await tester.pump(const Duration(seconds: 3));
+    // Denied: no position is invented; the area picker opens instead.
+    final d = AppState(start: 'map', role: 'tenant')..locator = _FakeLocator(null, LocateFail.denied);
+    await d.useMyLocation();
+    expect((d.myPos, d.sheet, d.toast), (null, 'areas', 'No problem. Pick an area instead.'));
+    d.dispose();
+
+    // Search this area: after a pan, hostels within 3 km of the new centre.
+    s.mapPanned(posOf(hostelById('lakshmi')));
+    await tester.pump();
+    await tap(tester, find.text('Search this area'));
+    expect((s.mapAreaLabel, s.mapMoved), ('This area', false));
+    expect(filtered(s).map((h) => h.id), ['lakshmi']);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2026,4 +2076,16 @@ class _FakeData extends SampleData {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+}
+
+class _FakeLocator implements Locator {
+  _FakeLocator(this.pos, [this.fail]);
+  final (double, double)? pos;
+  final LocateFail? fail;
+  int asked = 0;
+  @override
+  Future<((double, double)?, LocateFail?)> locate() async {
+    asked++;
+    return (pos, fail);
+  }
 }

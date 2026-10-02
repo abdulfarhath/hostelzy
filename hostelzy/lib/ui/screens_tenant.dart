@@ -20,6 +20,8 @@ List<Hostel> filtered(AppState s) {
     final from = rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
     // F07: a hostel with 3 strikes is removed from Hostelzy.
     if (s.removed(h.id)) return false;
+    // F18: the area picked on the map.
+    if (!s.inMapArea(h)) return false;
     return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
   }
 
@@ -43,7 +45,7 @@ List<Hostel> filtered(AppState s) {
       _ => 0,
     };
     if (d != 0) return d;
-    final c = kmTo(a, s.lm).compareTo(kmTo(b, s.lm));
+    final c = s.kmFor(a).compareTo(s.kmFor(b));
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
   return out;
@@ -293,7 +295,7 @@ class HostelCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     T(h.name, w: 800, s: 17, lh: 1.15),
                     const SizedBox(height: 4),
-                    T('${kmLabel(kmTo(h, s.lm))} from ${s.lm} · ${featOf(h)}', s: 13, c: p.mu),
+                    T('${kmLabel(s.kmFor(h))} ${s.kmFrom} · ${featOf(h)}', s: 13, c: p.mu),
                     // F08: rank and its reasons, never the score number.
                     const SizedBox(height: 3),
                     Rich([sp(context, '#${s.rankOf(h.id)} near ${s.lm}', w: 800, c: p.tx), sp(context, ' · ${s.rankReasons(h.id)}')], s: 12, c: p.mu, lh: 1.35),
@@ -695,7 +697,7 @@ class DetailScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              T('${kmLabel(kmTo(h, s.lm))} from ${s.lm}'),
+                              T('${kmLabel(s.kmFor(h))} ${s.kmFrom}'),
                               T(h.instant ? 'Instant booking' : 'Owner confirms holds'),
                             ],
                           ),

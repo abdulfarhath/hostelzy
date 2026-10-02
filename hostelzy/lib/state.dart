@@ -14,6 +14,7 @@ import 'poster.dart';
 import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
+import 'locate.dart';
 import 'backend.dart' show HostelData, Listings, RemoteSettings, SampleData;
 
 /// App state and actions. Mirrors the prototype's single component state so
@@ -1454,6 +1455,85 @@ class AppState extends ChangeNotifier {
     hist = h;
     sheet = null;
   });
+
+  // ------------------------------------------------------------ F18 map
+
+  /// "Use my location" ([NoLocator] in tests, web, desktop).
+  Locator locator = const NoLocator();
+
+  /// The user's own position, only after they allowed it. Never invented.
+  (double, double)? myPos;
+
+  /// Area picked on the map (null = all areas), or a panned-to centre from
+  /// "Search this area".
+  String? mapArea;
+  (double, double)? areaCenter;
+
+  /// Where the map is after the user panned it; shows "Search this area".
+  (double, double)? mapNow;
+
+  /// Area picker search text.
+  String areaQ = '';
+  bool mapMoved = false;
+
+  /// Bumped to recentre the map (area picked, location found).
+  int mapFocus = 0;
+  (double, double) get mapFocusPos => mapArea != null ? (areaLatLng[mapArea] ?? landmarkLatLng[lm]!) : areaCenter ?? myPos ?? landmarkLatLng[lm]!;
+
+  /// Distance to a hostel: from you once location is on, else from the
+  /// landmark searched.
+  double kmFor(Hostel h) => myPos != null ? kmBetween(posOf(h), myPos!) : kmTo(h, lm);
+  String get kmFrom => myPos != null ? 'from you' : 'from $lm';
+
+  /// The map area filter (Explore follows it too).
+  bool inMapArea(Hostel h) => (mapArea == null || h.area == mapArea) && (areaCenter == null || kmBetween(posOf(h), areaCenter!) <= searchRadiusKm);
+  String get mapAreaLabel => mapArea ?? (areaCenter != null ? 'This area' : (myPos != null ? 'Near me' : 'All areas'));
+
+  void pickArea(String? a) => update(() {
+    mapArea = a;
+    areaCenter = null;
+    mapMoved = false;
+    mapFocus++;
+    sheet = null;
+  });
+
+  void mapPanned((double, double) c) {
+    mapNow = c;
+    if (!mapMoved) update(() => mapMoved = true);
+  }
+
+  void searchThisArea() => update(() {
+    if (mapNow == null) return;
+    areaCenter = mapNow;
+    mapArea = null;
+    mapMoved = false;
+  });
+
+  /// After the location explainer: Android asks, then the map centres on you
+  /// and hostels sort by distance from you.
+  Future<void> useMyLocation() async {
+    update(() => sheet = null);
+    final (pos, fail) = await locator.locate();
+    if (pos != null) {
+      update(() {
+        myPos = pos;
+        mapArea = null;
+        areaCenter = null;
+        mapMoved = false;
+        sortBy = 'near';
+        mapFocus++;
+      });
+      return toastMsg('Showing hostels by distance from you.');
+    }
+    update(() => sheet = 'areas');
+    toastMsg(switch (fail) {
+      LocateFail.off => 'Location is switched off on this phone. Pick an area instead.',
+      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or pick an area.',
+      LocateFail.denied => 'No problem. Pick an area instead.',
+      LocateFail.unavailable => 'Location works in the Android app. Pick an area instead.',
+      _ => 'Couldn’t find your location. Pick an area instead.',
+    });
+  }
 
   /// F18: sample owner / resident data only in debug builds and tests.
   static bool samples = kDebugMode;
