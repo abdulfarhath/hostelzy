@@ -212,6 +212,19 @@ class NeedsYouNow extends StatelessWidget {
           badge: null,
           extra: f.photo != null ? FixPhotoThumb(f, size: 96) : null,
         ),
+      // F23: a shared thing (or a room's geyser) marked not working.
+      for (final a in s.brokenThings)
+        (
+          key: 'broken-${a.id}',
+          icon: 'wrench',
+          title: 'Broken: ${a.label}, ${s.floorName(a.floor).toLowerCase()}',
+          sub: [if (a.inRooms) s.amenityWhere(a), a.byResident ? 'Marked by a resident' : 'Marked by you'].join(' · '),
+          right: a.at > 0 ? ago(s.now - a.at) : 'Today',
+          urgent: false,
+          btns: [('Fixed', 'check', () => s.setAmenityWorking(a, true))],
+          badge: null,
+          extra: null,
+        ),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

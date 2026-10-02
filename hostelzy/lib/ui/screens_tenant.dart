@@ -25,7 +25,7 @@ List<Hostel> filtered(AppState s) {
     if (s.removed(h.id)) return false;
     // F18: the area picked on the map.
     if (!s.inMapArea(h)) return false;
-    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && (!s.fDeals || s.bestQuote(h.id, f: s.fR) != null) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
+    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && (!s.fDeals || s.bestQuote(h.id, f: s.fR) != null) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free'))) && (s.fAm.isEmpty || s.hasAmenities(h.id, s.fAm));
   }
 
   final out = browsable.where(ok).toList();

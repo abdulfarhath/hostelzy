@@ -15,6 +15,9 @@ mixin _AmenityData {
   /// "Something broke": the floor sheet's rows turn into Not working buttons.
   bool amBreak = false;
 
+  /// Owner Layouts: Rooms or Shared things.
+  String amOwnerTab = 'rooms';
+
   /// Tenant filters: things that must be on a floor (or in the washroom).
   Set<String> fAm = {};
 
@@ -36,7 +39,7 @@ List<Amenity> seedAmenities() {
     a('anjani', 1, 'washer'),
     a('anjani', 2, 'fridge'),
     a('anjani', 2, 'ro'),
-    a('anjani', 2, 'geyser', place: 'washroom', rooms: [201, 202, 204]),
+    a('anjani', 2, 'geyser', place: 'washroom', rooms: [201, 203]),
     a('anjani', 2, 'washer', working: false, res: true, at: day),
     a('anjani', 3, 'ro'),
     a('anjani', 3, 'iron'),

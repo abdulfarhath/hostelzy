@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'dart:ui' show Offset;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_config.dart';
@@ -571,7 +572,16 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
-    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*), amenities(*)');
+    const base = '*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)';
+    List<Map<String, dynamic>> rows;
+    try {
+      rows = await db.from('hostels').select('$base, amenities(*)');
+    } on PostgrestException catch (e) {
+      // F23: until the amenities migration has run (FOUNDER-TODO 4u), load
+      // the hostels without them instead of failing.
+      debugPrint('listings without amenities: ${e.message}');
+      rows = await db.from('hostels').select(base);
+    }
     // S5: strike counts are public (they hide deals and listings).
     final st = await db.rpc('strike_counts') as List;
     // F19: "Checked by N residents · date" per room.

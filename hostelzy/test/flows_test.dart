@@ -104,6 +104,8 @@ void main() {
     await tap(tester, find.text('Anjani Residency'));
     expect(s.screen, 'detail');
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.screen, 'picker');
     await tap(tester, freeBed(s));
     expect(s.bed, isNotNull);
@@ -459,6 +461,8 @@ void main() {
 
     // Picker: AC filter skips non-AC rooms.
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     await tap(tester, find.widgetWithText(ChipBtn, 'Non-AC'));
     expect(s.findBed('anjani', '${s.room}-A').r!.ac, isFalse);
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
@@ -541,6 +545,8 @@ void main() {
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     await tap(tester, find.text('Pick a bed'));
+    // F23: the room plan comes first; these steps use the floor view.
+    if (s.mode == 'room') await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.screen, 'picker');
     await tap(tester, freeBed(s));
     final bed = s.bed!;

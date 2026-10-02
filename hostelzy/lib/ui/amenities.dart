@@ -90,7 +90,11 @@ class OnEachFloor extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: T('Shared by everyone on that floor. “In 4 of 6 rooms” means the room’s own washroom has it. Each room plan shows its own.', s: 13, c: p.mu, lh: 1.4),
+          child: () {
+            final ex = s.amenities.where((a) => a.hid == hid && a.inRooms).firstOrNull;
+            final inRooms = ex == null ? '' : ' “${s.amenityLine(ex).replaceFirst('${ex.label} ', '')}” means the room’s own ${ex.place == 'washroom' ? 'washroom' : 'room'} has it. Each room plan shows its own.';
+            return T('Shared by everyone on that floor.$inRooms', s: 13, c: p.mu, lh: 1.4);
+          }(),
         ),
       ],
     );
@@ -203,7 +207,7 @@ class AmenityFloorSheet extends StatelessWidget {
               children: [
                 Expanded(child: Cta('Add a thing', key: const ValueKey('amAddBtn'), icon: 'plus', height: 48, px: 14, fs: 14, onTap: () => s.openAddAmenity())),
                 const SizedBox(width: 8),
-                Expanded(child: OutlineCta(s.amBreak ? 'Done' : 'Something broke', key: const ValueKey('amBreakBtn'), icon: s.amBreak ? 'check' : 'help', height: 48, px: 14, fs: 14, onTap: () => s.update(() => s.amBreak = !s.amBreak))),
+                Expanded(child: OutlineCta(s.amBreak ? 'Done' : 'Something broke', key: const ValueKey('amBreakBtn'), icon: s.amBreak ? 'check' : 'wrench', height: 48, px: 14, fs: 14, onTap: () => s.update(() => s.amBreak = !s.amBreak))),
               ],
             ),
           ),
@@ -320,6 +324,112 @@ class AmenityAddSheet extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Owner Layouts → Shared things: floor chips, who changed what, an edit
+/// button per thing and "Add a shared thing".
+class OwnerSharedThings extends StatelessWidget {
+  const OwnerSharedThings({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final hid = s.ownHid;
+    final floors = {...floorsOf(s.rooms[hid] ?? const <Room>[]), ...s.amenityFloors(hid)}.toList()..sort();
+    final list = s.amenitiesOn(hid, s.amFloor);
+    final last = s.lastResidentChange(hid, s.amFloor);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final f in floors)
+                ChipBtn(f == 0 ? 'Ground' : 'Floor $f', key: ValueKey('ownFloor-$f'), on: f == s.amFloor, onTap: () => s.update(() {
+                  s.amFloor = f;
+                  s.amHid = hid;
+                })),
+            ],
+          ),
+        ),
+        if (last != null)
+          Container(
+            key: const ValueKey('residentChanged'),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            padding: const EdgeInsets.all(12),
+            color: p.sf,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Ic('user', size: 20, color: p.tx),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const T('A resident changed this floor', w: 800, s: 14),
+                      T('${last.label}${last.working ? '' : ' marked Not working'} · ${dayMon(DateTime.fromMillisecondsSinceEpoch(last.at))}. Keep it, or correct it.', s: 13, c: p.mu, lh: 1.4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: Scroll(
+            key: ValueKey('ownThings${s.scrollEpoch}'),
+            child: Container(
+              decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final a in list)
+                    Container(
+                      key: ValueKey('ownThing-${a.id}'),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(
+                        children: [
+                          Container(width: 36, height: 36, color: p.sf, alignment: Alignment.center, child: Ic(amenityIcon(a.kind), size: 20, color: p.tx)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                T(a.inRooms ? '${a.label} · in room ${a.place == 'washroom' ? 'washrooms' : 'rooms'}' : (a.qty > 1 ? '${a.label} ×${a.qty}' : a.label), w: 800, s: 16),
+                                T([if (a.inRooms) a.rooms.join(', '), a.byResident ? 'a resident' : 'you', dayMon(DateTime.fromMillisecondsSinceEpoch(a.at))].join(' · '), s: 13, c: p.mu),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Tag(a.working ? 'Working' : 'Not working', bg: a.working ? transparent : p.ab, fg: a.working ? p.mu : p.ad),
+                          const SizedBox(width: 8),
+                          Tap(
+                            key: ValueKey('ownEdit-${a.id}'),
+                            onTap: () => s.openAddAmenity(edit: a),
+                            child: Semantics(label: 'Change ${a.label}', child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: Ic('pencil', size: 16, color: p.tx))),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing on this floor yet. Add the fridge, RO, washing machine…', s: 14, c: p.mu)),
+                  Padding(padding: const EdgeInsets.all(16), child: T('Broken things also show on Today as a repair.', s: 13, c: p.mu)),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(color: p.bg, border: Border(top: bs(2, p.tx))),
+          child: Cta('Add a shared thing', key: const ValueKey('ownAddThing'), icon: 'plus', height: 54, px: 16, fs: 15, onTap: () => s.openAddAmenity(hid: hid, floor: s.amFloor)),
+        ),
+      ],
     );
   }
 }
