@@ -158,3 +158,8 @@ Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team co
   - Login, About you, Role, Permission and Manage at 320×568 with the keyboard open (no overflow);
   - a one-tag hostel, an unknown hostel id, an editor on a room without a layout, and the go-live check.
 
+
+**go_router · 2026-10-02** (branch `feature/go-router`; this was the follow-up to group 1):
+- `MaterialApp.router` with `lib/router.dart`. AppState keeps the screens and the back stack, so Android back works as before through PopScope.
+- Deep links from the web pages: `hostelzy://app/r?c=HZ-…` opens that enquiry (owner: Today with the enquiry sheet; tenant: Holds). A code this account can't see gets "isn't in this account". `hostelzy://app/j?c=…` keeps the invite code for sign-up. The demo APK uses `hostelzy-demo://`.
+- Other links open the app where it was. Test: `go_router deep links…`.
