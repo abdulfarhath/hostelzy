@@ -6,7 +6,6 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
-import 'payments.dart';
 import 'reminders.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
@@ -185,6 +184,8 @@ class ResidentHomeScreen extends StatelessWidget {
   }
 }
 
+/// F22 Area 2 (board `rPay`): one amount card, a few rows, one or two
+/// actions at the bottom. Due → Waiting for owner → Paid (card goes dark).
 class RentPayScreen extends StatelessWidget {
   const RentPayScreen({super.key});
   @override
@@ -196,8 +197,14 @@ class RentPayScreen extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 18), child: PageHead(kicker: 'Your stay', title: 'Pay rent')),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('Your stay isn’t on Hostelzy yet. Once your owner adds you, your rent shows here.', s: 14, c: p.mu, lh: 1.45)),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: PageHead(kicker: 'Your stay', title: 'Rent'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: T('Your stay isn’t on Hostelzy yet. Once your owner adds you, your rent shows here.', s: 14, c: p.mu, lh: 1.45),
+          ),
         ],
       );
     }
@@ -208,142 +215,114 @@ class RentPayScreen extends StatelessWidget {
     final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent, note: s.rentNote);
     final started = rent.id.isNotEmpty;
     final sample = !s.onServer;
-    final history = sample ? [('September 2026', '₹8,040', 'Confirmed by Srinivas on 3 Sep'), ('August 2026', '₹7,980', 'Confirmed by Srinivas on 4 Aug'), ('July 2026', '₹8,110', 'Confirmed by Srinivas on 2 Jul')] : const <(String, String, String)>[];
+    final history = sample ? [('September', '₹8,040 · confirmed 3 Sep'), ('August', '₹7,980 · confirmed 4 Aug'), ('July', '₹8,110 · confirmed 2 Jul')] : const <(String, String)>[];
     final advance = sample ? terms.advance : s.myStayRow?.advance ?? 0;
     final upi = s.ownerUpi[st.hid]?.id ?? '';
-    return Scroll(
-      key: ValueKey('rPay${s.scrollEpoch}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: PageHead(kicker: '${st.bed.isEmpty ? '' : 'Bed ${st.bed} · '}${h.name}', title: 'Pay rent'),
+    final month = monthYear(appToday).split(' ').first;
+    final paid = rent.status == 'paid';
+    final (label, line) = switch (rent.status) {
+      'paid' => ('$month rent · Paid', '$owner confirmed on ${rent.done}. Thank you.'),
+      'waiting' => ('Waiting for $owner', 'You sent UPI reference ${utrSpaced(rent.utr ?? '')}. It says Paid once $owner sees it.'),
+      'missing' => ('Not received', '$owner couldn’t find UPI reference ${utrSpaced(rent.utr ?? '')}. Check it in your UPI app.'),
+      _ => ('$month rent', '${dueNote(terms, st.joinDay)} · ${dueLeft(terms, st.joinDay)}'),
+    };
+    void remind() => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, I paid ${fmt(rent.amt)} rent for bed ${st.bed} by UPI. UPI reference ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.');
+    final actions = <Widget>[
+      if (rent.status == 'due') ...[
+        Cta('Pay ${fmt(rent.amt)} by UPI', height: 54, px: 16, fs: 15, onTap: s.payMyRent),
+        if (started) OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(rent)),
+      ],
+      if (rent.status == 'waiting') ...[
+        Cta('Remind $owner', icon: 'msg', height: 54, px: 16, fs: 15, onTap: remind),
+        OutlineCta('Fix the UPI reference', icon: 'chev', onTap: () => s.openPayUtr(rent)),
+      ],
+      if (rent.status == 'missing') ...[
+        Cta('Fix the UPI reference', height: 54, px: 16, fs: 15, onTap: () => s.openPayUtr(rent)),
+        OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, about my rent for bed ${st.bed}: UPI reference ${utrSpaced(rent.utr ?? '')}.')),
+      ],
+      if (paid)
+        Cta(
+          'Share receipt',
+          icon: 'msg',
+          height: 54,
+          px: 16,
+          fs: 15,
+          onTap: () => s.share('Rent receipt · ${h.name} · bed ${st.bed} · ${monthYear(appToday)} · ${fmt(rent.amt)} · UPI ref. ${utrSpaced(rent.utr ?? '')} · confirmed by $owner on ${rent.done}'),
+        ),
+    ];
+    Widget row(String k, String v) => KV(k, v, keyWidth: 130);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: Scroll(
+            key: ValueKey('rPay${s.scrollEpoch}'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: PageHead(kicker: '${h.name}${st.bed.isEmpty ? '' : ' · Bed ${st.bed}'}', title: 'Rent'),
+                ),
+                Container(
+                  key: const ValueKey('rentCard'),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  padding: const EdgeInsets.all(16),
+                  color: paid ? p.tx : p.sf,
+                  child: Css(
+                    c: paid ? p.bg : p.tx,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Kicker(label, c: paid ? p.bg : p.tx),
+                        const SizedBox(height: 4),
+                        T(fmt(rent.amt), w: 800, s: 52, lh: 1.05, ls: -.03, tab: true),
+                        const SizedBox(height: 6),
+                        T(line, s: 14, w: rent.status == 'due' || rent.status == 'missing' ? 800 : 400, c: paid ? p.bg : (rent.status == 'waiting' ? p.tx : p.ad), lh: 1.4),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (sample) ...[row('Rent', '₹7,600'), row('Electricity · meter', '₹420')] else row('Rent', fmt(rent.amt)),
+                      row('Pay to', upi.isEmpty ? '$owner hasn’t added a UPI ID yet' : upi),
+                    ],
+                  ),
+                ),
+                if (history.isNotEmpty) ...[
+                  const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('Paid before')),
+                  Container(
+                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (final x in history) row(x.$1, x.$2)]),
+                  ),
+                ],
+                if (advance > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    child: T('Advance ${fmt(advance)} · ${fmt(math.max(0, advance - terms.maintenance))} back when you leave', s: 14),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: T('You pay $owner directly. Hostelzy never holds the money.', s: 12, c: p.mu, lh: 1.4),
+                ),
+              ],
+            ),
           ),
-          // F17: pay the owner by UPI → UTR → the owner confirms → Paid.
-          Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 4), child: PaySteps4(rent)),
-          if (rent.status != 'paid') ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-              child: Row(children: [Expanded(child: T(switch (rent.status) {
-                'waiting' => 'Waiting for $owner',
-                'missing' => '$owner couldn’t find this UPI reference',
-                _ => dueNote(terms, st.joinDay),
-              }, w: 800, s: 15, c: rent.status == 'missing' ? p.ad : p.tx)), T(rent.status == 'waiting' ? 'UPI reference ${utrSpaced(rent.utr ?? '')} sent' : 'Pay straight to $owner', s: 12, c: p.mu)]),
+        ),
+        if (actions.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              color: p.bg,
+              border: Border(top: bs(2, p.tx)),
             ),
-            if (sample) ...[
-              const LineRow('Rent, bed 204-B', '₹7,600'),
-              const LineRow('Electricity · by meter, from Srinivas', '₹420'),
-              const LineRow('Late fee', '₹0'),
-            ] else
-              LineRow('Rent${st.bed.isEmpty ? '' : ', bed ${st.bed}'}', fmt(rent.amt)),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Flexible(child: T('Pay $owner', w: 800, s: 16)), const SizedBox(width: 12), T(fmt(rent.amt), w: 800, s: 26)]),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: VGap(
-                gap: 8,
-                children: [
-                  if (rent.status == 'due') ...[
-                    Cta('Pay ${fmt(rent.amt)} by UPI', onTap: s.payMyRent),
-                    if (started) OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(rent)),
-                  ],
-                  if (rent.status == 'waiting')
-                    Cta('Remind $owner on WhatsApp', icon: 'msg', bg: p.tx, fg: p.bg, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, I paid ${fmt(rent.amt)} rent for bed ${st.bed} by UPI. UPI reference ${utrSpaced(rent.utr ?? '')}. Please confirm on Hostelzy.')),
-                  if (rent.status == 'missing') ...[
-                    Cta('Fix the UPI reference', onTap: () => s.openPayUtr(rent)),
-                    OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, about my rent for bed ${st.bed}: UPI reference ${utrSpaced(rent.utr ?? '')}.')),
-                  ],
-                  T(upi.isEmpty ? '$owner hasn’t added a UPI ID yet. Hostelzy never holds the money.' : 'You pay $upi directly. Hostelzy never holds the money; $owner confirms when it arrives.', s: 12, c: p.mu, lh: 1.4),
-                ],
-              ),
-            ),
-          ],
-          if (rent.status == 'paid')
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-              decoration: BoxDecoration(
-                color: p.gn,
-                border: Border(bottom: bs(2, p.tx)),
-              ),
-              child: Css(
-                c: p.ai,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: box(w: 2, c: p.ai),
-                        child: const Ic('check', size: 24),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    T('${fmt(rent.amt)} paid', w: 800, s: 40, ls: -.03, lh: 1),
-                    const SizedBox(height: 8),
-                    T('${monthYear(appToday)} · $owner confirmed on ${rent.done}', s: 14, w: 600),
-                    const SizedBox(height: 12),
-                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.share('Rent receipt · ${h.name} · bed ${st.bed} · ${monthYear(appToday)} · ${fmt(rent.amt)} · UPI ref. ${utrSpaced(rent.utr ?? '')} · confirmed by $owner on ${rent.done}')),
-                  ],
-                ),
-              ),
-            ),
-          if (advance > 0) ...[
-            const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Advance')),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                border: Border(top: bs(2, p.dv), bottom: bs(1, p.hl)),
-              ),
-              child: Css(
-                s: 14,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(child: Rich([sp(context, fmt(advance), w: 800), sp(context, ' '), sp(context, sample ? 'paid $residentJoined' : 'paid when you joined', c: p.mu)])),
-                    const SizedBox(width: 8),
-                    Flexible(child: Tag('${fmt(math.max(0, advance - terms.maintenance))} back when you leave', bg: p.sf)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if (history.isNotEmpty) ...[
-            const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('History')),
-            Container(
-              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final h in history)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                      child: Css(
-                        s: 14,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: Rich([sp(context, h.$1, w: 800), sp(context, '\n'), sp(context, h.$3, s: 12, w: 600, c: p.gn)])),
-                            const SizedBox(width: 12),
-                            T(h.$2, w: 600),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+            child: VGap(gap: 8, children: actions),
+          ),
+      ],
     );
   }
 }
@@ -504,27 +483,54 @@ class _WeekTableState extends State<WeekTable> {
   }
 }
 
+/// F22 Area 2 (board `food`): today first. A day strip, the 3 meals tagged
+/// Done / Next / Later on today, "How was breakfast?", and the whole week one
+/// tap away in the header.
 class FoodScreen extends StatelessWidget {
   const FoodScreen({super.key});
+
+  /// When each meal ends (hour of the day), for Done / Next / Later.
+  static const _ends = {'b': 9.5, 'l': 14.0, 'n': 22.0};
+
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final dm = s.menu[s.day];
+    final week = s.foodView == 'week';
+    final noMenu = s.onServer && s.role == 'resident';
+    final now = DateTime.fromMillisecondsSinceEpoch(s.now);
+    final hour = now.hour + now.minute / 60;
+    final next = meals.where((m) => hour < _ends[m[0]]!).firstOrNull?[0];
+    String tag(String k) => hour >= _ends[k]! ? 'Done' : (k == next ? 'Next' : 'Later');
     return Scroll(
       key: ValueKey('food${s.scrollEpoch}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: 'This week · ${s.stayHostel.name}', title: 'Food'),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: PageHead(kicker: s.stayHostel.name, title: 'Food'),
+                ),
+                if (!noMenu)
+                  Tap(
+                    key: const ValueKey('foodWeek'),
+                    onTap: () => s.update(() => s.foodView = week ? 'day' : 'week'),
+                    child: Padding(padding: const EdgeInsets.only(bottom: 6), child: T(week ? '‹ By day' : 'Whole week ›', s: 14, w: 800)),
+                  ),
+              ],
+            ),
           ),
-          if (s.onServer && s.role == 'resident')
-            Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('${s.stayOwner} hasn’t put the menu on Hostelzy yet. It shows here once they do.', s: 14, c: p.mu, lh: 1.45))
-          else ...[
-          Seg(opts: const [('day', 'By day'), ('week', 'Whole week')], cur: s.foodView, onPick: (v) => s.update(() => s.foodView = v), margin: const EdgeInsets.fromLTRB(16, 0, 16, 14)),
-          if (s.foodView == 'week') ...[
+          if (noMenu)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: T('${s.stayOwner} hasn’t put the menu on Hostelzy yet. It shows here once they do.', s: 14, c: p.mu, lh: 1.45),
+            )
+          else if (week) ...[
             WeekTable(
               onPick: (i) => s.update(() {
                 s.day = i;
@@ -535,8 +541,7 @@ class FoodScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: T('Today is highlighted. Swipe sideways for dinner. Tap a day to open it.', s: 12, c: p.mu),
             ),
-          ],
-          if (s.foodView == 'day') ...[
+          ] else ...[
             Container(
               decoration: BoxDecoration(
                 border: Border(top: bs(2, p.tx), bottom: bs(2, p.tx)),
@@ -548,23 +553,16 @@ class FoodScreen extends StatelessWidget {
                     for (var i = 0; i < weekDays.length; i++)
                       Expanded(
                         child: Tap(
+                          key: ValueKey('day-$i'),
                           onTap: () => s.update(() => s.day = i),
                           child: Container(
-                            decoration: BoxDecoration(
-                              color: i == s.day ? p.tx : transparent,
-                              border: i > 0 ? Border(left: bs(1, p.hl)) : null,
-                            ),
-                            child: InsetBar(
-                              edge: Edge.bottom,
-                              size: i == todayIdx ? 4 : 0,
-                              color: p.ac,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 10, 0, 9),
-                                child: Css(
-                                  c: i == s.day ? p.bg : p.tx,
-                                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(weekDays[i][0], s: 11, w: 600), const SizedBox(height: 1), T(weekDays[i][1], w: 800, s: 18)]),
-                                ),
-                              ),
+                            constraints: const BoxConstraints(minHeight: 56),
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            color: i == s.day ? p.tx : transparent,
+                            alignment: Alignment.center,
+                            child: Css(
+                              c: i == s.day ? p.bg : p.tx,
+                              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [T(weekDays[i][0], s: 12, w: 600), T(weekDays[i][1], w: 800, s: 17)]),
                             ),
                           ),
                         ),
@@ -574,32 +572,41 @@ class FoodScreen extends StatelessWidget {
               ),
             ),
             for (final m in meals)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: VGap(
-                  gap: 6,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
+              () {
+                final today = s.day == todayIdx;
+                final tg = today ? tag(m[0]) : null;
+                return Opacity(
+                  opacity: tg == 'Done' ? .55 : 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(
                       children: [
-                        T(m[1], w: 800, s: 20),
-                        T(m[2], s: 13, c: p.mu),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Rich([sp(context, m[1], w: 800, s: 18), sp(context, '  ${m[2]}', s: 13, c: p.mu)]),
+                              const SizedBox(height: 2),
+                              T(dm.of(m[0]), s: 15, lh: 1.4),
+                            ],
+                          ),
+                        ),
+                        if (tg != null) ...[const SizedBox(width: 12), Tag(tg, bg: tg == 'Next' ? p.ab : p.sf, fg: tg == 'Next' ? p.ad : (tg == 'Done' ? p.mu : p.tx))],
                       ],
                     ),
-                    T(dm.of(m[0]), s: 15, lh: 1.45),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              }(),
             if (s.day == todayIdx)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                padding: const EdgeInsets.all(12),
+                decoration: box(w: 2, c: p.tx),
                 child: VGap(
-                  gap: 10,
+                  gap: 8,
                   children: [
-                    const Kicker('How was breakfast?'),
+                    const T('How was breakfast?', w: 800, s: 15),
                     Seg(
                       opts: same(['Good', 'Okay', 'Poor']),
                       cur: s.rated,
@@ -609,12 +616,13 @@ class FoodScreen extends StatelessWidget {
                       },
                       pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
                       fs: 14,
+                      center: true,
+                      dividers: true,
                     ),
-                    T('Goes to ${s.stayOwner} and the kitchen without your name.', s: 12, c: p.mu),
+                    T('Goes to the kitchen without your name.', s: 13, c: p.mu),
                   ],
                 ),
               ),
-          ],
           ],
         ],
       ),
@@ -727,183 +735,345 @@ class HelpScreen extends StatelessWidget {
   }
 }
 
+/// F22 Area 2 (board `stay`): Me › My stay. The bed, then the things a
+/// resident does once in a while: move, give notice, review, fix a layout.
+class StayScreen extends StatelessWidget {
+  const StayScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final st = s.myStay;
+    final h = s.stayHostel;
+    final terms = h.terms;
+    final sample = !s.onServer;
+    final rent = sample ? 7600 : st?.rent ?? 0;
+    final free = (s.rooms[h.id] ?? const <Room>[]).expand((r) => r.beds).where((b) => b.state == 'free' && !b.mine).length;
+    final advance = sample ? terms.advance : s.myStayRow?.advance ?? 0;
+    final since = sample ? 'Since $residentJoined ${appToday.year}' : s.myStayRow?.since ?? '';
+    void move(String t) => s.update(() {
+      s.hist = [...s.hist, s.screen];
+      s.screen = 'move';
+      s.sheet = null;
+      s.moveTab = t;
+    });
+    final rows = <(String, String, String, VoidCallback)>[
+      ('swap', 'Move to another bed', free == 0 ? 'No free beds right now' : '$free free bed${free == 1 ? '' : 's'} here', () => move('swap')),
+      ('logout', 'Give notice', '${terms.noticeDays} days · earliest last day ${leaveDates(terms).first}', () => move('vacate')),
+      ('star', 'Review your stay', '30-day review', () => s.go('rReview')),
+      ('pencil', 'Fix a room layout', 'Any room in ${h.name}', () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[h.id]?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101)),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+          child: Row(
+            children: [
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(h.name), const T('My stay', w: 800, s: 26, lh: 1.1)]),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Scroll(
+            key: ValueKey('rStay${s.scrollEpoch}'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (st == null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: T('Your stay isn’t on Hostelzy yet. Once ${s.stayOwner} adds you, it shows here.', s: 14, c: p.mu, lh: 1.45),
+                  )
+                else
+                  Container(
+                    key: const ValueKey('stayCard'),
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: box(w: 2, c: p.tx),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        T(st.bed.isEmpty ? h.name : 'Bed ${st.bed} · Room ${s.stayRoom}', w: 800, s: 20),
+                        const SizedBox(height: 2),
+                        T([if (since.isNotEmpty) since, if (rent > 0) '${fmt(rent)} a month', 'rent due on the ${ordinal(terms.dueDay(st.joinDay))}'].join(' · '), s: 14, c: p.mu, lh: 1.4),
+                      ],
+                    ),
+                  ),
+                Container(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final r in rows)
+                        Tap(
+                          key: ValueKey('stay-${r.$2}'),
+                          onTap: r.$4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  color: p.sf,
+                                  alignment: Alignment.center,
+                                  child: Ic(r.$1, size: 18, color: p.tx),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      T(r.$2, w: 800, s: 16),
+                                      T(r.$3, s: 13, c: p.mu),
+                                    ],
+                                  ),
+                                ),
+                                Ic('chev', size: 16, color: p.mu),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (advance > 0) Padding(padding: const EdgeInsets.all(16), child: T('Advance ${fmt(advance)} · ${fmt(math.max(0, advance - terms.maintenance))} back when you leave', s: 14)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F22 Area 2 (boards `notice` and `swap`): one job each, the action at the
+/// bottom. On the server notice and moves go to the owner on WhatsApp
+/// (nothing pretends to be saved on Hostelzy).
 class MoveScreen extends StatelessWidget {
   const MoveScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    // F21: the resident's own hostel and bed; on the server notice and swaps
-    // go to the owner on WhatsApp (nothing pretends to be saved on Hostelzy).
     final h = s.stayHostel;
     final owner = s.stayOwner;
     final bed = s.myStay?.bed ?? '';
+    final myRent = !s.onServer ? 7600 : s.myStay?.rent ?? 0;
     final terms = h.terms;
     final dates = leaveDates(terms);
     final a = s.rooms[h.id] ?? const <Room>[];
     final swapBeds = <({Bed b, Room r})>[];
     for (final r in a) {
       for (final b in r.beds) {
-        if (b.state == 'free' && '${r.n}' != s.stayRoom && !b.mine && swapBeds.length < 6) swapBeds.add((b: b, r: r));
+        if (b.state == 'free' && b.id != bed && !b.mine && swapBeds.length < 6) swapBeds.add((b: b, r: r));
       }
     }
+    final vacate = s.moveTab == 'vacate';
+    final who = s.meFirst.isEmpty ? 'your resident' : s.meFirst;
+    final from = bed.isEmpty ? '' : ' from bed $bed';
     Widget body;
-    if (s.moveTab == 'vacate') {
-      body = !s.notice
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: VGap(
-                    gap: 12,
+    Widget? bar;
+    if (vacate && !s.notice) {
+      body = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: VGap(
+          gap: 10,
+          children: [
+            T('Notice is ${terms.noticeDays} days. Pick your last day.', s: 15, c: p.mu, lh: 1.5),
+            for (var i = 0; i < dates.length; i++)
+              Tap(
+                key: ValueKey('vDate-${dates[i]}'),
+                onTap: () => s.update(() => s.vDate = dates[i]),
+                child: Container(
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: box(bg: s.vDate == dates[i] ? p.ab : transparent, w: 2, c: s.vDate == dates[i] ? p.ac : p.tx),
+                  child: Row(
                     children: [
-                      Rich([sp(context, 'Notice period is '), sp(context, '${terms.noticeDays} days', w: 800), sp(context, '. The earliest you can leave is '), sp(context, dates.first, w: 800), sp(context, '.')], s: 14, lh: 1.45),
-                      const Padding(padding: EdgeInsets.only(top: 6), child: Kicker('Last day')),
-                      Seg(opts: same(dates), cur: s.vDate, onPick: (v) => s.update(() => s.vDate = v), pad: const EdgeInsets.all(12), fs: 14),
-                      const Padding(padding: EdgeInsets.only(top: 6), child: Kicker('Reason')),
-                      wrap(6, [
-                        for (final r in const ['New job', 'Moving home', 'Found another place', 'Other']) ChipBtn(r, on: r == s.vReason, onTap: () => s.update(() => s.vReason = r)),
-                      ]),
+                      Expanded(child: T(dates[i], w: 800, s: 15)),
+                      if (i == 0) T('earliest', s: 13, c: p.mu),
                     ],
                   ),
                 ),
-                const Padding(padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16), child: Kicker('Advance refund')),
-                LineRow('Advance paid', fmt(terms.advance), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
-                LineRow('Exit maintenance', '− ${fmt(terms.maintenance)}', pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
-                LineRow('Refund', '${fmt(terms.refund)} within 7 days', vw: 800, pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 16)),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Cta(
-                    'Give notice for ${s.vDate}',
-                    parts: ['Give notice for', s.vDate],
-                    height: 54,
-                    px: 16,
-                    fs: 15,
-                    onTap: () {
-                      s.update(() => s.notice = true);
-                      if (s.onServer) {
-                        s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. I am giving notice: my last day is ${s.vDate}.');
-                      } else {
-                        s.toastMsg('Notice saved. Tell $owner on WhatsApp too.');
-                      }
-                    },
-                  ),
-                ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                  decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-                  child: VGap(
-                    gap: 8,
-                    children: [
-                      Kicker('Notice given', c: p.ad),
-                      T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
-                      T(s.onServer ? 'Sent to $owner on WhatsApp. They mark your bed "free soon" on Hostelzy.' : 'Saved on Hostelzy. Tell $owner on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
-                      OutlineCta('Tell $owner on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. I am giving notice: my last day is ${s.vDate}.')),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TimelineStep(t: 'Notice given', d: 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
-                      TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
-                      TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Tap(
-                      onTap: () => s.update(() => s.notice = false),
-                      child: T('Withdraw notice', w: 600, s: 14, c: p.ad),
-                    ),
-                  ),
-                ),
-                // F08: exit review with the advance check.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: OutlineCta('Review your stay', icon: 'star', height: 52, fs: 14, onTap: () => s.go('rExit')),
-                ),
-              ],
-            );
-    } else {
+              ),
+            const Padding(padding: EdgeInsets.only(top: 6), child: T('Why are you leaving? (optional)', w: 800, s: 13)),
+            wrap(6, [
+              for (final r in const ['New job', 'Moving home', 'Found another place', 'Other']) ChipBtn(r, on: r == s.vReason, onTap: () => s.update(() => s.vReason = s.vReason == r ? null : r)),
+            ]),
+            Container(
+              margin: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.all(12),
+              color: p.sf,
+              child: Rich(
+                [sp(context, '${fmt(terms.refund)} back', w: 800), sp(context, ' to your UPI within 7 days of leaving (advance ${fmt(terms.advance)} minus ${fmt(terms.maintenance)} maintenance).')],
+                s: 14,
+                lh: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
+      bar = Cta(
+        'Give notice for ${s.vDate}',
+        parts: ['Give notice for', s.vDate],
+        height: 54,
+        px: 16,
+        fs: 15,
+        onTap: () {
+          s.update(() => s.notice = true);
+          if (s.onServer) {
+            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.');
+          } else {
+            s.toastMsg('Notice saved. Tell $owner on WhatsApp too.');
+          }
+        },
+      );
+    } else if (vacate) {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-            child: T('Free beds in ${h.name}. Rent changes from next month.', s: 14, lh: 1.45),
-          ),
-          for (final e in swapBeds)
-            () {
-              final diff = e.r.rent - 7600;
-              final o = e.b.id == s.swapBed;
-              return Tap(
-                onTap: () => s.update(() => s.swapBed = e.b.id),
-                child: InsetBar(
-                  edge: Edge.left,
-                  size: o ? 4 : 0,
-                  color: p.ac,
-                  bg: o ? p.ab : null,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              T('Bed ${e.b.id}', w: 800, s: 16),
-                              const SizedBox(height: 2),
-                              T('Floor ${e.r.floor} · ${e.r.share} sharing · ${e.b.spot}', s: 12, c: p.mu),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        T(diff == 0 ? 'Same rent' : '${diff > 0 ? '+' : '−'}${fmt(diff.abs())}', w: 800, s: 14),
-                      ],
-                    ),
-                  ),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+            child: VGap(
+              gap: 8,
+              children: [
+                Kicker('Notice given', c: p.ad),
+                T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
+                T(
+                  s.onServer
+                      ? 'Sent to $owner on WhatsApp. They mark your bed "free soon" on Hostelzy.'
+                      : 'Saved on Hostelzy. Tell $owner on WhatsApp too. Your bed goes back on Hostelzy as "free soon".',
+                  s: 14,
+                  c: p.mu,
                 ),
-              );
-            }(),
+                OutlineCta(
+                  'Tell $owner on WhatsApp',
+                  icon: 'msg',
+                  height: 48,
+                  onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.'),
+                ),
+              ],
+            ),
+          ),
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Cta(
-              s.swapSent
-                  ? 'Request sent for ${s.swapBed}'
-                  : s.swapBed != null
-                  ? 'Ask to move to ${s.swapBed}'
-                  : 'Pick a bed to move to',
-              icon: 'swap',
-              height: 54,
-              px: 16,
-              fs: 15,
-              opacity: s.swapBed != null && !s.swapSent ? 1 : .4,
-              onTap: () {
-                if (s.swapBed == null || s.swapSent) return;
-                s.update(() => s.swapSent = true);
-                if (s.onServer) {
-                  s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst}${bed.isEmpty ? '' : ' from bed $bed'}. Can I move to bed ${s.swapBed}?');
-                } else {
-                  s.toastMsg('Swap request saved. Ask $owner on WhatsApp too.');
-                }
-              },
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TimelineStep(t: 'Notice given', d: 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
+                TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
+                TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(
+                onTap: () => s.update(() => s.notice = false),
+                child: T('Withdraw notice', w: 600, s: 14, c: p.ad),
+              ),
             ),
           ),
         ],
+      );
+      // F08: exit review with the advance check.
+      bar = OutlineCta('Review your stay', icon: 'star', height: 52, fs: 14, onTap: () => s.go('rExit'));
+    } else {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: T('New rent starts next month. $owner confirms the move.', s: 14, c: p.mu, lh: 1.45),
+          ),
+          Container(
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (swapBeds.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: T('No free beds in ${h.name} right now.', s: 14, c: p.mu),
+                  ),
+                for (final e in swapBeds)
+                  () {
+                    final diff = e.r.rent - myRent;
+                    final o = e.b.id == s.swapBed;
+                    return Tap(
+                      key: ValueKey('swap-${e.b.id}'),
+                      onTap: () => s.update(() => s.swapBed = e.b.id),
+                      child: InsetBar(
+                        edge: Edge.left,
+                        size: o ? 4 : 0,
+                        color: p.ac,
+                        bg: o ? p.ab : null,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    T('Bed ${e.b.id}', w: 800, s: 16),
+                                    const SizedBox(height: 2),
+                                    T(['Floor ${e.r.floor}', '${e.r.share} sharing${e.r.ac ? ' AC' : ''}', e.b.spot, if ('${e.r.n}' == s.stayRoom) 'same room'].join(' · '), s: 13, c: p.mu),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              T(
+                                myRent == 0
+                                    ? fmt(e.r.rent)
+                                    : diff == 0
+                                    ? 'Same rent'
+                                    : '${diff > 0 ? '+ ' : '− '}${fmt(diff.abs())}',
+                                w: 800,
+                                s: 14,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }(),
+              ],
+            ),
+          ),
+        ],
+      );
+      bar = Cta(
+        s.swapSent
+            ? 'Request sent for ${s.swapBed}'
+            : s.swapBed != null
+            ? 'Ask to move to ${s.swapBed}'
+            : 'Pick a bed to move to',
+        icon: 'swap',
+        height: 54,
+        px: 16,
+        fs: 15,
+        opacity: s.swapBed != null && !s.swapSent ? 1 : .4,
+        onTap: () {
+          if (s.swapBed == null || s.swapSent) return;
+          s.update(() => s.swapSent = true);
+          if (s.onServer) {
+            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. Can I move to bed ${s.swapBed}?');
+          } else {
+            s.toastMsg('Request saved. Ask $owner on WhatsApp too.');
+          }
+        },
       );
     }
     return Column(
@@ -916,18 +1086,24 @@ class MoveScreen extends StatelessWidget {
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(bed.isEmpty ? h.name : 'Bed $bed'), const T('Move out or swap', w: 800, s: 22, lh: 1.1)]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [Kicker(vacate && bed.isNotEmpty ? 'Bed $bed' : h.name), T(vacate ? 'Give notice' : 'Move to another bed', w: 800, s: 26, lh: 1.1)],
+                ),
               ),
             ],
           ),
         ),
-        Seg(opts: const [('vacate', 'Give notice'), ('swap', 'Swap bed')], cur: s.moveTab, onPick: (v) => s.update(() => s.moveTab = v), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12), fs: 14, margin: const EdgeInsets.symmetric(horizontal: 16)),
-        const SizedBox(height: 14),
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-            child: Scroll(key: ValueKey('move${s.scrollEpoch}'), child: body),
+          child: Scroll(key: ValueKey('move${s.scrollEpoch}'), child: body),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(
+            color: p.bg,
+            border: Border(top: bs(2, p.tx)),
           ),
+          child: bar,
         ),
       ],
     );

@@ -13,6 +13,9 @@ mixin _ReviewsData {
   int rvStars = 0, exStars = 0;
   Map<String, int> rvCats = {};
   String? rvLayout, exAdv, exAgain;
+
+  /// F22: the exit review's optional line.
+  String exText = '';
   String rvText = '', revF = 'new';
   String? replyFor;
   String replyText = '';
@@ -58,7 +61,7 @@ mixin _ReviewsData {
   final Map<int, Uint8List> complaintPhotosLocal = {};
   int? cPhotoView;
   late String vDate = leaveDates(hostels[0].terms).first;
-  String vReason = 'New job';
+  String? vReason;
   bool notice = false;
   String? swapBed;
   bool swapSent = false;
@@ -195,12 +198,13 @@ extension ReviewsActions on AppState {
     if (adv == null) return toastMsg('Tell us if you got your advance back.');
     if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
     if (onServer) {
-      _postReviewLive(kind: 'exit', stars: exStars, advance: adv, again: exAgain).then((ok) {
+      _postReviewLive(kind: 'exit', stars: exStars, body: exText.trim(), advance: adv, again: exAgain).then((ok) {
         if (!ok) return;
         update(() {
           exAdv = null;
           exStars = 0;
           exAgain = null;
+          exText = '';
         });
         back();
         toastMsg(adv == 'not' ? 'Thanks. Your review is posted, and the owner sees the advance wasn’t returned.' : 'Thanks. Your review is posted.');
@@ -210,10 +214,11 @@ extension ReviewsActions on AppState {
     final st = stats['anjani']!;
     update(() {
       stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: '', stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: exText.trim(), stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
       exAdv = null;
       exStars = 0;
       exAgain = null;
+      exText = '';
     });
     back();
     toastMsg(adv == 'not' ? 'Thanks. We remind the owner and check in a week.' : 'Thanks. Your review is posted.');

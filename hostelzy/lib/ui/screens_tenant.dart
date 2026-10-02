@@ -537,23 +537,13 @@ class MeScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final isOwner = s.role == 'owner';
-    void move(String t) => s.update(() {
-      s.hist = [...s.hist, s.screen];
-      s.screen = 'move';
-      s.sheet = null;
-      s.moveTab = t;
-    });
-    // F21 W3: My stay (moved off resident Home).
-    final stay = <(String, VoidCallback, Color)>[
-      ('Room layouts · fix any room', () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[s.homeHid ?? 'anjani']?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101), p.tx),
-      ('Swap bed', () => move('swap'), p.tx),
-      ('Give notice', () => move('vacate'), p.tx),
-    ];
     // F22 Area 1: one list, each row with a one-line status.
     final live = s.holds.where((h) => !const ['released', 'expired'].contains(h.status)).toList();
     final held = live.where((h) => h.status != 'booked').length, booked = live.where((h) => h.status == 'booked').length;
     final nSaved = s.saved.values.where((v) => v).length;
     final rows = <(String, String, VoidCallback)>[
+      // F22 Area 2: the resident's stay is one row; its actions live in My stay.
+      if (s.role == 'resident') ('My stay', s.myStay == null ? 'Not on Hostelzy yet' : [if (s.myStay!.bed.isNotEmpty) 'Bed ${s.myStay!.bed}', s.stayHostel.name].join(' · '), () => s.go('rStay')),
       if (!isOwner) ('Saved', nSaved == 0 ? 'Nothing yet' : '$nSaved hostel${nSaved == 1 ? '' : 's'}', () => s.go('saved')),
       if (!isOwner) ('Holds', live.isEmpty ? 'None right now' : [if (held > 0) '$held held', if (booked > 0) '$booked booked'].join(' · '), () => s.tab('holds')),
       if (!isOwner) ('Stay Rewards', const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'Not a member yet', () => s.go('rewards')),
@@ -606,20 +596,6 @@ class MeScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (s.role == 'resident') ...[
-            const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('My stay')),
-            for (final r in stay)
-              Tap(
-                key: ValueKey('stay-${r.$1}'),
-                onTap: r.$2,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(border: Border(top: r == stay.first ? bs(2, p.dv) : BorderSide.none, bottom: bs(1, p.hl))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Flexible(child: T(r.$1, s: 15, w: 600)), Ic('chev', size: 18, color: p.mu)]),
-                ),
-              ),
-            const SizedBox(height: 12),
-          ],
           for (final r in rows) row(r),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
