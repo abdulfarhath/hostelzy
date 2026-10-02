@@ -40,4 +40,7 @@ test('layout fixes: days waited, owner silent after 7, what changed', async () =
   const after = { w: 18, h: 16, beds: { A: [1, 1], B: [6, 1] }, items: [{ id: 'fan1', kind: 'fan', x: 2, y: 7, w: 1, h: 1 }, { id: 'ac1', kind: 'ac', x: 17, y: 6, w: 0.5, h: 1.8, working: false }, { id: 'window1', kind: 'window', x: 0, y: 0, w: 4, h: 0.3 }] };
   assert.deepEqual(layoutChanges(before, after), ['Fan moved', 'AC unit not working', 'Window added', 'Bed B moved', 'Size 18 × 15 → 18 × 16 ft']);
   assert.deepEqual(layoutChanges(null, { w: 10, h: 10, beds: {}, items: [] }), ['Size 0 × 0 → 10 × 10 ft']);
+  const { quickLine } = await import('../../../app/console/logic.js');
+  assert.equal(quickLine({ issue: 'broken', item: 'AC unit' }), 'Broken: AC unit');
+  assert.equal(quickLine({ issue: 'not_here', item: 'Fan' }), 'Not in this room: Fan');
 });

@@ -169,3 +169,10 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
 - **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
 - **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
+
+## Decisions during build (Ideas chat, 2026-10-02)
+- Welcome language row appears only in W4 when Telugu/Hindi really exist (no fake options).
+- Notify sheet promises only what's real; tenants get a server push when the owner keeps/declines a hold.
+- Tenants are asked for notifications after their first hold; owners/residents after sign-in.
+- "UPI reference" everywhere, including the owner plan invoice (shown once as "UPI reference (UTR)").
+- "Best deals" sort removed; a "Hostelzy deals only" filter chip stays.

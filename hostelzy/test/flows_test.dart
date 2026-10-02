@@ -2995,10 +2995,18 @@ void main() {
       t.mode = 'room';
     });
     await tester.pump();
+    // F19 extras: they can try the editor (nothing is saved); only Send is locked.
     await tap(tester, find.text('Edit room'));
+    expect((t.screen, t.fixTry, t.sheet), ('rFix', true, null));
+    expect(find.text('Try mode · play freely, nothing is saved'), findsOneWidget);
+    await tap(tester, find.text('Send · residents only'));
     expect(t.sheet, 'fixLock');
     expect(find.text('Only residents of Anjani Residency can fix room layouts'), findsOneWidget);
     expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
+    // Leaving discards the try.
+    t.update(() => t.sheet = null);
+    t.leaveFixEditor();
+    expect((t.fixTry, t.fixDrafts.isEmpty), (false, true));
     t.dispose();
 
     // A resident: their room screen → Edit room → the suggestion editor.
@@ -3473,7 +3481,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, myStay: rows.myStay);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
     return 'HZ-5009';
   }
 
@@ -3502,7 +3510,7 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, myStay: rows.myStay,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
@@ -3523,7 +3531,7 @@ class _FakeLive extends SampleRepo {
   }
   // F19: layout fixes.
   @override
-  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async {
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note, {String? photo}) async {
     await _rec('fix $hid $room ${(layout['items'] as List).length} $note');
     return 'lf-1';
   }
@@ -3603,14 +3611,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, myStay: rows.myStay);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, myStay: rows.myStay);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
   }
 }
 
