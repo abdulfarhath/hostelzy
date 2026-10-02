@@ -37,6 +37,10 @@ abstract class SignIn {
 
   /// C: deletes the Firebase user (right after [reauth]).
   Future<void> deleteUser();
+
+  /// Why the last sign-in failed, as the real code ("google: canceled",
+  /// "firebase: invalid-credential"), so it can be shown and reported.
+  String? get lastError;
 }
 
 /// No Google sign-in here: the app offers the local fallback.
@@ -58,6 +62,8 @@ class NoSignIn implements SignIn {
   Account? get current => null;
   @override
   Future<void> signOut() async {}
+  @override
+  String? get lastError => null;
 }
 
 /// Optional override for Google's web client id; normally it comes from
@@ -67,12 +73,23 @@ const _webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 class FirebaseSignIn implements SignIn {
   final _auth = FirebaseAuth.instance;
   bool _ready = false;
+  String? _err;
+
+  @override
+  String? get lastError => _err;
+
+  /// "firebase: internal-error · Requests from this Android client …" (short).
+  static String _code(String who, String code, String? msg) {
+    final m = (msg ?? '').replaceAll(RegExp(r'\s+'), ' ').trim();
+    return '$who: $code${m.isEmpty ? '' : ' · ${m.length > 90 ? '${m.substring(0, 90)}…' : m}'}';
+  }
 
   @override
   bool get available => true;
 
   @override
   Future<(Account?, SignInFail?)> google() async {
+    _err = null;
     try {
       final g = GoogleSignIn.instance;
       if (!_ready) {
@@ -85,12 +102,15 @@ class FirebaseSignIn implements SignIn {
       return ((uid: u.uid, name: u.displayName ?? a.displayName ?? '', email: u.email ?? a.email), null);
     } on GoogleSignInException catch (e) {
       debugPrint('Google sign-in: $e');
+      _err = _code('google', e.code.name, e.description);
       return (null, e.code == GoogleSignInExceptionCode.canceled ? SignInFail.cancelled : (e.code == GoogleSignInExceptionCode.clientConfigurationError || e.code == GoogleSignInExceptionCode.providerConfigurationError ? SignInFail.notSetUp : SignInFail.failed));
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase sign-in: ${e.code}');
+      _err = _code('firebase', e.code, e.message);
       return (null, e.code == 'operation-not-allowed' || e.code == 'app-not-authorized' ? SignInFail.notSetUp : SignInFail.failed);
     } catch (e) {
       debugPrint('Sign-in: $e');
+      _err = _code('other', e.runtimeType.toString(), '$e');
       return (null, SignInFail.failed);
     }
   }
