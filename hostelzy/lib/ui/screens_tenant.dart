@@ -494,18 +494,9 @@ class MeScreen extends StatelessWidget {
     final rows = <(String, VoidCallback, Color)>[
       if (!isOwner) ('Stay Rewards · ${const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'not a member yet'}', () => s.go('rewards'), p.tx),
       ('Saved hostels', () => s.toastMsg('${s.saved.values.where((v) => v).length} saved'), p.tx),
-      ('Notifications', () => s.toastMsg('Notifications go to WhatsApp and here.'), p.tx),
+      ('Settings', () => s.go('settings'), p.tx),
       ('Switch role', () => s.tab('role'), p.tx),
-      (
-        'Log out',
-        () => s.update(() {
-          s.screen = 'welcome';
-          s.hist = [];
-          s.phone = '';
-          s.otp = '';
-        }),
-        p.ad,
-      ),
+      ('Log out', s.logOut, p.ad),
     ];
     return Scroll(
       key: ValueKey('me${s.scrollEpoch}'),

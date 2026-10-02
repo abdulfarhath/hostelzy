@@ -23,7 +23,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
   late final AppState state = AppState(
     start: _pick(q['start'], AppState.screens),
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
-    theme: _pick(q['theme'], const ['light', 'dark']),
+    theme: _pick(q['theme'], const ['light', 'dark', 'system']),
     mode: _pick(q['mode'], const ['plan', 'room', 'list', 'building']),
     sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'joined', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
