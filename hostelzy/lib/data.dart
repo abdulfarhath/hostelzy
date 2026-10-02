@@ -717,8 +717,11 @@ class CaseEvent {
 
 /// A Fair Play case: new → waiting (48 h for the owner) → decide → closed.
 class FairCase {
-  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2, this.openedAt});
+  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2, this.openedAt, this.key});
   final String id, hid, title, signal;
+
+  /// S5: the case's id on the server (null on sample data).
+  final String? key;
   String status;
   final List<CaseEvent> events;
 

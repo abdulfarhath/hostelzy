@@ -40,6 +40,7 @@ extension SyncActions on AppState {
     // S7: the plan comes from the server: real invoices only, and the owner's
     // newest one (or the trial, before the first is issued).
     invoices = l.invoices;
+    cases = l.cases;
     if (rooms[ownHid] != null) {
       final mine = l.invoices.where((i) => i.hid == ownHid).firstOrNull;
       final trial = l.trialEnds[ownHid];

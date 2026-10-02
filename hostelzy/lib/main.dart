@@ -95,7 +95,7 @@ class _HostelzyAppState extends State<HostelzyApp> {
       await state.syncPushToken();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
-      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}));
+      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}));
       state.toastMsg('Couldn’t reach Hostelzy. Check your internet and open the app again.');
       debugPrint('Supabase: $e');
     }

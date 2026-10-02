@@ -596,7 +596,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => 'Book bed ${s.pay?.bed ?? ''} · deal ${s.pay?.note ?? ''}',
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
-      'report' => 'Anjani Residency · private',
+      'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       _ => null,
     };

@@ -379,3 +379,19 @@ Not needed.
   - Tests: `supabase/tests/reviews_test.sql`.
 - **Not yet:** a "layout is wrong" review doesn't flag the room's layout on the server. Reviews don't store the room, so the team sees it in the review instead.
 - Test: `S4: on Supabase, reviews come from the server, residents post them and owners reply`.
+
+**S5 · Fair Play on the server · 2026-10-02** (branch `feature/s5-fair-play`):
+- **Cases:** owners and the team see their `fair_cases` live. The statuses map to the app as new, decide (owner replied, team to decide), waiting (team asked for more) and closed.
+- **Owner:**
+  - **Fix:** `fix_case()` works only within 48 hours. It switches the resident to Via Hostelzy and closes the case with no strike. After 48 hours the owner is told to reply instead.
+  - **Reply:** sets `owner_reply`. A reply to a case the team sent back returns it to the team.
+- **Team (founder admin):** close, ask for more, or strike. A strike adds a `strikes` row and the result text.
+- **Strike counts:** shared with everyone through `strike_counts()`, because 2 strikes hide deals, 3 hide the listing, and ranking uses them. The strike rows themselves stay private.
+- **Tenant:**
+  - The private report goes to `fair_reports`, about the hostel of the ended hold. The owner never sees it.
+  - The report sheet names that hostel instead of the sample one.
+- **Migration `20261002140000_s5_fair_play.sql`:**
+  - Updated guard, `fix_case`, `strike_counts`, and `fair_cases` added to Realtime.
+  - Tests: `supabase/tests/fairplay_test.sql`.
+- **Not on the server:** the "3 fixes in 6 months = 1 warning" count. The team sees the fixes in closed cases.
+- Test: `S5: on Supabase, Fair Play cases, replies, fixes, decisions and reports go to the server`.

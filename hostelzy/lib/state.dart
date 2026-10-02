@@ -508,6 +508,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       confirmed[h.id] = 0;
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
+      strikes[h.id] = l.strikes[h.id] ?? 0;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
     }
     // S4: the live hostels' reviews replace any earlier copy of them.
