@@ -8,22 +8,27 @@ import 'kit.dart';
 // Hostelzy team mode (Settings → Hostelzy team) and the owner's list of room
 // layouts (Manage → Layouts).
 
-/// Passcode sheet. Temporary until F13 adds real admin accounts.
+/// Team access (B7): Hostelzy team Google accounts only.
 class TeamSheet extends StatelessWidget {
   const TeamSheet({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final a = s.account;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
         gap: 12,
         children: [
           T('For the Hostelzy team only. Owners and tenants don’t need this.', s: 13, c: p.mu, lh: 1.45),
-          VGap(gap: 6, children: [const T('Team passcode', w: 800, s: 13), Field(value: s.teamCode, numeric: true, placeholder: '4 digits', hiddenText: true, onChanged: (v) => s.update(() => s.teamCode = v.replaceAll(RegExp(r'\D'), '')))]),
-          Cta('Open team tools', icon: 'lock', height: 54, px: 16, fs: 15, onTap: s.unlockTeam),
-          T('Temporary: real team accounts come with the backend (F13).', s: 12, c: p.mu),
+          if (a == null)
+            T('Sign in with your Hostelzy team Google account, then come back here.', s: 14, w: 600, lh: 1.45)
+          else ...[
+            T('Signed in as ${a.email}', s: 14, w: 600),
+            Cta(s.teamChecking ? 'Checking…' : 'Open team tools', icon: 'lock', height: 54, px: 16, fs: 15, onTap: s.checkTeam),
+          ],
+          T('The founder adds team accounts. There is no passcode.', s: 12, c: p.mu),
         ],
       ),
     );

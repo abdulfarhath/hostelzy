@@ -50,6 +50,7 @@ extension LoginActions on AppState {
         screen = 'phone';
         sheet = null;
       });
+      startLive();
       return;
     }
     toastMsg(switch (fail) {

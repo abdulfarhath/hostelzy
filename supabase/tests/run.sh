@@ -9,4 +9,7 @@ $P -d hz_rls_test -f tests/stub.sql
 for f in migrations/*.sql; do $P -d hz_rls_test -f "$f"; done
 $P -d hz_rls_test -f tests/rls_test.sql
 $P -d hz_rls_test -f tests/b5_test.sql
+$P -d hz_rls_test -f tests/b7_test.sql
+$P -d hz_rls_test -f tests/console_test.sql
+$P -d hz_rls_test -f tests/delete_test.sql
 $P -d hz_rls_test -f tests/invites_test.sql
