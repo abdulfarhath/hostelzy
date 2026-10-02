@@ -115,8 +115,8 @@ class RewardsScreen extends StatelessWidget {
                       children: [
                         Container(height: 10, decoration: box(w: 2, c: p.tx), child: LayoutBuilder(builder: (context, c) => Row(children: [Container(width: c.maxWidth * s.monthsOnTime / trustedMonths, color: p.tx)]))),
                         const SizedBox(height: 8),
-                        check(true, 'Rent paid on time · ${s.monthsOnTime} of ${s.monthsOnTime} months'),
-                        check(true, 'No complaints from the owner'),
+                        check(s.lateRentMonths == 0, s.lateRentMonths == 0 ? 'Rent paid on time · ${s.monthsOnTime} of ${s.monthsOnTime} months' : 'Rent late in ${s.lateRentMonths} of ${s.monthsOnTime} months'),
+                        check(s.ownerComplaints == 0, s.ownerComplaints == 0 ? 'No complaints from the owner' : '${s.ownerComplaints} complaint from the owner'),
                         check(false, '$trustedMonths months in a Hostelzy hostel · ${trustedMonths - s.monthsOnTime} to go'),
                         const SizedBox(height: 4),
                         T('Then: a badge owners see, lower-advance deals and first look at newly free beds.', s: 12, c: p.mu, lh: 1.4),
@@ -135,7 +135,7 @@ class RewardsScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Kicker('Your code'), T(s.referralCode, w: 800, s: 22, ls: .04)])),
-                      Cta('Share', icon: 'msg', height: 44, px: 14, fs: 14, expand: false, gap: 10, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Find a PG on Hostelzy with my code ${s.referralCode}: we both get ${fmt(referralReward)} after your first month.')),
+                      Cta('Share', icon: 'msg', height: 44, px: 14, fs: 14, expand: false, gap: 10, bg: p.tx, fg: p.bg, onTap: () => s.share(s.referralText)),
                     ],
                   ),
                 ),

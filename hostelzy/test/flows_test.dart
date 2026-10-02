@@ -1467,6 +1467,33 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('Stay Rewards: share my code, Trusted tenant earned from the stay (F09)', (tester) async {
+    final s = AppState(start: 'rewards', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(s.level, 'none');
+    s.update(() => s.becomeMember('Anjani Residency'));
+    expect(s.level, 'member');
+    await tester.pump();
+    await tap(tester, find.text('Share'));
+    expect(s.lastShare, contains(s.referralCode));
+    await tester.pump(const Duration(seconds: 3));
+    // Six months, rent always on time, no owner complaints: Trusted.
+    s.update(() => s.monthsOnTime = 6);
+    expect(s.level, 'trusted');
+    // One late month or an owner complaint keeps you a Member.
+    s.update(() => s.lateRentMonths = 1);
+    expect(s.level, 'member');
+    s.update(() {
+      s.lateRentMonths = 0;
+      s.ownerComplaints = 1;
+    });
+    expect(s.level, 'member');
+    s.update(() => s.monthsOnTime = 4);
+    await tester.pump();
+    expect(find.text('1 complaint from the owner'), findsOneWidget);
+    s.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

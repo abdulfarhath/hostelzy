@@ -1380,7 +1380,7 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Join Anjani Residency on Hostelzy: $link'))),
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join Anjani Residency on Hostelzy to pay rent, raise complaints and see the food menu: https://$link'))),
                         const SizedBox(width: 8),
                         Expanded(child: Cta('Copy link', icon: 'check', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () {
                           s.copyText(link);
