@@ -9,6 +9,7 @@ import 'fairplay.dart';
 import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
+import 'layout_fixes.dart';
 import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
@@ -411,6 +412,10 @@ class _AppBody extends StatelessWidget {
     'compare' => const CompareScreen(),
     'oLayout' => const OwnerLayoutScreen(),
     'aLayout' => const AdminLayoutScreen(),
+    'rRoom' => const ResidentRoomScreen(),
+    'rFix' => const FixEditorScreen(),
+    'oFix' => const OwnerFixScreen(),
+    'oFixDone' => const FixDoneScreen(),
     'aAdd' => const AddHostelScreen(),
     'aTrack' => const TrackerScreen(),
     'oTeam' => const TeamScreen(),
@@ -583,6 +588,10 @@ class _Sheet extends StatelessWidget {
       'payUtr' => 'Enter the UTR',
       'manager' => 'Add a manager',
       'photo' => 'This photo',
+      'fixLock' => 'Fix this room?',
+      'fixLimit' => 'Can’t send yet',
+      'fixSend' => 'Send your fix',
+      'fixReject' => 'Reject this fix?',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
@@ -598,6 +607,8 @@ class _Sheet extends StatelessWidget {
       'manager' => '${hostelById(s.ownHid).name} · team',
       'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
+      'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
+      'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -623,6 +634,10 @@ class _Sheet extends StatelessWidget {
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
       'photo' => const PhotoSheet(),
+      'fixLock' => const FixLockSheet(),
+      'fixLimit' => const FixLimitSheet(),
+      'fixSend' => const FixSendSheet(),
+      'fixReject' => const FixRejectSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);

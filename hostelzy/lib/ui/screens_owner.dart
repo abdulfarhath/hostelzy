@@ -9,6 +9,7 @@ import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
 import 'layout.dart' show ConfirmLayoutsCard;
+import 'layout_fixes.dart' show OwnerFixCards;
 import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
@@ -217,6 +218,8 @@ class OwnerTodayScreen extends StatelessWidget {
           const FreeBedsCard(),
           const ConfirmLayoutsCard(),
           const PaymentsToCheck(),
+          // F19: residents' layout fixes waiting for the owner.
+          const OwnerFixCards(),
           const _Enquiries(),
           const _RankCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),

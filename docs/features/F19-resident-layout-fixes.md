@@ -85,3 +85,61 @@ Not designed: a reward for approved fixes (the founder decides; until then, the 
 ## Open questions (Ideas chat decides unless the founder says otherwise)
 - Reward for an approved fix (Stay Rewards credits)? Credits are money-like, so **founder decides**.
   Until then: no reward, just the "Checked by a resident" badge.
+
+## Build
+
+**Built · 2026-10-02** (branch `feature/f19-layout-fixes`, stacked on the S-series PRs).
+
+**Resident**
+- **Home:** a new "Room layouts" row opens their own room's layout (board 1). The room chips switch to any room in their hostel.
+- **Edit room** opens the owner's editor in suggestion mode (boards 2 and 3):
+  - Dark banner: "Only you see this until you send it".
+  - Move with drag or the nudge arrows; Turn, Reset, Undo, Redo.
+  - Working / Not working (on the draft only); room size ±1 ft.
+  - Checks before sending. "Bed A has a resident · it can’t be deleted" turns Send off.
+- **Draft:** stays on this phone, and survives restarts.
+- **Send** (board 4) lists what changed, then takes an optional note and Send.
+- **After sending** (board 5), the room shows one of:
+  - "Waiting for <owner>", with Change my suggestion / Withdraw it;
+  - Approved, with Done;
+  - Not approved: the reason, then Edit room again / Talk to <owner> on WhatsApp.
+- **Limit:** 3 open fixes per hostel is the most (board 3c). A new fix for the same room replaces the old one.
+
+**Everyone else**
+- The Room tab's bottom bar has **Edit room**; Compare beds moved to a chip.
+- For non-residents, Edit room opens the lock sheet (board 0): Book a bed / See beds / "Ask your owner for your invite code."
+
+**Owner**
+- **Today:** "Layout fixes from residents" cards (board 8).
+- **Compare** (board 9): Now vN | Suggested side by side, with changes outlined in red. "What changed" lists them. Below: the resident's name and note (owner only), then Approve & publish / Reject.
+- **Reject** sheet (board 10): reason chips plus text.
+- **Approved** (board 11): Live for tenants, the versions, the tenant badge, and Undo publish.
+
+**Tenants**
+- The Room tab shows "Checked by a resident · 2 Oct", or "Checked by N residents". Names are never shown.
+
+**Team console** (board 12)
+- New "Layout fixes" nav item, listing waiting fixes oldest first. Fixes waiting 7 days or more show "Owner silent".
+- Detail shows what changed, the note, Approve & publish / Reject (only after 7 days), and "Remind <owner> on WhatsApp".
+
+**Server:** migration `20261002160000_f19_layout_fixes.sql`, which adds:
+- tables `layout_fixes` and `layout_history`;
+- functions:
+  - `send_layout_fix`: confirmed residents only, checks the layout, max 3 open, pushes the owner;
+  - `withdraw_layout_fix`;
+  - `decide_layout_fix`: staff, or the team after 7 days; approve publishes and keeps the old version in history; pushes the resident;
+  - `publish_layout`: owners publish their own edits on the server (DECISIONS 2026-10-02, F18);
+  - `undo_layout_publish`;
+  - `layout_checks()`: public counts for the badge;
+- `layout_fixes` in Realtime.
+
+Tests: `supabase/tests/layoutfix_test.sql`; flow tests "F19: …" (2); console logic test.
+
+**Not built:** these extras are on the canvas but not in this spec:
+- Try mode for visitors (0b)
+- Quick fix (3b)
+- Muting a resident (10b)
+- Photos with a fix
+- Rewards for fixes (founder decides)
+
+Listed for the Ideas chat to schedule.

@@ -852,6 +852,95 @@ String? wallOf(Rect r, double w, double h) {
 /// A saved state of a layout, for undo / redo in the editor.
 typedef LayoutSnap = ({double w, double h, Map<String, Offset> beds, List<LItem> items, Map<String, String> bunks});
 
+/// F19: a resident's suggested fix to a room layout. The owner (and the
+/// team after 7 days) approves or rejects it; tenants never see who sent it.
+class LayoutFix {
+  LayoutFix({required this.id, required this.hid, required this.room, required this.snap, required this.at, this.note = '', this.status = 'pending', this.author = '', this.authorBed = '', this.since = '', this.reason, this.decidedAt, this.mine = false, this.baseVersion = 1});
+  final String id, hid;
+  final int room;
+  final LayoutSnap snap;
+  final String note, author, authorBed, since;
+
+  /// pending | approved | rejected | withdrawn
+  String status;
+  String? reason;
+
+  /// When it was sent / decided (ms).
+  final int at;
+  int? decidedAt;
+
+  /// Sent from this phone (the resident's own).
+  final bool mine;
+
+  /// The live version it was drawn on.
+  final int baseVersion;
+}
+
+/// F19: a layout as JSON for the server ({w, h, beds: {A: [x, y]}, items, bunks}).
+Map<String, dynamic> layoutJson(LayoutSnap l) => {
+  'w': l.w,
+  'h': l.h,
+  'beds': {for (final e in l.beds.entries) e.key: [e.value.dx, e.value.dy]},
+  'items': [for (final i in l.items) {'id': i.id, 'kind': i.kind, 'x': i.x, 'y': i.y, 'w': i.w, 'h': i.h, if (i.facing != null) 'facing': i.facing, 'working': i.working}],
+  'bunks': l.bunks,
+};
+
+/// F19: [layoutJson] back to a snapshot.
+LayoutSnap snapFromJson(Map<String, dynamic> j) {
+  num n(Object? v) => v as num? ?? 0;
+  return (
+    w: n(j['w']).toDouble(),
+    h: n(j['h']).toDouble(),
+    beds: {for (final e in (j['beds'] as Map? ?? const {}).entries) e.key as String: Offset(n((e.value as List)[0]).toDouble(), n(e.value[1]).toDouble())},
+    items: [
+      for (final i in (j['items'] as List? ?? const []).cast<Map>()) LItem(i['id'] as String, i['kind'] as String, n(i['x']).toDouble(), n(i['y']).toDouble(), n(i['w']).toDouble(), n(i['h']).toDouble(), facing: i['facing'] as String?, working: i['working'] as bool? ?? true),
+    ],
+    bunks: {for (final e in (j['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String},
+  );
+}
+
+/// F19: what a fix changes, in words, and which things moved (for the red
+/// outline): "Fan 1" · "moved", "AC unit" · "right → left wall".
+({List<(String, String)> lines, Set<String> ids}) layoutDiff(LayoutSnap a, LayoutSnap b) {
+  const names = {'fan': 'Fan', 'ac': 'AC unit', 'window': 'Window', 'door': 'Door', 'wash': 'Washroom', 'pillar': 'Pillar'};
+  final lines = <(String, String)>[], ids = <String>{};
+  String nm(LItem i) {
+    final same = [...a.items, ...b.items].where((x) => x.kind == i.kind).map((x) => x.id).toSet();
+    return same.length > 1 ? '${names[i.kind] ?? i.kind} ${i.id.replaceAll(RegExp(r'[^0-9]'), '')}' : names[i.kind] ?? i.kind;
+  }
+  for (final i in b.items) {
+    final o = a.items.where((x) => x.id == i.id).firstOrNull;
+    if (o == null) {
+      lines.add((nm(i), 'added'));
+      ids.add(i.id);
+      continue;
+    }
+    final wo = wallOf(o.rect, a.w, a.h), wn = wallOf(i.rect, b.w, b.h);
+    final changes = [
+      if (wo != wn && (wo != null || wn != null)) '${wo ?? 'middle'} → ${wn ?? 'middle'}${wn == null ? '' : ' wall'}'
+      else if (o.x != i.x || o.y != i.y) 'moved',
+      if ((o.w != i.w || o.h != i.h) && wo == wn) 'turned',
+      if (o.working != i.working) i.working ? 'working' : 'not working',
+      if (o.facing != i.facing && i.facing != null) 'faces ${i.facing}',
+    ];
+    if (changes.isNotEmpty) {
+      lines.add((nm(i), changes.join(' · ')));
+      ids.add(i.id);
+    }
+  }
+  for (final o in a.items) {
+    if (!b.items.any((x) => x.id == o.id)) lines.add((nm(o), 'taken off'));
+  }
+  for (final k in b.beds.keys.toList()..sort()) {
+    if (a.beds[k] != b.beds[k]) {
+      lines.add(('Bed $k', a.beds.containsKey(k) ? 'moved' : 'added'));
+      ids.add('bed:$k');
+    }
+  }
+  if (a.w != b.w || a.h != b.h) lines.add(('Size', '${a.w.round()} × ${a.h.round()} → ${b.w.round()} × ${b.h.round()} ft'));
+  return (lines: lines, ids: ids);
+}
+
 /// A room's layout, drawn by the Hostelzy team. Layout beds are the bed-map
 /// beds (same letters). [live]: a version tenants see. [pending]: a newer
 /// version waiting for the owner's approval.
