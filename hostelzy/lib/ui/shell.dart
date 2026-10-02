@@ -346,6 +346,7 @@ class _AppBody extends StatelessWidget {
 
   Widget _screen(String k) => switch (k) {
     'welcome' => const WelcomeScreen(),
+    'login' => const LoginScreen(),
     'phone' => const PhoneScreen(),
     'otp' => const OtpScreen(),
     'role' => const RoleScreen(),
@@ -972,7 +973,7 @@ class _EnquirySheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        KV('Phone', '${phoneSpaced(e.phone)} · verified by OTP', keyWidth: 110),
+        KV('Phone', '${phoneSpaced(e.phone)} · not verified', keyWidth: 110),
         KV('Asked about', e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed', keyWidth: 110),
         KV('When', clockTime(e.at), keyWidth: 110),
         KV('From', e.from, keyWidth: 110),

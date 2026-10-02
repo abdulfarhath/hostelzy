@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey;
 import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/push.dart';
+import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -54,18 +55,22 @@ Future<void> tap(WidgetTester tester, Finder f) async {
 
 void main() {
   mapTiles = false; // no network in flow tests
-  testWidgets('onboarding: phone, OTP and role lead to Explore', (tester) async {
+  testWidgets('onboarding: sign in, phone and role lead to Explore', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);
     expect(find.text('See the'), findsOneWidget);
     await tap(tester, find.text('Get started'));
+    expect(s.screen, 'login');
+    // No Google sign-in in tests: it says so, and the local fallback works.
+    await tap(tester, find.text('Continue with Google'));
+    await tester.pump();
+    expect(s.toast, 'Google sign-in works in the Android app. Use Hostelzy on this phone for now.');
+    await tester.pump(const Duration(seconds: 3)); // toast gone
+    await tap(tester, find.text('Use on this phone only'));
     expect(find.text('Your mobile number'), findsOneWidget);
     await tap(tester, find.text('Debug: fill a test number'));
-    await tap(tester, find.text('Send code'));
-    expect(find.text('Sent by SMS to +91 90000 00001. Android can fill it in for you.'), findsOneWidget);
-    expect(find.text('Resend in 0:30'), findsOneWidget);
-    await tap(tester, find.text('Debug: fill'));
-    await tap(tester, find.text('Verify'));
+    await tap(tester, find.text('Continue'));
+    expect((s.screen, s.signedIn, s.account, s.phoneVerified), ('role', true, null, false));
     await tap(tester, find.text('I need a bed'));
     expect(s.screen, 'explore');
     expect(find.text('Beds near Hitec City'), findsOneWidget);
@@ -211,7 +216,7 @@ void main() {
     await tap(tester, find.text('HZ-4821'));
     expect(s.sheet, 'enq');
     expect(find.text('HZ-4821 · Ravi Teja'), findsOneWidget);
-    expect(find.text('90000 00029 · verified by OTP'), findsOneWidget);
+    expect(find.text('90000 00029 · not verified'), findsWidgets);
     await tap(tester, find.text('Mark as contacted'));
     expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4821').contacted, isTrue);
     expect(s.sheet, isNull);
@@ -983,9 +988,10 @@ void main() {
     await tap(tester, find.text('Fair Play rules accepted'));
     await tap(tester, find.text('Bed status checked on the visit'));
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone')), matching: find.byType(TextField)), '9000000009');
-    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerOtp')), matching: find.byType(TextField)), '123456');
     await tester.pump();
-    await tap(tester, find.text('Verify owner'));
+    await tap(tester, find.text('Call it'));
+    expect(s.lastLink.toString(), 'tel:+919000000009');
+    await tap(tester, find.text('The owner’s phone rang'));
     expect(s.goLiveLeft, isEmpty);
     await tap(tester, find.text('Go live'));
     final h = hostels.last;
@@ -1085,7 +1091,12 @@ void main() {
     expect(find.textContaining('Privacy policy', findRichText: true), findsOneWidget);
     await tester.enterText(find.byType(TextField), '9000000001');
     await tester.pump();
-    await tap(tester, find.text('Send code'));
+    // F13: no SMS codes yet; the number is typed and stays not verified.
+    await tap(tester, find.text('Continue'));
+    expect((l.screen, l.phoneVerified), ('role', false));
+    // The OTP screen (behind phoneOtpLogin) keeps its resend timer.
+    l.sendCode();
+    await tester.pump();
     expect(l.screen, 'otp');
     expect(find.text('Resend in 0:30'), findsOneWidget);
     l.update(() => l.now += 31000);
@@ -1734,6 +1745,48 @@ void main() {
       s.dispose();
     }
   });
+
+  testWidgets('Sign in with Google: account, phone not verified, profile saved (F13)', (tester) async {
+    final s = AppState(start: 'login');
+    final data = _FakeData();
+    s.signIn = _FakeSignIn(null);
+    s.data = data;
+    await pumpApp(tester, s);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    // Not switched on in Firebase yet: honest message, nothing pretends.
+    (s.signIn as _FakeSignIn).fail = SignInFail.notSetUp;
+    await tap(tester, find.text('Continue with Google'));
+    await tester.pump();
+    expect((s.screen, s.account), ('login', null));
+    expect(s.toast, 'Google sign-in isn’t switched on yet. Use Hostelzy on this phone for now.');
+    (s.signIn as _FakeSignIn).fail = SignInFail.cancelled;
+    await tap(tester, find.text('Continue with Google'));
+    await tester.pump();
+    expect(s.toast, 'Sign-in cancelled.');
+    await tester.pump(const Duration(seconds: 3)); // toast gone
+    // Works.
+    (s.signIn as _FakeSignIn).fail = null;
+    await tap(tester, find.text('Continue with Google'));
+    await tester.pump();
+    expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
+    expect(find.textContaining('Signed in as asha@gmail.com.'), findsOneWidget);
+    expect(find.textContaining('“not verified”'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '9000000007');
+    await tester.pump();
+    await tap(tester, find.text('Continue'));
+    await tap(tester, find.text('I run a hostel'));
+    await tester.pump();
+    expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
+    // Push token goes to the account once signed in.
+    s.push = _FakePush(true);
+    await s.enablePush();
+    expect(data.tokens, ['fcm-token']);
+    // Log out signs out of Google too.
+    s.logOut();
+    expect(((s.signIn as _FakeSignIn).signedOut, s.account), (true, null));
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -1750,4 +1803,27 @@ class _FakePush implements Push {
   Future<String?> token() async => 'fcm-token';
   @override
   Stream<(String, String)> get foreground => const Stream.empty();
+}
+
+class _FakeSignIn implements SignIn {
+  _FakeSignIn(this.fail);
+  SignInFail? fail;
+  bool signedOut = false;
+  @override
+  bool get available => true;
+  @override
+  Future<(Account?, SignInFail?)> google() async => fail != null ? (null, fail) : ((uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'), null);
+  @override
+  Future<String?> idToken() async => 'id-token';
+  @override
+  Future<void> signOut() async => signedOut = true;
+}
+
+class _FakeData extends SampleData {
+  ({String name, String email, String phone, String role})? profile;
+  final tokens = <String>[];
+  @override
+  Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
+  @override
+  Future<void> savePushToken(String token) async => tokens.add(token);
 }

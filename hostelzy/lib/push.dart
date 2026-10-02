@@ -8,6 +8,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import 'sign_in.dart';
+
 /// Result of asking Android for notification permission.
 enum PushAsk { allowed, denied, unavailable }
 
@@ -47,10 +49,11 @@ class FirebasePush implements Push {
   Stream<(String, String)> get foreground => FirebaseMessaging.onMessage.where((m) => m.notification != null).map((m) => (m.notification!.title ?? 'Hostelzy', m.notification!.body ?? ''));
 }
 
-/// Starts Firebase on Android: crash reports in release builds, and push.
-/// Returns [NoPush] anywhere else or if Firebase can't start.
-Future<Push> startFirebase() async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return const NoPush();
+/// Starts Firebase on Android: crash reports in release builds, push and
+/// Google sign-in. Returns [NoPush] / [NoSignIn] anywhere else or if Firebase
+/// can't start.
+Future<(Push, SignIn)> startFirebase() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return (const NoPush(), const NoSignIn());
   try {
     await Firebase.initializeApp();
     final c = FirebaseCrashlytics.instance;
@@ -60,9 +63,9 @@ Future<Push> startFirebase() async {
       c.recordError(e, st, fatal: true);
       return true;
     };
-    return FirebasePush();
+    return (FirebasePush(), FirebaseSignIn());
   } catch (e) {
     debugPrint('Firebase: $e');
-    return const NoPush();
+    return (const NoPush(), const NoSignIn());
   }
 }

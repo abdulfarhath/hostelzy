@@ -359,7 +359,7 @@ class RoomMode extends StatelessWidget {
       body = VGap(
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'lock', head: 'Sign in to see room layouts', body: 'Room layouts are only for people who have verified their phone number.'),
+          const LayoutEmpty(icon: 'lock', head: 'Sign in to see room layouts', body: 'Room layouts are only for people signed in to Hostelzy.'),
           T('It takes one OTP. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
         ],
       );

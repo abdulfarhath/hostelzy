@@ -17,6 +17,12 @@ abstract class HostelData {
   /// Live hostels, or null to keep the built-in sample data.
   Future<Listings?> listings();
   Future<RemoteSettings?> settings();
+
+  /// The signed-in user's profile. The phone is typed, never marked verified.
+  Future<void> saveProfile({required String name, required String email, required String phone, required String role});
+
+  /// This phone's push token (FCM).
+  Future<void> savePushToken(String token);
 }
 
 class SampleData implements HostelData {
@@ -25,15 +31,21 @@ class SampleData implements HostelData {
   Future<Listings?> listings() async => null;
   @override
   Future<RemoteSettings?> settings() async => null;
+  @override
+  Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
+  @override
+  Future<void> savePushToken(String token) async {}
 }
 
 class SupabaseData implements HostelData {
   SupabaseData(this.db);
   final SupabaseClient db;
 
-  /// Connects with the public anon key from `app_config.dart`.
-  static Future<SupabaseData> connect() async {
-    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  /// Connects with the public anon key from `app_config.dart`. Signed-in
+  /// users send their Firebase ID token ([idToken]); Supabase checks it
+  /// (Third-party Auth) and the database rules use its uid.
+  static Future<SupabaseData> connect({Future<String?> Function()? idToken}) async {
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseData(Supabase.instance.client);
   }
 
@@ -46,6 +58,13 @@ class SupabaseData implements HostelData {
 
   @override
   Future<RemoteSettings?> settings() async => settingsFromRows(await db.from('app_settings').select());
+
+  @override
+  Future<void> saveProfile({required String name, required String email, required String phone, required String role}) =>
+      db.from('profiles').upsert({'name': name, 'email': email, 'phone': phone, 'role': role}, onConflict: 'id');
+
+  @override
+  Future<void> savePushToken(String token) => db.from('push_tokens').upsert({'token': token, 'platform': 'android', 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'token');
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.

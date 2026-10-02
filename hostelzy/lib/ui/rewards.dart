@@ -269,7 +269,7 @@ class TrustedSheet extends StatelessWidget {
           check('6 months in Hostelzy hostels'),
           check('Rent paid on time every month'),
           check('No complaints from owners'),
-          check('Phone verified by OTP'),
+          check('Signed in to Hostelzy'),
           Padding(padding: const EdgeInsets.only(top: 10), child: T('Hostelzy checks this from real stays. We don’t share which hostels $first stayed at before.', s: 13, c: p.mu, lh: 1.45)),
           Padding(
             padding: const EdgeInsets.only(top: 10),
