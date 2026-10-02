@@ -43,7 +43,7 @@ List<Hostel> filtered(AppState s) {
       _ => 0,
     };
     if (d != 0) return d;
-    final c = a.mins[s.lm]!.compareTo(b.mins[s.lm]!);
+    final c = kmTo(a, s.lm).compareTo(kmTo(b, s.lm));
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
   return out;
@@ -293,7 +293,7 @@ class HostelCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     T(h.name, w: 800, s: 17, lh: 1.15),
                     const SizedBox(height: 4),
-                    T('${h.mins[s.lm]} min to ${s.lm} · ${featOf(h)}', s: 13, c: p.mu),
+                    T('${kmLabel(kmTo(h, s.lm))} from ${s.lm} · ${featOf(h)}', s: 13, c: p.mu),
                     // F08: rank and its reasons, never the score number.
                     const SizedBox(height: 3),
                     Rich([sp(context, '#${s.rankOf(h.id)} near ${s.lm}', w: 800, c: p.tx), sp(context, ' · ${s.rankReasons(h.id)}')], s: 12, c: p.mu, lh: 1.35),
@@ -356,196 +356,7 @@ class HostelCard extends StatelessWidget {
 
 // ------------------------------------------------------------ map
 
-class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final filt = filtered(s);
-    final mh = hostelById(s.mapSel);
-    return ClipRect(
-      child: LayoutBuilder(
-        builder: (context, c) {
-          final w = c.maxWidth, h = c.maxHeight;
-          Widget road(double left, double top, double rw, double rh, double deg) => Positioned(
-            left: left,
-            top: top,
-            width: rw,
-            height: rh,
-            child: Transform.rotate(
-              angle: deg * 3.141592653589793 / 180,
-              child: Container(color: p.bg),
-            ),
-          );
-          Positioned at(double xPct, double yPct, Offset tr, Widget child) => Positioned(
-            left: w * xPct / 100,
-            top: h * yPct / 100,
-            child: FractionalTranslation(translation: tr, child: child),
-          );
-          final pins = [for (final ho in hostels) ho]..sort((a, b) => (a.id == s.mapSel ? 1 : 0) - (b.id == s.mapSel ? 1 : 0));
-          return Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              Positioned.fill(child: CustomPaint(painter: _GridPainter(p.sf, p.hl))),
-              road(-.2 * w, .44 * h, 1.4 * w, 14, -14),
-              road(.58 * w, -.1 * h, 12, 1.2 * h, 18),
-              road(-.1 * w, .76 * h, 1.2 * w, 8, 6),
-              Positioned(right: 10, bottom: 206, child: T('map tiles', s: 10, mono: true, c: p.mu)),
-              for (final l in landmarks)
-                at(
-                  landmarkXY[l]![0],
-                  landmarkXY[l]![1],
-                  const Offset(-.5, -.5),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 8, height: 8, color: l == s.lm ? p.ac : p.tx),
-                      const SizedBox(width: 5),
-                      T(l, s: 11, w: 600, c: p.mu),
-                    ],
-                  ),
-                ),
-              Positioned(
-                top: 10,
-                left: 12,
-                right: 12,
-                child: Tap(
-                  onTap: () => s.update(() => s.sheet = 'search'),
-                  child: Container(
-                    height: 46,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: box(bg: p.bg, w: 2, c: p.tx),
-                    child: Row(
-                      children: [
-                        const Ic('search', size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: T(searchSummary(s), s: 14, w: 600, ell: true)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 12,
-                right: 12,
-                bottom: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: box(bg: p.bg, w: 2, c: p.tx),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Stripes(step: 6, width: 84, height: 84, border: Border.all(width: 1, color: p.hl)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              T('${mh.gender} · ${mh.area}', s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.ad),
-                              const SizedBox(height: 3),
-                              T(mh.name, w: 800, s: 16, lh: 1.15),
-                              const SizedBox(height: 3),
-                              T('${s.freeOf(mh.id).f} beds free · ${mh.mins[s.lm]} min to ${s.lm}', s: 12, c: p.mu),
-                              const Spacer(),
-                              const SizedBox(height: 3),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Rich([sp(context, fmt(mh.from)), sp(context, '/mo', s: 12, w: 400, c: p.mu)], s: 16, w: 800),
-                                  Tap(
-                                    onTap: () => s.update(() {
-                                      s.hist = [...s.hist, s.screen];
-                                      s.screen = 'detail';
-                                      s.sheet = null;
-                                      s.hid = mh.id;
-                                      s.dealAc = null;
-                                    }),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                                      color: p.ac,
-                                      child: Css(
-                                        c: p.ai,
-                                        w: 800,
-                                        s: 13,
-                                        child: const Row(mainAxisSize: MainAxisSize.min, children: [T('View'), SizedBox(width: 8), Ic('arrow', size: 13)]),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              for (final ho in pins)
-                () {
-                  final sel = ho.id == s.mapSel, vis = filt.contains(ho);
-                  return at(
-                    ho.x,
-                    ho.y,
-                    const Offset(-.5, -1),
-                    Tap(
-                      onTap: () => s.update(() => s.mapSel = ho.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                        decoration: box(
-                          bg: sel ? p.ac : p.bg,
-                          w: 2,
-                          c: sel
-                              ? p.ac
-                              : vis
-                              ? p.tx
-                              : p.tk,
-                        ),
-                        child: T(
-                          '₹${(ho.from / 1000).toStringAsFixed(1)}k',
-                          w: 800,
-                          s: 13,
-                          c: sel
-                              ? p.ai
-                              : vis
-                              ? p.tx
-                              : p.mu,
-                        ),
-                      ),
-                    ),
-                  );
-                }(),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
 
-class _GridPainter extends CustomPainter {
-  _GridPainter(this.bg, this.line);
-  final Color bg, line;
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = bg);
-    final p = Paint()..color = line;
-    for (var y = 0.0; y < size.height; y += 34) {
-      canvas.drawRect(Rect.fromLTWH(0, y, size.width, 1), p);
-    }
-    for (var x = 0.0; x < size.width; x += 34) {
-      canvas.drawRect(Rect.fromLTWH(x, 0, 1, size.height), p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GridPainter o) => o.bg != bg || o.line != line;
-}
 
 // ------------------------------------------------------------ holds
 
@@ -884,7 +695,7 @@ class DetailScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              T('${h.mins[s.lm]} min to ${s.lm}'),
+                              T('${kmLabel(kmTo(h, s.lm))} from ${s.lm}'),
                               T(h.instant ? 'Instant booking' : 'Owner confirms holds'),
                             ],
                           ),

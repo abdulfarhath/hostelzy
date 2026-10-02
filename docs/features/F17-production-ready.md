@@ -180,5 +180,12 @@ Shipped in parts (Build chat).
 - **Manage → Rates → Where tenants pay you:** UPI ID, name shown in UPI, Test with ₹1, "Hostelzy never holds the money"; the sample ID `sample.owner@upi` is flagged until the owner types theirs.
 - Tests: the F04 booking, F09 move-in and rent tests now go through UTR + owner confirm; new test `payments: owner says not received; tenant fixes or cancels; owner UPI ID (F17)`.
 
-**Still to do:** part 3, the real map and the large-screen layout (boards 9, 11). Real-looking sample phone numbers, the real date and the rest of group A come with those parts; group B waits for F13.
+**Part 3 · shipped 2026-10-02** (branch `feature/f17-map`):
+- **Real map (board 9):** `flutter_map` with OpenStreetMap tiles and "© OpenStreetMap contributors" shown; square price pins (red, the selected one in ink, grey when filtered out), the searched landmark as an ink dot with a halo, the search bar, and a card with distance, rating, free beds, price, **Directions** (Google Maps directions to the hostel's coordinates) and View hostel. Hostels have real coordinates (Madhapur, Kondapur, Gachibowli, KPHB, Ameerpet); new hostels from Add hostel use their area. Android release manifest now has INTERNET.
+- **Distances instead of made-up minutes:** Explore, the hostel page and the map show straight-line "1.6 km from Hitec City", and "Nearest" sorts by it. Travel time comes later.
+- **Large screens (board 11):** the Play Store build on tablets / laptops shows the app column with the real map beside it for tenants (a brand panel for other roles). The phone frame, jump list, "Mobile prototype" text and the fake "9:41 · 5G" status bar are debug-only (`HostelzyShell.prototypeFrame`).
+- **Not done from board 9/11:** "my location" (needs the location permission, F15) and the desktop left nav rail (the app's own tabs are used).
+- Test: `real map and the large-screen layout (F17)`.
+
+**Group A still open** (small, no keys needed): real-looking sample phone numbers → `+91 90000 0000x`; the real date instead of 1 Oct 2026 (sample data is anchored to it, so it changes with real data, F13); a real invite QR (`qr_flutter`); owner screens that still say Anjani / Srinivas after switching hostels; "Did you join?" and the move-in date; owner's house rules on the hostel page; the Hold requests tile; deals wording; founder admin screens inside the app. **Group B** waits for F13 (backend: real OTP, sync, server-issued HZ codes, ledger).
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,6 +8,7 @@ import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
 import 'layout.dart';
+import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
 import 'plan.dart';
@@ -27,6 +29,10 @@ class HostelzyShell extends StatelessWidget {
   final bool bare;
   final VoidCallback? onOpenOverview;
 
+  /// The clickable prototype (phone frame, jump list, fake status bar) is
+  /// for development only; the Play Store build uses [_Wide] (F17 board 11).
+  static bool prototypeFrame = kDebugMode;
+
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -38,10 +44,41 @@ class HostelzyShell extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, c) {
             if (bare) return const PhoneFrame();
-            if (c.maxWidth >= 730) return _Desk(onOpenOverview: onOpenOverview);
+            if (c.maxWidth >= 730) return prototypeFrame ? _Desk(onOpenOverview: onOpenOverview) : _Wide(width: c.maxWidth);
             return const _FullScreen();
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Tablets and desktop: the app in a column, the map beside it for tenants.
+class _Wide extends StatelessWidget {
+  const _Wide({required this.width});
+  final double width;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final map = s.role == 'tenant' && width >= 1000;
+    return ColoredBox(
+      color: p.bg,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(width: 440, decoration: BoxDecoration(border: Border(right: bs(2, p.tx))), child: const _FullScreen()),
+          Expanded(
+            child: map
+                ? const MapScreen()
+                : Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [const BrandMark(size: 72), const SizedBox(height: 12), const T('hostelzy', w: 800, s: 32, ls: -.02), const SizedBox(height: 4), T('PGs and hostels in Hyderabad', s: 14, c: p.mu)],
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }

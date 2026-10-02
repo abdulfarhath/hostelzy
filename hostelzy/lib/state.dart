@@ -1356,7 +1356,7 @@ class AppState extends ChangeNotifier {
   /// WhatsApp with the message filled in; [phone] empty lets the user pick a chat.
   void whatsapp(String phone, String text) => openLink(Uri.parse('https://wa.me/${phone.isEmpty ? '' : '91$phone'}?text=${Uri.encodeComponent(text)}'), 'WhatsApp');
   void call(String phone) => openLink(Uri.parse('tel:+91$phone'), 'the phone app');
-  void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('${h.name}, ${h.area}, Hyderabad')}'), 'Maps');
+  void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${posOf(h).$1},${posOf(h).$2}'), 'Maps');
 
   /// Holds that ran out (shown as "Hold expired").
   final Set<String> expiredHolds = {};
