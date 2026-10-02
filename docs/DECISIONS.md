@@ -152,5 +152,12 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   later.** Build everything else on sample data now; keep keys and the UPI ID as clearly marked
   placeholders/config, never hard-coded.
 
+**Logo final** — founder, 2026-10-02 (Brand chat)
+- Logo is **B3-a2 "Full room"**: window, bunk, fan, **AC unit with dotted air lines**, 3 beds, your
+  bed red (replaces concept C, which is dropped). Canvas:
+  https://claude.ai/artifact/7AQacMXpVCZUFpDn89ET4D. Brand chat makes the final files in
+  `docs/brand/assets/`; Build puts them in the app (launcher icon, splash, login). Name stays
+  **Hostelzy**.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
