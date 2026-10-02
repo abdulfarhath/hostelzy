@@ -1824,7 +1824,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -2808,6 +2808,64 @@ void main() {
     s.dispose();
   });
 
+  test('S5: on Supabase, Fair Play cases, replies, fixes, decisions and reports go to the server', () async {
+    final l = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], cases: [
+      {'id': 'c1', 'ref': 'FP-0201', 'hostel_id': 'h1', 'title': 'Larry added late', 'signal': 'Signal', 'status': 'new', 'resident': 'Late Larry', 'events': [{'on': '1 Oct', 'what': 'Moved in', 'detail': '', 'flag': true}], 'created_at': '2026-10-02T10:00:00Z'},
+      {'id': 'c2', 'ref': 'FP-0200', 'hostel_id': 'h1', 'title': 'Report', 'signal': 'Tenant report', 'status': 'new', 'owner_reply': 'He paid me directly', 'created_at': '2026-10-01T10:00:00Z'},
+      {'id': 'c3', 'ref': 'FP-0199', 'hostel_id': 'h1', 'title': 'Old', 'signal': 'S', 'status': 'decided', 'decision': 'Strike 1 · warning', 'created_at': '2026-09-01T10:00:00Z'},
+    ]);
+    expect(l.cases.map((c) => '${c.id} ${c.status} ${c.events.length}'), ['FP-0201 new 1', 'FP-0200 decide 0', 'FP-0199 closed 0']);
+    expect(listingsFromRows(const [], strikes: {'h1': 2}).strikes['h1'], 2);
+
+    final s = AppState(start: 'oToday', role: 'owner');
+    final fake = _FakeLive(l);
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    expect(s.cases.length, 3); // only the server's cases
+    final c1 = s.cases.first, c2 = s.cases[1];
+    // The owner fixes within 48 hours: the server switches the resident and closes it.
+    s.fixCase(c1);
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect((fake.calls.last, s.toast), ('fix c1', 'Late Larry is now Via Hostelzy. Case closed, no strike.'));
+    fake.fixError = 'the 48 hours are over; reply instead';
+    s.fixCase(c1);
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(s.toast, 'The 48 hours are over. Reply instead and the Hostelzy team decides.');
+    // A reply to a case the team sent back goes back to the team.
+    final w = FairCase(id: 'FP-0202', hid: 'h1', title: 't', signal: 's', status: 'waiting', key: 'c4');
+    s.update(() => s.fpReply = 'He moved in on the 3rd');
+    s.replyCase(w);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'casereply c4 He moved in on the 3rd true');
+    // The team decides: a strike is recorded with the result.
+    s.decideCase(c2, 'strike');
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'decide c2 h1 strike Strike 1 · ${strikeLadder[0].$2.toLowerCase()}');
+    expect(s.strikes['h1'], 1);
+    // A tenant's private report needs the hostel of an ended hold.
+    s.update(() {
+      s.role = 'tenant';
+      s.reportWhy = 'Owner asked me to skip the app';
+      s.holds = [];
+    });
+    s.sendReport();
+    expect(s.toast, 'Reports are about a hostel you held a bed at. Hold one first.');
+    s.update(() => s.holds = [Hold(id: 'x', hid: 'h1', bed: '101-A', room: 101, opt: 'free', start: 0, status: 'released')]);
+    s.sendReport();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect((fake.calls.last, s.toast), ('report h1 Owner asked me to skip the app ', 'Report sent to the Hostelzy team. The owner never sees your name.'));
+    s.stopLive();
+    s.dispose();
+  });
+
   test('sign-in errors: the real code is shown and sent to Crashlytics, never hidden', () async {
     final s = AppState(start: 'login', role: 'tenant');
     final gs = _FakeSignIn(SignInFail.failed);
@@ -3134,7 +3192,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
     return 'HZ-5009';
   }
 
@@ -3163,10 +3221,25 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
+
+  // S5: Fair Play.
+  @override
+  Future<void> sendReport(String hid, String why, String note) => _rec('report $hid $why $note');
+  @override
+  Future<void> replyCase(String key, String reply, {bool reopen = false}) => _rec('casereply $key $reply $reopen');
+  String? fixError;
+  @override
+  Future<void> fixCase(String key) async {
+    if (fixError != null) throw Exception(fixError);
+    await _rec('fix $key');
+  }
+
+  @override
+  Future<void> decideCase(String key, String hid, String how, String? decision) => _rec('decide $key $hid $how $decision');
 
   // S4: reviews.
   @override
@@ -3206,14 +3279,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases);
   }
 }
 

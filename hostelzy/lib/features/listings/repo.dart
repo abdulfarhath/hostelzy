@@ -15,7 +15,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -119,6 +119,14 @@ abstract class HostelRepo {
   /// the confirmed stay), and the owner's reply.
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
   Future<void> replyReview(String id, String reply);
+
+  /// S5: Fair Play. A tenant's private report; the owner's reply (sending a
+  /// case the team returned back to them); the owner's 48-hour fix; the
+  /// team's decision (`close` | `more` | `strike`, with the result text).
+  Future<void> sendReport(String hid, String why, String note);
+  Future<void> replyCase(String key, String reply, {bool reopen = false});
+  Future<void> fixCase(String key);
+  Future<void> decideCase(String key, String hid, String how, String? decision);
 }
 
 class SampleRepo implements HostelRepo {
@@ -195,6 +203,14 @@ class SampleRepo implements HostelRepo {
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {}
   @override
   Future<void> replyReview(String id, String reply) async {}
+  @override
+  Future<void> sendReport(String hid, String why, String note) async {}
+  @override
+  Future<void> replyCase(String key, String reply, {bool reopen = false}) async {}
+  @override
+  Future<void> fixCase(String key) async {}
+  @override
+  Future<void> decideCase(String key, String hid, String how, String? decision) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -264,8 +280,9 @@ class SupabaseRepo implements HostelRepo {
       db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
       db.from('invoices').select(),
       db.from('owner_plans').select('hostel_id, trial_ends'),
+      db.from('fair_cases').select(),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], me: me);
   }
 
   @override
@@ -358,6 +375,21 @@ class SupabaseRepo implements HostelRepo {
   Future<void> replyReview(String id, String reply) => db.from('reviews').update({'reply': reply}).eq('id', id);
 
   @override
+  Future<void> sendReport(String hid, String why, String note) => db.from('fair_reports').insert({'hostel_id': hid, 'why': why, 'note': note});
+
+  @override
+  Future<void> replyCase(String key, String reply, {bool reopen = false}) => db.from('fair_cases').update({'owner_reply': reply, if (reopen) 'status': 'new'}).eq('id', key);
+
+  @override
+  Future<void> fixCase(String key) => db.rpc('fix_case', params: {'p_case': key});
+
+  @override
+  Future<void> decideCase(String key, String hid, String how, String? decision) async {
+    if (how == 'strike') await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
+    await db.from('fair_cases').update({'status': how == 'more' ? 'waiting' : 'closed', 'decision': decision}).eq('id', key);
+  }
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -373,7 +405,9 @@ class SupabaseRepo implements HostelRepo {
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
     final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)');
-    return listingsFromRows(rows);
+    // S5: strike counts are public (they hide deals and listings).
+    final st = await db.rpc('strike_counts') as List;
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int});
   }
 
   @override
@@ -400,7 +434,7 @@ class SupabaseRepo implements HostelRepo {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -490,7 +524,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
