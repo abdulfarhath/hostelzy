@@ -409,3 +409,22 @@ Not needed.
   - The `manager_invites` table and the two functions.
   - Tests: `supabase/tests/managers_test.sql`.
 - Test: `S8: on Supabase, owners see the hostels they run; managers join with a one-time code`.
+
+**S6 · Stay Rewards on the server · 2026-10-02** (branch `feature/s6-stay-rewards`). The amounts are DECISIONS': ₹100 Member reward and ₹100 each for referrals. Guardrails come from the Ideas chat.
+- **Ledger:** `reward_ledger` is append-only. A trigger refuses every update and delete, even the team's.
+  - Each row has: who (tenant `user_id` or owner `hostel_id`), kind, amount, reason, source stay or user, created by, and when.
+  - A unique `event_key` means each event is granted once.
+- **Grants:** only the server makes them, never the app.
+  - `rewards_on_stay` (trigger): a confirmed "Via Hostelzy" stay makes the tenant a Member with +₹100. On a later Hostelzy stay, the tenant's balance is spent at move-in (`spend`), and the same amount is credited to that owner (`owner_credit`, added to `owner_plans.credit` for their next invoice).
+  - `referral_sweep()` (daily, pg_cron): ₹100 to the friend and ₹100 to the referrer, once the friend's first Hostelzy month is done.
+  - `my_referral_code()` makes the code ("ASHA-4K7Q"). `use_referral_code(code)` works once, before a first stay, and not with your own code.
+- **No cash-out:** a tenant's balance only comes off a Hostelzy move-in, and an owner's credit only off a Hostelzy invoice.
+- **Team:** `reverse_reward(id, why)` adds a reversal row with the opposite amount (an owner credit also comes off their plan credit). The console has a new "Rewards" page that shows the ledger, with Reverse.
+- **App:**
+  - Stay Rewards reads Member status, balance, the code, used, and friends rewarded from the server.
+  - New tenants can enter a friend's code.
+  - "Yes, I joined" and "I've moved in" no longer grant anything on the phone. They say the reward comes once the owner confirms the stay.
+  - Owner credits on the plan screen come from the ledger.
+- **Migration `20261002170000_s6_stay_rewards.sql`:** tests in `supabase/tests/rewards_test.sql`.
+- **Not built:** F09's "Hostelzy-funded rewards capped monthly (e.g. ₹3,000)". No amount is decided, so there's no cap yet; the team can reverse entries.
+- Test: `S6: on Supabase, Stay Rewards come from the server ledger; nothing is granted by the phone`.

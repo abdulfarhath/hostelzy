@@ -128,6 +128,11 @@ abstract class HostelRepo {
   /// sample data.
   Future<String> managerInvite(String hid, String name, String phone);
   Future<String> joinAsManager(String code);
+
+  /// S6: the user's referral code (made once on the server), and using a
+  /// friend's code before a first stay (returns the friend's first name).
+  Future<String> referralCode();
+  Future<String> useReferralCode(String code);
 }
 
 class SampleRepo implements HostelRepo {
@@ -212,6 +217,10 @@ class SampleRepo implements HostelRepo {
   Future<String> managerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
   @override
   Future<String> joinAsManager(String code) => throw UnsupportedError('sample data');
+  @override
+  Future<String> referralCode() => throw UnsupportedError('sample data');
+  @override
+  Future<String> useReferralCode(String code) => throw UnsupportedError('sample data');
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -284,8 +293,10 @@ class SupabaseRepo implements HostelRepo {
       db.from('fair_cases').select(),
       db.from('hostel_staff').select('hostel_id, user_id, role'),
       db.from('manager_invites').select().order('created_at'),
+      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('profiles').select('member, member_since, ref_code, referred_by').eq('id', me),
+      db.from('reward_ledger').select().order('created_at'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], me: me);
   }
 
   @override
@@ -397,6 +408,12 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<String> joinAsManager(String code) async => await db.rpc('join_as_manager', params: {'p_code': code}) as String;
+
+  @override
+  Future<String> referralCode() async => await db.rpc('my_referral_code') as String;
+
+  @override
+  Future<String> useReferralCode(String code) async => await db.rpc('use_referral_code', params: {'p_code': code}) as String;
 
   @override
   Stream<String> changes() {

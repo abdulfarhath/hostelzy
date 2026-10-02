@@ -129,9 +129,14 @@ extension FairPlayActions on AppState {
     update(() {
       joinAnswer = a;
       sheet = null;
-      if (a == 'yes') becomeMember('Anjani Residency');
+      // S6: on Supabase, Member comes from a confirmed stay (the server).
+      if (a == 'yes' && !onServer) becomeMember('Anjani Residency');
     });
-    toastMsg(a == 'yes' ? 'Thanks. Your ₹100 Member reward is unlocked for your next stay.' : 'Thanks. Only Hostelzy sees your answer.');
+    toastMsg(a != 'yes'
+        ? 'Thanks. Only Hostelzy sees your answer.'
+        : onServer
+        ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
+        : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');
   }
 
   void sendReport() {
