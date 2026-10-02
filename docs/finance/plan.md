@@ -1,4 +1,4 @@
-# Hostelzy money & growth plan (v1)
+# Hostelzy money & growth plan (v2: ₹40k budget)
 
 Owned by the **Hostelzy · Finance & Growth** chat. Written 2026-10-02.
 Reads with: `docs/DECISIONS.md` (prices, rewards), `docs/marketing/README.md` (what to post, where).
@@ -10,32 +10,33 @@ Rates used: $1 ≈ ₹95 (Sept 2026). Foreign tools add 18% GST + ~3.5% card fee
 
 ## 0. Open questions for the founder (answer in the Finance chat)
 
-| # | Question | My default if you don't answer |
+| # | Question | Working default (founder said "keep going", 2026-10-02) |
 |---|---|---|
-| Q1 | Is the ₹30,000 **after** your personal costs, or do personal costs come out of it? | Plan below spends ₹25,000 max and leaves ₹5,000 for you. |
+| Q1 | ~~Is the ₹30k after personal costs?~~ **Answered (founder, 2026-10-02):** "around ₹42,000 a month… put it as **₹40k per month**", covering deploying the app, AI tokens, everything. | Budget below = **₹40,000/month, all-in for Hostelzy**. Personal costs are outside it. *(My reading of a voice message, please confirm.)* |
+| Q1b | What is your monthly AI tokens / Claude bill? | ₹10,000 placeholder |
 | Q2 | Rewards cap **₹5,000/month** (see §6)? | PROPOSED, not live until you say yes. |
-| Q3 | Founding-20 offer: Marketing README says "3 months free, then ₹299 for life". DECISIONS says 30-day trial, ₹499/₹999/₹1,499. Which one? | DECISIONS wins. See §4 for why. |
+| Q3 | Founding-20 offer: "3 months free, then ₹299 for life" vs DECISIONS (30-day trial, ₹499/₹999/₹1,499)? | DECISIONS wins (Marketing README now matches). See §4. |
 | Q4 | Marketing's guarantee "No enquiry in 30 days → you never pay"? It's open-ended. Safer: "No enquiry during your 30-day trial → your next month is free too" (costs at most one month, ~₹750 per hostel). | Not promised to anyone until you say yes. |
 
 ---
 
 ## 1. Monthly budget
 
-### The split (from Month 2, steady state)
+### The split: ₹40,000 a month, all-in (from Month 2)
 
 | Bucket | Cap / month | Expected spend | Notes |
 |---|---|---|---|
-| Tech | ₹5,000 | ~₹3,000 | Unused part goes to the reserve |
+| Tech (server, Play, maps, domain) | ₹5,000 | ~₹2,900 | Unused part goes to the reserve |
+| AI tokens (Claude, building the app) | ₹10,000 | your real bill (Q1b) | Should drop once the app is built |
 | Rewards (Hostelzy-paid) | ₹5,000 **PROPOSED** | ₹0–5,000 | Hard cap, §6 |
-| Sales commissions (partner / ambassadors) | ₹6,000 | grows with paid owners | Only paid when an owner pays, §3 |
-| Print: QR posters, stickers, standees | ₹3,000 | ₹2,000–3,000 | Only on hostels that joined |
-| Travel + tea for owner visits | ₹2,500 | ₹2,500 | Metro/petrol, chai with owners |
+| Sales commissions (partner / ambassadors) | ₹8,000 | grows with paid owners | Only paid when an owner pays, §3 |
+| Print: QR posters, stickers, standees | ₹4,000 | ₹2,000–4,000 | Only on hostels that joined |
+| Travel + tea for owner visits | ₹3,000 | ₹3,000 | Metro/petrol, chai with owners |
 | Instagram boosts (test only) | ₹2,000 | ₹0–2,000 | Only boost a reel that already did well for free |
-| Buffer (marketing) | ₹1,500 | — | Moves to reserve if unused |
-| **Total Hostelzy** | **₹25,000** | | |
-| You (personal) | ₹5,000 | | Q1 may change this |
+| Reserve top-up | ₹3,000 | ₹3,000 | Plus every unused rupee above |
+| **Total** | **₹40,000** | | Marketing + rewards = ₹22,000 |
 
-**Reserve rule:** all unused money goes to a "Hostelzy reserve" until it holds **₹30,000** (one month of runway). Don't spend the reserve on ads.
+**Reserve rule:** all unused money goes to a "Hostelzy reserve" until it holds **₹40,000** (one month of runway). Don't spend the reserve on ads.
 
 ### Tech: real tools and costs
 
@@ -137,7 +138,7 @@ owners in person; expect 10–15 hours a week. Paid ads before you have hostels 
 **Pay rules that stop gaming**
 - ₹200 only after the owner's first UTR is confirmed. If the owner leaves in month 1 because of a false promise, it's taken back.
 - ₹20 per hold only from a **new phone number**, not the partner's own phone/UPI/contacts list, and not if the hold was cancelled within 10 minutes. Max 100 holds per partner per month (₹2,000).
-- Commissions capped at **₹6,000/month total** in Month 2–3. Raise it only when paid-owner revenue covers it.
+- Commissions capped at **₹8,000/month total** in Month 2–3. Raise it only when paid-owner revenue covers it.
 
 **Legal / ethical basics**
 - A short **written agreement** for every partner (WhatsApp-signed PDF is fine): commission-only,
@@ -177,15 +178,16 @@ Next-stay ₹100 discounts are credited on the owner's invoice, so they lower th
 | Covers | Monthly cost | Paid hostels needed |
 |---|---|---|
 | Tech only | ₹3,000 | **4** |
-| Tech + marketing (full ₹25k) | ₹25,000 | **34** |
-| Everything incl. the ₹5k for you (₹30k) | ₹30,000 | **40** |
+| Tech + marketing + rewards (no AI tokens) | ₹30,000 | **40** |
+| Everything incl. AI tokens (the full ₹40k) | ₹40,000 | **54** |
 
-**When does your ₹30k stop being needed?** At **~40 paid hostels**. On the targets above that's
-Month 4–5 (Feb 2027) if conversion holds at 50%+. Realistic range: Month 4 to Month 8.
+**When does your ₹40k stop being needed?** At **~54 paid hostels** (or ~40 once AI token costs
+drop after the build). On the targets above that's Month 6–9 (Mar–Jun 2027) if conversion holds at
+50%+. Be ready for it to take longer.
 
 **Why the "₹299 for life" founding offer hurts (Q3):** 20 hostels × ₹299 = ₹6,000/mo forever,
-and 3 free months means no revenue until Month 4. Break-even would need ~100 hostels instead of
-~40. Better founding perks that cost no cash: "Founding hostel" badge, a featured spot for 3
+and 3 free months means no revenue until Month 4. Break-even would need far more hostels than
+the ~54 above. Better founding perks that cost no cash: "Founding hostel" badge, a featured spot for 3
 months, first say on new features. Price stays as in DECISIONS.
 
 ---
@@ -196,7 +198,7 @@ months, first say on new features. Price stays as in DECISIONS.
 1. Open a **separate savings account** only for Hostelzy (any bank with free UPI; no company needed, DECISIONS says no company/GST at start).
 2. Link the Hostelzy UPI ID `9059790014@axl` to that new account (in the UPI app → bank accounts → change primary). Owners' payments then land there.
 3. Pay every Hostelzy bill (Supabase, Play, posters, commissions) **from that account only**.
-4. Move your monthly ₹25,000 into it on the 1st. Nothing personal goes in or out.
+4. Move your monthly ₹40,000 into it on the 1st. Nothing personal goes in or out.
 5. Make the Google Sheet below. Update it every Sunday (10 minutes).
 6. Save every invoice the app makes (owner plan, F10) as PDF in a Drive folder `Hostelzy/Invoices/2026-10/`. Match each UTR to the bank statement once a month.
 
@@ -246,3 +248,15 @@ months, first say on new features. Price stays as in DECISIONS.
 **What Build needs if the founder says yes:** a monthly cap setting, a waitlist state for rewards,
 and the plain-words message above. (Finance doesn't write code; the Ideas chat records it and
 specs it.)
+
+---
+
+## Files in docs/finance
+
+| File | What |
+|---|---|
+| `plan.md` | This plan |
+| `founder-morning-checklist.md` | What the founder must decide / pay, in order |
+| `hostelzy-money.xlsx` | Bills tracker (upload to Google Sheets) |
+| `hiring-post.md` | Ready-to-paste hiring posts + partner agreement |
+| `owner-pitch-numbers.md` | Plan cost per day, payback maths for owners |
