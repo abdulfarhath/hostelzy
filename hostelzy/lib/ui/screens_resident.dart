@@ -6,6 +6,7 @@ import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
 import 'payments.dart';
+import 'reminders.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
   const ResidentHomeScreen({super.key});
@@ -62,10 +63,12 @@ class ResidentHomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: PageHead(kicker: 'Anjani Residency · Room 204 · Bed B', title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
           ),
+          if (s.showToday) const TodayCard(),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
