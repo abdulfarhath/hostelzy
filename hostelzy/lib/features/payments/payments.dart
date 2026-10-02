@@ -39,7 +39,7 @@ extension PaymentsActions on AppState {
   Future<void> sendPayUtr() async {
     final p = pay;
     if (p == null) return;
-    if (payUtr.length != 12) return toastMsg('The UTR has 12 digits.');
+    if (payUtr.length != 12) return toastMsg('The UPI reference has 12 digits.');
     final h = hostelById(p.hid);
     // C: on Supabase the owner sees it only once the server has it.
     if (onServer && !await sendUtrLive(p, payUtr)) return;
@@ -51,7 +51,7 @@ extension PaymentsActions on AppState {
       if (p.kind == 'rent') {
         for (final r in residents.where((r) => r.bed == p.bed)) {
           r.status = 'Waiting';
-          r.note = 'UTR sent · ${h.owner} to confirm';
+          r.note = 'UPI reference sent · ${h.owner} to confirm';
         }
       }
       sheet = null;
@@ -76,11 +76,11 @@ extension PaymentsActions on AppState {
       if (p.kind == 'rent') {
         for (final r in residents.where((r) => r.bed == p.bed)) {
           r.status = received ? 'Paid' : 'Due';
-          r.note = received ? 'Confirmed ${dayMon(appToday)}' : 'UTR not found';
+          r.note = received ? 'Confirmed ${dayMon(appToday)}' : 'UPI reference not found';
         }
       }
     });
-    toastMsg(received ? 'Confirmed. It shows as ${p.kind == 'rent' ? 'paid' : 'booked'}.' : 'Marked not received. Tell $first on WhatsApp to check the UTR.');
+    toastMsg(received ? 'Confirmed. It shows as ${p.kind == 'rent' ? 'paid' : 'booked'}.' : 'Marked not received. Tell $first on WhatsApp to check the UPI reference.');
   }
 
   /// Tenant gives up on a booking whose payment didn't arrive.

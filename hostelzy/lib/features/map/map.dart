@@ -109,8 +109,9 @@ extension MapAreaActions on AppState {
       hist = [];
     });
     syncProfile();
-    // Push fix: after a Google sign-in, offer notifications once.
-    offerPush();
+    // Push fix: after a Google sign-in, offer notifications once. F21 W2:
+    // tenants are asked after their first hold instead.
+    if (r != 'tenant') offerPush();
   }
 
   /// Android back button: close a sheet → previous screen → the role's home

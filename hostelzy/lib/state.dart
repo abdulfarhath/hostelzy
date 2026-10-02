@@ -45,6 +45,7 @@ part 'features/links/links.dart';
 part 'features/photos/photos.dart';
 part 'features/reminders/reminders.dart';
 part 'features/residents/my_stay.dart';
+part 'features/session/guest.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -52,7 +53,7 @@ part 'features/residents/my_stay.dart';
 /// B4: split by area. Each `lib/features/<area>/*.dart` part holds that
 /// area's fields (a `_XData` mixin) and actions (an `XActions` extension).
 /// This file keeps the shared core: navigation, `update`, statics, restore.
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -104,8 +105,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone'];
-  static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where'];
+  static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
 
@@ -259,6 +260,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   /// Brings back what was saved; a signed-in user opens on their role's home.
   void restore(Map<String, dynamic> m, {Account? firebaseUser}) {
+    opens = (m['opens'] as int? ?? 0) + 1;
     if (m.isEmpty) {
       _saved = jsonEncode(snapshot());
       return;
@@ -376,6 +378,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   /// prefilled message ending with the HZ code and its link. One enquiry per
   /// tenant + hostel + bed: tapping again reuses the code.
   void enquire(String hid, String body, {String? bed, required String from}) {
+    // F21 W2: guests sign in first; the enquiry needs their name and phone.
+    if (!needSignIn('enquiry', () => enquire(hid, body, bed: bed, from: from))) return;
     // C: on Supabase the server records it and issues the HZ code.
     if (onServer) {
       enquireLive(hid, body, bed: bed, from: from);

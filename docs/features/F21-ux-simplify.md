@@ -106,7 +106,7 @@ Phone boards 390×844, with dark copies of Explore, the hostel page and owner To
 ## Build
 One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Today queue, offline state.
 
-### Wave 1 · Built · 2026-10-02 (branch `feature/f21-honesty`)
+### Wave 1 · Built · 2026-10-02 (merged, #65)
 - **Resident screens show the resident's real stay.** On the server, Home, Pay rent, Food, Help, Move out / swap and the review headers use the user's own confirmed stay: hostel, room, bed, rent, join day, owner. Demo builds still show the Anjani sample.
   - Server data: `liveFromRows` now returns `myStay`, the user's own stay row.
   - The "Room 204 board" is gone everywhere.
@@ -122,6 +122,52 @@ One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Tod
   - **Add resident:** the button says "Add resident" instead of "Add and send code". The "Waiting OTP" filter is now "Not confirmed".
 - **Avatar initials** come from the user's name (they were "SR" / "RV").
 - **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
+
+### Wave 2 · Built · 2026-10-02 (branch `feature/f21-w2`)
+Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`, `SignIn`, `Notify`, `Utr`.
+- **Look around as a guest.** Welcome's main button is **Find a bed** (straight to Explore, "No sign-in needed to look around."), with links **I run a PG · I live in a PG · Sign in**.
+  - Explore shows "Browsing as a guest · Sign in" until the user signs in.
+  - Sign-in is asked at the first hold or enquiry, in a sheet: "Sign in to hold this bed" / "Sign in to message <owner>".
+  - After Google + name and phone, the hold (or enquiry) goes ahead by itself, and the user is back on the bed picker.
+  - Closing the sheet drops it.
+  - The language row on the board is Wave 4 (item 20). It isn't shown until the languages exist.
+- **No prompts on arrival.**
+  - The water-reminder offer waits for the 3rd app open (`opens` is counted on the phone).
+  - Tenants are no longer asked for notifications when they pick their role. After their first free hold they see "Bed X is held for you · Turn on notifications so <owner>’s reply reaches you", once.
+  - Owners and residents are still asked after sign-in, as before.
+- **The notification promise is real.** Migration `20261002200000_f21_hold_reply_push.sql` adds a push to the tenant when the owner (or a manager) keeps or declines a waiting hold: "Bed 101-C is kept for you" / "Bed 101-C wasn’t kept". Nothing is sent when the tenant releases the hold themselves. Test: `supabase/tests/holdpush_test.sql`. FOUNDER-TODO **4r**.
+  - The board's "and we remind you before the hour ends" is left out: nothing sends that reminder yet.
+- **Explore.**
+  - Title "Find a bed", kicker "Hyderabad · N beds free now".
+  - One **Where?** bar, then one row: **Filters** (with a count badge) + Men / Women / Co-living / AC / Under ₹8,000. The sort chips and the ranking paragraph are gone.
+  - Photo-first cards:
+    - the first real photo ("No photos yet" otherwise) and a save heart
+    - "#1 near you" once, on the first card when sorted by Recommended
+    - a green "Hostelzy price ₹X" when the deal lowers the rent; other deals keep their headline ("₹1,000 less upfront")
+    - "Men · Madhapur · 1.6 km from Hitec City · 9 free"
+    - "₹7,600/mo · ₹10,600 to move in · electricity extra": the cheapest bed that fits the filters, with move-in = rent + advance (+ joining fee)
+- **Where?** is one typed screen used by Explore and the Map. It has Near me, then **Landmarks** ("N hostels within 5 km"), **Areas** ("Coming soon" when empty) and **Hostels** by name, which open the hostel page. The Map's area button is the same bar now.
+- **Filters sheet:**
+  - Sort by (Recommended / Nearest / Lowest price), For, Room (sharing + AC / Non-AC), Budget, Deals ("Hostelzy deals only") and Food. "Best deals" is no longer a sort; the **Hostelzy deals** chip on Explore keeps deals findable (Ideas chat, 2026-10-02)
+  - **Clear all** and "Show N hostels"
+  - The title shows "Filters · 2"
+  - The Search tab is now **Saved**
+- **Hostel page:**
+  - one rent table, with the Hostelzy price in green, "₹9,000 walk in" struck through and "N free"
+  - a footer line with the deal ("Hostelzy price: ₹200 off every month · ₹500 exit · Free laundry"; "AC rooms only" when it is)
+  - "Rent per month · Advance ₹3,000 · ₹2,500 back when you leave"
+  - "Same price for every bed of a type. Food included. Electricity extra, by meter."
+  - **House rules ›** folded into one row
+  - the bottom bar "From ₹7,400/mo · ₹10,400 to move in · 9 free" with **Pick a bed**
+  - The separate deal block (`DealBlock`) is gone. The visit block and tags moved below the rules.
+- **Hold:** two equal cards, **Hold free · 1 hour** (picked first; 2 hours for Members) and **Pay ₹3,000 to book**, then the bed, rent and refund line and one button: "Hold bed 204-D free" / "Pay ₹3,000 to book". With a deal, the booking card shows the deal and the booking code.
+- **Plain words:**
+  - HZ code → **Booking code**
+  - UTR → **UPI reference** ("12 digits, in your UPI app under the payment"), with a small drawing of a UPI receipt and its three names (UPI Ref. No., UTR, Transaction ID). This covers tenant and resident screens and the owner's payment check.
+  - "Deal locked" → **Your price is fixed**
+  - Owner invoices to Hostelzy (Plan) say "UPI reference" too, shown once as "UPI reference (UTR)" (Ideas chat, 2026-10-02). Only the Hostelzy team console keeps "UTR".
+- **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
+- **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
 
 ## Decisions during build (Ideas chat, 2026-10-02)

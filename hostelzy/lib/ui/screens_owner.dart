@@ -419,7 +419,7 @@ class _Enquiries extends StatelessWidget {
                   children: [
                     Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shield', size: 16, color: p.mu)),
                     const SizedBox(width: 8),
-                    Expanded(child: Rich([sp(context, 'Not on this list = not from Hostelzy.', w: 800, c: p.tx), sp(context, ' Someone says they found you on Hostelzy? Ask for their HZ code.')], s: 12, c: p.mu, lh: 1.4)),
+                    Expanded(child: Rich([sp(context, 'Not on this list = not from Hostelzy.', w: 800, c: p.tx), sp(context, ' Someone says they found you on Hostelzy? Ask for their booking code (HZ-…).')], s: 12, c: p.mu, lh: 1.4)),
                   ],
                 ),
               ),

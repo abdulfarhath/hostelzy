@@ -25,7 +25,7 @@ extension LinksActions on AppState {
   /// tenant's holds. Only enquiries this account can see.
   void openEnquiryLink(String code) {
     final c = code.trim().toUpperCase();
-    if (!RegExp(r'^HZ-[0-9]{3,8}$').hasMatch(c)) return toastMsg('That link has no HZ code.');
+    if (!RegExp(r'^HZ-[0-9]{3,8}$').hasMatch(c)) return toastMsg('That link has no booking code.');
     final e = enquiries.where((x) => x.ref == c).firstOrNull;
     if (!signedIn || e == null) return toastMsg('$c isn’t in this account. Sign in with the account that sent or got it.');
     update(() {

@@ -77,6 +77,8 @@ extension LoginActions on AppState {
     if (phone.length != 10) return toastMsg('Enter all 10 digits.');
     if (!AppState.validPhone(phone)) return toastMsg('Mobile numbers start with 6, 7, 8 or 9.');
     myName = myName.trim();
+    // F21 W2: a guest goes back to the hold or enquiry that asked for sign-in.
+    if (_finishSignIn()) return;
     update(() {
       signedIn = true;
       hist = [...hist, screen];

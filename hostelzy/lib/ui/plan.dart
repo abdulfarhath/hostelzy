@@ -89,9 +89,9 @@ class PlanScreen extends StatelessWidget {
     final credits = s.ownerCredits.where((c) => c.hid == s.ownHid).toList();
     final (kick, big, sub) = switch (inv.status) {
       'upcoming' => ('Free trial', '${s.trialLeft} days left', 'Ends ${dayName(s.trialEnd)}. First invoice ${fmt(s.invoiceAmt)} on ${dayName(inv.due)}.'),
-      'checking' => (planTiers[tier].label, 'Checking your payment', 'UTR ${utrSpaced(inv.utr ?? '')} · usually within a day.'),
+      'checking' => (planTiers[tier].label, 'Checking your payment', 'UPI reference ${utrSpaced(inv.utr ?? '')} · usually within a day.'),
       'paid' => (planTiers[tier].label, 'Paid for ${_monthNames[inv.due.month - 1]}', 'Next invoice on ${dayMon(DateTime(inv.due.year, inv.due.month + 1, inv.due.day))}.'),
-      'missing' => (planTiers[tier].label, 'Payment not found', 'Check the UTR in your UPI app, or pay again with the QR.'),
+      'missing' => (planTiers[tier].label, 'Payment not found', 'Check the UPI reference in your UPI app, or pay again with the QR.'),
       _ => (planTiers[tier].label, inv.late > 0 ? '${inv.late} days late' : '${fmt(s.invoiceAmt)} due', inv.pausesDeals ? 'Deals paused until you pay.' : 'Pay by ${dayName(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.'),
     };
     return Column(
@@ -217,7 +217,7 @@ class PlanScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                  child: T('You pay by UPI QR, then type the UTR number. We check it against our bank record.', s: 12, c: p.mu, lh: 1.45),
+                  child: T('You pay by UPI QR, then type the UPI reference. We check it against our bank record.', s: 12, c: p.mu, lh: 1.45),
                 ),
               ],
             ),
@@ -316,7 +316,7 @@ class UtrSheet extends StatelessWidget {
           VGap(
             gap: 6,
             children: [
-              const T('12-digit UTR number', w: 800, s: 13),
+              const T('UPI reference (UTR), 12 digits', w: 800, s: 13),
               Field(
                 value: s.utrDraft,
                 placeholder: '4021 8834 1297',
@@ -338,10 +338,10 @@ class UtrSheet extends StatelessWidget {
             children: [
               Ic('shield', size: 16, color: p.mu),
               const SizedBox(width: 8),
-              Expanded(child: T('We match the UTR with our bank record, usually within a day. No screenshots needed.', s: 12, c: p.mu, lh: 1.45)),
+              Expanded(child: T('We match the UPI reference with our bank record, usually within a day. No screenshots needed.', s: 12, c: p.mu, lh: 1.45)),
             ],
           ),
-          Cta('Send UTR', icon: 'check', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.sendUtr),
+          Cta('Send UPI reference', icon: 'check', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.sendUtr),
         ],
       ),
     );
@@ -366,8 +366,8 @@ class PayStatusScreen extends StatelessWidget {
     };
     final msg = switch (inv.status) {
       'paid' => [sp(context, 'Received on ${inv.checked ?? dayMon(appToday)}. Next invoice on ${dayMon(next)}.')],
-      'missing' => [sp(context, 'No payment with UTR '), sp(context, utr, w: 800, c: p.tx), sp(context, ' reached us. Check the number in your UPI app, or pay again with the QR.')],
-      _ => [sp(context, 'We’re matching UTR '), sp(context, utr, w: 800, c: p.tx), sp(context, ' with our bank record. Usually within a day. Your listing stays live meanwhile.')],
+      'missing' => [sp(context, 'No payment with UPI reference '), sp(context, utr, w: 800, c: p.tx), sp(context, ' reached us. Check the number in your UPI app, or pay again with the QR.')],
+      _ => [sp(context, 'We’re matching UPI reference '), sp(context, utr, w: 800, c: p.tx), sp(context, ' with our bank record. Usually within a day. Your listing stays live meanwhile.')],
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -386,7 +386,7 @@ class PayStatusScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      KV('UTR', utr, keyWidth: 70),
+                      KV('UPI ref.', utr, keyWidth: 70),
                       KV('Sent', inv.sent ?? '—', keyWidth: 70),
                       KV('Plan', planTiers[planTierOf(inv.beds)].label, keyWidth: 70),
                     ],
@@ -397,15 +397,15 @@ class PayStatusScreen extends StatelessWidget {
           ),
         ),
         if (inv.status == 'paid')
-          Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 16), child: OutlineCta('Share receipt', icon: 'print', onTap: () => s.share('Hostelzy receipt · ${inv.ref} · ${hostelById(inv.hid).name} · ${fmt(inv.amt)} · UTR ${utrSpaced(inv.utr ?? '')} · paid, checked ${inv.checked ?? ''}'))),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 16), child: OutlineCta('Share receipt', icon: 'print', onTap: () => s.share('Hostelzy receipt · ${inv.ref} · ${hostelById(inv.hid).name} · ${fmt(inv.amt)} · UPI ref. ${utrSpaced(inv.utr ?? '')} · paid, checked ${inv.checked ?? ''}'))),
         if (inv.status == 'missing')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
             child: VGap(
               gap: 8,
               children: [
-                Cta('Fix the UTR', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.openUtr),
-                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UTR ${utrSpaced(inv.utr ?? '')}.')),
+                Cta('Fix the UPI reference', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.openUtr),
+                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UPI reference ${utrSpaced(inv.utr ?? '')}.')),
               ],
             ),
           ),
@@ -426,8 +426,8 @@ class PlanBanner extends StatelessWidget {
     final amt = fmt(s.invoiceAmt);
     final checking = inv.status == 'checking';
     final (icon, title, body) = inv.pausesDeals
-        ? ('warn', 'Deals paused: plan ${inv.late} days late', checking ? 'We’re checking your UTR. Deals switch back on once it matches our bank record.' : 'Tenants see walk-in prices only. Your listing, holds and residents keep working. Pay $amt to switch deals back on.')
-        : ('clock', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UTR. Usually within a day.' : '$amt for ${_monthNames[inv.due.month - 1]}. Pay by ${dayMon(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.');
+        ? ('warn', 'Deals paused: plan ${inv.late} days late', checking ? 'We’re checking your UPI reference. Deals switch back on once it matches our bank record.' : 'Tenants see walk-in prices only. Your listing, holds and residents keep working. Pay $amt to switch deals back on.')
+        : ('clock', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UPI reference. Usually within a day.' : '$amt for ${_monthNames[inv.due.month - 1]}. Pay by ${dayMon(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.');
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Column(
