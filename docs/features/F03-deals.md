@@ -1,6 +1,6 @@
 # F03 · Hostelzy deals
 
-**Stage:** Design approved (founder, 2026-10-02)
+**Stage:** Built (2026-10-02) · waiting on founder merge
 
 ## Problem
 Tenants need a reason to book through Hostelzy instead of walking in; owners need a cheap way to fill beds.
@@ -27,4 +27,38 @@ Canvas https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn · boards 1 (hostel pag
 - Deals per room type (AC / non-AC): see F16 board 6.
 
 ## Build
-_Not started._
+Branch `feature/f03-deals` (2026-10-02), boards 1, 2, 4 and F16 board 6. Built on F16
+(`feature/f16-ac-rooms`, PR #4) for deals per room type, with F05 + F06 (PRs #2, #3) merged in.
+Merge #2, #3, #4 first; this PR's own diff is then F03 only.
+
+**Model** (`lib/data.dart`): the 6-deal menu with fixed amounts (₹200/month off, ₹500 off the
+first month, advance ₹1,000 lower, exit maintenance down to ₹500, free weekly laundry, no ₹1,000
+joining fee), `Deals` per hostel (up to 3, target all / AC only / non-AC only, confirmed date)
+and `DealQuote` (walk-in vs Hostelzy: monthly fee, first month, advance, joining fee, to move in,
+exit maintenance, back when you leave, 6-month saving, upfront saving, ribbon text).
+Sample deals: Anjani (exit, monthly, laundry · all rooms), Sai Sri (exit, lower advance),
+Greenview (first month off, exit), Orchid (monthly · non-AC), Nest 42 and Lakshmi none.
+
+**Screens**
+- Tenant · hostel page: green "Hostelzy deal" table, With Hostelzy vs Walk in, headline
+  "You save in the first 6 months ₹1,200" with "₹200 less to move in + ₹200/month" and "Plus ₹500
+  more back when you leave"; Non-AC / AC switch (F16 board 6) with "No Hostelzy deal on non-AC
+  rooms… See the deal on AC rooms"; exit-rules line (always on); bottom bar "₹X walk in" struck,
+  "₹Y to move in", **Book with deal** (opens the picker on that room type). The F16 grid turns
+  green with the walk-in price struck for covered rooms, plus the "Hostelzy deal: … · all rooms" strip.
+- Tenant · Explore: green ribbon on the photo ("Save ₹1,200 in 6 mo", "₹1,000 less upfront"),
+  perk chips, Hostelzy price with walk-in struck on the F16 type lines, "No Hostelzy deal yet",
+  and a **Best deals** chip that sorts by the 6-month saving.
+- Owner · Manage → **Deals** (new segment): menu of 6 with tenant saving and cost to the owner,
+  max 3 (a 4th shows "Pick up to 3"), All rooms / AC only / Non-AC only, always-on exit rules,
+  "Tenant saves · 6 months", "Costs you / month", "N of 3 picked · strength", Publish deals
+  (sets "Confirmed by owner" to today). The Rooms and rent rate card shows the Hostelzy price and
+  a "Deal: … · Change" line that opens the picker.
+
+**Not built here:** "Owner's number shows after you hold a bed" (board 1) belongs to F07 Fair
+Play, because "Ask on WhatsApp" (F05) still opens before a hold; booking with the advance and the
+locked deal are F04. Manage's 5 segments share the width by label length so they don't wrap.
+
+**Tests:** `test/flows_test.dart` → "Hostelzy deals: Explore badges, deal table, owner picks
+deals" and "deal quote maths". The earlier flows now tap "Book with deal" on Anjani (it has a
+deal). `flutter analyze` clean, `flutter test` 18/18.

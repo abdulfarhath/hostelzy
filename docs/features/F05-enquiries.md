@@ -1,6 +1,6 @@
 # F05 · Enquiry flow
 
-**Stage:** Design approved (founder, 2026-10-01)
+**Stage:** Built (2026-10-01) · waiting on founder merge
 
 ## Problem
 A WhatsApp message can be edited or never sent, so it can't prove a tenant came from Hostelzy.
@@ -30,4 +30,30 @@ Canvas https://claude.ai/artifact/ESZuLcHxCsxE8bgavAFj2B (row "F05", boards 1–
 - The tenant note is green as the spec says, but the design rules keep green for savings and deals. Board 1's "Note" tweak shows a neutral version. Pick one.
 
 ## Build
-_Not started._
+Branch `feature/f05-enquiries` (from `main`, 2026-10-01). Built fresh from boards 1–3; the
+`draft/f05-enquiries` branch was only used as a reference.
+
+**Model.** `Enquiry` in `lib/data.dart` (HZ code, name, verified phone, hostel, bed or "Any bed",
+time, where it came from, message, New/Contacted). `AppState.enquire()` records it **before**
+the WhatsApp sheet opens; one enquiry per tenant + hostel + bed (tapping again reuses the code).
+Sample data: Ravi Teja HZ-4821, Sandeep Kumar HZ-4817 (new), Imran Shaikh HZ-4809 (contacted);
+the tenant's own enquiries start at HZ-4822.
+
+**Screens**
+1. Tenant · WhatsApp sheet (from "Ask on WhatsApp" on the hostel page and "WhatsApp owner" on a
+   hold): note "Srinivas has been told on Hostelzy, with your verified number and ref HZ-…",
+   "To Srinivas · Anjani Residency", message ending `Ref HZ-… · hostelzy.in/r/HZ-…` (also in
+   Copy message), footer line.
+2. Owner · Today: "Enquiries from Hostelzy" under the KPI tiles, above Hold requests. Rows as
+   designed; WhatsApp red while New, outline once Contacted; WhatsApp or Call marks it Contacted;
+   "N new" / "All replied"; footer "Not on this list = not from Hostelzy…".
+3. Owner · one enquiry (sheet `enq`, opened by tapping the HZ code): Phone, Asked about, When,
+   From, Message, Status, the Manage → Residents hint, WhatsApp, Call, Mark as contacted.
+
+**Design defaults (unanswered design questions, easy to change)**
+- Enquiries stay a **section**; `enquiriesTile` in `screens_owner.dart` swaps the Complaints tile
+  for an Enquiries count.
+- Tenant note is **green**; `enquiryNoteGreen` in `shell.dart` gives the neutral version.
+
+**Tests:** `test/flows_test.dart` → "enquiry recorded before WhatsApp; owner sees and contacts it"
+and "WhatsApp owner from a hold records the bed". `flutter analyze` clean, `flutter test` 12/12. Rebased onto `main` after F02 merged (2026-10-02).

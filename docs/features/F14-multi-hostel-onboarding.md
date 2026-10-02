@@ -112,3 +112,11 @@ Uneven floors:
 
 ## Build
 _Not started. Depends on F13 (backend)._
+
+**Uneven floors fix (2026-10-02, branch `feature/uneven-floors`, ahead of F14):** sample hostels
+now have uneven floors (`floorPlans` in `lib/data.dart`: Sai Sri 3 / 5 / 2 rooms, Greenview 4 / 2,
+Lakshmi 2 / none / 5; Anjani unchanged 4 / 4 / 4). `floorsOf()` lists floors that have beds; the
+tenant bed picker (floor tabs, Plan, Building) and the owner bed map (floor plan splits the rooms
+between the street and courtyard sides; All floors wraps two rooms per row) use it, so empty
+floors are hidden and any room count works. Test: "uneven floors: picker and owner bed map follow
+each floor". The room generator itself comes with F14.

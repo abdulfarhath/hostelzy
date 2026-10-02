@@ -306,10 +306,13 @@ class _AppBody extends StatelessWidget {
     'food' => const FoodScreen(),
     'help' => const HelpScreen(),
     'move' => const MoveScreen(),
+    'rConfirm' => const ConfirmStayScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
+    'oRates' => const OwnerRatesScreen(),
+    'oInvite' => const OwnerInviteScreen(),
     _ => const SizedBox(),
   };
 }
@@ -394,18 +397,22 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'search' => 'Search',
-      'hold' => sb?.b != null ? 'Hold bed ${sb!.b!.id}' : 'Hold',
+      'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
       'wa' => 'Continue on WhatsApp',
       'add' => 'Add a booking',
+      'addR' => 'Add a resident',
       'bed' => 'Bed ${s.obed ?? ''}',
       _ => '',
     };
+    final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
       'bed' => const _BedSheet(),
+      'enq' => const _EnquirySheet(),
+      'addR' => const _AddResidentSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
@@ -440,7 +447,11 @@ class _Sheet extends StatelessWidget {
                             decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),
                             child: Row(
                               children: [
-                                Expanded(child: T(title, w: 800, s: 20)),
+                                Expanded(
+                                  child: enq != null
+                                      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Kicker('Enquiry from Hostelzy'), const SizedBox(height: 2), T('${enq.ref} · ${enq.name}', w: 800, s: 20)])
+                                      : T(title, w: 800, s: 20),
+                                ),
                                 const SizedBox(width: 12),
                                 Tap(
                                   onTap: close,
@@ -500,6 +511,7 @@ class _SearchSheet extends StatelessWidget {
           ),
           group('Who is it for', Seg(opts: const [('Any', 'Any'), ('Women', 'Women'), ('Men', 'Men'), ('Co-living', 'Co-ed')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad)),
           group('Sharing', Seg(opts: same(['Any', '2', '3', '4']), cur: s.fS, onPick: (v) => s.update(() => s.fS = v), pad: segPad)),
+          group('Room', Seg(opts: same(['Any', 'AC', 'Non-AC']), cur: s.fR, onPick: (v) => s.update(() => s.fR = v), pad: segPad)),
           group('Monthly budget', Seg(opts: const [('Any', 'Any'), ('6k', '<6k'), ('8k', '<8k'), ('10k', '<10k')], cur: s.fB, onPick: (v) => s.update(() => s.fB = v), pad: segPad)),
           Tap(
             onTap: () => s.update(() => s.fFood = !s.fFood),
@@ -544,6 +556,8 @@ class _SearchSheet extends StatelessWidget {
   }
 }
 
+/// F04 board 3: book by paying the advance straight to the owner (deal
+/// locked, HZ code), or hold free for an hour.
 class _HoldSheet extends StatelessWidget {
   const _HoldSheet();
   @override
@@ -552,78 +566,149 @@ class _HoldSheet extends StatelessWidget {
     final p = PalScope.of(context);
     final h = hostelById(s.hid);
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
-    final o = holdOptions[s.holdOpt]!;
+    if (sb?.b == null) return const SizedBox();
+    final b = sb!.b!, r = sb.r!;
+    final q = s.quote(h.id, r.ac, r.share);
+    final perks = s.lockedPerks(q, h);
+    Widget line(String k, Widget v, {Color? bg, Color? fg}) => Container(
+      color: bg,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: null,
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [T(k, s: 14, c: fg ?? p.mu), v]),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-          child: T(sb?.b != null ? '${h.name} · Room ${sb!.r!.n} · ${fmt(sb.r!.rent)}/mo' : '', s: 13, c: p.mu),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: T('${h.name} · Room ${r.n} · ${r.share} sharing${h.ac ? ' · ${r.type}' : ''} · ${b.spot}', s: 13, c: p.mu),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: VGap(
-            gap: 8,
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          decoration: box(w: 2, c: p.tx),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final k in holdOptions.keys)
-                () {
-                  final on = k == s.holdOpt;
-                  final opt = holdOptions[k]!;
-                  return Tap(
-                    onTap: () => s.update(() => s.holdOpt = k),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: box(bg: on ? p.ab : transparent, w: 2, c: on ? p.ac : p.hl),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: const Kicker('Pay the owner to book'),
+              ),
+              Container(
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: line('Advance (refundable)', T(fmt(q.hzAdv), s: 14, w: 800)),
+              ),
+              Container(
+                color: p.tx,
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [T('Pay ${h.owner} today', w: 800, s: 15, c: p.bg), T(fmt(q.hzAdv), w: 800, s: 26, c: p.bg)],
+                ),
+              ),
+              const Padding(padding: EdgeInsets.fromLTRB(12, 10, 12, 4), child: Kicker('Pay at the hostel on move-in')),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    T('First month fee', s: 14, c: p.mu),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        if (q.hzFirst < q.fee) ...[
+                          Text(fmt(q.fee), style: DefaultTextStyle.of(context).style.copyWith(fontSize: 12, color: p.mu, decoration: TextDecoration.lineThrough, decorationColor: p.mu)),
+                          const SizedBox(width: 4),
+                        ],
+                        T(fmt(q.hzFirst), s: 14, w: 800),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.all(12),
+          color: q.any ? p.gb : p.sf,
+          child: q.any
+              ? VGap(
+                  gap: 8,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [T('Your deal is locked', w: 800, s: 15, c: p.gn), T(s.peekRef, s: 12, w: 800, ls: .04, c: p.gn)],
+                    ),
+                    LayoutBuilder(
+                      builder: (context, c) => Wrap(
+                        runSpacing: 6,
                         children: [
-                          SizedBox(
-                            width: 20,
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                width: 18,
-                                height: 18,
-                                alignment: Alignment.center,
-                                decoration: box(w: 2, c: p.tx),
-                                child: Container(width: 8, height: 8, color: on ? p.ac : transparent),
-                              ),
+                          for (final k in perks)
+                            SizedBox(
+                              width: c.maxWidth / 2,
+                              child: Row(children: [Ic('check', size: 14, color: p.gn), const SizedBox(width: 6), Flexible(child: T(k, s: 13))]),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                T(opt.title, w: 800, s: 16),
-                                const SizedBox(height: 3),
-                                T(opt.sub, s: 13, c: p.mu, lh: 1.35),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          T(opt.amt, w: 800, s: 18),
                         ],
                       ),
                     ),
-                  );
-                }(),
+                    T('Show this code at the hostel. The owner sees the same deal in their app.', s: 12, c: p.mu, lh: 1.4),
+                  ],
+                )
+              : T('No Hostelzy deal on this room type. Exit rules are still locked: ${fmt(q.hzExit)} maintenance, ${h.terms.noticeDays} days notice.', s: 13, c: p.mu, lh: 1.4),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [T('Back when you leave', s: 13, c: p.mu), Rich([sp(context, fmt(q.hzBack), w: 800), sp(context, ' of your ${fmt(q.hzAdv)}', c: p.mu)], s: 13)],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Expanded(child: Cta('Pay advance', height: 56, px: 14, fs: 15, onTap: () => s.placeHold('book'))),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Tap(
+                  onTap: () => s.placeHold('free'),
+                  child: Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: box(w: 2, c: p.tx),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [const T('Hold free', w: 800, s: 15), T('1 hour · 2 h for Members', s: 11, w: 600, c: p.mu)],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
-          child: T(o.note, s: 12, c: p.mu, lh: 1.45),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Cta(o.cta, px: 16, onTap: s.placeHold),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: T('You pay ${fmt(q.hzAdv)} by UPI straight to ${h.owner}. Hostelzy never holds your money; we keep the record and your deal.', s: 12, c: p.mu, lh: 1.4),
         ),
       ],
     );
   }
 }
+
+/// F05 design question: the tenant note is green as the spec says, but the
+/// design rules keep green for savings and deals. Founder approved the
+/// default (green); false gives the neutral version from board 1.
+const enquiryNoteGreen = true;
 
 class _WaSheet extends StatelessWidget {
   const _WaSheet();
@@ -631,13 +716,38 @@ class _WaSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final ref = s.waRef;
+    final noteFg = enquiryNoteGreen ? p.gn : p.tx;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 12,
         children: [
-          Rich([sp(context, 'To '), sp(context, s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
-          Container(padding: const EdgeInsets.all(14), color: p.sf, child: T(s.waMsg ?? '', s: 15, lh: 1.45)),
+          if (ref != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: box(bg: enquiryNoteGreen ? p.gb : p.sf, w: 2, c: enquiryNoteGreen ? p.gb : p.tx),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shieldOk', size: 20, color: noteFg)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Rich([sp(context, '${s.waTo} has been told on Hostelzy', w: 800, c: noteFg), sp(context, ', with your verified number and ref '), sp(context, ref, w: 800), sp(context, '.')], s: 14, lh: 1.4)),
+                ],
+              ),
+            ),
+          Rich([sp(context, 'To '), sp(context, ref != null ? '${s.waTo} · ${hostelById(s.waHid!).name}' : s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
+          Container(
+            padding: const EdgeInsets.all(14),
+            color: p.sf,
+            child: VGap(
+              gap: 10,
+              children: [
+                T(s.waMsg ?? '', s: 15, lh: 1.45),
+                if (ref != null) Rich([sp(context, 'Ref '), sp(context, ref, w: 800), sp(context, ' · hostelzy.in/r/$ref')], s: 14, lh: 1.45),
+              ],
+            ),
+          ),
           Cta(
             'Open WhatsApp',
             icon: 'msg',
@@ -657,11 +767,182 @@ class _WaSheet extends StatelessWidget {
             icon: 'check',
             height: 50,
             onTap: () {
-              s.copyText(s.waMsg ?? '');
+              s.copyText(s.waFull);
               s.update(() => s.sheet = null);
               s.toastMsg('Message copied.');
             },
           ),
+          if (ref != null) T("Change the message if you like. Your enquiry is already saved on Hostelzy, so you're covered either way.", s: 12, c: p.mu, lh: 1.45),
+        ],
+      ),
+    );
+  }
+}
+
+/// F05 board 3: one enquiry, opened from its HZ code on owner Today.
+class _EnquirySheet extends StatelessWidget {
+  const _EnquirySheet();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final e = s.enquiries.where((x) => x.ref == s.enqRef).firstOrNull;
+    if (e == null) return const SizedBox();
+    final first = e.name.split(' ')[0];
+    final r = e.bed != null ? s.findBed(e.hid, e.bed).r : null;
+    void contact(String how) {
+      s.markContacted(e.ref);
+      if (how == 'wa') {
+        s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+      } else {
+        s.update(() => s.sheet = null);
+        s.toastMsg(how == 'call' ? 'Calling $first on +91 ${phoneSpaced(e.phone)}…' : 'Marked as contacted.');
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        KV('Phone', '${phoneSpaced(e.phone)} · verified by OTP', keyWidth: 110),
+        KV('Asked about', e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed', keyWidth: 110),
+        KV('When', clockTime(e.at), keyWidth: 110),
+        KV('From', e.from, keyWidth: 110),
+        KV('Message', '“${e.msg}”', keyWidth: 110),
+        KV('Status', e.contacted ? 'Contacted' : 'New · not replied yet', keyWidth: 110),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          padding: const EdgeInsets.all(12),
+          color: p.sf,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(padding: EdgeInsets.only(top: 1), child: Ic('userPlus', size: 18)),
+              const SizedBox(width: 10),
+              Expanded(child: Rich([sp(context, 'If $first joins, add them in '), sp(context, 'Manage → Residents', w: 800), sp(context, " with this number. They'll show as "), sp(context, 'Joined via Hostelzy', w: 800), sp(context, '.')], s: 13, lh: 1.4)),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          child: Row(
+            children: [
+              Expanded(child: Cta('WhatsApp', icon: 'msg', height: 50, px: 14, fs: 15, onTap: () => contact('wa'))),
+              const SizedBox(width: 8),
+              Expanded(child: OutlineCta('Call', icon: 'phone', height: 50, px: 14, fs: 15, onTap: () => contact('call'))),
+            ],
+          ),
+        ),
+        if (!e.contacted)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(
+                onTap: () => contact('mark'),
+                child: const SizedBox(
+                  height: 44,
+                  child: Center(child: T('Mark as contacted', w: 800, s: 14, underline: true)),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// F06 board 5: the owner adds a resident; the number is matched live
+/// against Hostelzy enquiries, holds and bookings.
+class _AddResidentSheet extends StatelessWidget {
+  const _AddResidentSheet();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final missing = s.unassignedBeds;
+    final free = <String>[
+      for (final r in s.rooms['anjani']!)
+        for (final b in r.beds)
+          if (b.state == 'free' && !b.mine) b.id,
+    ];
+    final m = s.matchFor(s.rPhone, s.rJoinAt);
+    final who = s.rName.trim().isEmpty ? 'They get' : '${s.rName.trim().split(' ')[0]} gets';
+    Widget label(String t) => T(t, w: 800, s: 13);
+    Widget field(String l, String v, ValueChanged<String> on, {String? ph, bool numeric = false}) => VGap(
+      gap: 6,
+      children: [label(l), Field(value: v, onChanged: on, placeholder: ph, numeric: numeric)],
+    );
+    String digits(String v, int n) {
+      final d = v.replaceAll(RegExp(r'\D'), '');
+      return d.length > n ? d.substring(0, n) : d;
+    }
+
+    Widget bedChip(String id, bool flagged) {
+      final on = id == s.rBed;
+      return Tap(
+        onTap: () => s.pickResidentBed(id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          decoration: box(bg: on ? (flagged ? p.ab : p.tx) : transparent, w: 1, c: flagged ? p.ac : (on ? p.tx : p.dv)),
+          child: T(flagged ? '$id · no resident' : id, s: 13, w: 600, c: flagged ? p.ad : (on ? p.bg : p.tx)),
+        ),
+      );
+    }
+
+    final past = [for (var i = 2; i <= 7; i++) i];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 12,
+        children: [
+          field('Name', s.rName, (v) => s.update(() => s.rName = v), ph: 'Full name'),
+          field('WhatsApp number', s.rPhone, (v) => s.update(() => s.rPhone = digits(v, 10)), ph: '10 digits', numeric: true),
+          if (s.rPhone.length == 10)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              color: p.sf,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(padding: EdgeInsets.only(top: 1), child: Ic('shield', size: 18)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Rich(
+                      m != null
+                          ? [sp(context, 'Joined via Hostelzy.', w: 800), sp(context, ' This number ${m.what} on Hostelzy ${s.now - m.at < 86400000 ? 'today' : 'on ${dayMon(DateTime.fromMillisecondsSinceEpoch(m.at))}'} (${m.ref}).')]
+                          : [sp(context, 'Direct.', w: 800), sp(context, ' No Hostelzy enquiry, hold or booking from this number in the last $matchWindowDays days.')],
+                      s: 13,
+                      lh: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          VGap(
+            gap: 6,
+            children: [
+              label('Bed'),
+              wrap(6, [for (final id in missing) bedChip(id, true), for (final id in free.take(8)) bedChip(id, false)]),
+            ],
+          ),
+          VGap(
+            gap: 6,
+            children: [
+              label('Joined on'),
+              Seg(opts: same(['Today', 'Yesterday', 'Pick date']), cur: s.rJoin, onPick: (v) => s.update(() => s.rJoin = v), pad: const EdgeInsets.all(10)),
+              if (s.rJoin == 'Pick date') wrap(6, [for (final d in past) ChipBtn(dayMon(appToday.subtract(Duration(days: d))), on: s.rPickBack == d, onTap: () => s.update(() => s.rPickBack = d), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
+            ],
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: field('Monthly fee', s.rFee.isEmpty ? '' : fmt(int.parse(s.rFee)), (v) => s.update(() => s.rFee = digits(v, 6)), ph: '₹', numeric: true)),
+              const SizedBox(width: 10),
+              Expanded(child: field('Advance paid', s.rAdv.isEmpty ? '' : fmt(int.parse(s.rAdv)), (v) => s.update(() => s.rAdv = digits(v, 6)), ph: '₹', numeric: true)),
+            ],
+          ),
+          T('$who a WhatsApp code to confirm. They count as a resident once they confirm.', s: 12, c: p.mu, lh: 1.4),
+          Cta('Add and send code', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
         ],
       ),
     );
@@ -771,7 +1052,9 @@ class _AddSheet extends StatelessWidget {
               final name = s.addName.trim();
               s.update(() {
                 s.sheet = null;
-                s.residents = [...s.residents, Resident(name: name, bed: sel.b!.id, amt: sel.r!.rent, status: 'Due', note: 'Moves in ${s.addDate}')];
+                final m = s.matchFor(s.addPhone, s.now);
+                // F06: a new booking waits for the tenant's WhatsApp code like any added resident.
+                s.residents = [...s.residents, Resident(name: name, bed: sel.b!.id, amt: sel.r!.rent, status: 'Due', note: 'Moves in ${s.addDate}', phone: s.addPhone, via: m != null ? 'hz' : 'direct', since: 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: false)];
                 s.addName = '';
                 s.addPhone = '';
                 s.addBed = null;
@@ -792,7 +1075,7 @@ class _BedSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final f = s.findBed('anjani', s.obed);
+    final f = s.findBed(s.ownHid, s.obed);
     if (f.b == null) return const SizedBox();
     final b = f.b!, r = f.r!;
     final res = s.residents.where((x) => x.bed == b.id).firstOrNull;

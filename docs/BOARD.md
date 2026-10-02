@@ -7,10 +7,10 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 |---|---|---|---|---|
 | F01 | Core app from the Claude Design handoff (20 screens, 3 roles) | **Shipped** | Build | On `main`, APK `apk-1` |
 | F02 | Fix the advance model (₹3,000 advance + exit maintenance) | **Shipped** · merged 2026-10-02 | Build | PR #1 squash-merged by founder's instruction; APK builds from `main` |
-| F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Design approved** · 2026-10-02 | Build | Mockups 1, 2, 4 in the Deals canvas, updated 2026-10-02 (6-month headline, max 3 deals, owner number after hold) |
-| F04 | Book with the advance, deal locked, HZ code | **Design approved** · 2026-10-02 | Build | Mockup 3 in the Deals canvas, updated 2026-10-02 (pay the owner, free hold, no ₹299 hold) |
-| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Design approved** · 2026-10-01 | Build | Boards 1–3 in the Enquiries & Residents canvas (2026-10-01). Draft code on branch `draft/f05-enquiries` (unapproved) |
-| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Design approved** · 2026-10-01 | Build | Boards 4–7 in the Enquiries & Residents canvas (2026-10-01). Matching window 60 days (decided 2026-10-02) |
+| F03 | Hostelzy deals: owner deal menu + tenant comparison + badges | **Shipped** · merged 2026-10-02 | Build | PR #5 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
+| F04 | Book with the advance, deal locked, HZ code | **Shipped** · merged 2026-10-02 | Build | PR #6 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
+| F05 | Enquiry flow (HZ code before WhatsApp, owner enquiry list) | **Shipped** · merged 2026-10-02 | Build | PR #2 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
+| F06 | Owner resident list + phone confirmation + Via Hostelzy / Direct matching | **Shipped** · merged 2026-10-02 | Build | PR #3 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F07 | Fair Play rules, collusion checks, cases, strikes | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Fair Play canvas |
 | F08 | Verified-resident reviews + Hostelzy score ranking | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Reviews canvas |
 | F09 | Stay Rewards (next-stay discount, Trusted tenant, referrals) | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Stay Rewards canvas |
@@ -19,7 +19,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Design approved** · 2026-10-02 (standing approval) | Build | Boards 1–6 in the Room Layouts canvas |
 | F13 | Backend: Supabase, real OTP, live sync, push | **Spec ready** · blocked | Build | Needs Supabase, Firebase, MSG91 accounts |
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
-| F16 | AC / non-AC room types, pricing grid and filter | **Design approved** · 2026-10-02 | Build | Boards 1–6 in the AC / Non-AC Rooms canvas (2026-10-02). Touches F03, F04, F12. No position-based pricing |
+| F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
 
 ## Plan (founder, 2026-10-02)

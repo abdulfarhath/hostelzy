@@ -867,3 +867,151 @@ class MoveScreen extends StatelessWidget {
     );
   }
 }
+
+/// F06 board 7: the resident confirms what the owner added, with the
+/// WhatsApp code. Only then do they count as a resident.
+class ConfirmStayScreen extends StatelessWidget {
+  const ConfirmStayScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final r = s.toConfirm;
+    final h = hostels[0];
+    final t = h.terms;
+    if (r == null) {
+      return Padding(padding: const EdgeInsets.all(16), child: T('Nothing to confirm right now.', s: 14, c: p.mu));
+    }
+    final room = s.findBed('anjani', r.bed).r;
+    final joined = r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday;
+    final done = r.confirmed;
+    final cells = <Widget>[];
+    for (var i = 0; i < 6; i++) {
+      if (i > 0) cells.add(const SizedBox(width: 8));
+      cells.add(
+        Expanded(
+          child: Container(
+            height: 52,
+            alignment: Alignment.center,
+            decoration: box(w: 2, c: i == s.cOtp.length ? p.ac : p.tx),
+            child: T(i < s.cOtp.length ? s.cOtp[i] : '', w: 800, s: 22),
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: Scroll(
+            key: ValueKey('rConfirm${s.scrollEpoch}'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                  child: VGap(
+                    gap: 6,
+                    children: [
+                      Kicker('Confirm your stay', c: p.ad),
+                      T('${h.owner} added you at ${h.name}', w: 800, s: 30, lh: 1.02, ls: -.025),
+                      T("Check the details. If they're right, confirm with the code we sent on WhatsApp.", s: 14, c: p.mu),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      KV('Name', r.name, keyWidth: 130),
+                      KV('Bed', '${r.bed}${room != null ? ' · ${room.share} sharing' : ''}', keyWidth: 130),
+                      KV('Joined on', '${dayName(joined)} ${joined.year}', keyWidth: 130),
+                      KV('Monthly fee', fmt(r.amt), keyWidth: 130),
+                      KV('Advance paid', fmt(r.advance), keyWidth: 130),
+                      KV('When you leave', '${fmt(t.maintenance)} kept · ${fmt(r.advance - t.maintenance)} back · ${t.noticeDays} days notice', keyWidth: 130),
+                    ],
+                  ),
+                ),
+                if (!done)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                    child: VGap(
+                      gap: 8,
+                      children: [
+                        T('Code sent to ${phoneSpaced(r.phone)}', w: 800, s: 13),
+                        Stack(
+                          children: [
+                            Row(children: cells),
+                            Positioned.fill(
+                              child: Field(
+                                value: s.cOtp,
+                                onChanged: (v) => s.update(() {
+                                  final d = v.replaceAll(RegExp(r'\D'), '');
+                                  s.cOtp = d.length > 6 ? d.substring(0, 6) : d;
+                                }),
+                                numeric: true,
+                                border: false,
+                                height: null,
+                                pad: EdgeInsets.zero,
+                                hiddenText: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Tap(onTap: () => s.update(() => s.cOtp = '482113'), child: T('Paste code from WhatsApp', s: 12, w: 600, c: p.ad)),
+                            T("Didn't get it? Resend in 0:24", s: 12, c: p.mu),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                    padding: const EdgeInsets.all(14),
+                    decoration: box(w: 2, c: p.tx),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(width: 32, height: 32, alignment: Alignment.center, color: p.tx, child: Ic('check', size: 18, color: p.bg)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const T("You're confirmed", w: 800, s: 16),
+                              const SizedBox(height: 2),
+                              T('Pay rent, see the food menu and raise complaints from the app. The exit rules above are saved on Hostelzy.', s: 13, c: p.mu, lh: 1.4),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: VGap(
+            gap: 8,
+            children: [
+              if (!done) ...[
+                Cta('Yes, this is me', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.confirmStay),
+                OutlineCta('Something\'s wrong', height: 50, onTap: () => s.openWA(h.owner, 'Hi ${h.owner}, the details you added for me on Hostelzy are not right: ')),
+              ] else
+                Cta('Go to my stay', height: 54, px: 16, fs: 15, onTap: () => s.jump('rHome', 'resident')),
+              T('Only ${h.name} and Hostelzy see these details.', s: 12, c: p.mu, lh: 1.4),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
