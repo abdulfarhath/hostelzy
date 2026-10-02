@@ -1,6 +1,6 @@
 # F23 · Floor amenities (fridge, washing machine, water purifier…) + layout-first view
 
-**Stage:** Design ready · demo for the founder: https://claude.ai/artifact/PjkPGAojZgLXFLWP56yvFf · waiting for the founder’s approval · founder idea 2026-10-02 · **this feature needs the founder's approval of the
+**Stage:** **Design approved by the founder, 2026-10-02** ("yes for all", Ideas chat) · demo https://claude.ai/artifact/PjkPGAojZgLXFLWP56yvFf · goes into "Hostelzy · Main design", then Build.
 design before building** (founder's explicit exception to the "no approvals" rule).
 
 ## Problem
