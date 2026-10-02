@@ -23,7 +23,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f15-play-store`. Outside-the-app checklist (Play account, domain pages, upload key, SHA-1) in the feature file |
 | F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Shipped** · parts 1–3 + leftovers merged 2026-10-02 | Build | Honest login, real links, holds expire, UPI → UTR → owner confirms, real map, large screens with a left nav rail, honest toasts, owner screens follow the selected hostel. Group B needs F13 |
 | F18 | Real-user bug fixes (back button, stay logged in, own name/phone, gated roles, crashes, keyboard, map location + area, owner edits layouts) | **Built** · all 10 groups merged 2026-10-02 (APK `apk-32`) | Build | From the founder's phone test of apk-29. Photos/gallery, delete v2 and the team console need the backend (F13 part 2) |
-| F19 | Residents fix room layouts (any room in their hostel → owner approves; others see a "residents only" nudge) | **Spec ready** · 2026-10-02 | Design | Founder idea. Reward for approved fixes: founder to decide |
+| F19 | Residents fix room layouts (any room in their hostel → owner approves; others see a "residents only" nudge) | **Design approved** · 2026-10-02 (standing approval) | Build | Design: https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR · Founder idea. Reward for approved fixes: founder to decide |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
@@ -41,6 +41,7 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 18. ~~F14 questions~~ **Decided 2026-10-02 (see DECISIONS.md).**
 
 ## Links
+- **F19 Residents fix their room layout (resident suggestion editor, send/result, owner compare + approve/reject, console list; Design approved · 2026-10-02):** https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR
 - **F18 Real app v2 (sign in, role gates, empty states, map v2, owner layout editor, photos, saved, delete v2, team console, small UX; Design approved · 2026-10-02):** https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
 - **All screens (the app as it is today, redrawn from the code 2026-10-02 after F18 and #37–#51: 146 screens by role (Onboarding · Tenant · Resident · Owner · Hostelzy team · Web), 35 Updated, 38 New, light + dark; Design approved · standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
