@@ -9,9 +9,14 @@ it from photos or memory. The people who live in that room know it best. Moving 
 also fun, and it keeps residents coming back to the app.
 
 ## Who can do it
-- **Only a confirmed resident of that room** (an active stay in that room, confirmed by the owner).
-- Not tenants browsing, not someone with only a hold, not residents of other rooms. A person who
-  has moved out loses access.
+- **A confirmed resident of the hostel** (an active stay there, confirmed by the owner) can suggest
+  fixes for **any room in that hostel**, not just their own.
+- Everyone else (tenants browsing, someone with only a hold, residents of other hostels) **still sees
+  the "Edit room" button**. Tapping it shows a friendly lock sheet: "Only residents of <hostel> can
+  fix room layouts. Stay here to help others see the real room." with **Book a bed** / **See beds**
+  and "Already staying here? Ask your owner for your invite code." This is meant to make people want
+  to join.
+- A person who has moved out loses access.
 - The owner (and the Hostelzy team) approve.
 
 ## User stories
@@ -25,7 +30,7 @@ also fun, and it keeps residents coming back to the app.
 - **Reset** throws away my draft and goes back to the published layout.
 
 **Owner**
-- I get a push: "Anjali (Room 204) suggested a layout fix".
+- I get a push: "Anjali (lives in 204) suggested a fix for Room 207". Example: "Anjali (Room 204) suggested a layout fix".
 - I see the current layout and the suggestion **side by side** (changes highlighted) plus the note.
 - I tap **Approve & publish** or **Reject** (optional reason). Approve replaces the published
   layout right away; the old one is kept in history.
@@ -38,11 +43,12 @@ also fun, and it keeps residents coming back to the app.
 - Same safety rules as the owner editor: an AC room must have an AC unit; bed count = sharing; a bed
   with a resident can't be deleted; no gates, CCTV or exits shown.
 - The resident's name is shown to the owner only, never to tenants.
-- Women's PG floor-plan privacy stays (residents see only their own room, not the whole floor).
+- Women's PG floor-plan privacy stays for outsiders. Residents of the hostel may see every room there.
 - Approved layouts show "Checked by a resident" with the date on the hostel page.
 
 ## Screens
-1. Resident: My room → layout → **Edit my room** (editor in "suggestion" mode, banner "Only you
+0. Non-resident: any room layout → **Edit room** → lock sheet (above).
+1. Resident: any room in their hostel → layout → **Edit room** (editor in "suggestion" mode, banner "Only you
    see this until you send it").
 2. Resident: Send sheet (note + Send) → "Waiting for owner" state → approved / rejected result.
 3. Owner: Today/Inbox card "Layout fix from Room 204" → side-by-side compare → Approve / Reject.
@@ -51,7 +57,7 @@ also fun, and it keeps residents coming back to the app.
 ## Backend
 - `layout_suggestions` (id, hostel_id, room_id, author_id, layout jsonb, note, status
   pending/approved/rejected, reason, created_at, decided_by, decided_at).
-- RLS: insert/update own pending row only if the author has an active stay in that room; owner/staff
+- RLS: insert/update own pending row only if the author has an active stay in that hostel; owner/staff
   of the hostel and the team read and decide. Approve = server function that copies the layout into
   `layouts` and keeps the old version.
 - Push to the owner on new suggestion; push to the resident on decision.
