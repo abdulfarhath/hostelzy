@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'app_config.dart';
 import 'features/listings/repo.dart';
 import 'push.dart';
+import 'reminders.dart';
 import 'router.dart';
 import 'sign_in.dart';
 import 'store.dart';
@@ -20,6 +21,8 @@ Future<void> main() async {
   final (p, a) = await startFirebase();
   push = p;
   signIn = a;
+  // F20: reminders ring from this phone (local notifications).
+  reminders = await LocalReminders.start();
   // F18: stay logged in: what this phone kept from last time.
   saved = await store.load();
   runApp(const HostelzyApp());
@@ -28,6 +31,7 @@ Future<void> main() async {
 /// F13: Firebase push and Google sign-in on Android; no-ops elsewhere.
 Push push = const NoPush();
 SignIn signIn = const NoSignIn();
+Reminders reminders = NoReminders();
 final Store store = PrefsStore();
 Map<String, dynamic> saved = const {};
 
@@ -40,7 +44,7 @@ class HostelzyApp extends StatefulWidget {
   State<HostelzyApp> createState() => _HostelzyAppState();
 }
 
-class _HostelzyAppState extends State<HostelzyApp> {
+class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
   // F17: start-state shortcuts and the all-screens canvas are for
   // development only; the Play Store build always starts at Welcome.
   final q = kDebugMode ? Uri.base.queryParameters : const <String, String>{};
@@ -73,6 +77,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
     if (q['start'] == null) state.restore(saved, firebaseUser: signIn.current);
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     state.watchPushToken();
+    state.startReminders(reminders);
+    WidgetsBinding.instance.addObserver(this);
     if (dataSource == 'supabase') {
       _goLive();
     } else {
@@ -103,8 +109,15 @@ class _HostelzyAppState extends State<HostelzyApp> {
 
   static String? _pick(String? v, List<String> ok) => v != null && ok.contains(v) ? v : null;
 
+  /// F20: a glass counted from a notification shows when the app comes back.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed) state.refreshGlasses();
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pushSub.cancel();
     router.dispose();
     state.dispose();
