@@ -31,6 +31,10 @@ abstract class HostelRepo {
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
 
+  /// C: deletes the signed-in user's data on the server (keeps others'
+  /// records without their identity). Throws with the server's reason.
+  Future<void> deleteMyAccount();
+
   /// B7: a hostel's photos, cover first. Empty on sample data.
   Future<List<HostelPhoto>> photos(String hid);
 
@@ -61,6 +65,8 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> savePushToken(String token) async {}
   @override
+  Future<void> deleteMyAccount() async {}
+  @override
   Future<List<HostelPhoto>> photos(String hid) async => const [];
   @override
   Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) => throw UnsupportedError('sample data');
@@ -85,6 +91,9 @@ class SupabaseRepo implements HostelRepo {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseRepo(Supabase.instance.client);
   }
+
+  @override
+  Future<void> deleteMyAccount() => db.rpc('delete_my_account');
 
   @override
   Future<List<HostelPhoto>> photos(String hid) async =>

@@ -100,7 +100,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -480,11 +480,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void startDelete() => update(() {
-    delOtp = '';
     hist = [...hist, screen];
-    screen = 'delOtp';
-    codeSentAt = DateTime.now().millisecondsSinceEpoch;
-    now = codeSentAt;
+    screen = 'delConfirm';
   });
 
   // F17 links

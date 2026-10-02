@@ -247,3 +247,22 @@ Not needed.
   - the publication check in `rls_test.sql`.
 - Founder: run the B6 SQL file once in the SQL Editor (`docs/FOUNDER-TODO.md`).
 - Still to come (C): the owner and resident screens' writes (accept a hold, confirm a payment, update a complaint) go to Supabase, and Realtime then shows them on the other phone.
+
+
+**C · account deletion · 2026-10-02** (branch `feature/c-account-deletion`, design board 18 "Delete account v2"):
+- Settings → Delete account → **Confirm it’s you**: an account card with initials, name and email, and **Confirm with Google** (the official Google button, now also on the sign-in screen). **Keep my account** leaves.
+- Order:
+  1. Google re-authentication (`SignIn.reauth()`; a different account or a cancel stops it);
+  2. `delete_my_account()` on the server;
+  3. the Firebase user is deleted and Google disconnected;
+  4. the phone forgets everything.
+  If any step fails, nothing is called deleted.
+- Not signed in with Google: "Delete from this phone" (all the data is there). The fake 6-digit code step is gone.
+- `20261002070000_c_delete_account.sql`, `delete_my_account()` (signed-in users only):
+  - removes the profile, push tokens, move requests and staff rows;
+  - releases open holds and frees their beds;
+  - keeps others' records without the person: enquiries as "Deleted user", reviews as "Former resident", payments and complaints detached, stays unlinked;
+  - owners of a live hostel are asked to hand it over first;
+  - `guard_payment` and `guard_review` allow only that change during the deletion;
+  - tests: `supabase/tests/delete_test.sql`.
+- Done screen copy from the design, and **Close Hostelzy**. The web delete page now says the app deletes server data.

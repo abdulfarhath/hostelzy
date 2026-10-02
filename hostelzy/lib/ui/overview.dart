@@ -114,7 +114,7 @@ class OverviewPage extends StatelessWidget {
       [
         ('Settings', {'start': 'settings', 'role': 'tenant'}),
         ('Delete account', {'start': 'delAcc', 'role': 'tenant'}),
-        ('Delete: confirm code', {'start': 'delOtp', 'role': 'tenant'}),
+        ('Delete: confirm with Google', {'start': 'delConfirm', 'role': 'tenant'}),
         ('Delete: done', {'start': 'delDone', 'role': 'tenant'}),
         ('Notifications explainer', {'start': 'perm', 'role': 'tenant'}),
         ('Update needed', {'start': 'gate', 'role': 'tenant'}),

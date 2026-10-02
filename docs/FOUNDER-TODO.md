@@ -36,6 +36,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Copy the `firebaseConfig = { … }` block it shows and send it to the Build chat (it's public, not a secret).
    - Firebase → **Authentication** → **Settings** → **Authorized domains** → **Add domain** → `farhath.me`.
    - Then the console works at https://farhath.me/hostelzy/app/console/ (Build adds the config).
+4c. **Account deletion (C)**: Supabase → SQL Editor → paste `supabase/migrations/20261002070000_c_delete_account.sql` → **Run** → "Success".
 
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):

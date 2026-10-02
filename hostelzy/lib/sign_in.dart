@@ -11,7 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 typedef Account = ({String uid, String name, String email});
 
 /// Why Google sign-in didn't finish.
-enum SignInFail { cancelled, notSetUp, failed }
+enum SignInFail { cancelled, notSetUp, failed, otherAccount }
 
 abstract class SignIn {
   /// False where Google sign-in can't work (tests, web, desktop, no Firebase).
@@ -31,11 +31,21 @@ abstract class SignIn {
   Future<bool> isTeam();
 
   Future<void> signOut();
+
+  /// C: confirms it's still you (Google again), before deleting the account.
+  Future<SignInFail?> reauth();
+
+  /// C: deletes the Firebase user (right after [reauth]).
+  Future<void> deleteUser();
 }
 
 /// No Google sign-in here: the app offers the local fallback.
 class NoSignIn implements SignIn {
   const NoSignIn();
+  @override
+  Future<SignInFail?> reauth() async => SignInFail.notSetUp;
+  @override
+  Future<void> deleteUser() async {}
   @override
   bool get available => false;
   @override
@@ -109,5 +119,35 @@ class FirebaseSignIn implements SignIn {
   Future<void> signOut() async {
     await _auth.signOut();
     if (_ready) await GoogleSignIn.instance.signOut();
+  }
+
+  @override
+  Future<SignInFail?> reauth() async {
+    final u = _auth.currentUser;
+    if (u == null) return SignInFail.failed;
+    try {
+      final g = GoogleSignIn.instance;
+      if (!_ready) {
+        await g.initialize(serverClientId: _webClientId.isEmpty ? null : _webClientId);
+        _ready = true;
+      }
+      final a = await g.authenticate();
+      await u.reauthenticateWithCredential(GoogleAuthProvider.credential(idToken: a.authentication.idToken));
+      return null;
+    } on GoogleSignInException catch (e) {
+      return e.code == GoogleSignInExceptionCode.canceled ? SignInFail.cancelled : SignInFail.failed;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Re-auth: ${e.code}');
+      return e.code == 'user-mismatch' ? SignInFail.otherAccount : SignInFail.failed;
+    } catch (e) {
+      debugPrint('Re-auth: $e');
+      return SignInFail.failed;
+    }
+  }
+
+  @override
+  Future<void> deleteUser() async {
+    await _auth.currentUser?.delete();
+    if (_ready) await GoogleSignIn.instance.disconnect();
   }
 }
