@@ -131,7 +131,7 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
-### Areas 4 and 5 · Onboarding, team tools, leftovers: built 2026-10-02 (branch `feature/f22-onboarding`)
+### Areas 4 and 5 · Onboarding, team tools, leftovers: built 2026-10-02 (merged, #74)
 - **Sign in:** logo, a title that says why ("Sign in to hold a bed" / "…to list your PG" / "…to join your PG"), Continue with Google, "Keep browsing as a guest", the Terms line. "Use on this phone only" stays as a small link (the only way in without a Google account).
 - **About you:** two fields, the "Not verified" tag, "We’ll check it by SMS later".
 - **Role:** "What brings you here?" with three big rows; "You can switch later in Me".
