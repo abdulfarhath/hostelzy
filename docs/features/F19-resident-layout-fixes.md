@@ -163,11 +163,27 @@ Still the founder's call: Stay Rewards credits for approved fixes (money). Defau
 
 Tests: `supabase/tests/layoutfix_test.sql`; flow tests "F19: …" (2); console logic test.
 
-**Not built:** these extras are on the canvas but not in this spec:
-- Try mode for visitors (0b)
-- Quick fix (3b)
-- Muting a resident (10b)
-- Photos with a fix
-- Rewards for fixes (founder decides)
-
-Listed for the Ideas chat to schedule.
+### v1 extras · Built · 2026-10-02 (branch `feature/f19-extras`)
+- **Try mode (`Try`):** a visitor's Edit room opens the full editor with "Try mode · play freely, nothing is saved". Only the outlined **Send · residents only** button is locked; it opens the `Lock` sheet. Leaving discards the try, and no draft is kept.
+- **Quick fix (`QuickFix`):** on their room screen a resident taps an item (fan, AC, window, door, washroom) and picks one of:
+  - Wrong place / Missing / Broken / Not in this room
+  - then adds an optional word and an optional photo, and sends ("Send: AC unit is broken").
+  - "Bigger change? … the editor" stays.
+  - Quick fixes count toward the limit of 3 waiting. A quick fix and a layout fix for the same room can both wait.
+- **Repairs:** a **Broken** quick fix goes to the owner's Today as a repair card: "Broken: AC unit, Room 207" with the resident's word and the photo, then **Start work** / **Not broken**. The resident gets a push either way.
+  - Other quick fixes show as "Quick fix: Window is in the wrong place, Room 207" with **Got it** / **Not right**. Approving one changes no layout; the owner edits the room themselves.
+- **Photo:** one photo, optional, on the Send sheet and on a quick fix. "Only <owner> and the Hostelzy team see it."
+  - It's stored in the private `fix-photos` bucket under `<hostel>/<user>/…`. The uploader, the hostel's staff and the team can read it; the app and the console use signed links.
+  - Compare shows it.
+- **Mute (`Mute`):**
+  - Compare has "Mute <name>’s suggestions", which opens a confirm sheet.
+  - Muting closes that resident's waiting fixes. From then on they see "Suggestions are off for this hostel", and Edit room and quick fixes are off for them.
+  - Unmute is under Manage → Residents → "Layout suggestions off" → Turn on.
+- **Team console:** Layout fixes shows a quick fix as one line ("Broken: AC unit") plus the photo.
+- **Server (`20261002190000_f19_extras.sql`, FOUNDER-TODO 4q):**
+  - `layout_fixes` gets `kind`, `issue`, `item`, `photo` and `repair`.
+  - New: `send_quick_fix`, `set_repair`, `mute_fix_author` / `unmute_fix_author`, and the table `layout_fix_mutes`.
+  - `send_layout_fix` takes the photo; `decide_layout_fix` doesn't touch the layout for quick fixes.
+  - New bucket `fix-photos`, with policies.
+  - Tests: `supabase/tests/fixextras_test.sql`; flow tests in `test/fix_extras_test.dart` (3) plus the updated F19 test (try mode).
+- **Still the founder's call:** rewards for approved fixes. There are none.

@@ -261,9 +261,10 @@ class LayoutMap extends StatelessWidget {
           );
         }
         // Edit mode: a touch target per bed and item (at least 32 px), and
-        // the selected one outlined in red.
+        // the selected one outlined in red. F19 quick fix: in view mode with
+        // [onSelect], items (not beds) can be tapped too.
         final handles = <Widget>[];
-        if (edit) {
+        if (edit || onSelect != null) {
           Widget handle(String id, Rect ftRect) {
             final r = sc(ftRect);
             final hit = Rect.fromCenter(center: r.center, width: math.max(r.width, 32), height: math.max(r.height, 32));
@@ -273,8 +274,8 @@ class LayoutMap extends StatelessWidget {
                 key: ValueKey('ed-$id'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onSelect?.call(id),
-                onPanUpdate: (d) => onDrag?.call(id, d.delta / k),
-                onPanEnd: (_) => onDragEnd?.call(),
+                onPanUpdate: edit ? (d) => onDrag?.call(id, d.delta / k) : null,
+                onPanEnd: edit ? (_) => onDragEnd?.call() : null,
                 child: Container(decoration: id == selected ? BoxDecoration(border: Border.all(color: p.ac, width: 2)) : null),
               ),
             );
@@ -283,7 +284,7 @@ class LayoutMap extends StatelessWidget {
           for (final i in l.items) {
             handles.add(handle(i.id, i.rect));
           }
-          for (final b in l.beds.keys.where((b) => !l.bunks.containsKey(b))) {
+          for (final b in l.beds.keys.where((b) => edit && !l.bunks.containsKey(b))) {
             handles.add(handle('bed:$b', l.bedRect(b)));
           }
         }

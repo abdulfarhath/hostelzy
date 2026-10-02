@@ -95,3 +95,9 @@ export function layoutChanges(before, after) {
   if (b.w !== after.w || b.h !== after.h) out.push(`Size ${Math.round(b.w)} × ${Math.round(b.h)} → ${Math.round(after.w)} × ${Math.round(after.h)} ft`);
   return out;
 }
+
+// F19 extras: a quick fix in one line ("Broken: AC unit").
+export function quickLine(f) {
+  const what = { broken: 'Broken', missing: 'Missing', not_here: 'Not in this room', wrong_place: 'Wrong place' }[f.issue] ?? 'Quick fix';
+  return `${what}: ${f.item ?? 'an item'}`;
+}

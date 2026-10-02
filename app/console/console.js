@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine } from './logic.js';
 
 const app = document.getElementById('app');
 
@@ -255,8 +255,10 @@ const VIEWS = {
       if (!sel) return detail.replaceChildren(el('p', { class: 'empty' }, 'No layout fixes waiting.'));
       const days = waitedDays(sel.created_at);
       const owner = sel.hostels?.owner_name || 'The owner';
-      const live = await db.from('layouts').select('w, h, beds, items').eq('hostel_id', sel.hostel_id).eq('room', sel.room).eq('stage', 'published').maybeSingle().then(ok);
-      const changes = layoutChanges(live, sel.layout);
+      // F19 extras: a quick fix is one item (no layout); the photo is private (signed link).
+      const live = sel.kind === 'quick' ? null : await db.from('layouts').select('w, h, beds, items').eq('hostel_id', sel.hostel_id).eq('room', sel.room).eq('stage', 'published').maybeSingle().then(ok);
+      const changes = sel.kind === 'quick' ? [quickLine(sel)] : layoutChanges(live, sel.layout);
+      const photo = sel.photo ? (await db.storage.from('fix-photos').createSignedUrl(sel.photo, 3600)).data?.signedUrl : null;
       const wa = waLink(phone[sel.hostel_id], `Hi ${owner}, a resident sent a layout fix for room ${sel.room} ${days} days ago. Please approve or reject it in the Hostelzy app → Today.`);
       detail.replaceChildren(
         el('h2', {}, `${sel.hostels?.name ?? ''} · Room ${sel.room}`),
@@ -264,6 +266,7 @@ const VIEWS = {
         el('div', { class: 'kick' }, `${changes.length} ${changes.length === 1 ? 'change' : 'changes'}`),
         el('ul', {}, changes.map((c) => el('li', {}, c))),
         sel.note ? el('p', {}, `“${sel.note}”`) : null,
+        photo ? el('img', { src: photo, alt: 'Photo from the resident', style: 'max-width:100%;border:1px solid var(--hl)' }) : null,
         el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, `${sel.author_name}${sel.author_bed ? ' · lives in ' + sel.author_bed : ''}`),
         el('button', { class: 'btn primary cta', disabled: days < 7, onclick: () => decide(sel, true) }, 'Approve & publish', '✓'),
         el('button', { class: 'btn full', disabled: days < 7, onclick: () => decide(sel, false) }, 'Reject'),

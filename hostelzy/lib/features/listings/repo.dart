@@ -135,7 +135,17 @@ abstract class HostelRepo {
   Future<String> useReferralCode(String code);
   /// F19: layout fixes. A resident sends or withdraws one; the owner (the
   /// team after 7 days) decides; owners publish their own edits and can undo.
-  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note);
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note, {String? photo});
+
+  /// F19 extras: a quick fix on one item, the owner's repair answer, muting
+  /// a resident's suggestions, and the fix photo (private: the uploader, the
+  /// hostel's staff and the team).
+  Future<String> sendQuickFix(String hid, int room, {required String item, required String issue, String note = '', String? photo});
+  Future<void> setRepair(String id, String state);
+  Future<void> muteFixAuthor(String fixId);
+  Future<void> unmuteFixAuthor(String hid, String userId);
+  Future<String> uploadFixPhoto(String hid, String uid, Uint8List jpg);
+  Future<String?> fixPhotoUrl(String path);
   Future<void> withdrawLayoutFix(String id);
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''});
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
@@ -230,7 +240,19 @@ class SampleRepo implements HostelRepo {
   Future<String> useReferralCode(String code) => throw UnsupportedError('sample data');
 
   @override
-  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) => throw UnsupportedError('sample data');
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note, {String? photo}) => throw UnsupportedError('sample data');
+  @override
+  Future<String> sendQuickFix(String hid, int room, {required String item, required String issue, String note = '', String? photo}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> setRepair(String id, String state) async {}
+  @override
+  Future<void> muteFixAuthor(String fixId) async {}
+  @override
+  Future<void> unmuteFixAuthor(String hid, String userId) async {}
+  @override
+  Future<String> uploadFixPhoto(String hid, String uid, Uint8List jpg) => throw UnsupportedError('sample data');
+  @override
+  Future<String?> fixPhotoUrl(String path) async => null;
   @override
   Future<void> withdrawLayoutFix(String id) async {}
   @override
@@ -314,8 +336,9 @@ class SupabaseRepo implements HostelRepo {
       me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('profiles').select('member, member_since, ref_code, referred_by').eq('id', me),
       db.from('reward_ledger').select().order('created_at'),
       db.from('layout_fixes').select().neq('status', 'withdrawn').order('created_at'),
+      db.from('layout_fix_mutes').select('hostel_id, user_id, name'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], mutes: r[14], me: me);
   }
 
   @override
@@ -435,8 +458,31 @@ class SupabaseRepo implements HostelRepo {
   Future<String> useReferralCode(String code) async => await db.rpc('use_referral_code', params: {'p_code': code}) as String;
 
   @override
-  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async =>
-      await db.rpc('send_layout_fix', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout, 'p_note': note}) as String;
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note, {String? photo}) async =>
+      await db.rpc('send_layout_fix', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout, 'p_note': note, 'p_photo': photo}) as String;
+
+  @override
+  Future<String> sendQuickFix(String hid, int room, {required String item, required String issue, String note = '', String? photo}) async =>
+      await db.rpc('send_quick_fix', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_issue': issue, 'p_note': note, 'p_photo': photo}) as String;
+
+  @override
+  Future<void> setRepair(String id, String state) => db.rpc('set_repair', params: {'p_id': id, 'p_state': state});
+
+  @override
+  Future<void> muteFixAuthor(String fixId) => db.rpc('mute_fix_author', params: {'p_fix': fixId});
+
+  @override
+  Future<void> unmuteFixAuthor(String hid, String userId) => db.rpc('unmute_fix_author', params: {'p_hostel': hid, 'p_user': userId});
+
+  @override
+  Future<String> uploadFixPhoto(String hid, String uid, Uint8List jpg) async {
+    final path = '$hid/$uid/${DateTime.now().microsecondsSinceEpoch}.jpg';
+    await db.storage.from('fix-photos').uploadBinary(path, jpg, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    return path;
+  }
+
+  @override
+  Future<String?> fixPhotoUrl(String path) async => db.storage.from('fix-photos').createSignedUrl(path, 3600);
 
   @override
   Future<void> withdrawLayoutFix(String id) => db.rpc('withdraw_layout_fix', params: {'p_id': id});

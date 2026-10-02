@@ -58,6 +58,9 @@ String monthYear(DateTime d) => '${monthNames[d.month - 1]} ${d.year}';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/// "fan", but "AC unit" keeps its capitals.
+String lowerName(String n) => n.length > 1 && n[1].toUpperCase() == n[1] && n[1].toLowerCase() != n[1] ? n : n.toLowerCase();
+
 /// `31 Oct`
 String dayMon(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
@@ -855,11 +858,32 @@ typedef LayoutSnap = ({double w, double h, Map<String, Offset> beds, List<LItem>
 /// F19: a resident's suggested fix to a room layout. The owner (and the
 /// team after 7 days) approves or rejects it; tenants never see who sent it.
 class LayoutFix {
-  LayoutFix({required this.id, required this.hid, required this.room, required this.snap, required this.at, this.note = '', this.status = 'pending', this.author = '', this.authorBed = '', this.since = '', this.reason, this.decidedAt, this.mine = false, this.baseVersion = 1});
+  LayoutFix({required this.id, required this.hid, required this.room, required this.snap, required this.at, this.note = '', this.status = 'pending', this.author = '', this.authorBed = '', this.since = '', this.reason, this.decidedAt, this.mine = false, this.baseVersion = 1, this.kind = 'layout', this.issue, this.item, this.photo, this.repair, this.authorId = ''});
   final String id, hid;
   final int room;
   final LayoutSnap snap;
   final String note, author, authorBed, since;
+
+  /// F19 extras: layout | quick (one item: wrong_place | missing | broken |
+  /// not_here); the photo (storage path, or a local key on sample data); a
+  /// Broken quick fix's repair: working | not_broken.
+  final String kind;
+  final String? issue, item, photo;
+  String? repair;
+
+  /// Who sent it (for muting).
+  final String authorId;
+
+  bool get quick => kind == 'quick';
+  bool get broken => quick && issue == 'broken';
+
+  /// "AC unit is broken", "Fan is in the wrong place".
+  String get quickLine => switch (issue) {
+    'broken' => '$item is broken',
+    'missing' => 'There’s no ${lowerName(item ?? '')} in this room',
+    'not_here' => '$item isn’t in this room',
+    _ => '$item is in the wrong place',
+  };
 
   /// pending | approved | rejected | withdrawn
   String status;
