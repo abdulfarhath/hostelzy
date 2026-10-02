@@ -123,7 +123,7 @@ One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Tod
 - **Avatar initials** come from the user's name (they were "SR" / "RV").
 - **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
 
-### Wave 2 · Built · 2026-10-02 (branch `feature/f21-w2`)
+### Wave 2 · Built · 2026-10-02 (merged, #67)
 Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`, `SignIn`, `Notify`, `Utr`.
 - **Look around as a guest.** Welcome's main button is **Find a bed** (straight to Explore, "No sign-in needed to look around."), with links **I run a PG · I live in a PG · Sign in**.
   - Explore shows "Browsing as a guest · Sign in" until the user signs in.
@@ -217,3 +217,7 @@ Designs `Home`, `Help`, `Today`, `TodayDark`, `Manage`.
 - Tenants are asked for notifications after their first hold; owners/residents after sign-in.
 - "UPI reference" everywhere, including the owner plan invoice (shown once as "UPI reference (UTR)").
 - "Best deals" sort removed; a "Hostelzy deals only" filter chip stays.
+- W3: Manage gets an "Enquiries" row (full list + "Not on this list = not from Hostelzy", needed by Fair Play).
+- W3: complaint photos are real (private bucket; resident, staff, team can read).
+- W3: owner words "Came from the app / Walked in / Not confirmed / Joined before Hostelzy"; centre tab "Add tenant".
+- W3: "Reviews and ranking" is one Manage row.
