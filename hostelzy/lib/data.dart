@@ -58,6 +58,9 @@ String monthYear(DateTime d) => '${monthNames[d.month - 1]} ${d.year}';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/// `1st`, `2nd`, `14th`
+String ordinal(int n) => '$n${(n % 100 >= 11 && n % 100 <= 13) ? 'th' : const ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][n % 10]}';
+
 /// `31 Oct`
 String dayMon(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
@@ -707,6 +710,13 @@ final ownerPhones = <String, String>{'anjani': '9000000101', 'saisri': '90000001
 
 /// "98••• •••••"
 String maskPhone(String p) => p.length < 2 ? '••••• •••••' : '${p.substring(0, 2)}••• •••••';
+
+/// F21 W1 (design `Agree`): the three rules a new owner agrees to.
+const fairBasics = [
+  'List only real beds, real prices and real photos.',
+  'Add every tenant who came through Hostelzy within 3 days of moving in.',
+  'Don’t ask Hostelzy tenants to skip the app or pay outside it.',
+];
 
 const fairRules = [
   ('Add every resident within 3 days', 'Name and phone. That is how a stay counts as Via Hostelzy or Direct.'),

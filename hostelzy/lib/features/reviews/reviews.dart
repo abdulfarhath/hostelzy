@@ -42,6 +42,8 @@ mixin _ReviewsData {
   String mapSel = 'anjani';
   String payM = 'UPI';
   /// Food: today's weekday first (E1).
+  /// F21: "This is correct" on Confirm stay.
+  bool cAgree = false;
   int day = appToday.weekday - 1;
   String? rated;
   List<Complaint> complaints = seedComplaints();

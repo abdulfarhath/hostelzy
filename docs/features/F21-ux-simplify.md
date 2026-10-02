@@ -116,10 +116,10 @@ One PR per wave. Flow tests for guest browsing → first hold sign-in, owner Tod
   - This also fixes a crash: the old code looked up the sample payment `rent204B`, which doesn't exist on the server.
   - The sample history and the electricity line show only in demo builds.
 - **Notice and swap on the server go to the owner on WhatsApp.** The app no longer says "Saved on Hostelzy" when nothing is saved there.
-- **No fake codes.**
-  - Fair Play: "I agree to the Fair Play rules" checkbox; the rules stay under Settings → Fair Play rules.
-  - Confirm stay: "Yes, this is me" in demo builds. On the server it's "Enter the invite code", the real confirmation path, where the owner's approval links the stay.
-  - Add resident: "Add resident" (it was "Add and send code"), and the "Waiting OTP" filter is now "Not confirmed".
+- **No fake codes** (designs `Agree` and `Stay`).
+  - **Fair Play:** a new owner sees the 3 plain rules, "Full rules: Settings → Fair Play ›", an **I agree** checkbox and **Agree and continue**. The full rules and the strike ladder open from the link and from Settings.
+  - **Confirm stay:** 3 lines (bed, rent with its due day, advance with the refund), "Something wrong? Message <owner> ›", a **This is correct** checkbox and **Yes, that’s right**. On the server the confirmation goes through the invite code, which is the real path; the owner's approval links the stay.
+  - **Add resident:** the button says "Add resident" instead of "Add and send code". The "Waiting OTP" filter is now "Not confirmed".
 - **Avatar initials** come from the user's name (they were "SR" / "RV").
 - **Tests:** `test/honesty_test.dart` ("F21 W1: …", 2 tests). The test caught two text overflows on Pay rent with longer owner names; both are fixed.
 

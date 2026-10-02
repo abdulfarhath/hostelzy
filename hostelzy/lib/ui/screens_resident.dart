@@ -932,8 +932,9 @@ class MoveScreen extends StatelessWidget {
   }
 }
 
-/// F06 board 7: the resident confirms what the owner added. F21: no fake
-/// code; on the server they confirm by joining with the hostel's invite code.
+/// F06 board 7: the resident confirms what the owner added. F21 W1 (design
+/// `Stay`): three plain lines and "This is correct", no fake code. On the
+/// server they confirm by joining with the hostel's invite code.
 class ConfirmStayScreen extends StatelessWidget {
   const ConfirmStayScreen({super.key});
   @override
@@ -946,84 +947,84 @@ class ConfirmStayScreen extends StatelessWidget {
     if (r == null) {
       return Padding(padding: const EdgeInsets.all(16), child: T('Nothing to confirm right now.', s: 14, c: p.mu));
     }
-    final room = s.findBed(h.id, r.bed).r;
+    final owner = h.owner.trim().isEmpty ? 'your owner' : h.owner;
     final joined = r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday;
+    final due = t.dueDay(joined.day);
     final done = r.confirmed;
+    final lines = [
+      'You live in ${h.name}, bed ${r.bed}.',
+      'Rent ${fmt(r.amt)} a month, due on the ${ordinal(due)}.',
+      'Advance ${fmt(r.advance)} · ${fmt(math.max(0, r.advance - t.maintenance))} back when you leave.',
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Bed ${r.bed}', title: done ? 'You’re confirmed' : 'Confirm your stay', size: 28))],
+          ),
+        ),
         Expanded(
           child: Scroll(
             key: ValueKey('rConfirm${s.scrollEpoch}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                  child: VGap(
-                    gap: 6,
-                    children: [
-                      Kicker('Confirm your stay', c: p.ad),
-                      T('${h.owner} added you at ${h.name}', w: 800, s: 30, lh: 1.02, ls: -.025),
-                      T(s.onServer ? "Check the details. If they're right, join with the invite code ${h.owner.isEmpty ? 'your owner' : h.owner} gives you." : "Check the details. If they're right, confirm them.", s: 14, c: p.mu),
-                    ],
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      KV('Name', r.name, keyWidth: 130),
-                      KV('Bed', '${r.bed}${room != null ? ' · ${room.share} sharing' : ''}', keyWidth: 130),
-                      KV('Joined on', '${dayName(joined)} ${joined.year}', keyWidth: 130),
-                      KV('Monthly fee', fmt(r.amt), keyWidth: 130),
-                      KV('Advance paid', fmt(r.advance), keyWidth: 130),
-                      KV('When you leave', '${fmt(t.maintenance)} kept · ${fmt(r.advance - t.maintenance)} back · ${t.noticeDays} days notice', keyWidth: 130),
-                    ],
-                  ),
-                ),
-                if (done)
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                    padding: const EdgeInsets.all(14),
-                    decoration: box(w: 2, c: p.tx),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(width: 32, height: 32, alignment: Alignment.center, color: p.tx, child: Ic('check', size: 18, color: p.bg)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const T("You're confirmed", w: 800, s: 16),
-                              const SizedBox(height: 2),
-                              T('Pay rent, see the food menu and raise complaints from the app. The exit rules above are saved on Hostelzy.', s: 13, c: p.mu, lh: 1.4),
-                            ],
-                          ),
-                        ),
-                      ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(height: 2, color: p.tx),
+                  for (final (i, l) in lines.indexed)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(width: 28, height: 28, alignment: Alignment.center, color: p.tx, child: T('${i + 1}', w: 800, s: 14, c: p.bg)),
+                          const SizedBox(width: 10),
+                          Expanded(child: T(l, s: 15, lh: 1.45)),
+                        ],
+                      ),
                     ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Tap(onTap: () => s.openWA(owner, 'Hi $owner, the details you added for me on Hostelzy are not right: ', phone: s.stayOwnerPhone), child: T('Something wrong? Message $owner ›', w: 800, s: 14)),
                   ),
-              ],
+                  const SizedBox(height: 20),
+                  if (done)
+                    T('Pay rent, see the food menu and raise complaints from the app. The exit rules above are saved on Hostelzy.', s: 14, c: p.mu, lh: 1.45)
+                  else ...[
+                    Tap(
+                      key: const ValueKey('stayAgree'),
+                      onTap: () => s.update(() => s.cAgree = !s.cAgree),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Row(
+                          children: [
+                            Container(width: 28, height: 28, alignment: Alignment.center, decoration: box(bg: s.cAgree ? p.tx : transparent, w: 2, c: p.tx), child: s.cAgree ? Ic('check', size: 18, color: p.bg) : null),
+                            const SizedBox(width: 12),
+                            const Expanded(child: T('This is correct', w: 800, s: 16)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (s.onServer) Padding(padding: const EdgeInsets.only(top: 10), child: T('To confirm on Hostelzy, join with the invite code $owner gives you.', s: 12, c: p.mu, lh: 1.4)),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: VGap(
-            gap: 8,
-            children: [
-              if (!done) ...[
-                Cta(s.onServer ? 'Enter the invite code' : 'Yes, this is me', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.confirmStay),
-                OutlineCta('Something\'s wrong', height: 50, onTap: () => s.openWA(h.owner, 'Hi ${h.owner}, the details you added for me on Hostelzy are not right: ')),
-              ] else
-                Cta('Go to my stay', height: 54, px: 16, fs: 15, onTap: () => s.jump('rHome', 'resident')),
-              T('Only ${h.name} and Hostelzy see these details.', s: 12, c: p.mu, lh: 1.4),
-            ],
-          ),
+          child: done
+              ? Cta('Go to my stay', height: 54, px: 16, fs: 15, onTap: () => s.jump('rHome', 'resident'))
+              : Cta('Yes, that’s right', height: 54, px: 16, fs: 15, opacity: s.cAgree ? 1 : .4, onTap: s.confirmStay),
         ),
       ],
     );

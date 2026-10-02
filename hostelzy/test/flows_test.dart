@@ -355,13 +355,16 @@ void main() {
     // Resident checks the details and confirms (F21: no fake code); now counted as Via Hostelzy.
     s.jump('rConfirm', 'resident');
     await tester.pump();
-    expect(find.text('Srinivas added you at Anjani Residency'), findsOneWidget);
-    expect(find.text('₹1,000 kept · ₹2,000 back · 30 days notice'), findsOneWidget);
+    expect(find.text('You live in Anjani Residency, bed 103-A.'), findsOneWidget);
+    expect(find.textContaining('back when you leave.'), findsOneWidget);
     expect(find.textContaining('code'), findsNothing);
-    await tap(tester, find.text('Yes, this is me'));
+    await tap(tester, find.text('Yes, that’s right'));
+    expect((added.confirmed, s.toast), (false, 'Tick “This is correct” first.'));
+    await tap(tester, find.byKey(const ValueKey('stayAgree')));
+    await tap(tester, find.text('Yes, that’s right'));
     expect(added.confirmed, isTrue);
     expect(added.tag, 'hz');
-    expect(find.text("You're confirmed"), findsOneWidget);
+    expect(find.text('You’re confirmed'), findsOneWidget);
     s.dispose();
   });
 
@@ -663,12 +666,12 @@ void main() {
     await pumpApp(tester, s);
     await tap(tester, find.text('I run a hostel'));
     expect(s.screen, 'oRules');
-    await tap(tester, find.text('I accept the Fair Play rules'));
+    await tap(tester, find.text('Agree and continue'));
     expect(s.fairAccepted, isFalse);
     expect(s.toast, 'Tick “I agree” first.');
     await tester.pump(const Duration(seconds: 3)); // the toast goes
     await tap(tester, find.byKey(const ValueKey('fpAgree')));
-    await tap(tester, find.text('I accept the Fair Play rules'));
+    await tap(tester, find.text('Agree and continue'));
     expect((s.fairAccepted, s.screen), (true, 'oToday'));
     expect(find.text('Fair Play check FP-0142'), findsOneWidget);
 
@@ -2619,7 +2622,10 @@ void main() {
     expect((s.residents.single.name, s.sheet, r0.beds[i].state), ('Ravi Kumar', null, 'booked'));
     expect(s.toast, 'Added. Ravi confirms by joining with your invite code.');
     // F21: no typed code. On the server the resident confirms by joining with the invite.
-    s.update(() => s.cBed = '101-A');
+    s.update(() {
+      s.cBed = '101-A';
+      s.cAgree = true;
+    });
     s.confirmStay();
     expect(s.screen, 'roleGate');
     expect(s.residents.single.confirmed, isFalse);

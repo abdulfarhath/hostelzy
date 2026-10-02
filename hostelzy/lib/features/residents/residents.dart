@@ -114,6 +114,7 @@ extension ResidentsActions on AppState {
   void confirmStay() {
     final r = toConfirm;
     if (r == null) return;
+    if (!cAgree) return toastMsg('Tick “This is correct” first.');
     // F21: no typed code (nothing sends one). On the server the resident
     // confirms by joining with the hostel's invite code; approving links it.
     if (onServer) {
@@ -127,6 +128,7 @@ extension ResidentsActions on AppState {
       cBed = r.bed;
       r.confirmed = true;
       r.since = 'Joined ${dayMon(r.joinAt != null ? DateTime.fromMillisecondsSinceEpoch(r.joinAt!) : appToday)}';
+      cAgree = false;
     });
     toastMsg('Confirmed. Welcome to your stay.');
   }

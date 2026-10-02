@@ -12,6 +12,9 @@ mixin _FairPlayData {
   /// F21: the owner ticks "I agree" (no fake SMS code).
   bool fpAgree = false;
 
+  /// The full rules opened from "Full rules ›" before agreeing.
+  bool fpFull = false;
+
   /// Owner mistakes fixed within 48 hours; 3 in 6 months = 1 warning.
   int ownerFixes = 0;
 
@@ -39,6 +42,7 @@ extension FairPlayActions on AppState {
     update(() {
       fairAccepted = true;
       fpAgree = false;
+      fpFull = false;
       screen = 'oToday';
       hist = [];
     });
