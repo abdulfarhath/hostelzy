@@ -377,7 +377,7 @@ class OwnerCaseScreen extends StatelessWidget {
                       Expanded(
                         child: open
                             ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('$h h $m min left to explain', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T('Reply before Sun 4 Oct, 6:40 pm. The founder reads every reply before deciding.', s: 13, lh: 1.4)])
-                            : T(c.result ?? (c.status == 'decide' ? 'Reply sent. The founder is deciding.' : 'Closed'), w: 800, s: 14),
+                            : T(c.result ?? (c.status == 'decide' ? 'Reply saved. The Hostelzy team decides.' : 'Closed'), w: 800, s: 14),
                       ),
                     ],
                   ),

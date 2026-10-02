@@ -40,7 +40,7 @@ String occCounts(AppState s) {
 }
 
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
-List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == 'anjani' && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), ...s.reqs];
+List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), if (s.ownHid == 'anjani') ...s.reqs];
 
 /// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
 /// only as a section (false, the approved default).
@@ -57,7 +57,7 @@ class OwnerTodayScreen extends StatelessWidget {
     final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
     final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
     final openC = s.complaints.where((x) => x.status != 'Resolved').length;
-    final freshE = s.enquiries.where((e) => e.hid == 'anjani' && !e.contacted).length;
+    final freshE = s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted).length;
     final kpis = <(String, String, String, Color, VoidCallback)>[
       ('Free beds', '${c.free}', '${c.soon} freeing up soon', p.tx, () => s.tab('oBeds')),
       ('Hold requests', '${reqs.length}', 'Need your reply', reqs.isNotEmpty ? p.ad : p.tx, () => s.toastMsg(reqs.isEmpty ? 'No hold requests right now.' : 'Hold requests are listed below on Today.')),
@@ -399,7 +399,7 @@ class _Enquiries extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final list = s.enquiries.where((e) => e.hid == 'anjani').toList();
+    final list = s.enquiries.where((e) => e.hid == s.ownHid).toList();
     final fresh = list.where((e) => !e.contacted).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -508,7 +508,7 @@ class _EnquiryRow extends StatelessWidget {
                   border: d ? p.tx : p.ac,
                   onTap: () {
                     s.markContacted(e.ref);
-                    s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+                    s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).');
                   },
                 ),
               ),
@@ -934,7 +934,7 @@ class OwnerRentScreen extends StatelessWidget {
                               Tooltip(
                                 message: 'Remind on WhatsApp',
                                 child: Tap(
-                                  onTap: () => s.whatsapp(r.phone, 'Hi ${r.name.split(' ')[0]}, a reminder: your rent of ${fmt(r.amt)} for bed ${r.bed} is due. Thanks, Srinivas'),
+                                  onTap: () => s.whatsapp(r.phone, 'Hi ${r.name.split(' ')[0]}, a reminder: your rent of ${fmt(r.amt)} for bed ${r.bed} is due. Thanks, ${hostelById(s.ownHid).owner}'),
                                   child: Container(
                                     width: 34,
                                     height: 34,
@@ -1009,7 +1009,7 @@ class OwnerManageScreen extends StatelessWidget {
                           child: Tap(
                             onTap: () {
                               s.update(() => s.complaints = s.complaints.map((x) => x.id == c.id ? x.copyWith(status: nxs[c.status], note: nxs[c.status] == 'Resolved' ? 'Fixed by the owner' : 'Owner is on it') : x).toList());
-                              s.toastMsg('${c.by.split(' ')[0]} has been updated.');
+                              s.toastMsg('Updated. ${c.by.split(' ')[0]} sees it in the app.');
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
@@ -1137,7 +1137,7 @@ class OwnerManageScreen extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Expanded(child: PageHead(kicker: 'Anjani Residency', title: 'Manage')),
+              Expanded(child: PageHead(kicker: hostelById(s.ownHid).name, title: 'Manage')),
               // Room layouts (F12), managers (F14), the Hostelzy plan (F10).
               Tap(
                 onTap: () => s.go('oLayouts'),
@@ -1348,7 +1348,7 @@ class OwnerInviteScreen extends StatelessWidget {
             children: [
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
-              const Expanded(child: PageHead(kicker: 'Anjani Residency · Residents', title: 'Invite residents', size: 28)),
+              Expanded(child: PageHead(kicker: '${hostelById(s.ownHid).name} · Residents', title: 'Invite residents', size: 28)),
             ],
           ),
         ),
@@ -1380,7 +1380,7 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join Anjani Residency on Hostelzy to pay rent, raise complaints and see the food menu: https://$link'))),
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join ${hostelById(s.ownHid).name} on Hostelzy to pay rent, raise complaints and see the food menu: https://$link'))),
                         const SizedBox(width: 8),
                         Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sharePoster('https://$link'))),
                       ],
@@ -1464,10 +1464,10 @@ class RateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final d = s.rateDraft ?? s.rates['anjani']!;
-    final acd = s.acDraft ?? {for (final r in s.rooms['anjani']!) r.n: r.ac};
-    final rooms = s.rooms['anjani']!.where((r) => r.floor == s.rcFloor).toList();
-    final deal = s.dealsOf('anjani');
+    final d = s.rateDraft ?? s.rates[s.ownHid]!;
+    final acd = s.acDraft ?? {for (final r in s.rooms[s.ownHid]!) r.n: r.ac};
+    final rooms = s.rooms[s.ownHid]!.where((r) => r.floor == s.rcFloor).toList();
+    final deal = s.dealsOf(s.ownHid);
     Widget head(String t, {Color? c}) => T(t, s: 10, w: 600, ls: .08, upper: true, c: c ?? p.mu);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1589,8 +1589,8 @@ class RateCard extends StatelessWidget {
                         Row(
                           children: [
                             T('Floor ', s: 12, c: p.mu),
-                            for (final f in floorsOf(s.rooms['anjani']!)) ...[
-                              if (f != floorsOf(s.rooms['anjani']!).first) T(' · ', s: 12, c: p.mu),
+                            for (final f in floorsOf(s.rooms[s.ownHid]!)) ...[
+                              if (f != floorsOf(s.rooms[s.ownHid]!).first) T(' · ', s: 12, c: p.mu),
                               Tap(onTap: () => s.update(() => s.rcFloor = f), child: T('$f', s: 12, w: f == s.rcFloor ? 800 : 400, c: f == s.rcFloor ? p.tx : p.mu, underline: f == s.rcFloor)),
                             ],
                           ],

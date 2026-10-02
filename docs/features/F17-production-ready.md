@@ -185,7 +185,7 @@ Shipped in parts (Build chat).
 - **Distances instead of made-up minutes:** Explore, the hostel page and the map show straight-line "1.6 km from Hitec City", and "Nearest" sorts by it. Travel time comes later.
 - **Large screens (board 11):** the Play Store build on tablets / laptops shows the app column with the real map beside it for tenants (a brand panel for other roles). The phone frame, jump list, "Mobile prototype" text and the fake "9:41 · 5G" status bar are debug-only (`HostelzyShell.prototypeFrame`).
 - **Follow-up (branch `feature/f17-map-config`):** tile provider in one file, `lib/map_config.dart` (URL, user agent, attribution). OSM's public tiles are for testing only, not heavy production traffic: switch to a keyed provider (MapTiler / Stadia / `google_maps_flutter`) when the founder adds a key. All landmarks are labelled on the map; a "my location" button says location comes with the permission (F15) and never fakes a spot. Android launch screen shows the room mark on white.
-- **Not done from board 9/11:** real "my location" (needs the location permission, F15) and the desktop left nav rail (the app's own tabs are used).
+- **Not done from board 9/11:** real "my location" (needs the location permission, F15). The desktop left nav rail came with the leftovers below.
 - Test: `real map and the large-screen layout (F17)`.
 
 **Group A cleanup · shipped 2026-10-02** (branch `feature/f17-cleanup`):
@@ -198,5 +198,11 @@ Shipped in parts (Build chat).
 - Founder admin screens (cases, payments, layouts, add hostel, tracker) are reachable only through debug tools; a separate admin login comes with F13.
 - Test: `honest leftovers: fake sample numbers, owner rules, real QR, joined prompt (F17)`.
 
-**Still open:** owner screens that keep Anjani's sample data after switching hostels (needs per-hostel data, F13); group B (real OTP, sync, server HZ codes, ledger) waits for F13.
+**Leftovers · shipped 2026-10-02** (branch `feature/f17-leftovers`):
+- **Left nav rail (board 11):** on tablets and laptops the Play Store build shows the role's tabs (Explore/Map/Search/Holds/Me, Home/Food/Pay rent/Help/Me, Today/Beds/Booking/Rent/Manage) as a 96px rail on the left with the room mark, red inset bar on the active tab, red action tab in the middle. The bottom tab bar is hidden there; screens without tabs show no rail.
+- **Honest wording audit:** toasts no longer claim something reached another person. Examples: "Reply saved. The Hostelzy team decides.", "Updated. X sees it in the app.", "Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.", "Booked bed X. Send them a welcome on WhatsApp.", food feedback "Saved for Srinivas and the kitchen". Plan screen: **Open UPI app** opens a real `upi://` link once Hostelzy's UPI ID is set (until then it says the ID isn't set yet); **Share receipt** uses the phone's share sheet; **WhatsApp Hostelzy** uses `supportWhatsApp` in `lib/app_config.dart` (empty → "Hostelzy’s WhatsApp number is coming soon.").
+- **Owner screens follow the selected hostel:** Manage header, Invite residents (title and share text), rates and room types, deals, hold requests, enquiries (and the WhatsApp reply text), rent reminders and the owner's Me card use the hostel picked in the switcher. Switching drops unsaved rate/deal drafts. Residents, rent rows and complaints are sample data for Anjani only, so other hostels show them empty until F13.
+- Test: `wide screens get a left rail; owner screens follow the selected hostel (F17)`.
+
+**Still open:** group B (real OTP, sync, server HZ codes, ledger, per-hostel residents) waits for F13.
 

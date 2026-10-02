@@ -520,9 +520,9 @@ class MeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      T(isOwner ? 'Srinivas Rao' : 'Rahul Varma', w: 800, s: 24, lh: 1.05),
+                      T(isOwner ? (s.ownHid == 'anjani' ? 'Srinivas Rao' : hostelById(s.ownHid).owner) : 'Rahul Varma', w: 800, s: 24, lh: 1.05),
                       const SizedBox(height: 3),
-                      T('+91 ${s.phone.isNotEmpty ? phoneSpaced(s.phone) : '90000 00001'} · ${const {'tenant': 'Looking for a bed', 'resident': 'Resident', 'owner': 'Owner, Anjani Residency'}[s.role]}', s: 13, c: p.mu),
+                      T('+91 ${s.phone.isNotEmpty ? phoneSpaced(s.phone) : '90000 00001'} · ${{'tenant': 'Looking for a bed', 'resident': 'Resident', 'owner': 'Owner, ${hostelById(s.ownHid).name}'}[s.role]}', s: 13, c: p.mu),
                     ],
                   ),
                 ),
@@ -643,7 +643,7 @@ class DetailScreen extends StatelessWidget {
                           child: Tap(
                             onTap: () {
                               s.update(() => s.saved[h.id] = !saved);
-                              s.toastMsg(saved ? 'Removed from saved' : "Saved. We'll tell you if a bed frees up.");
+                              s.toastMsg(saved ? 'Removed from saved' : 'Saved on this phone.');
                             },
                             child: Container(
                               height: 40,

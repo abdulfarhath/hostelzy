@@ -1587,4 +1587,46 @@ void main() {
     expect(a.expand((r) => r.beds).length, 36);
     expect(a.expand((r) => r.beds).where((b) => b.state == 'booked').length, 23);
   });
+
+  testWidgets('wide screens get a left rail; owner screens follow the selected hostel (F17)', (tester) async {
+    await _loadFonts(tester);
+    HostelzyShell.prototypeFrame = false;
+    addTearDown(() => HostelzyShell.prototypeFrame = true);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final w = AppState(start: 'explore', role: 'tenant');
+    await tester.pumpWidget(MaterialApp(home: AppScope(state: w, child: const HostelzyShell())));
+    await tester.pump();
+    // Tabs live in the rail, not in a bottom bar as well.
+    expect(find.byKey(const ValueKey('rail-holds')), findsOneWidget);
+    expect(find.text('Holds'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rail-holds')));
+    await tester.pump();
+    expect(w.screen, 'holds');
+    await tester.tap(find.byKey(const ValueKey('rail-action')));
+    await tester.pump();
+    expect(w.sheet, 'search');
+    // No rail on screens without tabs.
+    w.update(() {
+      w.sheet = null;
+      w.screen = 'detail';
+    });
+    await tester.pump();
+    expect(find.byKey(const ValueKey('rail-holds')), findsNothing);
+    w.dispose();
+
+    // Owner switches to another hostel: Manage, rates and enquiries follow it.
+    final o = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, o);
+    o.openRates();
+    o.switchHostel('saisri');
+    expect(o.rateDraft, isNull);
+    o.openRates();
+    await tester.pump();
+    expect(o.rateDraft, o.rates['saisri']);
+    expect(find.textContaining(RegExp('Sai Sri Ladies Hostel', caseSensitive: false)), findsWidgets);
+    expect(find.textContaining(RegExp('Anjani', caseSensitive: false)), findsNothing);
+    o.dispose();
+  });
 }
