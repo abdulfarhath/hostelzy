@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'app_config.dart';
 import 'data.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
@@ -29,6 +30,11 @@ class AppState extends ChangeNotifier {
     reqs = seedRequests(n);
     enquiries = seedEnquiries(n);
     _planDemo(plan);
+    // F15: old builds must update; maintenance from the backend (F13).
+    if (appBuild < minSupportedBuild || maintenanceUntil.isNotEmpty) {
+      gateKind = appBuild < minSupportedBuild ? 'update' : 'maintenance';
+      screen = 'gate';
+    }
     signedIn = auth != 'out';
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -41,7 +47,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam'];
+  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -1338,6 +1344,81 @@ class AppState extends ChangeNotifier {
     update(() => hid = h.hid);
     openPicker();
   }
+
+  // ------------------------------------------------------------ F15 Play Store
+
+  /// Notification choices (sent once notifications are live, F13).
+  final Map<String, bool> notif = {'hold': true, 'rent': true, 'beds': false};
+
+  /// Permission explainer shown: notifications | location | camera.
+  String permKind = 'notifications';
+
+  /// Update / maintenance screen: update | maintenance.
+  String gateKind = 'update';
+
+  String delReason = '', delOtp = '';
+
+  /// Why the account can't be deleted yet, or null.
+  ({String title, String body, String cta, VoidCallback go})? get deleteBlock {
+    final h = holds.where((x) => const ['waiting', 'confirmed', 'held', 'paying'].contains(x.status)).firstOrNull;
+    if (h != null) {
+      return (title: 'You have an open hold', body: 'Your hold on bed ${h.bed} at ${hostelById(h.hid).name} is still open. Cancel it or let it end first.', cta: 'Go to my hold', go: () => update(() {
+        holdId = h.id;
+        hist = [...hist, screen];
+        screen = 'hold';
+      }));
+    }
+    if (role == 'owner' && (invoice.status == 'due' || invoice.status == 'missing')) {
+      return (title: 'Your Hostelzy plan is unpaid', body: 'Owners: invoice ${invoice.ref} (${fmt(invoiceAmt)}) is due. Pay it or contact us, then delete.', cta: 'Open invoice', go: () => go('oInvoice'));
+    }
+    return null;
+  }
+
+  bool isDark(Brightness phone) => theme == 'dark' || (theme == 'system' && phone == Brightness.dark);
+
+  void openPerm(String kind) => update(() {
+    permKind = kind;
+    hist = [...hist, screen];
+    screen = 'perm';
+  });
+
+  void startDelete() => update(() {
+    delOtp = '';
+    hist = [...hist, screen];
+    screen = 'delOtp';
+    codeSentAt = DateTime.now().millisecondsSinceEpoch;
+    now = codeSentAt;
+  });
+
+  /// Deletes the account. With no backend yet, everything lives on this
+  /// phone, so this clears it here; with F13 it also deletes it on the server.
+  void deleteAccount() {
+    if (delOtp.length != 6) return toastMsg('Enter the 6-digit code.');
+    final me = myPhone;
+    update(() {
+      enquiries = enquiries.where((e) => e.phone != me).toList();
+      holds = [];
+      saved.clear();
+      level = 'none';
+      rewardUsed = false;
+      phone = '';
+      otp = '';
+      signedIn = false;
+      delReason = '';
+      screen = 'delDone';
+      hist = [];
+      sheet = null;
+    });
+  }
+
+  void logOut() => update(() {
+    screen = 'welcome';
+    hist = [];
+    phone = '';
+    otp = '';
+    signedIn = false;
+    sheet = null;
+  });
 
   // ------------------------------------------------------------ F17 links
 

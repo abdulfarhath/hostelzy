@@ -106,7 +106,7 @@ class MapScreen extends StatelessWidget {
           right: 12,
           top: 66,
           child: Tap(
-            onTap: () => s.toastMsg('Your location comes once the app asks for location permission. Showing distances from ${s.lm} for now.'),
+            onTap: () => s.openPerm('location'),
             child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(bg: p.bg, w: 2, c: p.tx), child: const Ic('pin', size: 20)),
           ),
         ),

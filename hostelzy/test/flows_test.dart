@@ -1192,6 +1192,70 @@ void main() {
     h.dispose();
   });
 
+  testWidgets('Play Store: settings, delete account (blocked, code, done), permission explainer (F15)', (tester) async {
+    final s = AppState(start: 'me', role: 'tenant');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('Settings'));
+    expect(s.screen, 'settings');
+    expect(find.text('Hostelzy 1.0.0 (1) · Made in Hyderabad'), findsOneWidget);
+    // Appearance: Phone setting follows the phone.
+    await tap(tester, find.text('Phone setting'));
+    expect(s.theme, 'system');
+    expect(s.isDark(Brightness.dark), isTrue);
+    expect(s.isDark(Brightness.light), isFalse);
+    // Turning a notification on shows the explainer first.
+    await tap(tester, find.text('New free beds'));
+    expect((s.screen, s.permKind), ('perm', 'notifications'));
+    expect(find.text('Turn on notifications?'), findsOneWidget);
+    await tap(tester, find.text('Turn on'));
+    expect(s.screen, 'settings');
+    await tester.pump(const Duration(seconds: 3));
+    // Privacy policy opens the web page.
+    await tap(tester, find.text('Privacy policy'));
+    expect(s.lastLink.toString(), 'https://hostelzy.in/privacy');
+    await tester.pump(const Duration(seconds: 3));
+
+    // Delete account: blocked while a hold is open.
+    s.update(() => s.holds = [Hold(id: 'x', hid: 'anjani', bed: '204-D', room: 204, opt: 'free', start: s.now, status: 'waiting')]);
+    await tap(tester, find.text('Delete account'));
+    expect(find.text('You have an open hold'), findsOneWidget);
+    expect(find.text('You can’t delete your account yet'), findsOneWidget);
+    await tap(tester, find.text('Back to settings'));
+    s.update(() => s.holds = []);
+    await tap(tester, find.text('Delete account'));
+    expect(find.text('Delete your account?'), findsOneWidget);
+    await tap(tester, find.text('Continue'));
+    expect(s.screen, 'delOtp');
+    await tap(tester, find.text('Delete my account'));
+    expect(s.screen, 'delOtp'); // needs the code
+    await tester.pump(const Duration(seconds: 3));
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+    await tap(tester, find.text('Delete my account'));
+    expect((s.screen, s.phone, s.signedIn, s.level), ('delDone', '', false, 'none'));
+    expect(find.text('Your account is deleted'), findsOneWidget);
+    await tap(tester, find.text('Close'));
+    expect(s.screen, 'welcome');
+    s.dispose();
+
+    // Owners with an unpaid plan can't delete yet.
+    final o = AppState(start: 'delAcc', role: 'owner', plan: 'late5');
+    await pumpApp(tester, o);
+    expect(find.text('Your Hostelzy plan is unpaid'), findsOneWidget);
+    await tap(tester, find.text('Open invoice'));
+    expect(o.screen, 'oInvoice');
+    o.dispose();
+
+    // The map's my-location button explains before asking; it never fakes a spot.
+    final m = AppState(start: 'map', role: 'tenant');
+    await pumpApp(tester, m);
+    await tap(tester, find.byWidgetPredicate((w) => w is Ic && w.name == 'pin' && w.size == 20).first);
+    expect((m.screen, m.permKind), ('perm', 'location'));
+    await tap(tester, find.text('Pick an area instead'));
+    expect((m.screen, m.sheet), ('map', 'search'));
+    m.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

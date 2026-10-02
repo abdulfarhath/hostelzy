@@ -11,6 +11,7 @@ import 'layout.dart';
 import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
+import 'settings.dart';
 import 'plan.dart';
 import 'reviews.dart';
 import 'rewards.dart';
@@ -36,7 +37,8 @@ class HostelzyShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final pal = s.theme == 'dark' ? Pal.dark : Pal.light;
+    // F15: Phone setting follows the phone's light / dark mode.
+    final pal = s.isDark(MediaQuery.platformBrightnessOf(context)) ? Pal.dark : Pal.light;
     return PalScope(
       pal: pal,
       child: DefaultTextStyle(
@@ -268,7 +270,7 @@ class _FullScreen extends StatelessWidget {
     final mq = MediaQuery.of(context);
     final onWelcome = s.screen == 'welcome';
     final sbBg = onWelcome ? p.ac : p.bg;
-    final dark = s.theme == 'dark';
+    final dark = s.isDark(MediaQuery.platformBrightnessOf(context));
     // Light status-bar icons on the red welcome screen and in dark theme.
     final lightIcons = onWelcome ? !dark : dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -372,6 +374,12 @@ class _AppBody extends StatelessWidget {
     'aAdd' => const AddHostelScreen(),
     'aTrack' => const TrackerScreen(),
     'oTeam' => const TeamScreen(),
+    'settings' => const SettingsScreen(),
+    'delAcc' => const DeleteAccountScreen(),
+    'delOtp' => const DeleteOtpScreen(),
+    'delDone' => const DeleteDoneScreen(),
+    'perm' => const PermissionScreen(),
+    'gate' => const GateScreen(),
     'oToday' => const OwnerTodayScreen(),
     'oBeds' => const OwnerBedsScreen(),
     'oRent' => const OwnerRentScreen(),

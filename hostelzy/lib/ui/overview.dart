@@ -109,6 +109,18 @@ class OverviewPage extends StatelessWidget {
       ],
     ),
     (
+      '07 · Play Store (F15)',
+      null,
+      [
+        ('Settings', {'start': 'settings', 'role': 'tenant'}),
+        ('Delete account', {'start': 'delAcc', 'role': 'tenant'}),
+        ('Delete: confirm code', {'start': 'delOtp', 'role': 'tenant'}),
+        ('Delete: done', {'start': 'delDone', 'role': 'tenant'}),
+        ('Notifications explainer', {'start': 'perm', 'role': 'tenant'}),
+        ('Update needed', {'start': 'gate', 'role': 'tenant'}),
+      ],
+    ),
+    (
       '06 · Dark theme',
       null,
       [
@@ -117,6 +129,7 @@ class OverviewPage extends StatelessWidget {
         ('Room layout', {'start': 'picker', 'role': 'tenant', 'mode': 'room', 'theme': 'dark'}),
         ('Resident home', {'start': 'rHome', 'role': 'resident', 'theme': 'dark'}),
         ('Owner today', {'start': 'oToday', 'role': 'owner', 'theme': 'dark'}),
+        ('Settings', {'start': 'settings', 'role': 'tenant', 'theme': 'dark'}),
         ('Your plan', {'start': 'oPlan', 'role': 'owner', 'theme': 'dark'}),
         ('Plan invoice', {'start': 'oInvoice', 'role': 'owner', 'theme': 'dark'}),
       ],
