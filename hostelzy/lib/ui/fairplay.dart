@@ -356,7 +356,9 @@ class ReportSheet extends StatelessWidget {
   }
 }
 
-/// F07 board 5: the owner's case, 48 hours to explain or fix.
+/// F07 board 5, F22 Area 3 `oCase`: the Fair Play check. A banner with the
+/// real time left, what happened (flagged steps in red), the owner's reply,
+/// and "Send my reply" / "Change … to “Came from the app”".
 class OwnerCaseScreen extends StatelessWidget {
   const OwnerCaseScreen({super.key});
   @override
@@ -368,11 +370,15 @@ class OwnerCaseScreen extends StatelessWidget {
     final open = c.status == 'waiting' || c.status == 'new';
     final first = c.resident?.split(' ').first ?? 'them';
     final left = c.hoursLeftAt(s.now);
-    final h = left.floor(), m = ((left - h) * 60).round();
+    final hrs = left.floor(), mins = (left * 60).floor();
+    final within = hrs >= 1 ? '$hrs hour${hrs == 1 ? '' : 's'}' : '$mins minute${mins == 1 ? '' : 's'}';
+    final n = s.strikes[c.hid] ?? 0;
+    final by = DateTime.fromMillisecondsSinceEpoch(s.now + (left * 3600000).round());
+    final byTxt = '${dayName(by)}, ${by.hour % 12 == 0 ? 12 : by.hour % 12}:${by.minute.toString().padLeft(2, '0')} ${by.hour < 12 ? 'am' : 'pm'}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _head(context, 'Fair Play check · ${c.id}', c.title),
+        _head(context, '${c.id} · ${hostelById(c.hid).name}', 'Fair Play check', size: 30),
         Expanded(
           child: Scroll(
             key: ValueKey('oCase${s.scrollEpoch}'),
@@ -380,7 +386,8 @@ class OwnerCaseScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  key: const ValueKey('caseBanner'),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   padding: const EdgeInsets.all(12),
                   decoration: box(bg: open ? p.ab : p.sf, w: 2, c: open ? p.ad : p.tx),
                   child: Row(
@@ -390,50 +397,44 @@ class OwnerCaseScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: open
-                            ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('$h h $m min left to explain', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T('Reply before Sun 4 Oct, 6:40 pm. The founder reads every reply before deciding.', s: 13, lh: 1.4)])
+                            ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(left <= 0 ? 'The 48 hours are over' : 'Reply within $within', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(left <= 0 ? 'You can still reply. The Hostelzy team decides.' : 'Explain or fix it by $byTxt. The Hostelzy team reads every reply before deciding.', s: 13, lh: 1.4)])
                             : T(c.result ?? (c.status == 'decide' ? 'Reply saved. The Hostelzy team decides.' : 'Closed'), w: 800, s: 14),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Kicker('What we saw'), T('From Hostelzy records', s: 12, w: 800, c: p.mu)]),
-                ),
-                Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), padding: const EdgeInsets.only(top: 4), child: _Timeline(c.events)),
-                if (open) ...[
-                  const Padding(padding: EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Your side')),
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: T(c.title, w: 800, s: 17, lh: 1.3)),
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: T('What happened, from Hostelzy records:', s: 13, c: p.mu)),
+                for (final e in c.events)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: VGap(
-                      gap: 8,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (c.resident != null)
-                          Tap(
-                            onTap: () => s.fixCase(c),
-                            child: Container(
-                              height: 54,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              color: p.ac,
-                              child: Row(
-                                children: [
-                                  Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [T('Change $first to “Came from the app”', w: 800, s: 15, c: p.ai), T('A mistake fixed within 48 h: case closed, no strike', s: 11, w: 600, c: p.ai)])),
-                                  Ic('check', size: 18, color: p.ai),
-                                ],
-                              ),
-                            ),
-                          ),
-                        const T('Or explain what happened', w: 800, s: 13),
-                        Field(value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'e.g. $first came through a friend before the enquiry'),
-                        OutlineCta('Add a photo as proof', icon: 'plus', height: 44, fs: 14, onTap: () => s.toastMsg('Photo upload comes with the backend.')),
+                        SizedBox(width: 52, child: T(e.date, s: 13, c: p.mu)),
+                        const SizedBox(width: 10),
+                        Container(width: 12, height: 12, margin: const EdgeInsets.only(top: 4), color: e.flag ? p.ad : p.tx),
+                        const SizedBox(width: 10),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(e.title, w: 800, s: 15), T(e.sub, s: 13, c: p.mu)])),
                       ],
                     ),
                   ),
-                ] else if (c.ownerReply != null) ...[
+                if (open)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                    child: Semantics(
+                      label: 'Your reply',
+                      child: Field(key: const ValueKey('caseReply'), value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'Your side, in a line or two', maxLines: 2, height: null, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+                    ),
+                  )
+                else if (c.ownerReply != null) ...[
                   const Padding(padding: EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Your reply')),
                   Container(margin: const EdgeInsets.symmetric(horizontal: 16), padding: const EdgeInsets.all(12), color: p.sf, child: T('“${c.ownerReply}”', s: 14, lh: 1.5)),
                 ],
-                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: T('You have $n strike${n == 1 ? '' : 's'}. ${open && c.resident != null ? 'A mistake fixed within 48 hours closes the case with no strike; 3 fixes in 6 months = 1 warning.' : '3 fixes in 6 months = 1 warning.'}', s: 13, c: p.mu, lh: 1.4),
+                ),
               ],
             ),
           ),
@@ -444,8 +445,11 @@ class OwnerCaseScreen extends StatelessWidget {
           child: VGap(
             gap: 8,
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T('You have ${s.strikes[c.hid] ?? 0} strikes', s: 12, c: p.mu), T('3 fixes in 6 months = 1 warning', s: 12, c: p.mu)]),
-              if (open) Cta('Send my reply', height: 50, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.replyCase(c)) else OutlineCta('Read the Fair Play rules', height: 50, onTap: () => s.go('oRules')),
+              if (open) ...[
+                Cta('Send my reply', height: 54, px: 16, fs: 15, onTap: () => s.replyCase(c)),
+                if (c.resident != null) OutlineCta('Change $first to “Came from the app”', icon: 'check', onTap: () => s.fixCase(c)),
+              ] else
+                OutlineCta('Read the Fair Play rules', onTap: () => s.go('oRules')),
             ],
           ),
         ),
