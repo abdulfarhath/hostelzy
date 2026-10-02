@@ -214,5 +214,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - Founder approved the F21 Before → After demo and asked for **every screen** to be redesigned in that
   style, designed and built in parallel, with the chats deciding everything themselves. Spec: F22.
 
+**Floor amenities + layout-first** — founder, 2026-10-02
+- Tenants see shared things per floor (fridge, washing machine, water purifier…); owners and residents
+  add them; no exact position needed. The room layout is the primary view for all roles; floor view is
+  secondary. **F23 needs the founder's approval of the design before building** (only exception).
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
