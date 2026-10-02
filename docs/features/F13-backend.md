@@ -306,3 +306,9 @@ Not needed.
 - `Complaint.key` keeps the server id. `LiveRows.myHostel` is the resident's hostel.
 - Test: `C: on Supabase, enquiries, payments and complaints are written to the server`.
 - Still local-only: holds (they need bed ids from the listings) and the owner's sign-up approvals (after #46).
+
+**B5 · push hardening · 2026-10-02** (branch `feature/b5-push-hardening`), after the live test showed send-push answering a bare 500:
+- Every failure answers 500 with the reason in the body, so `net._http_response` shows it. Examples: "FCM_SERVICE_ACCOUNT is not valid JSON", a private key that can't be read, "Google token: 400 …", a REST error. Keys and secrets are never in the body. The reason is also logged.
+- If the Google token fails, every pending row gets the reason in `push_outbox.error` and stays pending, so it is retried next minute. A row that throws gets its reason, and the other rows still go.
+- A private key pasted with literal `\n` still works.
+- Tests: three new ones in `supabase/functions/tests/fcm.test.ts`.
