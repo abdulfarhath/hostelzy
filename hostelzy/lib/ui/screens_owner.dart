@@ -198,6 +198,7 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const _FairPlayCard(),
           const _Enquiries(),
           const _RankCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Hold requests')),
@@ -290,6 +291,43 @@ class OwnerTodayScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// F07: an open Fair Play case or a strike, at the top of owner Today.
+class _FairPlayCard extends StatelessWidget {
+  const _FairPlayCard();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final c = s.ownerCase;
+    final n = s.strikes[s.ownHid] ?? 0;
+    if (c == null && n == 0) return const SizedBox();
+    return Tap(
+      onTap: () => s.go(c != null ? 'oCase' : 'oStrike'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: const EdgeInsets.all(12),
+        decoration: box(bg: p.ab, w: 2, c: p.ad),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Ic(c != null ? 'clock' : 'flag', size: 20, color: p.ad),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: c != null
+                    ? [T('Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title}. Your reply is with the founder.' : '${c.title}. 47 h left to explain or fix it.', s: 13, lh: 1.4)]
+                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(strikeLadder[(n - 1).clamp(0, 2)].$2, s: 13)],
+              ),
+            ),
+            Ic('chev', size: 18, color: p.ad),
+          ],
+        ),
       ),
     );
   }

@@ -215,7 +215,8 @@ class RoleScreen extends StatelessWidget {
           Tap(
             onTap: () => s.update(() {
               s.role = r[0];
-              s.screen = homeOf[r[0]]!;
+              // F07: a new owner accepts the Fair Play rules first.
+              s.screen = r[0] == 'owner' && !s.fairAccepted ? 'oRules' : homeOf[r[0]]!;
               s.hist = [];
             }),
             child: Container(
