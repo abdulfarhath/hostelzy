@@ -68,3 +68,39 @@ Phone boards 390×844, with dark copies at the end of each row. Existing tokens 
   reschedule on boot and on app start. Android 13+ uses the existing POST_NOTIFICATIONS permission;
   ask for exact alarms only if needed and explain why.
 - Flow test: turn water on → schedule count matches interval × hours; add/delete my reminder.
+
+## Build
+
+**Built · 2026-10-02** on `feature/f20-reminders`. Flow tests: `hostelzy/test/reminders_test.dart`.
+
+- **Rings from the phone:** `flutter_local_notifications` + `timezone` (India time), in
+  `lib/reminders.dart`. Each reminder is a repeating daily (or weekly) schedule, so nothing
+  needs the app to be open. Inexact alarms (`inexactAllowWhileIdle`): no exact-alarm
+  permission to ask for; Android may shift a ring by a few minutes to save battery.
+  Rescheduled on every app start, after a phone restart and after an app update (boot receiver).
+- **Water:** every 20 / 30 / 45 / 60 / 90 / 120 min from the start of the awake hours, before
+  the end (8 am – 10 pm at 30 min = 28 a day, as in the design). Notification "Time for a glass
+  of water" with **Done** (counts a glass without opening the app) and **Snooze 10 min**.
+  The body says the goal ("Goal: 8 glasses a day…"), not a live count: a repeating
+  notification can't know today's count.
+- **My reminders:** quick add (Medicine 9 pm, Lunch 1 pm, Walk 6:30 pm, Sleep on time 10 pm,
+  Call home 7 pm), name, time (the phone's clock picker), Once / Every day / Weekdays / Pick
+  days. Up to 20. Tap one to edit or delete it. A time outside the awake hours is refused with
+  why ("Nothing rings outside your awake hours").
+- **From {hostel} (residents):** meal times inside the awake hours (lunch 12:30 "Lunch is
+  served till 2 pm", dinner 8 pm; breakfast 7:30 only if the awake hours start by then, and the
+  row says which), with **Open menu**; rent due 3 days before and on the day at 9 am with
+  **Pay rent** (amount shown in the demo; "Pay {owner} by {date}" on the server until the
+  resident's rent comes from there). Laundry day is greyed until owners can set one.
+- **Today card** on resident Home and Explore while water or a reminder is on: glasses, the next
+  reminder, **+ Glass**.
+- **First-time offer** ("Want water reminders?") once after sign-in, on the home tab, only where
+  reminders can ring (the Android app). **Not now** never asks again; Me → Reminders always works.
+- **Permission:** uses the existing notification permission. Turning anything on asks for it if
+  Android has it off; the screen shows "Notifications are off · Turn on notifications".
+- **Saved on this phone** with the rest of the app's state. Glasses live in their own key so
+  Done from a notification can count one in the background.
+
+**Not in this PR (follow-up):** backing reminders up to the profile on the server so a new phone
+gets them back (needs a `profiles.reminders` column + FOUNDER-TODO step). Owners have no Me tab,
+so the offer and Today card are for tenants and residents.
