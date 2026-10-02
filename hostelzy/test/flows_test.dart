@@ -813,11 +813,11 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('I’ve paid'));
     expect(s.sheet, 'utr');
-    await tap(tester, find.text('Send UTR'));
+    await tap(tester, find.text('Send UPI reference'));
     expect(s.invoice.status, 'upcoming'); // needs all 12 digits
     await tester.enterText(find.byType(TextField).last, '4021 8834 1297');
     await tester.pump();
-    await tap(tester, find.text('Send UTR'));
+    await tap(tester, find.text('Send UPI reference'));
     expect((s.screen, s.sheet, s.invoice.status, s.invoice.utr, s.invoice.amt), ('oPayStatus', null, 'checking', '402188341297', 899));
     expect(find.text('Checking your payment'), findsOneWidget);
     s.dispose();
@@ -858,7 +858,7 @@ void main() {
     final m = AppState(start: 'oPayStatus', role: 'owner', plan: 'missing');
     await pumpApp(tester, m);
     expect(find.text('We couldn’t find this payment'), findsOneWidget);
-    await tap(tester, find.text('Fix the UTR'));
+    await tap(tester, find.text('Fix the UPI reference'));
     expect((m.sheet, m.utrDraft), ('utr', '402188341297'));
     m.dispose();
   });
@@ -2745,7 +2745,7 @@ void main() {
     s.sendUtr();
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UTR saved. Hostelzy checks it against the bank record.'));
+    expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UPI reference saved. Hostelzy checks it against the bank record.'));
     // The team marks it paid (founder admin on the server).
     s.markPaid(s.invoices.single);
     await Future<void>.delayed(Duration.zero);

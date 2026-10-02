@@ -85,6 +85,10 @@ void main() {
     await _tap(tester, find.widgetWithText(ChipBtn, 'Under ₹10,000'));
     expect((s.sortBy, s.filterCount), ('price', 2));
     expect(find.text('Filters · 2'), findsOneWidget);
+    // Deals stay findable without a sort: "Hostelzy deals only".
+    await _tap(tester, find.text('Hostelzy deals only'));
+    expect(s.filterCount, 3);
+    expect(filtered(s).every((h) => s.bestQuote(h.id, f: s.fR) != null), isTrue);
     await _tap(tester, find.byKey(const ValueKey('clearAll')));
     expect(s.filterCount, 0);
     await _tap(tester, find.textContaining('Show '));

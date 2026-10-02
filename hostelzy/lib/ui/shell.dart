@@ -767,6 +767,7 @@ class _SearchSheet extends StatelessWidget {
               for (final (k, l) in const [('Any', 'Any'), ('6k', 'Under ₹6,000'), ('8k', 'Under ₹8,000'), ('10k', 'Under ₹10,000')]) ChipBtn(l, on: s.fB == k, pad: chipPad, onTap: () => s.update(() => s.fB = k)),
             ]),
           ),
+          group('Deals', wrap(6, [ChipBtn('Hostelzy deals only', on: s.fDeals, pad: chipPad, onTap: () => s.update(() => s.fDeals = !s.fDeals))])),
           Tap(
             key: const ValueKey('foodToggle'),
             onTap: () => s.update(() => s.fFood = !s.fFood),

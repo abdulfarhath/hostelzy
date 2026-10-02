@@ -48,7 +48,7 @@ extension PlanActions on AppState {
   }
 
   void sendUtr() {
-    if (utrDraft.length != 12) return toastMsg('The UTR has 12 digits.');
+    if (utrDraft.length != 12) return toastMsg('The UPI reference has 12 digits.');
     final key = invoice.key;
     if (onServer && key != null) {
       // S7: saved on the server; the team checks it against the bank.
@@ -60,7 +60,7 @@ extension PlanActions on AppState {
           sheet = null;
           screen = 'oPayStatus';
         });
-        toastMsg('UTR saved. Hostelzy checks it against the bank record.');
+        toastMsg('UPI reference saved. Hostelzy checks it against the bank record.');
       });
       return;
     }
@@ -74,7 +74,7 @@ extension PlanActions on AppState {
       sheet = null;
       screen = 'oPayStatus';
     });
-    toastMsg('UTR saved. Hostelzy checks it against the bank record.');
+    toastMsg('UPI reference saved. Hostelzy checks it against the bank record.');
   }
 
   /// Founder admin: the UTR is in the bank record.

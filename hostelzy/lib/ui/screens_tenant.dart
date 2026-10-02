@@ -23,7 +23,7 @@ List<Hostel> filtered(AppState s) {
     if (s.removed(h.id)) return false;
     // F18: the area picked on the map.
     if (!s.inMapArea(h)) return false;
-    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
+    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && (!s.fDeals || s.bestQuote(h.id, f: s.fR) != null) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free')));
   }
 
   final out = browsable.where(ok).toList();
@@ -90,6 +90,7 @@ class ExploreScreen extends StatelessWidget {
       for (final g in const ['Men', 'Women', 'Co-living']) ChipBtn(g, on: s.fG == g, onTap: () => set(() => s.fG = s.fG == g ? 'Any' : g), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
       ChipBtn('AC', on: s.fR == 'AC', onTap: () => set(() => s.fR = s.fR == 'AC' ? 'Any' : 'AC'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
       ChipBtn('Under ₹8,000', on: s.fB == '8k', onTap: () => set(() => s.fB = s.fB == '8k' ? 'Any' : '8k'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+      ChipBtn('Hostelzy deals', on: s.fDeals, onTap: () => set(() => s.fDeals = !s.fDeals), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
     ];
     return Scroll(
       key: ValueKey('explore${s.scrollEpoch}'),

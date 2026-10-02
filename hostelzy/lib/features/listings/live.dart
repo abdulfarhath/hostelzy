@@ -88,7 +88,7 @@ Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> paym
     bed: bedLabel(r['beds'] as Map<String, dynamic>?),
     amt: r['rent'] as int? ?? 0,
     status: switch (last?['status']) { 'paid' => 'Paid', 'waiting' => 'Waiting', _ => 'Due' },
-    note: switch (last?['status']) { 'paid' => 'Confirmed', 'waiting' => 'UTR sent · confirm it', 'missing' => 'UTR not found', _ => 'No rent payment yet this month' },
+    note: switch (last?['status']) { 'paid' => 'Confirmed', 'waiting' => 'UPI reference sent · confirm it', 'missing' => 'UPI reference not found', _ => 'No rent payment yet this month' },
     phone: r['phone'] as String? ?? '',
     via: r['via'] as String? ?? 'direct',
     since: confirmed ? 'Joined ${dayMon(joined)}' : 'Added ${dayMon(joined)}',

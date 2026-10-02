@@ -148,7 +148,7 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
     - "₹7,600/mo · ₹10,600 to move in · electricity extra": the cheapest bed that fits the filters, with move-in = rent + advance (+ joining fee)
 - **Where?** is one typed screen used by Explore and the Map. It has Near me, then **Landmarks** ("N hostels within 5 km"), **Areas** ("Coming soon" when empty) and **Hostels** by name, which open the hostel page. The Map's area button is the same bar now.
 - **Filters sheet:**
-  - Sort by (Recommended / Nearest / Lowest price), For, Room (sharing + AC / Non-AC), Budget and Food
+  - Sort by (Recommended / Nearest / Lowest price), For, Room (sharing + AC / Non-AC), Budget, Deals ("Hostelzy deals only") and Food. "Best deals" is no longer a sort; the **Hostelzy deals** chip on Explore keeps deals findable (Ideas chat, 2026-10-02)
   - **Clear all** and "Show N hostels"
   - The title shows "Filters · 2"
   - The Search tab is now **Saved**
@@ -165,7 +165,7 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
   - HZ code → **Booking code**
   - UTR → **UPI reference** ("12 digits, in your UPI app under the payment"), with a small drawing of a UPI receipt and its three names (UPI Ref. No., UTR, Transaction ID). This covers tenant and resident screens and the owner's payment check.
   - "Deal locked" → **Your price is fixed**
-  - Owner invoices to Hostelzy (Plan) keep "UTR"
+  - Owner invoices to Hostelzy (Plan) say "UPI reference" too, shown once as "UPI reference (UTR)" (Ideas chat, 2026-10-02). Only the Hostelzy team console keeps "UTR".
 - **Bed picker:** Plan and Room only. Building folds into Plan's floors, and the list is a **See cheapest beds ›** link.
 - **Tests:** `test/guest_test.dart` ("F21 W2: …", 3 tests). It covers Welcome → Find a bed → guest Explore → Where? → Filters → hostel page → hold → sign-in → the hold placed by itself; the Welcome links and the enquiry sign-in; and app-open counting. The older flow tests that used the old words and layout were updated.
 
