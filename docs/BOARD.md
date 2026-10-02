@@ -21,7 +21,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Onboarding canvas |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
-| F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Spec ready** · 2026-10-02 | Design | Full list in the feature file. Build right after F10, before the app icon and F12 |
+| F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Design approved** · 2026-10-02 (standing approval) | Build | Full list in the feature file. Build right after F10, before the app icon and F12 |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
@@ -52,4 +52,5 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 - Stay Rewards mockups (F09): https://claude.ai/artifact/Fqh4QhVks7STMjaktHqpja
 - Owner Plan mockups (F10): https://claude.ai/artifact/H9qRG67RPK2W5zN1ssYY4N
 - Onboarding mockups (F14): https://claude.ai/artifact/ANjRUNhkyGSzeCLQNFVm4T
+- Make It Real mockups (F17): https://claude.ai/artifact/7deh6fqgzmxdytYgjnwuhz
 - Play Store Screens mockups (F15): https://claude.ai/artifact/PBCza1yUDPzNVc2QHDrAN4

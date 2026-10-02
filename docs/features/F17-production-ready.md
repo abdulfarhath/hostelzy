@@ -1,6 +1,6 @@
 # F17 · Make it real: remove every demo and fake behaviour
 
-**Stage:** Spec ready · 2026-10-02 (founder asked for the list; Ideas chat decides the plan)
+**Stage:** Design approved · 2026-10-02 (standing approval)
 
 ## Problem
 The app was built from a clickable prototype. Today nothing talks to a server or another app
@@ -135,7 +135,30 @@ sees your name", "Exit rules locked… Hostelzy steps in", "one review per stay;
    hold/enquiry sheets, map). Build F17 after F10, before the app icon and F12.
 
 ## Design
-_Not started._
+Canvas https://claude.ai/artifact/7deh6fqgzmxdytYgjnwuhz. Design approved under the founder's standing approval (CLAUDE.md, DECISIONS 2026-10-02). Only screens whose meaning changes. Sample UPI ID is clearly fake: `sample.owner@upi`; sample phone `+91 90000 00001`.
+
+Payments: **pay the owner by UPI → enter UTR → owner confirms → only then Booked / Paid**. Shown as a 4-step bar on every payment screen.
+1. **Tenant: pay the advance.** Sheet with the amount, "Pay to Srinivas · sample.owner@upi", UPI note HZ-4821. "Pay ₹3,000 by UPI" opens the UPI app with everything filled in; also "I've already paid · enter UTR". Note: Booked only after Srinivas confirms.
+2. **Tenant: enter the UTR** (12 digits), with where to find it; "Send to Srinivas".
+3. **Tenant: status** (tweak Waiting for owner / Booked / Not received).
+   - Waiting: "Payment sent · waiting for Srinivas to confirm", the bed "not booked yet", Remind on WhatsApp, Fix the UTR.
+   - Booked: "Booked. Bed 204-D is yours", show HZ-4821.
+   - Not received: "Srinivas says the payment didn't arrive", Fix the UTR, WhatsApp, cancel.
+4. **Owner: "Received ₹3,000?"** on Today, with the UTR and UPI note, and Yes, received / Not received. Also covers rent. Hint: tap yes only after seeing the money.
+5. **Resident: pay rent** (tweak Due / Waiting for owner / Paid / Not received). Same steps. Amount from the rate card plus the electricity meter the owner enters; history shows "Confirmed by Srinivas".
+6. **Owner: Manage → Rates** gets "Where tenants pay you": UPI ID, name shown in UPI, "Test with ₹1", and "Hostelzy never holds the money".
+
+Honest wording:
+7. **WhatsApp sheet.** "Send this on WhatsApp so Srinivas knows you came from Hostelzy" (neutral box, not green); "Send on WhatsApp" opens WhatsApp; "Nothing is sent until you press send in WhatsApp."
+8. **Hold** (tweak Active / Expired at 0:00).
+   - Active: timer and "Srinivas doesn't know yet", with "Tell Srinivas on WhatsApp".
+   - Expired: "0:00 · Your hold has ended. Bed 204-D is free for everyone again", with Hold again / See other beds.
+
+Real map, login, large screens:
+9. **Real map** (OpenStreetMap-style tiles, with "© OpenStreetMap contributors" shown). Square red price pins (the selected one in ink), an ink "you are here" dot with a halo, search and "my location" buttons, and a bottom card with distance from you, Directions (opens Google Maps) and View hostel.
+10. **Login without demo buttons** (tweak Phone number / Code). No "Fill a demo number", no "Paste code"; Send code / Verify stay disabled until the input is complete; real "Resend in 0:24"; "Android can fill it in for you"; consent line.
+11. **Tablet / desktop full screen** (1280 × 800). Left nav rail, list in the middle, map on the right. No phone frame, jump list or fake status bar.
+- Dark mode: boards "3 in dark mode" and "9 in dark mode". Every board has a Dark tweak.
 
 ## Build
 _Not started._
