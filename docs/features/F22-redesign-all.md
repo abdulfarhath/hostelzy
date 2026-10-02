@@ -1,6 +1,6 @@
 # F22 · Redesign every screen (F21 style)
 
-**Stage:** Designing · Area 1 Tenant designed 2026-10-02 · founder, 2026-10-02 ("I really like the after… do every screen, your own
+**Stage:** Design approved · all 5 areas designed 2026-10-02 (chats decide; founder confirmed in the Design chat) · founder, 2026-10-02 ("I really like the after… do every screen, your own
 decisions, never take my approval").
 
 ## Rules (from the approved F21 demo)
@@ -57,6 +57,74 @@ Board names are the frame titles on the canvas (screen id · what it shows · Re
 - `settings`: You / Notifications / App (Language, Look Light/Dark/Auto, Privacy and terms, Hostelzy team), then Log out and Delete account; plus dark
 
 Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, report sheet, move-in reward. Delete account screens are redesigned in Area 5.
+
+### Area 2 · Resident: done 2026-10-02
+- `rPay`: Rent, one screen with a tweak for Due / Waiting for owner / Paid.
+  - big amount card (dark when paid); rows Rent / Electricity / Pay to
+  - "Paid before" list; "Advance ₹3,000 · ₹2,000 back when you leave"
+  - actions: "Pay ₹8,020 by UPI" + "I’ve paid · enter UPI reference" / "Remind Srinivas" + "Fix the UPI reference" / "Share receipt"
+  - plus dark
+- `food`: day strip, then today's 3 meals (Done / Next / Later), "How was breakfast?" Good / Okay / Poor, and "Whole week ›" in the header.
+- `me › My stay`: a bed card, then Move to another bed / Give notice / Review your stay / Fix a room layout, and the advance line. Give notice moves out of Home.
+- `move · notice`: 3 last-day choices, optional reason chips, "₹2,000 back to your UPI within 7 days", "Give notice for 1 Nov".
+- `move · swap`: free beds with the rent difference, then "Ask to move to 201-C".
+- `rReview`: 4 rows of 40px stars, an optional line, Post review. `rExit`: "Did you get your ₹2,000 back?" (Yes / Not yet / No), overall stars, optional line.
+- `rewards`: dark status card (Member · ₹100 · 2-hour holds), 3 steps to earn, Invite a friend.
+- Already redesigned via F21: Home, Help, Confirm your stay. Reminders (F20) stay as built.
+
+### Area 3 · Owner: done 2026-10-02
+- `oBeds`:
+  - floor chips with free counts
+  - 2-column room cards with bed boxes (free / hold / taken / selected red)
+  - legend and "Rooms and rates ›"
+  - tapping a bed opens the **bed sheet**: resident, room, rent, since and how they came; Message / Mark as leaving
+  - plus dark
+- `oRent`: Collected ₹ and "Still to come" with a progress bar; seg All / Due / Late / Paid; rows with a tag and a 44px bell to remind; plus dark.
+- `oMore · Residents`:
+  - search bar; chips "Came from the app / Walked in / Joined before Hostelzy"
+  - "2 taken beds have no resident" banner; rows with plain tags; a QR button for Invite
+- **Add tenant** (centre tab sheet): name, +91 phone, bed, move-in date, "How did they find you?" (Hostelzy app / Walked in / Before Hostelzy), and the booking-code hint.
+- `oInvite`: QR next to the code, Share link / Print poster, "Waiting for you" with Approve / ✕, "Make a new code".
+- `enquiry sheet`: Booking code first, WhatsApp / Call, "add him with this booking code".
+- Manage pages:
+  - **Deals:** up to 3 switches; active ones in green
+  - **Rates and UPI:** one table of room type / walk-in / Hostelzy price, one UPI ID, Test with ₹1, "Rooms and floors ›"
+  - **Complaints:** seg Open / Being fixed / Fixed, one action per row
+  - **Food menu:** day chips, 3 fields, "Copy Friday to Saturday", Save
+  - **House rules:** plain fields
+  - **Reviews and ranking:** one page, with score and rank tiles, a "To rank higher" line and Reply buttons
+- `oPlan + oInvoice`: **one screen** with a tweak for Free trial / Due / Checking / Paid / Late. Each has a big status card, Plan / Pay to / Invoice rows, and one or two actions. It replaces plan, invoice, UTR, status and overdue. Plus dark.
+- `oCase` (Fair Play check):
+  - "Reply within 47 hours" banner
+  - what happened, as a timeline with flagged steps in red
+  - reply box; "Send my reply" / "Change him to “Came from the app”"
+- `oTeam`: you plus managers, with "Managers can’t see your plan, deals, rates or Fair Play notices", and Add a manager.
+- Removed: the Still-free-beds card (now an item in "Needs you now").
+- Kept: switcher, trusted sheet, strike notices, and the layouts / rooms / photos row (already one job per screen).
+
+### Area 4 · Onboarding + Hostelzy team in the app: done 2026-10-02
+- `login`: logo, "Sign in to hold a bed", "So owners know who’s coming. No passwords, no codes.", the Google button, "Keep browsing as a guest", Terms line. Plus dark.
+- `phone`: About you, with just two fields (name, +91 phone with a "Not verified" tag) and "We’ll check it by SMS later". Plus dark.
+- `role`: "What brings you here?" with three big rows (I need a bed / I live in a PG / I run a PG); "You can switch later in Me".
+- `roleGate`:
+  - resident: "Join your PG", a code field with Join, "Scan the poster QR", a "No code?" box with "Send my number on WhatsApp", "Not in a PG yet? Find a bed ›"
+  - owner: "List your PG", one line on visit / free trial / no commission, PG name, area chips, Request a visit / WhatsApp Hostelzy
+- `aAdd`: one wizard frame with a 6-segment progress bar and "Add hostel · step n of 6". Drawn: 1 Basics, 2 Rooms floor by floor (floor cards with room chips, Copy floor above, Add floor), 6 Ready to go live? (checklist with red open items, "Go live · 1 thing left") plus dark. Steps 3–5 keep the same frame; their content is unchanged.
+- `aTrack`: seg by stage, then rows with a next-step button and Add hostel.
+- `aPay`: "Match each UPI reference in the bank app", seg To check / Late / Paid, rows with Mark paid / Not received.
+- `aCases`: seg New / Waiting / Decide / Closed, inline No issue / Ask more / Strike 1, and the decide rule.
+- Kept: team sheet, aHome, aTeam, the layout editor, the team console website (already one job per page) and the web pages.
+
+### Area 5 · Leftovers: done 2026-10-02
+- `perm`: three sheets asked in context, not at start:
+  - notifications after the first hold ("Get a message when Srinivas replies?")
+  - location from the map
+  - camera from the camera button
+- `delAcc`: "Deleted" and "Kept, without your name" as two short lists; Continue / Keep my account.
+- `delConfirm`: account card plus "Confirm with Google". `delDone`: "Your account is deleted" and Close.
+- Kept: update / maintenance gate, open-hold block, F19 and F20 rows (designed in this style already), DEMO strip, back-to-exit toast.
+
+**F22 design is complete:** 88 boards are tagged Redesigned on All screens.
 
 The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 
