@@ -261,7 +261,6 @@ class InvoiceScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Rich([sp(context, 'Scan with any UPI app. Amount and the note '), sp(context, inv.ref, w: 800, c: p.tx), sp(context, ' are filled in.')], s: 13, c: p.mu, align: TextAlign.center),
-                        if (hostelzyUpiId.startsWith('[')) ...[const SizedBox(height: 6), T('Sample QR: Hostelzy’s UPI ID isn’t set yet. Don’t pay with it.', s: 12, w: 800, c: p.ad, align: TextAlign.center)],
                       ],
                     ),
                   ),
@@ -290,7 +289,7 @@ class InvoiceScreen extends StatelessWidget {
           child: VGap(
             gap: 8,
             children: [
-              Cta('Open UPI app', height: 54, px: 16, fs: 15, onTap: () => hostelzyUpiId.startsWith('[') ? s.toastMsg('Hostelzy’s UPI ID isn’t set yet, so this invoice can’t be paid yet.') : s.openLink(upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref), 'a UPI app')),
+              Cta('Open UPI app', height: 54, px: 16, fs: 15, onTap: () => s.openLink(upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref), 'a UPI app')),
               OutlineCta('I’ve paid', icon: 'check', onTap: s.openUtr),
             ],
           ),
@@ -406,7 +405,7 @@ class PayStatusScreen extends StatelessWidget {
               gap: 8,
               children: [
                 Cta('Fix the UTR', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.openUtr),
-                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => supportWhatsApp.isEmpty ? s.toastMsg('Hostelzy’s WhatsApp number is coming soon.') : s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UTR ${utrSpaced(inv.utr ?? '')}.')),
+                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UTR ${utrSpaced(inv.utr ?? '')}.')),
               ],
             ),
           ),

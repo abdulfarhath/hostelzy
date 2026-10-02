@@ -10,9 +10,12 @@ const privacyUrl = 'https://hostelzy.in/privacy';
 const termsUrl = 'https://hostelzy.in/terms';
 const deleteAccountUrl = 'https://hostelzy.in/delete-account';
 
-/// Hostelzy's WhatsApp support number (10 digits). PLACEHOLDER: empty until
-/// the founder sets it.
-const supportWhatsApp = '';
+/// Hostelzy's WhatsApp support number, 10 digits (the +91 is added when the
+/// link opens). DECISIONS 2026-10-02 "Payments contact + login SMS".
+const supportWhatsApp = '9059790014';
+
+/// Hostelzy's own UPI ID: owners pay their plan invoices here (F10).
+const hostelzyUpiId = '9059790014@axl';
 
 /// Remote switches (from the backend, F13). Until then they never trigger in
 /// the Play Store build: the oldest supported build, and maintenance mode.
