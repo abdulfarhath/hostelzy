@@ -12,7 +12,20 @@
           "package_name": "app.hostelzy.hostelzy"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "640096243458-b1oc5hopeuokgimrccd5l4hl267j8in1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.hostelzy.hostelzy",
+            "certificate_hash": "4655be523550492ae0a4afca2609785f08bdaa24"
+          }
+        },
+        {
+          "client_id": "640096243458-h2tkur1jekbdf5q5b8v4u3ps60p6861a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC9kDMzW8rmWFwmtLzzYwuFDVLgvTYzX1I"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640096243458-h2tkur1jekbdf5q5b8v4u3ps60p6861a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

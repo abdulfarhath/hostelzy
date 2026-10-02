@@ -185,6 +185,8 @@ Not needed.
   - `Sign in with Google: account, phone not verified, profile saved (F13)` (fake sign-in: not switched on, cancelled, success, profile + push token saved, log out);
   - the enquiry, Add-hostel and login tests are updated.
 
+**Google sign-in config · 2026-10-02:** the founder enabled Google sign-in, added the test key's SHA-1/SHA-256 in Firebase, and added Supabase Third-party Auth (Firebase `hostelzy`). `android/app/google-services.json` now has the Android OAuth client (certificate hash = the test key's SHA-1) and the web client (`…h2tkur1j…`), which `google_sign_in` reads as its server client id. Test APKs need the GitHub secrets `HZ_TEST_KEYSTORE_BASE64` / `HZ_TEST_KEYSTORE_PASSWORD` to sign with that key; without them Google sign-in fails with "isn't switched on yet".
+
 **Part 2 (next):**
 - SMS check of the phone (Firebase Phone Auth) once billing works;
 - owner, resident and team screens read and write their tables;
