@@ -77,6 +77,9 @@ String dayMon(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 List<String> leaveDates(Terms t) => [for (final d in leaveDays(t)) dayMon(d)];
 List<DateTime> leaveDays(Terms t) => [for (final x in [0, 15, 30]) appToday.add(Duration(days: t.noticeDays + x))];
 
+/// "12 min", "2 h": how long an owner usually takes to reply.
+String replyWords(int min) => min < 60 ? '$min min' : '${(min / 60).round()} h';
+
 /// F24: a resident's notice or move to another bed, from `move_requests`.
 /// [kind]: vacate | swap. [status]: open | accepted | declined | withdrawn.
 class MoveReq {
@@ -498,6 +501,10 @@ class Rule {
   const Rule(this.k, this.v);
   final String k, v;
 }
+
+/// F24: a real hostel with no rules yet: gate and visitors left for the
+/// owner to fill; the rest comes from its terms.
+List<Rule> blankRules(Terms t) => [for (final r in seedRules(t)) const {'Gate closes', 'Visitors'}.contains(r.k) ? Rule(r.k, '') : r];
 
 List<Rule> seedRules(Terms t) => [
   const Rule('Gate closes', '10:30 pm'),

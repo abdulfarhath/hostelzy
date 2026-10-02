@@ -100,6 +100,9 @@ mixin _ReviewsData {
   /// The owner's hostel (one per owner until F14).
   String ownHid = 'anjani';
 
+  /// F24: real counts per live hostel (reply speed, complaints, listing).
+  Map<String, HostelSignals> signals = {};
+
   /// Bumped whenever a screen's scroll position should reset.
   int scrollEpoch = 0;
 }
@@ -109,10 +112,20 @@ extension ReviewsActions on AppState {
   /// Ranking factors (0–1) for a hostel.
   Map<String, double> factors(String hid) {
     final h = hostelById(hid);
-    final f = seedFactors[hid] ?? const {'fresh': .5, 'complaints': .5, 'listing': .5};
+    final sg = signals[hid];
+    // F24: live hostels rank on real counts; the samples keep their made-up ones.
+    final f = sg == null
+        ? seedFactors[hid] ?? const {'fresh': .5, 'complaints': .5, 'listing': .5}
+        : {
+            'fresh': (1 - (confirmed[hid] ?? 7) / 14).clamp(0, 1).toDouble(),
+            'complaints': sg.residents == 0 ? .5 : (1 - sg.complaints30 / sg.residents).clamp(0, 1).toDouble(),
+            'listing': ((sg.photos >= 8 ? .5 : sg.photos / 16) + (sg.rooms == 0 ? 0 : .5 * sg.layouts / sg.rooms)).clamp(0, 1).toDouble(),
+          };
+    final reply = replyMins(hid);
     return {
       'reviews': (h.rating / 5 - (h.reviews < 20 ? .1 : 0)).clamp(0, 1).toDouble(),
-      'reply': (1 - h.reply / 120).clamp(0, 1).toDouble(),
+      // An owner with no replies yet is in the middle, not at the top.
+      'reply': reply == 0 ? .5 : (1 - reply / 120).clamp(0, 1).toDouble(),
       'fresh': f['fresh']!,
       'complaints': f['complaints']!,
       'listing': f['listing']!,
@@ -158,6 +171,22 @@ extension ReviewsActions on AppState {
     } catch (e) {
       debugPrint('listings: $e');
     }
+    // F24: the real counts; missing before their SQL runs.
+    try {
+      final sg = await data.signals();
+      if (sg.isNotEmpty) update(() => signals = sg);
+    } catch (e) {
+      debugPrint('signals: $e');
+    }
+  }
+
+  /// Minutes the owner usually takes to reply: the server's median once
+  /// there are 3 replies; the sample hostels' made-up value in the demo; 0
+  /// (unknown) otherwise.
+  int replyMins(String hid) {
+    final sg = signals[hid];
+    if (sg != null) return sg.replyN >= 3 ? math.max(1, sg.replyMin) : 0;
+    return isSeedHostel(hid) ? hostelById(hid).reply : 0;
   }
 
   void postReview() {

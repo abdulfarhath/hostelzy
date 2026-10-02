@@ -650,7 +650,7 @@ class DetailScreen extends StatelessWidget {
     final rules = ownRules != null
         ? [
             for (final r in ownRules)
-              if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
+              if (r.v.trim().isNotEmpty && !moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
         : h.id == 'anjani'
@@ -659,6 +659,9 @@ class DetailScreen extends StatelessWidget {
               if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
+        // F24: a real hostel's page never shows rules its owner didn't add.
+        : !isSeedHostel(h.id)
+        ? moneyRules(h)
         : [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],

@@ -82,7 +82,7 @@ extension SyncActions on AppState {
         ..addAll(known);
       if (ownerHostels.isNotEmpty && !ownerHostels.contains(ownHid)) {
         ownHid = ownerHostels.first;
-        if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
+        rules = hostelRules[ownHid] != null ? List.of(hostelRules[ownHid]!) : blankRules(hostelById(ownHid).terms);
       }
     }
     managers

@@ -203,7 +203,14 @@ abstract class HostelRepo {
   Future<void> movedOut(String stayKey);
   Future<void> sendRefund(String stayKey, String utr);
   Future<void> confirmRefund(String stayKey, bool got);
+
+  /// F24 item 6: counts per live hostel (reply speed, complaints, residents,
+  /// photos, rooms, layouts) for the hostel page and the ranking.
+  Future<Map<String, HostelSignals>> signals();
 }
+
+/// F24: real counts behind "Usually replies in ~N min" and the ranking.
+typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
 
 String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
@@ -371,6 +378,8 @@ class SampleRepo implements HostelRepo {
   Future<void> sendRefund(String stayKey, String utr) async {}
   @override
   Future<void> confirmRefund(String stayKey, bool got) async {}
+  @override
+  Future<Map<String, HostelSignals>> signals() async => {};
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -750,6 +759,11 @@ class SupabaseRepo implements HostelRepo {
   Future<void> sendRefund(String stayKey, String utr) => db.rpc('send_refund', params: {'p_stay': stayKey, 'p_utr': utr});
   @override
   Future<void> confirmRefund(String stayKey, bool got) => db.rpc('confirm_refund', params: {'p_stay': stayKey, 'p_got': got});
+  @override
+  Future<Map<String, HostelSignals>> signals() async => {
+    for (final r in (await db.rpc('hostel_signals') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (replyMin: r['reply_minutes'] as int? ?? 0, replyN: r['reply_n'] as int? ?? 0, complaints30: r['complaints_30d'] as int? ?? 0, residents: r['residents'] as int? ?? 0, photos: r['photos'] as int? ?? 0, rooms: r['rooms'] as int? ?? 0, layouts: r['layouts'] as int? ?? 0),
+  };
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.

@@ -195,3 +195,17 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **oRefund** (board): Advance / Kept / Refund / Pay to / Due, the UTR field, "Mark ₹X refunded".
 - **rRefund** (board): "<owner> marked it refunded · UPI ref", then "Yes, I got ₹X" or "Not received". A former resident reaches it from Me › Your refund, or from the push.
 - **Tests:** `test/moves_test.dart`; `home_today_test` counts the new Today items.
+
+**Wave A item 6: real values instead of fake ones.** Branch `feature/f24-moveout`.
+- **Server** (`20261002233500_f24_values.sql`, FOUNDER-TODO **4z**; tests: `supabase/tests/values_test.sql`):
+  - `enquiries.contacted_at` and `holds.decided_at` are stamped by a trigger.
+  - `hostel_signals()` gives per live hostel, as counts only: the median reply minutes over 60 days (with n), complaints in 30 days, current residents, photos, rooms and published layouts.
+- **Reply time.** "Usually replies in ~N min" (or "~N h") shows only after 3 real replies. Before that it says "Replies through Hostelzy". The sample hostels keep their demo values.
+- **Ranking.** Live hostels use real counts:
+  - complaints per resident;
+  - listing = photos plus layouts per room;
+  - freshness of the bed confirmation;
+  - an owner with no replies yet ranks in the middle, not at the top.
+- **House rules.** A real hostel's page never shows rules its owner didn't add, only the ones from its terms. The owner's editor leaves Gate closes and Visitors empty to fill in.
+- **Availability** ("N free · confirmed X days ago" from the server's bed confirmations) is with items 9/19 (owner tools).
+- **Tests:** `test/values_test.dart`.
