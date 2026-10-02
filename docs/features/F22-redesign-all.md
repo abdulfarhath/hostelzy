@@ -131,7 +131,7 @@ The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confir
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
-### Area 2 · Resident: built 2026-10-02 (branch `feature/f22-resident`)
+### Area 2 · Resident: built 2026-10-02 (merged, #72)
 - **Rent:** one amount card (dark when paid), rows Rent / Electricity / Pay to, "Paid before", the advance line, and the action at the bottom: Pay by UPI + enter UPI reference / Remind <owner> + Fix the UPI reference / Share receipt.
 - **Food:** day strip, today's meals tagged Done / Next / Later (from the clock), "How was breakfast?" Good / Okay / Poor, "Whole week ›" in the header.
 - **Me › My stay** (new screen `rStay`): the bed card, then Move to another bed / Give notice / Review your stay / Fix a room layout, and the advance line. Me shows one "My stay" row.
