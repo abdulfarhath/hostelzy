@@ -41,8 +41,19 @@ class Terms {
   int dueDay(int joinDay) => dueOnJoining ? joinDay : 1;
 }
 
-/// "Today" in the sample data.
-final appToday = DateTime(2026, 10, 1);
+/// "Today": the real date in India in the Play Store build (F17); the sample
+/// data's day (1 Oct 2026) in debug builds and tests, so the samples line up.
+final appToday = const bool.fromEnvironment('dart.vm.product') ? _todayIst() : DateTime(2026, 10, 1);
+
+DateTime _todayIst() {
+  final n = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+  return DateTime(n.year, n.month, n.day);
+}
+
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/// "October 2026"
+String monthYear(DateTime d) => '${monthNames[d.month - 1]} ${d.year}';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -278,32 +289,32 @@ const residentJoined = '14 Mar';
 const residentJoinDay = 14;
 
 List<Resident> seedResidents() => [
-  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay), phone: '9848012345', since: 'Since Mar 2026'),
-  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9866104421', since: 'Since Jun 2026'),
-  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000312876', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712'),
-  Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late', phone: '9959021143', since: 'Since Nov 2025'),
-  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9640087712', via: 'direct', since: 'Joined 18 Sep'),
-  Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late', phone: '9701556210', since: 'Since Feb 2026'),
-  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9849770135', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790'),
-  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9177345602', since: 'Since Jan 2026'),
+  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay), phone: '9000000001', since: 'Since Mar 2026'),
+  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9000000010', since: 'Since Jun 2026'),
+  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000000011', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712'),
+  Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late', phone: '9000000012', since: 'Since Nov 2025'),
+  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9000000013', via: 'direct', since: 'Joined 18 Sep'),
+  Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late', phone: '9000000014', since: 'Since Feb 2026'),
+  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9000000015', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790'),
+  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9000000016', since: 'Since Jan 2026'),
   // The rest of the first import (grandfathered, "Before Hostelzy").
   for (final (n, b, a, ph, since) in const [
-    ('Suresh Babu', '101-C', 7600, '9393012458', 'Since Nov 2025'),
-    ('Kiran Kumar', '101-D', 7600, '9440221907', 'Since Apr 2026'),
-    ('Venkatesh P', '102-A', 8700, '9848561230', 'Since Dec 2025'),
-    ('Srikanth Rao', '104-B', 8700, '9010443381', 'Since May 2026'),
-    ('Ajay Varma', '104-C', 8700, '9573120094', 'Since Jul 2026'),
-    ('Mahesh Yadav', '201-A', 8700, '9908811265', 'Since Feb 2026'),
-    ('Rohit Sharma', '201-B', 8700, '9618003347', 'Since Aug 2026'),
-    ('Praveen K', '203-C', 8700, '9246510082', 'Since Jan 2026'),
-    ('Anil Kumar', '302-A', 9000, '9885203316', 'Since Mar 2026'),
-    ('Ganesh Reddy', '303-B', 7900, '9550147720', 'Since Jun 2026'),
-    ('Sunil Naik', '303-C', 7900, '9032668814', 'Since Apr 2026'),
-    ('Ramesh Goud', '304-C', 9000, '9701934456', 'Since May 2026'),
+    ('Suresh Babu', '101-C', 7600, '9000000017', 'Since Nov 2025'),
+    ('Kiran Kumar', '101-D', 7600, '9000000018', 'Since Apr 2026'),
+    ('Venkatesh P', '102-A', 8700, '9000000019', 'Since Dec 2025'),
+    ('Srikanth Rao', '104-B', 8700, '9000000020', 'Since May 2026'),
+    ('Ajay Varma', '104-C', 8700, '9000000021', 'Since Jul 2026'),
+    ('Mahesh Yadav', '201-A', 8700, '9000000022', 'Since Feb 2026'),
+    ('Rohit Sharma', '201-B', 8700, '9000000023', 'Since Aug 2026'),
+    ('Praveen K', '203-C', 8700, '9000000024', 'Since Jan 2026'),
+    ('Anil Kumar', '302-A', 9000, '9000000025', 'Since Mar 2026'),
+    ('Ganesh Reddy', '303-B', 7900, '9000000026', 'Since Jun 2026'),
+    ('Sunil Naik', '303-C', 7900, '9000000027', 'Since Apr 2026'),
+    ('Ramesh Goud', '304-C', 9000, '9000000028', 'Since May 2026'),
   ])
     Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since),
   // Added by the owner today, waiting for the resident's WhatsApp code.
-  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9849033121', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false),
+  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9000000029', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false),
 ];
 
 /// F06 board 6: people who scanned the owner's invite QR and verified their
@@ -313,7 +324,7 @@ class Signup {
   final String id, name, phone, bed, ago;
 }
 
-const seedSignups = [Signup('s1', 'Abhishek P', '9866450921', '103-A', '2 h ago'), Signup('s2', 'Naveen Goud', '9701883240', '202-B', '5 h ago')];
+const seedSignups = [Signup('s1', 'Abhishek P', '9000000030', '103-A', '2 h ago'), Signup('s2', 'Naveen Goud', '9000000031', '202-B', '5 h ago')];
 
 /// F05: a tenant tapped "Ask on WhatsApp" / "WhatsApp owner". Hostelzy
 /// records it (HZ code, OTP-verified phone, hostel, bed, time) before
@@ -332,9 +343,9 @@ class Enquiry {
 }
 
 List<Enquiry> seedEnquiries(int now) => [
-  Enquiry(ref: 'HZ-4821', name: 'Ravi Teja', phone: '9849033121', hid: 'anjani', bed: '204-A', at: now - 6 * 60000, from: 'Hostel page · Ask on WhatsApp', msg: 'Can I come and see the rooms this evening?'),
-  Enquiry(ref: 'HZ-4817', name: 'Sandeep Kumar', phone: '9989120456', hid: 'anjani', bed: '201-C', at: now - 18 * 60000, from: 'Hold · WhatsApp owner', msg: 'Can I come and see it today at 6 pm?'),
-  Enquiry(ref: 'HZ-4809', name: 'Imran Shaikh', phone: '9701245580', hid: 'anjani', at: now - 2 * 3600000, from: 'Hostel page · Ask on WhatsApp', msg: 'Is there a bed free from 5 Oct?', contacted: true),
+  Enquiry(ref: 'HZ-4821', name: 'Ravi Teja', phone: '9000000029', hid: 'anjani', bed: '204-A', at: now - 6 * 60000, from: 'Hostel page · Ask on WhatsApp', msg: 'Can I come and see the rooms this evening?'),
+  Enquiry(ref: 'HZ-4817', name: 'Sandeep Kumar', phone: '9000000032', hid: 'anjani', bed: '201-C', at: now - 18 * 60000, from: 'Hold · WhatsApp owner', msg: 'Can I come and see it today at 6 pm?'),
+  Enquiry(ref: 'HZ-4809', name: 'Imran Shaikh', phone: '9000000033', hid: 'anjani', at: now - 2 * 3600000, from: 'Hostel page · Ask on WhatsApp', msg: 'Is there a bed free from 5 Oct?', contacted: true),
 ];
 
 /// "6 min ago", "2 h ago".
@@ -662,7 +673,7 @@ const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh
 // ------------------------------------------------------------ F07 Fair Play
 
 /// Owners' phone numbers: tenants see them only after a hold (DECISIONS).
-final ownerPhones = <String, String>{'anjani': '9848011223', 'saisri': '9849022314', 'nest42': '9000433125', 'greenview': '9866544216', 'orchid': '9440655327', 'lakshmi': '9959766418'};
+final ownerPhones = <String, String>{'anjani': '9000000101', 'saisri': '9000000102', 'nest42': '9000000103', 'greenview': '9000000104', 'orchid': '9000000105', 'lakshmi': '9000000106'};
 
 /// "98••• •••••"
 String maskPhone(String p) => '${p.substring(0, 2)}••• •••••';
@@ -706,7 +717,7 @@ List<FairCase> seedCases() => [
     status: 'waiting',
     resident: 'Teja Naidu',
     events: const [
-      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · phone 96400 87712 verified by OTP'),
+      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · phone 90000 00013 verified by OTP'),
       CaseEvent('11 Sep', 'Held bed 102-B', 'Free 1-hour hold'),
       CaseEvent('11 Sep', 'Hold cancelled by tenant', '18 minutes later'),
       CaseEvent('18 Sep', 'Added by you as Direct', 'Bed 102-B · same phone number', flag: true),

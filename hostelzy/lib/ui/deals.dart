@@ -225,7 +225,7 @@ class OwnerDeals extends StatelessWidget {
     final rank = switch (strength) {
       'Strong' => 'Top deals near ${s.lm}',
       'Good' => 'Shown in Best deals',
-      _ => 'Add a deal to rank higher',
+      _ => 'Add a deal to show in Best deals',
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

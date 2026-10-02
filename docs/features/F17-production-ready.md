@@ -188,5 +188,15 @@ Shipped in parts (Build chat).
 - **Not done from board 9/11:** real "my location" (needs the location permission, F15) and the desktop left nav rail (the app's own tabs are used).
 - Test: `real map and the large-screen layout (F17)`.
 
-**Group A still open** (small, no keys needed): real-looking sample phone numbers → `+91 90000 0000x`; the real date instead of 1 Oct 2026 (sample data is anchored to it, so it changes with real data, F13); a real invite QR (`qr_flutter`); owner screens that still say Anjani / Srinivas after switching hostels; "Did you join?" and the move-in date; owner's house rules on the hostel page; the Hold requests tile; deals wording; founder admin screens inside the app. **Group B** waits for F13 (backend: real OTP, sync, server-issued HZ codes, ledger).
+**Group A cleanup · shipped 2026-10-02** (branch `feature/f17-cleanup`):
+- All sample phone numbers are obvious fakes (`90000 000xx` for people, `90000 001xx` for owners).
+- **Real date:** the Play Store build uses today's date in India; debug builds and tests keep 1 Oct 2026 so the sample data lines up. Rent month, complaint date, notice date and the add-booking date chips follow it.
+- **Real QR codes** (`qr_flutter`): the resident invite QR encodes the invite link (the `hostelzy.in` page itself needs the domain, F15); the plan invoice QR is a real `upi://pay` code, marked "Sample QR, don't pay with it" until Hostelzy's UPI ID is set. "Print poster" was replaced by Copy link (no fake PDF).
+- **"Did you join?"** asks about the tenant's own ended hold; the 102-B sample shows only in debug builds.
+- **Hostel page house rules** for Anjani come from the owner's Manage → Rules (money terms always from the rate card).
+- Booked holds no longer show a made-up "5 Oct"; the Hold requests tile responds; deals copy says "show in Best deals" (deals are not in the ranking score).
+- Founder admin screens (cases, payments, layouts, add hostel, tracker) are reachable only through debug tools; a separate admin login comes with F13.
+- Test: `honest leftovers: fake sample numbers, owner rules, real QR, joined prompt (F17)`.
+
+**Still open:** owner screens that keep Anjani's sample data after switching hostels (needs per-hostel data, F13); group B (real OTP, sync, server HZ codes, ledger) waits for F13.
 

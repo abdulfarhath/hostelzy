@@ -77,7 +77,7 @@ class ResidentHomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Kicker('October rent'),
+                      Kicker('${monthNames[appToday.month - 1]} rent'),
                       const SizedBox(height: 4),
                       const T('₹8,020', w: 800, s: 34, ls: -.02, lh: 1.05),
                       const SizedBox(height: 2),
@@ -306,9 +306,9 @@ class RentPayScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     T('${fmt(rent.amt)} paid', w: 800, s: 40, ls: -.03, lh: 1),
                     const SizedBox(height: 8),
-                    T('October 2026 · Srinivas confirmed on ${rent.done}', s: 14, w: 600),
+                    T('${monthYear(appToday)} · Srinivas confirmed on ${rent.done}', s: 14, w: 600),
                     const SizedBox(height: 12),
-                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.whatsapp('', 'Rent receipt · Anjani Residency · bed 204-B · October 2026 · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
+                    Cta('Share receipt', icon: 'msg', height: 46, px: 14, fs: 14, bg: p.ai, fg: p.gn, onTap: () => s.whatsapp('', 'Rent receipt · Anjani Residency · bed 204-B · ${monthYear(appToday)} · ${fmt(rent.amt)} · UTR ${utrSpaced(rent.utr ?? '')} · confirmed by Srinivas on ${rent.done}')),
                   ],
                 ),
               ),
@@ -667,7 +667,7 @@ class HelpScreen extends StatelessWidget {
                   onTap: () {
                     if (s.cText.trim().isEmpty) return s.toastMsg('Tell us what is wrong first.');
                     s.update(() {
-                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: 'Rahul V · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: '1 Oct', note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
+                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: 'Rahul V · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
                       s.cText = '';
                     });
                     s.toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
@@ -781,7 +781,7 @@ class MoveScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TimelineStep(t: 'Notice given', d: 'Today, 1 Oct', bg: p.tx, bd: p.tx),
+                      TimelineStep(t: 'Notice given', d: 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
                       TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
                       TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
                     ],

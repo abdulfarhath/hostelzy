@@ -8,6 +8,7 @@ import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/kit.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
 
@@ -178,7 +179,7 @@ void main() {
     expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
     expect(s.waFull, endsWith('Ref $ref'));
     await tap(tester, find.text('Send on WhatsApp'));
-    expect(s.lastLink.toString(), startsWith('https://wa.me/919848011223?text=Hi%20Srinivas'));
+    expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));
     await tester.pump(const Duration(seconds: 3));
 
     // Asking again about the same hostel reuses the code.
@@ -205,7 +206,7 @@ void main() {
     await tap(tester, find.text('HZ-4821'));
     expect(s.sheet, 'enq');
     expect(find.text('HZ-4821 · Ravi Teja'), findsOneWidget);
-    expect(find.text('98490 33121 · verified by OTP'), findsOneWidget);
+    expect(find.text('90000 00029 · verified by OTP'), findsOneWidget);
     await tap(tester, find.text('Mark as contacted'));
     expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4821').contacted, isTrue);
     expect(s.sheet, isNull);
@@ -653,13 +654,13 @@ void main() {
     // Tenant: the owner's number is hidden until a hold.
     s.jump('detail', 'tenant');
     await tester.pump();
-    expect(find.text('98••• •••••'), findsOneWidget);
+    expect(find.text('90••• •••••'), findsOneWidget);
     expect(find.text('Shows after a hold'), findsOneWidget);
     s.update(() => s.bed = '204-D');
     s.placeHold('free');
     s.jump('detail', 'tenant');
     await tester.pump();
-    expect(find.text('98480 11223'), findsOneWidget);
+    expect(find.text('90000 00101'), findsOneWidget);
     expect(find.text('YOU HELD 204-D'), findsOneWidget);
 
     // "Did you join?" and a private report.
@@ -1155,6 +1156,40 @@ void main() {
     expect(find.text('9:41'), findsNothing);
     expect(find.textContaining('Mobile prototype'), findsNothing);
     w.dispose();
+  });
+
+  testWidgets('honest leftovers: fake sample numbers, owner rules, real QR, joined prompt (F17)', (tester) async {
+    // No real-looking phone numbers in the sample data.
+    final s = AppState(start: 'oMore', role: 'owner', moreTab: 'rules');
+    expect([...ownerPhones.values, ...s.residents.map((r) => r.phone).where((x) => x.isNotEmpty), ...s.enquiries.map((e) => e.phone)].every((x) => x.startsWith('90000')), isTrue);
+    await pumpApp(tester, s);
+    // The owner's own house rules show on the hostel page.
+    await tester.enterText(find.byType(TextField).first, '11 pm');
+    await tester.pump();
+    s.update(() {
+      s.role = 'tenant';
+      s.screen = 'detail';
+      s.hid = 'anjani';
+    });
+    await tester.pump();
+    expect(find.text('11 pm'), findsOneWidget);
+    s.dispose();
+
+    // Invite QR is a real QR code of the link.
+    final o = AppState(start: 'oInvite', role: 'owner');
+    await pumpApp(tester, o);
+    expect(find.byType(QrImageView), findsOneWidget);
+    o.dispose();
+
+    // "Did you join?" asks about the tenant's own ended hold.
+    final h = AppState(start: 'hold', role: 'tenant');
+    await pumpApp(tester, h);
+    final hold = h.holds.single;
+    h.expireHoldsAt(hold.start + h.holdSecs * 1000);
+    h.update(() => h.screen = 'holds');
+    await tester.pump();
+    expect(find.text('Anjani Residency · ${hold.bed}'), findsOneWidget);
+    h.dispose();
   });
 
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {

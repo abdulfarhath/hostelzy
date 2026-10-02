@@ -384,8 +384,9 @@ class HoldsScreen extends StatelessWidget {
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
             child: const PageHead(kicker: "Beds you're holding", title: 'Holds'),
           ),
-          // F07 board 3: asked after a hold ends.
-          if (s.joinAnswer == null)
+          // F07 board 3: asked after one of your holds ends (the 102-B sample
+          // shows in debug builds only, F17).
+          if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
             Tap(
               onTap: () => s.update(() => s.sheet = 'joined'),
               child: Container(
@@ -393,7 +394,7 @@ class HoldsScreen extends StatelessWidget {
                 decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                 child: Row(
                   children: [
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const T('Anjani Residency · 102-B', w: 800, s: 15), T('Hold ended 11 Sep · Did you join? One tap', s: 12, c: p.mu)])),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(s.endedHold != null ? '${hostelById(s.endedHold!.hid).name} · ${s.endedHold!.bed}' : 'Anjani Residency · 102-B', w: 800, s: 15), T('Hold ended${s.endedHold != null ? '' : ' 11 Sep'} · Did you join? One tap', s: 12, c: p.mu)])),
                     Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('Ended', s: 11, w: 800, ls: .05, upper: true, c: p.mu)),
                   ],
                 ),
@@ -435,7 +436,7 @@ class HoldsScreen extends StatelessWidget {
                             timed
                                 ? cd(i.left)
                                 : h.status == 'booked'
-                                ? '5 Oct'
+                                ? 'Booked'
                                 : '—',
                             w: 800,
                             s: 22,
@@ -530,7 +531,7 @@ class MeScreen extends StatelessWidget {
                     children: [
                       T(isOwner ? 'Srinivas Rao' : 'Rahul Varma', w: 800, s: 24, lh: 1.05),
                       const SizedBox(height: 3),
-                      T('+91 ${s.phone.isNotEmpty ? phoneSpaced(s.phone) : '98480 12345'} · ${const {'tenant': 'Looking for a bed', 'resident': 'Resident', 'owner': 'Owner, Anjani Residency'}[s.role]}', s: 13, c: p.mu),
+                      T('+91 ${s.phone.isNotEmpty ? phoneSpaced(s.phone) : '90000 00001'} · ${const {'tenant': 'Looking for a bed', 'resident': 'Resident', 'owner': 'Owner, Anjani Residency'}[s.role]}', s: 13, c: p.mu),
                     ],
                   ),
                 ),
@@ -596,12 +597,20 @@ class DetailScreen extends StatelessWidget {
       if (rr.isEmpty) return null;
       return (price: rr.first.rent, free: rr.fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length));
     }
-    final rules = [
+    // F17: Anjani shows the rules its owner keeps in Manage → Rules; other
+    // sample hostels use the standard set until their owners add theirs.
+    final rules = h.id == 'anjani'
+        ? [
+            for (final r in s.rules)
+              if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
+            ...moneyRules(h),
+          ]
+        : [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],
       ...moneyRules(h),
       ['Food', h.food ? 'Included, veg and non-veg' : 'Not included, shared kitchen'],
-    ];
+          ];
     Widget tagRow(int i) => IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
