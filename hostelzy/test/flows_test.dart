@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,10 +8,14 @@ import 'dart:convert';
 
 import 'package:hostelzy/app_config.dart' show dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
 import 'package:hostelzy/locate.dart';
+import 'package:hostelzy/features/photos/photo.dart';
+import 'package:hostelzy/features/photos/pick.dart';
+import 'package:image/image.dart' as img;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -19,6 +24,7 @@ import 'package:hostelzy/ui/kit.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:hostelzy/router.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
   for (final (family, files) in [
@@ -2007,6 +2013,15 @@ void main() {
       m.dispose();
     }
     tester.view.resetViewInsets();
+    // No keyboard: Manage's header buttons and the photo screens fit too.
+    for (final start in ['oMore', 'oPhotos', 'gallery']) {
+      final m = AppState(start: start, role: start == 'gallery' ? 'tenant' : 'owner');
+      await tester.pumpWidget(MaterialApp(home: AppScope(state: m, child: const HostelzyShell())));
+      await tester.pump();
+      final err = tester.takeException();
+      expect(err == null ? null : '$start: $err', isNull);
+      m.dispose();
+    }
     tester.view.reset();
 
     // Crash guards.
@@ -2206,6 +2221,202 @@ void main() {
     expect(o.toast, 'Sign in with your Hostelzy team Google account first.');
     o.dispose();
   });
+
+  test('B7: photos are cropped and compressed on the phone', () {
+    Uint8List png(int w, int h) => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
+    final a = img.decodeJpg(prepPhoto(png(1000, 1000), '4:3')!)!;
+    expect((a.width, a.height), (1000, 750));
+    final b = img.decodeJpg(prepPhoto(png(4000, 3000), 'free')!)!;
+    expect((b.width, b.height), (1600, 1200));
+    final c = img.decodeJpg(prepPhoto(png(900, 1200), '1:1')!)!;
+    expect((c.width, c.height), (900, 900));
+    expect(prepPhoto(Uint8List.fromList([1, 2, 3]), '4:3'), isNull);
+    expect(photoUrl('https://p.supabase.co', 'h1/a.jpg'), 'https://p.supabase.co/storage/v1/object/public/hostel-photos/h1/a.jpg');
+  });
+
+  testWidgets('B7: owner adds, orders and removes photos; tenants see the gallery', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner');
+    final fake = _FakePhotos();
+    s.data = fake;
+    s.picker = _FakePicker(1200, 1200);
+    await pumpApp(tester, s);
+    await tap(tester, find.byKey(const ValueKey('managePhotos')));
+    expect(s.screen, 'oPhotos');
+    expect(find.text('0 of 8 minimum'), findsOneWidget);
+    expect(find.text('Drag to reorder. The first is the cover.'), findsOneWidget);
+    // Add → crop (square, cover) → Use: uploads a compressed JPEG.
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect((s.screen, s.cropCover, s.cropLabel), ('oCrop', true, 'Front'));
+    await tap(tester, find.text('Square'));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(s.screen, 'oPhotos');
+    expect(fake.uploaded.length, 1);
+    final up = img.decodeJpg(fake.uploaded.single)!;
+    expect((up.width, up.height), (1200, 1200));
+    expect(find.text('COVER'), findsOneWidget);
+    expect(find.text('1 of 8 minimum'), findsOneWidget);
+    // Second photo: a washroom; the upload fails, then Retry works.
+    fake.failNext = true;
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect(s.cropCover, isFalse);
+    await tap(tester, find.text('Front ▾'));
+    await tap(tester, find.text('Room ▾'));
+    expect(s.cropLabel, 'Washroom');
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsOneWidget);
+    await tap(tester, find.text('Failed · Retry'));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsNothing);
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Front', 'Washroom']);
+    // Make the washroom the cover: it moves first and the order is saved.
+    await tap(tester, find.text('Washroom'));
+    expect(s.sheet, 'photo');
+    await tap(tester, find.text('Make it the cover'));
+    await tester.pump();
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Washroom', 'Front']);
+    expect(fake.lastOrder, ['ph1', 'ph0']);
+    expect(fake.lastCover, 'ph1');
+    // Remove the old front photo.
+    await tap(tester, find.text('Front'));
+    await tap(tester, find.text('Remove photo'));
+    await tester.pump();
+    expect(fake.rows.map((p) => p.id), ['ph1']);
+    await tap(tester, find.text('Done'));
+    expect(s.screen, 'oMore');
+
+    // Sample data never pretends to upload.
+    final demo = AppState(start: 'oPhotos', role: 'owner');
+    demo.picker = _FakePicker(400, 300);
+    await pumpApp(tester, demo);
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(demo.toast, 'Photos upload in the real Hostelzy app. This is sample data.');
+    expect(demo.photosOf[demo.ownHid] ?? const [], isEmpty);
+    await tester.pump(const Duration(seconds: 3));
+
+    // A tenant opens the hostel: cover, "See 2 photos", the gallery.
+    fake.rows
+      ..clear()
+      ..addAll([
+        (id: 'a', path: 'x/a.jpg', url: 'https://x.test/a.jpg', label: 'Front', ord: 0, cover: true),
+        (id: 'b', path: 'x/b.jpg', url: 'https://x.test/b.jpg', label: '3 sharing', ord: 1, cover: false),
+      ]);
+    final t = AppState(start: 'explore', role: 'tenant');
+    t.data = fake;
+    await pumpApp(tester, t);
+    t.update(() {
+      t.hid = 'anjani';
+      t.screen = 'detail';
+    });
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('See 2 photos'), findsOneWidget);
+    await tap(tester, find.text('See 2 photos'));
+    expect(t.screen, 'gallery');
+    expect(find.text('1 / 2 · Front'), findsOneWidget);
+    expect(find.text('Rooms 1'), findsOneWidget);
+    await tap(tester, find.text('Rooms 1'));
+    expect(find.text('1 / 1 · 3 sharing'), findsOneWidget);
+    await tap(tester, find.text('All 2'));
+    expect(find.text('Photos by the owner'), findsOneWidget);
+    s.dispose();
+    demo.dispose();
+    t.dispose();
+  });
+
+  test('B6: live rows map server statuses to the app', () {
+    final l = liveFromRows(
+      holds: [
+        {'id': 'h1', 'hostel_id': 'x', 'opt': 'advance', 'status': 'waiting', 'ref': 'HZ-5002', 'started_at': '2026-10-02T10:00:00Z', 'beds': {'letter': 'A', 'rooms': {'number': 101, 'label': null}}},
+        {'id': 'h2', 'hostel_id': 'x', 'opt': 'free', 'status': 'expired', 'ref': 'HZ-5003', 'started_at': '2026-10-02T09:00:00Z', 'beds': {'letter': 'B', 'rooms': {'number': 204, 'label': '204A'}}},
+      ],
+      enquiries: [
+        {'ref': 'HZ-5001', 'name': 'Kiran', 'phone': '9111111111', 'hostel_id': 'x', 'bed': '101-A', 'created_at': '2026-10-02T08:00:00Z', 'source': 'Hostel page · Ask on WhatsApp', 'msg': 'Hi', 'contacted': false},
+      ],
+      payments: [
+        {'id': 'p1', 'hostel_id': 'x', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'h1', 'status': 'pending', 'utr': null, 'created_at': '2026-10-02T10:00:00Z', 'confirmed_at': null, 'holds': {'beds': {'letter': 'A', 'rooms': {'number': 101}}}},
+      ],
+      complaints: [
+        {'id': '0000002a-0000-0000-0000-000000000000', 'author_id': 'me', 'bed': '101-A', 'cat': 'WiFi', 'body': 'Slow', 'status': 'Fixed', 'note': 'Router reset', 'created_at': '2026-10-01T08:00:00Z'},
+      ],
+      me: 'me',
+    );
+    expect(l.holds.map((h) => '${h.bed} ${h.room} ${h.opt} ${h.status} ${h.ref}'), ['101-A 101 book waiting HZ-5002', '204A-B 204 free released HZ-5003']);
+    expect(l.expired, {'h2'});
+    expect((l.enquiries.single.ref, l.enquiries.single.bed, l.enquiries.single.hid), ('HZ-5001', '101-A', 'x'));
+    final p = l.payments.single;
+    expect((p.status, p.what, p.bed, p.holdId, p.utr), ('due', 'Advance for bed 101-A', '101-A', 'h1', null));
+    final c = l.complaints.single;
+    expect((c.id, c.status, c.mine, c.date), (42, 'Resolved', true, '1 Oct'));
+  });
+
+  test('B6: signed in on Supabase, lists are live and refetch on Realtime changes', () async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final empty = liveFromRows(holds: [], enquiries: [], payments: [], complaints: []);
+    final fake = _FakeLive(empty);
+    s.data = fake;
+    // Not signed in with Google: nothing is fetched.
+    await s.startLive();
+    expect(fake.fetches, 0);
+    s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@x.in');
+    await s.startLive();
+    expect((fake.fetches, fake.askedAs), (1, 'fb-owner'));
+    expect([s.enquiries.length, s.holds.length, s.payments.length, s.complaints.length], [0, 0, 0, 0]); // samples replaced, never mixed
+    // A tenant enquires: Realtime says "enquiries changed"; three quick changes, one refetch.
+    fake.rows = liveFromRows(holds: [], enquiries: [
+      {'ref': 'HZ-5009', 'name': 'Asha', 'phone': '9000000001', 'hostel_id': 'x', 'created_at': '2026-10-02T11:00:00Z'},
+    ], payments: [], complaints: []);
+    fake.ctrl..add('enquiries')..add('holds')..add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    expect(s.enquiries.single.ref, 'HZ-5009');
+    // Logged out: no more updates.
+    s.stopLive();
+    fake.ctrl.add('enquiries');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(fake.fetches, 2);
+    s.dispose();
+  });
+
+  testWidgets('go_router deep links: enquiry and invite links open the right place', (tester) async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final r = appRouter(s, (_) => const HostelzyShell(bare: true));
+    addTearDown(r.dispose);
+    await _loadFonts(tester);
+    tester.view.physicalSize = const Size(410, 864);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: r, builder: (c, child) => AppScope(state: s, child: child!)));
+    await tester.pump();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    // An owner opens a tenant's enquiry link: Today, with that enquiry open.
+    s.update(() => s.screen = 'oRent');
+    r.go('/r?c=hz-4821');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.sheet, s.enqRef), ('oToday', 'enq', 'HZ-4821'));
+    expect(r.routerDelegate.currentConfiguration.uri.path, '/');
+    // Not this account's code: say so, stay put.
+    s.update(() => s.sheet = null);
+    r.go('/hostelzy/app/r?c=HZ-9999');
+    await tester.pumpAndSettle();
+    expect((s.screen, s.toast), ('oToday', 'HZ-9999 isn’t in this account. Sign in with the account that sent or got it.'));
+    r.go('/r?c=nonsense');
+    await tester.pumpAndSettle();
+    expect(s.toast, 'That link has no HZ code.');
+    // A resident invite is kept for sign-up.
+    r.go('/j?c=anj-7q2');
+    await tester.pumpAndSettle();
+    expect((s.pendingInvite, s.toast), ('ANJ-7Q2', 'Invite ANJ-7Q2 saved. Sign in and pick “I live in a Hostelzy PG”.'));
+    // Any other link just opens the app.
+    r.go('/somewhere/else');
+    await tester.pumpAndSettle();
+    expect(find.byType(HostelzyShell), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2250,6 +2461,61 @@ class _FakeData extends SampleRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+}
+
+/// B7: Storage stand-in. [failNext] makes the next upload fail once.
+class _FakePhotos extends SampleRepo {
+  final rows = <HostelPhoto>[];
+  final uploaded = <Uint8List>[];
+  bool failNext = false;
+  List<String>? lastOrder;
+  String? lastCover;
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async => sortPhotos(rows);
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
+    if (failNext) {
+      failNext = false;
+      throw Exception('network');
+    }
+    uploaded.add(jpg);
+    final p = (id: 'ph${rows.length}', path: '$hid/ph${rows.length}.jpg', url: 'https://x.test/ph${rows.length}.jpg', label: label, ord: ord, cover: cover);
+    rows.add(p);
+    return p;
+  }
+
+  @override
+  Future<void> removePhoto(HostelPhoto p) async => rows.removeWhere((x) => x.id == p.id);
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {
+    lastOrder = [for (final p in ordered) p.id];
+    lastCover = coverId;
+  }
+}
+
+class _FakePicker implements PhotoPicker {
+  _FakePicker(this.w, this.h);
+  final int w, h;
+  @override
+  Future<Uint8List?> pick() async => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
+}
+
+/// B6: a Supabase stand-in with live rows and a Realtime change stream.
+class _FakeLive extends SampleRepo {
+  _FakeLive(this.rows);
+  LiveRows rows;
+  int fetches = 0;
+  String? askedAs;
+  final ctrl = StreamController<String>.broadcast();
+  @override
+  Future<LiveRows?> live({String? me}) async {
+    fetches++;
+    askedAs = me;
+    return rows;
+  }
+
+  @override
+  Stream<String> changes() => ctrl.stream;
 }
 
 class _FakeLocator implements Locator {

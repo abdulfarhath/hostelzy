@@ -2,12 +2,16 @@
 // sample hostels (offline, tests); `SupabaseRepo` reads live hostels from the
 // database. Row Level Security decides what each user may read or write.
 
+import 'dart:typed_data';
+import 'dart:async';
 import 'dart:ui' show Offset;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_config.dart';
 import '../../data.dart';
+import '../photos/photo.dart';
+import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
@@ -26,6 +30,24 @@ abstract class HostelRepo {
 
   /// This phone's push token (FCM).
   Future<void> savePushToken(String token);
+
+  /// B7: a hostel's photos, cover first. Empty on sample data.
+  Future<List<HostelPhoto>> photos(String hid);
+
+  /// B7: uploads a compressed JPEG to the hostel's folder and records it.
+  /// Throws [UnsupportedError] on sample data (nothing is uploaded).
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover});
+
+  Future<void> removePhoto(HostelPhoto p);
+
+  /// Saves the order (list order) and which photo is the cover.
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId);
+  /// B6: what this user may see of holds, enquiries, payments and complaints;
+  /// null keeps the built-in sample data.
+  Future<LiveRows?> live({String? me});
+
+  /// B6: emits a table name whenever one of [liveTables] changes (Realtime).
+  Stream<String> changes();
 }
 
 class SampleRepo implements HostelRepo {
@@ -38,6 +60,18 @@ class SampleRepo implements HostelRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async {}
   @override
   Future<void> savePushToken(String token) async {}
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async => const [];
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> removePhoto(HostelPhoto p) async {}
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {}
+  @override
+  Future<LiveRows?> live({String? me}) async => null;
+  @override
+  Stream<String> changes() => const Stream.empty();
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -50,6 +84,58 @@ class SupabaseRepo implements HostelRepo {
   static Future<SupabaseRepo> connect({Future<String?> Function()? idToken}) async {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey, accessToken: idToken);
     return SupabaseRepo(Supabase.instance.client);
+  }
+
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async =>
+      sortPhotos([for (final r in await db.from('hostel_photos').select().eq('hostel_id', hid)) photoFromRow(supabaseUrl, r)]);
+
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
+    final path = '$hid/${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${jpg.length.toRadixString(36)}.jpg';
+    await db.storage.from('hostel-photos').uploadBinary(path, jpg, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    if (cover) await db.from('hostel_photos').update({'cover': false}).eq('hostel_id', hid).eq('cover', true);
+    final row = await db.from('hostel_photos').insert({'hostel_id': hid, 'path': path, 'label': label, 'ord': ord, 'cover': cover}).select().single();
+    return photoFromRow(supabaseUrl, row);
+  }
+
+  @override
+  Future<void> removePhoto(HostelPhoto p) async {
+    await db.from('hostel_photos').delete().eq('id', p.id);
+    await db.storage.from('hostel-photos').remove([p.path]);
+  }
+
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {
+    if (ordered.isEmpty) return;
+    // One cover at a time: clear it first, then set order and the new cover.
+    await db.from('hostel_photos').update({'cover': false}).inFilter('id', [for (final p in ordered) p.id]);
+    for (final (i, p) in ordered.indexed) {
+      await db.from('hostel_photos').update({'ord': i, 'cover': p.id == coverId}).eq('id', p.id);
+    }
+  }
+
+  @override
+  Future<LiveRows?> live({String? me}) async {
+    final r = await Future.wait([
+      db.from('holds').select('*, beds(letter, rooms(number, label))').order('started_at', ascending: false),
+      db.from('enquiries').select().order('created_at', ascending: false),
+      db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
+      db.from('complaints').select().order('created_at', ascending: false),
+    ]);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], me: me);
+  }
+
+  @override
+  Stream<String> changes() {
+    final out = StreamController<String>();
+    var ch = db.channel('hz-live');
+    for (final t in liveTables) {
+      ch = ch.onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: t, callback: (_) => out.add(t));
+    }
+    ch.subscribe();
+    out.onCancel = () => db.removeChannel(ch);
+    return out.stream;
   }
 
   @override

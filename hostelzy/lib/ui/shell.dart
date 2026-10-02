@@ -7,6 +7,7 @@ import '../state.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
+import 'photos.dart';
 import 'layout.dart';
 import 'map.dart';
 import 'onboarding.dart';
@@ -381,6 +382,9 @@ class _AppBody extends StatelessWidget {
     'holds' => const HoldsScreen(),
     'me' => const MeScreen(),
     'detail' => const DetailScreen(),
+    'oPhotos' => const OwnerPhotosScreen(),
+    'oCrop' => const CropScreen(),
+    'gallery' => const GalleryScreen(),
     'picker' => const PickerScreen(),
     'hold' => const HoldScreen(),
     'rHome' => const ResidentHomeScreen(),
@@ -578,6 +582,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => 'Pay the advance',
       'payUtr' => 'Enter the UTR',
       'manager' => 'Add a manager',
+      'photo' => 'This photo',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
@@ -617,6 +622,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => const PayAdvSheet(),
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
+      'photo' => const PhotoSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() => s.sheet = null);
