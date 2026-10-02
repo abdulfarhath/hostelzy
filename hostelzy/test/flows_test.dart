@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
+import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/kit.dart';
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';
@@ -46,6 +47,7 @@ Future<void> tap(WidgetTester tester, Finder f) async {
 }
 
 void main() {
+  mapTiles = false; // no network in flow tests
   testWidgets('onboarding: phone, OTP and role lead to Explore', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);
@@ -1050,7 +1052,7 @@ void main() {
     expect(find.textContaining('doesn’t know yet'), findsOneWidget);
     expect(find.text('Demo: simulate the owner confirming'), findsOneWidget); // debug builds only
     await tap(tester, find.text('Directions'));
-    expect(s.lastLink.toString(), 'https://www.google.com/maps/search/?api=1&query=Anjani%20Residency%2C%20Madhapur%2C%20Hyderabad');
+    expect(s.lastLink.toString(), 'https://www.google.com/maps/dir/?api=1&destination=17.4483,78.3915');
     await tester.pump(const Duration(seconds: 3));
     expect(s.expireHoldsAt(h.start + s.holdSecs * 1000 - 5000), isFalse);
     expect(s.expireHoldsAt(h.start + s.holdSecs * 1000), isTrue);
@@ -1123,6 +1125,35 @@ void main() {
     await tap(tester, find.text('Test with ₹1'));
     expect(o.lastLink!.queryParameters['am'], '1');
     o.dispose();
+  });
+
+  testWidgets('real map and the large-screen layout (F17)', (tester) async {
+    final s = AppState(start: 'map', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
+    final mh = hostelById(s.mapSel);
+    expect(find.text('${kmLabel(kmTo(mh, 'Hitec City'))} from Hitec City · rated ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
+    await tap(tester, find.text('₹${(hostelById('greenview').from / 1000).toStringAsFixed(1)}k'));
+    expect(s.mapSel, 'greenview');
+    await tap(tester, find.text('Directions'));
+    expect(s.lastLink.toString(), 'https://www.google.com/maps/dir/?api=1&destination=17.464,78.356');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('View hostel'));
+    expect((s.screen, s.hid), ('detail', 'greenview'));
+    s.dispose();
+
+    // Release layout on a laptop: app column + map, no phone frame or jump list.
+    HostelzyShell.prototypeFrame = false;
+    addTearDown(() => HostelzyShell.prototypeFrame = true);
+    tester.view.physicalSize = const Size(1280, 800);
+    final w = AppState(start: 'explore', role: 'tenant');
+    await tester.pumpWidget(MaterialApp(home: AppScope(state: w, child: const HostelzyShell())));
+    await tester.pump();
+    expect(find.text('Beds near Hitec City'), findsOneWidget);
+    expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
+    expect(find.text('9:41'), findsNothing);
+    expect(find.textContaining('Mobile prototype'), findsNothing);
+    w.dispose();
   });
 
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {

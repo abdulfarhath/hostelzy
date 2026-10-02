@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- F17: map tiles (OpenStreetMap) load over the network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Hostelzy"
         android:name="${applicationName}"
