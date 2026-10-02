@@ -140,5 +140,17 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - Still needs the founder in person: accounts and money (Supabase, Firebase, MSG91, Google Play,
   domain), and anything that changes `DECISIONS.md` business rules.
 
+**Name, logo, accounts** — founder, 2026-10-02
+- **Name stays "Hostelzy"** for now; the founder may rename later. No rename work until then.
+- Founder: "take your own decisions and keep building". The Ideas chat decides open product
+  questions from here and records them here.
+- **Logo: concept C "H made of beds"** (7 bed blocks form an H, the middle one red = your bed),
+  picked by the Ideas chat on the founder's delegation, from the Brand chat's 6 concepts
+  (https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq1). Brand chat refines it; Build makes it the
+  app icon.
+- **Supabase/Firebase/MSG91 keys and the payments setup (UPI ID) will be added by the founder
+  later.** Build everything else on sample data now; keep keys and the UPI ID as clearly marked
+  placeholders/config, never hard-coded.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
