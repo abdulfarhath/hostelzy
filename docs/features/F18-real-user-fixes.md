@@ -1,6 +1,6 @@
 # F18 · Real-user bug fixes (from the founder's phone test, apk-29)
 
-**Stage:** Design approved · 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
+**Stage:** Building · Design approved 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
 
 Founder found on a real phone: back button exits/jumps to start, login forgotten after reopening,
 dummy numbers on code screens, name prefilled, no "use my location" / area picker, owner can't edit
@@ -65,4 +65,19 @@ Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team co
 8. **Small UX:** BackExit ("Press back again to exit" toast), Demo (DEMO banner while on sample data), KeyboardUtr and KeyboardAdd (sheets stay above the keyboard, CTA visible).
 
 ## Build
-_Not started._
+
+**Groups 1–3 · back button, stay logged in, own identity** (branch `feature/f18-back-login-identity`):
+- **Back button (1):** `PopScope` on the shell → `AppState.handleBack()`: close the sheet → previous screen → the role's home tab (or Welcome when signed out) → "Press back again to exit" (second press within 2 s closes the app).
+- **Stay logged in (2):**
+  - `lib/store.dart` (`PrefsStore` on shared_preferences; `NoStore` / `MemoryStore` in tests) keeps signed-in state, name, phone, role, theme, holds (with their HZ codes), saved hostels, the user's own enquiries and Fair Play acceptance. It's saved whenever any of them change.
+  - At startup `main.dart` loads it before the first frame. `restore()` brings it back: the beds the user holds are marked again, and a signed-in user opens on their role's home, not Welcome.
+  - A Google account only counts while Firebase still has it signed in (`SignIn.current`).
+  - Fresh starts are signed out (`signedIn` defaults false).
+  - **Log out** forgets everything: holds released, saved hostels, enquiries, name, phone, role, and the phone's saved copy.
+- **Own identity (3):**
+  - Sign-up asks **Your name** (prefilled from Google, editable; never a sample name) and **Mobile number** (10 digits starting 6–9).
+  - `meName` / `meFirst` / `meShort` replace "Rahul Varma / Rahul V." in Me, Settings, Stay Rewards, enquiries, advance payments, hold requests, reviews ("Shows as …"), resident greeting, complaints, notice and warden messages, and owner messages.
+  - `myPhone` no longer falls back to `90000 00001`; Me shows **Add your number** instead.
+  - The resident's stay (Anjani 204-B) is still sample data in debug builds; group 4 gates it in release.
+- Test: `back button, stay logged in, own name and phone (F18)`. Sample-flow tests now sign in a named user first.
+

@@ -75,7 +75,7 @@ class RewardsScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Rahul Varma · Me', title: 'Stay Rewards', size: 28))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${s.meName.isEmpty ? 'You' : s.meName} · Me', title: 'Stay Rewards', size: 28))]),
         ),
         Expanded(
           child: Scroll(

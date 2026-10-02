@@ -131,6 +131,15 @@ class PhoneScreen extends StatelessWidget {
               // F13: typed, not verified: owners see "not verified" until SMS checks exist.
               : _StepHead(step: 'Step 2 of 2', title: 'Your mobile number', sub: '${s.account != null ? 'Signed in as ${s.account!.email}. ' : ''}Owners use it to call or WhatsApp you. They see it as “not verified” until Hostelzy can check numbers by SMS.'),
           const SizedBox(height: 28),
+          // F18: the user's own name (never a sample one).
+          if (!phoneOtpLogin) ...[
+            const T('Your name', w: 800, s: 13),
+            const SizedBox(height: 6),
+            Field(key: const ValueKey('myName'), value: s.myName, placeholder: 'Full name', onChanged: (v) => s.update(() => s.myName = v)),
+            const SizedBox(height: 16),
+            const T('Mobile number', w: 800, s: 13),
+            const SizedBox(height: 6),
+          ],
           Container(
             height: 60,
             decoration: box(w: 2, c: p.tx),
@@ -151,7 +160,7 @@ class PhoneScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : (phoneOtpLogin ? s.sendCode() : s.savePhone()), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
+          Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
           const SizedBox(height: 12),
           Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
           // F17: demo shortcut for development only, never in the Play Store build.

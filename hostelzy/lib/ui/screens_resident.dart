@@ -38,7 +38,7 @@ class ResidentHomeScreen extends StatelessWidget {
         }),
       ),
       ('Raise complaint', 'wrench', () => s.tab('help')),
-      ('Message warden', 'msg', () => s.openWA('Ravi, warden', 'Hi Ravi, this is Rahul from room 204.')),
+      ('Message warden', 'msg', () => s.openWA('Ravi, warden', 'Hi Ravi, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from room 204.')),
     ];
     Widget quickBtn((String, String, VoidCallback) q) => Expanded(
       child: Tap(
@@ -62,9 +62,9 @@ class ResidentHomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: PageHead(kicker: 'Anjani Residency · Room 204 · Bed B', title: 'Morning, Rahul', size: 32),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: PageHead(kicker: 'Anjani Residency · Room 204 · Bed B', title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
           ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -91,7 +91,7 @@ class ResidentHomeScreen extends StatelessWidget {
             ),
           ),
           // F08: the 30-day review (one per stay).
-          if (!s.reviews.any((r) => r.name == 'Rahul V.' && r.kind == '30-day'))
+          if (!s.reviews.any((r) => r.name == s.meShort && r.kind == '30-day'))
             Tap(
               onTap: () => s.go('rReview'),
               child: Container(
@@ -667,7 +667,7 @@ class HelpScreen extends StatelessWidget {
                   onTap: () {
                     if (s.cText.trim().isEmpty) return s.toastMsg('Tell us what is wrong first.');
                     s.update(() {
-                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: 'Rahul V · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
+                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: '${s.meShort} · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: dayMon(appToday), note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
                       s.cText = '';
                     });
                     s.toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
@@ -772,7 +772,7 @@ class MoveScreen extends StatelessWidget {
                       Kicker('Notice given', c: p.ad),
                       T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
                       T('Saved on Hostelzy. Tell Srinivas on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
-                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, this is Rahul from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
+                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, this is ${s.meFirst.isEmpty ? 'your resident' : s.meFirst} from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
                     ],
                   ),
                 ),

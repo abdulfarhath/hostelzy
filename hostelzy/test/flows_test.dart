@@ -9,6 +9,7 @@ import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabas
 import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
+import 'package:hostelzy/store.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -68,9 +69,15 @@ void main() {
     await tester.pump(const Duration(seconds: 3)); // toast gone
     await tap(tester, find.text('Use on this phone only'));
     expect(find.text('Your mobile number'), findsOneWidget);
+    // F18: no sample name; the user types their own.
+    expect(s.myName, '');
     await tap(tester, find.text('Debug: fill a test number'));
     await tap(tester, find.text('Continue'));
-    expect((s.screen, s.signedIn, s.account, s.phoneVerified), ('role', true, null, false));
+    expect((s.screen, s.toast), ('phone', 'Enter your name.'));
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('myName')), matching: find.byType(TextField)), 'Asha Kumari');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Continue'));
+    expect((s.screen, s.signedIn, s.account, s.phoneVerified, s.meName, s.meShort), ('role', true, null, false, 'Asha Kumari', 'Asha K.'));
     await tap(tester, find.text('I need a bed'));
     expect(s.screen, 'explore');
     expect(find.text('Beds near Hitec City'), findsOneWidget);
@@ -176,6 +183,7 @@ void main() {
 
   testWidgets('enquiry recorded before WhatsApp; owner sees and contacts it (F05)', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
+    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     final before = s.enquiries.length;
     await tap(tester, find.text('Ask on WhatsApp'));
@@ -293,6 +301,7 @@ void main() {
   testWidgets('owner adds a resident; phone matched to the enquiry; resident confirms (F06)', (tester) async {
     // A tenant enquires first, from the demo number.
     final s = AppState(start: 'detail', role: 'tenant');
+    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     await tap(tester, find.text('Ask on WhatsApp'));
     final ref = s.waRef!;
@@ -488,6 +497,7 @@ void main() {
 
   testWidgets('book with the advance: deal locked, HZ code, owner sees it (F04)', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
+    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     await tap(tester, find.text('Book with deal'));
     expect(s.screen, 'picker');
@@ -577,6 +587,7 @@ void main() {
   testWidgets('verified reviews, ranking and owner replies (F08)', (tester) async {
     // Explore: Recommended is the default sort; rank and reasons, never a score.
     final s = AppState(start: 'explore', role: 'tenant');
+    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     expect(s.sortBy, 'rec');
     expect(filtered(s).first.id, 'anjani');
@@ -1095,8 +1106,14 @@ void main() {
     await pumpApp(tester, l);
     expect(find.text('Privacy policy', findRichText: true), findsNothing);
     expect(find.textContaining('Privacy policy', findRichText: true), findsOneWidget);
-    await tester.enterText(find.byType(TextField), '9000000001');
+    await tester.enterText(find.byType(TextField).first, 'Asha');
+    await tester.enterText(find.byType(TextField).last, '5000000001');
     await tester.pump();
+    // F18: Indian mobiles start with 6–9.
+    await tap(tester, find.text('Continue'));
+    expect((l.screen, l.toast), ('phone', 'Mobile numbers start with 6, 7, 8 or 9.'));
+    await tester.enterText(find.byType(TextField).last, '9000000001');
+    await tester.pump(const Duration(seconds: 3));
     // F13: no SMS codes yet; the number is typed and stays not verified.
     await tap(tester, find.text('Continue'));
     expect((l.screen, l.phoneVerified), ('role', false));
@@ -1781,7 +1798,9 @@ void main() {
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
     expect(find.textContaining('Signed in as asha@gmail.com.'), findsOneWidget);
     expect(find.textContaining('“not verified”'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), '9000000007');
+    // The Google name is prefilled but editable.
+    expect(s.myName, 'Asha K');
+    await tester.enterText(find.byType(TextField).last, '9000000007');
     await tester.pump();
     await tap(tester, find.text('Continue'));
     await tap(tester, find.text('I run a hostel'));
@@ -1796,6 +1815,74 @@ void main() {
     expect(((s.signIn as _FakeSignIn).signedOut, s.account), (true, null));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
+  });
+
+  testWidgets('back button, stay logged in, own name and phone (F18)', (tester) async {
+    // Android back: sheet → previous screen → home tab → "press again to exit".
+    final s = AppState(start: 'explore', role: 'tenant');
+    await pumpApp(tester, s);
+    s.go('detail');
+    s.update(() => s.sheet = 'search');
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect((s.screen, s.sheet), ('detail', null));
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(s.screen, 'explore');
+    s.tab('holds');
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(s.screen, 'explore');
+    expect(s.handleBack(), isFalse);
+    expect(s.toast, 'Press back again to exit');
+    expect(s.handleBack(), isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+
+    // Sign up once; reopening the app keeps you signed in on your own home.
+    final mem = MemoryStore();
+    final a = AppState();
+    expect((a.screen, a.signedIn), ('welcome', false));
+    a.store = mem;
+    a.continueOnPhone();
+    a.update(() {
+      a.myName = '  Asha Kumari ';
+      a.phone = '9876543210';
+    });
+    a.savePhone();
+    a.update(() {
+      a.role = 'tenant';
+      a.screen = 'explore';
+      a.saved['nest42'] = true;
+      a.holds = [Hold(id: 'h9', hid: 'saisri', bed: a.rooms['saisri']!.first.beds.first.id, room: a.rooms['saisri']!.first.n, opt: 'free', start: a.now, status: 'waiting')];
+    });
+    expect((mem.data['name'], mem.data['phone'], mem.data['signedIn'], (mem.data['saved'] as List).join()), ('Asha Kumari', '9876543210', true, 'nest42'));
+    a.dispose();
+
+    final b = AppState();
+    b.store = mem;
+    b.restore(await mem.load());
+    final bed = b.findBed('saisri', b.holds.single.bed).b!;
+    expect((b.screen, b.signedIn, b.meName, b.phone, b.saved['nest42'], bed.mine, bed.state), ('explore', true, 'Asha Kumari', '9876543210', true, true, 'held'));
+    await pumpApp(tester, b);
+    b.tab('me');
+    await tester.pump();
+    expect(find.text('Asha Kumari'), findsOneWidget);
+    expect(find.textContaining('+91 98765 43210'), findsOneWidget);
+    // Logging out forgets everything on this phone.
+    b.logOut();
+    await tester.pump();
+    expect((mem.data.isEmpty, b.meName, b.phone, b.holds.isEmpty, b.saved.isEmpty, bed.mine, b.screen), (true, '', '', true, true, false, 'welcome'));
+    b.dispose();
+
+    // No sample identity: Me says "Add your number", never a dummy one.
+    final c = AppState(start: 'me', role: 'tenant');
+    await pumpApp(tester, c);
+    expect(find.textContaining('Add your number'), findsOneWidget);
+    expect(find.textContaining('90000 00001'), findsNothing);
+    expect(find.text('Rahul Varma'), findsNothing);
+    c.dispose();
   });
 }
 
@@ -1825,6 +1912,8 @@ class _FakeSignIn implements SignIn {
   Future<(Account?, SignInFail?)> google() async => fail != null ? (null, fail) : ((uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'), null);
   @override
   Future<String?> idToken() async => 'id-token';
+  @override
+  Account? get current => null;
   @override
   Future<void> signOut() async => signedOut = true;
 }

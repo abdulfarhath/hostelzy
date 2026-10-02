@@ -23,6 +23,9 @@ abstract class SignIn {
   /// Firebase ID token for Supabase (refreshed when needed).
   Future<String?> idToken();
 
+  /// The account Firebase still has signed in from last time, if any.
+  Account? get current;
+
   Future<void> signOut();
 }
 
@@ -35,6 +38,8 @@ class NoSignIn implements SignIn {
   Future<(Account?, SignInFail?)> google() async => (null, SignInFail.notSetUp);
   @override
   Future<String?> idToken() async => null;
+  @override
+  Account? get current => null;
   @override
   Future<void> signOut() async {}
 }
@@ -76,6 +81,12 @@ class FirebaseSignIn implements SignIn {
 
   @override
   Future<String?> idToken() async => _auth.currentUser?.getIdToken();
+
+  @override
+  Account? get current {
+    final u = _auth.currentUser;
+    return u == null ? null : (uid: u.uid, name: u.displayName ?? '', email: u.email ?? '');
+  }
 
   @override
   Future<void> signOut() async {

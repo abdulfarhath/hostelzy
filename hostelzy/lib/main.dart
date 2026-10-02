@@ -7,6 +7,7 @@ import 'app_config.dart';
 import 'backend.dart';
 import 'push.dart';
 import 'sign_in.dart';
+import 'store.dart';
 import 'state.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
@@ -16,12 +17,16 @@ Future<void> main() async {
   final (p, a) = await startFirebase();
   push = p;
   signIn = a;
+  // F18: stay logged in: what this phone kept from last time.
+  saved = await store.load();
   runApp(const HostelzyApp());
 }
 
 /// F13: Firebase push and Google sign-in on Android; no-ops elsewhere.
 Push push = const NoPush();
 SignIn signIn = const NoSignIn();
+final Store store = PrefsStore();
+Map<String, dynamic> saved = const {};
 
 /// Root. On the web, query parameters pick a start state, the same props the
 /// design exposes: `?start=picker&role=tenant&mode=list&theme=dark`, and
@@ -57,6 +62,9 @@ class _HostelzyAppState extends State<HostelzyApp> {
     super.initState();
     state.push = push;
     state.signIn = signIn;
+    state.store = store;
+    // Dev start states (debug ?start=…) skip the saved login.
+    if (q['start'] == null) state.restore(saved, firebaseUser: signIn.current);
     _pushSub = push.foreground.listen((m) => state.toastMsg(m.$2.isEmpty ? m.$1 : '${m.$1}: ${m.$2}'));
     if (dataSource == 'supabase') _goLive();
   }
