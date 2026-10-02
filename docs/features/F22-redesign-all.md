@@ -128,6 +128,12 @@ Kept as they are: gallery, Visited by Hostelzy, compare, layout coming soon, rep
 
 The F21 boards are rolled in as Redesigned: Welcome, resident Home, Help, Confirm your stay, owner Today (+ dark), Manage, Fair Play "I agree".
 
+**Synced to the build (2026-10-02, Main design v19).** These boards now match the merged code:
+30-day review uses the five server categories (Food, Cleanliness, Safety, Water and power, Owner);
+exit review offers Yes / Only part of it / Not yet; Add tenant has no "How did they find you?" (app
+tenants are linked by phone); Plan's Late state says deals pause from day 15 and Paid offers Share
+receipt; go-live checklist has the team tick Fair Play after reading the rules with the owner.
+
 ## Build
 One PR per area; flow tests per area; keep server behaviour unchanged.
 
