@@ -27,9 +27,6 @@ mixin _LoginData {
   bool pushAsked = false;
   StreamSubscription<String>? _tokenSub;
 
-  /// Permission explainer shown: notifications | location | camera.
-  String permKind = 'notifications';
-
   /// Update / maintenance screen: update | maintenance.
   String gateKind = 'update';
 
@@ -185,7 +182,7 @@ extension LoginActions on AppState {
     }
     if (ok == null || pushAsked) return;
     update(() => pushAsked = true);
-    openPerm('notifications');
+    openPerm();
   }
 
   /// Settings switch: shows on only when Android allows it too.

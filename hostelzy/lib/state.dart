@@ -48,6 +48,7 @@ part 'features/reminders/reminders.dart';
 part 'features/residents/my_stay.dart';
 part 'features/session/guest.dart';
 part 'features/amenities/amenities.dart';
+part 'features/food/food.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -58,7 +59,7 @@ part 'features/amenities/amenities.dart';
 /// F21 W4: how long an Undo stays.
 const undoSecs = Duration(seconds: 5);
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -110,7 +111,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay'];
   static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -284,8 +285,9 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     for (final e in ((m['fixDrafts'] as Map?) ?? const {}).entries) {
       fixDrafts[e.key as String] = snapFromJson((e.value as Map).cast<String, dynamic>());
     }
+    // F18 kept the owner's menu on the phone; it now waits to be saved to the server.
     final me = m['menu'] as List?;
-    if (me != null && me.length == menu.length) menu = [for (final d in me.cast<List>()) DayMenu(d[0] as String, d[1] as String, d[2] as String)];
+    if (me != null && me.length == 7) phoneMenu = [for (final d in me.cast<List>()) DayMenu(d[0] as String, d[1] as String, d[2] as String)];
     // A Google account counts only while Firebase still has it signed in.
     account = firebaseUser ?? (a != null && !signIn.available ? (uid: a['uid'] as String, name: a['name'] as String, email: a['email'] as String) : null);
     signedIn = m['signedIn'] as bool? ?? false;
@@ -588,8 +590,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     }
   });
 
-  void openPerm(String kind) => update(() {
-    permKind = kind;
+  void openPerm() => update(() {
     hist = [...hist, screen];
     screen = 'perm';
   });

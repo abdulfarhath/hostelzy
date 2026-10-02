@@ -751,8 +751,7 @@ class OwnerManageScreen extends StatelessWidget {
       'deals' => (const OwnerDeals(), Cta('Save deals', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.publishDeals)),
       'rates' => (const RateCard(), Cta('Save', key: const ValueKey('saveRates'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveRates)),
       'complaints' => (const _Complaints(), null),
-      // The menu is kept as you type; Done goes back to Manage.
-      'menu' => (const _MenuEditor(), Cta('Done', key: const ValueKey('menuDone'), icon: 'check', height: 54, px: 16, fs: 15, onTap: () => s.update(() => s.moreTab = 'home'))),
+      'menu' => (const _MenuEditor(), Cta(s.menuDirty ? 'Save menu' : 'Saved', key: const ValueKey('menuSave'), icon: 'check', height: 54, px: 16, fs: 15, opacity: s.menuDirty ? 1 : .4, onTap: s.menuDirty ? s.saveMenu : null)),
       _ => (const _HouseRules(), Cta('Save rules', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveRules)),
     };
     // F18: while typing, the header makes room for the field and keyboard.
@@ -901,11 +900,24 @@ class _MenuEditor extends StatelessWidget {
     final p = PalScope.of(context);
     const full = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     final d = s.mDay, to = (s.mDay + 1) % 7;
+    final week = s.menuDraft ?? blankWeek;
+    // This week's ratings from residents: counts only, never names.
+    final votes = [
+      for (final m in meals)
+        if (s.mealVotes[m[0]] case final v? when v.values.any((n) => n > 0)) '${m[1]}: ${v['good'] ?? 0} good · ${v['okay'] ?? 0} okay · ${v['poor'] ?? 0} poor',
+    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: VGap(
         gap: 12,
         children: [
+          if (votes.isNotEmpty)
+            Container(
+              key: const ValueKey('mealVotes'),
+              padding: const EdgeInsets.all(12),
+              decoration: box(w: 2, c: p.tx),
+              child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600), T('Counts only. Hostelzy never shows who said what.', s: 12, c: p.mu)]),
+            ),
           Row(
             children: [
               for (var i = 0; i < 7; i++) ...[
@@ -932,27 +944,19 @@ class _MenuEditor extends StatelessWidget {
                 T('${m[1]} · ${m[2]}', w: 800, s: 13),
                 Field(
                   key: ValueKey('menu-$d-${m[0]}'),
-                  value: s.menu[d].of(m[0]),
-                  onChanged: (v) => s.update(() {
-                    final menu = List.of(s.menu);
-                    menu[d] = menu[d].withMeal(m[0], v);
-                    s.menu = menu;
-                  }),
+                  value: week[d].of(m[0]),
+                  onChanged: (v) => s.setMenuMeal(d, m[0], v),
                 ),
               ],
             ),
-          T('Saved as you type. Residents see changes right away in their Food tab.', s: 13, c: p.mu),
+          T(s.menuDirty ? 'Not saved yet. Residents see the menu once you tap Save menu.' : 'Residents see this week in their Food tab.', key: const ValueKey('menuNote'), s: 13, c: s.menuDirty ? p.ad : p.mu),
           OutlineCta(
             'Copy ${full[d]} to ${full[to]}',
             icon: 'copy',
             height: 48,
             fs: 14,
             onTap: () {
-              s.update(() {
-                final menu = List.of(s.menu);
-                menu[to] = menu[d];
-                s.menu = menu;
-              });
+              s.copyMenuDay(d, to);
               s.toastMsg('${full[to]} now has ${full[d]}’s menu.');
             },
           ),
@@ -1016,7 +1020,7 @@ class _ManageList extends StatelessWidget {
     final inv = s.invoice;
     final myE = s.enquiries.where((e) => e.hid == h.id).toList();
     final newE = myE.where((e) => !e.contacted).length;
-    void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : s.update(() => s.moreTab = t);
+    void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : t == 'menu' ? s.openMenu() : s.update(() => s.moreTab = t);
     final rows = <(String, String, String, int, VoidCallback)>[
       ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
       ('msg', 'Enquiries', newE == 0 ? '${myE.length} from Hostelzy · all replied' : '$newE new · ${myE.length} from Hostelzy', newE, () => section('enquiries')),

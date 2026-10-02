@@ -867,6 +867,8 @@ class DetailScreen extends StatelessWidget {
                 ),
                 // F23: the shared things on each floor (and the geyser in rooms).
                 OnEachFloor(hid: h.id),
+                // Today's food, then the whole week, when the owner has put a menu.
+                FoodPeek(hid: h.id),
                 const SizedBox(height: 12),
                 // F21 W2: rules folded under one row.
                 Tap(
@@ -1597,3 +1599,60 @@ class SavedScreen extends StatelessWidget {
     );
   }
 }
+
+/// Hostel page: today's breakfast, lunch and dinner from the owner's menu,
+/// and "Food menu ›" for the whole week. Hidden when there's no menu.
+class FoodPeek extends StatelessWidget {
+  const FoodPeek({super.key, required this.hid});
+  final String hid;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final m = s.menuOf(hid);
+    return OnShow(
+      () => s.loadMenu(hid),
+      child: m == null
+          ? const SizedBox.shrink()
+          : Column(
+              key: const ValueKey('foodPeek'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(child: Kicker('Food today · $todayName')),
+                      Tap(key: const ValueKey('foodMenu'), onTap: () => s.openFoodFor(hid), child: T('Food menu ›', s: 14, w: 800)),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final ml in meals)
+                        if (m[todayIdx].of(ml[0]).trim().isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(width: 84, child: T(ml[1], w: 800, s: 14)),
+                                const SizedBox(width: 8),
+                                Expanded(child: T(m[todayIdx].of(ml[0]), s: 14, c: p.mu, lh: 1.35)),
+                              ],
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+

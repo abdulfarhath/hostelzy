@@ -49,9 +49,9 @@ extension OnPhoneActions on AppState {
     'opens': opens,
     // F20: reminders ring from this phone.
     'rem': remJson(),
-    // F18 (F5): the owner's house rules and menu stay on the phone.
+    // F18 (F5): the owner's house rules stay on the phone; a menu only until it is saved.
     'rules': [for (final r in rules) [r.k, r.v]],
-    'menu': [for (final d in menu) [d.b, d.l, d.n]],
+    if ((menuDirty ? menuDraft : phoneMenu) case final m?) 'menu': [for (final d in m) [d.b, d.l, d.n]],
     // F19: layout fix drafts stay on this phone until they are sent.
     'fixDrafts': {
       for (final e in fixDrafts.entries) e.key: layoutJson(e.value),
@@ -98,9 +98,7 @@ extension OnPhoneActions on AppState {
     if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
     if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
     if (sheet == 'trusted' && trustedReq == null) trustedReq = 'k1';
-    if (screen == 'rConfirm') {
-      cBed = residents.where((r) => !r.confirmed).firstOrNull?.bed;
-    }
+    if (screen == 'oMore' && moreTab == 'menu' && menuDraft == null) _fillMenuDraft();
     if (sheet == 'addR' && rBed == null) {
       rBed = unassignedBeds.firstOrNull;
       final r = rBed != null ? findBed('anjani', rBed).r : null;

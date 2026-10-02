@@ -17,8 +17,6 @@ mixin _MapAreaData {
   /// Where the map is after the user panned it; shows "Search this area".
   (double, double)? mapNow;
 
-  /// Area picker search text.
-  String areaQ = '';
   bool mapMoved = false;
 
   /// Bumped to recentre the map (area picked, location found).
