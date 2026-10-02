@@ -25,7 +25,8 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F18 | Real-user bug fixes (back button, stay logged in, own name/phone, gated roles, crashes, keyboard, map location + area, owner edits layouts) | **Built** · all 10 groups merged 2026-10-02 (APK `apk-32`) | Build | From the founder's phone test of apk-29. Photos/gallery, delete v2 and the team console need the backend (F13 part 2) |
 | F19 | Residents fix room layouts (any room in their hostel → owner approves; others see a "residents only" nudge) | **Built** · 2026-10-02 (v1 core; PR open, stacked on the S7–S8 PRs; v1 extras next) | Build | Design: https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR · Founder idea. Reward for approved fixes: founder to decide |
 | F20 | Reminders: water every N min, my own tasks, hostel meal/rent reminders (on the phone) | **Built** · 2026-10-02 (PR feature/f20-reminders) | Build | Founder idea. Local notifications, works offline. Backup to the profile is a follow-up |
-| F21 | Simpler UI/UX: one job per home screen, guest browsing, plain words, honest data, Telugu, accessibility | **Design ready** · 2026-10-02 · waiting for the founder’s approval | Founder | 24 fixes in 4 waves; wave 1 = fake-data bugs |
+| F21 | Simpler UI/UX: one job per home screen, guest browsing, plain words, honest data, Telugu, accessibility | **Design approved** · founder, 2026-10-02 · W1 in PR #65, W2–W4 next | Founder | 24 fixes in 4 waves; wave 1 = fake-data bugs |
+| F22 | Redesign every screen in the F21 style (simple, one job per screen, plain words) | **Designing** · 2026-10-02 | Design → Build | Founder: "your own decisions, never take my approval". Area by area, built in parallel |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build

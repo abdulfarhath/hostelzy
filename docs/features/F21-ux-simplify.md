@@ -1,6 +1,6 @@
 # F21 · Simpler UI/UX (Airbnb-level clarity)
 
-**Stage:** Design ready · **waiting for founder approval** (founder asked to see a small Before → After demo first; Waves 2–4 wait; Wave 1 honesty bugs go ahead) · design: https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7 · spec ready, founder asked 2026-10-02 ("minimal, easy for all users, like Airbnb").
+**Stage:** **Design approved by the founder, 2026-10-02** (demo https://claude.ai/artifact/DNTXZPEsMZTRSisLqvpAhG) · all waves go ahead · design: https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7 · spec ready, founder asked 2026-10-02 ("minimal, easy for all users, like Airbnb").
 Source: code audit of every screen (Ideas chat, 2026-10-02). Ideas chat decides details (standing approval).
 
 ## Principle

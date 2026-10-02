@@ -210,5 +210,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - The Hostelzy app reminds users to drink water (as often as every 20 min) and about their own
   tasks, plus hostel meal times and rent. Runs on the phone. Spec: F20.
 
+**Simpler design for the whole app** — founder, 2026-10-02
+- Founder approved the F21 Before → After demo and asked for **every screen** to be redesigned in that
+  style, designed and built in parallel, with the chats deciding everything themselves. Spec: F22.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
