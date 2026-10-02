@@ -15,7 +15,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -97,6 +97,13 @@ abstract class HostelRepo {
   /// phone to Hostelzy (60 days), opens a Fair Play case when added late, and
   /// books the bed. Returns how it matched.
   Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn});
+
+  /// S3: owner edits. The rate card (keys from [rateKey]) and each room's
+  /// type and rent, by room number.
+  Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms);
+  Future<void> saveDeals(String hid, Deals d);
+  Future<void> saveRules(String hid, List<Rule> rules);
+  Future<void> saveUpi(String hid, String id, String name);
 }
 
 class SampleRepo implements HostelRepo {
@@ -153,6 +160,14 @@ class SampleRepo implements HostelRepo {
   Future<void> setHoldStatus(String id, String status) async {}
   @override
   Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms) async {}
+  @override
+  Future<void> saveDeals(String hid, Deals d) async {}
+  @override
+  Future<void> saveRules(String hid, List<Rule> rules) async {}
+  @override
+  Future<void> saveUpi(String hid, String id, String name) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -282,6 +297,25 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
+  Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms) async {
+    await db.from('rate_cards').upsert([
+      for (final e in rates.entries) {'hostel_id': hid, 'ac': e.key.startsWith('ac'), 'share': int.parse(e.key.replaceFirst(RegExp('^(ac|non)'), '')), 'rent': e.value},
+    ], onConflict: 'hostel_id,ac,share');
+    for (final e in rooms.entries) {
+      await db.from('rooms').update({'ac': e.value.ac, 'rent': e.value.rent}).eq('hostel_id', hid).eq('number', e.key);
+    }
+  }
+
+  @override
+  Future<void> saveDeals(String hid, Deals d) => db.from('deals').upsert({'hostel_id': hid, 'deals_on': d.on.toList(), 'target': d.target, 'confirmed_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+
+  @override
+  Future<void> saveRules(String hid, List<Rule> rules) => db.from('hostels').update({'rules': [for (final r in rules) {'k': r.k, 'v': r.v}]}).eq('id', hid);
+
+  @override
+  Future<void> saveUpi(String hid, String id, String name) => db.from('hostels').update({'upi_id': id, 'upi_name': name}).eq('id', hid);
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -296,7 +330,7 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
-    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*)');
+    final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*)');
     return listingsFromRows(rows);
   }
 
@@ -319,6 +353,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
+  final deals = <String, Deals>{}, rules = <String, List<Rule>>{};
   for (final h in rows) {
     final id = h['id'] as String;
     final rs = <Room>[
@@ -389,11 +424,18 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
     rates[id] = rate;
     if (h['lat'] != null && h['lng'] != null) pos[id] = ((h['lat'] as num).toDouble(), (h['lng'] as num).toDouble());
     upi[id] = (id: h['upi_id'] as String? ?? '', name: h['upi_name'] as String? ?? '');
+    // S3: the owner's deals and house rules. One-to-one joins may come back as a map or a list.
+    final d = switch (h['deals']) { final Map m => m.cast<String, dynamic>(), final List l when l.isNotEmpty => (l.first as Map).cast<String, dynamic>(), _ => null };
+    deals[id] = d == null
+        ? const Deals()
+        : Deals(on: {...(d['deals_on'] as List? ?? const []).cast<String>()}, target: d['target'] as String? ?? 'all', confirmed: d['confirmed_at'] == null ? '' : dayMon(DateTime.parse(d['confirmed_at'] as String).toLocal()));
+    final ru = [for (final r in (h['rules'] as List? ?? const []).cast<Map>()) Rule('${r['k'] ?? ''}', '${r['v'] ?? ''}')];
+    if (ru.isNotEmpty) rules[id] = ru;
     lays[id] = {
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in

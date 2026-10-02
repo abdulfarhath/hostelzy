@@ -1824,7 +1824,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -2645,6 +2645,63 @@ void main() {
     s.dispose();
   });
 
+  test('S3: on Supabase, owner edits (rates, deals, rules, UPI ID) are saved on the server', () async {
+    final l = listingsFromRows([
+      {'id': 'h1', 'name': 'Sai PG', 'gender': 'Men', 'area': 'Ameerpet', 'rules': [{'k': 'Gate closes', 'v': '11 pm'}], 'deals': {'deals_on': ['monthly', 'exit'], 'target': 'ac', 'confirmed_at': '2026-10-01T10:00:00Z'}},
+      {'id': 'h2', 'name': 'Other', 'gender': 'Men', 'area': 'Ameerpet', 'deals': []},
+    ]);
+    expect(l.deals['h1']!.on, {'monthly', 'exit'});
+    expect(l.deals['h1']!.target, 'ac');
+    expect(l.deals['h2']!.on, isEmpty);
+    expect(l.rules['h1']!.single.v, '11 pm');
+    expect(l.rules['h2'], isNull);
+
+    final s = AppState(start: 'oMore', role: 'owner');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner'));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    // Rate card: written first, then the phone shows it.
+    s.openRates();
+    final key = s.rateDraft!.keys.first;
+    s.update(() => s.rateDraft![key] = s.rateDraft![key]! + 500);
+    s.saveRates();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'rates ${s.ownHid} ${s.rateDraft!.length} ${s.rooms[s.ownHid]!.length}');
+    expect(s.rates[s.ownHid]![key], s.rateDraft![key]);
+    // Deals
+    s.update(() => s.dealDraft = {'monthly'});
+    s.publishDeals();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.last, 'deals ${s.ownHid} monthly ${s.dealTarget}');
+    expect(s.deals[s.ownHid]!.on, {'monthly'});
+    // Rules: the hostel page shows the saved ones.
+    s.update(() => s.rules = [const Rule('Gate closes', '11 pm')]);
+    s.saveRules();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect((fake.calls.last, s.toast), ('rules ${s.ownHid} Gate closes=11 pm', 'Rules saved. Residents and new tenants see them now.'));
+    expect(s.hostelRules[s.ownHid]!.single.v, '11 pm');
+    // UPI ID: nothing saved while it isn't one; saved once it is and they pause.
+    s.setOwnerUpi('imran@', 'Imran');
+    await Future<void>.delayed(const Duration(milliseconds: 1300));
+    expect(fake.calls.last, startsWith('rules'));
+    s.setOwnerUpi('imran@okaxis', 'Imran');
+    await Future<void>.delayed(const Duration(milliseconds: 1300));
+    expect((fake.calls.last, s.toast), ('upi ${s.ownHid} imran@okaxis Imran', 'UPI ID saved. Tenants pay you here.'));
+    // Offline: nothing changes on the phone and it says so.
+    fake.fail = true;
+    s.update(() => s.dealDraft = {'exit'});
+    s.publishDeals();
+    await Future<void>.delayed(Duration.zero);
+    expect(s.deals[s.ownHid]!.on, {'monthly'});
+    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    s.stopLive();
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -2969,6 +3026,16 @@ class _FakeLive extends SampleRepo {
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
+
+  // S3: owner edits.
+  @override
+  Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms) => _rec('rates $hid ${rates.length} ${rooms.length}');
+  @override
+  Future<void> saveDeals(String hid, Deals d) => _rec('deals $hid ${(d.on.toList()..sort()).join(',')} ${d.target}');
+  @override
+  Future<void> saveRules(String hid, List<Rule> rules) => _rec('rules $hid ${rules.map((r) => '${r.k}=${r.v}').join(';')}');
+  @override
+  Future<void> saveUpi(String hid, String id, String name) => _rec('upi $hid $id $name');
 
   // S2: the owner's residents and hold decisions.
   @override

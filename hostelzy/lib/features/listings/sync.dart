@@ -14,6 +14,9 @@ mixin _SyncData {
   /// B6: Realtime subscription and its debounce.
   StreamSubscription<String>? _liveSub;
   Timer? _liveWait;
+
+  /// S3: the owner's UPI ID is saved a moment after they stop typing.
+  Timer? _upiWait;
 }
 
 extension SyncActions on AppState {
@@ -100,7 +103,23 @@ extension SyncActions on AppState {
   Future<bool> sendUtrLive(Payment p, String utr) => _write(() => data.sendUtr(p.id, utr));
   Future<bool> confirmPaymentLive(Payment p, bool received) => _write(() => data.confirmPayment(p.id, received, holdId: p.holdId));
 
+  /// S3: the owner types their UPI ID; on Supabase it is saved once it looks
+  /// right and they pause.
+  void setOwnerUpi(String id, String name) {
+    update(() => ownerUpi[ownHid] = (id: id, name: name));
+    if (!onServer) return;
+    _upiWait?.cancel();
+    if (!validUpiId(id)) return;
+    final hid = ownHid;
+    _upiWait = Timer(const Duration(milliseconds: 1200), () {
+      _write(() => data.saveUpi(hid, id, name)).then((ok) {
+        if (ok) toastMsg('UPI ID saved. Tenants pay you here.');
+      });
+    });
+  }
+
   void stopLive() {
+    _upiWait?.cancel();
     _liveSub?.cancel();
     _liveSub = null;
     _liveWait?.cancel();

@@ -162,6 +162,23 @@ extension ResidentsActions on AppState {
       if (v == null || v < 1000) return toastMsg('Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more).');
     }
     final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
+    final msg = newAc > 0 ? 'Saved. The Hostelzy team adds the AC unit to the layout within 48 hours.' : 'Rate card saved. Tenants see the new prices now.';
+    if (onServer) {
+      // S3: saved on the server first; the phone follows only if it worked.
+      final draft = Map.of(rateDraft!), ac = Map.of(acDraft!), hid = ownHid;
+      _write(() => data.saveRates(hid, draft, {for (final r in rs) r.n: (ac: ac[r.n]!, rent: draft[rateKey(ac[r.n]!, r.share)]!)})).then((ok) {
+        if (!ok) return;
+        update(() {
+          rates[hid] = draft;
+          for (final r in rs) {
+            r.ac = ac[r.n]!;
+          }
+          applyRates(hid);
+        });
+        toastMsg(msg);
+      });
+      return;
+    }
     update(() {
       rates[ownHid] = Map.of(rateDraft!);
       for (final r in rs) {
@@ -169,7 +186,7 @@ extension ResidentsActions on AppState {
       }
       applyRates(ownHid);
     });
-    toastMsg(newAc > 0 ? 'Saved. The Hostelzy team adds the AC unit to the layout within 48 hours.' : 'Rate card saved. Tenants see the new prices now.');
+    toastMsg(msg);
   }
 
   /// Rewrites every room's rent from the hostel's rate card.
