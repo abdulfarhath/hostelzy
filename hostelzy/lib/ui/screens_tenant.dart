@@ -110,7 +110,7 @@ class ExploreScreen extends StatelessWidget {
             child: VGap(
               gap: 12,
               children: [
-                PageHead(kicker: 'Hyderabad · $totalFree beds free now', title: 'Find a bed', gap: 2),
+                PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere),
               ],
@@ -134,6 +134,10 @@ class ExploreScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // F21 W4: grey cards while loading; "You're offline" instead of "No hostels".
+                if (s.listState == 'loading') ...const [SkeletonCard(), SkeletonCard()]
+                else if (s.listState == 'offline') const OfflineBlock()
+                else ...[
                 // F21 W2: the rank shows once, on the first card.
                 for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
@@ -171,9 +175,73 @@ class ExploreScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                ],
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F21 W4: a grey placeholder card while hostels load.
+class SkeletonCard extends StatelessWidget {
+  const SkeletonCard({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    Widget bar(double f, double h) => FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: f, child: Container(height: h, color: p.sf));
+    return Semantics(
+      label: 'Loading',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 22),
+        child: VGap(gap: 8, children: [Container(height: 168, color: p.sf), bar(.6, 16), bar(.8, 12), bar(.7, 12)]),
+      ),
+    );
+  }
+}
+
+/// F21 W4: "You're offline · Retry" (never "No hostels" when it's the network).
+class OfflineBlock extends StatelessWidget {
+  const OfflineBlock({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      child: VGap(
+        gap: 10,
+        children: [
+          const T('You’re offline', w: 800, s: 20),
+          T('Hostels show again when you’re back online. Your saved hostels and holds are still here.', s: 14, c: p.mu, lh: 1.45),
+          Align(alignment: Alignment.centerLeft, child: Tap(key: const ValueKey('retry'), onTap: s.retryListings, child: Container(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16), decoration: box(w: 2, c: p.tx), child: const T('Retry', w: 800, s: 14)))),
+        ],
+      ),
+    );
+  }
+}
+
+/// F21 W4: an inline error with Retry (toasts are for success only).
+class InlineError extends StatelessWidget {
+  const InlineError(this.title, {super.key, required this.onRetry, this.sub = 'Check your internet.'});
+  final String title, sub;
+  final VoidCallback onRetry;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.all(12),
+      decoration: box(bg: p.ab, w: 2, c: p.ad),
+      child: Row(
+        children: [
+          Ic('warn', size: 20, color: p.ad),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(title, w: 800, s: 15, c: p.ad), T(sub, s: 13)])),
+          const SizedBox(width: 8),
+          Tap(key: const ValueKey('inlineRetry'), onTap: onRetry, child: Container(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), decoration: box(w: 2, c: p.tx), child: const T('Retry', w: 800, s: 14))),
         ],
       ),
     );
@@ -294,8 +362,7 @@ class HostelCard extends StatelessWidget {
                         child: Tap(
                           key: ValueKey('save-${h.id}'),
                           onTap: () {
-                            s.update(() => s.saved[h.id] = !saved);
-                            s.toastMsg(saved ? 'Removed from saved' : 'Saved on this phone.');
+                            s.toggleSaved(h.id);
                           },
                           child: Container(width: 40, height: 40, alignment: Alignment.center, color: p.bg, child: Ic('heart', size: 18, color: saved ? p.ad : p.tx)),
                         ),
@@ -366,6 +433,8 @@ class HoldsScreen extends StatelessWidget {
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
             child: const PageHead(kicker: "Beds you're holding", title: 'Holds'),
           ),
+          // F21 W4: an inline error with Retry, never a silent empty list.
+          if (s.liveFailed && s.onServer) InlineError('Couldn’t load your holds', onRetry: s.refreshLive),
           // F07 board 3: asked after one of your holds ends (the 102-B sample
           // shows in debug builds only, F17).
           if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
@@ -382,7 +451,7 @@ class HoldsScreen extends StatelessWidget {
                 ),
               ),
             ),
-          for (final h in s.holds.reversed)
+          for (final h in s.holds.reversed.where((h) => !s.releasing.contains(h.id)))
             () {
               final i = holdInfo(s, h);
               final timed = const ['waiting', 'confirmed', 'held'].contains(h.status);
@@ -491,7 +560,6 @@ class MeScreen extends StatelessWidget {
       ('Saved hostels · ${s.saved.values.where((v) => v).length}', () => s.go('saved'), p.tx),
       ('Settings', () => s.go('settings'), p.tx),
       ('Switch role', () => s.tab('role'), p.tx),
-      ('Log out', s.logOut, p.ad),
     ];
     return Scroll(
       key: ValueKey('me${s.scrollEpoch}'),
@@ -524,17 +592,7 @@ class MeScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-            child: VGap(
-              gap: 10,
-              children: [
-                const Kicker('Appearance'),
-                Seg(opts: const [('light', 'Light'), ('dark', 'Dark')], cur: s.theme, onPick: (v) => s.update(() => s.theme = v), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12), fs: 14),
-              ],
-            ),
-          ),
+          // F21 W4: theme and Log out live in Settings only.
           if (s.role == 'resident') ...[
             const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('My stay')),
             for (final r in stay)
@@ -558,7 +616,7 @@ class MeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    T(r.$1, s: 15, w: 600, c: r.$3),
+                    Flexible(child: T(r.$1, s: 15, w: 600, c: r.$3)),
                     Ic('chev', size: 18, color: p.mu),
                   ],
                 ),
@@ -662,8 +720,7 @@ class DetailScreen extends StatelessWidget {
                           right: 12,
                           child: Tap(
                             onTap: () {
-                              s.update(() => s.saved[h.id] = !saved);
-                              s.toastMsg(saved ? 'Removed from saved' : 'Saved on this phone.');
+                              s.toggleSaved(h.id);
                             },
                             child: Container(
                               height: 40,
@@ -997,13 +1054,13 @@ class PickerScreen extends StatelessWidget {
         if (h.ac && h.hasNon)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Padding(padding: EdgeInsets.only(right: 4), child: Kicker('Room')),
-                for (final f in const ['Any', 'AC', 'Non-AC']) ...[
-                  const SizedBox(width: 6),
-                  ChipBtn(f, on: s.pR == f, onTap: () => s.pickRoomType(f)),
-                ],
+                for (final f in const ['Any', 'AC', 'Non-AC']) ChipBtn(f, on: s.pR == f, onTap: () => s.pickRoomType(f)),
               ],
             ),
           ),
@@ -1515,7 +1572,7 @@ class HoldScreen extends StatelessWidget {
                       OutlineCta('Directions', icon: 'pin', onTap: () => s.directions(hostelById(hold?.hid ?? s.hid))),
                       if (canCancel)
                         Tap(
-                          onTap: () => s.releaseHold(hold!, msg: 'Hold released.'),
+                          onTap: () => s.releaseWithUndo(hold!),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: T('Release this hold', w: 600, s: 14, c: p.ad),

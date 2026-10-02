@@ -361,7 +361,9 @@ class _AppBody extends StatelessWidget {
                     color: p.tx,
                     boxShadow: const [BoxShadow(offset: Offset(0, 12), blurRadius: 32, color: Color.fromRGBO(0, 0, 0, .25))],
                   ),
-                  child: T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg),
+                  child: s.toastUndo == null
+                      ? T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg)
+                      : Row(children: [Expanded(child: T(s.toast!, s: 14, w: 600, lh: 1.35, c: p.bg)), Tap(key: const ValueKey('undo'), onTap: s.undoToast, child: Padding(padding: const EdgeInsets.only(left: 12), child: T('Undo', s: 14, w: 800, c: p.bg, underline: true)))]),
                 ),
               ),
           ],
@@ -434,7 +436,8 @@ class _AppBody extends StatelessWidget {
     'oRooms' => const OwnerRoomsScreen(),
     'aTeam' => const TeamMembersScreen(),
     'oToday' => const OwnerTodayScreen(),
-    'oBeds' => const OwnerBedsScreen(),
+    // F21 W4: the bed map is a floor drawing; its labels grow at most 1.3×.
+    'oBeds' => MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: const OwnerBedsScreen()),
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
     'oInvite' => const OwnerInviteScreen(),

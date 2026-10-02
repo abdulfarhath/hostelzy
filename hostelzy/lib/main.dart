@@ -88,6 +88,9 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
 
   /// F13: live hostels and remote switches from Supabase.
   Future<void> _goLive() async {
+    // F21 W4: skeleton cards until the hostels arrive; "offline" if they can't.
+    state.reconnect = _goLive;
+    state.update(() => state.listState = 'loading');
     try {
       final db = await SupabaseRepo.connect(idToken: signIn.available ? signIn.idToken : null);
       state.data = db;
@@ -95,6 +98,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       if (s != null) state.applySettings(s);
       final l = await db.listings();
       if (l != null) state.applyListings(l);
+      state.update(() => state.listState = 'ready');
       // B6: the signed-in user's holds, enquiries, payments and complaints, live.
       await state.startLive();
       // F20: a new phone gets its reminders back.
@@ -103,8 +107,10 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       await state.syncPushToken();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
-      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
-      state.toastMsg('Couldn’t reach Hostelzy. Check your internet and open the app again.');
+      if (state.listState == 'loading') {
+        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
+        state.update(() => state.listState = 'offline');
+      }
       debugPrint('Supabase: $e');
     }
   }
@@ -141,7 +147,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       ),
       builder: (context, child) => MediaQuery(
         // F18: follow the phone's text size, capped so layouts still fit.
-        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 1.3)),
+        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 1, maxScaleFactor: 2)),
         child: overview ? OverviewPage(onOpenPrototype: () => setState(() => overview = false)) : AppScope(state: state, child: child!),
       ),
     );

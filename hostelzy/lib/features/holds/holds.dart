@@ -3,6 +3,9 @@ part of '../../state.dart';
 // F18 holds
 mixin _HoldsData {
 
+  /// F21 W4: holds released with Undo still showing; released for real after [undoSecs].
+  final Set<String> releasing = {};
+
   /// What each bed was before a hold (free, or free soon), so releasing puts
   /// it back exactly (D10).
   final Map<String, String> _bedBefore = {};
@@ -56,6 +59,25 @@ extension HoldsActions on AppState {
       payments = payments.where((x) => x.holdId != h.id || x.status == 'paid').toList();
     });
     if (msg != null) toastMsg(msg);
+  }
+
+  /// F21 W4: the tenant's Release, with 5 seconds to Undo before it happens.
+  void releaseWithUndo(Hold h) {
+    update(() {
+      releasing.add(h.id);
+      if (screen == 'hold') {
+        final hs = List.of(hist);
+        screen = hs.isNotEmpty ? hs.removeLast() : 'holds';
+        hist = hs;
+      }
+    });
+    final t = Timer(undoSecs, () {
+      if (releasing.remove(h.id)) releaseHold(h);
+    });
+    toastWithUndo('Hold on bed ${h.bed} released', () {
+      t.cancel();
+      update(() => releasing.remove(h.id));
+    });
   }
 
   /// Owner releases a held bed: the tenant's hold record follows (F9).

@@ -46,9 +46,11 @@ class T extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // `font: 11px 'JetBrains Mono'` resets line-height to normal: rounded ascent + descent.
-    final size = s ?? DefaultTextStyle.of(context).style.fontSize ?? 16;
+    // F21 W4: no 10–11px info text; small capitals labels stay at 11.
+    final sz = s == null || mono ? s : math.max(s!, upper ? 11.0 : 12.0);
+    final size = sz ?? DefaultTextStyle.of(context).style.fontSize ?? 16;
     final lineH = lh ?? (mono ? ((1.02 * size).round() + (.3 * size).round()) / size : null);
-    var style = cssStyle(DefaultTextStyle.of(context).style, s: s, w: w, c: c, ls: ls, lh: lineH, tab: tab, mono: mono);
+    var style = cssStyle(DefaultTextStyle.of(context).style, s: sz, w: w, c: c, ls: ls, lh: lineH, tab: tab, mono: mono);
     if (underline) style = style.copyWith(decoration: TextDecoration.underline, decorationColor: style.color);
     final t = upper ? text.toUpperCase() : text;
     final Widget out;
@@ -498,10 +500,44 @@ class Tap extends StatelessWidget {
   final Widget child;
   final bool enabled;
   @override
-  Widget build(BuildContext context) => MouseRegion(
-    cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
-    child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child),
+  Widget build(BuildContext context) => Semantics(
+    // F21 W4: screen readers hear a button; small targets still take a 48×48 tap.
+    button: onTap != null,
+    enabled: enabled && onTap != null,
+    child: _MinHit(
+      on: onTap != null,
+      child: MouseRegion(
+        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+        child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child),
+      ),
+    ),
   );
+}
+
+/// F21 W4: accepts taps up to 48×48 around a smaller child, without changing
+/// the layout (Android's minimum touch target).
+class _MinHit extends SingleChildRenderObjectWidget {
+  const _MinHit({required this.on, super.child});
+  final bool on;
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderMinHit(on);
+  @override
+  void updateRenderObject(BuildContext context, _RenderMinHit r) => r.on = on;
+}
+
+class _RenderMinHit extends RenderProxyBox {
+  _RenderMinHit(this.on);
+  bool on;
+  static const _min = 48.0;
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (!on || size.contains(position)) return super.hitTest(result, position: position);
+    final dx = size.width < _min ? (_min - size.width) / 2 : 0.0, dy = size.height < _min ? (_min - size.height) / 2 : 0.0;
+    if (dx == 0 && dy == 0) return false;
+    if (!Rect.fromLTRB(-dx, -dy, size.width + dx, size.height + dy).contains(position)) return false;
+    // Just outside a small target: count it as a tap on the nearest point.
+    return super.hitTest(result, position: Offset(position.dx.clamp(0, size.width - .01), position.dy.clamp(0, size.height - .01)));
+  }
 }
 
 /// Horizontal or vertical scroller without scrollbars or overscroll glow.

@@ -43,8 +43,9 @@ class Cta extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
     final f = fg ?? p.ai;
+    // F21 W4: at large text the label wraps and the button grows (min height).
     Widget w = Container(
-      height: height,
+      constraints: height == null ? null : BoxConstraints(minHeight: height!),
       padding: EdgeInsets.symmetric(horizontal: px, vertical: vpad),
       decoration: box(
         bg: bg ?? p.ac,
@@ -59,9 +60,9 @@ class Cta extends StatelessWidget {
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
           children: [
             if (parts != null)
-              for (final t in parts!) T(t)
+              for (final t in parts!) Flexible(child: T(t))
             else
-              T(label),
+              Flexible(child: T(label)),
             if (!expand) SizedBox(width: gap),
             Ic(icon, size: iconSize, color: f),
           ],
@@ -506,7 +507,7 @@ class GoogleButton extends StatelessWidget {
         decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: const Color(0xFF201E1D)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [SvgPicture.string(_googleG, width: 20, height: 20), const SizedBox(width: 12), T(label, s: 16, w: 800, c: const Color(0xFF201E1D))],
+          children: [SvgPicture.string(_googleG, width: 20, height: 20), const SizedBox(width: 12), Flexible(child: T(label, s: 16, w: 800, c: const Color(0xFF201E1D)))],
         ),
       ),
     ),

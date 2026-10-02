@@ -53,6 +53,9 @@ part 'features/session/guest.dart';
 /// B4: split by area. Each `lib/features/<area>/*.dart` part holds that
 /// area's fields (a `_XData` mixin) and actions (an `XActions` extension).
 /// This file keeps the shared core: navigation, `update`, statics, restore.
+/// F21 W4: how long an Undo stays.
+const undoSecs = Duration(seconds: 5);
+
 class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();

@@ -125,7 +125,7 @@ class ResidentHomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Kicker("Today's food · $todayName", nowrap: true),
+                Flexible(child: Kicker("Today's food · $todayName")),
                 Tap(
                   onTap: () => s.tab('food'),
                   child: T('Full week', s: 12, w: 600, c: p.ad),
@@ -309,7 +309,7 @@ class RentPayScreen extends StatelessWidget {
                   children: [
                     Flexible(child: Rich([sp(context, fmt(advance), w: 800), sp(context, ' '), sp(context, sample ? 'paid $residentJoined' : 'paid when you joined', c: p.mu)])),
                     const SizedBox(width: 8),
-                    Tag('${fmt(math.max(0, advance - terms.maintenance))} back when you leave', bg: p.sf),
+                    Flexible(child: Tag('${fmt(math.max(0, advance - terms.maintenance))} back when you leave', bg: p.sf)),
                   ],
                 ),
               ),

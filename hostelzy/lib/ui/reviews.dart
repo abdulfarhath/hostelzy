@@ -505,7 +505,7 @@ class OwnerRankScreen extends StatelessWidget {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [T('${rankLabel[k]} · ${(rankWeights[k]! * 100).round()}%', w: 800, s: 14), T(rankWord(f[k]!), w: 800, s: 13, c: f[k]! >= .7 ? p.tx : p.ad)],
+                          children: [Flexible(child: T('${rankLabel[k]} · ${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)), const SizedBox(width: 8), Flexible(child: T(rankWord(f[k]!), w: 800, s: 13, c: f[k]! >= .7 ? p.tx : p.ad, align: TextAlign.right))],
                         ),
                         Container(
                           height: 8,
@@ -519,7 +519,7 @@ class OwnerRankScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const T('Fair Play strikes', w: 800, s: 14), T(strikes == 0 ? '0 · rank not lowered' : '$strikes · rank lowered', w: 800, s: 13, c: strikes == 0 ? p.tx : p.ad)]),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Flexible(child: T('Fair Play strikes', w: 800, s: 14)), const SizedBox(width: 8), Flexible(child: T(strikes == 0 ? '0 · rank not lowered' : '$strikes · rank lowered', w: 800, s: 13, c: strikes == 0 ? p.tx : p.ad, align: TextAlign.right))]),
                 ),
               ],
             ),
