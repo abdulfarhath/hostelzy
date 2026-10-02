@@ -281,3 +281,20 @@ Founder asked: trademark, .in and .com for **HostelHunt**.
 
 **Brand chat view: not recommended.** Taken .com by a hostel business, a near-twin (Hostel Hunter) in India,
 and hard to protect. Fine as an ad phrase ("Start your hostel hunt") but not as the brand.
+
+---
+
+# Is "Hostelzy" a good name? Check (2026-10-02)
+
+| Check | Result |
+|---|---|
+| hostelzy.com / .app / .co / gethostelzy.com | ✅ free (registry lookup) |
+| hostelzy.in | **Not confirmed.** The .in lookup is blocked here. No website/DNS answers for hostelzy.in (a hint it may be free, not proof). Founder: check on GoDaddy/Hostinger and buy. |
+| Web search "Hostelzy" | Only our own GitHub repo. No company/app found. |
+| Trademark "Hostelzy" (web only) | No filing found on public trademark sites. **IP India search not done (blocked).** |
+| Closest marks | **Hostelz.com**: global hostel search since 2002, app, @hostelz on Instagram/TikTok/YouTube. One letter apart, same kind of service. **Hostello**: trademark applications filed in India (seen on RegisterKaro, details blocked here). |
+
+**Verdict:** a good, simple, friendly name, and fine to launch with in Hyderabad. The main risk is
+Hostelz.com: a lawyer must judge if it is "too close" before we file (classes 9, 42, 43, 36).
+Lower the risk: always use the room logo + "hostelzy" together; market as a PG/hostel app in
+Hyderabad (not travel hostels); file the trademark early as a logo + word mark.
