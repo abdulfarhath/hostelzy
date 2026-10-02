@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'data.dart';
 
@@ -31,7 +32,9 @@ class AppState extends ChangeNotifier {
     signedIn = auth != 'out';
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (const ['hold', 'holds', 'oToday'].contains(screen)) {
+      // F17: a free hold really ends at 0:00.
+      if (_expireHolds(DateTime.now().millisecondsSinceEpoch)) return;
+      if (const ['hold', 'holds', 'oToday', 'otp'].contains(screen)) {
         now = DateTime.now().millisecondsSinceEpoch;
         notifyListeners();
       }
@@ -47,6 +50,21 @@ class AppState extends ChangeNotifier {
   String? sheet;
   List<String> hist = [];
   String phone = '', otp = '';
+
+  /// When the last code was sent (ms); "Resend in 0:30" counts down from it.
+  int codeSentAt = 0;
+  int get resendLeft => (30 - (now - codeSentAt) / 1000).ceil().clamp(0, 30);
+
+  /// The SMS itself needs the backend (F13): MSG91 / Firebase.
+  void sendCode() => update(() {
+    now = DateTime.now().millisecondsSinceEpoch;
+    codeSentAt = now;
+    otp = '';
+    if (screen != 'otp') {
+      hist = [...hist, screen];
+      screen = 'otp';
+    }
+  });
   final Map<String, List<Room>> rooms = {};
 
   /// F03: each hostel's published deals.
@@ -289,7 +307,7 @@ class AppState extends ChangeNotifier {
     toastMsg('${hostelById(i.hid).owner} is asked to check the UTR.');
   }
 
-  void sendReminder(Invoice i) => toastMsg('Reminder sent to ${hostelById(i.hid).owner} on WhatsApp.');
+  void sendReminder(Invoice i) => whatsapp(ownerPhones[i.hid] ?? '', 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
 
   // ------------------------------------------------------------ F12 room layouts
 
@@ -789,6 +807,9 @@ class AppState extends ChangeNotifier {
   String? obed;
   final Map<String, bool> saved = {};
   String? waTo, waMsg;
+
+  /// Number the WhatsApp sheet sends to (10 digits).
+  String waPhone = '';
   String obView = 'plan';
   int obFloor = 2;
 
@@ -890,15 +911,16 @@ class AppState extends ChangeNotifier {
     _prep();
   });
 
-  void openWA(String to, String msg) => update(() {
+  void openWA(String to, String msg, {String phone = ''}) => update(() {
     sheet = 'wa';
     waTo = to;
+    waPhone = phone;
     waMsg = msg;
     waRef = null;
   });
 
   /// The tenant's verified number (the demo number until they log in).
-  String get myPhone => phone.length == 10 ? phone : '9848012345';
+  String get myPhone => phone.length == 10 ? phone : '9000000001';
 
   /// F05 tenant → owner hand-off. Records the enquiry on Hostelzy first (the
   /// owner is told from here, not by the WhatsApp text), then opens the
@@ -921,13 +943,14 @@ class AppState extends ChangeNotifier {
     final e = _record(hid, body, bed: bed, from: from);
     sheet = 'wa';
     waTo = hostelById(hid).owner;
+    waPhone = ownerPhones[hid] ?? '';
     waMsg = body;
     waRef = e.ref;
     waHid = hid;
   }
 
   /// Full message the tenant sends: their text plus the ref line.
-  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef · hostelzy.in/r/$waRef';
+  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nRef $waRef';
 
   void markContacted(String ref) => update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
 
@@ -1024,7 +1047,7 @@ class AppState extends ChangeNotifier {
 
   void rejectSignup(Signup g) {
     update(() => signups = signups.where((x) => x.id != g.id).toList());
-    toastMsg('Removed. ${g.name.split(' ')[0]} has been told.');
+    toastMsg('Removed.');
   }
 
   /// The resident the confirm screen is for (the newest one waiting).
@@ -1211,12 +1234,56 @@ class AppState extends ChangeNotifier {
       hist = [...hist, screen];
       screen = 'hold';
     });
-    toastMsg(opt == 'free' ? 'Hold placed. ${h0.owner} has been told on WhatsApp.' : 'Paid ${fmt(q.hzAdv)} to ${h0.owner}. Your deal is locked: $ref.');
+    toastMsg(opt == 'free' ? 'Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.' : 'Paid ${fmt(q.hzAdv)} to ${h0.owner}. Your deal is locked: $ref.');
   }
 
   void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
 
   void copyText(String s) => Clipboard.setData(ClipboardData(text: s));
+
+  // ------------------------------------------------------------ F17 links
+
+  /// The last link the app tried to open (WhatsApp, phone, maps, UPI).
+  Uri? lastLink;
+
+  /// Opens another app. Nothing is sent from Hostelzy itself.
+  Future<void> openLink(Uri u, String app) async {
+    lastLink = u;
+    try {
+      if (await launchUrl(u, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {}
+    toastMsg('Couldn’t open $app on this device.');
+  }
+
+  /// WhatsApp with the message filled in; [phone] empty lets the user pick a chat.
+  void whatsapp(String phone, String text) => openLink(Uri.parse('https://wa.me/${phone.isEmpty ? '' : '91$phone'}?text=${Uri.encodeComponent(text)}'), 'WhatsApp');
+  void call(String phone) => openLink(Uri.parse('tel:+91$phone'), 'the phone app');
+  void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('${h.name}, ${h.area}, Hyderabad')}'), 'Maps');
+
+  /// Holds that ran out (shown as "Hold expired").
+  final Set<String> expiredHolds = {};
+
+  bool _expireHolds(int n) {
+    final out = holds.where((h) => const ['waiting', 'confirmed', 'held'].contains(h.status) && holdSecs - (n - h.start) / 1000 <= 0).toList();
+    if (out.isEmpty) return false;
+    now = n;
+    update(() {
+      for (final h in out) {
+        final b = findBed(h.hid, h.bed).b;
+        if (b != null && b.mine) {
+          b.state = 'free';
+          b.mine = false;
+        }
+        expiredHolds.add(h.id);
+      }
+      holds = holds.map((h) => out.contains(h) ? h.withStatus('released') : h).toList();
+    });
+    return true;
+  }
+
+  /// Test hook: run the expiry check at time [n].
+  @visibleForTesting
+  bool expireHoldsAt(int n) => _expireHolds(n);
 }
 
 class AppScope extends InheritedNotifier<AppState> {

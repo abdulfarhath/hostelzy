@@ -161,4 +161,16 @@ Real map, login, large screens:
 - Dark mode: boards "3 in dark mode" and "9 in dark mode". Every board has a Dark tweak.
 
 ## Build
-_Not started._
+Shipped in parts (Build chat).
+
+**Part 1 · shipped 2026-10-02** (branch `feature/f17-honest-app`):
+- **Login (board 10):** no demo number / code buttons in the Play Store build (they stay as "Debug: …" in debug builds only, `kDebugMode`); placeholder "10-digit number"; "by SMS"; Send code / Verify grey until the input is complete; a real "Resend in 0:30" countdown, then "Resend code"; "Change number"; Terms and Privacy line. The code itself is still not checked by a server (F13).
+- **Release build has no demo tools:** `?start=…`, `?page=overview` and other URL shortcuts work only in debug builds. "Demo: simulate the owner confirming", the Fair Play "Paste code from SMS" and Confirm-stay "Paste code from WhatsApp" are debug-only too.
+- **Real links** (`url_launcher`): WhatsApp opens `wa.me/91<number>?text=…` (tenant → owner, owner → tenant, rent reminder, founder's plan reminder, share invite link and referral code); Call opens the phone app (`tel:`); Directions opens Google Maps search for the hostel. In tests, `AppState.lastLink` records the link.
+- **WhatsApp sheet (board 7):** "Ask Srinivas on WhatsApp", neutral box "Send this on WhatsApp so Srinivas knows you came from Hostelzy", Send on WhatsApp / Copy message, "Nothing is sent until you press send in WhatsApp." The dead link `hostelzy.in/r/…` is gone from the message.
+- **Holds (board 8):** "Free hold · Srinivas doesn't know yet", Tell Srinivas on WhatsApp; the hold **expires at 0:00** (bed freed), with "Hold expired · 0:00", Hold again / See other beds.
+- **Honest wording:** no "has been told", "gets a WhatsApp message", "Reminder sent", "Poster saved as a PDF" (now Copy link), complaint / notice / swap say "saved, tell Srinivas on WhatsApp too", no "Hostelzy steps in after 72 hours".
+- Test: `honest app: links open WhatsApp, phone and maps; holds expire; login resend (F17)`.
+
+**Still to do:** part 2, payments (UPI to the owner → UTR → owner confirms; boards 1–6), and part 3, the real map and the large-screen layout (boards 9, 11). Real-looking sample phone numbers, the real date and the rest of group A come with those parts; group B waits for F13.
+

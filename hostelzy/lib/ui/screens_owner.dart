@@ -273,7 +273,7 @@ class OwnerTodayScreen extends StatelessWidget {
                                   } else {
                                     s.update(() => s.reqs = s.reqs.where((x) => x.id != r.id).toList());
                                   }
-                                  s.toastMsg('Confirmed. ${r.name.split(' ')[0]} gets a WhatsApp message.');
+                                  s.toastMsg('Hold confirmed. Let ${r.name.split(' ')[0]} know on WhatsApp.');
                                 },
                               ),
                             ),
@@ -520,7 +520,7 @@ class _EnquiryRow extends StatelessWidget {
                   border: p.tx,
                   onTap: () {
                     s.markContacted(e.ref);
-                    s.toastMsg('Calling $first on +91 ${phoneSpaced(e.phone)}…');
+                    s.call(e.phone);
                   },
                 ),
               ),
@@ -925,7 +925,7 @@ class OwnerRentScreen extends StatelessWidget {
                               Tooltip(
                                 message: 'Remind on WhatsApp',
                                 child: Tap(
-                                  onTap: () => s.toastMsg('Reminder sent to ${r.name.split(' ')[0]} on WhatsApp.'),
+                                  onTap: () => s.whatsapp(r.phone, 'Hi ${r.name.split(' ')[0]}, a reminder: your rent of ${fmt(r.amt)} for bed ${r.bed} is due. Thanks, Srinivas'),
                                   child: Container(
                                     width: 34,
                                     height: 34,
@@ -1354,9 +1354,12 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.toastMsg('Opening WhatsApp to share $link…'))),
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Join Anjani Residency on Hostelzy: $link'))),
                         const SizedBox(width: 8),
-                        Expanded(child: Cta('Print poster', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.toastMsg('Poster saved as a PDF.'))),
+                        Expanded(child: Cta('Copy link', icon: 'check', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () {
+                          s.copyText(link);
+                          s.toastMsg('Link copied.');
+                        })),
                       ],
                     ),
                   ),

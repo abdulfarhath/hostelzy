@@ -21,7 +21,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f14-onboarding`. In memory until F13 (backend) |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Design approved** · 2026-10-02 (founder, "approve all") | Build | Play Store Screens canvas |
-| F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Design approved** · 2026-10-02 (standing approval) | Build | Full list in the feature file. Build right after F10, before the app icon and F12 |
+| F17 | Make it real: remove demo/fake behaviour (honest payments, real WhatsApp/map/QR, no demo login) | **Building** · part 1 merged 2026-10-02 | Build | Part 1 (login, links, holds, wording) shipped; part 2 payments and part 3 map + large screens next |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build

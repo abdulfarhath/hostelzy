@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -607,7 +608,7 @@ class HoldsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            T(lab[h.status]!, s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.ad),
+                            T(s.expiredHolds.contains(h.id) ? 'Expired' : lab[h.status]!, s: 11, w: 600, ls: .08, upper: true, lh: 1.3, c: p.ad),
                             const SizedBox(height: 3),
                             T('Bed ${h.bed}', w: 800, s: 18),
                             const SizedBox(height: 3),
@@ -1651,18 +1652,20 @@ class HoldScreen extends StatelessWidget {
     var bg = p.sf, fg = p.tx;
     var rows = <(String, String)>[];
     var steps = <TimelineStep>[];
-    var canSim = false, canCancel = false, canMoveIn = false;
+    var canSim = false, canCancel = false, canMoveIn = false, expired = false;
     VoidCallback wa = () {};
     if (hold != null) {
       final i = holdInfo(s, hold);
       final st = hold.status;
       final m = switch (st) {
-        'waiting' => ['Waiting for ${i.hh.owner}', cd(i.left), 'left for ${i.hh.owner} to confirm. Usually replies in ~${i.hh.reply} min.', 'sf', 'tx'],
+        'waiting' => ['Free hold', cd(i.left), 'left on your free hold. ${i.hh.owner} doesn’t know yet: tell them on WhatsApp so they keep the bed.', 'sf', 'tx'],
         'confirmed' => ['Confirmed by ${i.hh.owner}', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
         'held' => ['Held for you', cd(i.left), 'Go and see it before the timer ends to keep the bed.', 'gn', 'ai'],
         'booked' => ['Booked', 'Yours.', 'Advance paid to ${i.hh.owner}. Show ${hold.ref ?? 'your HZ code'} when you move in; your deal is locked.', 'gn', 'ai'],
+        _ when s.expiredHolds.contains(hold.id) => ['Hold expired', '0:00', 'Your hold has ended. Bed ${hold.bed} is free for everyone again. You can hold it again if it’s still free.', 'sf', 'tx'],
         _ => ['Released', '—', 'The hold ended. You paid nothing.', 'sf', 'tx'],
       };
+      expired = st == 'released' && s.expiredHolds.contains(hold.id);
       final done = st != 'waiting' && st != 'released';
       hostel = i.hh.name;
       bed = hold.bed;
@@ -1682,10 +1685,11 @@ class HoldScreen extends StatelessWidget {
       ];
       steps = [
         TimelineStep(t: 'Hold placed', d: 'Bed taken off the market for everyone else', bg: p.tx, bd: p.tx),
-        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Advance paid', d: hold.opt == 'free' ? (done ? 'Confirmed on WhatsApp' : 'Usually within ${i.hh.reply} minutes') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
+        TimelineStep(t: hold.opt == 'free' ? 'Owner confirms' : 'Advance paid', d: hold.opt == 'free' ? (done ? 'Confirmed by ${i.hh.owner}' : 'After you tell ${i.hh.owner} on WhatsApp') : 'Done', bg: done ? p.tx : p.ac, bd: done ? p.tx : p.ac),
         TimelineStep(t: 'Visit and move in', d: hold.opt == 'book' ? 'Pay the first month (${fmt(q.hzFirst)}) at move-in. Show ${hold.ref}.' : 'Pay ${fmt(q.hzAdv)} advance + first month at move-in.', bg: done ? p.ac : transparent, bd: done ? p.ac : p.tk),
       ];
-      canSim = st == 'waiting';
+      // Demo only: never in the Play Store build (F17).
+      canSim = st == 'waiting' && kDebugMode;
       canCancel = st == 'waiting' || st == 'confirmed' || st == 'held';
       canMoveIn = st == 'confirmed' || st == 'booked' || st == 'held';
       wa = () => s.enquire(hold.hid, "Hi ${i.hh.owner}, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed, from: 'Hold · WhatsApp owner');
@@ -1736,8 +1740,27 @@ class HoldScreen extends StatelessWidget {
                     children: [
                       if (canMoveIn)
                         Cta("Moving in · see what to pay", height: 52, px: 16, fs: 15, onTap: () => s.go('moveIn')),
-                      Cta('WhatsApp $owner', parts: ['WhatsApp', owner], icon: 'msg', height: 52, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: wa),
-                      OutlineCta('Directions', icon: 'pin', onTap: () => s.toastMsg('Opening Maps…')),
+                      if (expired) ...[
+                        Cta('Hold ${hold!.bed} again', height: 52, px: 16, fs: 15, onTap: () {
+                          final b = s.findBed(hold.hid, hold.bed).b;
+                          if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');
+                          s.update(() {
+                            s.hid = hold.hid;
+                            s.bed = hold.bed;
+                          });
+                          s.openPicker();
+                          s.update(() {
+                            s.bed = hold.bed;
+                            s.sheet = 'hold';
+                          });
+                        }),
+                        OutlineCta('See other beds', onTap: () {
+                          s.update(() => s.hid = hold.hid);
+                          s.openPicker();
+                        }),
+                      ] else
+                        Cta(hold?.status == 'waiting' ? 'Tell $owner on WhatsApp' : 'WhatsApp $owner', icon: 'msg', height: 52, px: 16, fs: 15, bg: hold?.status == 'waiting' ? p.ac : p.tx, fg: hold?.status == 'waiting' ? p.ai : p.bg, onTap: wa),
+                      OutlineCta('Directions', icon: 'pin', onTap: () => s.directions(hostelById(hold?.hid ?? s.hid))),
                       if (canCancel)
                         Tap(
                           onTap: () {
