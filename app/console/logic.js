@@ -63,3 +63,35 @@ export function waLink(phone, text) {
 }
 
 export const slugOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Math.random().toString(36).slice(2, 6);
+
+/** F19: whole days a resident's layout fix has waited. */
+export function waitedDays(iso, now = Date.now()) {
+  return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 86400000));
+}
+
+/** F19: owners decide first; after 7 days the team may. [label, tag kind]. */
+export function fixStatus(days) {
+  return days >= 7 ? ['Owner silent', 'red'] : ['With owner', 'neutral'];
+}
+
+const KIND = { fan: 'Fan', ac: 'AC unit', window: 'Window', door: 'Door', wash: 'Washroom', pillar: 'Pillar' };
+
+/** F19: what a fix changes compared with the live layout, in words. */
+export function layoutChanges(before, after) {
+  const b = before ?? { w: 0, h: 0, beds: {}, items: [] };
+  const out = [];
+  for (const i of after.items ?? []) {
+    const o = (b.items ?? []).find((x) => x.id === i.id);
+    const name = KIND[i.kind] ?? i.kind;
+    if (!o) out.push(`${name} added`);
+    else if (o.x !== i.x || o.y !== i.y || o.w !== i.w || o.h !== i.h) out.push(`${name} moved`);
+    else if ((o.working ?? true) !== (i.working ?? true)) out.push(`${name} ${i.working === false ? 'not working' : 'working again'}`);
+  }
+  for (const o of b.items ?? []) if (!(after.items ?? []).some((x) => x.id === o.id)) out.push(`${KIND[o.kind] ?? o.kind} taken off`);
+  for (const [k, p] of Object.entries(after.beds ?? {})) {
+    const q = (b.beds ?? {})[k];
+    if (!q || q[0] !== p[0] || q[1] !== p[1]) out.push(`Bed ${k} moved`);
+  }
+  if (b.w !== after.w || b.h !== after.h) out.push(`Size ${Math.round(b.w)} × ${Math.round(b.h)} → ${Math.round(after.w)} × ${Math.round(after.h)} ft`);
+  return out;
+}

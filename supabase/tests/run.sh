@@ -19,4 +19,5 @@ $P -d hz_rls_test -f tests/invoices_test.sql
 $P -d hz_rls_test -f tests/reviews_test.sql
 $P -d hz_rls_test -f tests/fairplay_test.sql
 $P -d hz_rls_test -f tests/managers_test.sql
+$P -d hz_rls_test -f tests/layoutfix_test.sql
 $P -d hz_rls_test -f tests/rewards_test.sql

@@ -49,6 +49,13 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 4j. **Reviews from the app (S4)** (after 4i): Supabase → SQL Editor → paste `supabase/migrations/20261002130000_s4_reviews.sql` → **Run** → "Success".
 4k. **Fair Play from the app (S5)** (after 4j): Supabase → SQL Editor → paste `supabase/migrations/20261002140000_s5_fair_play.sql` → **Run** → "Success".
 4l. **Managers (S8)** (after 4k): Supabase → SQL Editor → paste `supabase/migrations/20261002150000_s8_managers.sql` → **Run** → "Success".
+4m. **Residents fix room layouts (F19)** (after 4l): Supabase → SQL Editor → paste `supabase/migrations/20261002160000_f19_layout_fixes.sql` → **Run** → "Success".
+
+4n. **Demo APK sign-in** (likely cause of "Couldn't sign in" in the demo; the real APK works):
+   - console.cloud.google.com → project hostelzy → APIs & Services → Credentials → "Android key (auto created by Firebase)".
+   - Under Application restrictions → Android apps, the list has only `app.hostelzy.hostelzy`. **Add** `app.hostelzy.hostelzy.demo` with the same SHA-1 (`46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24`) → Save.
+   - The next APK's toast shows the real code (for example "firebase: … blocked") if it is still something else.
+
 4o. **Stay Rewards on the server (S6)** (after 4l; run it after 4m if F19 is merged first, the order doesn't matter): Supabase → SQL Editor → paste `supabase/migrations/20261002170000_s6_stay_rewards.sql` → **Run** → "Success".
 
 ## Soon (before real hostels)

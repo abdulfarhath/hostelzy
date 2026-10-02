@@ -42,9 +42,16 @@ extension OnPhoneActions on AppState {
     ],
     'fairAccepted': fairAccepted,
     'pushAsked': pushAsked,
+    // F20: reminders ring from this phone.
+    'rem': remJson(),
     // F18 (F5): the owner's house rules and menu stay on the phone.
     'rules': [for (final r in rules) [r.k, r.v]],
     'menu': [for (final d in menu) [d.b, d.l, d.n]],
+    // F19: layout fix drafts stay on this phone until they are sent.
+    'fixDrafts': {
+      for (final e in fixDrafts.entries) e.key: layoutJson(e.value),
+      if (_fixLayout != null) '$fixHid|$fixRoom': layoutJson(_fixLayout!.snap()),
+    },
   };
 
   void _persist() {

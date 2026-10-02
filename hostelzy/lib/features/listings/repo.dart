@@ -15,7 +15,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -133,6 +133,13 @@ abstract class HostelRepo {
   /// friend's code before a first stay (returns the friend's first name).
   Future<String> referralCode();
   Future<String> useReferralCode(String code);
+  /// F19: layout fixes. A resident sends or withdraws one; the owner (the
+  /// team after 7 days) decides; owners publish their own edits and can undo.
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note);
+  Future<void> withdrawLayoutFix(String id);
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''});
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
+  Future<void> undoLayoutPublish(String hid, int room);
 }
 
 class SampleRepo implements HostelRepo {
@@ -221,6 +228,17 @@ class SampleRepo implements HostelRepo {
   Future<String> referralCode() => throw UnsupportedError('sample data');
   @override
   Future<String> useReferralCode(String code) => throw UnsupportedError('sample data');
+
+  @override
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) => throw UnsupportedError('sample data');
+  @override
+  Future<void> withdrawLayoutFix(String id) async {}
+  @override
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) async {}
+  @override
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
+  @override
+  Future<void> undoLayoutPublish(String hid, int room) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -295,8 +313,9 @@ class SupabaseRepo implements HostelRepo {
       db.from('manager_invites').select().order('created_at'),
       me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('profiles').select('member, member_since, ref_code, referred_by').eq('id', me),
       db.from('reward_ledger').select().order('created_at'),
+      db.from('layout_fixes').select().neq('status', 'withdrawn').order('created_at'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], me: me);
   }
 
   @override
@@ -416,6 +435,22 @@ class SupabaseRepo implements HostelRepo {
   Future<String> useReferralCode(String code) async => await db.rpc('use_referral_code', params: {'p_code': code}) as String;
 
   @override
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async =>
+      await db.rpc('send_layout_fix', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout, 'p_note': note}) as String;
+
+  @override
+  Future<void> withdrawLayoutFix(String id) => db.rpc('withdraw_layout_fix', params: {'p_id': id});
+
+  @override
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) => db.rpc('decide_layout_fix', params: {'p_id': id, 'p_approve': approve, 'p_reason': reason});
+
+  @override
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) => db.rpc('publish_layout', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout});
+
+  @override
+  Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -433,7 +468,13 @@ class SupabaseRepo implements HostelRepo {
     final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)');
     // S5: strike counts are public (they hide deals and listings).
     final st = await db.rpc('strike_counts') as List;
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int});
+    // F19: "Checked by N residents · date" per room.
+    final ck = await db.rpc('layout_checks') as List;
+    final checks = <String, Map<int, (int, String)>>{};
+    for (final r in ck.cast<Map>()) {
+      (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
+    }
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks);
   }
 
   @override
@@ -451,7 +492,7 @@ class SupabaseRepo implements HostelRepo {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -541,7 +582,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in

@@ -6,6 +6,7 @@ import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
 import 'payments.dart';
+import 'reminders.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
   const ResidentHomeScreen({super.key});
@@ -62,10 +63,12 @@ class ResidentHomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: PageHead(kicker: 'Anjani Residency · Room 204 · Bed B', title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 32),
           ),
+          if (s.showToday) const TodayCard(),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
@@ -108,6 +111,23 @@ class ResidentHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+          // F19: residents fix any room's layout at their hostel.
+          Tap(
+            onTap: () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[s.homeHid ?? 'anjani']?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101),
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+              decoration: box(w: 1, c: p.dv),
+              child: Row(
+                children: [
+                  const Ic('pencil', size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Rich([sp(context, 'Room layouts. ', w: 800), sp(context, 'Something in the wrong place? Fix any room here.', c: p.mu)], s: 14, lh: 1.35)),
+                  const Ic('chev', size: 18),
+                ],
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 6),
             child: Row(
