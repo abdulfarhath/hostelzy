@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the migrations and the RLS tests on a throwaway local Postgres 16.
+# Runs the migrations, the RLS tests and the B5 server-rule tests on a throwaway local Postgres 16.
 # Usage: PGHOST=/var/tmp/hzpg PGPORT=54329 supabase/tests/run.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -8,3 +8,4 @@ $P -d postgres -c 'drop database if exists hz_rls_test' -c 'create database hz_r
 $P -d hz_rls_test -f tests/stub.sql
 for f in migrations/*.sql; do $P -d hz_rls_test -f "$f"; done
 $P -d hz_rls_test -f tests/rls_test.sql
+$P -d hz_rls_test -f tests/b5_test.sql
