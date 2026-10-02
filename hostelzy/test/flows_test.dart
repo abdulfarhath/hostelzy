@@ -701,7 +701,7 @@ void main() {
     final s = AppState(start: 'role');
     s.signedIn = true; // the role picker comes after sign-in
     await pumpApp(tester, s);
-    await tap(tester, find.text('I run a hostel'));
+    await tap(tester, find.text('I run a PG'));
     expect(s.screen, 'oRules');
     await tap(tester, find.text('Agree and continue'));
     expect(s.fairAccepted, isFalse);
@@ -1934,14 +1934,14 @@ void main() {
     await tap(tester, find.text('Continue with Google'));
     await tester.pump();
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
-    expect(find.textContaining('Signed in as asha@gmail.com.'), findsOneWidget);
+    expect(find.text('asha@gmail.com'.toUpperCase()), findsOneWidget);
     expect(find.textContaining('“not verified”'), findsOneWidget);
     // The Google name is prefilled but editable.
     expect(s.myName, 'Asha K');
     await tester.enterText(find.byType(TextField).last, '9000000007');
     await tester.pump();
     await tap(tester, find.text('Continue'));
-    await tap(tester, find.text('I run a hostel'));
+    await tap(tester, find.text('I run a PG'));
     await tester.pump();
     expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
@@ -2038,19 +2038,19 @@ void main() {
     final s = AppState(start: 'role', role: 'tenant');
     expect([s.residents, s.enquiries, s.cases, s.signups, s.payments, s.complaints, s.reqs].map((l) => l.length), [0, 0, 0, 0, 0, 0, 0]);
     await pumpApp(tester, s);
-    await tap(tester, find.text('I live in a Hostelzy PG'));
+    await tap(tester, find.text('I live in a PG'));
     expect((s.screen, s.roleGate), ('roleGate', 'resident'));
-    expect(find.text('Ask your owner to add you'), findsOneWidget);
+    expect(find.text('Join your PG'), findsOneWidget);
     s.update(() => s.phone = '9876543210');
     await tester.pump();
-    expect(find.text('+91 98765 43210'), findsOneWidget);
-    await tap(tester, find.text('Send it to your owner on WhatsApp'));
+    expect(find.text('Ask your owner to add you with +91 98765 43210.'), findsOneWidget);
+    await tap(tester, find.text('Send my number on WhatsApp'));
     expect(s.lastLink.toString(), contains('98765%2043210'));
     await tester.pump(const Duration(seconds: 3));
     await tester.binding.handlePopRoute();
     await tester.pump();
-    await tap(tester, find.text('I run a hostel'));
-    expect(find.text('List your hostel'), findsOneWidget);
+    await tap(tester, find.text('I run a PG'));
+    expect(find.text('List your PG'), findsOneWidget);
     await tap(tester, find.text('Request a visit').last);
     expect(s.toast, 'Enter your hostel’s name.');
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('gateHostel')), matching: find.byType(TextField)), 'Sri Sai Men’s PG');
@@ -2062,8 +2062,8 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.binding.handlePopRoute();
     await tester.pump();
-    await tap(tester, find.text('I live in a Hostelzy PG'));
-    await tap(tester, find.text('Not in a PG yet? Find a bed'));
+    await tap(tester, find.text('I live in a PG'));
+    await tap(tester, find.text('Not in a PG yet? Find a bed ›'));
     expect((s.screen, s.role), ('explore', 'tenant'));
     // The demo APK says it is on sample listings; the real one never does.
     expect(find.text('Sample data. Nothing you do here is real.'), findsOneWidget);
@@ -3287,12 +3287,12 @@ void main() {
       r.phone = '9876543210';
     });
     await pumpApp(tester, r);
-    expect(find.text('Have an invite code?'), findsOneWidget);
-    await tap(tester, find.text('Ask to join'));
+    expect(find.byKey(const ValueKey('inviteCode')), findsOneWidget);
+    await tap(tester, find.byKey(const ValueKey('joinGo')));
     expect(r.toast, 'Sign in with Google to join with a code.');
     await tester.pump(const Duration(seconds: 3));
     r.update(() => r.account = (uid: 'fb-kiran', name: 'Kiran Rao', email: 'k@gmail.com'));
-    await tap(tester, find.text('Ask to join'));
+    await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
     expect(od.joined, ('VAS-K9P', 'Kiran Rao', '9876543210'));
     expect((r.toast, r.pendingInvite), ('Asked to join Vasavi Boys Hostel. Your owner approves it, then your stay opens here.', null));
@@ -3300,13 +3300,13 @@ void main() {
     // A retired code: the server's reason, in plain words.
     od.joinError = 'P0001: that invite code isn\'t valid any more; ask your owner for the new one';
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('inviteCode')), matching: find.byType(TextField)), 'vas-7q2');
-    await tap(tester, find.text('Ask to join'));
+    await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
     expect(r.toast, 'That code isn’t valid any more. Ask your owner for the new one.');
     await tester.pump(const Duration(seconds: 3));
     // Sample data never pretends to send it.
     r.data = const SampleRepo();
-    await tap(tester, find.text('Ask to join'));
+    await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
     expect(r.toast, 'Invites work in the real Hostelzy app. This is sample data.');
     await tester.pump(const Duration(seconds: 3));
