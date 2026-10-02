@@ -17,7 +17,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F10 | Owner plan + UPI payment check (owner billing, founder admin) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f10-owner-plan`. UPI ID is a placeholder until the founder gives it |
 | F11 | Seat-map bed booking (pick a bed like a movie seat) | **Merged into F12** | — | The F12 Room tab is the seat map |
 | F12 | Room layouts (Hostelzy draws) + tenant Room tab (seat map, fans, AC, windows, washroom) | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f12-room-layouts`. Sample layouts are labelled as samples until real visits (F13/F14) |
-| F13 | Backend: Supabase, real OTP, live sync, push | **Building** · part 1 merged 2026-10-02; B3 (real APK on Supabase + demo APK) built 2026-10-02 | Build | Supabase schema + RLS + data layer done; founder runs the SQL (steps in the feature file). Firebase push + Crashlytics, Sign in with Google (phone typed, not verified). Founder: Google provider, test key secret, SHA in Firebase, Supabase Third-party Auth (steps in the feature file) |
+| F13 | Backend: Supabase, real OTP, live sync, push | **Building** · part 1, B3, B5 (server rules + push), B6 (live sync), B7 (photos + team console), C (account deletion, invites, live writes, server sign-ups) merged 2026-10-02; push confirmed end to end on apk-46 | Build | Sign in with Google (phone typed, not verified). Not on the server yet: holds/booking, owner resident list, owner edits (rooms, rent, deals, rules, layouts, profile, UPI), reviews, Fair Play reports/cases, Stay Rewards, owner plan invoices in the app, managers/multi-hostel. Details in the feature file |
 | F14 | Onboarding: Add hostel tool, managers, multi-hostel, invite QR, admin mode | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f14-onboarding`. In memory until F13 (backend) |
 | F16 | AC / non-AC room types, pricing grid and filter | **Shipped** · merged 2026-10-02 | Build | PR #4 merged to `main` on the founder's instruction (with uneven floors, PR #7) |
 | F15 | Play Store launch: settings, account deletion, permissions, privacy | **Shipped** · merged 2026-10-02 | Build | Branch `feature/f15-play-store`. Outside-the-app checklist (Play account, domain pages, upload key, SHA-1) in the feature file |
@@ -41,7 +41,7 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 
 ## Links
 - **F18 Real app v2 (sign in, role gates, empty states, map v2, owner layout editor, photos, saved, delete v2, team console, small UX; Design approved · 2026-10-02):** https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
-- **All screens (master canvas, every screen as it will ship, F01–F17 + brand; Design approved · 2026-10-02, standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+- **All screens (the app as it is today, redrawn from the code 2026-10-02 after F18 and #37–#51: 146 screens by role (Onboarding · Tenant · Resident · Owner · Hostelzy team · Web), 35 Updated, 38 New, light + dark; Design approved · standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
