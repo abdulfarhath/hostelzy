@@ -61,10 +61,13 @@ extension LoginActions on AppState {
       syncPushToken();
       return;
     }
+    // Never hide why: the real code is shown and sent to Crashlytics.
+    final why = signIn.lastError;
+    if (fail != SignInFail.cancelled && why != null) push.report(Exception('Google sign-in failed: $why'), reason: 'sign-in');
     toastMsg(switch (fail) {
       SignInFail.cancelled => 'Sign-in cancelled.',
-      SignInFail.notSetUp => 'Google sign-in isn’t switched on yet. Use Hostelzy on this phone for now.',
-      _ => 'Couldn’t sign in. Check your internet and try again.',
+      SignInFail.notSetUp => why == null ? 'Google sign-in isn’t switched on yet. Use Hostelzy on this phone for now.' : 'Google sign-in isn’t set up for this app ($why). Use Hostelzy on this phone for now.',
+      _ => why == null ? 'Couldn’t sign in. Check your internet and try again.' : 'Couldn’t sign in ($why). Try again.',
     });
   }
 
