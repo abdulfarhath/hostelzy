@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432">
-  <rect x="124.000" y="124.000" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="124.000" y="190.240" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="124.000" y="256.480" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="256.480" y="124.000" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="256.480" y="190.240" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="256.480" y="256.480" width="51.520" height="51.520" fill="#FFFFFF"/>
-  <rect x="190.240" y="190.240" width="51.520" height="51.520" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432"><g transform="translate(120.000 120.000)"><rect x="7.680" y="7.680" width="30.720" height="17.280" fill="#FFFFFF"/><rect x="80.640" y="7.680" width="103.680" height="17.280" fill="#FFFFFF"/><rect x="7.680" y="7.680" width="17.280" height="176.640" fill="#FFFFFF"/><rect x="167.040" y="7.680" width="17.280" height="176.640" fill="#FFFFFF"/><rect x="7.680" y="167.040" width="92.160" height="17.280" fill="#FFFFFF"/><rect x="130.560" y="167.040" width="53.760" height="17.280" fill="#FFFFFF"/><rect x="38.400" y="7.680" width="42.240" height="5.760" fill="#FFFFFF"/><rect x="38.400" y="19.200" width="42.240" height="5.760" fill="#FFFFFF"/><rect x="96.000" y="24.960" width="46.080" height="9.600" fill="#FFFFFF"/><rect x="32.640" y="32.640" width="30.720" height="61.440" fill="#FFFFFF"/><rect x="32.640" y="126.720" width="53.760" height="26.880" fill="#FFFFFF"/><rect x="128.640" y="65.280" width="30.720" height="61.440" fill="#FFFFFF"/><circle cx="92.160" cy="90.240" r="8.640" fill="#FFFFFF"/></g></svg>

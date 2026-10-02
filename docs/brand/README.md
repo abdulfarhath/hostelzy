@@ -41,3 +41,6 @@ Ideas chat: please record this in DECISIONS.md.
 
 ## Logo
 Round 1 concepts: `logo.md` and https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq1
+
+## Final logo (founder, 2026-10-02)
+**B3-a2 "Room with AC"**. Spec, files and Build steps: `logo.md` (top). Assets: `assets/`.

@@ -1,140 +1,189 @@
-"""Builds Hostelzy logo assets (concept C, 'H made of beds') into docs/brand/assets."""
+"""Builds the Hostelzy logo assets: B3-a2 "Room with AC" (final, founder 2026-10-02).
+
+Run: python3 docs/brand/make_logo.py   (needs: pip install fonttools cairosvg)
+Writes docs/brand/assets/. The mark is drawn on a 100-unit grid. Every piece is solid, so the
+floor stays transparent in every file.
+"""
 import os
+import shutil
 import cairosvg
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.boundsPen import BoundsPen
 
-REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT = f'{REPO}/docs/brand/assets'
-FONT = f'{REPO}/hostelzy/assets/fonts/Archivo-ExtraBold.ttf'
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(HERE, '..', '..'))
+OUT = os.path.join(HERE, 'assets')
+FONT = os.path.join(REPO, 'hostelzy', 'assets', 'fonts', 'Archivo-ExtraBold.ttf')
 
-INK, RED, BG = '#201E1D', '#EC3013', '#F3F2F2'
-INK_D, RED_D, BG_D = '#F0EEEE', '#FF563C', '#161514'
-WHITE = '#FFFFFF'
-
-# Mark on a 100-unit grid: 3x3 cells of 28 with 8 gaps. H = both columns + middle cell.
-CELL, GAP = 28, 8
-POS = [0, CELL + GAP, 2 * (CELL + GAP)]
-COLS = [(0, r) for r in range(3)] + [(2, r) for r in range(3)]
-MID = (1, 1)
+THEMES = {
+    'light': {'w': '#201E1D', 'b': '#605D5D', 'r': '#EC3013'},
+    'dark': {'w': '#F0EEEE', 'b': '#9A9696', 'r': '#FF563C'},
+    'mono': {'w': '#FFFFFF', 'b': '#FFFFFF', 'r': '#FFFFFF'},
+}
+WHITE, RED, INK, BG_L, BG_D = '#FFFFFF', '#EC3013', '#201E1D', '#F3F2F2', '#161514'
 
 
-def mark_rects(x0, y0, size, ink, mid, snap=False):
-    """The H. With snap, blocks land on whole pixels (for small PNGs)."""
-    out = []
-    if snap:
-        cell = round(size * CELL / 100)
-        gap = max(1, round(size * GAP / 100))
-        tot = 3 * cell + 2 * gap
-        bx, by = round(x0 + (size - tot) / 2), round(y0 + (size - tot) / 2)
-        pos = [0, cell + gap, 2 * (cell + gap)]
-        for c, r in COLS + [MID]:
-            fill = mid if (c, r) == MID else ink
-            out.append(f'<rect x="{bx + pos[c]}" y="{by + pos[r]}" width="{cell}" height="{cell}" fill="{fill}"/>')
-        return '\n  '.join(out)
+def shapes(small):
+    """B3-a2 as solid pieces only (no cut-outs), so the floor is always transparent."""
+    S = []
+    R = lambda x, y, w, h, role: S.append(('rect', role, (x, y, w, h)))
+    # Walls, with a window opening on top (20-42) and a door gap at the bottom (52-68).
+    R(4, 4, 16, 9, 'w'); R(42, 4, 54, 9, 'w')
+    R(4, 4, 9, 92, 'w'); R(87, 4, 9, 92, 'w')
+    R(4, 87, 48, 9, 'w'); R(68, 87, 28, 9, 'w')
+    if small:
+        R(20, 4, 22, 3, 'w'); R(20, 10, 22, 3, 'w')
+    else:
+        R(20, 6, 22, 2.2, 'w'); R(20, 9.8, 22, 2.2, 'w')               # window: double line
+    if small:
+        R(50, 13, 24, 5, 'w')                                          # AC as a bar
+    else:                                                              # AC unit + dotted air
+        R(50, 14.5, 24, 1.6, 'w'); R(50, 19.9, 24, 1.6, 'w')
+        R(50, 14.5, 1.6, 7, 'w'); R(72.4, 14.5, 1.6, 7, 'w'); R(53, 17.6, 18, 1.2, 'w')
+        for x in (55, 62, 69):
+            S.append(('dots', 'w', (x, 24, 32, 1.6)))
+    if small:
+        R(17, 17, 16, 32, 'b')
+    else:                                                              # bunk: two layers
+        R(17, 17, 16, 2.6, 'b'); R(17, 46.4, 16, 2.6, 'b'); R(17, 17, 2.6, 32, 'b'); R(30.4, 17, 2.6, 32, 'b')
+        R(22.2, 22.2, 5.6, 21.6, 'b')
+    if small:
+        R(17, 66, 28, 14, 'b'); R(67, 34, 16, 32, 'r')
+    else:                                                              # grey bed + YOUR bed, pillow gaps
+        R(17, 66, 6, 14, 'b'); R(25.6, 66, 19.4, 14, 'b')
+        R(67, 34, 16, 6, 'r'); R(67, 42.6, 16, 23.4, 'r')
+    if small:
+        S.append(('circle', 'w', (48, 47, 4.5)))                      # fan as a dot
+    else:
+        for k in range(3):                                             # fan: 3 blades + hub
+            S.append(('blade', 'w', (48, 46, 8, k * 120)))
+        S.append(('circle', 'w', (48, 46, 2.48)))
+    return S
+
+
+def el(kind, geo, fill, s):
+    if kind == 'rect':
+        x, y, w, h = geo
+        return f'<rect x="{x * s:.3f}" y="{y * s:.3f}" width="{w * s:.3f}" height="{h * s:.3f}" fill="{fill}"/>'
+    if kind == 'circle':
+        cx, cy, r = geo
+        return f'<circle cx="{cx * s:.3f}" cy="{cy * s:.3f}" r="{r * s:.3f}" fill="{fill}"/>'
+    if kind == 'blade':
+        cx, cy, ln, rot = geo
+        bw = ln * 0.42
+        return (f'<rect x="{(cx - bw / 2) * s:.3f}" y="{(cy - ln) * s:.3f}" width="{bw * s:.3f}" height="{ln * s:.3f}" '
+                f'fill="{fill}" transform="rotate({rot} {cx * s:.3f} {cy * s:.3f})"/>')
+    if kind == 'dots':
+        x, y0, y1, d = geo
+        out, y = [], y0
+        while y + d <= y1 + 0.01:
+            out.append(f'<rect x="{(x - d / 2) * s:.3f}" y="{y * s:.3f}" width="{d * s:.3f}" height="{d * s:.3f}" fill="{fill}"/>')
+            y += 2 * d
+        return ''.join(out)
+
+
+def mark(x0, y0, size, theme, small, mid=None):
+    """Mark group at (x0, y0), `size` px square, transparent floor."""
     s = size / 100
-    for c, r in COLS + [MID]:
-        fill = mid if (c, r) == MID else ink
-        out.append(f'<rect x="{x0 + POS[c] * s:.3f}" y="{y0 + POS[r] * s:.3f}" '
-                   f'width="{CELL * s:.3f}" height="{CELL * s:.3f}" fill="{fill}"/>')
-    return '\n  '.join(out)
-
-
-def write_px(name, build, native, sizes):
-    """build(px, snap) -> svg at px. SVG file at native size; each PNG drawn at its own pixel size."""
-    with open(f'{OUT}/{name}.svg', 'w') as f:
-        f.write(build(native, False))
-    for px, suffix in sizes:
-        cairosvg.svg2png(bytestring=build(px, px <= 192).encode(), write_to=f'{OUT}/{name}{suffix}.png',
-                         output_width=px, output_height=px)
+    pal = THEMES[theme]
+    body = ''.join(el(kind, geo, pal[role], s) for kind, role, geo in shapes(small))
+    return f'<g transform="translate({x0:.3f} {y0:.3f})">{body}</g>'
 
 
 def svg(w, h, body, bg=None):
-    back = f'<rect width="{w}" height="{h}" fill="{bg}"/>\n  ' if bg else ''
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">\n  '
-            f'{back}{body}\n</svg>\n')
+    back = f'<rect width="{w}" height="{h}" fill="{bg}"/>' if bg else ''
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">{back}{body}</svg>\n'
 
 
-def write(name, content, png_sizes=()):
+def save(name, build, sizes):
+    """build(px) -> svg. Writes name.svg at the first size and a PNG per (px, suffix)."""
+    with open(f'{OUT}/{name}.svg', 'w') as f:
+        f.write(build(sizes[0][0]))
+    for px, suffix in sizes:
+        cairosvg.svg2png(bytestring=build(px).encode(), write_to=f'{OUT}/{name}{suffix}.png',
+                         output_width=px, output_height=px)
+
+
+def wordmark(x, baseline, size, tracking=-0.02):
+    font = TTFont(FONT)
+    upm, cmap, gs, hmtx = font['head'].unitsPerEm, font.getBestCmap(), font.getGlyphSet(), font['hmtx']
+    sc, pen, cx = size / upm, SVGPathPen(gs), 0.0
+    for ch in 'hostelzy':
+        g = cmap[ord(ch)]
+        gs[g].draw(TransformPen(pen, (sc, 0, 0, -sc, x + cx * sc, baseline)))
+        cx += hmtx[g][0] + tracking * upm
+    bp = BoundsPen(gs)
+    gs[cmap[ord('h')]].draw(bp)
+    return pen.getCommands(), (cx - tracking * upm) * sc, bp.bounds[3] * sc
+
+
+if os.path.isdir(OUT):
+    shutil.rmtree(OUT)
+os.makedirs(OUT)
+SMALL = 64  # at or below this many px the simple mark is used
+
+# Mark alone: light / dark / one colour (transparent background).
+for theme in ('light', 'dark', 'mono'):
+    save(f'mark-{theme}', lambda p, t=theme: svg(p, p, mark(0, 0, p, t, p <= SMALL, 'm')),
+         [(512, ''), (512, '-512')])
+    os.remove(f'{OUT}/mark-{theme}.png')
+
+# Play Store icon: 512x512, full-bleed white square (Play rounds the corners), mark at 76%.
+save('play-store-icon-512', lambda p: svg(p, p, mark(p * .12, p * .12, p * .76, 'light', False, 'm'), bg=WHITE),
+     [(512, '')])
+
+# Android adaptive icon, 108dp canvas = 432 px at xxxhdpi. Mark 48dp: even its corners stay
+# inside the round launcher mask (72dp visible circle), so round icons never cut the room.
+side = 432 * 48 / 108
+off = (432 - side) / 2
+save('ic_launcher_foreground', lambda p: svg(p, p, mark(off * p / 432, off * p / 432, side * p / 432, 'light', False, 'm')),
+     [(432, '')])
+save('ic_launcher_background', lambda p: svg(p, p, '', bg=WHITE), [(432, '')])
+save('ic_launcher_monochrome', lambda p: svg(p, p, mark(off * p / 432, off * p / 432, side * p / 432, 'mono', True, 'm')),
+     [(432, '')])
+
+# Same adaptive layers per density (108dp each), ready for mipmap-*/.
+for d, p in [('mdpi', 108), ('hdpi', 162), ('xhdpi', 216), ('xxhdpi', 324), ('xxxhdpi', 432)]:
+    for layer, theme, small in [('foreground', 'light', False), ('monochrome', 'mono', True)]:
+        body = svg(p, p, mark(off * p / 432, off * p / 432, side * p / 432, theme, small))
+        cairosvg.svg2png(bytestring=body.encode(), write_to=f'{OUT}/ic_launcher_{layer}-{d}.png',
+                         output_width=p, output_height=p)
+
+# Web build (hostelzy/web): favicon, PWA icons, maskable icons (mark inside the 80% safe circle).
+web = lambda p, k: svg(p, p, mark(p * (1 - k) / 2, p * (1 - k) / 2, p * k, 'light', p * k <= SMALL), bg=WHITE)
+for name, p, k in [('web-favicon', 32, .9), ('web-Icon-192', 192, .8), ('web-Icon-512', 512, .8),
+                   ('web-Icon-maskable-192', 192, .56), ('web-Icon-maskable-512', 512, .56)]:
+    cairosvg.svg2png(bytestring=web(p, k).encode(), write_to=f'{OUT}/{name}.png', output_width=p, output_height=p)
+
+# Legacy square launcher icons (Android 7 and older).
+dens = [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]
+save('ic_launcher', lambda p: svg(p, p, mark(p * .1, p * .1, p * .8, 'light', p * .8 <= SMALL, 'm'), bg=WHITE),
+     [(192, '')] + [(p, f'-{d}') for d, p in dens])
+os.remove(f'{OUT}/ic_launcher.png')
+
+# Notification icon: one colour, transparent, 24dp with 1dp padding, simple mark.
+note = [('mdpi', 24), ('hdpi', 36), ('xhdpi', 48), ('xxhdpi', 72), ('xxxhdpi', 96)]
+save('ic_stat_hostelzy', lambda p: svg(p, p, mark(p / 24, p / 24, p * 22 / 24, 'mono', True, 'm')),
+     [(24, '')] + [(p, f'-{d}') for d, p in note])
+os.remove(f'{OUT}/ic_stat_hostelzy.png')
+
+# Lockup: mark + "hostelzy" (Archivo ExtraBold, lowercase, -0.02em, like the app header).
+SIZE, PAD = 120, 24
+_, adv, hh = wordmark(0, 0, SIZE)
+msz = round(hh * 1.18)
+gap = round(hh * 0.30)
+base = PAD + msz
+W = round(PAD + msz + gap + adv + PAD)
+H = round(base + SIZE * 0.24 + PAD / 2)
+for name, theme, ink, bg in [('lockup-light', 'light', INK, None), ('lockup-dark', 'dark', '#F0EEEE', None),
+                             ('lockup-on-light', 'light', INK, BG_L), ('lockup-on-dark', 'dark', '#F0EEEE', BG_D)]:
+    d, _, _ = wordmark(PAD + msz + gap, base, SIZE)
+    body = mark(PAD, PAD, msz, theme, False, 'm') + f'<path d="{d}" fill="{ink}"/>'
+    content = svg(W, H, body, bg=bg)
     with open(f'{OUT}/{name}.svg', 'w') as f:
         f.write(content)
-    for px, suffix in png_sizes:
-        cairosvg.svg2png(bytestring=content.encode(), write_to=f'{OUT}/{name}{suffix}.png',
-                         output_width=px[0], output_height=px[1])
+    cairosvg.svg2png(bytestring=content.encode(), write_to=f'{OUT}/{name}@2x.png', output_width=W * 2, output_height=H * 2)
 
-
-def wordmark_path(text, x, baseline, size, tracking_em):
-    """Outlines `text` in Archivo ExtraBold; returns (svg path d, advance width)."""
-    font = TTFont(FONT)
-    upm = font['head'].unitsPerEm
-    cmap = font.getBestCmap()
-    gs = font.getGlyphSet()
-    hmtx = font['hmtx']
-    kern = {}
-    scale = size / upm
-    pen = SVGPathPen(gs)
-    cx = 0.0
-    for ch in text:
-        g = cmap[ord(ch)]
-        tp = TransformPen(pen, (scale, 0, 0, -scale, x + cx * scale, baseline))
-        gs[g].draw(tp)
-        cx += hmtx[g][0] + tracking_em * upm
-    cx -= tracking_em * upm
-    return pen.getCommands(), cx * scale
-
-
-def h_height(size):
-    font = TTFont(FONT)
-    upm = font['head'].unitsPerEm
-    gs = font.getGlyphSet()
-    from fontTools.pens.boundsPen import BoundsPen
-    bp = BoundsPen(gs)
-    gs[font.getBestCmap()[ord('h')]].draw(bp)
-    return bp.bounds[3] / upm * size
-
-
-os.makedirs(OUT, exist_ok=True)
-
-# 1. Mark alone (square, transparent), light / dark / mono.
-for name, ink, mid in [('mark', INK, RED), ('mark-dark', INK_D, RED_D), ('mark-mono', '#000000', '#000000')]:
-    write(name, svg(100, 100, mark_rects(0, 0, 100, ink, mid)), [((512, 512), '-512')])
-
-# 2. Play Store icon 512x512: full-bleed red square (Play rounds it), white H, ink bed.
-play = svg(512, 512, mark_rects(96, 96, 320, WHITE, INK), bg=RED)
-write('play-store-icon-512', play, [((512, 512), '')])
-
-# 3. Android adaptive icon (108dp canvas; 432px = xxxhdpi). Mark 46dp fits the 66dp safe circle.
-side = 432 * 46 / 108
-off = (432 - side) / 2
-write('ic_launcher_foreground', svg(432, 432, mark_rects(off, off, side, WHITE, INK)), [((432, 432), '')])
-write('ic_launcher_background', svg(432, 432, '', bg=RED), [((432, 432), '')])
-write('ic_launcher_monochrome', svg(432, 432, mark_rects(off, off, side, WHITE, WHITE)), [((432, 432), '')])
-
-# 4. Legacy launcher icons (square red tile), per density.
-dens = [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]
-write_px('ic_launcher', lambda p, sn: svg(p, p, mark_rects(p * 0.18, p * 0.18, p * 0.64, WHITE, INK, sn), bg=RED),
-         192, [(p, f'-{d}') for d, p in dens])
-
-# 5. Notification (status bar) icon: white silhouette, transparent, 24dp with 2dp padding.
-write_px('ic_stat_hostelzy', lambda p, sn: svg(p, p, mark_rects(p / 12, p / 12, p * 20 / 24, WHITE, WHITE, sn)),
-         24, [(p, f'-{d}') for d, p in [('mdpi', 24), ('hdpi', 36), ('xhdpi', 48), ('xxhdpi', 72), ('xxxhdpi', 96)]])
-
-# 6. Wordmark lockup: mark height = height of 'h'; text = app's own wordmark (lowercase, -0.02em).
-SIZE = 120
-hh = h_height(SIZE)
-pad = 24
-gap = hh * 0.32
-base = pad + hh
-d_probe, adv = wordmark_path('hostelzy', 0, 0, SIZE, -0.02)
-w = round(pad + hh + gap + adv + pad)
-desc = SIZE * 0.24
-h = round(base + desc + pad / 2)
-for name, ink, mid, bg in [('lockup', INK, RED, None), ('lockup-dark', INK_D, RED_D, None),
-                           ('lockup-on-light', INK, RED, BG), ('lockup-on-dark', INK_D, RED_D, BG_D)]:
-    d, _ = wordmark_path('hostelzy', pad + hh + gap, base, SIZE, -0.02)
-    body = mark_rects(pad, pad, hh, ink, mid) + f'\n  <path d="{d}" fill="{ink}"/>'
-    write(name, svg(w, h, body, bg=bg), [((w * 2, h * 2), '@2x')])
-
-print('lockup', w, h, 'h-height', round(hh, 1))
-print(len(os.listdir(OUT)), 'files')
+print(len(os.listdir(OUT)), 'files in', OUT)

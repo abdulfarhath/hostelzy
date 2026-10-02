@@ -1,5 +1,57 @@
 # Logo (Brand chat)
 
+## ✅ FINAL LOGO: B3-a2 "Room with AC" (founder, 2026-10-02)
+
+Founder in the Brand chat: "finalize B3-a2, put it into our application, take your own decisions".
+Earlier rounds below are history only. **Concept C files were replaced**; `assets/` is now B3-a2 only.
+
+### What it is
+A top view of a real PG room: walls with a **window** (double line) and a **door gap**, an **AC**
+on the wall with **dotted air**, a **fan**, a **bunk** and a grey bed, and **your bed in red**.
+Story: "see the real room, pick your bed".
+
+- Colours (from `Pal`): walls/AC/fan ink `#201E1D` (dark `#F0EEEE`), other beds grey `#605D5D`
+  (dark `#9A9696`), **your bed red `#EC3013`** (dark `#FF563C`). Floor is transparent.
+- Only your bed is red. Square corners. Don't rotate, outline, shadow or recolour it.
+- **Two sizes of detail:** at 64 px and below the simple mark is used (AC = a bar, fan = a dot,
+  no pillow or air dots), so it stays clear on small screens.
+- Wordmark: **hostelzy**, lowercase, Archivo ExtraBold (800), −0.02em, same as the app header.
+  In the lockup the room is 1.18× the height of the "h", gap 0.3×.
+- Icon ground: **white**. Brand chat decision: a red tile would break "only your bed is red".
+
+### Files in `docs/brand/assets/` (rebuild: `python3 docs/brand/make_logo.py`)
+| File | What | For Build |
+|---|---|---|
+| `ic_launcher_foreground-{mdpi…xxxhdpi}.png` (108–432 px) | Room on transparent, 48dp inside 108dp (fits round masks) | `res/mipmap-*/ic_launcher_foreground.png` |
+| `ic_launcher_monochrome-{mdpi…xxxhdpi}.png` | One-colour simple room | `res/mipmap-*/ic_launcher_monochrome.png` (Android 13 themed icons) |
+| `ic_launcher_background.svg/.png` | Plain white | use a colour resource `#FFFFFF` instead |
+| `ic_launcher-{mdpi…xxxhdpi}.png` (48–192) | Square white tile + room | `res/mipmap-*/ic_launcher.png` (Android 7 and older) |
+| `ic_stat_hostelzy-{mdpi…xxxhdpi}.png` (24–96) | White simple room, transparent | `res/drawable-*/ic_stat_hostelzy.png` (push notifications, when Firebase lands) |
+| `play-store-icon-512.png` | 512×512, full-bleed white (Play rounds it) | Play Console listing (F15) |
+| `web-favicon.png`, `web-Icon-192/512.png`, `web-Icon-maskable-192/512.png` | Web build icons | `web/favicon.png`, `web/icons/Icon-*.png` (same names) |
+| `mark-light.svg`, `mark-dark.svg`, `mark-mono.svg` (+ `-512.png`) | The room alone, transparent | In-app (with `flutter_svg`), splash, posters |
+| `lockup-light/dark.svg` (+`@2x.png`), `lockup-on-light/on-dark` | Room + "hostelzy", text outlined | Website, QR poster, slides |
+| `ic_launcher_foreground.svg`, `ic_launcher.svg`, `ic_stat_hostelzy.svg`, `*_monochrome.svg` | Vector sources | reference |
+
+### Build steps (Build chat: please do these on a branch, then merge per standing approval)
+1. Copy the PNGs above into `hostelzy/android/app/src/main/res/` (rename `-mdpi` etc. into the
+   matching `mipmap-mdpi/…` folders; file name without the density suffix).
+2. Add `res/mipmap-anydpi-v26/ic_launcher.xml` (and the same as `ic_launcher_round.xml`):
+   ```xml
+   <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+     <background android:drawable="@color/ic_launcher_background"/>
+     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+     <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
+   </adaptive-icon>
+   ```
+   and `res/values/ic_launcher_background.xml` with `<color name="ic_launcher_background">#FFFFFF</color>`.
+3. Replace `hostelzy/web/favicon.png` and `web/icons/Icon-*.png` with the `web-*` files.
+4. In the app header (`screens_start.dart` start screen, `shell.dart` header) put the room mark
+   (`mark-light.svg` / `mark-dark.svg` by theme, via `flutter_svg`, already a dependency) to the
+   left of the live `hostelzy` text, mark height ≈ 1.2× the text's x-height. Keep the text as text.
+5. App name stays **Hostelzy** (DECISIONS.md). No rename.
+
+
 Name: **Hostelzy** (kept for now, founder 2026-10-02).
 
 ## Round 1 concepts (2026-10-02)
@@ -25,10 +77,10 @@ Waiting for the founder to pick 1–2 to refine.
 
 ---
 
-# Concept C refined (2026-10-02) · ON HOLD
+# Concept C refined (2026-10-02) · NOT USED (history)
 
 > **On hold:** the founder now prefers concept B "The room" (Ideas chat, 2026-10-02).
-> The C files below stay in `assets/` but are **not final**. Build: don't use them yet.
+> Replaced by B3-a2. The C files were removed from `assets/` (see git history).
 
 Picked by the Ideas chat on the founder's delegation (DECISIONS.md "Name, logo, accounts").
 The founder can still change it.
