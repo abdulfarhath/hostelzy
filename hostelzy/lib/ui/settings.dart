@@ -76,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final name = s.role == 'owner' ? hostelById(s.ownHid).owner : 'Rahul Varma';
+    final name = s.meName.isNotEmpty ? s.meName : (s.role == 'owner' ? hostelById(s.ownHid).owner : 'Add your name');
     final phone = '+91 ${phoneSpaced(s.myPhone)}';
     Widget toggle(String k, String t, String sub) => Tap(
       onTap: () => s.notif[k]! ? s.update(() => s.notif[k] = false) : s.openPerm('notifications'),

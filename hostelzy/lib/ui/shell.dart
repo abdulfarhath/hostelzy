@@ -41,16 +41,23 @@ class HostelzyShell extends StatelessWidget {
     final s = AppScope.of(context);
     // F15: Phone setting follows the phone's light / dark mode.
     final pal = s.isDark(MediaQuery.platformBrightnessOf(context)) ? Pal.dark : Pal.light;
-    return PalScope(
-      pal: pal,
-      child: DefaultTextStyle(
-        style: rootTextStyle(pal),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            if (bare) return const PhoneFrame();
-            if (c.maxWidth >= 730) return prototypeFrame ? _Desk(onOpenOverview: onOpenOverview) : _Wide(width: c.maxWidth);
-            return const _FullScreen();
-          },
+    // F18: Android back steps through the app instead of closing it.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && s.handleBack()) SystemNavigator.pop();
+      },
+      child: PalScope(
+        pal: pal,
+        child: DefaultTextStyle(
+          style: rootTextStyle(pal),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              if (bare) return const PhoneFrame();
+              if (c.maxWidth >= 730) return prototypeFrame ? _Desk(onOpenOverview: onOpenOverview) : _Wide(width: c.maxWidth);
+              return const _FullScreen();
+            },
+          ),
         ),
       ),
     );
@@ -1268,7 +1275,7 @@ class _BedSheet extends StatelessWidget {
         },
         true,
       ));
-      actions.add(('Message resident', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is Srinivas from Anjani Residency.'), false));
+      actions.add(('Message resident', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), false));
     } else if (b.state == 'held') {
       actions.add((
         'Release hold',

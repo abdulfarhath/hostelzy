@@ -40,7 +40,7 @@ String occCounts(AppState s) {
 }
 
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
-List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), if (s.ownHid == 'anjani') ...s.reqs];
+List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting')) HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), if (s.ownHid == 'anjani') ...s.reqs];
 
 /// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
 /// only as a section (false, the approved default).

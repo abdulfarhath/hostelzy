@@ -281,7 +281,7 @@ class ResidentReviewScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                  child: Row(children: [T('Shows as ', s: 12, c: p.mu), const _Tag('Rahul V. · verified resident')]),
+                  child: Row(children: [T('Shows as ', s: 12, c: p.mu), _Tag('${s.meShort} · verified resident')]),
                 ),
               ],
             ),

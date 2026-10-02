@@ -1,6 +1,6 @@
 # F18 · Real-user bug fixes (from the founder's phone test, apk-29)
 
-**Stage:** Spec ready · 2026-10-02 · no design needed (follow existing screens; F17 rules apply)
+**Stage:** Building · 2026-10-02 · no design needed (follow existing screens; F17 rules apply)
 
 Founder found on a real phone: back button exits/jumps to start, login forgotten after reopening,
 dummy numbers on code screens, name prefilled, no "use my location" / area picker, owner can't edit
@@ -51,4 +51,19 @@ and delete the Firebase user + server data), notifications (H6), real admin acco
 `DATA=supabase` release once real hostels exist (C6).
 
 ## Build
-_Not started._
+
+**Groups 1–3 · back button, stay logged in, own identity** (branch `feature/f18-back-login-identity`):
+- **Back button (1):** `PopScope` on the shell → `AppState.handleBack()`: close the sheet → previous screen → the role's home tab (or Welcome when signed out) → "Press back again to exit" (second press within 2 s closes the app).
+- **Stay logged in (2):**
+  - `lib/store.dart` (`PrefsStore` on shared_preferences; `NoStore` / `MemoryStore` in tests) keeps signed-in state, name, phone, role, theme, holds (with their HZ codes), saved hostels, the user's own enquiries and Fair Play acceptance. It's saved whenever any of them change.
+  - At startup `main.dart` loads it before the first frame. `restore()` brings it back: the beds the user holds are marked again, and a signed-in user opens on their role's home, not Welcome.
+  - A Google account only counts while Firebase still has it signed in (`SignIn.current`).
+  - Fresh starts are signed out (`signedIn` defaults false).
+  - **Log out** forgets everything: holds released, saved hostels, enquiries, name, phone, role, and the phone's saved copy.
+- **Own identity (3):**
+  - Sign-up asks **Your name** (prefilled from Google, editable; never a sample name) and **Mobile number** (10 digits starting 6–9).
+  - `meName` / `meFirst` / `meShort` replace "Rahul Varma / Rahul V." in Me, Settings, Stay Rewards, enquiries, advance payments, hold requests, reviews ("Shows as …"), resident greeting, complaints, notice and warden messages, and owner messages.
+  - `myPhone` no longer falls back to `90000 00001`; Me shows **Add your number** instead.
+  - The resident's stay (Anjani 204-B) is still sample data in debug builds; group 4 gates it in release.
+- Test: `back button, stay logged in, own name and phone (F18)`. Sample-flow tests now sign in a named user first.
+

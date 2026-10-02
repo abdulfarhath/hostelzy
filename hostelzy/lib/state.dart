@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
@@ -11,6 +12,7 @@ import 'data.dart';
 import 'poster.dart';
 import 'push.dart';
 import 'sign_in.dart';
+import 'store.dart';
 import 'backend.dart' show HostelData, Listings, RemoteSettings, SampleData;
 
 /// App state and actions. Mirrors the prototype's single component state so
@@ -41,7 +43,8 @@ class AppState extends ChangeNotifier {
       gateKind = appBuild < minSupportedBuild ? 'update' : 'maintenance';
       screen = 'gate';
     }
-    signedIn = auth != 'out';
+    // F18: nobody is signed in on a fresh start; restore() brings a login back.
+    signedIn = auth != 'out' && start != null && !const ['welcome', 'login', 'phone', 'otp', 'role'].contains(start);
     _prep();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       // F17: a free hold really ends at 0:00.
@@ -1087,7 +1090,7 @@ class AppState extends ChangeNotifier {
   void postReview() {
     if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
     update(() {
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: 'Rahul V.', stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
       // F12: a resident who says the layout is wrong flags it for the team.
       if (rvLayout == 'No') layoutOf('anjani', 204)?.disputes++;
       rvStars = 0;
@@ -1096,7 +1099,7 @@ class AppState extends ChangeNotifier {
       rvText = '';
     });
     back();
-    toastMsg('Review posted as Rahul V. · verified resident.');
+    toastMsg('Review posted as $meShort · verified resident.');
   }
 
   /// Exit review: the advance answer feeds the "advance returned" record.
@@ -1107,7 +1110,7 @@ class AppState extends ChangeNotifier {
     final st = stats['anjani']!;
     update(() {
       stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: 'Rahul V.', stars: exStars, text: '', stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: '', stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
       exAdv = null;
       exStars = 0;
       exAgain = null;
@@ -1269,6 +1272,97 @@ class AppState extends ChangeNotifier {
     fn();
     if (key != '$screen|$mode|$moreTab') scrollEpoch++;
     notifyListeners();
+    _persist();
+  }
+
+  // ------------------------------------------------------------ F18 on this phone
+
+  /// Where the user's own data is kept between launches ([NoStore] in tests).
+  Store store = const NoStore();
+  String _saved = '';
+
+  /// The user's own name: typed by them (prefilled from Google, editable).
+  String myName = '';
+
+  /// Display names from the user's own name; never a sample person.
+  String get meName => myName.trim();
+  String get meFirst => meName.isEmpty ? '' : meName.split(RegExp(r'\s+')).first;
+
+  /// "Asha K." for reviews and payment lines.
+  String get meShort {
+    final w = meName.split(RegExp(r'\s+')).where((x) => x.isNotEmpty).toList();
+    if (w.isEmpty) return 'You';
+    return w.length == 1 ? w.first : '${w.first} ${w.last[0]}.';
+  }
+
+  /// What is remembered on this phone. Sample data never goes in here.
+  Map<String, dynamic> snapshot() => {
+    'v': 1,
+    'signedIn': signedIn,
+    'role': role,
+    'theme': theme,
+    'name': myName,
+    'phone': phone,
+    if (account != null) 'account': {'uid': account!.uid, 'name': account!.name, 'email': account!.email},
+    'saved': [for (final e in saved.entries) if (e.value) e.key],
+    'holds': [
+      for (final h in holds) {'id': h.id, 'hid': h.hid, 'bed': h.bed, 'room': h.room, 'opt': h.opt, 'start': h.start, 'status': h.status, 'ref': h.ref, 'paid': h.paid, 'perks': h.perks},
+    ],
+    'enquiries': [
+      for (final e in enquiries.where((e) => phone.isNotEmpty && e.phone == phone)) {'ref': e.ref, 'name': e.name, 'phone': e.phone, 'hid': e.hid, 'bed': e.bed, 'at': e.at, 'from': e.from, 'msg': e.msg},
+    ],
+    'fairAccepted': fairAccepted,
+  };
+
+  void _persist() {
+    final j = jsonEncode(snapshot());
+    if (j == _saved) return;
+    _saved = j;
+    store.save(jsonDecode(j) as Map<String, dynamic>);
+  }
+
+  /// Brings back what was saved; a signed-in user opens on their role's home.
+  void restore(Map<String, dynamic> m, {Account? firebaseUser}) {
+    if (m.isEmpty) {
+      _saved = jsonEncode(snapshot());
+      return;
+    }
+    final a = m['account'] as Map<String, dynamic>?;
+    myName = m['name'] as String? ?? '';
+    phone = m['phone'] as String? ?? '';
+    role = m['role'] as String? ?? 'tenant';
+    theme = m['theme'] as String? ?? 'light';
+    fairAccepted = m['fairAccepted'] as bool? ?? false;
+    // A Google account counts only while Firebase still has it signed in.
+    account = firebaseUser ?? (a != null && !signIn.available ? (uid: a['uid'] as String, name: a['name'] as String, email: a['email'] as String) : null);
+    signedIn = m['signedIn'] as bool? ?? false;
+    if (a != null && signIn.available && firebaseUser == null) signedIn = false;
+    for (final id in (m['saved'] as List? ?? const [])) {
+      saved[id as String] = true;
+    }
+    holds = [
+      for (final h in (m['holds'] as List? ?? const []).cast<Map<String, dynamic>>())
+        Hold(id: h['id'] as String, hid: h['hid'] as String, bed: h['bed'] as String, room: h['room'] as int, opt: h['opt'] as String, start: h['start'] as int, status: h['status'] as String, ref: h['ref'] as String?, paid: h['paid'] as int? ?? 0, perks: (h['perks'] as List? ?? const []).cast<String>()),
+    ];
+    for (final h in holds.where((h) => h.status != 'released')) {
+      if (!hostels.any((x) => x.id == h.hid)) continue;
+      final b = findBed(h.hid, h.bed).b;
+      if (b != null) {
+        b.state = h.status == 'booked' ? 'booked' : 'held';
+        b.mine = true;
+      }
+    }
+    final mine = [
+      for (final e in (m['enquiries'] as List? ?? const []).cast<Map<String, dynamic>>())
+        Enquiry(ref: e['ref'] as String, name: e['name'] as String, phone: e['phone'] as String, hid: e['hid'] as String, bed: e['bed'] as String?, at: e['at'] as int, from: e['from'] as String, msg: e['msg'] as String),
+    ];
+    enquiries = [...mine, ...enquiries.where((e) => !mine.any((x) => x.ref == e.ref))];
+    if (signedIn && screen == 'welcome') {
+      screen = homeOf[role]!;
+      hist = [];
+    }
+    _saved = jsonEncode(snapshot());
+    notifyListeners();
   }
 
   void _prep() {
@@ -1340,6 +1434,35 @@ class AppState extends ChangeNotifier {
     sheet = null;
   });
 
+  /// F18: when Android back last showed "Press back again to exit" (ms).
+  int _backAt = 0;
+
+  /// Android back button: close a sheet → previous screen → the role's home
+  /// tab → "Press back again to exit". Returns true when the app may close.
+  bool handleBack() {
+    if (sheet != null) {
+      update(() => sheet = null);
+      return false;
+    }
+    if (hist.isNotEmpty) {
+      back();
+      return false;
+    }
+    final home = signedIn ? homeOf[role]! : 'welcome';
+    if (screen != home && screen != 'gate') {
+      update(() {
+        screen = home;
+        hist = [];
+      });
+      return false;
+    }
+    final t = DateTime.now().millisecondsSinceEpoch;
+    if (t - _backAt < 2000) return true;
+    _backAt = t;
+    toastMsg('Press back again to exit');
+    return false;
+  }
+
   void jump(String s, String r) => update(() {
     screen = s;
     role = r;
@@ -1358,7 +1481,7 @@ class AppState extends ChangeNotifier {
   });
 
   /// The tenant's verified number (the demo number until they log in).
-  String get myPhone => phone.length == 10 ? phone : '9000000001';
+  String get myPhone => phone.length == 10 ? phone : '';
 
   /// F05 tenant → owner hand-off. Records the enquiry on Hostelzy first (the
   /// owner is told from here, not by the WhatsApp text), then opens the
@@ -1371,7 +1494,7 @@ class AppState extends ChangeNotifier {
     final me = myPhone;
     var e = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull;
     if (e == null) {
-      e = Enquiry(ref: 'HZ-${_nextRef++}', name: 'Rahul Varma', phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch, from: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
+      e = Enquiry(ref: 'HZ-${_nextRef++}', name: meName.isEmpty ? 'Hostelzy user' : meName, phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch, from: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
       enquiries = [e, ...enquiries];
     }
     return e;
@@ -1677,7 +1800,7 @@ class AppState extends ChangeNotifier {
     final t = DateTime.now().millisecondsSinceEpoch;
     final id = 'h$t';
     final h = Hold(id: id, hid: hid, bed: b.id, room: b.room, opt: opt, start: t, status: opt == 'free' ? 'waiting' : 'paying', ref: ref, paid: opt == 'book' ? q.hzAdv : 0, perks: opt == 'book' && q.any ? lockedPerks(q, h0) : const []);
-    final pay = opt == 'book' ? Payment(id: 'pay$t', kind: 'advance', hid: hid, who: 'Rahul V.', what: 'Advance for bed ${b.id}', bed: b.id, amt: q.hzAdv, note: ref!, holdId: id) : null;
+    final pay = opt == 'book' ? Payment(id: 'pay$t', kind: 'advance', hid: hid, who: meShort, what: 'Advance for bed ${b.id}', bed: b.id, amt: q.hzAdv, note: ref!, holdId: id) : null;
     update(() {
       holds = [...holds, h];
       if (pay != null) payments = [...payments, pay];
@@ -1849,6 +1972,8 @@ class AppState extends ChangeNotifier {
     if (a != null) {
       update(() {
         account = a;
+        // F18: the Google name is only a starting point; the user can change it.
+        if (myName.trim().isEmpty) myName = a.name;
         hist = [...hist, screen];
         screen = 'phone';
         sheet = null;
@@ -1871,8 +1996,14 @@ class AppState extends ChangeNotifier {
   });
 
   /// After the phone number (typed, not verified): pick a role.
+  /// Indian mobile numbers: 10 digits starting 6–9.
+  static bool validPhone(String p) => RegExp(r'^[6-9]\d{9}$').hasMatch(p);
+
   void savePhone() {
+    if (myName.trim().length < 2) return toastMsg('Enter your name.');
     if (phone.length != 10) return toastMsg('Enter all 10 digits.');
+    if (!validPhone(phone)) return toastMsg('Mobile numbers start with 6, 7, 8 or 9.');
+    myName = myName.trim();
     update(() {
       signedIn = true;
       hist = [...hist, screen];
@@ -2016,16 +2147,34 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  void logOut() => update(() {
+  /// F18: logging out forgets everything this phone kept about the user.
+  void logOut() {
     signIn.signOut();
-    account = null;
-    screen = 'welcome';
-    hist = [];
-    phone = '';
-    otp = '';
-    signedIn = false;
-    sheet = null;
-  });
+    final me = phone;
+    update(() {
+      for (final h in holds.where((h) => h.status != 'released')) {
+        final b = hostels.any((x) => x.id == h.hid) ? findBed(h.hid, h.bed).b : null;
+        if (b != null && b.mine) {
+          b.mine = false;
+          b.state = 'free';
+        }
+      }
+      holds = [];
+      saved.clear();
+      if (me.isNotEmpty) enquiries = enquiries.where((e) => e.phone != me).toList();
+      account = null;
+      myName = '';
+      role = 'tenant';
+      screen = 'welcome';
+      hist = [];
+      phone = '';
+      otp = '';
+      signedIn = false;
+      sheet = null;
+    });
+    store.clear();
+    _saved = jsonEncode(snapshot());
+  }
 
   // ------------------------------------------------------------ F17 links
 
