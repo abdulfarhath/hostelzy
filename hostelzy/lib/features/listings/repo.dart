@@ -179,6 +179,10 @@ abstract class HostelRepo {
   /// staff get this week's counts per meal, never who.
   Future<void> rateMeal(String hid, String meal, String rating);
   Future<Map<String, Map<String, int>>> mealVotes(String hid);
+
+  /// F24: owners' numbers, only for hostels where this user holds, enquired,
+  /// stays or works (DECISIONS F07: the number shows after a hold).
+  Future<Map<String, String>> ownerContacts(List<String> hids);
 }
 
 class SampleRepo implements HostelRepo {
@@ -315,6 +319,8 @@ class SampleRepo implements HostelRepo {
   Future<void> rateMeal(String hid, String meal, String rating) async {}
   @override
   Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
+  @override
+  Future<Map<String, String>> ownerContacts(List<String> hids) async => {};
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -657,6 +663,12 @@ class SupabaseRepo implements HostelRepo {
     }
     return out;
   }
+
+  @override
+  Future<Map<String, String>> ownerContacts(List<String> hids) async => {
+    for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
+      if ((r['phone'] as String? ?? '').isNotEmpty) r['hostel_id'] as String: r['phone'] as String,
+  };
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.

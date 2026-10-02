@@ -32,7 +32,7 @@ extension MyStayActions on AppState {
   String get stayLine => [stayHostel.name, if (stayRoom.isNotEmpty) 'Room $stayRoom', if (stayBedLetter.isNotEmpty) 'Bed $stayBedLetter'].join(' · ');
 
   /// The owner's WhatsApp number, when Hostelzy has it (never a sample on the server).
-  String get stayOwnerPhone => onServer ? '' : ownerPhones[stayHostel.id] ?? '';
+  String get stayOwnerPhone => ownerPhones[stayHostel.id] ?? '';
 
   /// This month's rent payment: the sample in demo builds; on the server the
   /// newest one for this hostel started this month (null until the resident pays).

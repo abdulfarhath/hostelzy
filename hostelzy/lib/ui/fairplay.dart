@@ -237,7 +237,7 @@ class OwnerContact extends StatelessWidget {
               children: [
                 Ic(held ? 'phone' : 'lock', size: 16, color: held ? p.tx : p.mu),
                 const SizedBox(width: 8),
-                Expanded(child: T(held ? phoneSpaced(phone) : maskPhone(phone), w: 800, s: 15, c: held ? p.tx : p.mu)),
+                Expanded(child: T(held ? (phone.isEmpty ? 'Number not added yet' : phoneSpaced(phone)) : maskPhone(phone), w: 800, s: 15, c: held && phone.isNotEmpty ? p.tx : p.mu)),
                 if (held && hold != null)
                   Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T('You held ${hold.bed}', s: 11, w: 800, ls: .05, upper: true, c: p.bg))
                 else
