@@ -180,3 +180,5 @@ Designs `Main`, `ExploreGuest`, `Explore`, `Where`, `Filters`, `Detail`, `Hold`,
 - W3: complaint photos are real (private bucket; resident, staff, team can read).
 - W3: owner words "Came from the app / Walked in / Not confirmed / Joined before Hostelzy"; centre tab "Add tenant".
 - W3: "Reviews and ranking" is one Manage row.
+- W4: Telugu/Hindi files ship empty (no machine translation); a language shows only when it has strings, as "(beta)" until reviewed. Founder/native speaker fills docs/i18n/te-review.md.
+- W4: text scales to 2× (bed map and Welcome headline cap at 1.3×); released holds sync after the 5-second Undo; Log out + theme live only in Settings.
