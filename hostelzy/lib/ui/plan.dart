@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
@@ -289,7 +290,7 @@ class InvoiceScreen extends StatelessWidget {
           child: VGap(
             gap: 8,
             children: [
-              Cta('Open UPI app', height: 54, px: 16, fs: 15, onTap: () => s.toastMsg('Opening your UPI app: $amt to $hostelzyUpiId, note ${inv.ref}.')),
+              Cta('Open UPI app', height: 54, px: 16, fs: 15, onTap: () => hostelzyUpiId.startsWith('[') ? s.toastMsg('Hostelzy’s UPI ID isn’t set yet, so this invoice can’t be paid yet.') : s.openLink(upiUri(id: hostelzyUpiId, name: 'Hostelzy', amt: s.invoiceAmt, note: inv.ref), 'a UPI app')),
               OutlineCta('I’ve paid', icon: 'check', onTap: s.openUtr),
             ],
           ),
@@ -397,7 +398,7 @@ class PayStatusScreen extends StatelessWidget {
           ),
         ),
         if (inv.status == 'paid')
-          Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 16), child: OutlineCta('Download receipt', icon: 'print', onTap: () => s.toastMsg('Receipt for ${inv.ref} saved to Downloads.'))),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 16), child: OutlineCta('Share receipt', icon: 'print', onTap: () => s.share('Hostelzy receipt · ${inv.ref} · ${hostelById(inv.hid).name} · ${fmt(inv.amt)} · UTR ${utrSpaced(inv.utr ?? '')} · paid, checked ${inv.checked ?? ''}'))),
         if (inv.status == 'missing')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
@@ -405,7 +406,7 @@ class PayStatusScreen extends StatelessWidget {
               gap: 8,
               children: [
                 Cta('Fix the UTR', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.openUtr),
-                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.toastMsg('Opening WhatsApp to Hostelzy about ${inv.ref}…')),
+                OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => supportWhatsApp.isEmpty ? s.toastMsg('Hostelzy’s WhatsApp number is coming soon.') : s.whatsapp(supportWhatsApp, 'Hi Hostelzy, about invoice ${inv.ref}: UTR ${utrSpaced(inv.utr ?? '')}.')),
               ],
             ),
           ),

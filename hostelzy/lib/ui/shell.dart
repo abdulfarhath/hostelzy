@@ -66,12 +66,14 @@ class _Wide extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final map = s.role == 'tenant' && width >= 1000;
+    final rail = AppState.tabScreens.contains(s.screen);
     return ColoredBox(
       color: p.bg,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(width: 440, decoration: BoxDecoration(border: Border(right: bs(2, p.tx))), child: const _FullScreen()),
+          if (rail) const _Rail(),
+          Container(width: 440, decoration: BoxDecoration(border: Border(right: bs(2, p.tx))), child: const _FullScreen(rail: true)),
           Expanded(
             child: map
                 ? const MapScreen()
@@ -264,7 +266,10 @@ class PhoneFrame extends StatelessWidget {
 }
 
 class _FullScreen extends StatelessWidget {
-  const _FullScreen();
+  const _FullScreen({this.rail = false});
+
+  /// On wide screens the tabs live in [_Rail] instead of the bottom bar.
+  final bool rail;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -282,7 +287,8 @@ class _FullScreen extends StatelessWidget {
         child: _AppBody(
           top: Container(height: mq.padding.top, color: sbBg),
           bottom: Container(height: mq.padding.bottom, color: sbBg),
-          toastBottom: 76 + mq.padding.bottom,
+          toastBottom: (rail ? 12 : 76) + mq.padding.bottom,
+          tabs: !rail,
         ),
       ),
     );
@@ -291,15 +297,16 @@ class _FullScreen extends StatelessWidget {
 
 /// Screen + tabs + sheets + toast, between a top and bottom inset.
 class _AppBody extends StatelessWidget {
-  const _AppBody({required this.top, required this.bottom, required this.toastBottom});
+  const _AppBody({required this.top, required this.bottom, required this.toastBottom, this.tabs = true});
   final Widget top, bottom;
   final double toastBottom;
+  final bool tabs;
 
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final showTabs = AppState.tabScreens.contains(s.screen);
+    final showTabs = tabs && AppState.tabScreens.contains(s.screen);
     // Material installs its own DefaultTextStyle; put the design's back.
     return Material(
       type: MaterialType.transparency,
@@ -395,18 +402,81 @@ class _AppBody extends StatelessWidget {
   };
 }
 
+const _tabs = {
+  'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('*', 'Search', 'search'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
+  'resident': [('rHome', 'Home', 'home'), ('food', 'Food', 'utensils'), ('rPay', 'Pay rent', 'wallet'), ('help', 'Help', 'wrench'), ('me', 'Me', 'user')],
+  'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Booking', 'plus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
+};
+
+void _openTab(AppState s, String k) {
+  if (k != '*') return s.tab(k);
+  if (s.role == 'tenant') {
+    s.update(() => s.sheet = 'search');
+  } else {
+    s.update(() {
+      s.sheet = 'add';
+      s.addName = '';
+      s.addPhone = '';
+      s.addBed = null;
+      s.addDate = 'Today';
+    });
+  }
+}
+
+/// F17 board 11: tablets and desktop get the tabs as a left rail.
+class _Rail extends StatelessWidget {
+  const _Rail();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final list = _tabs[s.role]!;
+    return Container(
+      width: 96,
+      decoration: BoxDecoration(color: p.bg, border: Border(right: bs(2, p.tx))),
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Center(child: BrandMark(size: 40)),
+          const SizedBox(height: 20),
+          for (var i = 0; i < list.length; i++)
+            () {
+              final t = list[i];
+              final center = i == 2, act = s.screen == t.$1;
+              return Tap(
+                key: ValueKey('rail-${t.$1 == '*' ? 'action' : t.$1}'),
+                onTap: () => _openTab(s, t.$1),
+                child: InsetBar(
+                  edge: Edge.left,
+                  size: !center && act ? 3 : 0,
+                  color: p.ac,
+                  bg: center ? p.ac : null,
+                  child: SizedBox(
+                    height: 72,
+                    child: Css(
+                      c: center ? p.ai : act ? p.tx : p.mu,
+                      s: 11,
+                      w: 600,
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Ic(t.$3, size: 22), const SizedBox(height: 6), T(t.$2, nowrap: true)]),
+                    ),
+                  ),
+                ),
+              );
+            }(),
+        ],
+      ),
+    );
+  }
+}
+
 class _TabBar extends StatelessWidget {
   const _TabBar();
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const tabs = {
-      'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('*', 'Search', 'search'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
-      'resident': [('rHome', 'Home', 'home'), ('food', 'Food', 'utensils'), ('rPay', 'Pay rent', 'wallet'), ('help', 'Help', 'wrench'), ('me', 'Me', 'user')],
-      'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Booking', 'plus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
-    };
-    final list = tabs[s.role]!;
+    final list = _tabs[s.role]!;
     return Container(
       height: 64,
       decoration: BoxDecoration(
@@ -422,20 +492,7 @@ class _TabBar extends StatelessWidget {
               final center = i == 2, act = s.screen == t.$1;
               return Expanded(
                 child: Tap(
-                  onTap: () {
-                    if (t.$1 != '*') return s.tab(t.$1);
-                    if (s.role == 'tenant') {
-                      s.update(() => s.sheet = 'search');
-                    } else {
-                      s.update(() {
-                        s.sheet = 'add';
-                        s.addName = '';
-                        s.addPhone = '';
-                        s.addBed = null;
-                        s.addDate = 'Today';
-                      });
-                    }
-                  },
+                  onTap: () => _openTab(s, t.$1),
                   child: InsetBar(
                     edge: Edge.top,
                     size: !center && act ? 3 : 0,
@@ -905,7 +962,7 @@ class _EnquirySheet extends StatelessWidget {
     void contact(String how) {
       s.markContacted(e.ref);
       if (how == 'wa') {
-        s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
+        s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
       } else {
         s.update(() => s.sheet = null);
         how == 'call' ? s.call(e.phone) : s.toastMsg('Marked as contacted.');
@@ -1172,7 +1229,7 @@ class _AddSheet extends StatelessWidget {
                 s.addBed = null;
                 s.addDate = 'Today';
               });
-              s.toastMsg('Booked bed ${sel.b!.id}. Welcome message sent on WhatsApp.');
+              s.toastMsg('Booked bed ${sel.b!.id}. Send them a welcome on WhatsApp.');
             },
           ),
         ],

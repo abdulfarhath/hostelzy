@@ -615,12 +615,12 @@ class FoodScreen extends StatelessWidget {
                       cur: s.rated,
                       onPick: (v) {
                         s.update(() => s.rated = v);
-                        s.toastMsg('Thanks. Shared with the kitchen.');
+                        s.toastMsg('Thanks. Saved for Srinivas and the kitchen, without your name.');
                       },
                       pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
                       fs: 14,
                     ),
-                    T('Shared with the kitchen without your name.', s: 12, c: p.mu),
+                    T('Goes to Srinivas and the kitchen without your name.', s: 12, c: p.mu),
                   ],
                 ),
               ),

@@ -149,7 +149,7 @@ class AppState extends ChangeNotifier {
       c.status = 'decide';
       fpReply = '';
     });
-    toastMsg('Reply sent. The founder reads it before deciding.');
+    toastMsg('Reply saved. The Hostelzy team reads it before deciding.');
   }
 
   /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals
@@ -191,7 +191,7 @@ class AppState extends ChangeNotifier {
       reportNote = '';
       sheet = null;
     });
-    toastMsg('Report sent. The owner never sees your name.');
+    toastMsg('Report saved for the Hostelzy team. The owner never sees your name.');
   }
 
   // ------------------------------------------------------------ F09 rewards
@@ -308,7 +308,7 @@ class AppState extends ChangeNotifier {
       sheet = null;
       screen = 'oPayStatus';
     });
-    toastMsg('UTR sent. We’ll check it against our bank record.');
+    toastMsg('UTR saved. Hostelzy checks it against the bank record.');
   }
 
   /// Founder admin: the UTR is in the bank record.
@@ -319,13 +319,13 @@ class AppState extends ChangeNotifier {
         ..late = 0
         ..checked = dayMon(appToday);
     });
-    toastMsg('${i.ref} marked paid. ${hostelById(i.hid).owner} gets a receipt.');
+    toastMsg('${i.ref} marked paid.');
   }
 
   /// Founder admin: no payment with that UTR reached the bank.
   void notReceived(Invoice i) {
     update(() => i.status = 'missing');
-    toastMsg('${hostelById(i.hid).owner} is asked to check the UTR.');
+    toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
   }
 
   void sendReminder(Invoice i) => whatsapp(ownerPhones[i.hid] ?? '', 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
@@ -852,7 +852,7 @@ class AppState extends ChangeNotifier {
         ..drawn = dayMon(appToday)
         ..request = null;
     });
-    toastMsg('v${l.version} sent to ${hostelById(l.hid).owner} for approval.');
+    toastMsg('v${l.version} is waiting for ${hostelById(l.hid).owner}’s approval.');
   }
 
   // ------------------------------------------------------------ F14 onboarding
@@ -891,6 +891,10 @@ class AppState extends ChangeNotifier {
 
   void switchHostel(String hid) => update(() {
     ownHid = hid;
+    // Drafts belong to the hostel they were opened on.
+    rateDraft = null;
+    acDraft = null;
+    dealDraft = null;
     sheet = null;
     screen = 'oToday';
     hist = [];
@@ -1147,7 +1151,7 @@ class AppState extends ChangeNotifier {
   }
 
   void openDeals() => update(() {
-    final d = dealsOf('anjani');
+    final d = dealsOf(ownHid);
     dealDraft = Set.of(d.on);
     dealTarget = d.target;
     screen = 'oMore';
@@ -1157,7 +1161,7 @@ class AppState extends ChangeNotifier {
   });
 
   void toggleDeal(String id) {
-    final cur = dealDraft ??= Set.of(dealsOf('anjani').on);
+    final cur = dealDraft ??= Set.of(dealsOf(ownHid).on);
     if (cur.contains(id)) {
       update(() => cur.remove(id));
     } else if (cur.length >= maxDeals) {
@@ -1168,8 +1172,8 @@ class AppState extends ChangeNotifier {
   }
 
   void publishDeals() {
-    final on = Set.of(dealDraft ?? dealsOf('anjani').on);
-    update(() => deals['anjani'] = Deals(on: on, target: dealTarget, confirmed: dayMon(appToday)));
+    final on = Set.of(dealDraft ?? dealsOf(ownHid).on);
+    update(() => deals[ownHid] = Deals(on: on, target: dealTarget, confirmed: dayMon(appToday)));
     toastMsg(on.isEmpty ? 'Deals removed. Tenants see walk-in prices.' : 'Deals published. Tenants who book through Hostelzy get them.');
   }
 
@@ -1266,8 +1270,8 @@ class AppState extends ChangeNotifier {
 
   void _prep() {
     if (screen == 'oMore' && moreTab == 'rates' && rateDraft == null) {
-      rateDraft = Map.of(rates['anjani']!);
-      acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
+      rateDraft = Map.of(rates[ownHid]!);
+      acDraft = {for (final r in rooms[ownHid]!) r.n: r.ac};
     }
     if (screen == 'compare' && cmpA.isEmpty) {
       final r = rooms[hid]!.firstWhere((r) => layoutOf(hid, r.n) != null && r.beds.where(_open).length >= 2);
@@ -1541,9 +1545,10 @@ class AppState extends ChangeNotifier {
 
   /// Owner opens "Rooms and rent" with a draft copy of the rate card.
   void openRates() {
-    rateDraft = Map.of(rates['anjani']!);
-    acDraft = {for (final r in rooms['anjani']!) r.n: r.ac};
-    rcFloor = 2;
+    rateDraft = Map.of(rates[ownHid]!);
+    acDraft = {for (final r in rooms[ownHid]!) r.n: r.ac};
+    final fs = floorsOf(rooms[ownHid]!);
+    rcFloor = fs.contains(2) ? 2 : fs.first;
     // Manage → Rates (DECISIONS 2026-10-02).
     screen = 'oMore';
     hist = [];
@@ -1565,14 +1570,14 @@ class AppState extends ChangeNotifier {
   });
 
   void saveRates() {
-    final rs = rooms['anjani']!;
+    final rs = rooms[ownHid]!;
     final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
     update(() {
-      rates['anjani'] = Map.of(rateDraft!);
+      rates[ownHid] = Map.of(rateDraft!);
       for (final r in rs) {
         r.ac = acDraft![r.n]!;
       }
-      applyRates('anjani');
+      applyRates(ownHid);
     });
     toastMsg(newAc > 0 ? 'Saved. The Hostelzy team adds the AC unit to the layout within 48 hours.' : 'Rate card saved. Tenants see the new prices now.');
   }
@@ -1793,7 +1798,7 @@ class AppState extends ChangeNotifier {
         }
       }
     });
-    toastMsg(received ? 'Confirmed. $first sees it as ${p.kind == 'rent' ? 'paid' : 'booked'}.' : 'Marked not received. $first is asked to check the UTR.');
+    toastMsg(received ? 'Confirmed. It shows as ${p.kind == 'rent' ? 'paid' : 'booked'}.' : 'Marked not received. Tell $first on WhatsApp to check the UTR.');
   }
 
   /// Tenant gives up on a booking whose payment didn't arrive.
