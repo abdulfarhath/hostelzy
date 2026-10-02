@@ -26,12 +26,23 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 
 5b. **Support email** (optional): the web pages offer WhatsApp only. Send the Build chat an email address if you want one listed too.
 
+4b. **Team accounts and the team console (B7)**:
+   - Supabase → SQL Editor → paste `supabase/migrations/20261002060000_b7_console.sql` → **Run** → "Success".
+   - GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**: `FIREBASE_SERVICE_ACCOUNT` = the same Firebase .json text as in step 4 (generate a new key if you deleted it).
+   - Sign in to the Hostelzy app once with your Google account.
+   - GitHub repo → **Actions** → **Team member** → **Run workflow** → your Gmail address, **add** → Run. (Same steps to add or remove anyone on the team.)
+   - In the app: **Me → Settings → Hostelzy team → Open team tools** (no passcode any more).
+   - Firebase → ⚙ **Project settings** → **Your apps** → **Add app** → **Web** (`</>`) → nickname `team console` → **Register app**.
+   - Copy the `firebaseConfig = { … }` block it shows and send it to the Build chat (it's public, not a secret).
+   - Firebase → **Authentication** → **Settings** → **Authorized domains** → **Add domain** → `farhath.me`.
+   - Then the console works at https://farhath.me/hostelzy/app/console/ (Build adds the config).
+
 ## Soon (before real hostels)
 5. ~~**Lock the Firebase key**~~ (done) (stops others using it):
    - console.cloud.google.com → project hostelzy → APIs & Services → Credentials
    - Click "Android key (auto created by Firebase)"
    - Application restrictions → Android apps → Add → package `app.hostelzy.hostelzy` + SHA-1 → Save
-6. **Make the GitHub repo private** (founder: do it at the end, once the app is production-ready and before the first real users; hides the team passcode and code):
+6. **Make the GitHub repo private** (founder: do it at the end, once the app is production-ready and before the first real users; hides the code):
    - Repo → Settings → scroll to Danger Zone → Change visibility → Private
    - Note: new APK downloads then need you logged in to GitHub.
 7. **Domain** (`hostelzy.in`, about ₹800/year; Hostinger/GoDaddy accept UPI):

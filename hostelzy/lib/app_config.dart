@@ -31,9 +31,6 @@ const hostelzyUpiId = '9059790014@axl';
 /// the Play Store build: the oldest supported build, and maintenance mode.
 const minSupportedBuild = 0;
 
-/// TEMPORARY: unlocks the Hostelzy team tools (Settings → Hostelzy team) until
-/// F13 adds real admin accounts. Change it before sharing builds widely.
-const teamPasscode = '2580';
 const maintenanceUntil = ''; // e.g. '6:30 pm'; empty = no maintenance
 
 /// F13 backend: Supabase (Mumbai). The anon key is public by design: it can
