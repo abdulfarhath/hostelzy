@@ -424,7 +424,7 @@ class _Sheet extends StatelessWidget {
     final title = switch (s.sheet) {
       'search' => 'Search',
       'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
-      'wa' => 'Continue on WhatsApp',
+      'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
       'add' => 'Add a booking',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
@@ -441,6 +441,7 @@ class _Sheet extends StatelessWidget {
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'joined' => 'One quick question',
+      'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom}',
       'switch' => 'Your hostels',
@@ -759,11 +760,6 @@ class _HoldSheet extends StatelessWidget {
   }
 }
 
-/// F05 design question: the tenant note is green as the spec says, but the
-/// design rules keep green for savings and deals. Founder approved the
-/// default (green); false gives the neutral version from board 1.
-const enquiryNoteGreen = true;
-
 class _WaSheet extends StatelessWidget {
   const _WaSheet();
   @override
@@ -771,26 +767,26 @@ class _WaSheet extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final ref = s.waRef;
-    final noteFg = enquiryNoteGreen ? p.gn : p.tx;
+    final to = s.waTo ?? '';
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 12,
         children: [
+          // F17: honest. Nothing tells the owner except the tenant's own message.
           if (ref != null)
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: box(bg: enquiryNoteGreen ? p.gb : p.sf, w: 2, c: enquiryNoteGreen ? p.gb : p.tx),
+              color: p.sf,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shieldOk', size: 20, color: noteFg)),
+                  Padding(padding: const EdgeInsets.only(top: 1), child: Ic('msg', size: 20, color: p.tx)),
                   const SizedBox(width: 10),
-                  Expanded(child: Rich([sp(context, '${s.waTo} has been told on Hostelzy', w: 800, c: noteFg), sp(context, ', with your verified number and ref '), sp(context, ref, w: 800), sp(context, '.')], s: 14, lh: 1.4)),
+                  Expanded(child: Rich([sp(context, 'Send this on WhatsApp', w: 800, c: p.tx), sp(context, ' so $to knows you came from Hostelzy. Your enquiry code is '), sp(context, ref, w: 800, c: p.tx), sp(context, '.')], s: 14, lh: 1.45)),
                 ],
               ),
             ),
-          Rich([sp(context, 'To '), sp(context, ref != null ? '${s.waTo} · ${hostelById(s.waHid!).name}' : s.waTo ?? '', w: 800, c: p.tx), sp(context, ". We fill in the message so you don't have to.")], s: 13, c: p.mu),
           Container(
             padding: const EdgeInsets.all(14),
             color: p.sf,
@@ -798,12 +794,12 @@ class _WaSheet extends StatelessWidget {
               gap: 10,
               children: [
                 T(s.waMsg ?? '', s: 15, lh: 1.45),
-                if (ref != null) Rich([sp(context, 'Ref '), sp(context, ref, w: 800), sp(context, ' · hostelzy.in/r/$ref')], s: 14, lh: 1.45),
+                if (ref != null) Rich([sp(context, 'Ref '), sp(context, ref, w: 800)], s: 14, lh: 1.45),
               ],
             ),
           ),
           Cta(
-            'Open WhatsApp',
+            'Send on WhatsApp',
             icon: 'msg',
             height: 54,
             px: 16,
@@ -811,9 +807,9 @@ class _WaSheet extends StatelessWidget {
             bg: p.tx,
             fg: p.bg,
             onTap: () {
-              final to = s.waTo ?? '';
+              final text = s.waFull, phone = s.waPhone;
               s.update(() => s.sheet = null);
-              s.toastMsg('Opening WhatsApp with $to…');
+              s.whatsapp(phone, text);
             },
           ),
           OutlineCta(
@@ -826,7 +822,7 @@ class _WaSheet extends StatelessWidget {
               s.toastMsg('Message copied.');
             },
           ),
-          if (ref != null) T("Change the message if you like. Your enquiry is already saved on Hostelzy, so you're covered either way.", s: 12, c: p.mu, lh: 1.45),
+          T('Nothing is sent until you press send in WhatsApp.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),
     );
@@ -847,10 +843,10 @@ class _EnquirySheet extends StatelessWidget {
     void contact(String how) {
       s.markContacted(e.ref);
       if (how == 'wa') {
-        s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).');
+        s.openWA(e.name, 'Hi $first, this is Srinivas from Anjani Residency. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
       } else {
         s.update(() => s.sheet = null);
-        s.toastMsg(how == 'call' ? 'Calling $first on +91 ${phoneSpaced(e.phone)}…' : 'Marked as contacted.');
+        how == 'call' ? s.call(e.phone) : s.toastMsg('Marked as contacted.');
       }
     }
 

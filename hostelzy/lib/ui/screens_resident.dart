@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -661,13 +662,13 @@ class HelpScreen extends StatelessWidget {
                   onTap: () {
                     if (s.cText.trim().isEmpty) return s.toastMsg('Tell us what is wrong first.');
                     s.update(() {
-                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: 'Rahul V · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: '1 Oct', note: 'Sent to Srinivas', mine: true)];
+                      s.complaints = [...s.complaints, Complaint(id: DateTime.now().millisecondsSinceEpoch, by: 'Rahul V · 204', cat: s.cCat, text: s.cText.trim(), status: 'Open', date: '1 Oct', note: 'Saved · tell Srinivas on WhatsApp too', mine: true)];
                       s.cText = '';
                     });
-                    s.toastMsg('Sent. Srinivas has 72 hours to fix it.');
+                    s.toastMsg('Saved. Srinivas sees it in the app once it is online. Tell them on WhatsApp too.');
                   },
                 ),
-                T('Not fixed in 72 hours? Hostelzy steps in.', s: 12, c: p.mu),
+                T('Not fixed? Raise it again, or WhatsApp Srinivas.', s: 12, c: p.mu),
               ],
             ),
           ),
@@ -748,7 +749,7 @@ class MoveScreen extends StatelessWidget {
                     fs: 15,
                     onTap: () {
                       s.update(() => s.notice = true);
-                      s.toastMsg('Notice sent to Srinivas.');
+                      s.toastMsg('Notice saved. Tell Srinivas on WhatsApp too.');
                     },
                   ),
                 ),
@@ -765,7 +766,8 @@ class MoveScreen extends StatelessWidget {
                     children: [
                       Kicker('Notice given', c: p.ad),
                       T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
-                      T('Srinivas has been told. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
+                      T('Saved on Hostelzy. Tell Srinivas on WhatsApp too. Your bed goes back on Hostelzy as "free soon".', s: 14, c: p.mu),
+                      OutlineCta('Tell Srinivas on WhatsApp', icon: 'msg', height: 48, onTap: () => s.whatsapp(ownerPhones['anjani']!, 'Hi Srinivas, this is Rahul from bed 204-B. I am giving notice: my last day is ${s.vDate}.')),
                     ],
                   ),
                 ),
@@ -856,7 +858,7 @@ class MoveScreen extends StatelessWidget {
               onTap: () {
                 if (s.swapBed == null || s.swapSent) return;
                 s.update(() => s.swapSent = true);
-                s.toastMsg('Swap request sent to Srinivas.');
+                s.toastMsg('Swap request saved. Ask Srinivas on WhatsApp too.');
               },
             ),
           ),
@@ -985,7 +987,7 @@ class ConfirmStayScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Tap(onTap: () => s.update(() => s.cOtp = '482113'), child: T('Paste code from WhatsApp', s: 12, w: 600, c: p.ad)),
+                            if (kDebugMode) Tap(onTap: () => s.update(() => s.cOtp = '482113'), child: T('Paste code from WhatsApp', s: 12, w: 600, c: p.ad)) else const SizedBox(),
                             T("Didn't get it? Resend in 0:24", s: 12, c: p.mu),
                           ],
                         ),

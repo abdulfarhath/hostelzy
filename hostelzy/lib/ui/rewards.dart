@@ -135,7 +135,7 @@ class RewardsScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Kicker('Your code'), T(s.referralCode, w: 800, s: 22, ls: .04)])),
-                      Cta('Share', icon: 'msg', height: 44, px: 14, fs: 14, expand: false, gap: 10, bg: p.tx, fg: p.bg, onTap: () => s.toastMsg('Opening WhatsApp to share ${s.referralCode}…')),
+                      Cta('Share', icon: 'msg', height: 44, px: 14, fs: 14, expand: false, gap: 10, bg: p.tx, fg: p.bg, onTap: () => s.whatsapp('', 'Find a PG on Hostelzy with my code ${s.referralCode}: we both get ${fmt(referralReward)} after your first month.')),
                     ],
                   ),
                 ),
@@ -279,7 +279,7 @@ class TrustedSheet extends StatelessWidget {
                 s.reqs = s.reqs.where((x) => x.id != id).toList();
                 s.sheet = null;
               });
-              s.toastMsg('Confirmed. $first gets a WhatsApp message.');
+              s.toastMsg('Hold confirmed. Let $first know on WhatsApp.');
             }),
           ),
         ],

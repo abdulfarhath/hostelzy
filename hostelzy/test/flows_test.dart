@@ -52,10 +52,11 @@ void main() {
     expect(find.text('See the'), findsOneWidget);
     await tap(tester, find.text('Get started'));
     expect(find.text('Your mobile number'), findsOneWidget);
-    await tap(tester, find.text('Fill a demo number'));
+    await tap(tester, find.text('Debug: fill a test number'));
     await tap(tester, find.text('Send code'));
-    expect(find.text('Sent to +91 98480 12345'), findsOneWidget);
-    await tap(tester, find.text('Paste code from SMS'));
+    expect(find.text('Sent by SMS to +91 90000 00001. Android can fill it in for you.'), findsOneWidget);
+    expect(find.text('Resend in 0:30'), findsOneWidget);
+    await tap(tester, find.text('Debug: fill'));
     await tap(tester, find.text('Verify'));
     await tap(tester, find.text('I need a bed'));
     expect(s.screen, 'explore');
@@ -77,7 +78,8 @@ void main() {
     expect(find.text('Book bed $bed'), findsOneWidget);
     await tap(tester, find.text('Hold free'));
     expect(s.screen, 'hold');
-    expect(find.text('WAITING FOR SRINIVAS'), findsOneWidget);
+    expect(find.text('FREE HOLD'), findsOneWidget);
+    expect(find.text('Tell Srinivas on WhatsApp'), findsOneWidget);
     expect(s.findBed('anjani', bed).b!.state, 'held');
 
     // The same hold shows up in the owner's request inbox.
@@ -151,12 +153,17 @@ void main() {
     final ref = s.waRef!;
     expect(s.enquiries.length, before + 1);
     expect(s.enquiries.first.ref, ref);
-    expect(s.enquiries.first.phone, '9848012345');
-    expect(find.textContaining('has been told on Hostelzy'), findsOneWidget);
-    expect(find.textContaining('hostelzy.in/r/$ref'), findsOneWidget);
-    expect(s.waFull, endsWith('Ref $ref · hostelzy.in/r/$ref'));
+    expect(s.enquiries.first.phone, '9000000001');
+    // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
+    expect(find.text('Ask Srinivas on WhatsApp'), findsOneWidget);
+    expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
+    expect(s.waFull, endsWith('Ref $ref'));
+    await tap(tester, find.text('Send on WhatsApp'));
+    expect(s.lastLink.toString(), startsWith('https://wa.me/919848011223?text=Hi%20Srinivas'));
+    await tester.pump(const Duration(seconds: 3));
 
     // Asking again about the same hostel reuses the code.
+    await tap(tester, find.text('Ask on WhatsApp'));
     await tap(tester, find.text('Copy message'));
     await tap(tester, find.text('Ask on WhatsApp'));
     expect(s.waRef, ref);
@@ -189,7 +196,7 @@ void main() {
   testWidgets('WhatsApp owner from a hold records the bed (F05)', (tester) async {
     final s = AppState(start: 'hold', role: 'tenant');
     await pumpApp(tester, s);
-    await tap(tester, find.text('WhatsApp'));
+    await tap(tester, find.text('Tell Srinivas on WhatsApp'));
     expect(s.sheet, 'wa');
     expect(s.enquiries.first.bed, s.holds.single.bed);
     expect(s.enquiries.first.from, 'Hold · WhatsApp owner');
@@ -279,14 +286,14 @@ void main() {
     expect(s.sheet, 'addR');
     expect(s.rBed, '103-A');
     await tester.enterText(find.byType(EditableText).at(0), 'Rahul Varma');
-    await tester.enterText(find.byType(EditableText).at(1), '98480 12345');
+    await tester.enterText(find.byType(EditableText).at(1), '90000 00001');
     await tester.pump();
     expect(find.textContaining('Joined via Hostelzy.'), findsOneWidget);
     expect(find.textContaining('($ref)'), findsOneWidget);
     await tester.enterText(find.byType(EditableText).at(1), '9000000000');
     await tester.pump();
     expect(find.textContaining('No Hostelzy enquiry, hold or booking from this number in the last 60 days.'), findsOneWidget);
-    await tester.enterText(find.byType(EditableText).at(1), '9848012345');
+    await tester.enterText(find.byType(EditableText).at(1), '9000000001');
     await tester.pump();
     await tap(tester, find.text('Add and send code'));
     expect(s.sheet, isNull);
@@ -476,7 +483,7 @@ void main() {
     // The booking is on the owner's Hostelzy list, and matches the phone (F05/F06).
     expect(s.enquiries.first.ref, ref);
     expect(s.enquiries.first.from, 'Book · Pay advance');
-    expect(s.matchFor('9848012345', s.now)?.ref, ref);
+    expect(s.matchFor('9000000001', s.now)?.ref, ref);
     s.dispose();
   });
 
@@ -989,6 +996,50 @@ void main() {
     expect(o.managers.single, (name: 'Prakash', phone: '9000000002', joined: false));
     expect(find.text('INVITE PENDING'), findsOneWidget);
     o.dispose();
+  });
+
+  testWidgets('honest app: links open WhatsApp, phone and maps; holds expire; login resend (F17)', (tester) async {
+    // A free hold says the owner doesn't know yet, and ends at 0:00.
+    final s = AppState(start: 'hold', role: 'tenant');
+    await pumpApp(tester, s);
+    final h = s.holds.single;
+    expect(find.textContaining('doesn’t know yet'), findsOneWidget);
+    expect(find.text('Demo: simulate the owner confirming'), findsOneWidget); // debug builds only
+    await tap(tester, find.text('Directions'));
+    expect(s.lastLink.toString(), 'https://www.google.com/maps/search/?api=1&query=Anjani%20Residency%2C%20Madhapur%2C%20Hyderabad');
+    await tester.pump(const Duration(seconds: 3));
+    expect(s.expireHoldsAt(h.start + s.holdSecs * 1000 - 5000), isFalse);
+    expect(s.expireHoldsAt(h.start + s.holdSecs * 1000), isTrue);
+    await tester.pump();
+    expect(s.holds.single.status, 'released');
+    expect(s.findBed('anjani', h.bed).b!.state, 'free');
+    expect(find.text('HOLD EXPIRED'), findsOneWidget);
+    expect(find.text('0:00'), findsOneWidget);
+    await tap(tester, find.text('Hold ${h.bed} again'));
+    expect((s.screen, s.sheet, s.bed), ('picker', 'hold', h.bed));
+    s.dispose();
+
+    // Owner: Call opens the phone app; reminders open WhatsApp with the text.
+    final o = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, o);
+    await tap(tester, find.text('Call').first);
+    expect(o.lastLink.toString(), startsWith('tel:+91'));
+    o.dispose();
+
+    // Login: no demo fill in release; the resend timer counts down.
+    final l = AppState(start: 'phone', role: 'tenant');
+    await pumpApp(tester, l);
+    expect(find.text('Privacy policy', findRichText: true), findsNothing);
+    expect(find.textContaining('Privacy policy', findRichText: true), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '9000000001');
+    await tester.pump();
+    await tap(tester, find.text('Send code'));
+    expect(l.screen, 'otp');
+    expect(find.text('Resend in 0:30'), findsOneWidget);
+    l.update(() => l.now += 31000);
+    await tester.pump();
+    expect(find.text('Resend code'), findsOneWidget);
+    l.dispose();
   });
 
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -95,7 +96,7 @@ class PhoneScreen extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: BackBtn(onTap: s.back),
           ),
-          const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code. No passwords.'),
+          const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.'),
           const SizedBox(height: 28),
           Container(
             height: 60,
@@ -111,18 +112,23 @@ class PhoneScreen extends StatelessWidget {
                   child: const T('+91', w: 800, s: 20),
                 ),
                 Expanded(
-                  child: Field(value: s.phone, onChanged: (v) => s.update(() => s.phone = _digits(v, 10)), placeholder: '98480 12345', numeric: true, border: false, height: null, fs: 22, w: 800, ls: .04, pad: const EdgeInsets.symmetric(horizontal: 14)),
+                  child: Field(value: s.phone, onChanged: (v) => s.update(() => s.phone = _digits(v, 10)), placeholder: '10-digit number', numeric: true, border: false, height: null, fs: 22, w: 800, ls: .04, pad: const EdgeInsets.symmetric(horizontal: 14)),
                 ),
               ],
             ),
           ),
           const Spacer(),
-          Cta('Send code', onTap: () => s.phone.length == 10 ? s.go('otp') : s.toastMsg('Enter all 10 digits.'), iconSize: 20, opacity: s.phone.length == 10 ? 1 : .4),
+          Cta('Send code', onTap: () => s.phone.length == 10 ? s.sendCode() : s.toastMsg('Enter all 10 digits.'), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
           const SizedBox(height: 12),
-          Tap(
-            onTap: () => s.update(() => s.phone = '9848012345'),
-            child: T('Fill a demo number', s: 13, c: p.ad, w: 600),
-          ),
+          Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+          // F17: demo shortcut for development only, never in the Play Store build.
+          if (kDebugMode) ...[
+            const SizedBox(height: 8),
+            Tap(
+              onTap: () => s.update(() => s.phone = '9000000001'),
+              child: T('Debug: fill a test number', s: 13, c: p.ad, w: 600),
+            ),
+          ],
         ],
       ),
     );
@@ -163,7 +169,7 @@ class OtpScreen extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: BackBtn(onTap: s.back),
           ),
-          _StepHead(step: 'Step 2 of 2', title: 'Enter the code', sub: 'Sent to +91 ${phoneSpaced(s.phone)}'),
+          _StepHead(step: 'Step 2 of 2', title: 'Enter the code', sub: 'Sent by SMS to +91 ${phoneSpaced(s.phone)}. Android can fill it in for you.'),
           const SizedBox(height: 28),
           Stack(
             children: [
@@ -177,15 +183,19 @@ class OtpScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Tap(
-                onTap: () => s.update(() => s.otp = '482913'),
-                child: T('Paste code from SMS', s: 13, c: p.ad, w: 600),
-              ),
-              T('Resend in 0:24', s: 13, c: p.mu),
+              s.resendLeft > 0
+                  ? T('Resend in ${cd(s.resendLeft.toDouble())}', s: 13, c: p.mu)
+                  : Tap(onTap: s.sendCode, child: T('Resend code', s: 13, w: 800, c: p.ad)),
+              if (kDebugMode)
+                Tap(
+                  onTap: () => s.update(() => s.otp = '123456'),
+                  child: T('Debug: fill', s: 13, c: p.ad, w: 600),
+                ),
+              Tap(onTap: s.back, child: T('Change number', s: 13, w: 800, c: p.mu)),
             ],
           ),
           const Spacer(),
-          Cta('Verify', onTap: () => s.otp.length == 6 ? (s..signedIn = true).go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, opacity: s.otp.length == 6 ? 1 : .4),
+          Cta('Verify', onTap: () => s.otp.length == 6 ? (s..signedIn = true).go('role') : s.toastMsg('Enter the 6-digit code.'), iconSize: 20, bg: s.otp.length == 6 ? null : p.tk, fg: s.otp.length == 6 ? null : p.mu),
         ],
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -167,7 +168,7 @@ class OwnerRulesScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Tap(onTap: () => s.update(() => s.fpOtp = '553014'), child: T('Paste code from SMS', s: 12, w: 600, c: p.ad)),
+                        if (kDebugMode) Tap(onTap: () => s.update(() => s.fpOtp = '553014'), child: T('Paste code from SMS', s: 12, w: 600, c: p.ad)),
                       ],
                     ),
                   )
@@ -257,7 +258,7 @@ class OwnerContact extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Row(
                 children: [
-                  Expanded(child: OutlineCta('Call', icon: 'phone', height: 44, px: 14, fs: 14, onTap: () => s.toastMsg('Calling ${h.owner} on +91 ${phoneSpaced(phone)}…'))),
+                  Expanded(child: OutlineCta('Call', icon: 'phone', height: 44, px: 14, fs: 14, onTap: () => s.call(phone))),
                   const SizedBox(width: 8),
                   Expanded(child: OutlineCta('WhatsApp', icon: 'msg', height: 44, px: 14, fs: 14, onTap: () => s.enquire(h.id, 'Hi ${h.owner}, I held bed ${hold?.bed} at ${h.name} on Hostelzy.', bed: hold?.bed, from: 'Hold · WhatsApp owner'))),
                 ],

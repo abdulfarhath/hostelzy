@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'state.dart';
@@ -16,7 +17,9 @@ class HostelzyApp extends StatefulWidget {
 }
 
 class _HostelzyAppState extends State<HostelzyApp> {
-  final q = Uri.base.queryParameters;
+  // F17: start-state shortcuts and the all-screens canvas are for
+  // development only; the Play Store build always starts at Welcome.
+  final q = kDebugMode ? Uri.base.queryParameters : const <String, String>{};
   late final AppState state = AppState(
     start: _pick(q['start'], AppState.screens),
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
