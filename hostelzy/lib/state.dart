@@ -47,6 +47,7 @@ part 'features/photos/photos.dart';
 part 'features/reminders/reminders.dart';
 part 'features/residents/my_stay.dart';
 part 'features/session/guest.dart';
+part 'features/amenities/amenities.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -57,7 +58,7 @@ part 'features/session/guest.dart';
 /// F21 W4: how long an Undo stays.
 const undoSecs = Duration(seconds: 5);
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -570,6 +571,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     // S4: the live hostels' reviews replace any earlier copy of them.
     final ids = {for (final h in l.hostels) h.id};
     reviews = [...reviews.where((r) => !ids.contains(r.hid)), for (final h in l.hostels) ...?l.reviews[h.id]];
+    // F23: their floor and room things too.
+    amenities = [...amenities.where((a) => !ids.contains(a.hid)), for (final h in l.hostels) ...?l.amenities[h.id]];
     // S3: the owner edits their own hostel's rules.
     if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
   });

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
+import 'amenities.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
@@ -864,6 +865,9 @@ class DetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: T('Same price for every bed of a type.${h.food ? ' Food included.' : ''} Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}.', s: 13, c: p.mu, lh: 1.4),
                 ),
+                // F23: the shared things on each floor (and the geyser in rooms).
+                OnEachFloor(hid: h.id),
+                const SizedBox(height: 12),
                 // F21 W2: rules folded under one row.
                 Tap(
                   key: const ValueKey('houseRules'),
@@ -966,9 +970,9 @@ class PickerScreen extends StatelessWidget {
     final room = rs.where((r) => r.n == s.room).firstOrNull ?? rs[0];
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final hasSel = sb != null && sb.b != null;
-    // F12: Room sits beside Plan; Plan stays the default. F21 W2: Building
-    // folds into Plan's floors; the list is a "See cheapest beds" link.
-    const modes = [('plan', 'Plan'), ('room', 'Room')];
+    // F23: the room plan comes first (layout-first, founder); its "Floor view"
+    // button and the floor view's room names switch between the two. The
+    // list is a "See cheapest beds" link.
     final locked = s.floorLocked(h.id) && s.mode == 'plan';
 
     Widget body;
@@ -997,33 +1001,6 @@ class PickerScreen extends StatelessWidget {
                   children: s.mode == 'room' ? [Kicker('${h.name} · ${room.share} sharing', ell: true), T('Room ${room.label}', w: 800, s: 26, lh: 1.1)] : [Kicker(h.name, ell: true), const T('Pick a bed', w: 800, s: 26, lh: 1.1)],
                 ),
               ),
-            ],
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: box(w: 2, c: p.tx),
-          child: Row(
-            children: [
-              for (var i = 0; i < modes.length; i++)
-                Expanded(
-                  child: Tap(
-                    onTap: () => s.update(() => s.mode = modes[i].$1),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: s.mode == modes[i].$1 ? p.tx : transparent,
-                        border: i > 0 ? Border(left: bs(1, p.hl)) : null,
-                      ),
-                      child: Css(
-                        c: s.mode == modes[i].$1 ? p.bg : p.tx,
-                        s: 13,
-                        w: 600,
-                        child: T(modes[i].$2, align: TextAlign.center),
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),

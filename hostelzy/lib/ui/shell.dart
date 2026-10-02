@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../state.dart';
+import 'amenities.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
@@ -643,6 +644,8 @@ class _Sheet extends StatelessWidget {
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
+      'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
+      'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -681,6 +684,8 @@ class _Sheet extends StatelessWidget {
       'water' => const WaterSheet(),
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
+      'amFloor' => const AmenityFloorSheet(),
+      'amAdd' => const AmenityAddSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {

@@ -1445,7 +1445,7 @@ const amenityKinds = <(String, String, String)>[
   // (kind, label, icon)
   ('fridge', 'Fridge', 'fridge'),
   ('washer', 'Washing machine', 'washer'),
-  ('ro', 'Water purifier (RO)', 'drop'),
+  ('ro', 'Water purifier (RO)', 'ro'),
   ('cooler', 'Water cooler', 'cooler'),
   ('geyser', 'Geyser', 'geyser'),
   ('microwave', 'Microwave', 'microwave'),
