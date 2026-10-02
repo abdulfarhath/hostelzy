@@ -1357,6 +1357,68 @@ void main() {
     o.dispose();
   });
 
+  testWidgets('F12 extras: bunk beds, copy to same rooms, resident says not accurate, 3-monthly confirm', (tester) async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    // Sample bunk: Nest 42 room 101, D over C.
+    final n = s.layoutOf('nest42', 101)!;
+    final nr = s.rooms['nest42']!.firstWhere((r) => r.n == 101);
+    expect(bedFacts(n, nr, 'D').first, 'Upper bunk');
+    expect(bedFacts(n, nr, 'C').first, 'Lower bunk');
+    expect(bedTraits(n, nr, 'A').bunk, 'Single bed');
+    // The owner is asked every 3 months whether the layouts still match.
+    await pumpApp(tester, s);
+    expect(find.text('Do your room layouts still match?'), findsOneWidget);
+    await tap(tester, find.text('All still correct'));
+    expect(s.layoutConfirmed['anjani'], 0);
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Do your room layouts still match?'), findsNothing);
+
+    // Editor: stack two beds into a bunk and move them as one; take apart.
+    s.update(() {
+      s.teamUnlocked = true;
+      s.lRoom = 101;
+    });
+    s.openLayout(101, editor: true);
+    await tester.pump();
+    final l = s.layoutOf('anjani', 101)!;
+    final room = s.rooms['anjani']!.firstWhere((r) => r.n == 101);
+    s.edSelect('bed:A');
+    await tap(tester, find.text('Stack as bunk'));
+    final upper = l.bunks.keys.single;
+    expect(l.bunks[upper], 'A');
+    expect(l.beds[upper], l.beds['A']);
+    expect(bedTraits(l, room, 'A').bunk, 'Lower bunk');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.byKey(const ValueKey('nudge-down')));
+    expect(l.beds[upper], l.beds['A']); // moved together
+    await tap(tester, find.text('Unstack bunk'));
+    expect(l.bunks, isEmpty);
+    expect(l.beds[upper], isNot(l.beds['A']));
+    await tester.pump(const Duration(seconds: 3));
+
+    // Copy to the other rooms of the same type, as new versions.
+    final same = s.rooms['anjani']!.where((r) => r.n != 101 && r.share == room.share && r.ac == room.ac).toList();
+    expect(same, isNotEmpty);
+    await tap(tester, find.text('Copy to same rooms'));
+    for (final r in same) {
+      final t = s.layoutOf('anjani', r.n)!;
+      expect(t.pending, isTrue);
+      expect(t.beds['A'], l.beds['A']);
+    }
+    s.dispose();
+
+    // Resident's 30-day review: "No" flags the layout for the team.
+    final r = AppState(start: 'rReview', role: 'resident');
+    await pumpApp(tester, r);
+    r.update(() {
+      r.rvStars = 4;
+      r.rvLayout = 'No';
+    });
+    r.postReview();
+    expect(r.layoutOf('anjani', 204)!.disputes, 1);
+    r.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

@@ -109,6 +109,7 @@ class OwnerLayoutsScreen extends StatelessWidget {
       final l = s.layoutOf(h.id, n);
       if (l == null) return (label: 'Coming soon', bg: p.sf, fg: p.mu);
       if (l.request != null) return (label: 'Change requested', bg: p.ab, fg: p.ad);
+      if (l.disputes > 0) return (label: 'Resident: not accurate', bg: p.ab, fg: p.ad);
       if (l.pending) return (label: 'Waiting for approval', bg: p.ac, fg: p.ai);
       return (label: 'Live', bg: p.tx, fg: p.bg);
     }

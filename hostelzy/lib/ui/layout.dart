@@ -213,36 +213,46 @@ class LayoutMap extends StatelessWidget {
           final ct = sc(f.rect).center;
           labels.add(Positioned(left: ct.dx - 11, top: ct.dy - 10, child: label(f.working ? 'Fan' : 'Fan · not working', icon: 'fan', c: f.working ? null : p.ad)));
         }
+        (BedLook, String) lookFor(Bed b) => switch (mode) {
+          'plain' || 'edit' => (BedLook(p.sf, p.tx, p.tx, '3 × 6 ft'), '3 × 6 ft'),
+          'compare' when cmp.isNotEmpty && b.letter == cmp[0] => (bedState(p, 'sel'), 'Selected'),
+          'compare' when cmp.length > 1 && b.letter == cmp[1] => (BedLook(p.ab, p.ac, p.ad, 'Compare'), 'Compare'),
+          _ => () {
+            final lk = lookOf(p, b, b.letter == focus && (b.state == 'free' || b.state == 'soon') ? b.id : s.bed);
+            return (lk.look, lk.tag);
+          }(),
+        };
+        Widget bedBox(Bed b, {String? note}) {
+          final (look, tag) = lookFor(b);
+          return Tap(
+            onTap: () => onPick?.call(b.letter),
+            child: BedBox(
+              look: look,
+              padding: const EdgeInsets.all(5),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(children: [T(b.letter, w: 800, s: note == null ? 22 : 16, lh: 1), if (note != null) ...[const SizedBox(width: 4), Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(note, s: 8, w: 800, upper: true, nowrap: true)))]]),
+                  FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.bottomLeft, child: T(tag, s: 9, w: 800, ls: .06, upper: true, nowrap: true)),
+                ],
+              ),
+            ),
+          );
+        }
+
         for (final b in room.beds) {
-          if (!l.beds.containsKey(b.letter)) continue;
+          if (!l.beds.containsKey(b.letter) || l.bunks.containsKey(b.letter)) continue;
           final r = sc(l.bedRect(b.letter));
-          final (look, tag) = switch (mode) {
-            'plain' || 'edit' => (BedLook(p.sf, p.tx, p.tx, '3 × 6 ft'), '3 × 6 ft'),
-            'compare' when cmp.isNotEmpty && b.letter == cmp[0] => (bedState(p, 'sel'), 'Selected'),
-            'compare' when cmp.length > 1 && b.letter == cmp[1] => (BedLook(p.ab, p.ac, p.ad, 'Compare'), 'Compare'),
-            _ => () {
-              final lk = lookOf(p, b, b.letter == focus && (b.state == 'free' || b.state == 'soon') ? b.id : s.bed);
-              return (lk.look, lk.tag);
-            }(),
-          };
+          final up = l.upperOn(b.letter);
+          final upper = up == null ? null : room.beds.where((x) => x.letter == up).firstOrNull;
+          // A bunk bed: the upper bunk on top, the lower below, each tappable.
           kids.add(
             Positioned.fromRect(
               rect: r,
-              child: Tap(
-                onTap: () => onPick?.call(b.letter),
-                child: BedBox(
-                  look: look,
-                  padding: const EdgeInsets.all(5),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      T(b.letter, w: 800, s: 22, lh: 1),
-                      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.bottomLeft, child: T(tag, s: 9, w: 800, ls: .06, upper: true, nowrap: true)),
-                    ],
-                  ),
-                ),
-              ),
+              child: upper == null
+                  ? bedBox(b)
+                  : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Expanded(child: bedBox(upper, note: 'Upper')), Container(height: 2, color: p.tx), Expanded(child: bedBox(b, note: 'Lower'))]),
             ),
           );
         }
@@ -269,7 +279,7 @@ class LayoutMap extends StatelessWidget {
           for (final i in l.items) {
             handles.add(handle(i.id, i.rect));
           }
-          for (final b in l.beds.keys) {
+          for (final b in l.beds.keys.where((b) => !l.bunks.containsKey(b))) {
             handles.add(handle('bed:$b', l.bedRect(b)));
           }
         }
@@ -497,6 +507,7 @@ class CompareScreen extends StatelessWidget {
     if (l == null) return const SizedBox();
     final a = bedTraits(l, room, s.cmpA), b = bedTraits(l, room, s.cmpB);
     final rows = <(String, String, String)>[
+      if (a.bunk != 'Single bed' || b.bunk != 'Single bed') ('Bed', a.bunk, b.bunk),
       ('Fan', a.fan, b.fan),
       if (a.ac != null) ('AC', a.ac!, b.ac!),
       ('Window', a.win, b.win),
@@ -902,6 +913,8 @@ class AdminLayoutScreen extends StatelessWidget {
                       ],
                     ),
                     Wrap(spacing: 6, runSpacing: 6, children: [
+                      ChipBtn(sel != null && sel.startsWith('bed:') && (l.bunks.containsKey(sel.substring(4)) || l.upperOn(sel.substring(4)) != null) ? 'Unstack bunk' : 'Stack as bunk', on: false, onTap: () => s.edBunk(l, room)),
+                      ChipBtn('Copy to same rooms', on: false, onTap: () => s.copyToSameRooms(l, room)),
                       ChipBtn('Mirror ↔', on: false, onTap: () => s.edMirror(l)),
                       ChipBtn('Flip ↕', on: false, onTap: () => s.edMirror(l, vertical: true)),
                       ChipBtn('History', on: false, onTap: () => s.toastMsg('v1 drawn 28 Sep${l.version > 1 ? ' · v${l.version} drawn ${l.drawn}' : ''}')),
@@ -927,6 +940,8 @@ class AdminLayoutScreen extends StatelessWidget {
                         ],
                       ),
                   ]),
+                  if (l.disputes > 0)
+                    section('Residents', [T('${l.disputes} ${l.disputes == 1 ? 'resident says' : 'residents say'} this layout isn’t accurate (30-day review). Check it on the next visit.', s: 13, c: p.ad, lh: 1.4)]),
                   section('Checks before sending', [
                     for (final (ok, t) in checks) Row(children: [Ic(ok ? 'check' : 'warn', size: 16, color: ok ? p.gn : p.ad), const SizedBox(width: 8), Expanded(child: T(t, s: 13))]),
                   ]),
@@ -957,6 +972,38 @@ class AdminLayoutScreen extends StatelessWidget {
           child: Cta('Send to owner for approval', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
         ),
       ],
+    );
+  }
+}
+
+
+/// Owner Today: every 3 months, confirm the room layouts still match (F12).
+class ConfirmLayoutsCard extends StatelessWidget {
+  const ConfirmLayoutsCard({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final days = s.layoutConfirmed[s.ownHid];
+    if (days == null || days < layoutConfirmEvery || s.layouts[s.ownHid] == null) return const SizedBox();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(
+        gap: 8,
+        children: [
+          const T('Do your room layouts still match?', w: 800, s: 17),
+          T('Last confirmed $days days ago. Every 3 months, check that beds, fans, AC and windows are still where the layouts show them.', s: 13, c: p.mu, lh: 1.4),
+          Row(
+            children: [
+              Expanded(child: Cta('All still correct', icon: 'check', height: 46, px: 12, fs: 14, onTap: () => s.confirmLayouts(s.ownHid))),
+              const SizedBox(width: 8),
+              Cta('Review', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oLayouts')),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

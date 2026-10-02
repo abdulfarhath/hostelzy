@@ -495,7 +495,11 @@ class AppState extends ChangeNotifier {
     final y = to.dy.roundToDouble().clamp(0, l.h - r.height).toDouble();
     final id = edSel!;
     if (id.startsWith('bed:')) {
-      l.beds[id.substring(4)] = Offset(x, y);
+      // A bunk bed moves as one: both beds share the spot.
+      final b = l.bunks[id.substring(4)] ?? id.substring(4);
+      l.beds[b] = Offset(x, y);
+      final up = l.upperOn(b);
+      if (up != null) l.beds[up] = Offset(x, y);
     } else {
       final i = l.items.firstWhere((i) => i.id == id);
       i
@@ -570,7 +574,10 @@ class AppState extends ChangeNotifier {
     _remember(l);
     update(() {
       if (id.startsWith('bed:')) {
-        l.beds.remove(id.substring(4));
+        final b = id.substring(4);
+        l.beds.remove(b);
+        l.bunks.remove(b);
+        l.bunks.removeWhere((_, lower) => lower == b);
       } else {
         l.items.removeWhere((i) => i.id == id);
       }
@@ -654,6 +661,61 @@ class AppState extends ChangeNotifier {
       _undo.add(l.snap());
       l.restore(_redo.removeLast());
     });
+  }
+
+  /// Stack another bed on the selected one as a bunk (upper over lower), or
+  /// take a bunk apart again.
+  void edBunk(RoomLayout l, Room room) {
+    final id = edSel;
+    if (id == null || !id.startsWith('bed:')) return toastMsg('Tap a bed first.');
+    final b = id.substring(4);
+    final lower = l.bunks[b] ?? b;
+    final upper = l.upperOn(lower);
+    _remember(l);
+    if (upper != null) {
+      update(() {
+        l.bunks.remove(upper);
+        final p = l.beds[lower]!;
+        l.beds[upper] = Offset(p.dx + bedW + 1 > l.w - bedW ? (p.dx - bedW - 1).clamp(0, l.w - bedW).toDouble() : p.dx + bedW + 1, p.dy);
+      });
+      return toastMsg('Bunk taken apart: two single beds.');
+    }
+    final p0 = l.bedRect(lower).center;
+    final other = (l.beds.keys.where((k) => k != lower && !l.bunks.containsKey(k) && l.upperOn(k) == null).toList()..sort((a, c) => (l.bedRect(a).center - p0).distance.compareTo((l.bedRect(c).center - p0).distance))).firstOrNull;
+    if (other == null) return toastMsg('No single bed left to stack.');
+    update(() {
+      l.bunks[other] = lower;
+      l.beds[other] = l.beds[lower]!;
+    });
+    toastMsg('Bed ${room.label}-$other is now the upper bunk over ${room.label}-$lower.');
+  }
+
+  /// Copy this layout to the other rooms of the same type (same sharing, AC
+  /// or not) as new versions for the owner to approve.
+  void copyToSameRooms(RoomLayout l, Room room) {
+    final same = rooms[l.hid]!.where((r) => r.n != room.n && r.share == room.share && r.ac == room.ac).toList();
+    if (same.isEmpty) return toastMsg('No other ${room.share}-sharing ${room.type} rooms here.');
+    update(() {
+      for (final r in same) {
+        final t = layouts[l.hid]?[r.n];
+        if (t == null) continue;
+        if (!t.pending) t.published ??= t.snap();
+        t
+          ..restore(l.snap())
+          ..version += t.pending ? 0 : 1
+          ..pending = true
+          ..drawn = dayMon(appToday);
+      }
+    });
+    toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')} as new versions for the owner to approve.');
+  }
+
+  /// Days since the owner confirmed the layouts still match the rooms.
+  final Map<String, int> layoutConfirmed = Map.of(seedLayoutConfirmed);
+
+  void confirmLayouts(String hid) {
+    update(() => layoutConfirmed[hid] = 0);
+    toastMsg('Thanks. Tenants see your layouts as confirmed today.');
   }
 
   void edMirror(RoomLayout l, {bool vertical = false}) {
@@ -899,6 +961,8 @@ class AppState extends ChangeNotifier {
     if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
     update(() {
       reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: 'Rahul V.', stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
+      // F12: a resident who says the layout is wrong flags it for the team.
+      if (rvLayout == 'No') layoutOf('anjani', 204)?.disputes++;
       rvStars = 0;
       rvCats = {};
       rvLayout = null;
