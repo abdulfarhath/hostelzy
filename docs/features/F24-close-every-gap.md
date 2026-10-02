@@ -68,6 +68,43 @@ case photo; remove "Publish for approval"/"Hostelzy admin" from oEditor; remove 
 opens on room plan (layout-first); owner block on hostel page (number after a hold).
 Rule: every new screen in the app gets a board; same count both ways (CLAUDE.md).
 
+## Design
+**Main design v22** (https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB) · Design chat, 2026-10-02. 187 → **206 boards**.
+Row "F24 · Close every gap", plus the console row and the wizard row.
+
+**Added** (already in the app, now drawn, 8): `oEnquiries` (Manage › Enquiries, HZ code per row,
+WhatsApp/Call) · `oTodayCards` (Today: “Still 7 free beds?” + “Do your room layouts still match?”) ·
+`mgrJoin` (Join your PG with an MGR- code + toast) · `oShapeReq` (Ask Hostelzy to draw it, 48 h) ·
+`oShapeBack` (Hostelzy drew a new version · Publish v1) · `detailOwner` (owner block, tweak Before / After
+a hold) · console `cRewards` (ledger with Reverse) · console `cLayoutFixes`.
+
+**New** (Build adds, 11):
+- `oMeter` Rent › Electricity: ₹ per unit, one “Now” reading per room, units and ₹ each (split by
+  residents in the room), “Add to October rent · 4 of 5 rooms”.
+- `rentMeter` resident rent line “Electricity · 70 units ÷ 4 · ₹8/unit · ₹140”.
+- `oLaundry` House rules › Laundry day: day chips, “Machine free” seg, reminder 8 pm the evening before.
+- `oRefund` owner: Advance / Kept / Refund / Pay to, UTR field, “Mark ₹2,000 refunded”, due 7 days after leaving.
+- `rRefund` tenant: “Srinivas marked it refunded · UPI ref.”, “Yes, I got ₹2,000” / “Not received”.
+- `aAddOwner` wizard step 6 of 7 “Owner account”: Not linked → “Send sign-in link on WhatsApp” (Google,
+  once, 7 days) → Linked. Go-live is now step 7 with “Owner account linked” and “Bed status checked”.
+- `oCasePhoto` Fair Play check: “Photo from Teja” proof + “Add a photo to your reply”.
+- `oShape` Create a layout: shape tiles Rectangle / L / T / U / Angled corner / Narrow end / Alcove /
+  Custom, W × L, “Start drawing · L shape”; Custom → request (48 h).
+- `roomLayersOn` Room with “Show: Fan reach · AC airflow” on (rings). Default Room is now **off** (F12).
+- `trustedPerks` “You’re a Trusted tenant”: first look at new beds (1 h early), lower-advance deals,
+  2-hour holds, “Trusted tenant” on hold requests.
+- console `cLayoutHelp`: owner requests table (shape, what they asked, due countdown, status) + detail
+  with photos, “Open in layout editor”, “Send to owner”.
+
+**Updated:** hostel page `r-detail` (+dark): green **“Save ₹2,700 in 6 months”** headline with “₹1,500 off
+the advance + ₹200 off every month” on top of the single price table, and “Layouts checked by 6
+residents”. `f23-Room` icons only + layer chips. `cCases` Fair Play + **Tenant reports** (Open a case /
+No case · close). Console nav adds Rewards and Layout fixes. Wizard says “of 7”. `oEditor` “Layout
+editor” + “Publish” (no approval, no “Hostelzy admin”); `f14-*` “Hostelzy team mode”. OTP wording gone:
+poster (“Sign in · With Google, one tap”; “never asks for your password or UPI PIN”), Trusted sheet
+(“Signed in to Hostelzy”), aAdd 5 (“confirms by joining with the invite code”), layout-coming-soon,
+Add a manager. Picker frame: Floor view opens first only for guests or rooms with no layout (F23).
+
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
