@@ -1113,7 +1113,7 @@ class OwnerManageScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            Cta('Save rules', icon: 'check', height: 52, px: 16, fs: 15, onTap: () => s.toastMsg('Rules saved. Residents and new tenants see them now.')),
+            Cta('Save rules', icon: 'check', height: 52, px: 16, fs: 15, onTap: s.saveRules),
           ],
         ),
       );

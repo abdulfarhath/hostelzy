@@ -607,7 +607,15 @@ class DetailScreen extends StatelessWidget {
     }
     // F17: Anjani shows the rules its owner keeps in Manage → Rules; other
     // sample hostels use the standard set until their owners add theirs.
-    final rules = h.id == 'anjani'
+    // S3: rules the owner saved on the server come first.
+    final ownRules = s.hostelRules[h.id];
+    final rules = ownRules != null
+        ? [
+            for (final r in ownRules)
+              if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
+            ...moneyRules(h),
+          ]
+        : h.id == 'anjani'
         ? [
             for (final r in s.rules)
               if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],

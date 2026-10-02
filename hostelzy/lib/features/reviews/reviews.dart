@@ -210,8 +210,33 @@ extension ReviewsActions on AppState {
 
   void publishDeals() {
     final on = Set.of(dealDraft ?? dealsOf(ownHid).on);
-    update(() => deals[ownHid] = Deals(on: on, target: dealTarget, confirmed: dayMon(appToday)));
-    toastMsg(on.isEmpty ? 'Deals removed. Tenants see walk-in prices.' : 'Deals published. Tenants who book through Hostelzy get them.');
+    final d = Deals(on: on, target: dealTarget, confirmed: dayMon(appToday)), hid = ownHid;
+    final msg = on.isEmpty ? 'Deals removed. Tenants see walk-in prices.' : 'Deals published. Tenants who book through Hostelzy get them.';
+    if (onServer) {
+      _write(() => data.saveDeals(hid, d)).then((ok) {
+        if (!ok) return;
+        update(() => deals[hid] = d);
+        toastMsg(msg);
+      });
+      return;
+    }
+    update(() => deals[hid] = d);
+    toastMsg(msg);
+  }
+
+  /// S3: Manage → Rules. On Supabase they are saved for the hostel's page.
+  void saveRules() {
+    final hid = ownHid, list = List.of(rules);
+    const msg = 'Rules saved. Residents and new tenants see them now.';
+    if (onServer) {
+      _write(() => data.saveRules(hid, list)).then((ok) {
+        if (!ok) return;
+        update(() => hostelRules[hid] = list);
+        toastMsg(msg);
+      });
+      return;
+    }
+    toastMsg(msg);
   }
   /// This month's rent is paid once Srinivas confirms it (F17).
   bool get paid => myRent.status == 'paid';

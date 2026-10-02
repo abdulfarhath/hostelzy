@@ -231,8 +231,8 @@ class UpiCard extends StatelessWidget {
         gap: 10,
         children: [
           const Kicker('Where tenants pay you'),
-          VGap(gap: 6, children: [const T('Your UPI ID', w: 800, s: 13), Field(key: const ValueKey('upiId'), value: u.id, placeholder: 'name@bank', onChanged: (v) => s.update(() => s.ownerUpi[s.ownHid] = (id: v.trim(), name: u.name)))]),
-          VGap(gap: 6, children: [const T('Name shown in UPI', w: 800, s: 13), Field(key: const ValueKey('upiName'), value: u.name, onChanged: (v) => s.update(() => s.ownerUpi[s.ownHid] = (id: u.id, name: v)))]),
+          VGap(gap: 6, children: [const T('Your UPI ID', w: 800, s: 13), Field(key: const ValueKey('upiId'), value: u.id, placeholder: 'name@bank', onChanged: (v) => s.setOwnerUpi(v.trim(), u.name))]),
+          VGap(gap: 6, children: [const T('Name shown in UPI', w: 800, s: 13), Field(key: const ValueKey('upiName'), value: u.name, onChanged: (v) => s.setOwnerUpi(u.id, v))]),
           OutlineCta('Test with ₹1', icon: 'chev', height: 48, fs: 14, onTap: () => s.openLink(upiUri(id: u.id, name: u.name, amt: 1, note: 'Hostelzy test'), 'a UPI app')),
           T('Pays you ₹1 from your own phone to check it works.', s: 12, c: p.mu),
           _shieldNote(context, [sp(context, 'Advances and rent go straight to this UPI ID. Hostelzy never holds the money; you confirm each payment in the app.')]),

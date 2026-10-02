@@ -346,3 +346,14 @@ Not needed.
   - Tests: `supabase/tests/residents_test.sql`. The RLS fixture's resident now has their own bed.
 - Not yet: rent payments started by residents on the server, and moving out from the app.
 - Test: `S2: on Supabase, the owner's residents and hold decisions are on the server`.
+
+**S3 · owner edits on the server · 2026-10-02** (branch `feature/s3-owner-edits`):
+- Signed in on Supabase, each owner edit is saved on the server first. The phone changes, and says so, only after the save works. If the save fails it says "Couldn’t save it…" and the phone keeps the old values.
+  - **Rooms and rent:** the rate card is upserted to `rate_cards`, and each room's type and rent go to `rooms`.
+  - **Deals:** `deals` (which deals, which rooms, confirmed now).
+  - **House rules:** `hostels.rules` (`[{k, v}]`). The hostel page shows the saved rules plus the money rules.
+  - **UPI ID:** `hostels.upi_id` / `upi_name`. It is saved about a second after the owner stops typing, and only once it looks like a UPI ID. The screen design is unchanged; there's no extra button.
+- Listings now read each hostel's deals and saved rules, so tenants see them.
+- No new SQL: staff could already write these tables, and the hostel guard allows rules and the UPI ID.
+- **Not here:** room layouts. On the server only the Hostelzy team edits layouts (RLS). Owner layout edits stay on the phone until the founder decides whether owners may publish layouts.
+- Test: `S3: on Supabase, owner edits (rates, deals, rules, UPI ID) are saved on the server`.

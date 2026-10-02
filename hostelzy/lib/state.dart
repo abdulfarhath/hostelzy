@@ -129,6 +129,9 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   /// F03: each hostel's published deals.
   final Map<String, Deals> deals = Map.of(seedDeals);
 
+  /// S3: house rules saved on the server, per hostel.
+  final Map<String, List<Rule>> hostelRules = {};
+
   /// Owner's deal picker draft (Manage → Deals) and the tenant's deal-table room type.
   Set<String>? dealDraft;
   String dealTarget = 'all';
@@ -201,6 +204,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   void switchHostel(String hid) => update(() {
     ownHid = hid;
+    if (hostelRules[hid] != null) rules = List.of(hostelRules[hid]!);
     // Drafts belong to the hostel they were opened on.
     rateDraft = null;
     acDraft = null;
@@ -503,7 +507,11 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       stats[h.id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
       confirmed[h.id] = 0;
       layouts[h.id] = l.layouts[h.id] ?? {};
+      deals[h.id] = l.deals[h.id] ?? const Deals();
+      if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
     }
+    // S3: the owner edits their own hostel's rules.
+    if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
   });
 
   /// Remote switches: too-old builds must update; maintenance mode.
