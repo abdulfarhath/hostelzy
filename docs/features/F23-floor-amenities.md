@@ -50,6 +50,12 @@ secondary toggle. Applies to the tenant bed picker, resident "My room", owner La
 4. **Add sheet** (`Add`): ① a 5-column icon grid of 15 items (Other last), ② a − 1 + stepper, ③ a Working / Not working seg, then Save ("Save · Washing machine on floor 2").
 5. **Owner** (`Owner`): Floor 2 with seg Rooms | Shared things, floor chips, a "A resident changed this floor" banner, rows with who/when and an edit button, "Add a shared thing", and a note that broken things go to Today as a repair.
 6. **Filters** (`Filters`): "On the floor" chips with icons: Washing machine, Fridge, RO water.
+**Room-level items (added 2026-10-02):**
+- The add sheet has a **Where?** step: `On the floor` · `In room washroom` (picked for Geyser) · `In the room`, then room chips 201…206 plus "All rooms on this floor"; Save reads "Geyser in 4 room washrooms".
+- The hostel page shows "Geyser in 4 of 6 rooms" in the floor row.
+- On the room plan, the washroom block shows a geyser icon with "WASHROOM · GEYSER", and the bed card says "Geyser in washroom". The "On floor 2" strip keeps only shared items.
+- The floor sheet and owner list show the geyser as "in the room washroom of 201, 202, 204, 205".
+- Filters add "Geyser in my washroom".
 
 ## Room-level items: geyser in the washroom (founder, 2026-10-02)
 Some things live **inside a room**, not on the floor. Most common: a **geyser in the room's attached
