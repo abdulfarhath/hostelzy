@@ -45,7 +45,7 @@ jobs:
           fi
       # B3: two APKs. hostelzy.apk is the real app on Supabase (honest empty
       # states, never samples); hostelzy-demo.apk runs on sample data with a
-      # DEMO banner and installs next to it (".demo" id, no Firebase).
+      # DEMO banner and installs next to it (".demo" id).
       - run: flutter build apk --release --dart-define=DATA=supabase
         env:
           HZ_TEST_KEYSTORE_PASSWORD: ${{ secrets.HZ_TEST_KEYSTORE_PASSWORD }}
@@ -68,7 +68,7 @@ jobs:
           body: |
             Test builds, signed with the Hostelzy test key (not the Play Store key). Allow installs from unknown sources.
             - hostelzy.apk: the real app. Live hostels from Supabase; empty until hostels are added.
-            - hostelzy-demo.apk: sample data with a DEMO banner, for showing the app. Installs next to the real one ("Hostelzy Demo"). No Google sign-in or push.
+            - hostelzy-demo.apk: sample data with a DEMO banner, for showing the app. Installs next to the real one ("Hostelzy Demo").
           files: |
             hostelzy/hostelzy.apk
             hostelzy/hostelzy-demo.apk

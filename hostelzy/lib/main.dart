@@ -15,8 +15,7 @@ import 'ui/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // B3: the demo APK has no Firebase (see android/app/build.gradle.kts).
-  final (p, a) = AppState.demoBanner ? (const NoPush(), const NoSignIn()) : await startFirebase();
+  final (p, a) = await startFirebase();
   push = p;
   signIn = a;
   // F18: stay logged in: what this phone kept from last time.

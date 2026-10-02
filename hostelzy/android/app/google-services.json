@@ -29,6 +29,49 @@
       "api_key": [
         {
           "current_key": "AIzaSyC9kDMzW8rmWFwmtLzzYwuFDVLgvTYzX1I"
+        },
+        {
+          "current_key": "AIzaSyCsudAUylzTU9QP491U0MdXNB-mmlHYG64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640096243458-h2tkur1jekbdf5q5b8v4u3ps60p6861a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640096243458:android:bd85b72fdbcc30844bbc1b",
+        "android_client_info": {
+          "package_name": "app.hostelzy.hostelzy.demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "640096243458-532ch7o1kcfhva7q8cd796enbhc3s1qj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.hostelzy.hostelzy.demo",
+            "certificate_hash": "4655be523550492ae0a4afca2609785f08bdaa24"
+          }
+        },
+        {
+          "client_id": "640096243458-h2tkur1jekbdf5q5b8v4u3ps60p6861a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9kDMzW8rmWFwmtLzzYwuFDVLgvTYzX1I"
+        },
+        {
+          "current_key": "AIzaSyCsudAUylzTU9QP491U0MdXNB-mmlHYG64"
         }
       ],
       "services": {
