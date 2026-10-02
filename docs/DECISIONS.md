@@ -171,5 +171,12 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   traffic only). At launch: switch to Google Maps (or a keyed tile provider) when the founder adds
   an API key. Distances come from real coordinates.
 
+**Payments contact + login SMS** — founder / Ideas chat, 2026-10-02
+- Hostelzy UPI ID: `9059790014@axl`. Support WhatsApp: `+91 90597 90014` (founder).
+- **Phone login uses Firebase Phone Auth, not MSG91** *(Ideas chat)*: MSG91 needs Indian DLT
+  sender registration (a business entity and paperwork), which the founder doesn't have. Firebase
+  sends the OTP SMS itself; Supabase trusts Firebase sign-ins via its Third-party Auth. Needs the
+  Firebase Blaze (pay-as-you-go) plan with a budget alert, and a stable app signing key (SHA-1).
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
