@@ -30,6 +30,10 @@ The founder has approved every design and every merge in advance. Design marks f
 **Design approved** itself; Build merges its own PR to `main` once `flutter analyze` is clean and
 `flutter test` passes. Accounts, money and changes to business rules still need the founder.
 This overrides the "only the founder approves" lines below until the founder says otherwise.
+Founder, 2026-10-02 (later): "keep designing and building in parallel, never wait for my approval".
+The Ideas chat decides product details; **Design keeps the "Hostelzy · All screens" canvas
+(https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB) updated after every feature it designs or
+Build merges** (same URL, tag Updated/New).
 
 ## Feature stages (`docs/BOARD.md`)
 

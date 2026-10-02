@@ -57,20 +57,31 @@ also fun, and it keeps residents coming back to the app.
 ## Design
 
 **Design approved · 2026-10-02** (standing approval). Canvas "Hostelzy · F19 Residents fix their room layout": https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR
-Phone boards 390×844 (light; dark copies at the end of rows); console 1440×900. Same look as the owner layout editor (aLayout).
+Phone boards 390×844 (light; dark copies at the end of rows); console 1440×900. Same look as the owner layout editor (aLayout). Updated 2026-10-02 for the founder's change: any room in the hostel, plus a join nudge for non-residents. The example is Rahul, who lives in 204, fixing Room 207.
 
-1. **Resident, My room** (`Main`): their own room's layout only, with "Edit my room". Women's PG privacy: never the floor.
+0. **Non-resident lock sheet** (`Lock`, `LockDark`): the Room tab shows **Edit room** to everyone. For non-residents it opens "Only residents of Anjani Residency can fix room layouts" / "Stay here to help others see the real room.", with **Book a bed** (red), **See beds** and "Already staying here? Ask your owner for your invite code."
+
+1. **Resident, any room in their hostel** (`Main`): Room 207's layout with **Edit room**, and "Residents of Anjani Residency can see and fix every room here." Women's PG floor privacy still applies to outsiders.
 2. **Suggestion editor** (`Edit`, `EditDark`): dark banner "Only you see this until you send it", the room map with the moved item outlined in red, the selection line with nudge arrows, Turn / Reset / Undo / Redo, Status (working / not working), room size, "Checks before sending", and "Send to owner".
 3. **A check fails** (`EditCheck`): "Bed A has a resident · it can’t be deleted"; Send is off and a toast explains why.
 4. **Send sheet** (`Send`): a change summary, an optional note for the owner, "Tenants never see who sent it", and Send.
 5. **After sending** (`After`, tweak): Waiting for owner (Change my suggestion / Withdraw it) · Approved ("Checked by a resident · 2 Oct") · Not approved (owner's reason, Edit my room again).
 6. **Tenant badge** (`Checked`): "Checked by a resident · 2 Oct" on the Room tab; the resident's name is never shown.
-7. **Owner push** (`Push`): "Rahul (Room 204) suggested a layout fix".
-8. **Owner Today card** (`Today`): "Layout fix from Room 204" with the note and "Compare and decide".
+7. **Owner push** (`Push`): "Rahul (lives in 204) suggested a fix for Room 207".
+8. **Owner Today card** (`Today`): "Layout fix for Room 207", from "Rahul V. · lives in 204-B" with the note and "Compare and decide".
 9. **Compare** (`Compare`, `CompareDark`): Now v1 | Suggested, side by side, changes outlined in red, "What changed", the resident's name and note (owner only), then Approve & publish / Reject.
 10. **Reject sheet** (`Reject`): an optional reason with chips, "The current layout stays live".
 11. **Approved** (`Approved`): "Live for tenants", v2 "fix by a resident", v1 kept in history, the tenant badge, and "Undo publish".
 12. **Team console, Layout fixes** (`Console`, `ConsoleDark`): a new nav item; a table of pending fixes, oldest first, with "Owner silent" past 7 days; a detail pane with the compare and Approve & publish / Reject / Remind the owner on WhatsApp.
+
+**v1 additions (designed 2026-10-02):**
+- `Try`: a visitor in **try mode** gets the full editor with a grey "Try mode · play freely, nothing is saved" strip. Only the outlined **Send · residents only** button is locked, and it opens the `Lock` sheet. Leaving discards the try.
+- `QuickFix`: tap an item, then pick **Wrong place / Missing / Broken / Not in this room**, add an optional word and an optional photo (camera button), and send ("Send: AC unit is broken"). "Bigger change? … the editor."
+- `Send` now has **1 photo (optional)**, "Only Srinivas and the Hostelzy team see it". The owner's `Compare` shows the photo.
+- The trust badge reads **"Checked by 3 residents · 2 Oct"** on `Checked` and `Approved` (N = different residents with approved fixes in 6 months).
+- `Limit`: "You have 3 fixes waiting at Anjani Residency", listing the waiting ones with "Keep my draft for later".
+- `Mute`: the owner taps "Mute Rahul’s suggestions" on `Compare`, then confirms in a sheet. The resident sees "Suggestions are off for this hostel"; unmuting is under Manage → Residents.
+- `Today` also shows a **Broken** quick fix as a repair card ("Broken: AC unit, Room 207" · Start work / Not broken).
 
 Not designed: a reward for approved fixes (the founder decides; until then, the badge only).
 
@@ -81,6 +92,23 @@ Not designed: a reward for approved fixes (the founder decides; until then, the 
   of the hostel and the team read and decide. Approve = server function that copies the layout into
   `layouts` and keeps the old version.
 - Push to the owner on new suggestion; push to the resident on decision.
+
+## v1 additions (Ideas chat, 2026-10-02, founder delegated: "keep going, no approval needed")
+1. **Visitor try mode**: non-residents can open the editor and move things around (nothing saved
+   to the server); only **Send** is locked, and tapping it shows the lock sheet. Leaving the editor
+   discards the try.
+2. **Quick fixes**: tap any item → "Wrong place" / "Missing" / "Broken" / "Not in this room" →
+   Send. The full editor stays for bigger changes. "Broken" items also show on the owner's Today as
+   a maintenance item.
+3. **Optional photo**: 1 photo per suggestion (Storage, same rules as hostel photos; visible only to
+   the owner and team).
+4. **Trust badge**: "Checked by N residents · <date>" on the room and hostel page, where N counts
+   approved suggestions from different residents in the last 6 months.
+5. **Spam limit**: max 3 pending suggestions per resident per hostel; the owner can mute a resident's
+   suggestions.
+
+Later (v2): "Share my room" image card for WhatsApp/Instagram.
+Still the founder's call: Stay Rewards credits for approved fixes (money). Default: none.
 
 ## Open questions (Ideas chat decides unless the founder says otherwise)
 - Reward for an approved fix (Stay Rewards credits)? Credits are money-like, so **founder decides**.
