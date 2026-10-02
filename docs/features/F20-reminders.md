@@ -1,6 +1,6 @@
 # F20 · Reminders (water, meals and my own tasks)
 
-**Stage:** Spec ready · founder idea, 2026-10-02 · no design approval needed (standing approval).
+**Stage:** Design approved · 2026-10-02 (standing approval) · design: https://claude.ai/artifact/U9TnnagapmbzjJt9tM6K7K · spec ready, founder idea, 2026-10-02 · no design approval needed (standing approval).
 
 ## Problem
 Students and working people in PGs forget simple things: drinking water, eating on time, paying
@@ -41,6 +41,27 @@ Everyone signed in (tenant, resident, owner). Works in the demo APK too.
 4. Notification look: title, Done / Snooze actions.
 5. Home "Today" card with glasses count and next reminder.
 6. First-time offer card after sign-in.
+
+## Design
+
+**Design approved · 2026-10-02** (standing approval). Canvas "Hostelzy · F20 Reminders": https://claude.ai/artifact/U9TnnagapmbzjJt9tM6K7K
+Phone boards 390×844, with dark copies at the end of each row. Existing tokens only: water uses ink (`tx`) plus a drop icon, no blue and no green. No emoji in the app UI; Build can add emoji to notification titles if wanted.
+
+1. **Reminders** (`Main`, `MainDark`; a tweak shows the "Notifications are off" banner with "Turn on notifications"):
+   - **Water card:** a switch, "Every 30 min · 8 am – 10 pm", "5 of 8 glasses today" as 8 square glass cells, "I had a glass" and "Next at 4:30 pm".
+   - **My reminders**, with **+ Add:** Take medicine 9:00 pm every day, Lunch 1:00 pm weekdays, Call home Sundays (off).
+   - **From Anjani Residency:** Meal times from the food menu, Rent due (3 days before and on the day), Laundry day (greyed: "When Srinivas sets one").
+   - Footnote: "Reminders ring from this phone, even offline. Nothing rings outside your awake hours."
+2. **Me row** (`Me`): "Reminders · water every 30 min", first in the list.
+3. **Water settings sheet** (`Water`): How often (20 min / 30 / 45 / 60 / 90 / 2 hours), awake hours From/To, a daily-goal stepper (8), "That’s 28 reminders a day, 8:00 am to 10:00 pm.", and Save.
+4. **Add a reminder sheet** (`Add`): Quick add chips (Medicine, Lunch, Walk, Sleep on time, Call home), Name, Time, Repeat (Once / Every day / Weekdays / Pick days, with a day row), and Add reminder.
+5. **Notifications** (`Notify`, `NotifyDark`):
+   - "Time for a glass of water" / "5 of 8 today…" with **Done** · **Snooze 10 min**
+   - "Take medicine" with Done / Snooze
+   - "Lunch is served till 2 pm" with Open menu
+   - "Rent due in 3 days" with Pay rent
+6. **Today card** (`Home`, `HomeDark` on resident Home; `HomeTenant` on Explore): a drop tile, "5 of 8 glasses", "Next: Medicine at 9 pm" (or "Next glass at 4:30 pm") and a "+ Glass" button.
+7. **First-time offer** (`Offer`): a sheet after first sign-in, "Want water reminders?", with Turn on water reminders / Not now and "Change it any time in Me → Reminders. Runs on this phone."
 
 ## Build notes
 - flutter_local_notifications (exact alarms where allowed; inexact fallback), timezone package,
