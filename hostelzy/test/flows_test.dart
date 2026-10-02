@@ -2510,6 +2510,42 @@ void main() {
     s.dispose();
   });
 
+  test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
+    final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
+      {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
+      {'id': 'su-2', 'name': 'Old One', 'phone': '9000000041', 'bed': null, 'status': 'approved', 'user_id': 'fb-old', 'created_at': '2026-10-01T10:00:00Z'},
+      {'id': 'su-3', 'name': 'Me Myself', 'phone': '9000000042', 'bed': '', 'status': 'pending', 'user_id': 'fb-owner', 'created_at': '2026-10-02T10:00:00Z'},
+    ], now: DateTime.parse('2026-10-02T12:00:00Z').millisecondsSinceEpoch);
+    // Only pending sign-ups from other people are listed.
+    expect(rows.signups.map((g) => (g.id, g.name, g.bed)), [('su-1', 'Ravi Teja', '101-B')]);
+    final s = AppState(start: 'oInvite', role: 'owner');
+    final fake = _FakeLive(rows);
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    expect(s.signups.single.name, 'Ravi Teja');
+    final before = s.residents.length;
+    s.approveSignup(s.signups.single);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls, ['signup su-1 true']);
+    expect(s.toast, 'Ravi is now a resident here.');
+    expect(s.residents.length, before); // no local stand-in: the server makes the stay
+    s.rejectSignup(s.signups.single);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect((fake.calls.last, s.toast), ('signup su-1 false', 'Removed.'));
+    // Offline: nothing is said to be done.
+    fake.fail = true;
+    s.approveSignup(s.signups.single);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(fake.calls.length, 2);
+    s.stopLive();
+    s.dispose();
+  });
+
   testWidgets('C: server invite codes: owner gets one, a resident asks to join', (tester) async {
     // Owner on Supabase: the code comes from the server; a new one replaces it.
     final o = AppState(start: 'oInvite', role: 'owner');
@@ -2765,7 +2801,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups);
     return 'HZ-5009';
   }
 
@@ -2779,6 +2815,8 @@ class _FakeLive extends SampleRepo {
   Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) => _rec('complaint $hid $cat $body');
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) => _rec('complaint $key $status');
+  @override
+  Future<void> decideSignup(String id, bool approve) => _rec('signup $id $approve');
 }
 
 /// C: server invites stand-in.

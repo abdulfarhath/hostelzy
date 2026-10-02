@@ -194,8 +194,9 @@ class SupabaseRepo implements HostelRepo {
       db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
       db.from('complaints').select().order('created_at', ascending: false),
       me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('hostel_id, user_id, confirmed, left_on').eq('user_id', me),
+      db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], me: me);
   }
 
   @override
