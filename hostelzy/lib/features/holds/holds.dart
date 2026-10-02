@@ -40,6 +40,16 @@ extension HoldsActions on AppState {
   /// Release a hold: the bed goes back to how it was, the hold record says
   /// Released, and any unconfirmed advance for it is dropped (D10, F9).
   void releaseHold(Hold h, {String? msg}) {
+    // S1: a server hold is released on the server (the bed frees itself
+    // there); the tenant's release also cancels its unconfirmed advance.
+    if (onServer && !RegExp(r'^h\d+$').hasMatch(h.id)) {
+      _write(() => data.releaseHold(h.id, cancelPay: role == 'tenant')).then((ok) {
+        if (!ok) return;
+        update(() => _freeBed(h.hid, h.bed));
+        if (msg != null) toastMsg(msg);
+      });
+      return;
+    }
     update(() {
       _freeBed(h.hid, h.bed);
       holds = holds.map((x) => x.id == h.id ? x.withStatus('released') : x).toList();

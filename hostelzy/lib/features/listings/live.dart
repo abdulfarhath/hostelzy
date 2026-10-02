@@ -32,9 +32,10 @@ Enquiry enquiryFromRow(Map<String, dynamic> r) => Enquiry(
   contacted: r['contacted'] as bool? ?? false,
 );
 
-/// Server statuses → the app's: an advance hold is a booking ("book"), and an
-/// expired hold shows as released (its id goes in [LiveRows.expired]).
-Hold holdFromRow(Map<String, dynamic> r) {
+/// Server statuses → the app's: an advance hold is a booking ("book") that is
+/// "paying" until the owner confirms, and an expired hold shows as released
+/// (its id goes in [LiveRows.expired]). [paid]: its advance, from payments.
+Hold holdFromRow(Map<String, dynamic> r, {int paid = 0}) {
   final b = r['beds'] as Map<String, dynamic>?;
   final status = r['status'] as String;
   return Hold(
@@ -44,8 +45,9 @@ Hold holdFromRow(Map<String, dynamic> r) {
     room: (b?['rooms'] as Map<String, dynamic>?)?['number'] as int? ?? 0,
     opt: switch (r['opt']) { 'advance' => 'book', final String o => o, _ => 'free' },
     start: _ms(r['started_at']),
-    status: status == 'expired' ? 'released' : status,
+    status: status == 'expired' ? 'released' : (status == 'waiting' && r['opt'] == 'advance' ? 'paying' : status),
     ref: r['ref'] as String?,
+    paid: paid,
   );
 }
 
@@ -86,7 +88,10 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
 );
 
 LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], int? now}) => (
-  holds: [for (final r in holds) holdFromRow(r)],
+  holds: [
+    for (final r in holds)
+      holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
+  ],
   enquiries: [for (final r in enquiries) enquiryFromRow(r)],
   payments: [for (final r in payments) paymentFromRow(r)],
   complaints: [for (final r in complaints) complaintFromRow(r, me: me)],

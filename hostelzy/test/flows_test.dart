@@ -2377,7 +2377,7 @@ void main() {
       ],
       me: 'me',
     );
-    expect(l.holds.map((h) => '${h.bed} ${h.room} ${h.opt} ${h.status} ${h.ref}'), ['101-A 101 book waiting HZ-5002', '204A-B 204 free released HZ-5003']);
+    expect(l.holds.map((h) => '${h.bed} ${h.room} ${h.opt} ${h.status} ${h.ref}'), ['101-A 101 book paying HZ-5002', '204A-B 204 free released HZ-5003']);
     expect(l.expired, {'h2'});
     expect((l.enquiries.single.ref, l.enquiries.single.bed, l.enquiries.single.hid), ('HZ-5001', '101-A', 'x'));
     final p = l.payments.single;
@@ -2506,6 +2506,75 @@ void main() {
     await s.sendPayUtr();
     expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
     expect(s.payments.single.utr, isNot('999999999999'));
+    s.stopLive();
+    s.dispose();
+  });
+
+  test('S1: on Supabase, holds and bookings are placed on the server', () async {
+    expect(listingsFromRows([
+      {'id': 'h1', 'name': 'Sai PG', 'gender': 'Men', 'area': 'Ameerpet', 'rooms': [
+        {'number': 101, 'floor': 1, 'share': 2, 'rent': 8000, 'beds': [{'id': 'bed-uuid', 'letter': 'A', 'state': 'free'}]},
+      ]},
+    ]).rooms['h1']!.single.beds.single.key, 'bed-uuid');
+    // An advance hold waiting for the owner shows as "paying", with its advance.
+    final l = liveFromRows(holds: [
+      {'id': 'x1', 'hostel_id': 'h1', 'opt': 'advance', 'status': 'waiting', 'ref': 'HZ-1', 'started_at': '2026-10-02T10:00:00Z', 'beds': {'letter': 'A', 'rooms': {'number': 101}}},
+    ], enquiries: [], payments: [
+      {'id': 'p1', 'hostel_id': 'h1', 'kind': 'advance', 'amount': 2500, 'hold_id': 'x1', 'status': 'pending', 'created_at': '2026-10-02T10:00:00Z'},
+    ], complaints: []);
+    expect((l.holds.single.status, l.holds.single.paid, l.holds.single.opt), ('paying', 2500, 'book'));
+
+    final s = AppState(start: 'explore', role: 'tenant');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-asha'));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-asha', name: 'Asha K', email: 'a@gmail.com'));
+    await s.startLive();
+    // Give two free beds their server ids.
+    Bed keyed(String key) {
+      final r = s.rooms['anjani']!.firstWhere((r) => r.beds.any((b) => b.state == 'free' && b.key == null));
+      final i = r.beds.indexWhere((b) => b.state == 'free' && b.key == null);
+      final b = r.beds[i];
+      return r.beds[i] = Bed(id: b.id, letter: b.letter, room: b.room, floor: b.floor, spot: b.spot, state: 'free', soon: '', key: key);
+    }
+    final b1 = keyed('bed-uuid-1');
+    s.update(() {
+      s.hid = 'anjani';
+      s.bed = b1.id;
+    });
+    // Book with the advance: the server makes the hold and the payment; the pay sheet opens.
+    s.placeHold('book');
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(fake.calls.single, startsWith('hold anjani bed-uuid-1 book '));
+    expect((s.screen, s.sheet, s.holdId, s.payId), ('hold', 'payAdv', 'hold-uuid-1', 'pay-uuid-1'));
+    expect((b1.state, b1.mine), ('held', true));
+    expect(s.holds.single.status, 'paying');
+    // The server refuses a bed someone else just took: said plainly, nothing placed.
+    final o = keyed('bed-uuid-2');
+    fake.holdError = 'that bed is not free any more';
+    s.update(() => s.bed = o.id);
+    s.placeHold('free');
+    await Future<void>.delayed(Duration.zero);
+    expect(s.toast, 'Someone just took this bed. Pick another one.');
+    expect(s.holds.length, 1);
+    // A free hold, then the tenant releases it on the server (and its advance, if any).
+    fake.holdError = null;
+    s.placeHold('free');
+    for (var i = 0; i < 4; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(fake.calls.last, 'hold anjani bed-uuid-2 free 0');
+    expect(s.toast, contains('sees it in Hostelzy'));
+    final free = s.holds.firstWhere((h) => h.id == 'hold-uuid-2');
+    s.releaseHold(free, msg: 'Hold released.');
+    for (var i = 0; i < 4; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect((fake.calls.last, s.toast), ('release hold-uuid-2 true', 'Hold released.'));
+    expect(s.holds.firstWhere((h) => h.id == 'hold-uuid-2').status, 'released');
+    // Server holds don't expire on the phone; the server ends them.
+    expect(s.expireHoldsAt(DateTime.now().millisecondsSinceEpoch + 3 * 3600 * 1000), isFalse);
     s.stopLive();
     s.dispose();
   });
@@ -2817,6 +2886,29 @@ class _FakeLive extends SampleRepo {
   Future<void> updateComplaint(String key, {required String status, required String note}) => _rec('complaint $key $status');
   @override
   Future<void> decideSignup(String id, bool approve) => _rec('signup $id $approve');
+
+  // S1: holds placed on the server.
+  String? holdError;
+  @override
+  Future<({String id, String ref, String? payId})> placeHold({required String hid, required String bedKey, required String opt, int advance = 0}) async {
+    if (holdError != null) throw Exception(holdError);
+    await _rec('hold $hid $bedKey $opt $advance');
+    final n = calls.where((c) => c.startsWith('hold ')).length;
+    final id = 'hold-uuid-$n', payId = opt == 'book' ? 'pay-uuid-$n' : null;
+    rows = (
+      holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
+      enquiries: rows.enquiries,
+      payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups,
+    );
+    return (id: id, ref: 'HZ-501$n', payId: payId);
+  }
+
+  @override
+  Future<void> releaseHold(String id, {bool cancelPay = true}) async {
+    await _rec('release $id $cancelPay');
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups);
+  }
 }
 
 /// C: server invites stand-in.

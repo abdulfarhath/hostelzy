@@ -247,6 +247,10 @@ extension ResidentsActions on AppState {
     final r = findBed(hid, bed).r!;
     final h0 = hostelById(hid);
     final q = quote(hid, r.ac, r.share);
+    if (onServer) {
+      _placeHoldLive(b, opt, opt == 'book' ? q.hzAdv : 0, opt == 'book' && q.any ? lockedPerks(q, h0) : const [], h0);
+      return;
+    }
     String? ref;
     if (opt == 'book') {
       ref = _record(hid, 'Booked bed ${b.id} with the advance.', bed: b.id, from: 'Book · Pay advance').ref;
@@ -270,5 +274,42 @@ extension ResidentsActions on AppState {
       payId = pay?.id;
     });
     if (pay == null) toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
+  }
+
+  /// S1: on Supabase the server places the hold (bed free, at most 2, HZ code)
+  /// and a booking starts its advance payment; then the lists are refetched.
+  Future<void> _placeHoldLive(Bed b, String opt, int advance, List<String> perks, Hostel h0) async {
+    final key = b.key;
+    if (key == null) return toastMsg('This bed isn’t on the server. Pull down to refresh and try again.');
+    final hostel = hid;
+    final ({String id, String ref, String? payId}) res;
+    try {
+      res = await data.placeHold(hid: hostel, bedKey: key, opt: opt, advance: advance);
+    } catch (e) {
+      final m = '$e';
+      return toastMsg(m.contains('not free any more')
+          ? 'Someone just took this bed. Pick another one.'
+          : m.contains('2 beds at a time')
+          ? 'You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.'
+          : 'Couldn’t place the hold. Check your internet and try again.');
+    }
+    await refreshLive();
+    update(() {
+      // If the refetch failed, show what the server just made.
+      if (!holds.any((x) => x.id == res.id)) {
+        holds = [...holds, Hold(id: res.id, hid: hostel, bed: b.id, room: b.room, opt: opt, start: DateTime.now().millisecondsSinceEpoch, status: opt == 'free' ? 'waiting' : 'paying', ref: res.ref, paid: opt == 'book' ? advance : 0)];
+        if (res.payId != null) payments = [...payments, Payment(id: res.payId!, kind: 'advance', hid: hostel, who: meShort, what: 'Advance for bed ${b.id}', bed: b.id, amt: advance, note: res.ref, holdId: res.id)];
+      }
+      if (perks.isNotEmpty) holds = [for (final x in holds) x.id == res.id ? x.withPerks(perks) : x];
+      b.state = 'held';
+      b.mine = true;
+      holdId = res.id;
+      bed = null;
+      hist = [...hist, screen];
+      screen = 'hold';
+      sheet = res.payId != null ? 'payAdv' : null;
+      payId = res.payId;
+    });
+    if (res.payId == null) toastMsg('Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification.');
   }
 }

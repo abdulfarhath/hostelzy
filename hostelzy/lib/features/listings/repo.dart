@@ -80,6 +80,15 @@ abstract class HostelRepo {
   Future<void> confirmPayment(String paymentId, bool received, {String? holdId});
   Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body});
   Future<void> updateComplaint(String key, {required String status, required String note});
+
+  /// S1: a tenant's hold on bed [bedKey] (`free`, or `book` with the
+  /// [advance] payment started). The server checks the bed is free and issues
+  /// the HZ code. Throws [UnsupportedError] on sample data.
+  Future<({String id, String ref, String? payId})> placeHold({required String hid, required String bedKey, required String opt, int advance = 0});
+
+  /// S1: releases a hold. The tenant's own release also cancels its
+  /// unconfirmed advance ([cancelPay]); staff only release the bed.
+  Future<void> releaseHold(String id, {bool cancelPay = true});
 }
 
 class SampleRepo implements HostelRepo {
@@ -128,6 +137,10 @@ class SampleRepo implements HostelRepo {
   Future<void> raiseComplaint({required String hid, required String bed, required String cat, required String body}) async {}
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) async {}
+  @override
+  Future<({String id, String ref, String? payId})> placeHold({required String hid, required String bedKey, required String opt, int advance = 0}) => throw UnsupportedError('sample data');
+  @override
+  Future<void> releaseHold(String id, {bool cancelPay = true}) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -227,6 +240,23 @@ class SupabaseRepo implements HostelRepo {
       db.from('complaints').update({'status': status == 'Resolved' ? 'Fixed' : status, 'note': note}).eq('id', key);
 
   @override
+  Future<({String id, String ref, String? payId})> placeHold({required String hid, required String bedKey, required String opt, int advance = 0}) async {
+    final h = await db.from('holds').insert({'hostel_id': hid, 'bed_id': bedKey, 'opt': opt == 'book' ? 'advance' : 'free'}).select('id, ref').single();
+    String? payId;
+    if (opt == 'book') {
+      final p = await db.from('payments').insert({'hostel_id': hid, 'hold_id': h['id'], 'kind': 'advance', 'amount': advance, 'note': h['ref']}).select('id').single();
+      payId = p['id'] as String;
+    }
+    return (id: h['id'] as String, ref: h['ref'] as String, payId: payId);
+  }
+
+  @override
+  Future<void> releaseHold(String id, {bool cancelPay = true}) async {
+    await db.from('holds').update({'status': 'released'}).eq('id', id);
+    if (cancelPay) await db.from('payments').update({'status': 'cancelled'}).eq('hold_id', id).inFilter('status', ['pending', 'waiting', 'missing']);
+  }
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -290,6 +320,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows) {
                   spot: b['spot'] as String? ?? '',
                   state: b['state'] as String? ?? 'free',
                   soon: b['free_from'] == null ? '' : dayMon(DateTime.parse(b['free_from'] as String)),
+                  key: b['id'] as String?,
                 ),
             ],
           );
