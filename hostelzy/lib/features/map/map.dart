@@ -83,7 +83,8 @@ extension MapAreaActions on AppState {
   bool get canOwner => AppState.samples || teamUnlocked || ownerHostels.any((h) => !isSeedHostel(h));
 
   /// Resident screens need an owner to have added you (backend, F13 part 2).
-  bool get canResident => AppState.samples;
+  /// S8: on Supabase, once the owner has confirmed your stay.
+  bool get canResident => AppState.samples || myHostel != null;
 
   /// Sends the visit request to the Hostelzy team on WhatsApp (no backend yet).
   void requestVisit() {

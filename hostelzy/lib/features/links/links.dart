@@ -60,6 +60,26 @@ extension LinksActions on AppState {
     if (account == null) return toastMsg('Sign in with Google to join with a code.');
     if (joining) return;
     update(() => joining = true);
+    // S8: a manager's one-time code makes them staff of that hostel.
+    if (c.startsWith('MGR-')) {
+      try {
+        final h = await data.joinAsManager(c);
+        update(() {
+          joining = false;
+          pendingInvite = null;
+          inviteDraft = '';
+        });
+        await refreshLive();
+        toastMsg('You’re a manager at $h now. Pick “I run a hostel” to start.');
+      } on UnsupportedError {
+        update(() => joining = false);
+        toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+      } catch (e) {
+        update(() => joining = false);
+        toastMsg('$e'.contains('valid any more') ? 'That manager code isn’t valid any more. Ask the owner for a new one.' : 'Couldn’t join. Check your internet and try again.');
+      }
+      return;
+    }
     try {
       final h = await data.joinWithInvite(c, name: meName, phone: phone);
       update(() {

@@ -53,7 +53,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
     theme: _pick(q['theme'], const ['light', 'dark', 'system']),
     mode: _pick(q['mode'], const ['plan', 'room', 'list', 'building']),
-    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'joined', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom']),
+    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'joined', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom', 'fixLock', 'fixLimit', 'fixSend', 'fixReject']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
     moreTab: _pick(q['moreTab'], const ['residents', 'complaints', 'deals', 'rates', 'menu', 'rules']),
     foodView: _pick(q['foodView'], const ['day', 'week']),
@@ -103,7 +103,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       await state.syncPushToken();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
-      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}));
+      state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}));
       state.toastMsg('Couldn’t reach Hostelzy. Check your internet and open the app again.');
       debugPrint('Supabase: $e');
     }

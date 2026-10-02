@@ -9,6 +9,7 @@ import 'fairplay.dart';
 import 'kit.dart';
 import 'photos.dart';
 import 'layout.dart';
+import 'layout_fixes.dart';
 import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
@@ -412,6 +413,10 @@ class _AppBody extends StatelessWidget {
     'compare' => const CompareScreen(),
     'oLayout' => const OwnerLayoutScreen(),
     'aLayout' => const AdminLayoutScreen(),
+    'rRoom' => const ResidentRoomScreen(),
+    'rFix' => const FixEditorScreen(),
+    'oFix' => const OwnerFixScreen(),
+    'oFixDone' => const FixDoneScreen(),
     'aAdd' => const AddHostelScreen(),
     'aTrack' => const TrackerScreen(),
     'oTeam' => const TeamScreen(),
@@ -585,6 +590,10 @@ class _Sheet extends StatelessWidget {
       'payUtr' => 'Enter the UTR',
       'manager' => 'Add a manager',
       'photo' => 'This photo',
+      'fixLock' => 'Fix this room?',
+      'fixLimit' => 'Can’t send yet',
+      'fixSend' => 'Send your fix',
+      'fixReject' => 'Reject this fix?',
       'water' => 'Drink water',
       'addRem' => s.remEdit == null ? 'Add a reminder' : 'Edit reminder',
       'waterOffer' => 'Want water reminders?',
@@ -606,6 +615,8 @@ class _Sheet extends StatelessWidget {
       'addRem' => 'My reminders',
       'waterOffer' => 'New in Hostelzy · stay on track',
       'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
+      'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
+      'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -631,6 +642,10 @@ class _Sheet extends StatelessWidget {
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
       'photo' => const PhotoSheet(),
+      'fixLock' => const FixLockSheet(),
+      'fixLimit' => const FixLimitSheet(),
+      'fixSend' => const FixSendSheet(),
+      'fixReject' => const FixRejectSheet(),
       'water' => const WaterSheet(),
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),

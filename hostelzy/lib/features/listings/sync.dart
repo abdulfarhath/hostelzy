@@ -17,6 +17,10 @@ mixin _SyncData {
 
   /// S3: the owner's UPI ID is saved a moment after they stop typing.
   Timer? _upiWait;
+
+  /// S8: hostels this user runs were missing from the listings once (e.g.
+  /// loaded before sign-in); they were fetched again.
+  bool _staffRefetched = false;
 }
 
 extension SyncActions on AppState {
@@ -41,6 +45,29 @@ extension SyncActions on AppState {
     // newest one (or the trial, before the first is issued).
     invoices = l.invoices;
     cases = l.cases;
+    fixes = l.fixes;
+    // S8: the owner switcher lists the hostels this user runs on the server
+    // (those whose rooms are loaded; missing ones are fetched once more).
+    final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];
+    if (known.length < l.myHostels.length && !_staffRefetched) {
+      _staffRefetched = true;
+      Future.microtask(() async {
+        await refreshListings();
+        await refreshLive();
+      });
+    }
+    if (known.isNotEmpty || ownerHostels.any((h) => !isSeedHostel(h))) {
+      ownerHostels
+        ..clear()
+        ..addAll(known);
+      if (ownerHostels.isNotEmpty && !ownerHostels.contains(ownHid)) {
+        ownHid = ownerHostels.first;
+        if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
+      }
+    }
+    managers
+      ..clear()
+      ..addAll([for (final m in l.managers) if (m.hid == ownHid) (name: m.name, phone: m.phone, joined: m.joined)]);
     if (rooms[ownHid] != null) {
       final mine = l.invoices.where((i) => i.hid == ownHid).firstOrNull;
       final trial = l.trialEnds[ownHid];

@@ -15,7 +15,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -127,6 +127,20 @@ abstract class HostelRepo {
   Future<void> replyCase(String key, String reply, {bool reopen = false});
   Future<void> fixCase(String key);
   Future<void> decideCase(String key, String hid, String how, String? decision);
+
+  /// S8: the owner's one-time manager code, and joining with it (returns the
+  /// hostel's name). Throws with the server's reason; [UnsupportedError] on
+  /// sample data.
+  Future<String> managerInvite(String hid, String name, String phone);
+  Future<String> joinAsManager(String code);
+
+  /// F19: layout fixes. A resident sends or withdraws one; the owner (the
+  /// team after 7 days) decides; owners publish their own edits and can undo.
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note);
+  Future<void> withdrawLayoutFix(String id);
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''});
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
+  Future<void> undoLayoutPublish(String hid, int room);
 }
 
 class SampleRepo implements HostelRepo {
@@ -211,6 +225,20 @@ class SampleRepo implements HostelRepo {
   Future<void> fixCase(String key) async {}
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {}
+  @override
+  Future<String> managerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
+  @override
+  Future<String> joinAsManager(String code) => throw UnsupportedError('sample data');
+  @override
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) => throw UnsupportedError('sample data');
+  @override
+  Future<void> withdrawLayoutFix(String id) async {}
+  @override
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) async {}
+  @override
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
+  @override
+  Future<void> undoLayoutPublish(String hid, int room) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -281,8 +309,11 @@ class SupabaseRepo implements HostelRepo {
       db.from('invoices').select(),
       db.from('owner_plans').select('hostel_id, trial_ends'),
       db.from('fair_cases').select(),
+      db.from('hostel_staff').select('hostel_id, user_id, role'),
+      db.from('manager_invites').select().order('created_at'),
+      db.from('layout_fixes').select().neq('status', 'withdrawn').order('created_at'),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], fixes: r[11], me: me);
   }
 
   @override
@@ -390,6 +421,28 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
+  Future<String> managerInvite(String hid, String name, String phone) async => await db.rpc('new_manager_invite', params: {'h': hid, 'p_name': name, 'p_phone': phone}) as String;
+
+  @override
+  Future<String> joinAsManager(String code) async => await db.rpc('join_as_manager', params: {'p_code': code}) as String;
+
+  @override
+  Future<String> sendLayoutFix(String hid, int room, Map<String, dynamic> layout, String note) async =>
+      await db.rpc('send_layout_fix', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout, 'p_note': note}) as String;
+
+  @override
+  Future<void> withdrawLayoutFix(String id) => db.rpc('withdraw_layout_fix', params: {'p_id': id});
+
+  @override
+  Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) => db.rpc('decide_layout_fix', params: {'p_id': id, 'p_approve': approve, 'p_reason': reason});
+
+  @override
+  Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) => db.rpc('publish_layout', params: {'p_hostel': hid, 'p_room': room, 'p_layout': layout});
+
+  @override
+  Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
   Stream<String> changes() {
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
@@ -407,7 +460,13 @@ class SupabaseRepo implements HostelRepo {
     final rows = await db.from('hostels').select('*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)');
     // S5: strike counts are public (they hide deals and listings).
     final st = await db.rpc('strike_counts') as List;
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int});
+    // F19: "Checked by N residents · date" per room.
+    final ck = await db.rpc('layout_checks') as List;
+    final checks = <String, Map<int, (int, String)>>{};
+    for (final r in ck.cast<Map>()) {
+      (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
+    }
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks);
   }
 
   @override
@@ -434,7 +493,7 @@ class SupabaseRepo implements HostelRepo {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -524,7 +583,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
       for (final l in (h['layouts'] as List? ?? const []).cast<Map<String, dynamic>>().where((l) => l['stage'] == 'published')) l['room'] as int: layoutFromRow(id, l),
     };
   }
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks);
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
