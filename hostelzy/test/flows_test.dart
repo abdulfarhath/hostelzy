@@ -1824,7 +1824,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -2741,6 +2741,73 @@ void main() {
     s.dispose();
   });
 
+  test('S4: on Supabase, reviews come from the server, residents post them and owners reply', () async {
+    final l = listingsFromRows([
+      {'id': 'h1', 'name': 'Sai PG', 'gender': 'Men', 'area': 'Ameerpet', 'reviews': [
+        {'id': 'rv1', 'hostel_id': 'h1', 'author_name': 'Teja N.', 'kind': 'stay', 'stars': 4, 'body': 'Good food', 'cats': {'Food': 5, 'Owner': 3}, 'layout': 'Mostly', 'created_at': '2026-09-20T10:00:00Z'},
+        {'id': 'rv2', 'hostel_id': 'h1', 'author_name': 'Arjun R.', 'kind': 'exit', 'stars': 5, 'body': '', 'cats': {'Food': 4}, 'layout': 'Yes', 'advance': 'all', 'again': 'Yes', 'reply': 'Thanks', 'replied_at': '2026-10-01T10:00:00Z', 'created_at': '2026-09-30T10:00:00Z'},
+      ]},
+    ]);
+    final rv = l.reviews['h1']!;
+    expect(rv.map((r) => '${r.id} ${r.kind} ${r.fresh}'), ['rv2 exit false', 'rv1 30-day true']);
+    expect((l.hostels.single.rating, l.hostels.single.reviews), (4.5, 2));
+    final st = statsOf(rv);
+    expect((st.cats[0], st.advFull, st.advLeft, st.layoutPct), (4.5, 1, 1, 75));
+
+    final s = AppState(start: 'rReview', role: 'resident');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-teja'));
+    s.data = fake;
+    s.update(() {
+      s.account = (uid: 'fb-teja', name: 'Teja N', email: 't@gmail.com');
+      s.myName = 'Teja Naidu';
+    });
+    await s.startLive();
+    // Not a resident on the server yet: the review isn't sent.
+    s.update(() => s.rvStars = 4);
+    s.postReview();
+    await Future<void>.delayed(Duration.zero);
+    expect(s.toast, 'Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
+    expect(fake.calls, isEmpty);
+    // A confirmed resident: posted to their hostel, then the hostels are fetched again.
+    fake.rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-teja', stays: [
+      {'id': 'st1', 'hostel_id': 'h1', 'user_id': 'fb-teja', 'name': 'Teja N', 'confirmed': true, 'left_on': null, 'joined_on': '2026-09-01'},
+    ]);
+    await s.refreshLive();
+    expect(s.myHostel, 'h1');
+    s.update(() {
+      s.rvText = 'Good food';
+      s.rvCats = {'Food': 5};
+      s.rvLayout = 'Mostly';
+    });
+    s.postReview();
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(fake.calls.single, 'review h1 ${s.meShort} stay 4 Good food 1 Mostly null null');
+    expect(fake.listingsFetched, 1);
+    expect((s.toast, s.rvStars), ('Review posted as ${s.meShort} · verified resident.', 0));
+    // Exit review
+    s.update(() {
+      s.exAdv = 'part';
+      s.exStars = 3;
+      s.exAgain = 'No';
+    });
+    s.postExitReview();
+    for (var k = 0; k < 8; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(fake.calls.last, 'review h1 ${s.meShort} exit 3  0 null part No');
+    // The owner replies to a server review.
+    s.update(() => s.replyText = 'Thanks Teja');
+    s.postReply(rv.last);
+    for (var k = 0; k < 4; k++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect((fake.calls.last, s.toast), ('reply rv1 Thanks Teja', 'Reply posted under Teja’s review.'));
+    s.stopLive();
+    s.dispose();
+  });
+
   test('C: on Supabase, the owner sees server sign-ups and approving or removing goes to the server', () async {
     final rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', signups: [
       {'id': 'su-1', 'name': 'Ravi Teja', 'phone': '9000000040', 'bed': '101-B', 'status': 'pending', 'user_id': 'fb-ravi', 'created_at': '2026-10-02T10:00:00Z'},
@@ -3064,6 +3131,19 @@ class _FakeLive extends SampleRepo {
       complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
+  }
+
+  // S4: reviews.
+  @override
+  Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) =>
+      _rec('review $hid $name $kind $stars $body ${cats.length} $layout $advance $again');
+  @override
+  Future<void> replyReview(String id, String reply) => _rec('reply $id $reply');
+  int listingsFetched = 0;
+  @override
+  Future<Listings?> listings() async {
+    listingsFetched++;
+    return null;
   }
 
   // S7: plan invoices.

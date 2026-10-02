@@ -128,8 +128,44 @@ extension ReviewsActions on AppState {
     return t[0].toUpperCase() + t.substring(1);
   }
 
+  /// S4: on Supabase a review needs a confirmed stay (the server checks it).
+  Future<bool> _postReviewLive({required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {
+    final hid = myHostel;
+    if (hid == null) {
+      toastMsg('Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
+      return false;
+    }
+    final ok = await _write(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
+    if (ok) await refreshListings();
+    return ok;
+  }
+
+  /// S4: hostels (and their reviews) again from the server.
+  Future<void> refreshListings() async {
+    try {
+      final l = await data.listings();
+      if (l != null) applyListings(l);
+    } catch (e) {
+      debugPrint('listings: $e');
+    }
+  }
+
   void postReview() {
     if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    if (onServer) {
+      _postReviewLive(kind: 'stay', stars: rvStars, body: rvText.trim(), cats: Map.of(rvCats), layout: rvLayout).then((ok) {
+        if (!ok) return;
+        update(() {
+          rvStars = 0;
+          rvCats = {};
+          rvLayout = null;
+          rvText = '';
+        });
+        back();
+        toastMsg('Review posted as $meShort · verified resident.');
+      });
+      return;
+    }
     update(() {
       reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
       // F12: a resident who says the layout is wrong flags it for the team.
@@ -148,6 +184,19 @@ extension ReviewsActions on AppState {
     final adv = exAdv;
     if (adv == null) return toastMsg('Tell us if you got your advance back.');
     if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    if (onServer) {
+      _postReviewLive(kind: 'exit', stars: exStars, advance: adv, again: exAgain).then((ok) {
+        if (!ok) return;
+        update(() {
+          exAdv = null;
+          exStars = 0;
+          exAgain = null;
+        });
+        back();
+        toastMsg(adv == 'not' ? 'Thanks. Your review is posted, and the owner sees the advance wasn’t returned.' : 'Thanks. Your review is posted.');
+      });
+      return;
+    }
     final st = stats['anjani']!;
     update(() {
       stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
@@ -162,6 +211,19 @@ extension ReviewsActions on AppState {
 
   void postReply(Review r) {
     if (replyText.trim().isEmpty) return toastMsg('Write a reply first.');
+    if (onServer) {
+      final text = replyText.trim();
+      _write(() => data.replyReview(r.id, text)).then((ok) async {
+        if (!ok) return;
+        await refreshListings();
+        update(() {
+          replyFor = null;
+          replyText = '';
+        });
+        toastMsg('Reply posted under ${r.name.split(' ')[0]}’s review.');
+      });
+      return;
+    }
     update(() {
       r.reply = replyText.trim();
       r.replyWhen = 'replied today';

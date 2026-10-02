@@ -15,7 +15,7 @@ import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
-import 'features/listings/live.dart' show LiveRows;
+import 'features/listings/live.dart' show LiveRows, statsOf;
 import 'features/listings/repo.dart' show HostelRepo, Listings, RemoteSettings, SampleRepo;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
@@ -504,12 +504,15 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       rooms[h.id] = l.rooms[h.id]!;
       rates[h.id] = l.rates[h.id]!;
       ownerUpi[h.id] = l.upi[h.id]!;
-      stats[h.id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
+      stats[h.id] = statsOf(l.reviews[h.id] ?? const []);
       confirmed[h.id] = 0;
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
     }
+    // S4: the live hostels' reviews replace any earlier copy of them.
+    final ids = {for (final h in l.hostels) h.id};
+    reviews = [...reviews.where((r) => !ids.contains(r.hid)), for (final h in l.hostels) ...?l.reviews[h.id]];
     // S3: the owner edits their own hostel's rules.
     if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
   });

@@ -367,3 +367,15 @@ Not needed.
   - `invoices` is added to Realtime.
   - Tests: `supabase/tests/invoices_test.sql`.
 - Test: `S7: on Supabase, the owner's plan invoice comes from the server`.
+
+**S4 · reviews on the server · 2026-10-02** (branch `feature/s4-reviews`):
+- **Reading:** listings read each live hostel's `reviews`, newest first. A hostel's rating, review count and stats (category averages, advance returned in full, layout accurate % with Mostly counting half) come from them. The ranking uses the real rating.
+- **Posting:**
+  - A resident posts a 30-day or exit review to the hostel they live in (`myHostel`). The server checks the confirmed stay. Without one the app says reviews open once the owner adds you, and nothing is sent.
+  - Owners reply. The server lets them change only the reply, and it sets `replied_at`.
+  - After posting, the hostels are fetched again.
+- **Migration `20261002130000_s4_reviews.sql`:**
+  - The layout answer may be Mostly (as the app asks).
+  - Tests: `supabase/tests/reviews_test.sql`.
+- **Not yet:** a "layout is wrong" review doesn't flag the room's layout on the server. Reviews don't store the room, so the team sees it in the review instead.
+- Test: `S4: on Supabase, reviews come from the server, residents post them and owners reply`.
