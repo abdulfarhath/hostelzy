@@ -227,3 +227,39 @@ Founder: "findhostel, gethostel: aren't these simple and great?"
 ## Best of both (Brand chat's suggestion)
 **Brand name** = a name we can own (Hostelmila / Hostelji).
 **Web addresses** = findhostel.in and gethostel.in point to it, so search and ads still get the simple words.
+
+---
+
+# Round 4: invented names, like Myntra / Reebok / Nike (2026-10-02)
+
+Founder: "random name combining letters, like Myntra, Reebok, Nike".
+Invented names are the **strongest trademarks** (they describe nothing, so nobody else can claim them).
+Like Myntra (from "mantra"), each one below hides a small meaning.
+
+Checked ~140 invented names. Almost every short one has its **.com taken** (often parked).
+That's normal now; many brands use .app / .in or "get<name>.com".
+
+| Name | Say it | Hidden meaning | .com | .app | Quick check |
+|---|---|---|---|---|---|
+| **Hostlo** | HOST-lo | Telugu "hostel **lo**" = *in the hostel*; Hindi "hostel **lo**" = *take a hostel*. Works in both. | ❌ | ✅ | Nothing found. |
+| **Tikaao** | ti-KAA-o | Hindi "tikna / tikao" = settle in, stay put. | ✅ | ✅ | Nothing in our field. "Tikaoo" (clothes app) and "Tikao.ai" (marketing) exist. |
+| **Mukaa** | MU-kaa | Urdu "mukaam" = a place you stay. Soft, short. | ❌ | ✅ | Nothing found. |
+| **Rehnio** | REH-nee-o | Hindi "rehna" = to live / stay. | ✅ | not checked | Nothing found. A bit like "Rahna Homes". |
+| **Kamrly** | KUM-ruh-lee | "Kamra" = room. | ✅ | ✅ | Nothing found. Spelling is hard to guess. |
+| **Rukko** | RUK-ko | "Ruko" = stay, stop here. | ❌ | ✅ | Nothing found. |
+| **Kirayo** | ki-RAA-yo | "Kiraya" = rent. | ❌ | ✅ | Nothing found. Feels like money, not home. |
+| **Kotsy** | KOT-see | Cot + cosy. | ❌ | ✅ | Nothing found. |
+| **Staymo** | STAY-mo | Stay + mo(re). | ❌ | ✅ | Nothing found. |
+| **Dormaro** | dor-MAA-ro | Dorm + aaram (rest). | ✅ | not checked | Nothing found. "Dorm" is less used in Indian PGs. |
+| **Kamrova** | kam-RO-vaa | Kamra (room). | ✅ | not checked | Nothing found. Sounds Russian. |
+| Dostel | DOS-tel | Dost (friend) + hostel. | ❌ | ✅ | ⚠️ Rhymes with **Zostel** (big hostel chain). Drop. |
+| Bedzo | BED-zo | Bed + zo. | ❌ | ✅ | ⚠️ "Zo" = Zostel's style. Drop. |
+
+Taken (.com and .app): Hostra, Bedra, Stayra, Tenra, Aramo, Gharo, Rumo, Hostiva, Stalo, Nivra, Milora, Livaro, Nestlo, Staylo, Bedlo, Roomvi, Yaaro…
+
+## Brand chat's picks (round 4)
+1. **Hostlo**: short, fun, and it means something in **both Telugu and Hindi**. Domains: hostlo.app + findhostel.in.
+2. **Tikaao**: "settle in", .com free.
+3. **Mukaa**: softest sound, short.
+
+Same rule: only web + domain checks here. Lawyer must run IP India search (classes 9, 42, 43, 36).
