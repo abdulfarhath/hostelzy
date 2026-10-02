@@ -34,6 +34,10 @@ Founder, 2026-10-02 (later): "keep designing and building in parallel, never wai
 The Ideas chat decides product details; **Design keeps the "Hostelzy · All screens" canvas
 (https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB) updated after every feature it designs or
 Build merges** (same URL, tag Updated/New).
+Founder, 2026-10-02 (evening): "take your own decisions… never take my approval for anything". The
+chats decide designs, product details and merges themselves. Only things the founder must physically
+do (accounts, keys, SQL runs, payments setup) or that change money amounts already in DECISIONS.md go
+to the founder.
 
 ## Feature stages (`docs/BOARD.md`)
 
