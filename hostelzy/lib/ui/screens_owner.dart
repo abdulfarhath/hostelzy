@@ -1295,6 +1295,14 @@ class _Residents extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
+                      if (r.lateDays > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+                          decoration: box(bg: p.ab, w: 1, c: p.ab),
+                          child: T('Late · ${r.lateDays}d', s: 11, w: 800, ls: .04, upper: true, nowrap: true, c: p.ad),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
                       () {
                         final t = residentTag(p, r.tag);
                         return Container(

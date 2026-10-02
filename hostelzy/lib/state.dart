@@ -89,6 +89,7 @@ class AppState extends ChangeNotifier {
   // ------------------------------------------------------------ F07 Fair Play
 
   List<FairCase> cases = seedCases();
+  static final seedCaseCount = seedCases().length;
 
   /// The owner accepted the Fair Play rules (by code) when signing up.
   bool fairAccepted = false;
@@ -1310,7 +1311,18 @@ class AppState extends ChangeNotifier {
     final b = findBed('anjani', bed).b;
     if (b != null) b.state = 'booked';
     final joined = dayMon(DateTime.fromMillisecondsSinceEpoch(joinAt));
-    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt);
+    // F06: residents who came through Hostelzy are added within 3 days of
+    // moving in. Later counts as a Fair Play signal (F07).
+    final late = m != null ? ((now - joinAt) / 86400000).floor() : 0;
+    final lateDays = late > addWithinDays ? late : 0;
+    if (lateDays > 0) {
+      final id = 'FP-0${143 + cases.length - seedCaseCount}';
+      cases = [
+        FairCase(id: id, hid: 'anjani', title: '$name added $lateDays days after moving in', signal: 'Hostelzy resident (${m!.ref}) added after the 3-day limit', status: 'new', resident: bed, events: [CaseEvent(dayMon(DateTime.fromMillisecondsSinceEpoch(m.at)), 'On Hostelzy', 'Tenant ${m.what}'), CaseEvent(joined, 'Moved in', 'Bed $bed'), CaseEvent(dayMon(appToday), 'Added by the owner', '$lateDays days later', flag: true)]),
+        ...cases,
+      ];
+    }
+    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
   }
 
   void openAddResident() => update(() {
@@ -1342,7 +1354,7 @@ class AppState extends ChangeNotifier {
       sheet = null;
       resF = 'All';
     });
-    toastMsg('Code sent to ${name.split(' ')[0]} on WhatsApp.');
+    toastMsg(res.lateDays > 0 ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.' : 'Added as Waiting OTP. ${name.split(' ')[0]} confirms with the code once the app is online.');
   }
 
   /// Invite QR sign-ups have verified their phone already; approving counts them.
