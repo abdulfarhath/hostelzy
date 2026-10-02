@@ -11,6 +11,9 @@ import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
 import 'package:hostelzy/locate.dart';
+import 'package:hostelzy/features/photos/photo.dart';
+import 'package:hostelzy/features/photos/pick.dart';
+import 'package:image/image.dart' as img;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -1992,6 +1995,15 @@ void main() {
       m.dispose();
     }
     tester.view.resetViewInsets();
+    // No keyboard: Manage's header buttons and the photo screens fit too.
+    for (final start in ['oMore', 'oPhotos', 'gallery']) {
+      final m = AppState(start: start, role: start == 'gallery' ? 'tenant' : 'owner');
+      await tester.pumpWidget(MaterialApp(home: AppScope(state: m, child: const HostelzyShell())));
+      await tester.pump();
+      final err = tester.takeException();
+      expect(err == null ? null : '$start: $err', isNull);
+      m.dispose();
+    }
     tester.view.reset();
 
     // Crash guards.
@@ -2196,6 +2208,111 @@ void main() {
     expect(o.teamUnlocked, isFalse);
     o.dispose();
   });
+
+  test('B7: photos are cropped and compressed on the phone', () {
+    Uint8List png(int w, int h) => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
+    final a = img.decodeJpg(prepPhoto(png(1000, 1000), '4:3')!)!;
+    expect((a.width, a.height), (1000, 750));
+    final b = img.decodeJpg(prepPhoto(png(4000, 3000), 'free')!)!;
+    expect((b.width, b.height), (1600, 1200));
+    final c = img.decodeJpg(prepPhoto(png(900, 1200), '1:1')!)!;
+    expect((c.width, c.height), (900, 900));
+    expect(prepPhoto(Uint8List.fromList([1, 2, 3]), '4:3'), isNull);
+    expect(photoUrl('https://p.supabase.co', 'h1/a.jpg'), 'https://p.supabase.co/storage/v1/object/public/hostel-photos/h1/a.jpg');
+  });
+
+  testWidgets('B7: owner adds, orders and removes photos; tenants see the gallery', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner');
+    final fake = _FakePhotos();
+    s.data = fake;
+    s.picker = _FakePicker(1200, 1200);
+    await pumpApp(tester, s);
+    await tap(tester, find.byKey(const ValueKey('managePhotos')));
+    expect(s.screen, 'oPhotos');
+    expect(find.text('0 of 8 minimum'), findsOneWidget);
+    expect(find.text('Drag to reorder. The first is the cover.'), findsOneWidget);
+    // Add → crop (square, cover) → Use: uploads a compressed JPEG.
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect((s.screen, s.cropCover, s.cropLabel), ('oCrop', true, 'Front'));
+    await tap(tester, find.text('Square'));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(s.screen, 'oPhotos');
+    expect(fake.uploaded.length, 1);
+    final up = img.decodeJpg(fake.uploaded.single)!;
+    expect((up.width, up.height), (1200, 1200));
+    expect(find.text('COVER'), findsOneWidget);
+    expect(find.text('1 of 8 minimum'), findsOneWidget);
+    // Second photo: a washroom; the upload fails, then Retry works.
+    fake.failNext = true;
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    expect(s.cropCover, isFalse);
+    await tap(tester, find.text('Front ▾'));
+    await tap(tester, find.text('Room ▾'));
+    expect(s.cropLabel, 'Washroom');
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsOneWidget);
+    await tap(tester, find.text('Failed · Retry'));
+    await tester.pump();
+    expect(find.text('Failed · Retry'), findsNothing);
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Front', 'Washroom']);
+    // Make the washroom the cover: it moves first and the order is saved.
+    await tap(tester, find.text('Washroom'));
+    expect(s.sheet, 'photo');
+    await tap(tester, find.text('Make it the cover'));
+    await tester.pump();
+    expect(s.photosIn(s.ownHid, 'Hostel').map((p) => p.label), ['Washroom', 'Front']);
+    expect(fake.lastOrder, ['ph1', 'ph0']);
+    expect(fake.lastCover, 'ph1');
+    // Remove the old front photo.
+    await tap(tester, find.text('Front'));
+    await tap(tester, find.text('Remove photo'));
+    await tester.pump();
+    expect(fake.rows.map((p) => p.id), ['ph1']);
+    await tap(tester, find.text('Done'));
+    expect(s.screen, 'oMore');
+
+    // Sample data never pretends to upload.
+    final demo = AppState(start: 'oPhotos', role: 'owner');
+    demo.picker = _FakePicker(400, 300);
+    await pumpApp(tester, demo);
+    await tap(tester, find.byKey(const ValueKey('addPhoto')));
+    await tap(tester, find.byKey(const ValueKey('useCrop')));
+    await tester.pump();
+    expect(demo.toast, 'Photos upload in the real Hostelzy app. This is sample data.');
+    expect(demo.photosOf[demo.ownHid] ?? const [], isEmpty);
+    await tester.pump(const Duration(seconds: 3));
+
+    // A tenant opens the hostel: cover, "See 2 photos", the gallery.
+    fake.rows
+      ..clear()
+      ..addAll([
+        (id: 'a', path: 'x/a.jpg', url: 'https://x.test/a.jpg', label: 'Front', ord: 0, cover: true),
+        (id: 'b', path: 'x/b.jpg', url: 'https://x.test/b.jpg', label: '3 sharing', ord: 1, cover: false),
+      ]);
+    final t = AppState(start: 'explore', role: 'tenant');
+    t.data = fake;
+    await pumpApp(tester, t);
+    t.update(() {
+      t.hid = 'anjani';
+      t.screen = 'detail';
+    });
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('See 2 photos'), findsOneWidget);
+    await tap(tester, find.text('See 2 photos'));
+    expect(t.screen, 'gallery');
+    expect(find.text('1 / 2 · Front'), findsOneWidget);
+    expect(find.text('Rooms 1'), findsOneWidget);
+    await tap(tester, find.text('Rooms 1'));
+    expect(find.text('1 / 1 · 3 sharing'), findsOneWidget);
+    await tap(tester, find.text('All 2'));
+    expect(find.text('Photos by the owner'), findsOneWidget);
+    s.dispose();
+    demo.dispose();
+    t.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2237,6 +2354,43 @@ class _FakeData extends SampleRepo {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+}
+
+/// B7: Storage stand-in. [failNext] makes the next upload fail once.
+class _FakePhotos extends SampleRepo {
+  final rows = <HostelPhoto>[];
+  final uploaded = <Uint8List>[];
+  bool failNext = false;
+  List<String>? lastOrder;
+  String? lastCover;
+  @override
+  Future<List<HostelPhoto>> photos(String hid) async => sortPhotos(rows);
+  @override
+  Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
+    if (failNext) {
+      failNext = false;
+      throw Exception('network');
+    }
+    uploaded.add(jpg);
+    final p = (id: 'ph${rows.length}', path: '$hid/ph${rows.length}.jpg', url: 'https://x.test/ph${rows.length}.jpg', label: label, ord: ord, cover: cover);
+    rows.add(p);
+    return p;
+  }
+
+  @override
+  Future<void> removePhoto(HostelPhoto p) async => rows.removeWhere((x) => x.id == p.id);
+  @override
+  Future<void> savePhotoOrder(List<HostelPhoto> ordered, String coverId) async {
+    lastOrder = [for (final p in ordered) p.id];
+    lastCover = coverId;
+  }
+}
+
+class _FakePicker implements PhotoPicker {
+  _FakePicker(this.w, this.h);
+  final int w, h;
+  @override
+  Future<Uint8List?> pick() async => Uint8List.fromList(img.encodePng(img.Image(width: w, height: h)));
 }
 
 class _FakeLocator implements Locator {

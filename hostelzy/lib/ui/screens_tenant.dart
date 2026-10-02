@@ -7,6 +7,7 @@ import 'common.dart';
 import 'deals.dart';
 import 'fairplay.dart';
 import 'kit.dart';
+import 'photos.dart';
 import 'layout.dart';
 import 'onboarding.dart';
 
@@ -591,6 +592,7 @@ class DetailScreen extends StatelessWidget {
     final h = hostelById(s.hid);
     final rs = s.rooms[h.id]!;
     final free = s.freeOf(h.id).f;
+    final photos = s.photosOf[h.id] ?? const [];
     final saved = s.saved[h.id] ?? false;
     // F03: the deal table's room type drives the bottom bar.
     final dv = dealView(s, h);
@@ -647,6 +649,8 @@ class DetailScreen extends StatelessWidget {
                     painter: Hatch(p.sf, 8, 16, base: p.bg),
                     child: Stack(
                       children: [
+                        // B7: the owner's cover photo; tap for the gallery.
+                        Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : Tap(onTap: () => s.openGallery(h.id), child: PhotoImg(photos.first.url)))),
                         Positioned(
                           top: 10,
                           left: 12,
@@ -673,7 +677,16 @@ class DetailScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Positioned(left: 14, bottom: 10, child: T('hostel photos · 1 / 12', s: 11, mono: true, c: p.mu)),
+                        Positioned(
+                          left: 12,
+                          bottom: 10,
+                          child: photos.isEmpty
+                              ? T('No photos yet', s: 11, mono: true, c: p.mu)
+                              : Tap(
+                                  onTap: () => s.openGallery(h.id),
+                                  child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10), child: T('See ${photos.length} photo${photos.length == 1 ? '' : 's'}', s: 13, w: 800)),
+                                ),
+                        ),
                       ],
                     ),
                   ),

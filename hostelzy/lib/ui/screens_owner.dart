@@ -1142,31 +1142,53 @@ class OwnerManageScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(child: PageHead(kicker: hostelById(s.ownHid).name, title: 'Manage')),
-              // Room layouts (F12), managers (F14), the Hostelzy plan (F10).
-              Tap(
-                onTap: () => s.go('oLayouts'),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: const T('Layouts', w: 800, s: 13),
-                ),
-              ),
-              Tap(
-                onTap: () => s.go('oTeam'),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: const T('Team', w: 800, s: 13),
-                ),
-              ),
-              Tap(
-                onTap: () => s.go('oPlan'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
+              // B7: the buttons scroll sideways on small phones.
+              Flexible(
+                flex: 3,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    children: [
+                      // B7: hostel photos.
+                      Tap(
+                        key: const ValueKey('managePhotos'),
+                        onTap: s.openPhotos,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Photos', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oLayouts'),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Layouts', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oTeam'),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: const T('Team', w: 800, s: 13),
+                        ),
+                      ),
+                      Tap(
+                        onTap: () => s.go('oPlan'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                          decoration: box(w: 2, c: p.tx),
+                          child: Row(children: [const T('Your plan', w: 800, s: 13), const SizedBox(width: 4), Ic('chev', size: 16, color: p.tx)]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

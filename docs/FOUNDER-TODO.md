@@ -23,6 +23,7 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    - Same page → search `pg_net` → turn it on.
    - Supabase → **SQL Editor** → **New query**.
    - Paste `supabase/migrations/20261002030000_b5_server_rules.sql` from GitHub (Copy raw file) → **Run** → "Success".
+   - New query again → paste `supabase/migrations/20261002050000_b7_photos.sql` → **Run** → "Success" (hostel photos).
 4. **Push notifications (B5)**:
    - Firebase → ⚙ **Project settings** → **Service accounts** → **Generate new private key** (a .json file downloads).
    - Supabase → **Edge Functions** → **Secrets** → **Add**: name `FCM_SERVICE_ACCOUNT`, value = the whole .json file's text → Save.
