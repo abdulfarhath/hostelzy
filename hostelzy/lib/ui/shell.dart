@@ -327,7 +327,7 @@ class _AppBody extends StatelessWidget {
               children: [
                 top,
                 // F18 design "Demo": the Play Store build says when it's on sample listings.
-                if (!AppState.samples && !liveListings && !const ['welcome', 'login', 'phone', 'otp', 'role', 'roleGate', 'gate'].contains(s.screen))
+                if (AppState.demoBanner && !liveListings && !const ['welcome', 'login', 'phone', 'otp', 'role', 'roleGate', 'gate'].contains(s.screen))
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     color: p.tx,

@@ -167,7 +167,20 @@ class ExploreScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final h in results) HostelCard(h),
-                if (results.isEmpty)
+                // F18 design "Empty": no hostels live yet (or none in the area picked).
+                if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                    child: VGap(
+                      gap: 10,
+                      children: [
+                        T(s.mapArea != null ? 'No hostels in ${s.mapArea} yet' : 'No hostels in this area yet', w: 800, s: 20),
+                        T('Hostelzy is adding hostels area by area, after a visit to each one. Check back soon, or try another area.', s: 14, c: p.mu, lh: 1.45),
+                        Align(alignment: Alignment.centerLeft, child: Tap(onTap: () => s.update(() => s.sheet = 'areas'), child: Container(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14), decoration: box(w: 2, c: p.tx), child: const T('Pick another area', w: 800, s: 14)))),
+                      ],
+                    ),
+                  )
+                else if (results.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                     child: VGap(

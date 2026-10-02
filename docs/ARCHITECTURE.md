@@ -41,7 +41,7 @@ everywhere, one class owns every feature.
 ## Migration order (small steps, app keeps working)
 1. Router + back stack (go_router) and session restore (shared_preferences + Firebase currentUser). (F18 groups 1–2)
 2. `Me` profile (name, phone, role) from Supabase `profiles`; sample identity removed. (F18 group 3)
-3. Repository interface; move hostels/rooms/beds/rates reads to SupabaseRepo; release builds use it.
+3. Repository interface; move hostels/rooms/beds/rates reads to SupabaseRepo; release builds use it. **Done 2026-10-02 (B3):** `lib/features/listings/repo.dart`; CI publishes `hostelzy.apk` (Supabase) and `hostelzy-demo.apk` (samples).
 4. Split `AppState` by area as each feature moves to the repository.
 5. Edge Functions: HZ codes, hold expiry cron, push sending, resident matching.
 6. Realtime for holds/enquiries/payments so owner and tenant phones stay in sync.
