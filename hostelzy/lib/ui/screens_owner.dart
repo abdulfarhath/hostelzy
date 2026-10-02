@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data.dart';
+import '../app_config.dart' show inviteLink, shortLink;
 import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
@@ -1347,7 +1348,7 @@ class OwnerInviteScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const link = 'hostelzy.in/j/ANJ-7Q2';
+    final link = inviteLink('ANJ-7Q2');
     Widget step(String t, String d) => Expanded(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(t, w: 800, s: 13), const SizedBox(height: 2), T(d, s: 12, c: p.mu)]),
     );
@@ -1380,10 +1381,10 @@ class OwnerInviteScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: box(bg: const Color(0xFFFFFFFF), w: 2, c: p.tx),
-                          child: QrImageView(data: 'https://$link', size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
+                          child: QrImageView(data: link, size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                         ),
                         const SizedBox(height: 12),
-                        const T(link, w: 800, s: 18),
+                        T(shortLink(link), w: 800, s: 15),
                         const SizedBox(height: 2),
                         T("Stick it at the front desk or send it in your residents' group.", s: 13, c: p.mu, align: TextAlign.center),
                       ],
@@ -1393,9 +1394,9 @@ class OwnerInviteScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join ${hostelById(s.ownHid).name} on Hostelzy to pay rent, raise complaints and see the food menu: https://$link'))),
+                        Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join ${hostelById(s.ownHid).name} on Hostelzy to pay rent, raise complaints and see the food menu: $link'))),
                         const SizedBox(width: 8),
-                        Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sharePoster('https://$link'))),
+                        Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sharePoster(link))),
                       ],
                     ),
                   ),

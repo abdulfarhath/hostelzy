@@ -53,3 +53,16 @@ Canvas https://claude.ai/artifact/PBCza1yUDPzNVc2QHDrAN4. **Design approved by t
 - **SHA-1 fingerprint** (for restricting a Google Maps / Firebase key): run `cd hostelzy/android && ./gradlew signingReport` (or `keytool -list -v -keystore <your-upload-keystore>.jks -alias <alias>`), and after the first upload copy the **App signing key** SHA-1 from Play Console → Setup → App integrity. Add both SHA-1s to the key.
 - **Release signing:** `android/app/build.gradle.kts` still signs release builds with the debug key. Before the first Play upload: create an upload keystore, keep it safe (never in git), and switch `signingConfig` to it (Build can do this once you have the keystore; CI needs it as a secret).
 - Still to do outside the app: Google Play developer account (₹2,100), the domain + privacy / terms / delete-account pages, the support WhatsApp number, Data Safety form, closed test with 12 testers for 14 days.
+
+**Web pages · 2026-10-02** (branch `feature/web-pages`, DECISIONS "Web address for now"):
+- `app/` at the repo root is served by GitHub Pages at https://farhath.me/hostelzy/app/. The old prototype at `farhath.me/hostelzy/` is untouched.
+- Pages, in the app's look with light and dark:
+  - `privacy/`: what the app actually collects;
+  - `terms/`;
+  - `delete-account/`: the in-app steps, plus the WhatsApp route Play requires;
+  - `r/?c=HZ-…`: an enquiry code;
+  - `j/?c=…`: a resident invite.
+- `lib/app_config.dart` builds every URL from one `webBase` constant: privacy, terms, delete account, `enquiryLink()` and `inviteLink()`. The owner's invite QR, link and poster now use it.
+- Honest for now:
+  - the delete page says in-app deletion clears the phone, and WhatsApp removes the server data, until full deletion ships (C);
+  - "Open in Hostelzy" deep links come with go_router.
