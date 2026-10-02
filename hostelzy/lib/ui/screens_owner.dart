@@ -35,7 +35,7 @@ String occCounts(AppState s) {
 }
 
 /// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
-List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == 'anjani' && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: 3600, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id), ...s.reqs];
+List<HoldRequest> allRequests(AppState s) => [for (final h in s.holds.where((h) => h.hid == 'anjani' && h.status == 'waiting')) HoldRequest(id: h.id, name: 'Rahul Varma', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'), ...s.reqs];
 
 /// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
 /// only as a section (false, the approved default).
@@ -221,9 +221,24 @@ class OwnerTodayScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  T(r.name, w: 800, s: 16),
+                                  Row(
+                                    children: [
+                                      T(r.name, w: 800, s: 16),
+                                      // F09: the Trusted tenant badge; tap for what it means.
+                                      if (r.trusted) ...[
+                                        const SizedBox(width: 6),
+                                        Tap(
+                                          onTap: () => s.update(() {
+                                            s.trustedReq = r.id;
+                                            s.sheet = 'trusted';
+                                          }),
+                                          child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                   const SizedBox(height: 2),
-                                  T('Bed ${r.bed} · ${r.type}', s: 13, c: p.mu),
+                                  T('Bed ${r.bed} · ${r.type}${r.secs > freeHoldSecs ? ' · 2 h' : ''}', s: 13, c: p.mu),
                                   const SizedBox(height: 2),
                                   T('“${r.note}”', s: 13),
                                 ],

@@ -345,13 +345,16 @@ String clockTime(int ms) {
 }
 
 class HoldRequest {
-  HoldRequest({required this.id, required this.name, required this.bed, required this.type, required this.secs, required this.note, required this.start, this.hold});
+  HoldRequest({required this.id, required this.name, required this.bed, required this.type, required this.secs, required this.note, required this.start, this.hold, this.trusted = false});
   final String id, name, bed, type, note;
   final int secs, start;
   final String? hold;
+
+  /// F09: the tenant is a Trusted tenant (owners see the badge, not where they stayed).
+  final bool trusted;
 }
 
-List<HoldRequest> seedRequests(int now) => [HoldRequest(id: 'k1', name: 'Karthik M', bed: '102-C', type: 'Free hold', secs: 2460, note: 'Can I visit at 6 pm today?', start: now), HoldRequest(id: 'v1', name: 'Vamsi Reddy', bed: '301-A', type: 'Free hold', secs: 3180, note: 'Joining Infosys on 12 Oct.', start: now)];
+List<HoldRequest> seedRequests(int now) => [HoldRequest(id: 'k1', name: 'Karthik M', bed: '102-C', type: 'Free hold', secs: 2460, note: 'Can I visit at 6 pm today?', start: now, trusted: true), HoldRequest(id: 'v1', name: 'Vamsi Reddy', bed: '301-A', type: 'Free hold', secs: 3180, note: 'Joining Infosys on 12 Oct.', start: now)];
 
 class Complaint {
   Complaint({required this.id, required this.by, required this.cat, required this.text, required this.status, required this.date, required this.note, this.mine = false});
@@ -446,7 +449,16 @@ const holdOptions = <String, HoldOption>{
 };
 
 /// Free hold length; Members (F09) get 2 hours.
-const freeHoldSecs = 3600;
+const freeHoldSecs = 3600, memberHoldSecs = 7200;
+
+// ------------------------------------------------------------ F09 Stay Rewards
+
+/// ₹100 off the next Hostelzy hostel's first month (given by the owner,
+/// credited on the owner's next Hostelzy invoice) and ₹100 per referral.
+const memberReward = 100, referralReward = 100;
+
+/// Trusted tenant after this many months, rent on time, no owner complaints.
+const trustedMonths = 6;
 
 class Hold {
   Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const []});
