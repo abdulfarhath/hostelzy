@@ -1,0 +1,35 @@
+name: Supabase functions
+
+# Deploys the Edge Functions when they change on main (or by hand).
+# Needs the GitHub secret SUPABASE_ACCESS_TOKEN (docs/FOUNDER-TODO.md);
+# without it this does nothing.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --experimental-strip-types --test supabase/functions/tests/*.test.ts
+      - uses: supabase/setup-cli@v1
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        with:
+          version: latest
+      # send-push checks its own x-hz-secret header, so the gateway JWT check is off.
+      - if: env.SUPABASE_ACCESS_TOKEN != ''
+        run: supabase functions deploy send-push --project-ref oafiaczotlilomlvhphp --no-verify-jwt
+      - if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "No SUPABASE_ACCESS_TOKEN secret yet; nothing deployed."
