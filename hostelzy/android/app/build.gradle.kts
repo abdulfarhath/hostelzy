@@ -1,5 +1,7 @@
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -29,11 +31,25 @@ android {
         versionName = flutter.versionName
     }
 
+    // F13: test APKs need a fixed signing key (stable SHA-1) for Google
+    // sign-in. CI writes it from GitHub secrets to HZ_TEST_KEYSTORE; it is
+    // never in the repo. Without it (local builds), the debug key is used.
+    // NOT the Play Store upload key: that one stays separate and secret.
+    val testKeystore = System.getenv("HZ_TEST_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (testKeystore != null) {
+            create("hostelzyTest") {
+                storeFile = testKeystore
+                storePassword = System.getenv("HZ_TEST_KEYSTORE_PASSWORD")
+                keyAlias = "hostelzy-test"
+                keyPassword = System.getenv("HZ_TEST_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (testKeystore != null) "hostelzyTest" else "debug")
         }
     }
 }

@@ -7,9 +7,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
-import 'backend.dart' show Listings, RemoteSettings;
 import 'data.dart';
 import 'poster.dart';
+import 'push.dart';
+import 'sign_in.dart';
+import 'backend.dart' show HostelData, Listings, RemoteSettings, SampleData;
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -51,7 +53,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
+  static const screens = ['welcome', 'login', 'phone', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -339,7 +341,7 @@ class AppState extends ChangeNotifier {
   /// Room tab layer toggles: off by default (DECISIONS 2026-10-02).
   bool showFan = false, showAc = false;
 
-  /// Layouts are only for people who verified their phone by OTP.
+  /// Layouts are only for people who signed in (Google, F13).
   bool signedIn = true;
 
   /// The two beds on Compare beds (letters in [room]).
@@ -955,7 +957,7 @@ class AppState extends ChangeNotifier {
   List<String> get goLiveLeft {
     final d = draft;
     return [
-      if (!d.ownerVerified) 'Owner phone verified by OTP',
+      if (!d.ownerVerified) 'Owner phone checked by a call',
       if (!d.fairPlay) 'Fair Play rules accepted',
       if (d.photoCount < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
       if (d.missingPrices.isNotEmpty) 'Every room type priced',
@@ -1481,7 +1483,7 @@ class AppState extends ChangeNotifier {
     toastMsg(res.lateDays > 0 ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.' : 'Added as Waiting OTP. ${name.split(' ')[0]} confirms with the code once the app is online.');
   }
 
-  /// Invite QR sign-ups have verified their phone already; approving counts them.
+  /// Invite QR sign-ups signed in with Google; approving counts them.
   void approveSignup(Signup g) {
     final r = findBed('anjani', g.bed).r;
     final res = _newResident(g.name, g.phone, g.bed, r?.rent ?? 0, hostels[0].terms.advance, now, confirmed: true);
@@ -1823,6 +1825,103 @@ class AppState extends ChangeNotifier {
   /// Notification choices (sent once notifications are live, F13).
   final Map<String, bool> notif = {'hold': true, 'rent': true, 'beds': false};
 
+  // ------------------------------------------------------------ F13 login
+
+  /// Google sign-in (Firebase on Android; [NoSignIn] in tests, web, desktop).
+  SignIn signIn = const NoSignIn();
+
+  /// Where data is saved: sample (on this phone) or Supabase.
+  HostelData data = const SampleData();
+
+  /// The signed-in Google account; null when using Hostelzy on this phone only.
+  Account? account;
+  bool signingIn = false;
+
+  /// The typed phone number is never verified until SMS checks exist.
+  bool get phoneVerified => false;
+
+  Future<void> continueWithGoogle() async {
+    if (signingIn) return;
+    if (!signIn.available) return toastMsg('Google sign-in works in the Android app. Use Hostelzy on this phone for now.');
+    update(() => signingIn = true);
+    final (a, fail) = await signIn.google();
+    update(() => signingIn = false);
+    if (a != null) {
+      update(() {
+        account = a;
+        hist = [...hist, screen];
+        screen = 'phone';
+        sheet = null;
+      });
+      return;
+    }
+    toastMsg(switch (fail) {
+      SignInFail.cancelled => 'Sign-in cancelled.',
+      SignInFail.notSetUp => 'Google sign-in isn’t switched on yet. Use Hostelzy on this phone for now.',
+      _ => 'Couldn’t sign in. Check your internet and try again.',
+    });
+  }
+
+  /// Honest fallback until Google sign-in is set up: nothing leaves the phone.
+  void continueOnPhone() => update(() {
+    account = null;
+    hist = [...hist, screen];
+    screen = 'phone';
+    sheet = null;
+  });
+
+  /// After the phone number (typed, not verified): pick a role.
+  void savePhone() {
+    if (phone.length != 10) return toastMsg('Enter all 10 digits.');
+    update(() {
+      signedIn = true;
+      hist = [...hist, screen];
+      screen = 'role';
+    });
+  }
+
+  /// Saves name, phone (not verified) and role once signed in with Google.
+  Future<void> syncProfile() async {
+    final a = account;
+    if (a == null) return;
+    try {
+      await data.saveProfile(name: a.name, email: a.email, phone: phone, role: role);
+    } catch (e) {
+      debugPrint('Profile: $e');
+    }
+  }
+
+  /// F13 push: Firebase on Android ([NoPush] in tests, web, desktop).
+  Push push = const NoPush();
+
+  /// This phone's FCM token once notifications are allowed. Saved to the
+  /// backend (`push_tokens`) once phone login works.
+  String? pushToken;
+
+  /// After the explainer: Android's own prompt, then the token.
+  Future<void> enablePush() async {
+    final r = await push.ask();
+    switch (r) {
+      case PushAsk.allowed:
+        pushToken = await push.token();
+        final t = pushToken;
+        if (t != null && account != null) {
+          try {
+            await data.savePushToken(t);
+          } catch (e) {
+            debugPrint('Push token: $e');
+          }
+        }
+        update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
+        toastMsg('Notifications allowed. Hostelzy starts sending them once your account is online.');
+      case PushAsk.denied:
+        toastMsg('Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
+      case PushAsk.unavailable:
+        update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
+        toastMsg('Saved. Notifications work in the Android app.');
+    }
+  }
+
   /// Permission explainer shown: notifications | location | camera.
   String permKind = 'notifications';
 
@@ -1909,6 +2008,7 @@ class AppState extends ChangeNotifier {
       phone = '';
       otp = '';
       signedIn = false;
+      account = null;
       delReason = '';
       screen = 'delDone';
       hist = [];
@@ -1917,6 +2017,8 @@ class AppState extends ChangeNotifier {
   }
 
   void logOut() => update(() {
+    signIn.signOut();
+    account = null;
     screen = 'welcome';
     hist = [];
     phone = '';

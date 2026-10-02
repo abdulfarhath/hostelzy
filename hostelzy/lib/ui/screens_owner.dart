@@ -392,7 +392,8 @@ class _RankCard extends StatelessWidget {
 }
 
 /// F05 board 2: enquiries Hostelzy recorded before the tenant's WhatsApp
-/// opened. The phone is OTP-verified, so it matches the chat that follows.
+/// opened. The phone is typed by the tenant and not verified yet (no SMS
+/// check until billing works, DECISIONS 2026-10-02).
 class _Enquiries extends StatelessWidget {
   const _Enquiries();
   @override
@@ -466,7 +467,7 @@ class _EnquiryRow extends StatelessWidget {
                       children: [
                         const Ic('check', size: 14),
                         const SizedBox(width: 5),
-                        Rich([sp(context, phoneSpaced(e.phone)), sp(context, ' · verified', c: p.mu)], s: 13),
+                        Rich([sp(context, phoneSpaced(e.phone)), sp(context, ' · not verified', c: p.mu)], s: 13),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -1388,7 +1389,7 @@ class OwnerInviteScreen extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [step('1 · Scan', 'Name, phone, bed'), step('2 · Code', 'Phone verified'), step('3 · You approve', 'Then they count')]),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [step('1 · Scan', 'Name, phone, bed'), step('2 · Sign in', 'With Google'), step('3 · You approve', 'Then they count')]),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
@@ -1413,7 +1414,7 @@ class OwnerInviteScreen extends StatelessWidget {
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [T(g.name, w: 800, s: 15), const SizedBox(height: 1), T('Bed ${g.bed} · phone verified · ${g.ago}', s: 12, c: p.mu)],
+                                    children: [T(g.name, w: 800, s: 15), const SizedBox(height: 1), T('Bed ${g.bed} · signed in · phone not verified · ${g.ago}', s: 12, c: p.mu)],
                                   ),
                                 ),
                                 const SizedBox(width: 8),

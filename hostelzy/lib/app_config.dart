@@ -41,3 +41,8 @@ const supabaseAnonKey = String.fromEnvironment(
 /// database; `--dart-define=DATA=supabase`). Stays `sample` until real
 /// hostels are in the database and phone login works (F13 part 2).
 const dataSource = String.fromEnvironment('DATA', defaultValue: 'sample');
+
+/// F13 login: Sign in with Google (Firebase Auth, free plan). SMS codes need
+/// Firebase billing, so the phone/OTP screens stay off until then
+/// (DECISIONS 2026-10-02 "Payments contact + login SMS").
+const phoneOtpLogin = false;

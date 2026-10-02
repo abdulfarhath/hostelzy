@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data.dart';
+import '../app_config.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
@@ -49,7 +50,7 @@ class WelcomeScreen extends StatelessWidget {
               child: VGap(
                 gap: 12,
                 children: [
-                  Cta('Get started', onTap: () => s.go('phone'), bg: p.ai, fg: p.ac, iconSize: 20),
+                  Cta('Get started', onTap: () => s.go(phoneOtpLogin ? 'phone' : 'login'), bg: p.ai, fg: p.ac, iconSize: 20),
                   const T('For tenants, residents and hostel owners.', s: 14, w: 600),
                 ],
               ),
@@ -81,6 +82,35 @@ class _StepHead extends StatelessWidget {
   }
 }
 
+/// F13: Sign in with Google (DECISIONS 2026-10-02). Until Google sign-in is
+/// switched on in Firebase, "Use on this phone only" keeps everything local.
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)),
+          const _StepHead(step: 'Step 1 of 2', title: 'Sign in', sub: 'With your Google account. No passwords, no codes.'),
+          const Spacer(),
+          Cta(s.signingIn ? 'Opening Google…' : 'Continue with Google', icon: 'user', onTap: s.continueWithGoogle, iconSize: 20, opacity: s.signingIn ? .6 : 1),
+          const SizedBox(height: 10),
+          OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
+          const SizedBox(height: 8),
+          T('Nothing is saved to an account. You can sign in later.', s: 12, c: p.mu, align: TextAlign.center),
+          const SizedBox(height: 12),
+          Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
 class PhoneScreen extends StatelessWidget {
   const PhoneScreen({super.key});
   @override
@@ -96,7 +126,10 @@ class PhoneScreen extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: BackBtn(onTap: s.back),
           ),
-          const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.'),
+          phoneOtpLogin
+              ? const _StepHead(step: 'Step 1 of 2', title: 'Your mobile number', sub: 'We send a 6-digit code by SMS. No passwords.')
+              // F13: typed, not verified: owners see "not verified" until SMS checks exist.
+              : _StepHead(step: 'Step 2 of 2', title: 'Your mobile number', sub: '${s.account != null ? 'Signed in as ${s.account!.email}. ' : ''}Owners use it to call or WhatsApp you. They see it as “not verified” until Hostelzy can check numbers by SMS.'),
           const SizedBox(height: 28),
           Container(
             height: 60,
@@ -118,7 +151,7 @@ class PhoneScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Cta('Send code', onTap: () => s.phone.length == 10 ? s.sendCode() : s.toastMsg('Enter all 10 digits.'), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
+          Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : (phoneOtpLogin ? s.sendCode() : s.savePhone()), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
           const SizedBox(height: 12),
           Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
           // F17: demo shortcut for development only, never in the Play Store build.
@@ -223,12 +256,15 @@ class RoleScreen extends StatelessWidget {
         ),
         for (final r in roles)
           Tap(
-            onTap: () => s.update(() {
-              s.role = r[0];
-              // F07: a new owner accepts the Fair Play rules first.
-              s.screen = r[0] == 'owner' && !s.fairAccepted ? 'oRules' : homeOf[r[0]]!;
-              s.hist = [];
-            }),
+            onTap: () {
+              s.update(() {
+                s.role = r[0];
+                // F07: a new owner accepts the Fair Play rules first.
+                s.screen = r[0] == 'owner' && !s.fairAccepted ? 'oRules' : homeOf[r[0]]!;
+                s.hist = [];
+              });
+              s.syncProfile();
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
               decoration: BoxDecoration(border: Border(bottom: bs(2, p.dv))),

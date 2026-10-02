@@ -1,19 +1,18 @@
-name: Android APK
+name: Android check
 
+# Pull requests: analyze, test and build the APK, but publish nothing.
+# (android-apk.yml publishes a release, and only runs on main.)
 on:
-  push:
-    branches: [main]
-    # Docs-only changes (board, specs, decisions) don't need a new APK.
+  pull_request:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,6 +29,7 @@ jobs:
           flutter-version: '3.47.5'
           cache: true
       - run: flutter pub get
+      - run: flutter analyze
       - run: flutter test
       # F13: fixed test signing key from GitHub secrets (never in the repo),
       # so Google sign-in keeps working. Skipped when the secret isn't set.
@@ -46,14 +46,3 @@ jobs:
       - run: flutter build apk --release
         env:
           HZ_TEST_KEYSTORE_PASSWORD: ${{ secrets.HZ_TEST_KEYSTORE_PASSWORD }}
-      - run: cp build/app/outputs/flutter-apk/app-release.apk hostelzy.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: hostelzy-apk
-          path: hostelzy/hostelzy.apk
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: apk-${{ github.run_number }}
-          name: Hostelzy APK build ${{ github.run_number }}
-          body: Debug-signed release build for testing. Download hostelzy.apk and install it on an Android phone (allow installs from unknown sources).
-          files: hostelzy/hostelzy.apk

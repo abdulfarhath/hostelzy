@@ -173,7 +173,12 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 
 **Payments contact + login SMS** — founder / Ideas chat, 2026-10-02
 - Hostelzy UPI ID: `9059790014@axl`. Support WhatsApp: `+91 90597 90014` (founder).
-- **Phone login uses Firebase Phone Auth, not MSG91** *(Ideas chat)*: MSG91 needs Indian DLT
+- **Update (founder, 2026-10-02): Plan B.** Firebase Blaze billing failed on the founder's card, so
+  login starts with **Sign in with Google** (Firebase Auth Google provider, free Spark plan), linked to
+  Supabase via Third-party Auth (Firebase). Users type their phone number; it shows as
+  "Not verified" until SMS OTP is added later (when billing works). Matching and reviews still rely
+  on owner-confirmed stays.
+- *(Superseded for now)* **Phone login uses Firebase Phone Auth, not MSG91** *(Ideas chat)*: MSG91 needs Indian DLT
   sender registration (a business entity and paperwork), which the founder doesn't have. Firebase
   sends the OTP SMS itself; Supabase trusts Firebase sign-ins via its Third-party Auth. Needs the
   Firebase Blaze (pay-as-you-go) plan with a budget alert, and a stable app signing key (SHA-1).
