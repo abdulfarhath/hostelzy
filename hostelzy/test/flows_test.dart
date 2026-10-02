@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import 'package:hostelzy/app_config.dart' show teamPasscode, dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
+import 'package:hostelzy/app_config.dart' show dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
 import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
@@ -1321,19 +1321,25 @@ void main() {
     await tap(tester, find.text('Room 201'));
     expect((o.screen, o.lRoom), ('oLayout', 201));
 
-    // Team mode: Settings → Hostelzy team → passcode → team home.
+    // Team mode (B7): only a Google account with the team claim.
     o.update(() => o.screen = 'settings');
     await tester.pump();
     await tap(tester, find.text('Hostelzy team'));
     expect(o.sheet, 'team');
-    await tester.enterText(find.byType(TextField).last, '1111');
+    expect(find.text('Sign in with your Hostelzy team Google account, then come back here.'), findsOneWidget);
+    final fs = _FakeSignIn(null);
+    o.update(() {
+      o.signIn = fs;
+      o.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com');
+    });
     await tester.pump();
     await tap(tester, find.text('Open team tools'));
-    expect(o.teamUnlocked, isFalse);
+    await tester.pump();
+    expect((o.teamUnlocked, o.toast), (false, 'asha@gmail.com isn’t a Hostelzy team account.'));
     await tester.pump(const Duration(seconds: 3));
-    await tester.enterText(find.byType(TextField).last, teamPasscode);
-    await tester.pump();
+    fs.team = true;
     await tap(tester, find.text('Open team tools'));
+    await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
     expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
     for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
@@ -2130,7 +2136,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, passcode lockout (F18)', (tester) async {
+  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, team sign-in (F18)', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     s.update(() => s.phone = '9876543210');
     // A bed that was "free soon" goes back to "free soon" when released (D10).
@@ -2194,15 +2200,10 @@ void main() {
     }
     o.saveRates();
     expect(o.fromOf(hostelById('anjani')), cheapest + 500);
-    // Team passcode: 5 wrong tries lock it (G1).
-    for (var i = 0; i < 5; i++) {
-      o.teamCode = '0000';
-      o.unlockTeam();
-    }
-    expect(o.toast, 'Too many wrong tries. Team mode is locked for 15 minutes.');
-    o.teamCode = teamPasscode;
-    o.unlockTeam();
-    expect(o.teamUnlocked, isFalse);
+    // No passcode exists any more (B7).
+    o.update(() => o.account = null);
+    await o.checkTeam();
+    expect(o.toast, 'Sign in with your Hostelzy team Google account first.');
     o.dispose();
   });
 }
@@ -2233,6 +2234,9 @@ class _FakeSignIn implements SignIn {
   Future<(Account?, SignInFail?)> google() async => fail != null ? (null, fail) : ((uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'), null);
   @override
   Future<String?> idToken() async => 'id-token';
+  bool team = false;
+  @override
+  Future<bool> isTeam() async => team;
   @override
   Account? get current => null;
   @override

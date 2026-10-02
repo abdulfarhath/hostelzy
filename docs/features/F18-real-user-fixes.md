@@ -158,3 +158,26 @@ Phone boards 390×844 (light, with Dark tweak; dark copies on each row); team co
   - Login, About you, Role, Permission and Manage at 320×568 with the keyboard open (no overflow);
   - a one-tag hostel, an unknown hostel id, an editor on a room without a layout, and the go-live check.
 
+
+**B7 part 2 · team accounts, console, no passcode · 2026-10-02** (branch `feature/b7-team-console`, design boards 19–22):
+- **Team accounts:**
+  - A Google account is on the team when Firebase has the `team: true` claim. The founder sets it with **Actions → Team member** (`tools/team-member.ts` and `supabase/functions/_shared/team.ts`, using Identity Toolkit and the service account from a GitHub secret).
+  - The app checks the claim with a fresh token (`SignIn.isTeam()`). Supabase's `is_team()` reads the same claim.
+- **The passcode mode is gone:** `teamPasscode`, the lockout and the passcode field are removed. The team sheet asks you to sign in with a team Google account and then checks it.
+- **Team console** (`app/console/`, GitHub Pages):
+  - Sign-in is Continue with Google, and non-team accounts are signed out with a message.
+  - **Onboarding:** a 6-column kanban (Lead, Visited, Signed up, Data complete, Live / trial, Paying). Click a draft to move it on. **Add hostel** creates a draft hostel plus its lead row: owner phone, visit time, gender.
+  - **Payments:**
+    - invoices with UTR;
+    - Checking rows have Mark paid / Not received;
+    - late rows have Remind on WhatsApp, using the owner's phone from the lead.
+  - **Fair Play cases:** New / Waiting / Decide / Closed, each with Close · no issue, Ask for more, and Strike · warning (adds a strike).
+  - **Layout help queue:** says honestly that requests come on WhatsApp for now.
+  - **Hostels:** Go live / Pause.
+  - Data comes from Supabase under the same RLS. The new `hostel_leads` table is team-only.
+  - Until the founder adds the Firebase web config, the page says "Not set up yet".
+- Tests:
+  - `supabase/functions/tests/team.test.ts` and `console.test.ts`;
+  - `supabase/tests/console_test.sql`;
+  - the app's team test now uses a fake team claim.
+- Founder steps: `docs/FOUNDER-TODO.md` 4b.

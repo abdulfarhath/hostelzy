@@ -9,12 +9,14 @@ export type Fetch = typeof fetch;
 const b64url = (b: Uint8Array | string) =>
   btoa(typeof b === 'string' ? b : String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-/** A signed JWT asking Google for an FCM access token (RS256). */
-export async function serviceAccountJwt(sa: ServiceAccount, nowSecs: number): Promise<string> {
+export const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
+
+/** A signed JWT asking Google for an access token (RS256), FCM by default. */
+export async function serviceAccountJwt(sa: ServiceAccount, nowSecs: number, scope = FCM_SCOPE): Promise<string> {
   const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const claims = b64url(JSON.stringify({
     iss: sa.client_email,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    scope,
     aud: 'https://oauth2.googleapis.com/token',
     iat: nowSecs,
     exp: nowSecs + 3600,
@@ -26,11 +28,11 @@ export async function serviceAccountJwt(sa: ServiceAccount, nowSecs: number): Pr
   return `${head}.${claims}.${b64url(sig)}`;
 }
 
-export async function accessToken(sa: ServiceAccount, f: Fetch, nowSecs: number): Promise<string> {
+export async function accessToken(sa: ServiceAccount, f: Fetch, nowSecs: number, scope = FCM_SCOPE): Promise<string> {
   const r = await f('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: await serviceAccountJwt(sa, nowSecs) }),
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: await serviceAccountJwt(sa, nowSecs, scope) }),
   });
   if (!r.ok) throw new Error(`Google token: ${r.status} ${await r.text()}`);
   return (await r.json()).access_token;
