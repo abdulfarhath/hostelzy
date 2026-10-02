@@ -88,3 +88,11 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 
 ## Never
 - Never share the Supabase **service_role** key or any private key file in chat or GitHub.
+
+### Play Store and staging (F24 Wave C)
+6a. **Play Store upload key** (👤 once, keep it forever; losing it means a new Play listing):
+   - On your computer: `keytool -genkeypair -v -keystore hostelzy-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`. Pick a strong password and keep the file and the password somewhere safe (not in the repo, not in chat).
+   - `base64 -w0 hostelzy-upload.jks` → GitHub repo → **Settings** → **Secrets and variables** → **Actions** → New secret `HZ_UPLOAD_KEYSTORE_BASE64` = that text. Also add `HZ_UPLOAD_KEYSTORE_PASSWORD` (the password) and `HZ_UPLOAD_KEY_ALIAS` = `upload`.
+   - Then **Actions** → **Play Store build** → Run workflow → production. It makes `app-release.aab` to upload in Play Console. Until the secret exists it stops with "No HZ_UPLOAD_KEYSTORE_BASE64 secret yet".
+6b. **Staging backend** (optional, for trying changes without touching real data): make a second Supabase project (Mumbai), run every file in `supabase/migrations/` on it in order, then add the GitHub secrets `HZ_STAGING_SUPABASE_URL` and `HZ_STAGING_SUPABASE_ANON_KEY` (Project Settings → API; the anon key is public). **Play Store build** → staging then makes a build whose Settings says "STAGING".
+6c. **Links open the app directly** (after 6a): Play Console → your app → **Setup** → **App signing** → copy the **SHA-256** of the app signing key. Put this file at `https://farhath.me/.well-known/assetlinks.json` (the root of your farhath.me site, not this repo): `[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"app.hostelzy.hostelzy","sha256_cert_fingerprints":["<SHA-256>"]}}]`. Until then, tapping a hostelzy link asks "Open with" instead of opening the app straight away.

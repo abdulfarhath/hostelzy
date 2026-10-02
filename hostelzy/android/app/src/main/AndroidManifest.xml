@@ -40,6 +40,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="${linkScheme}" android:host="app"/>
             </intent-filter>
+            <!-- F24 item 30: the same links as https (App Links). Android opens the
+                 app directly once the site has /.well-known/assetlinks.json
+                 (FOUNDER-TODO 6c); until then it asks "Open with". -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="${appLinkHost}" android:pathPrefix="/hostelzy/app/r"/>
+                <data android:scheme="https" android:host="${appLinkHost}" android:pathPrefix="/hostelzy/app/j"/>
+            </intent-filter>
             <meta-data android:name="flutter_deeplinking_enabled" android:value="true"/>
         </activity>
         <!-- F20 reminders (flutter_local_notifications): ring, survive restarts and
