@@ -29,3 +29,7 @@ checks were web searches, app stores, company listings and .com/.app domain chec
 
 ## Before launch
 A trademark lawyer runs the official IP India search and files in classes 9, 42, 43 and 36.
+
+## Round 1 name list (Brand chat, 2026-10-02)
+14 names with stories, ease of saying and quick checks: `names.md`.
+Brand chat's top 3: **Cotkey, Bedpakka, Bedmila**. Waiting for the founder to pick 2–3.
