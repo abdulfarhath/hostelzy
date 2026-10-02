@@ -369,7 +369,10 @@ class _AppBody extends StatelessWidget {
   Widget _screen(String k) => switch (k) {
     'welcome' => const WelcomeScreen(),
     'login' => const LoginScreen(),
+    'saved' => const SavedScreen(),
     'roleGate' => const RoleGateScreen(),
+    'oCreate' => const CreateLayoutScreen(),
+    'oPublished' => const LayoutPublishedScreen(),
     'phone' => const PhoneScreen(),
     'otp' => const OtpScreen(),
     'role' => const RoleScreen(),
@@ -556,6 +559,8 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'search' => 'Search',
+      'loc' => 'Use your location?',
+      'areas' => 'Pick an area',
       'hold' => sb?.b != null ? 'Book bed ${sb!.b!.id}' : 'Book',
       'wa' => s.waRef != null ? 'Ask ${s.waTo} on WhatsApp' : 'Continue on WhatsApp',
       'add' => 'Add a booking',
@@ -577,6 +582,7 @@ class _Sheet extends StatelessWidget {
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
+      'loc' || 'areas' => 'Map',
       'joined' => 'One quick question',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
@@ -591,6 +597,8 @@ class _Sheet extends StatelessWidget {
     };
     final body = switch (s.sheet) {
       'search' => const _SearchSheet(),
+      'loc' => const LocationSheet(),
+      'areas' => const AreasSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
@@ -1240,7 +1248,11 @@ class _AddSheet extends StatelessWidget {
             px: 16,
             fs: 15,
             onTap: () {
-              if (s.addName.trim().isEmpty || sel == null || sel.b == null) return s.toastMsg('Add a name and pick a bed.');
+              // F18 (F10): a real name, a real mobile number and a free bed.
+              if (s.addName.trim().length < 2) return s.toastMsg('Add the tenant’s name.');
+              if (s.addPhone.isNotEmpty && !AppState.validPhone(s.addPhone)) return s.toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
+              if (sel == null || sel.b == null) return s.toastMsg('Pick a bed.');
+              if (sel.b!.state == 'booked') return s.toastMsg('Bed ${sel.b!.id} is already taken.');
               sel.b!.state = 'booked';
               final name = s.addName.trim();
               s.update(() {
@@ -1296,9 +1308,8 @@ class _BedSheet extends StatelessWidget {
       actions.add((
         'Release hold',
         () {
-          b.state = 'free';
-          b.mine = false;
-          done('Bed ${b.id} is free again.');
+          s.ownerReleaseBed(s.ownHid, b);
+          done('Bed ${b.id} is ${b.state == 'soon' ? 'free soon' : 'free'} again.');
         },
         true,
       ));
@@ -1314,8 +1325,8 @@ class _BedSheet extends StatelessWidget {
       actions.add((
         'Hold for a walk-in',
         () {
-          b.state = 'held';
-          done('Bed ${b.id} held for 1 hour.');
+          s.holdWalkIn(s.ownHid, b);
+          done('Bed ${b.id} held for 1 hour. It frees itself after that.');
         },
         false,
       ));

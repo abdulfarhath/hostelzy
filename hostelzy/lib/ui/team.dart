@@ -106,26 +106,51 @@ class OwnerLayoutsScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);
     final rs = s.rooms[h.id]!;
+    // F18 design "Rooms": the owner edits and publishes; Live / Draft / No layout.
+    String kind(int n) {
+      final l = s.layoutOf(h.id, n);
+      if (l == null) return 'none';
+      if (!l.live || l.pending || l.published != null) return 'draft';
+      return 'live';
+    }
+
     ({String label, Color bg, Color fg}) state(int n) {
       final l = s.layoutOf(h.id, n);
-      if (l == null) return (label: 'Coming soon', bg: p.sf, fg: p.mu);
-      if (l.request != null) return (label: 'Change requested', bg: p.ab, fg: p.ad);
+      if (l == null) return (label: 'No layout', bg: p.ab, fg: p.ad);
+      if (l.request != null) return (label: 'Help requested', bg: p.ab, fg: p.ad);
       if (l.disputes > 0) return (label: 'Resident: not accurate', bg: p.ab, fg: p.ad);
-      if (l.pending) return (label: 'Waiting for approval', bg: p.ac, fg: p.ai);
+      if (kind(n) == 'draft') return (label: 'Draft', bg: transparent, fg: p.tx);
       return (label: 'Live', bg: p.tx, fg: p.bg);
     }
 
-    final waiting = rs.where((r) => s.layoutOf(h.id, r.n)?.pending == true).length;
+    String sub(Room r) {
+      final l = s.layoutOf(h.id, r.n);
+      final note = l == null ? '' : (l.pending ? ' · Hostelzy drew a new version' : (kind(r.n) == 'draft' ? ' · changes not published' : ' · edited ${l.drawn}'));
+      return '${r.share} sharing · ${r.type}$note';
+    }
+
+    final counts = {for (final k in ['live', 'draft', 'none']) k: rs.where((r) => kind(r.n) == k).length};
+    final shown = rs.where((r) => s.layoutsF == 'all' || kind(r.n) == s.layoutsF).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Manage', title: 'Room layouts', size: 28))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Beds', title: 'Room layouts', size: 28))]),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: T(waiting > 0 ? '$waiting ${waiting == 1 ? 'layout waits' : 'layouts wait'} for your approval. The Hostelzy team draws every room; you check and approve.' : 'The Hostelzy team draws every room; you check and approve. Request a change any time, free.', s: 13, c: p.mu, lh: 1.45),
+        Scroll(
+          horizontal: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                for (final (k, lbl) in [('all', 'All ${rs.length}'), ('live', 'Live ${counts['live']}'), ('draft', 'Draft ${counts['draft']}'), ('none', 'No layout ${counts['none']}')]) ...[
+                  ChipBtn(lbl, on: s.layoutsF == k, onTap: () => s.update(() => s.layoutsF = k)),
+                  const SizedBox(width: 6),
+                ],
+              ],
+            ),
+          ),
         ),
         Expanded(
           child: Scroll(
@@ -135,20 +160,20 @@ class OwnerLayoutsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final f in floorsOf(rs)) ...[
+                  for (final f in floorsOf(rs).where((f) => shown.any((r) => r.floor == f))) ...[
                     Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Floor $f')),
-                    for (final r in rs.where((r) => r.floor == f))
+                    for (final r in shown.where((r) => r.floor == f))
                       () {
                         final st = state(r.n);
                         return Tap(
-                          onTap: () => s.openLayout(r.n),
+                          onTap: () => s.ownerLayout(r.n),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                             decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                             child: Row(
                               children: [
-                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T('${r.share} sharing · ${r.type}', s: 12, c: p.mu)])),
-                                Tag(st.label, bg: st.bg, fg: st.fg),
+                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T(sub(r), s: 12, c: p.mu)])),
+                                Container(decoration: st.bg == transparent ? box(w: 1, c: p.tx) : null, child: Tag(st.label, bg: st.bg, fg: st.fg)),
                                 const SizedBox(width: 6),
                                 Ic('chev', size: 18, color: p.mu),
                               ],
@@ -157,6 +182,10 @@ class OwnerLayoutsScreen extends StatelessWidget {
                         );
                       }(),
                   ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Ic('pencil', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.', s: 12, c: p.mu, lh: 1.45))]),
+                  ),
                 ],
               ),
             ),

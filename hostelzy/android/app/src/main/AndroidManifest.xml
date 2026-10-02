@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- F13: push notifications (Android 13+ asks after the app's explainer). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- F18: "Use my location" on the map (approximate is enough). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="Hostelzy"
         android:name="${applicationName}"

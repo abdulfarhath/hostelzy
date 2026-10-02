@@ -1,6 +1,6 @@
 # F18 · Real-user bug fixes (from the founder's phone test, apk-29)
 
-**Stage:** Building · Design approved 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
+**Stage:** Built · Design approved 2026-10-02 (standing approval) · design: https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1 (anything not drawn there follows existing screens; F17 rules apply)
 
 Founder found on a real phone: back button exits/jumps to start, login forgotten after reopening,
 dummy numbers on code screens, name prefilled, no "use my location" / area picker, owner can't edit
@@ -43,6 +43,49 @@ APK runs on sample data only, nothing is saved on the phone, every user is the s
     (F7), walk-in hold expiry (F8), release updates hold record (F9), add-booking validation (F10),
     UPI ID format (F11), plan dates from start date (F12), layout photo uses image picker or is
     removed (F15), team passcode lockout after 5 tries (G1, stopgap).
+
+**Groups 8–10 · map v2, owner edits layouts, smaller fixes** (branch `feature/f18-map-layouts-small`):
+- **Map v2 (8), design "Map", "Location", "Areas":**
+  - Top bar: an area button (📍 All areas / area / This area / Near me) and **List**.
+  - The **Areas** sheet: search, Near me, a 2-column grid with hostel counts, and "Soon" for empty areas (Kukatpally, Jubilee Hills, Begumpet added).
+  - **Search this area** appears after a pan and filters to 3 km around the new centre.
+  - **Use my location** opens the explainer ("Use your location?", Allow location / Pick an area instead), then Android asks (`geolocator`, `ACCESS_COARSE_LOCATION`).
+    - Allowed: the map centres on you with a "you are here" dot, sorting switches to nearest, and distances read "km from you".
+    - Denied or off: the area picker opens with an honest message. A position is never invented.
+  - Pins and the card show only hostels that pass the filters (Explore follows the same area filter), prices show in full, and there's an empty card ("No hostels in X yet") when nothing matches. `lib/locate.dart` has `GeoLocator` / `NoLocator`.
+- **Owner edits layouts (9), DECISIONS 2026-10-02, design "Rooms", "Create", "Editor", "Published":**
+  - Manage → Layouts is **Room layouts**: All / Live / Draft / No layout filters with counts, Live / Draft / No layout tags, an "edited …" or "changes not published" line, and the note "You edit and publish your own layouts…".
+  - A room without a layout opens **Create a layout**: length × width in ft (6–60), **Copy Room X instead** (same sharing and AC), "Ask Hostelzy to help" by WhatsApp, and **Start drawing**. Only the rectangle shape is offered; L, alcove and angled shapes aren't built.
+  - The owner's room view has **Edit layout** / **Ask Hostelzy**. When the team drew a version it shows **Publish vN**.
+  - In the editor, **Publish** goes live at once (safety checks still apply: AC unit in AC rooms, beds = sharing, window facing, a bed with a resident can't be deleted). Tenants keep the previous version until then.
+  - **Live for tenants** has Done, Edit again, and **Undo publish · go back to vN** (or hide a first layout again).
+  - New layouts stay hidden from tenants until published. The team editor's button is now "Send to owner".
+- **Smaller fixes (10):**
+  - Terms and Privacy policy are real links (C1).
+  - The role screen has a back button (C3).
+  - "from ₹X" is computed from the rate card, and prices under ₹1,000 or blank can't be saved (D8).
+  - **Saved hostels** is a real list from Me (D9).
+  - A released bed goes back to its previous state (free or free soon) (D10).
+  - Compare and the layout title use the room label (D11).
+  - A tenant holds at most 2 beds at a time (D12).
+  - Food opens on today's weekday (E1).
+  - The review copy no longer promises editing (E5).
+  - Fair Play's 48 hours run from when the case opened (F4).
+  - House rules and the menu are kept on the phone (F5).
+  - Deals were already per hostel (F7, F17).
+  - Walk-in holds free themselves after 1 hour (F8).
+  - Releasing a hold, by the tenant or the owner, updates the hold record (F9).
+  - Add-booking checks the name, a valid mobile and a free bed (F10).
+  - The UPI ID must look like name@bank, and paying an invalid one is blocked (F11).
+  - The trial and first invoice run from the plan's start date (F12).
+  - Layout help has no fake "photo added" tiles; photos go to Hostelzy on WhatsApp until uploads exist (F15).
+  - The team passcode locks for 15 minutes after 5 wrong tries (G1).
+- Tests:
+  - `map v2: area picker, search this area, use my location (F18)`;
+  - `owner edits and publishes layouts without approval (F18)`;
+  - `smaller fixes: holds, walk-ins, saved list, prices, UPI ID, passcode lockout (F18)`;
+  - the old approval-flow tests updated to the owner-publishes wording.
+- **Not in this build** (design boards beyond the F18 fix list): owner photo upload, crop and the tenant gallery (needs storage, F13 part 2; `image_picker` not added); delete account v2 with Google re-auth (backend); the team web console.
 
 ## Needs the backend (F13 part 2; keep honest "once online" wording until then)
 Owner confirms holds/payments from their phone (D1, D2), server HZ codes, shared notice/complaints

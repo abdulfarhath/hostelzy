@@ -354,7 +354,8 @@ class OwnerCaseScreen extends StatelessWidget {
     if (c == null) return Column(children: [_head(context, 'Fair Play', 'No open cases')]);
     final open = c.status == 'waiting' || c.status == 'new';
     final first = c.resident?.split(' ').first ?? 'them';
-    final h = c.hoursLeft.floor(), m = ((c.hoursLeft - h) * 60).round();
+    final left = c.hoursLeftAt(s.now);
+    final h = left.floor(), m = ((left - h) * 60).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

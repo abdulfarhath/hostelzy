@@ -707,7 +707,7 @@ class CaseEvent {
 
 /// A Fair Play case: new → waiting (48 h for the owner) → decide → closed.
 class FairCase {
-  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2});
+  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2, this.openedAt});
   final String id, hid, title, signal;
   String status;
   final List<CaseEvent> events;
@@ -716,6 +716,11 @@ class FairCase {
   final String? resident;
   String? ownerReply, tenantNote, result;
   final double hoursLeft;
+
+  /// F18 (F4): when the case opened (ms). The owner's 48 hours run from here;
+  /// sample cases without it keep their sample time.
+  final int? openedAt;
+  double hoursLeftAt(int now) => openedAt == null ? hoursLeft : (48 - (now - openedAt!) / 3600000).clamp(0, 48).toDouble();
 }
 
 List<FairCase> seedCases() => [
@@ -757,8 +762,8 @@ const planIncluded = 'Verified enquiries with HZ codes · holds · residents app
 const remindAfterDays = 5, pauseAfterDays = 15;
 
 /// Anjani's 30-day trial started when the listing went live (1 Oct).
-final trialEnd = DateTime(2026, 10, 31);
-final firstInvoiceDue = DateTime(2026, 11, 1);
+/// F18 (F12): the 30-day trial and first invoice run from the plan's start.
+const trialDays = 30;
 
 /// An owner's monthly Hostelzy invoice. [status]: upcoming | due | checking |
 /// paid | missing (UTR not found in the bank record).
@@ -870,6 +875,22 @@ class RoomLayout {
 
   Rect bedRect(String letter) => Rect.fromLTWH(beds[letter]!.dx, beds[letter]!.dy, bedW, bedH);
   Rect itemRect(LItem i) => i.rect;
+
+  /// F18 Create a layout: resize the starting rectangle to [len] × [wid] ft,
+  /// keeping beds and items inside the walls.
+  void mirrorTo(double len, double wid) {
+    final sx = len / w, sy = wid / h;
+    for (final k in beds.keys.toList()) {
+      beds[k] = Offset((beds[k]!.dx * sx).roundToDouble().clamp(0, len - 3), (beds[k]!.dy * sy).roundToDouble().clamp(0, wid - 6));
+    }
+    for (final i in items) {
+      i
+        ..x = (i.x * sx).clamp(0, len - i.w)
+        ..y = (i.y * sy).clamp(0, wid - i.h);
+    }
+    w = len;
+    h = wid;
+  }
 
   LayoutSnap snap() => (w: w, h: h, beds: Map.of(beds), items: [for (final i in items) i.copy()], bunks: Map.of(bunks));
   void restore(LayoutSnap s) {
@@ -1201,6 +1222,9 @@ List<Payment> seedPayments() => [
   Payment(id: 'p1', kind: 'rent', hid: 'anjani', who: 'Arjun R.', what: 'October rent', bed: '204-A', amt: 7000, note: 'Rent Oct · 204-A', status: 'waiting', utr: '402199102245', sent: 'Thu 1 Oct, 9:20 am'),
 ];
 
+/// F18 (F11): what a UPI ID looks like (handle@psp).
+bool validUpiId(String id) => RegExp(r'^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$').hasMatch(id.trim());
+
 /// `upi://pay` link with the payee, amount and note filled in.
 Uri upiUri({required String id, required String name, required int amt, required String note}) => Uri(scheme: 'upi', host: 'pay', queryParameters: {'pa': id, 'pn': name, 'am': '$amt', 'tn': note, 'cu': 'INR'});
 
@@ -1229,7 +1253,16 @@ const areaLatLng = <String, (double, double)>{
   'SR Nagar': (17.4410, 78.4410),
   'Gachibowli': (17.4401, 78.3489),
   'KPHB': (17.4935, 78.3995),
+  'Kukatpally': (17.4849, 78.4138),
+  'Jubilee Hills': (17.4326, 78.4071),
+  'Begumpet': (17.4447, 78.4664),
 };
+
+/// F18 map: areas tenants can pick (design "Areas"); empty ones show "Soon".
+const mapAreas = ['Ameerpet', 'SR Nagar', 'Madhapur', 'Hitec City', 'Kondapur', 'Gachibowli', 'KPHB', 'Kukatpally', 'Jubilee Hills', 'Begumpet'];
+
+/// Search this area: hostels within this many km of the map's centre.
+const searchRadiusKm = 3.0;
 
 (double, double) posOf(Hostel h) => livePos[h.id] ?? hostelLatLng[h.id] ?? areaLatLng[h.area] ?? landmarkLatLng['Hitec City']!;
 

@@ -10,6 +10,7 @@ import 'package:hostelzy/backend.dart';
 import 'package:hostelzy/push.dart';
 import 'package:hostelzy/sign_in.dart';
 import 'package:hostelzy/store.dart';
+import 'package:hostelzy/locate.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
@@ -914,9 +915,9 @@ void main() {
     // Owner: Beds → room 204 → mark a fan not working → approve.
     final w = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, w);
-    await tap(tester, find.text('Approve layout'));
+    await tap(tester, find.text('New layout'));
     expect((w.screen, w.lRoom), ('oLayout', 204));
-    expect(find.text('Check it and approve to go live'), findsOneWidget);
+    expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
     final l = w.layoutOf('anjani', 204)!;
     expect(l.live, isTrue); // tenants keep seeing v1 until approval
     await tap(tester, find.text('Not working').last);
@@ -924,21 +925,20 @@ void main() {
     expect(w.complaints.first.text, 'Fan 2 in room 204 marked not working.');
     expect(find.text('FAN · NOT WORKING'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('Approve layout'));
+    await tap(tester, find.text('Publish v2'));
     expect(l.pending, isFalse);
-    expect(find.text('Approved · live for tenants'), findsOneWidget);
+    expect(find.text('Live for tenants'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    // Request a change: saved as pending (no backend yet).
-    await tap(tester, find.text('Request a change'));
+    // Ask Hostelzy for help: saved as pending (no backend yet).
+    await tap(tester, find.text('Ask Hostelzy'));
     expect(w.sheet, 'layoutReq');
     await tap(tester, find.text('Send request'));
     expect(l.request, isNull);
     await tester.enterText(find.byType(TextField).first, 'Bed C is against the washroom wall.');
-    await tap(tester, find.text('Room photo'));
     await tap(tester, find.text('Send request'));
     expect(l.request?.text, 'Bed C is against the washroom wall.');
-    expect(l.request?.added, {'photo'});
-    expect(find.text('Change requested · new version within 48 h'), findsOneWidget);
+    expect(l.request?.added, isEmpty); // no fake photos: they go on WhatsApp
+    expect(find.text('Help requested · Hostelzy replies within 48 h'), findsOneWidget);
 
     // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
     w.update(() => w.screen = 'aLayout');
@@ -948,7 +948,7 @@ void main() {
     await tap(tester, find.text('Mirror ↔'));
     expect(l.bedRect('A').left, l.w - before.right);
     await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('Send to owner for approval'));
+    await tap(tester, find.text('Send to owner'));
     expect((l.version, l.pending, l.request), (3, true, null));
     w.dispose();
   });
@@ -1104,8 +1104,12 @@ void main() {
     // Login: no demo fill in release; the resend timer counts down.
     final l = AppState(start: 'phone', role: 'tenant');
     await pumpApp(tester, l);
-    expect(find.text('Privacy policy', findRichText: true), findsNothing);
-    expect(find.textContaining('Privacy policy', findRichText: true), findsOneWidget);
+    // F18 (C1): Terms and Privacy policy are real links.
+    await tap(tester, find.text('Privacy policy'));
+    expect(l.lastLink.toString(), 'https://hostelzy.in/privacy');
+    await tap(tester, find.text('Terms'));
+    expect(l.lastLink.toString(), 'https://hostelzy.in/terms');
+    await tester.pump(const Duration(seconds: 3));
     await tester.enterText(find.byType(TextField).first, 'Asha');
     await tester.enterText(find.byType(TextField).last, '5000000001');
     await tester.pump();
@@ -1174,7 +1178,7 @@ void main() {
     expect(find.text('Gachibowli'), findsOneWidget); // other landmarks are labelled
     final mh = hostelById(s.mapSel);
     expect(find.text('${kmLabel(kmTo(mh, 'Hitec City'))} from Hitec City · rated ${jsNum(mh.rating)} · ${s.freeOf(mh.id).f} free'), findsOneWidget);
-    await tap(tester, find.text('₹${(hostelById('greenview').from / 1000).toStringAsFixed(1)}k'));
+    await tap(tester, find.text(fmt(hostelById('greenview').from)));
     expect(s.mapSel, 'greenview');
     await tap(tester, find.text('Directions'));
     expect(s.lastLink.toString(), 'https://www.google.com/maps/dir/?api=1&destination=17.464,78.356');
@@ -1292,10 +1296,11 @@ void main() {
     // The map's my-location button explains before asking; it never fakes a spot.
     final m = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, m);
-    await tap(tester, find.byWidgetPredicate((w) => w is Ic && w.name == 'pin' && w.size == 20).first);
-    expect((m.screen, m.permKind), ('perm', 'location'));
+    await tap(tester, find.text('Use my location'));
+    expect((m.screen, m.sheet), ('map', 'loc'));
+    expect(find.text('Use your location?'), findsOneWidget);
     await tap(tester, find.text('Pick an area instead'));
-    expect((m.screen, m.sheet), ('map', 'search'));
+    expect((m.screen, m.sheet, m.myPos), ('map', 'areas', null));
     m.dispose();
   });
 
@@ -1311,7 +1316,7 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('Layouts'));
     expect(o.screen, 'oLayouts');
-    expect(find.text('WAITING FOR APPROVAL'), findsOneWidget); // room 204, v2
+    expect(find.text('DRAFT'), findsOneWidget); // room 204: Hostelzy's v2 to publish
     expect(find.text('LIVE'), findsWidgets);
     await tap(tester, find.text('Room 201'));
     expect((o.screen, o.lRoom), ('oLayout', 201));
@@ -1379,7 +1384,7 @@ void main() {
     o.edSelect('fan1');
     await tap(tester, find.byKey(const ValueKey('nudge-left')));
     expect(o.liveLayout('anjani', 204)!.w, w0 + 1); // published copy taken before this edit
-    await tap(tester, find.text('Send to owner for approval'));
+    await tap(tester, find.text('Send to owner'));
     expect((l.pending, l.version), (true, 3));
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, isNot(l.items.firstWhere((i) => i.id == 'fan1').x));
     await tester.pump(const Duration(seconds: 3));
@@ -1392,8 +1397,8 @@ void main() {
       o.obFloor = 2;
     });
     await tester.pump();
-    await tap(tester, find.text('Approve layout'));
-    await tap(tester, find.text('Approve layout').last);
+    await tap(tester, find.text('New layout'));
+    await tap(tester, find.text('Publish v3'));
     expect(l.pending, isFalse);
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, l.items.firstWhere((i) => i.id == 'fan1').x);
     o.dispose();
@@ -1985,6 +1990,177 @@ void main() {
     c.dispose();
     resetSampleData();
   });
+
+  testWidgets('map v2: area picker, search this area, use my location (F18)', (tester) async {
+    final s = AppState(start: 'map', role: 'tenant');
+    await pumpApp(tester, s);
+    expect(find.text('All areas'), findsOneWidget);
+    // Pick an area: only hostels there, on the map and in Explore.
+    await tap(tester, find.byKey(const ValueKey('mapArea')));
+    expect(s.sheet, 'areas');
+    expect(find.text('Soon'), findsWidgets); // areas with no hostels yet
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('areaQ')), matching: find.byType(TextField)), 'kond');
+    await tester.pump();
+    expect(find.text('Ameerpet'), findsNothing);
+    await tap(tester, find.text('Kondapur'));
+    expect((s.mapArea, s.sheet), ('Kondapur', null));
+    expect(filtered(s).map((h) => h.area).toSet(), {'Kondapur'});
+    expect(find.text(fmt(hostelById('anjani').from)), findsNothing); // Madhapur pin hidden
+    s.tab('explore');
+    await tester.pump();
+    expect(find.text('Anjani Residency'), findsNothing);
+    s.tab('map');
+    await tester.pump();
+
+    // Use my location: explainer first, then the map centres on you and sorts by distance.
+    final loc = _FakeLocator((17.4610, 78.3610));
+    s.locator = loc;
+    await tap(tester, find.text('Use my location'));
+    expect((s.sheet, loc.asked), ('loc', 0));
+    await tap(tester, find.text('Allow location'));
+    await tester.pump();
+    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'near', 'Near me'));
+    expect(find.byKey(const ValueKey('youAreHere')), findsOneWidget);
+    expect(find.textContaining('km from you'), findsWidgets);
+    await tester.pump(const Duration(seconds: 3));
+    // Denied: no position is invented; the area picker opens instead.
+    final d = AppState(start: 'map', role: 'tenant')..locator = _FakeLocator(null, LocateFail.denied);
+    await d.useMyLocation();
+    expect((d.myPos, d.sheet, d.toast), (null, 'areas', 'No problem. Pick an area instead.'));
+    d.dispose();
+
+    // Search this area: after a pan, hostels within 3 km of the new centre.
+    s.mapPanned(posOf(hostelById('lakshmi')));
+    await tester.pump();
+    await tap(tester, find.text('Search this area'));
+    expect((s.mapAreaLabel, s.mapMoved), ('This area', false));
+    expect(filtered(s).map((h) => h.id), ['lakshmi']);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
+
+  testWidgets('owner edits and publishes layouts without approval (F18)', (tester) async {
+    final s = AppState(start: 'oLayouts', role: 'owner');
+    final room = s.rooms['anjani']!.last;
+    s.layouts['anjani']!.remove(room.n);
+    await pumpApp(tester, s);
+    expect(find.text('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.'), findsOneWidget);
+    await tap(tester, find.text('No layout 1'));
+    expect(find.text('Room ${room.label}'), findsOneWidget);
+    // No layout yet → Create a layout.
+    await tap(tester, find.text('Room ${room.label}'));
+    expect(s.screen, 'oCreate');
+    expect(find.text('Create a layout'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '3');
+    await tap(tester, find.text('Start drawing'));
+    expect(s.toast, 'Enter the room size in feet (6 to 60).');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '16');
+    await tester.pump(const Duration(seconds: 3));
+    await tap(tester, find.text('Start drawing'));
+    final l = s.layoutOf('anjani', room.n)!;
+    expect((s.screen, s.edOwner, l.w, l.live), ('aLayout', true, 16.0, false));
+    expect(s.liveLayout('anjani', room.n), isNull); // tenants: "Layout coming soon"
+    // Publish: live straight away, no approval.
+    await tap(tester, find.text('Publish'));
+    expect((s.screen, l.live, l.pending), ('oPublished', true, false));
+    expect(find.text('Live for tenants'), findsOneWidget);
+    expect(s.liveLayout('anjani', room.n), isNotNull);
+    // Undo: hidden again.
+    await tap(tester, find.text('Undo publish · hide it again'));
+    expect((l.live, s.liveLayout('anjani', room.n)), (false, null));
+    await tester.pump(const Duration(seconds: 3));
+
+    // Editing a live layout: tenants keep v1 until the owner publishes v2.
+    final r101 = s.layoutOf('anjani', 101)!;
+    expect((r101.live, r101.pending), (true, false));
+    s.openLayout(101, editor: true, owner: true);
+    await tester.pump();
+    final w0 = r101.w;
+    await tap(tester, find.byKey(const ValueKey('w+')));
+    expect(s.liveLayout('anjani', 101)!.w, w0);
+    await tap(tester, find.text('Publish'));
+    expect((r101.version, s.liveLayout('anjani', 101)!.w), (2, w0 + 1));
+    await tap(tester, find.text('Undo publish · go back to v1'));
+    expect((r101.version, r101.w, s.liveLayout('anjani', 101)!.w), (1, w0, w0));
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
+
+  testWidgets('smaller fixes: holds, walk-ins, saved list, prices, UPI ID, passcode lockout (F18)', (tester) async {
+    final s = AppState(start: 'explore', role: 'tenant');
+    s.update(() => s.phone = '9876543210');
+    // A bed that was "free soon" goes back to "free soon" when released (D10).
+    final soon = s.rooms['saisri']!.expand((r) => r.beds).firstWhere((b) => b.state == 'soon');
+    s.update(() {
+      s.hid = 'saisri';
+      s.bed = soon.id;
+    });
+    s.placeHold('free');
+    expect(soon.state, 'held');
+    s.releaseHold(s.holds.last);
+    expect((soon.state, soon.mine, s.holds.last.status), ('soon', false, 'released'));
+    // At most two active holds (D12).
+    final free = s.rooms['nest42']!.expand((r) => r.beds).where((b) => b.state == 'free').take(3).toList();
+    for (final b in free) {
+      s.update(() {
+        s.hid = 'nest42';
+        s.bed = b.id;
+      });
+      s.placeHold('free');
+    }
+    expect((s.activeHolds, free[2].state, s.toast), (2, 'free', 'You can hold 2 beds at a time. Release one in Holds first.'));
+    // The owner releasing the bed updates the tenant's hold record too (F9).
+    s.ownerReleaseBed('nest42', free[0]);
+    expect((free[0].state, s.holds.firstWhere((h) => h.bed == free[0].id).status), ('free', 'released'));
+    // Walk-in holds free themselves after an hour (F8).
+    final w = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free');
+    s.holdWalkIn('anjani', w);
+    expect(w.state, 'held');
+    s.walkIns['anjani|${w.id}'] = 0;
+    await tester.pump(const Duration(seconds: 2)); // the app's 1-second ticker
+    expect(w.state, 'free');
+
+    // Saved hostels list (D9).
+    s.update(() => s.saved['orchid'] = true);
+    await pumpApp(tester, s);
+    s.tab('me');
+    await tester.pump();
+    await tap(tester, find.text('Saved hostels · 1'));
+    expect(s.screen, 'saved');
+    expect(find.text('Orchid Women\'s PG'), findsOneWidget);
+    // Fair Play hours run from when the case opened (F4).
+    final c = FairCase(id: 'x', hid: 'anjani', title: 't', signal: 's', status: 'new', openedAt: s.now - 10 * 3600000);
+    expect(c.hoursLeftAt(s.now).round(), 38);
+    // UPI IDs look like name@bank (F11).
+    expect((validUpiId('srinivas@okaxis'), validUpiId('9059790014@axl'), validUpiId('srinivas'), validUpiId('a@1')), (true, true, false, false));
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+
+    // Owner: a ₹0 price can't be saved; "from ₹X" follows the rate card (D8).
+    final o = AppState(start: 'oToday', role: 'owner');
+    o.openRates();
+    final k0 = o.rateDraft!.keys.first;
+    o.rateDraft![k0] = 0;
+    o.saveRates();
+    expect(o.toast, startsWith('Set a price for'));
+    o.openRates();
+    final cheapest = o.fromOf(hostelById('anjani'));
+    for (final k in o.rateDraft!.keys.toList()) {
+      o.rateDraft![k] = o.rateDraft![k]! + 500;
+    }
+    o.saveRates();
+    expect(o.fromOf(hostelById('anjani')), cheapest + 500);
+    // Team passcode: 5 wrong tries lock it (G1).
+    for (var i = 0; i < 5; i++) {
+      o.teamCode = '0000';
+      o.unlockTeam();
+    }
+    expect(o.toast, 'Too many wrong tries. Team mode is locked for 15 minutes.');
+    o.teamCode = teamPasscode;
+    o.unlockTeam();
+    expect(o.teamUnlocked, isFalse);
+    o.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -2026,4 +2202,16 @@ class _FakeData extends SampleData {
   Future<void> saveProfile({required String name, required String email, required String phone, required String role}) async => profile = (name: name, email: email, phone: phone, role: role);
   @override
   Future<void> savePushToken(String token) async => tokens.add(token);
+}
+
+class _FakeLocator implements Locator {
+  _FakeLocator(this.pos, [this.fail]);
+  final (double, double)? pos;
+  final LocateFail? fail;
+  int asked = 0;
+  @override
+  Future<((double, double)?, LocateFail?)> locate() async {
+    asked++;
+    return (pos, fail);
+  }
 }

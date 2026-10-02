@@ -105,7 +105,7 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 8),
             T('Nothing is saved to an account. You can sign in later.', s: 12, c: p.mu, align: TextAlign.center),
             const SizedBox(height: 12),
-            Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+            _Agree(s: s),
           ],
         ),
       ),
@@ -166,7 +166,7 @@ class PhoneScreen extends StatelessWidget {
             const Spacer(),
             Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
             const SizedBox(height: 12),
-            Rich([sp(context, 'By continuing you agree to the '), sp(context, 'Terms', w: 800, c: p.tx), sp(context, ' and '), sp(context, 'Privacy policy', w: 800, c: p.tx), sp(context, '.')], s: 13, c: p.mu, align: TextAlign.center),
+            _Agree(s: s),
             // F17: demo shortcut for development only, never in the Play Store build.
             if (kDebugMode) ...[
               const SizedBox(height: 8),
@@ -267,9 +267,10 @@ class RoleScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: const PageHead(kicker: 'Welcome', title: 'How will you use Hostelzy?', size: 34, gap: 6),
+            // F18 (C3): back to About you.
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [if (s.hist.isNotEmpty) ...[Align(alignment: Alignment.centerLeft, child: BackBtn(onTap: s.back)), const SizedBox(height: 8)], const PageHead(kicker: 'Welcome', title: 'How will you use Hostelzy?', size: 34, gap: 6)]),
           ),
           for (final r in roles)
             Tap(
@@ -405,6 +406,26 @@ class RoleGateScreen extends StatelessWidget {
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           child: VGap(gap: 8, children: foot),
         ),
+      ],
+    );
+  }
+}
+
+/// F18 (C1): "By continuing you agree to the Terms and Privacy policy", both links real.
+class _Agree extends StatelessWidget {
+  const _Agree({required this.s});
+  final AppState s;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Wrap(
+      alignment: WrapAlignment.center,
+      children: [
+        T('By continuing you agree to the ', s: 13, c: p.mu),
+        Tap(onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser'), child: T('Terms', s: 13, w: 800, c: p.tx)),
+        T(' and ', s: 13, c: p.mu),
+        Tap(onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser'), child: T('Privacy policy', s: 13, w: 800, c: p.tx)),
+        T('.', s: 13, c: p.mu),
       ],
     );
   }

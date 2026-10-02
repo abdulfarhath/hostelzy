@@ -632,16 +632,16 @@ class OwnerBedsScreen extends StatelessWidget {
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
               T('${r.bath} bath · ${fmt(r.rent)}', s: 11, c: p.mu),
-              // F12: the room's layout; red when a new version waits for approval.
+              // F12/F18: the room's layout; red when Hostelzy drew a version for the owner to publish.
               () {
                 final wait = s.layoutOf(s.ownHid, r.n)?.pending == true;
                 return Tap(
-                  onTap: () => s.openLayout(r.n),
+                  onTap: () => s.ownerLayout(r.n),
                   child: Container(
                     height: 32,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     decoration: box(bg: wait ? p.ac : null, w: 2, c: wait ? p.ac : p.tx),
-                    child: Row(children: [Ic('room', size: 14, color: wait ? p.ai : p.tx), const SizedBox(width: 6), Expanded(child: T(wait ? 'Approve layout' : 'Room layout', s: 12, w: 800, c: wait ? p.ai : p.tx, ell: true))]),
+                    child: Row(children: [Ic('room', size: 14, color: wait ? p.ai : p.tx), const SizedBox(width: 6), Expanded(child: T(wait ? 'New layout' : 'Room layout', s: 12, w: 800, c: wait ? p.ai : p.tx, ell: true))]),
                   ),
                 );
               }(),

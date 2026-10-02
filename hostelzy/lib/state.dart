@@ -14,6 +14,7 @@ import 'poster.dart';
 import 'push.dart';
 import 'sign_in.dart';
 import 'store.dart';
+import 'locate.dart';
 import 'backend.dart' show HostelData, Listings, RemoteSettings, SampleData;
 
 /// App state and actions. Mirrors the prototype's single component state so
@@ -62,6 +63,7 @@ class AppState extends ChangeNotifier {
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       // F17: a free hold really ends at 0:00.
       if (_expireHolds(DateTime.now().millisecondsSinceEpoch)) return;
+      if (_expireWalkIns(DateTime.now().millisecondsSinceEpoch)) return;
       if (const ['hold', 'holds', 'oToday', 'otp'].contains(screen)) {
         now = DateTime.now().millisecondsSinceEpoch;
         notifyListeners();
@@ -69,7 +71,7 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rConfirm', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oReviews', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delOtp', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam'];
   static const tabScreens = ['explore', 'map', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -205,7 +207,7 @@ class AppState extends ChangeNotifier {
     final why = reportWhy;
     if (why == null) return toastMsg('Pick what happened.');
     update(() {
-      cases = [FairCase(id: 'FP-0${143 + cases.length - 6}', hid: 'anjani', title: 'Tenant report', signal: 'Tenant report: ${why[0].toLowerCase()}${why.substring(1)}', status: 'new', tenantNote: reportNote.trim().isEmpty ? null : reportNote.trim()), ...cases];
+      cases = [FairCase(openedAt: DateTime.now().millisecondsSinceEpoch, id: 'FP-0${143 + cases.length - 6}', hid: 'anjani', title: 'Tenant report', signal: 'Tenant report: ${why[0].toLowerCase()}${why.substring(1)}', status: 'new', tenantNote: reportNote.trim().isEmpty ? null : reportNote.trim()), ...cases];
       reportWhy = null;
       reportNote = '';
       sheet = null;
@@ -272,7 +274,10 @@ class AppState extends ChangeNotifier {
   // ------------------------------------------------------------ F10 owner plan
 
   /// The signed-in owner's next invoice (Anjani), then everyone else's.
-  late final Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: firstInvoiceDue);
+  /// When the owner's plan started (go-live day); the trial and invoices follow it.
+  late DateTime planStart = appToday;
+  DateTime get trialEnd => planStart.add(const Duration(days: trialDays));
+  late final Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: trialEnd.add(const Duration(days: 1)));
   late final List<Invoice> invoices = [invoice, ...seedInvoices()];
 
   /// UTR being typed on "I've paid".
@@ -476,8 +481,22 @@ class AppState extends ChangeNotifier {
     });
   }
 
+  /// G1 stopgap until real admin accounts: 5 wrong tries lock it for 15 min.
+  int _teamFails = 0, _teamLockedUntil = 0;
+
   void unlockTeam() {
-    if (teamCode != teamPasscode) return toastMsg('Wrong passcode.');
+    final t = DateTime.now().millisecondsSinceEpoch;
+    if (t < _teamLockedUntil) return toastMsg('Too many wrong tries. Try again in ${((_teamLockedUntil - t) / 60000).ceil()} min.');
+    if (teamCode != teamPasscode) {
+      _teamFails++;
+      if (_teamFails >= 5) {
+        _teamFails = 0;
+        _teamLockedUntil = t + 15 * 60000;
+        return toastMsg('Too many wrong tries. Team mode is locked for 15 minutes.');
+      }
+      return toastMsg('Wrong passcode. ${5 - _teamFails} tries left.');
+    }
+    _teamFails = 0;
     update(() {
       teamUnlocked = true;
       sheet = null;
@@ -486,18 +505,116 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  void openLayout(int n, {bool editor = false}) => update(() {
-    // F18: a room without a layout gets a starting one to edit (no crash).
+  void openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
+    // F18: a room without a layout gets a starting one to edit (no crash);
+    // tenants don't see it until it is published.
     final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
     if (editor && r != null && layoutOf(ownHid, n) == null) {
-      (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)..published = null;
+      (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)
+        ..published = null
+        ..live = false;
     }
+    edOwner = editor && owner;
     lRoom = n;
     edSel = null;
     hist = [...hist, screen];
     screen = editor ? 'aLayout' : 'oLayout';
     sheet = null;
   });
+
+  // ------------------------------------------------------------ F18 owner edits layouts
+
+  /// DECISIONS 2026-10-02: owners edit and publish their own layouts; the
+  /// Hostelzy team can still draw one for them. True while the owner edits.
+  bool edOwner = false;
+
+  /// Room layouts list filter: all | live | draft | none.
+  String layoutsF = 'all';
+
+  /// Create-a-layout draft (feet).
+  String clLen = '', clWid = '';
+
+  /// What tenants saw before the last publish, for "Undo publish".
+  ({int room, LayoutSnap? snap, int version})? lastPublish;
+
+  /// Owner taps a room: its layout, or "Create a layout" when it has none.
+  void ownerLayout(int n) {
+    if (layoutOf(ownHid, n) != null) return openLayout(n);
+    final r = rooms[ownHid]!.firstWhere((x) => x.n == n);
+    final l = mkLayout(ownHid, r, street: true);
+    update(() {
+      lRoom = n;
+      clLen = '${l.w.round()}';
+      clWid = '${l.h.round()}';
+      hist = [...hist, screen];
+      screen = 'oCreate';
+      sheet = null;
+    });
+  }
+
+  /// The nearest room of the same type that already has a layout to copy.
+  Room? copySource(int n) {
+    final r = rooms[ownHid]!.firstWhere((x) => x.n == n);
+    return rooms[ownHid]!.where((x) => x.n != n && x.share == r.share && x.ac == r.ac && layoutOf(ownHid, x.n) != null).firstOrNull;
+  }
+
+  /// Start drawing: a rectangle of the given size, or a copy of [from].
+  void createLayout({int? from}) {
+    final r = rooms[ownHid]!.firstWhere((x) => x.n == lRoom);
+    final len = double.tryParse(clLen) ?? 0, wid = double.tryParse(clWid) ?? 0;
+    if (from == null && (len < 6 || wid < 6 || len > 60 || wid > 60)) return toastMsg('Enter the room size in feet (6 to 60).');
+    final l = mkLayout(ownHid, r, street: true)
+      ..published = null
+      ..live = false
+      ..drawn = dayMon(appToday);
+    if (from != null) {
+      l.restore(layoutOf(ownHid, from)!.snap());
+    } else {
+      l.mirrorTo(len, wid);
+    }
+    update(() {
+      (layouts[ownHid] ??= {})[lRoom] = l;
+      screen = 'oLayouts';
+      hist = hist.where((x) => x != 'oCreate').toList();
+    });
+    openLayout(lRoom, editor: true, owner: true);
+  }
+
+  /// Owner publishes: tenants see this version now, no approval needed.
+  void publishLayout(RoomLayout l) {
+    final wasLive = l.live;
+    update(() {
+      lastPublish = (room: l.room, snap: wasLive ? (l.published ?? l.snap()) : null, version: l.version);
+      if (wasLive) l.version += 1;
+      l
+        ..live = true
+        ..pending = false
+        ..published = null
+        ..request = null
+        ..drawn = dayMon(appToday);
+      edOwner = false;
+      screen = 'oPublished';
+      sheet = null;
+    });
+  }
+
+  /// "Undo publish · go back to vN" (or hide a first layout again).
+  void undoPublish(RoomLayout l) {
+    final u = lastPublish;
+    if (u == null || u.room != l.room) return;
+    update(() {
+      if (u.snap == null) {
+        l.live = false;
+      } else {
+        l
+          ..restore(u.snap!)
+          ..version = u.version;
+      }
+      lastPublish = null;
+      screen = 'oLayout';
+    });
+    toastMsg(u.snap == null ? 'Unpublished. Tenants see “Layout coming soon” again.' : 'Back to v${u.version}. Tenants see it again.');
+  }
 
   // ------------------------------------------------------------ F14 rooms after go-live
 
@@ -1229,7 +1346,8 @@ class AppState extends ChangeNotifier {
   /// This month's rent is paid once Srinivas confirms it (F17).
   bool get paid => myRent.status == 'paid';
   String payM = 'UPI';
-  int day = 3;
+  /// Food: today's weekday first (E1).
+  int day = appToday.weekday - 1;
   String? rated;
   List<Complaint> complaints = seedComplaints();
   String cCat = 'WiFi', cText = '';
@@ -1332,6 +1450,9 @@ class AppState extends ChangeNotifier {
       for (final e in enquiries.where((e) => phone.isNotEmpty && e.phone == phone)) {'ref': e.ref, 'name': e.name, 'phone': e.phone, 'hid': e.hid, 'bed': e.bed, 'at': e.at, 'from': e.from, 'msg': e.msg},
     ],
     'fairAccepted': fairAccepted,
+    // F18 (F5): the owner's house rules and menu stay on the phone.
+    'rules': [for (final r in rules) [r.k, r.v]],
+    'menu': [for (final d in menu) [d.b, d.l, d.n]],
   };
 
   void _persist() {
@@ -1353,6 +1474,10 @@ class AppState extends ChangeNotifier {
     role = m['role'] as String? ?? 'tenant';
     theme = m['theme'] as String? ?? 'light';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
+    final ru = m['rules'] as List?;
+    if (ru != null && ru.isNotEmpty) rules = [for (final r in ru.cast<List>()) Rule(r[0] as String, r[1] as String)];
+    final me = m['menu'] as List?;
+    if (me != null && me.length == menu.length) menu = [for (final d in me.cast<List>()) DayMenu(d[0] as String, d[1] as String, d[2] as String)];
     // A Google account counts only while Firebase still has it signed in.
     account = firebaseUser ?? (a != null && !signIn.available ? (uid: a['uid'] as String, name: a['name'] as String, email: a['email'] as String) : null);
     signedIn = m['signedIn'] as bool? ?? false;
@@ -1454,6 +1579,85 @@ class AppState extends ChangeNotifier {
     hist = h;
     sheet = null;
   });
+
+  // ------------------------------------------------------------ F18 map
+
+  /// "Use my location" ([NoLocator] in tests, web, desktop).
+  Locator locator = const NoLocator();
+
+  /// The user's own position, only after they allowed it. Never invented.
+  (double, double)? myPos;
+
+  /// Area picked on the map (null = all areas), or a panned-to centre from
+  /// "Search this area".
+  String? mapArea;
+  (double, double)? areaCenter;
+
+  /// Where the map is after the user panned it; shows "Search this area".
+  (double, double)? mapNow;
+
+  /// Area picker search text.
+  String areaQ = '';
+  bool mapMoved = false;
+
+  /// Bumped to recentre the map (area picked, location found).
+  int mapFocus = 0;
+  (double, double) get mapFocusPos => mapArea != null ? (areaLatLng[mapArea] ?? landmarkLatLng[lm]!) : areaCenter ?? myPos ?? landmarkLatLng[lm]!;
+
+  /// Distance to a hostel: from you once location is on, else from the
+  /// landmark searched.
+  double kmFor(Hostel h) => myPos != null ? kmBetween(posOf(h), myPos!) : kmTo(h, lm);
+  String get kmFrom => myPos != null ? 'from you' : 'from $lm';
+
+  /// The map area filter (Explore follows it too).
+  bool inMapArea(Hostel h) => (mapArea == null || h.area == mapArea) && (areaCenter == null || kmBetween(posOf(h), areaCenter!) <= searchRadiusKm);
+  String get mapAreaLabel => mapArea ?? (areaCenter != null ? 'This area' : (myPos != null ? 'Near me' : 'All areas'));
+
+  void pickArea(String? a) => update(() {
+    mapArea = a;
+    areaCenter = null;
+    mapMoved = false;
+    mapFocus++;
+    sheet = null;
+  });
+
+  void mapPanned((double, double) c) {
+    mapNow = c;
+    if (!mapMoved) update(() => mapMoved = true);
+  }
+
+  void searchThisArea() => update(() {
+    if (mapNow == null) return;
+    areaCenter = mapNow;
+    mapArea = null;
+    mapMoved = false;
+  });
+
+  /// After the location explainer: Android asks, then the map centres on you
+  /// and hostels sort by distance from you.
+  Future<void> useMyLocation() async {
+    update(() => sheet = null);
+    final (pos, fail) = await locator.locate();
+    if (pos != null) {
+      update(() {
+        myPos = pos;
+        mapArea = null;
+        areaCenter = null;
+        mapMoved = false;
+        sortBy = 'near';
+        mapFocus++;
+      });
+      return toastMsg('Showing hostels by distance from you.');
+    }
+    update(() => sheet = 'areas');
+    toastMsg(switch (fail) {
+      LocateFail.off => 'Location is switched off on this phone. Pick an area instead.',
+      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or pick an area.',
+      LocateFail.denied => 'No problem. Pick an area instead.',
+      LocateFail.unavailable => 'Location works in the Android app. Pick an area instead.',
+      _ => 'Couldn’t find your location. Pick an area instead.',
+    });
+  }
 
   /// F18: sample owner / resident data only in debug builds and tests.
   static bool samples = kDebugMode;
@@ -1630,7 +1834,7 @@ class AppState extends ChangeNotifier {
     if (lateDays > 0) {
       final id = 'FP-0${143 + cases.length - seedCaseCount}';
       cases = [
-        FairCase(id: id, hid: 'anjani', title: '$name added $lateDays days after moving in', signal: 'Hostelzy resident (${m!.ref}) added after the 3-day limit', status: 'new', resident: bed, events: [CaseEvent(dayMon(DateTime.fromMillisecondsSinceEpoch(m.at)), 'On Hostelzy', 'Tenant ${m.what}'), CaseEvent(joined, 'Moved in', 'Bed $bed'), CaseEvent(dayMon(appToday), 'Added by the owner', '$lateDays days later', flag: true)]),
+        FairCase(openedAt: DateTime.now().millisecondsSinceEpoch, id: id, hid: 'anjani', title: '$name added $lateDays days after moving in', signal: 'Hostelzy resident (${m!.ref}) added after the 3-day limit', status: 'new', resident: bed, events: [CaseEvent(dayMon(DateTime.fromMillisecondsSinceEpoch(m.at)), 'On Hostelzy', 'Tenant ${m.what}'), CaseEvent(joined, 'Moved in', 'Bed $bed'), CaseEvent(dayMon(appToday), 'Added by the owner', '$lateDays days later', flag: true)]),
         ...cases,
       ];
     }
@@ -1760,6 +1964,11 @@ class AppState extends ChangeNotifier {
 
   void saveRates() {
     final rs = rooms[ownHid]!;
+    // F18 (D8): no ₹0 or blank prices on a room type that has rooms.
+    for (final r in rs) {
+      final v = rateDraft![rateKey(acDraft![r.n]!, r.share)];
+      if (v == null || v < 1000) return toastMsg('Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more).');
+    }
     final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
     update(() {
       rates[ownHid] = Map.of(rateDraft!);
@@ -1849,6 +2058,7 @@ class AppState extends ChangeNotifier {
   void placeHold([String? how]) {
     final b = findBed(hid, bed).b;
     if (b == null) return;
+    if (activeHolds >= maxHolds) return toastMsg('You can hold $maxHolds beds at a time. Release one in Holds first.');
     final opt = how ?? holdOpt;
     final r = findBed(hid, bed).r!;
     final h0 = hostelById(hid);
@@ -1858,6 +2068,7 @@ class AppState extends ChangeNotifier {
       ref = _record(hid, 'Booked bed ${b.id} with the advance.', bed: b.id, from: 'Book · Pay advance').ref;
     }
     // F17: a booking is "paying" until the owner confirms the advance arrived.
+    _bedBefore['$hid|${b.id}'] = b.state;
     b.state = 'held';
     b.mine = true;
     final t = DateTime.now().millisecondsSinceEpoch;
@@ -1878,6 +2089,74 @@ class AppState extends ChangeNotifier {
   }
 
   void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
+
+  // ------------------------------------------------------------ F18 holds
+
+  /// What each bed was before a hold (free, or free soon), so releasing puts
+  /// it back exactly (D10).
+  final Map<String, String> _bedBefore = {};
+
+  /// Walk-in holds the owner placed, and when they end (F8): ms.
+  final Map<String, int> walkIns = {};
+
+  /// "from ₹X": the cheapest rent on the rate card now (D8), not the
+  /// number frozen when the hostel was listed.
+  int fromOf(Hostel h) {
+    final rs = rooms[h.id];
+    if (rs == null || rs.isEmpty) return h.from;
+    return rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
+  }
+
+  /// A tenant holds at most this many beds at a time (D12).
+  static const maxHolds = 2;
+  int get activeHolds => holds.where((h) => const ['waiting', 'confirmed', 'held', 'paying'].contains(h.status)).length;
+
+  void _freeBed(String hid, String id) {
+    final b = hostels.any((x) => x.id == hid) ? findBed(hid, id).b : null;
+    if (b == null) return;
+    b
+      ..state = _bedBefore.remove('$hid|$id') ?? 'free'
+      ..mine = false;
+  }
+
+  /// Release a hold: the bed goes back to how it was, the hold record says
+  /// Released, and any unconfirmed advance for it is dropped (D10, F9).
+  void releaseHold(Hold h, {String? msg}) {
+    update(() {
+      _freeBed(h.hid, h.bed);
+      holds = holds.map((x) => x.id == h.id ? x.withStatus('released') : x).toList();
+      payments = payments.where((x) => x.holdId != h.id || x.status == 'paid').toList();
+    });
+    if (msg != null) toastMsg(msg);
+  }
+
+  /// Owner releases a held bed: the tenant's hold record follows (F9).
+  void ownerReleaseBed(String hid, Bed b) {
+    final h = holds.where((x) => x.hid == hid && x.bed == b.id && x.status != 'released').firstOrNull;
+    if (h != null) return releaseHold(h);
+    walkIns.remove('$hid|${b.id}');
+    update(() => _freeBed(hid, b.id));
+  }
+
+  /// Owner holds a bed for a walk-in for one hour; it frees itself after (F8).
+  void holdWalkIn(String hid, Bed b) {
+    _bedBefore['$hid|${b.id}'] = b.state;
+    walkIns['$hid|${b.id}'] = DateTime.now().millisecondsSinceEpoch + 3600 * 1000;
+    update(() => b.state = 'held');
+  }
+
+  bool _expireWalkIns(int n) {
+    final out = walkIns.entries.where((e) => e.value <= n).map((e) => e.key).toList();
+    if (out.isEmpty) return false;
+    update(() {
+      for (final k in out) {
+        walkIns.remove(k);
+        final i = k.indexOf('|');
+        _freeBed(k.substring(0, i), k.substring(i + 1));
+      }
+    });
+    return true;
+  }
 
   void copyText(String s) => Clipboard.setData(ClipboardData(text: s));
 
@@ -1934,6 +2213,7 @@ class AppState extends ChangeNotifier {
     final u = ownerUpi[p.hid]!;
     // F18: never pay a sample UPI ID in the Play Store build.
     if (!samples && u.id.startsWith('sample.')) return toastMsg('This is a sample listing, so it has no real UPI ID. Don’t pay it.');
+    if (u.id.isNotEmpty && !validUpiId(u.id)) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner}’s UPI ID isn’t valid. Ask them on WhatsApp.');
     if (u.id.isEmpty) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner} hasn’t added a UPI ID yet. Ask them on WhatsApp.');
     openLink(upiUri(id: u.id, name: u.name, amt: p.amt, note: p.note), 'a UPI app');
     update(() {
@@ -1995,15 +2275,7 @@ class AppState extends ChangeNotifier {
 
   /// Tenant gives up on a booking whose payment didn't arrive.
   void cancelBooking(Hold h) {
-    update(() {
-      final b = findBed(h.hid, h.bed).b;
-      if (b != null) {
-        b.state = 'free';
-        b.mine = false;
-      }
-      holds = holds.map((x) => x.id == h.id ? x.withStatus('released') : x).toList();
-      payments = payments.where((x) => x.holdId != h.id).toList();
-    });
+    releaseHold(h);
     update(() => hid = h.hid);
     openPicker();
   }
@@ -2218,11 +2490,7 @@ class AppState extends ChangeNotifier {
     final me = phone;
     update(() {
       for (final h in holds.where((h) => h.status != 'released')) {
-        final b = hostels.any((x) => x.id == h.hid) ? findBed(h.hid, h.bed).b : null;
-        if (b != null && b.mine) {
-          b.mine = false;
-          b.state = 'free';
-        }
+        if (hostels.any((x) => x.id == h.hid) && findBed(h.hid, h.bed).b?.mine == true) _freeBed(h.hid, h.bed);
       }
       holds = [];
       saved.clear();
@@ -2291,11 +2559,7 @@ class AppState extends ChangeNotifier {
     now = n;
     update(() {
       for (final h in out) {
-        final b = findBed(h.hid, h.bed).b;
-        if (b != null && b.mine) {
-          b.state = 'free';
-          b.mine = false;
-        }
+        if (findBed(h.hid, h.bed).b?.mine == true) _freeBed(h.hid, h.bed);
         expiredHolds.add(h.id);
       }
       holds = holds.map((h) => out.contains(h) ? h.withStatus('released') : h).toList();

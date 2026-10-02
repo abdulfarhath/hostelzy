@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
 import 'common.dart';
@@ -531,7 +532,7 @@ class CompareScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker('Room ${room.n} · ${room.share} sharing · ${room.type}'), const T('Compare beds', w: 800, s: 22, lh: 1.1)]))]),
+          child: Row(children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker('Room ${room.label} · ${room.share} sharing · ${room.type}'), const T('Compare beds', w: 800, s: 22, lh: 1.1)]))]),
         ),
         Expanded(
           child: Scroll(
@@ -639,18 +640,22 @@ class OwnerLayoutScreen extends StatelessWidget {
     final room = s.rooms[h.id]!.firstWhere((r) => r.n == s.lRoom);
     final l = s.layoutOf(h.id, room.n);
     final (stText, stBg, stFg) = l == null
-        ? ('Hostelzy is drawing this room', p.sf, p.tx)
+        ? ('No layout yet', p.ab, p.ad)
         : l.request != null
-        ? ('Change requested · new version within 48 h', p.ab, p.ad)
+        ? ('Help requested · Hostelzy replies within 48 h', p.ab, p.ad)
         : l.pending
-        ? ('Check it and approve to go live', p.ab, p.ad)
-        : ('Approved · live for tenants', p.tx, p.bg);
+        ? ('Hostelzy drew a new version · check and publish', p.ab, p.ad)
+        : !l.live
+        ? ('Draft · tenants see “Layout coming soon”', p.sf, p.tx)
+        : l.published != null
+        ? ('Live · you have changes not published', p.sf, p.tx)
+        : ('Live for tenants', p.tx, p.bg);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Beds', title: 'Room ${room.n} layout', size: 26))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Beds', title: 'Room ${room.label} layout', size: 26))]),
         ),
         Expanded(
           child: Scroll(
@@ -666,7 +671,7 @@ class OwnerLayoutScreen extends StatelessWidget {
                     child: Row(children: [Expanded(child: T(stText, s: 13, w: 800, c: stFg)), if (l != null) T('v${l.version} · drawn ${l.drawn}', s: 13, w: 600, c: stFg)]),
                   ),
                   if (l == null)
-                    const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The Hostelzy team draws every room after the visit. You approve it here before tenants see it.')
+                    const LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'Draw it yourself in a few minutes and publish it, or ask the Hostelzy team to draw it for you, free.')
                   else ...[
                     LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true),
                     Container(
@@ -704,20 +709,26 @@ class OwnerLayoutScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (l != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            child: Row(
-              children: [
-                Expanded(child: Cta(l.pending ? 'Approve layout' : 'Approved', icon: 'check', height: 52, px: 16, fs: 15, opacity: l.pending ? 1 : .5, onTap: () => l.pending ? s.approveLayout(l) : s.toastMsg('Tenants already see this layout.'))),
-                const SizedBox(width: 8),
-                Tap(
-                  onTap: s.openLayoutRequest,
-                  child: Container(height: 52, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('Request a change', w: 800, s: 15)),
-                ),
-              ],
-            ),
+        // F18 (DECISIONS 2026-10-02): the owner edits and publishes; Hostelzy helps if asked.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: l == null
+                    ? Cta('Create a layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.ownerLayout(room.n))
+                    : l.pending
+                    ? Cta('Publish v${l.version}', icon: 'check', height: 52, px: 16, fs: 15, onTap: () => s.approveLayout(l))
+                    : Cta('Edit layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.openLayout(room.n, editor: true, owner: true)),
+              ),
+              const SizedBox(width: 8),
+              Tap(
+                onTap: l == null ? () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the layout of room ${room.label} at ${h.name}.') : s.openLayoutRequest,
+                child: Container(height: 52, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('Ask Hostelzy', w: 800, s: 15)),
+              ),
+            ],
           ),
+        ),
       ],
     );
   }
@@ -730,36 +741,14 @@ class LayoutRequestSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    const tiles = [('photo', 'Room photo', 'From the door, whole room'), ('sketch', 'Paper sketch', 'Draw it on paper, take a photo'), ('voice', 'Voice note', 'Say what’s wrong, any language'), ('more', 'More photos', 'Pillar, alcove, balcony')];
-    Widget tile((String, String, String) t) {
-      final on = s.lReqAdded.contains(t.$1);
-      final tl = Tap(
-        onTap: () => s.update(() => on ? s.lReqAdded.remove(t.$1) : s.lReqAdded.add(t.$1)),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          color: on ? p.sf : null,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [Expanded(child: T(t.$2, w: 800, s: 14)), T(on ? 'Added' : '+ Add', s: 12, w: 800, c: on ? p.tx : p.ad)]),
-              const SizedBox(height: 2),
-              T(on ? (t.$1 == 'voice' ? 'Added · 0:18' : 'Added · 1 photo') : t.$3, s: 11, c: p.mu, lh: 1.3),
-            ],
-          ),
-        ),
-      );
-      return Expanded(child: on ? Container(decoration: box(w: 2, c: p.tx), child: tl) : Dashed(color: p.dv, width: 1, child: tl));
-    }
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
         gap: 12,
         children: [
           VGap(gap: 6, children: [const T('What’s different?', w: 800, s: 13), Field(value: s.lReqText, maxLines: 3, height: null, placeholder: 'Bed C is against the washroom wall, not near the door.', onChanged: (v) => s.update(() => s.lReqText = v))]),
-          const Kicker('Add any of these'),
-          IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tile(tiles[0]), const SizedBox(width: 8), tile(tiles[1])])),
-          IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [tile(tiles[2]), const SizedBox(width: 8), tile(tiles[3])])),
+          // F18 (F15): photos go over WhatsApp until uploads come with the backend.
+          OutlineCta('Send photos or a sketch on WhatsApp', icon: 'msg', height: 48, fs: 14, onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, photos for the layout of room ${s.lRoom} at ${hostelById(s.ownHid).name}:')),
           Row(
             children: [
               Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(value: s.lReqLen, numeric: true, placeholder: '18', onChanged: (v) => s.update(() => s.lReqLen = v.replaceAll(RegExp(r'\D'), '')))])),
@@ -767,7 +756,7 @@ class LayoutRequestSheet extends StatelessWidget {
               Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(value: s.lReqWid, numeric: true, placeholder: '15', onChanged: (v) => s.update(() => s.lReqWid = v.replaceAll(RegExp(r'\D'), '')))])),
             ],
           ),
-          T('Free. The Hostelzy team redraws it within 48 hours and sends you the new version to approve. Tenants keep seeing the current layout until then.', s: 12, c: p.mu, lh: 1.45),
+          T('Free. The Hostelzy team draws it within 48 hours once the app is online; until then, WhatsApp us the photos. Tenants keep seeing the current layout.', s: 12, c: p.mu, lh: 1.45),
           Cta('Send request', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
         ],
       ),
@@ -969,7 +958,10 @@ class AdminLayoutScreen extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Cta('Send to owner for approval', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
+          // F18: owners publish straight away; the team sends its drawing to the owner.
+          child: s.edOwner
+              ? Cta('Publish', icon: 'check', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.publishLayout(l) : s.toastMsg('Fix the checks first.'))
+              : Cta('Send to owner', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
         ),
       ],
     );
@@ -1004,6 +996,146 @@ class ConfirmLayoutsCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// F18 design "Create": a room with no layout yet.
+class CreateLayoutScreen extends StatelessWidget {
+  const CreateLayoutScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final room = s.rooms[h.id]!.firstWhere((r) => r.n == s.lRoom);
+    final src = s.copySource(room.n);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Room ${room.label}', title: 'Create a layout', size: 28))]),
+        ),
+        Expanded(
+          child: Scroll(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: VGap(
+                gap: 14,
+                children: [
+                  T('Room ${room.label} has no layout yet. Tenants see “Layout coming soon” until you publish one.', s: 14, c: p.mu, lh: 1.5),
+                  const T('Room size', w: 800, s: 13),
+                  Row(
+                    children: [
+                      Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(key: const ValueKey('clLen'), value: s.clLen, numeric: true, onChanged: (v) => s.update(() => s.clLen = v.replaceAll(RegExp(r'\D'), '')))])),
+                      const SizedBox(width: 10),
+                      Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(key: const ValueKey('clWid'), value: s.clWid, numeric: true, onChanged: (v) => s.update(() => s.clWid = v.replaceAll(RegExp(r'\D'), '')))])),
+                    ],
+                  ),
+                  if (src != null)
+                    Tap(
+                      onTap: () => s.createLayout(from: src.n),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        decoration: box(w: 2, c: p.tx),
+                        child: Row(
+                          children: [
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T('Copy Room ${src.label} instead', w: 800, s: 14), T('Same shape and items · you can change them after', w: 600, s: 11, c: p.mu)])),
+                            const Ic('copy', size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    color: p.sf,
+                    child: VGap(
+                      gap: 6,
+                      children: [
+                        const T('Rather not draw it?', w: 800, s: 14),
+                        T('Send a photo and a sketch; the Hostelzy team draws it within 48 hours, free.', s: 13, c: p.mu, lh: 1.4),
+                        Tap(onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the layout of room ${room.label} at ${h.name}. I’ll send a photo and a sketch.'), child: T('Ask Hostelzy to help', w: 800, s: 14, c: p.ad)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: Cta('Start drawing', height: 54, px: 16, fs: 15, onTap: s.createLayout),
+        ),
+      ],
+    );
+  }
+}
+
+/// F18 design "Published": the owner's layout is live, no approval needed.
+class LayoutPublishedScreen extends StatelessWidget {
+  const LayoutPublishedScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final room = s.rooms[h.id]!.firstWhere((r) => r.n == s.lRoom);
+    final l = s.layoutOf(h.id, room.n)!;
+    final u = s.lastPublish?.room == room.n ? s.lastPublish : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Room ${room.label}', title: 'Live for tenants', size: 30))]),
+        ),
+        Expanded(
+          child: Scroll(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: VGap(
+                gap: 12,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    color: p.tx,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Ic('check', size: 20, color: p.bg),
+                        const SizedBox(width: 10),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T('Published just now', w: 800, s: 14, c: p.bg), T('Tenants see this layout in the Room tab right away. Bed IDs and prices didn’t change.', s: 13, c: p.bg, lh: 1.4)])),
+                      ],
+                    ),
+                  ),
+                  LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true),
+                  KV('Version', 'v${l.version} · by you · ${l.drawn}', keyWidth: 90),
+                  if (u?.snap != null) KV('Before', 'v${u!.version}', keyWidth: 90),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: VGap(
+            gap: 8,
+            children: [
+              Cta('Done', icon: 'check', height: 54, px: 16, fs: 15, onTap: () => s.update(() {
+                s.screen = 'oLayouts';
+                s.hist = s.hist.where((x) => x != 'aLayout' && x != 'oLayout' && x != 'oLayouts').toList();
+              })),
+              OutlineCta('Edit again', icon: 'pencil', onTap: () => s.openLayout(room.n, editor: true, owner: true)),
+              if (u != null) Tap(onTap: () => s.undoPublish(l), child: T(u.snap == null ? 'Undo publish · hide it again' : 'Undo publish · go back to v${u.version}', w: 800, s: 13, c: p.tx)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
