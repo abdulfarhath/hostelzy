@@ -394,6 +394,19 @@ class RoleGateScreen extends StatelessWidget {
           ],
         ),
       ];
+      // F24: an owner who got a sign-in link from the Hostelzy team.
+      if (s.pendingInvite?.startsWith('OWN-') ?? false) {
+        body.insert(0, Container(
+          key: const ValueKey('ownerJoin'),
+          padding: const EdgeInsets.all(12),
+          decoration: box(w: 2, c: p.tx),
+          child: VGap(gap: 8, children: [
+            T('Your owner link from Hostelzy', w: 800, s: 15),
+            T('Sign in once with it and your PG opens here, set up the way we did it on the visit.', s: 13, c: p.mu, lh: 1.4),
+            Cta(s.joining ? 'Linking…' : 'Run my PG on Hostelzy', key: const ValueKey('ownerJoinGo'), height: 50, px: 14, fs: 15, onTap: s.joinInvite),
+          ]),
+        ));
+      }
       foot = [
         Cta('Request a visit', onTap: s.requestVisit, height: 54, px: 16, fs: 15),
         OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),

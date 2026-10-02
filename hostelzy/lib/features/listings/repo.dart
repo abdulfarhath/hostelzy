@@ -183,6 +183,16 @@ abstract class HostelRepo {
   /// F24: owners' numbers, only for hostels where this user holds, enquired,
   /// stays or works (DECISIONS F07: the number shows after a hold).
   Future<Map<String, String>> ownerContacts(List<String> hids);
+
+  /// F24: the team onboards a hostel: [saveHostel] creates (null [id]) or
+  /// updates the draft (basics, rate card, owner's number, rooms); the owner
+  /// joins with a one-time code; [goLive] starts the 30-day trial.
+  Future<String> saveHostel(String? id, Map<String, dynamic> p);
+  Future<void> saveRooms(String hid, List<Map<String, dynamic>> rooms);
+  Future<String> ownerInvite(String hid, String name, String phone);
+  Future<String> joinAsOwner(String code);
+  Future<bool> ownerLinked(String hid);
+  Future<void> goLive(String hid);
 }
 
 class SampleRepo implements HostelRepo {
@@ -321,6 +331,18 @@ class SampleRepo implements HostelRepo {
   Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
   @override
   Future<Map<String, String>> ownerContacts(List<String> hids) async => {};
+  @override
+  Future<String> saveHostel(String? id, Map<String, dynamic> p) => throw UnsupportedError('sample data');
+  @override
+  Future<void> saveRooms(String hid, List<Map<String, dynamic>> rooms) async {}
+  @override
+  Future<String> ownerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
+  @override
+  Future<String> joinAsOwner(String code) => throw UnsupportedError('sample data');
+  @override
+  Future<bool> ownerLinked(String hid) async => false;
+  @override
+  Future<void> goLive(String hid) => throw UnsupportedError('sample data');
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -669,6 +691,19 @@ class SupabaseRepo implements HostelRepo {
     for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
       if ((r['phone'] as String? ?? '').isNotEmpty) r['hostel_id'] as String: r['phone'] as String,
   };
+
+  @override
+  Future<String> saveHostel(String? id, Map<String, dynamic> p) async => await db.rpc('save_hostel', params: {'p_id': id, 'p': p}) as String;
+  @override
+  Future<void> saveRooms(String hid, List<Map<String, dynamic>> rooms) => db.rpc('save_rooms', params: {'p_hostel': hid, 'p_rooms': rooms});
+  @override
+  Future<String> ownerInvite(String hid, String name, String phone) async => await db.rpc('new_owner_invite', params: {'h': hid, 'p_name': name, 'p_phone': phone}) as String;
+  @override
+  Future<String> joinAsOwner(String code) async => await db.rpc('join_as_owner', params: {'p_code': code}) as String;
+  @override
+  Future<bool> ownerLinked(String hid) async => (await db.from('hostel_staff').select('user_id').eq('hostel_id', hid).eq('role', 'owner').limit(1)).isNotEmpty;
+  @override
+  Future<void> goLive(String hid) => db.rpc('go_live', params: {'h': hid});
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
@@ -745,6 +780,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           dueOnJoining: t['dueOnJoining'] as bool? ?? true,
           electricityExtra: t['electricityExtra'] as bool? ?? true,
         ),
+        live: (h['status'] as String? ?? 'live') == 'live',
+        visitedOn: h['visited_on'] == null ? '' : () {
+          final v = DateTime.parse(h['visited_on'] as String);
+          return '${dayMon(v)} ${v.year}';
+        }(),
       ),
     );
     rooms[id] = rs;

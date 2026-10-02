@@ -89,7 +89,7 @@ class WhereScreen extends StatelessWidget {
                     return row('globe', a, c == 0 ? 'Coming soon' : n(c), c == 0 ? () => s.toastMsg('No hostels in $a yet. Coming soon.') : () => s.pickWhereArea(a), dim: c == 0, key: ValueKey('area-$a'));
                   }(),
                 if (hostels.isNotEmpty) group('Hostels'),
-                for (final h in hostels) row('home', h.name, '${h.gender} · ${h.area}', () => s.pickWhereHostel(h.id), key: ValueKey('hostel-${h.id}')),
+                for (final h in browsable) row('home', h.name, '${h.gender} · ${h.area}', () => s.pickWhereHostel(h.id), key: ValueKey('hostel-${h.id}')),
                 if (lms.isEmpty && areas.isEmpty && hostels.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing called “${s.whereQ.trim()}” on Hostelzy yet.', s: 14, c: p.mu)),
                 Padding(padding: const EdgeInsets.fromLTRB(16, 20, 16, 20), child: T('The same field is on Explore and on the Map.', s: 12, c: p.mu)),
               ],

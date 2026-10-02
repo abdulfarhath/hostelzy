@@ -108,15 +108,165 @@ extension OnboardingActions on AppState {
       if (d.floors.every((f) => f.noBeds || f.rooms.isEmpty)) 'At least one room with beds',
       if (!d.ownerVerified) 'Owner phone checked by a call',
       if (!d.fairPlay) 'Fair Play rules accepted',
-      if (d.photoCount < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
+      if (!d.ownerLinked) 'Owner account linked',
+      if (draftPhotos < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
       if (d.missingPrices.isNotEmpty) 'Every room type priced',
       if (!d.bedsChecked) 'Bed status checked on the visit',
       if (!d.pinChecked) 'Map pin checked',
     ];
   }
 
+  /// Photos of the draft: real uploads on the server, ticked slots in the demo.
+  int get draftPhotos => onServer && draft.serverId != null ? (photosOf[draft.serverId] ?? const []).length : draft.photoCount;
+
+  /// F24: the draft as the server's save_hostel wants it. Rooms are numbered
+  /// floor × 100 + position, like the listing made at go-live.
+  Map<String, dynamic> draftPayload() {
+    final d = draft;
+    final rs = <Map<String, dynamic>>[];
+    for (var fi = 0; fi < d.floors.length; fi++) {
+      final f = d.floors[fi];
+      if (f.noBeds) continue;
+      for (var i = 0; i < f.rooms.length; i++) {
+        final dr = f.rooms[i];
+        final n = fi * 100 + i + 1;
+        rs.add({'number': n, 'label': dr.label == '$n' ? null : dr.label, 'floor': fi, 'share': dr.share, 'ac': dr.ac, 'rent': d.prices[rateKey(dr.ac, dr.share)] ?? 0, 'bath': 'Attached'});
+      }
+    }
+    final ll = areaLatLng[d.area];
+    return {
+      'name': d.name.trim(),
+      'gender': d.gender,
+      'area': d.area,
+      'owner_name': d.ownerName.trim(),
+      'owner_phone': d.ownerPhone,
+      'food': d.food != 'No food',
+      'ac': rs.any((r) => r['ac'] == true),
+      'only_ac': rs.isNotEmpty && rs.every((r) => r['ac'] == true),
+      'tags': [if (d.food != 'No food') '${d.food} a day', ...d.amenities.take(3)],
+      'terms': {'advance': d.advance, 'maintenance': d.kept, 'noticeDays': d.notice, 'dueOnJoining': d.dueOnJoining, 'electricityExtra': true},
+      if (ll != null) ...{'lat': ll.$1, 'lng': ll.$2},
+      'rates': [for (final e in d.prices.entries) if (e.value > 0) {'ac': e.key.startsWith('ac'), 'share': int.parse(e.key.replaceFirst(RegExp('^(ac|non)'), '')), 'rent': e.value}],
+      'rooms': rs,
+    };
+  }
+
+  /// Server words → the team's.
+  String _onboardWords(Object e) {
+    final m = '$e';
+    for (final k in const ['add the hostel name', 'add a price for', 'link the owner', 'add 8 photos', 'add at least one room', 'has someone in it', 'already has an owner']) {
+      if (m.contains(k)) {
+        final i = m.indexOf(k);
+        final end = m.indexOf(RegExp(r'[,}\n]'), i);
+        final w = m.substring(i, end < 0 ? m.length : end).trim();
+        return '${w[0].toUpperCase()}${w.substring(1)}.';
+      }
+    }
+    return 'Couldn’t save it. Check your internet and try again.';
+  }
+
+  /// F24: saves the draft on the server (the team, in the real app) and loads
+  /// it back, so photos and residents can go on it. True in the demo.
+  Future<bool> saveDraftLive() async {
+    if (!onServer) return true;
+    try {
+      final id = await data.saveHostel(draft.serverId, draftPayload());
+      draft.serverId = id;
+      await refreshListings();
+      return true;
+    } catch (e) {
+      debugPrint('save hostel: $e');
+      toastMsg(_onboardWords(e));
+      return false;
+    }
+  }
+
+  /// Residents typed on the visit become stays on the server (the beds show
+  /// as taken); each is saved once.
+  Future<bool> saveDraftResidents() async {
+    final id = draft.serverId;
+    if (!onServer || id == null) return true;
+    for (final r in draft.residents) {
+      final k = '${r.bed}|${r.phone}';
+      if (draft.savedResidents.contains(k)) continue;
+      final b = findBed(id, r.bed);
+      if (b.b == null) {
+        toastMsg('Bed ${r.bed} isn’t in the rooms.');
+        return false;
+      }
+      try {
+        await data.addStay(hid: id, bedKey: b.b!.key, name: r.name, phone: r.phone, rent: b.r!.rent, advance: draft.advance, joinedOn: appToday);
+        draft.savedResidents.add(k);
+      } catch (e) {
+        debugPrint('draft resident: $e');
+        toastMsg('Couldn’t save ${r.name}. Check your internet and try again.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// The wizard's Next: saves to the server after the rate card and after
+  /// the residents.
+  Future<void> nextAddStep() async {
+    if (addStep == 3 && !await saveDraftLive()) return;
+    if (addStep == 5 && !await saveDraftResidents()) return;
+    update(() => addStep++);
+    if (addStep == 4 && draft.serverId != null) loadPhotos(draft.serverId!, again: true);
+  }
+
+  /// Photos for the draft: the owners' Photos screen, for this hostel.
+  void openDraftPhotos() {
+    final id = draft.serverId;
+    if (id == null) return;
+    update(() {
+      photoFor = id;
+      photoAlbum = 'Hostel';
+      hist = [...hist, screen];
+      screen = 'oPhotos';
+    });
+    loadPhotos(id, again: true);
+  }
+
+  /// F24 (board `aAddOwner`): a one-time sign-in link for the owner on WhatsApp.
+  Future<void> sendOwnerLink() async {
+    final d = draft;
+    if (d.ownerName.trim().length < 2) return toastMsg('Add the owner’s name.');
+    if (d.ownerPhone.length != 10) return toastMsg('Enter the owner’s 10-digit phone.');
+    if (!onServer) {
+      update(() => d.ownerLinked = true);
+      return toastMsg('Sample data: the owner shows as linked.');
+    }
+    if (!await saveDraftLive()) return;
+    try {
+      final code = d.ownerCode.isNotEmpty ? d.ownerCode : await data.ownerInvite(d.serverId!, d.ownerName.trim(), d.ownerPhone);
+      update(() => d.ownerCode = code);
+      whatsapp(d.ownerPhone, 'Hi ${d.ownerName.trim().split(' ').first}, ${d.name.trim()} is on Hostelzy. Open this link, sign in with Google and pick “I run a PG” to run it from your phone: ${inviteLink(code)} (works once, for 7 days).');
+    } catch (e) {
+      debugPrint('owner invite: $e');
+      toastMsg(_onboardWords(e));
+    }
+  }
+
+  /// Checks whether the owner has signed in with their code.
+  Future<void> checkOwnerLinked() async {
+    final id = draft.serverId;
+    if (!onServer || id == null) return;
+    try {
+      final ok = await data.ownerLinked(id);
+      update(() => draft.ownerLinked = ok);
+      toastMsg(ok ? '${draft.ownerName.trim()} is linked.' : 'Not yet. Ask ${draft.ownerName.trim()} to open the link and sign in.');
+    } catch (e) {
+      toastMsg('Couldn’t check. Check your internet and try again.');
+    }
+  }
+
   void goLive() {
     if (goLiveLeft.isNotEmpty) return toastMsg('${goLiveLeft.length} things left.');
+    if (onServer) {
+      _goLiveServer();
+      return;
+    }
     final d = draft;
     var id = d.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     while (hostels.any((h) => h.id == id)) {
@@ -184,5 +334,25 @@ extension OnboardingActions on AppState {
       hist = [];
     });
     toastMsg('${d.name} is live. The 30-day trial starts today.');
+  }
+
+  /// F24: saves once more, then the server checks and puts it live (with the
+  /// 30-day trial and "Visited by Hostelzy" today).
+  Future<void> _goLiveServer() async {
+    final d = draft;
+    if (!await saveDraftLive()) return;
+    try {
+      await data.goLive(d.serverId!);
+      await refreshListings();
+      update(() {
+        screen = 'aTrack';
+        trackTab = 3;
+        hist = [];
+      });
+      toastMsg('${d.name.trim()} is live. The 30-day trial starts today.');
+    } catch (e) {
+      debugPrint('go live: $e');
+      toastMsg(_onboardWords(e));
+    }
   }
 }
