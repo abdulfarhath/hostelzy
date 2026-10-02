@@ -231,3 +231,19 @@ Not needed.
   - `supabase-functions.yml` deploys `send-push` from main once `SUPABASE_ACCESS_TOKEN` exists.
 - Founder steps: `docs/FOUNDER-TODO.md` items 3–4.
 - Not yet: the app doesn't write holds or enquiries to Supabase. That comes with the live tenant, owner and resident screens (C), which will show the server's HZ code.
+**B6 · Realtime · 2026-10-02** (branch `feature/b6-realtime`):
+- When a user is signed in on Supabase, their holds, enquiries, payments and complaints come from the database (`SupabaseRepo.live()`). RLS decides who sees what.
+- `20261002040000_b6_realtime.sql` puts those 4 tables in the `supabase_realtime` publication. Realtime checks RLS before sending a change.
+- A change is only a signal. The app refetches, at most once per 400 ms, so bed labels and the rules stay in one place.
+- Server statuses are mapped to the app's:
+  - an advance hold shows as a booking;
+  - an expired hold shows as released, marked as expired;
+  - pending payments show as due;
+  - fixed complaints show as resolved.
+- Live rows replace the lists and are never mixed with samples. Logging out stops the updates.
+- Tests:
+  - `B6: live rows map…`;
+  - `B6: signed in on Supabase…`;
+  - the publication check in `rls_test.sql`.
+- Founder: run the B6 SQL file once in the SQL Editor (`docs/FOUNDER-TODO.md`).
+- Still to come (C): the owner and resident screens' writes (accept a hold, confirm a payment, update a complaint) go to Supabase, and Realtime then shows them on the other phone.

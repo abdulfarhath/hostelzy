@@ -82,6 +82,8 @@ class _HostelzyAppState extends State<HostelzyApp> {
       if (s != null) state.applySettings(s);
       final l = await db.listings();
       if (l != null) state.applyListings(l);
+      // B6: the signed-in user's holds, enquiries, payments and complaints, live.
+      await state.startLive();
     } catch (e) {
       // Never show sample hostels as if they were live: an honest empty list.
       state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}));
