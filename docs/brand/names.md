@@ -103,3 +103,35 @@ no direct Play Store search (blocked here). A trademark lawyer must check before
 1. **Hostelji**: closest feel to Hostelzy, warm, easy for everyone, .com free.
 2. **Staypakka**: says the promise (trust), about the whole stay, .com free.
 3. **Cotkey** (from round 1): still works, "key" = your way into a stay, not only a bed.
+
+---
+
+# Deeper check: Hostelji (and Hostell) (2026-10-02)
+
+Founder liked **Hostelji** ("crazy" = loved it). Also checked **Hostell** in case that was meant.
+
+## Hostelji
+| Check | Result |
+|---|---|
+| Domains | .com ✅ .app ✅ .co ✅ .io ✅ .net ✅ .org ✅ free. **.in not checked** (lookup can't do .in). |
+| Web search | No app, company or brand named Hostelji found. |
+| Store search (via web) | Nothing found. Direct Play Store search blocked here. |
+| Trademark (web only) | No "Hostelji" mark found on public trademark sites. **Official IP India search not done.** |
+| Nearest names | **HostelKhoji** (hostel finder in Nepal, hostelkhoji.com): sounds a bit close. **Hostel Wallah** and **Hostelife** have filed trademarks in class 43 (2025). **Hostel Gandhi** was **refused** in class 43, so "Hostel + word" names can be refused. |
+| Social handles | Not checked (blocked here). Founder: check Instagram / X / YouTube on phone. |
+
+Brand chat view: **strongest so far.** Warm, easy in Telugu, Hindi and English,
+.com free, nothing in the same name found. Risk: "hostel" is a common word, so the
+lawyer must confirm "Hostelji" as a whole can be registered (and look at HostelKhoji).
+
+## Hostell
+- .com ❌ taken (.app and .co free).
+- Looks like a spelling mistake of "hostel". People will type "hostel" and miss us.
+- A misspelt common word is very hard to protect.
+- Not recommended.
+
+## Next steps for Hostelji (founder)
+1. Buy **hostelji.com** (+ .in if free) soon, about ₹1,000/year. Cheap, stops others taking it.
+2. Grab @hostelji on Instagram, X, YouTube.
+3. Trademark lawyer: IP India search + filing in classes 9, 42, 43, 36.
+4. Only then: Ideas chat records the name in DECISIONS.md, Build renames the app.
