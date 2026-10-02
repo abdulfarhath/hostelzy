@@ -25,7 +25,7 @@ Only the founder approves (spec, design, merge). Update this table whenever a fe
 | F18 | Real-user bug fixes (back button, stay logged in, own name/phone, gated roles, crashes, keyboard, map location + area, owner edits layouts) | **Built** · all 10 groups merged 2026-10-02 (APK `apk-32`) | Build | From the founder's phone test of apk-29. Photos/gallery, delete v2 and the team console need the backend (F13 part 2) |
 | F19 | Residents fix room layouts (any room in their hostel → owner approves; others see a "residents only" nudge) | **Built** · 2026-10-02 (v1 core; PR open, stacked on the S7–S8 PRs; v1 extras next) | Build | Design: https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR · Founder idea. Reward for approved fixes: founder to decide |
 | F20 | Reminders: water every N min, my own tasks, hostel meal/rent reminders (on the phone) | **Built** · 2026-10-02 (PR feature/f20-reminders) | Build | Founder idea. Local notifications, works offline. Backup to the profile is a follow-up |
-| F21 | Simpler UI/UX: one job per home screen, guest browsing, plain words, honest data, Telugu, accessibility | **Design ready** · waiting for founder approval of the demo (W1 bug fixes go ahead) | Build | 24 fixes in 4 waves; wave 1 = fake-data bugs |
+| F21 | Simpler UI/UX: one job per home screen, guest browsing, plain words, honest data, Telugu, accessibility | **Design ready** · 2026-10-02 · waiting for the founder’s approval | Founder | 24 fixes in 4 waves; wave 1 = fake-data bugs |
 
 ## Plan (founder, 2026-10-02)
 **Standing approval (founder, 2026-10-02):** every design is approved when it is finished, and Build
@@ -43,11 +43,11 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 18. ~~F14 questions~~ **Decided 2026-10-02 (see DECISIONS.md).**
 
 ## Links
-- **F21 Simpler UI (Welcome browse-first, Explore + Where? + filters, hold/book sheet, merged price table, resident Home, Help, owner Needs you now, Manage list, agreements, offline/skeleton; Design approved · 2026-10-02):** https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7
+- **F21 Simpler UI, waiting for the founder’s approval:** before → after demo https://claude.ai/artifact/DNTXZPEsMZTRSisLqvpAhG · full set https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7
 - **F20 Reminders (Me → Reminders, water settings, add reminder, notifications with Done/Snooze, Today card, first-time offer; Design approved · 2026-10-02):** https://claude.ai/artifact/U9TnnagapmbzjJt9tM6K7K
 - **F19 Residents fix their room layout (any room in the hostel, lock sheet + try mode for visitors, quick fixes, photo, “Checked by N residents”, limit + mute, owner compare, console; Design approved · 2026-10-02):** https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR
 - **F18 Real app v2 (sign in, role gates, empty states, map v2, owner layout editor, photos, saved, delete v2, team console, small UX; Design approved · 2026-10-02):** https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
-- **All screens (the app as it is today, redrawn from the code 2026-10-02 after F18 and #37–#54, plus F19/F20 (built) and the F21 redesign row: 200 screens, 57 Updated, 70 New, light + dark; Design approved · standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+- **All screens (the app as it is today, redrawn from the code 2026-10-02 after F18 and #37–#54, plus F19/F20 (built): 178 screens, 35 Updated, 70 New, light + dark; Design approved · standing approval):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
