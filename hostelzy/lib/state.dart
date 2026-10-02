@@ -234,6 +234,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   void dispose() {
     _ticker?.cancel();
     _toastTimer?.cancel();
+    _tokenSub?.cancel();
     stopLive();
     super.dispose();
   }
@@ -260,6 +261,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     role = m['role'] as String? ?? 'tenant';
     theme = m['theme'] as String? ?? 'light';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
+    pushAsked = m['pushAsked'] as bool? ?? false;
     final ru = m['rules'] as List?;
     if (ru != null && ru.isNotEmpty) rules = [for (final r in ru.cast<List>()) Rule(r[0] as String, r[1] as String)];
     final me = m['menu'] as List?;

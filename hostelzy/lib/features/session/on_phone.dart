@@ -41,6 +41,7 @@ extension OnPhoneActions on AppState {
       for (final e in enquiries.where((e) => phone.isNotEmpty && e.phone == phone)) {'ref': e.ref, 'name': e.name, 'phone': e.phone, 'hid': e.hid, 'bed': e.bed, 'at': e.at, 'from': e.from, 'msg': e.msg},
     ],
     'fairAccepted': fairAccepted,
+    'pushAsked': pushAsked,
     // F18 (F5): the owner's house rules and menu stay on the phone.
     'rules': [for (final r in rules) [r.k, r.v]],
     'menu': [for (final d in menu) [d.b, d.l, d.n]],
