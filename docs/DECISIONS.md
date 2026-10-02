@@ -206,5 +206,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - Everyone else still sees the **Edit room** button; tapping it says only residents can edit, with
   a nudge to book/join. Spec: F19.
 
+**Reminders in the app** — founder, 2026-10-02
+- The Hostelzy app reminds users to drink water (as often as every 20 min) and about their own
+  tasks, plus hostel meal times and rent. Runs on the phone. Spec: F20.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
