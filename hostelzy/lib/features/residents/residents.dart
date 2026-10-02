@@ -76,6 +76,13 @@ extension ResidentsActions on AppState {
 
   /// Invite QR sign-ups signed in with Google; approving counts them.
   void approveSignup(Signup g) {
+    // C: on Supabase the server makes the stay; the list refreshes from it.
+    if (onServer) {
+      _write(() => data.decideSignup(g.id, true)).then((ok) {
+        if (ok) toastMsg('${g.name.split(' ')[0]} is now a resident here.');
+      });
+      return;
+    }
     final r = findBed('anjani', g.bed).r;
     final res = _newResident(g.name, g.phone, g.bed, r?.rent ?? 0, hostels[0].terms.advance, now, confirmed: true);
     update(() {
@@ -86,6 +93,12 @@ extension ResidentsActions on AppState {
   }
 
   void rejectSignup(Signup g) {
+    if (onServer) {
+      _write(() => data.decideSignup(g.id, false)).then((ok) {
+        if (ok) toastMsg('Removed.');
+      });
+      return;
+    }
     update(() => signups = signups.where((x) => x.id != g.id).toList());
     toastMsg('Removed.');
   }
