@@ -10,7 +10,7 @@ mixin _PlanData {
   /// UTR being typed on "I've paid".
   String utrDraft = '';
 
-  /// Founder payments filter: check | late | paid | trial | all.
+  /// Founder payments filter: check | late | paid | soon (trial or not due).
   String payTab = 'check';
 }
 
