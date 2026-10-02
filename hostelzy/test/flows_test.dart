@@ -1494,6 +1494,69 @@ void main() {
     s.dispose();
   });
 
+  testWidgets('after go-live: add / remove rooms and floors, poster PDF, team members (F14)', (tester) async {
+    final s = AppState(start: 'oMore', role: 'owner', moreTab: 'rates');
+    await pumpApp(tester, s);
+    await tap(tester, find.text('Rooms · add or remove rooms and floors'));
+    expect(s.screen, 'oRooms');
+    final rs = s.rooms['anjani']!;
+    final n0 = rs.length;
+    // A room with a resident can't be removed.
+    final busy = rs.firstWhere((r) => r.n == 204);
+    expect(s.roomBlock('anjani', 204), 'Has a resident');
+    s.removeRoom('anjani', 204);
+    expect(rs.any((r) => r == busy), isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    // Add room 105 (2 sharing, AC) on floor 1.
+    await tap(tester, find.text('+ Add a room on floor 1'));
+    expect((s.sheet, s.nrLabel), ('addRoom', '105'));
+    s.update(() {
+      s.nrShare = 2;
+      s.nrAc = true;
+    });
+    await tester.pump();
+    await tap(tester, find.text('Add room'));
+    final r105 = rs.firstWhere((r) => r.label == '105');
+    expect((r105.share, r105.ac, rs.length), (2, true, n0 + 1));
+    expect(r105.beds.every((b) => b.state == 'free'), isTrue);
+    expect(r105.rent, s.rates['anjani']![rateKey(true, 2)]);
+    await tester.pump(const Duration(seconds: 3));
+    // ... and remove it again (empty room).
+    s.removeRoom('anjani', r105.n);
+    expect(rs.length, n0);
+    // A new floor 4, then remove it.
+    s.addFloor('anjani');
+    expect(s.nrFloor, 4);
+    s.addRoom('anjani');
+    expect(floorsOf(rs), contains(4));
+    s.removeFloor('anjani', 4);
+    expect(floorsOf(rs), isNot(contains(4)));
+    // A floor with residents can't go.
+    s.removeFloor('anjani', 2);
+    expect(floorsOf(rs), contains(2));
+    s.dispose();
+
+    // Resident QR poster: a real A4 PDF.
+    final o = AppState(start: 'oInvite', role: 'owner');
+    await pumpApp(tester, o);
+    await tester.runAsync(() => o.sharePoster('https://hostelzy.in/j/ANJ-7Q2'));
+    expect(o.lastPosterBytes, greaterThan(1000));
+    o.dispose();
+
+    // Team mode: team members, invites pending.
+    final t = AppState(start: 'aTeam', role: 'owner');
+    await pumpApp(tester, t);
+    expect(find.text('Founder'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('tmName')), matching: find.byType(TextField)), 'Imran');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('tmPhone')), matching: find.byType(TextField)), '9000000201');
+    await tester.pump();
+    await tap(tester, find.text('Layouts'));
+    await tap(tester, find.text('Send invite'));
+    expect(t.teamMembers.last, (name: 'Imran', phone: '9000000201', role: 'Layouts', joined: false));
+    expect(find.text('INVITE PENDING'), findsOneWidget);
+    t.dispose();
+  });
+
   testWidgets('app icon and room mark (logo B3-a2)', (tester) async {
     final s = AppState();
     await pumpApp(tester, s);

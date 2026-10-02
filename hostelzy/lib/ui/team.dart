@@ -43,6 +43,7 @@ class TeamHomeScreen extends StatelessWidget {
       ('wallet', 'Payments check', 'Owners’ plan invoices and UTRs to match in the bank', () => s.go('aPay')),
       ('flag', 'Fair Play cases', 'Signals, owner replies, strikes', () => s.go('aCases')),
       ('room', 'Layout editor', 'Draw and move beds, fans, AC, windows; send to the owner', () => s.openLayout(s.lRoom, editor: true)),
+      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () => s.go('aTeam')),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1382,10 +1382,7 @@ class OwnerInviteScreen extends StatelessWidget {
                       children: [
                         Expanded(child: Cta('Share link', icon: 'msg', height: 50, px: 14, fs: 14, bg: p.tx, fg: p.bg, onTap: () => s.share('Join Anjani Residency on Hostelzy to pay rent, raise complaints and see the food menu: https://$link'))),
                         const SizedBox(width: 8),
-                        Expanded(child: Cta('Copy link', icon: 'check', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () {
-                          s.copyText(link);
-                          s.toastMsg('Link copied.');
-                        })),
+                        Expanded(child: Cta('Poster PDF', icon: 'print', height: 50, px: 14, fs: 14, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sharePoster('https://$link'))),
                       ],
                     ),
                   ),
@@ -1475,6 +1472,16 @@ class RateCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+                  // F14: add or remove rooms and floors after go-live.
+                  Tap(
+                    onTap: () => s.go('oRooms'),
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      decoration: box(w: 2, c: p.tx),
+                      child: Row(children: [const Ic('room', size: 18), const SizedBox(width: 10), const Expanded(child: T('Rooms · add or remove rooms and floors', w: 800, s: 14)), Ic('chev', size: 18, color: p.mu)]),
+                    ),
+                  ),
                   // F17: where tenants pay the owner.
                   const UpiCard(),
                   Padding(
