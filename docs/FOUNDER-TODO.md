@@ -19,6 +19,10 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
 - [x] B5: pg_cron + pg_net, server rules SQL, FCM key, push secret, SUPABASE_ACCESS_TOKEN
 
 ## Now
+0. **⭐ All SQL in one go (replaces 4d → 4zi one by one):** open
+   https://github.com/abdulfarhath/hostelzy/blob/main/docs/sql/run-all-pending.sql → **Raw** → select all → copy →
+   Supabase → SQL Editor → New query → paste → **Run** → "Success. No rows returned". Then run the check query in
+   `docs/sql/README.md` (all `true`). Safe to run twice. If it errors, nothing changed: send the error to the hub.
 1. **Test the newest APK** from https://github.com/abdulfarhath/hostelzy/releases (real app `hostelzy.apk`; `hostelzy-demo.apk` has sample data). Send the hub ✅ / ❌ with screenshots.
 2. ~~Google login in the demo APK~~ (done 2026-10-02; in the app via PR #38).
 3. ~~Server rules (B5)~~ (done 2026-10-02).
