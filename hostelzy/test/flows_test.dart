@@ -228,7 +228,8 @@ void main() {
     // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
     expect(find.text('Ask Srinivas'), findsOneWidget);
     expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code $ref'));
+    // F24 4a: the message ends with the enquiry's link the owner can open.
+    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
     expect(find.text(s.waFull), findsOneWidget);
     await tap(tester, find.text('Open WhatsApp'));
     expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));
@@ -478,6 +479,16 @@ void main() {
     expect(o.acDraft![204], isFalse);
     await tap(tester, find.text('+ Add'));
     expect(o.rateDraft![rateKey(true, 4)], 7600 + 1200);
+    // F24 item 19: 204's layout has no AC unit, so it can't be made AC yet.
+    o.setRoomAc(r204, true);
+    await tester.pump();
+    expect(o.acDraft![204], isFalse);
+    expect(o.toast, 'Room 204’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.');
+    // With the AC unit in its published layout, it can.
+    final l204 = o.layoutOf('anjani', 204)!;
+    l204.items.add(LItem('ac1', 'ac', 1, 0, 3, 1));
+    l204.published?.items.add(LItem('ac1', 'ac', 1, 0, 3, 1));
+    expect(o.liveLayout('anjani', 204)!.ac, isNotNull);
     o.setRoomAc(r204, true);
     await tester.pump(const Duration(seconds: 3)); // let the "Add a price first" toast go
     await tap(tester, find.byKey(const ValueKey('saveRates')));

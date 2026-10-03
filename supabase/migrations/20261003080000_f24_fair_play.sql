@@ -222,8 +222,8 @@ as $$
 declare c record; three uuid[];
 begin
   select * into c from public.fair_cases where id = p_case;
-  -- Wave 3a: Fair Play is the owner's, not the managers'.
-  if c is null or not public.is_owner(c.hostel_id) then raise exception 'only this hostel''s owner can fix it'; end if;
+  -- Managers are stopped by Wave 3a's owner_only_case trigger ("only the owner handles Fair Play").
+  if c is null or not public.is_staff(c.hostel_id) then raise exception 'only this hostel''s staff can fix it'; end if;
   if c.status in ('decided', 'closed') then raise exception 'this case is closed'; end if;
   if c.created_at < now() - interval '48 hours' then raise exception 'the 48 hours are over; reply instead'; end if;
   if c.resident is null then raise exception 'there is no resident to fix; reply instead'; end if;

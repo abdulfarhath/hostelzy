@@ -115,7 +115,7 @@ class ReviewCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [Expanded(child: T(r.name, w: 800, s: 15)), const SizedBox(width: 8), Stars(r.stars)],
           ),
-          T('${r.kind == 'exit' ? 'Exit review' : '30-day review'} · ${r.stay}', s: 12, c: p.mu),
+          T('${r.kind == 'exit' ? 'Exit review' : '30-day review'} · ${r.stay}${r.edited ? ' · edited' : ''}', s: 12, c: p.mu),
           if (r.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: T(r.text, s: 15, lh: 1.45)),
           if (r.advance != null) T(r.advance == 'all' ? 'Got the advance back in full.' : r.advance == 'part' ? 'Got only part of the advance back.' : 'Advance not back yet.', s: 13, c: p.mu),
           if (r.reply != null)
@@ -124,19 +124,31 @@ class ReviewCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               color: p.sf,
               child: Rich([sp(context, '${h.owner} replied: ', w: 800), sp(context, r.reply!), if (r.replyWhen != null) sp(context, ' · ${r.replyWhen}', c: p.mu)], s: 13, lh: 1.45),
-            )
-          else if (ownerView && !open)
+            ),
+          // F08 board 6, F24 4a: one reply each; a review can't be removed, only reported.
+          if (ownerView && !open)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Tap(
-                  onTap: () => s.update(() {
-                    s.replyFor = r.id;
-                    s.replyText = '';
-                  }),
-                  child: Container(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), decoration: box(w: 2, c: p.tx), child: const T('Reply', w: 800, s: 13)),
-                ),
+              child: Row(
+                children: [
+                  if (r.reply == null)
+                    Tap(
+                      onTap: () => s.update(() {
+                        s.replyFor = r.id;
+                        s.replyText = '';
+                      }),
+                      child: Container(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), decoration: box(w: 2, c: p.tx), child: const T('Reply', w: 800, s: 13)),
+                    ),
+                  const Spacer(),
+                  if (s.reportedReviews.contains(r.id))
+                    T('Reported to Hostelzy', s: 12, c: p.mu)
+                  else
+                    Tap(
+                      key: ValueKey('report-${r.id}'),
+                      onTap: () => s.openReviewReport(r),
+                      child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: T('Report abuse', s: 13, w: 600, c: p.mu)),
+                    ),
+                ],
               ),
             ),
           if (open)
@@ -282,7 +294,7 @@ class ResidentReviewScreen extends StatelessWidget {
                     children: [
                       const T('Anything others should know? (optional)', w: 800, s: 13),
                       Field(value: s.rvText, onChanged: (v) => s.update(() => s.rvText = v), placeholder: 'Food, water, the owner…', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
-                      T('Shown as ${s.meShort} · verified resident. ${s.stayOwner} can reply, not delete.', s: 13, c: p.mu, lh: 1.4),
+                      T('Shown as ${s.meShort} · verified resident. One review per stay; you can change it later. ${s.stayOwner} can reply, not delete.', s: 13, c: p.mu, lh: 1.4),
                     ],
                   ),
                 ),
@@ -293,7 +305,7 @@ class ResidentReviewScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postReview),
+          child: Cta(s.myReview('30-day') != null ? 'Save changes' : 'Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postReview),
         ),
       ],
     );
@@ -370,7 +382,7 @@ class ExitReviewScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: Cta('Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postExitReview),
+          child: Cta(s.myReview('exit') != null ? 'Save changes' : 'Post review', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.postExitReview),
         ),
       ],
     );
@@ -484,6 +496,44 @@ class RankSheet extends StatelessWidget {
           T('Hostels are ranked by what residents and Hostelzy can check, never by who pays.', s: 14, lh: 1.45),
           for (final k in rankWeights.keys) Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(rankLabel[k]!, s: 14), T('${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)]),
           T('Reviews count only from residents with a confirmed stay. Fair Play strikes lower the rank.', s: 12, c: p.mu, lh: 1.4),
+          // F24 item 20 (DECISIONS F10): the 80+ bed plan's featured spot, said plainly.
+          T('Hostels with more than 80 beds get a featured spot at the top of Recommended with their Hostelzy plan. They are always marked Featured, and their rank doesn’t change.', key: const ValueKey('rankFeatured'), s: 12, c: p.mu, lh: 1.4),
+        ],
+      ),
+    );
+  }
+}
+
+/// F08 board 6, F24 4a (`revReport`): the owner reports a review that breaks
+/// the rules. The Hostelzy team reads it and hides the review if it does.
+class ReviewReportSheet extends StatelessWidget {
+  const ReviewReportSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 8,
+        children: [
+          for (final o in reviewReportReasons)
+            Tap(
+              onTap: () => s.update(() => s.revReportWhy = o),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: box(bg: s.revReportWhy == o ? p.sf : transparent, w: s.revReportWhy == o ? 2 : 1, c: s.revReportWhy == o ? p.tx : p.dv),
+                child: Row(
+                  children: [
+                    Container(width: 18, height: 18, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: Container(width: 8, height: 8, color: s.revReportWhy == o ? p.tx : transparent)),
+                    const SizedBox(width: 12),
+                    Expanded(child: T(o, s: 14, w: 600)),
+                  ],
+                ),
+              ),
+            ),
+          T('Reviews can’t be removed for being low. The Hostelzy team hides a review only if it breaks the rules.', s: 12, c: p.mu, lh: 1.45),
+          Cta('Send to Hostelzy', height: 54, px: 16, fs: 15, onTap: s.sendReviewReport),
         ],
       ),
     );

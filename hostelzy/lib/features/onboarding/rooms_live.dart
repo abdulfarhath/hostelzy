@@ -78,7 +78,13 @@ extension RoomsLiveActions on AppState {
       update(() => rooms[hid] = before);
       final m = '$e';
       final i = m.indexOf('room ');
-      toastMsg(m.contains('has someone in it') && i >= 0 ? 'Not saved: ${m.substring(i, m.indexOf('in it', i) + 5)}.' : 'Couldn’t save it. Check your internet and try again.');
+      // F24 item 19: the server's AC unit rule, in plain words.
+      final ac = RegExp(r'room (\S+): an AC room needs an AC unit').firstMatch(m)?.group(1);
+      toastMsg(m.contains('has someone in it') && i >= 0
+          ? 'Not saved: ${m.substring(i, m.indexOf('in it', i) + 5)}.'
+          : ac != null
+          ? 'Not saved: room $ac’s layout has no AC unit. Add it in the layout and publish first.'
+          : 'Couldn’t save it. Check your internet and try again.');
     }
   }
 

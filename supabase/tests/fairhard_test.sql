@@ -56,7 +56,7 @@ insert into public.stays (hostel_id, name, phone, via) values ('fa000000-0000-00
 -- after go-live: only the team
 select test.fails($$insert into public.stays (hostel_id, name, phone, via) values ('fa000000-0000-0000-0000-000000000001', 'Late Old', '9000000002', 'before')$$, 'only the Hostelzy team');
 insert into public.stays (hostel_id, name, phone, via) values ('fa000000-0000-0000-0000-000000000001', 'Walk In', '9000000003', 'direct');
-select test.fails($$update public.stays set via = 'before' where name = 'Walk In'$$, 'only the Hostelzy team');
+select test.fails($$update public.stays set via = 'before' where name = 'Walk In' and hostel_id::text like 'fa000000-%'$$, 'only the Hostelzy team');
 select test.fails($$update public.hostels set live_since = '2020-01-01' where id = 'fa000000-0000-0000-0000-000000000001'$$, 'ask the Hostelzy team');
 select test.act('authenticated', 'fb-fh-team', true);
 insert into public.stays (hostel_id, name, phone, via, joined_on) values ('fa000000-0000-0000-0000-000000000001', 'Long Stay', '9000000004', 'before', current_date - 200);
@@ -66,11 +66,11 @@ update public.hostels set status = 'live' where id = 'fa000000-0000-0000-0000-00
 reset role;
 select set_config('request.jwt.claims', '', false);
 select test.eq((select (live_since is not null)::text from public.hostels where id = 'fa000000-0000-0000-0000-000000000002'), 'true');
-select test.eq((select via from public.stays where name = 'Old Timer'), 'before');
-select test.eq((select via from public.stays where name = 'Long Stay'), 'before');
+select test.eq((select via from public.stays where name = 'Old Timer' and hostel_id::text like 'fa000000-%'), 'before');
+select test.eq((select via from public.stays where name = 'Long Stay' and hostel_id::text like 'fa000000-%'), 'before');
 -- the owner may still edit a before-resident's other details
 select test.act('authenticated', 'fb-fh-owner');
-update public.stays set rent = 7500 where name = 'Old Timer';
+update public.stays set rent = 7500 where name = 'Old Timer' and hostel_id::text like 'fa000000-%';
 
 -- ---------------------------------------------------------------- 3–4. strikes now
 reset role;
@@ -139,7 +139,7 @@ reset role;
 select set_config('request.jwt.claims', '', false);
 select test.eq((select count(*) || ' ' || min(reason) from public.strikes where hostel_id = 'fa000000-0000-0000-0000-000000000003'), '1 fixes');
 select test.eq((select count(*)::text from public.fair_cases where hostel_id = 'fa000000-0000-0000-0000-000000000003' and fix_counted), '3');
-select test.eq((select via from public.stays where name = 'Fix Three'), 'hz');
+select test.eq((select via from public.stays where name = 'Fix Three' and hostel_id::text like 'fa000000-%'), 'hz');
 
 -- ---------------------------------------------------------------- 5. the six signals
 insert into public.profiles (id, phone, name) values ('fb-fh-t1', '9200000001', 'Yes Sayer'), ('fb-fh-t2', '9200000002', 'Hold Person');

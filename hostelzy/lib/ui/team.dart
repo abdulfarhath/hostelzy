@@ -139,6 +139,8 @@ class OwnerLayoutsScreen extends StatelessWidget {
 
     String sub(Room r) {
       final l = s.layoutOf(h.id, r.n);
+      // F13 S4, F24 4a: residents' 30-day reviews say the layout is wrong.
+      if (l != null && l.disputes > 0) return 'Residents say this layout is wrong';
       final note = l == null ? '' : (l.pending ? ' · Hostelzy drew a new version' : (kind(r.n) == 'draft' ? ' · changes not published' : ' · edited ${l.drawn}'));
       return '${r.share} sharing · ${r.type}$note';
     }
@@ -202,7 +204,7 @@ class OwnerLayoutsScreen extends StatelessWidget {
                             decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                             child: Row(
                               children: [
-                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T(sub(r), s: 12, c: p.mu)])),
+                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T(sub(r), s: 12, c: (s.layoutOf(h.id, r.n)?.disputes ?? 0) > 0 ? p.ad : p.mu)])),
                                 Container(decoration: st.bg == transparent ? box(w: 1, c: p.tx) : null, child: Tag(st.label, bg: st.bg, fg: st.fg)),
                                 const SizedBox(width: 6),
                                 Ic('chev', size: 18, color: p.mu),

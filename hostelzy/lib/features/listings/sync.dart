@@ -139,6 +139,8 @@ extension SyncActions on AppState {
         // F24 #16, #25: the tenant's level and the resident's electricity.
         unawaited(loadLevel());
         unawaited(loadMyMeter(force: true));
+        // F24 #17: the hostels this user only manages.
+        if (l.myHostels.isNotEmpty) await loadManagerOf();
       }
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
@@ -174,7 +176,12 @@ extension SyncActions on AppState {
         await refreshLive();
       } catch (e) {
         debugPrint('enquiry: $e');
-        return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
+        // F24 4a: one open enquiry per bed on the server; use the one already there.
+        if (!'$e'.contains('enquiries_one_open') && !'$e'.contains('23505')) return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
+        await refreshLive();
+        ref = enquiries.where((x) => x.hid == hid && x.bed == bed).firstOrNull?.ref;
+        if (ref == null) return toastMsg('You already asked the owner about this bed.');
+        toastMsg('You already asked about this bed, so it’s the same booking code: $ref.');
       }
     }
     // The enquiry is recorded, so the server now gives this owner's number.
