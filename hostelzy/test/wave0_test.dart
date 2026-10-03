@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
+import 'package:hostelzy/features/explore/hostel_screen.dart' show dealHeadline;
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
-import 'package:hostelzy/ui/screens_tenant.dart' show dealHeadline;
 import 'package:hostelzy/ui/shell.dart';
 
 // F24 Wave 0: no fake or false lines in the real build, owners draw their own

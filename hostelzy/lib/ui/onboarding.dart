@@ -48,7 +48,7 @@ class StatusTag extends StatelessWidget {
 
 Widget _label(String t) => T(t, w: 800, s: 13);
 
-Widget _field(String label, String v, ValueChanged<String> on, {bool numeric = false, String? ph}) => VGap(
+Widget labeledField(String label, String v, ValueChanged<String> on, {bool numeric = false, String? ph}) => VGap(
   gap: 6,
   children: [
     _label(label),
@@ -150,7 +150,7 @@ class _Basics extends StatelessWidget {
       child: VGap(
         gap: 12,
         children: [
-          _field('Hostel name', d.name, (v) => s.update(() => d.name = v)),
+          labeledField('Hostel name', d.name, (v) => s.update(() => d.name = v)),
           _label('For'),
           Seg(opts: const [('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: d.gender, onPick: (v) => s.update(() => d.gender = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), center: true),
           _label('Area'),
@@ -162,7 +162,7 @@ class _Basics extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _field('Gate closes', d.gate, (v) => s.update(() => d.gate = v))),
+              Expanded(child: labeledField('Gate closes', d.gate, (v) => s.update(() => d.gate = v))),
               const SizedBox(width: 8),
               Expanded(
                 child: VGap(
@@ -186,7 +186,7 @@ class _Basics extends StatelessWidget {
             ],
           ),
           // F24 Wave 4c: house rules typed on the visit go on the server too.
-          _field('Visitors', d.visitors, (v) => s.update(() => d.visitors = v), ph: 'Common area only, till 8 pm'),
+          labeledField('Visitors', d.visitors, (v) => s.update(() => d.visitors = v), ph: 'Common area only, till 8 pm'),
           // F24 Wave 4c (board `aPin`): the real pin, dropped at the gate.
           Cta(
             d.pin != null ? 'Map pin · dropped at the gate' : 'Map pin · drop it at the gate',
@@ -452,14 +452,14 @@ class _Rates extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: _field('Advance (₹)', '${d.advance}', (v) => s.update(() => d.advance = int.tryParse(v) ?? 0), numeric: true)),
+                  Expanded(child: labeledField('Advance (₹)', '${d.advance}', (v) => s.update(() => d.advance = int.tryParse(v) ?? 0), numeric: true)),
                   const SizedBox(width: 10),
-                  Expanded(child: _field('Kept on leaving (₹)', '${d.kept}', (v) => s.update(() => d.kept = int.tryParse(v) ?? 0), numeric: true)),
+                  Expanded(child: labeledField('Kept on leaving (₹)', '${d.kept}', (v) => s.update(() => d.kept = int.tryParse(v) ?? 0), numeric: true)),
                 ],
               ),
               Row(
                 children: [
-                  Expanded(child: _field('Notice (days)', '${d.notice}', (v) => s.update(() => d.notice = int.tryParse(v) ?? 0), numeric: true)),
+                  Expanded(child: labeledField('Notice (days)', '${d.notice}', (v) => s.update(() => d.notice = int.tryParse(v) ?? 0), numeric: true)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: VGap(
@@ -1212,8 +1212,8 @@ class ManagerSheet extends StatelessWidget {
       child: VGap(
         gap: 10,
         children: [
-          _field('Name', s.mgrName, (v) => s.update(() => s.mgrName = v), ph: 'Prakash'),
-          _field('WhatsApp number', s.mgrPhone, (v) => s.update(() => s.mgrPhone = v), numeric: true, ph: '90000 00002'),
+          labeledField('Name', s.mgrName, (v) => s.update(() => s.mgrName = v), ph: 'Prakash'),
+          labeledField('WhatsApp number', s.mgrPhone, (v) => s.update(() => s.mgrPhone = v), numeric: true, ph: '90000 00002'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -7,7 +7,7 @@ import '../../map_config.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/screens_tenant.dart' show WhereBar, cardCost, filtered;
+import '../explore/explore_screen.dart' show WhereBar, cardCost, filtered;
 import '../photos/photos_screens.dart';
 
 // F17 board 9 + F18 "Map v2" + F22 Area 1: a real map (OpenStreetMap tiles,
