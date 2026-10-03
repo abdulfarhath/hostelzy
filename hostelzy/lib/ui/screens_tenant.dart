@@ -38,10 +38,13 @@ List<Hostel> filtered(AppState s) {
 
   int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
   final score = {for (final h in out) h.id: s.rankScore(h.id)};
+  // F10: an 80+ bed hostel's plan has a featured spot: first under Recommended.
+  final feat = {for (final h in out) if (s.featured(h.id)) h.id};
 
   out.sort((a, b) {
     // F08 Recommended (Hostelzy rank), F03 Best deals, or Lowest price; then nearest.
     final d = switch (s.sortBy) {
+      'rec' when feat.contains(a.id) != feat.contains(b.id) => feat.contains(a.id) ? -1 : 1,
       'rec' => score[b.id]!.compareTo(score[a.id]!),
       'deals' => saving(b).compareTo(saving(a)),
       'price' => cheapest(a).compareTo(cheapest(b)),
@@ -52,6 +55,17 @@ List<Hostel> filtered(AppState s) {
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
   return out;
+}
+
+/// The best-ranked hostel among [results] (the "#1 near you" card).
+String? topRanked(AppState s, List<Hostel> results) {
+  String? top;
+  var best = double.negativeInfinity;
+  for (final h in results) {
+    final v = s.rankScore(h.id);
+    if (v > best) (top, best) = (h.id, v);
+  }
+  return top;
 }
 
 String searchSummary(AppState s) {
@@ -85,6 +99,7 @@ class ExploreScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final results = filtered(s);
+    final top = s.sortBy == 'rec' ? topRanked(s, results) : null;
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
     // F21 W2: one search bar, one row of filters; sort lives in Filters.
@@ -154,7 +169,8 @@ class ExploreScreen extends StatelessWidget {
                 ]
                 else ...[
                 // F21 W2: the rank shows once, on the first card.
-                for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
+                // F10: featured hostels come first, so "#1" goes to the best rank among the results.
+                for (final h in results) HostelCard(h, first: h.id == top),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -353,6 +369,7 @@ class HostelCard extends StatelessWidget {
     final best = s.bestQuote(h.id, f: s.fR);
     final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
     final free = s.freeOf(h.id).f;
+    final featured = s.featured(h.id);
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -376,8 +393,9 @@ class HostelCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
-                      if (first)
-                        Positioned(left: 8, top: 8, child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T('#1 near you', s: 13, w: 800, c: p.bg))),
+                      // F10: the 80+ bed plan's featured spot is labelled, never passed off as rank.
+                      if (first || featured)
+                        Positioned(left: 8, top: 8, child: Container(key: featured ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (featured) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
                       Positioned(
                         right: 8,
                         top: 8,

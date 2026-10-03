@@ -220,6 +220,15 @@ abstract class HostelRepo {
   /// photos, rooms, layouts) for the hostel page and the ranking.
   Future<Map<String, HostelSignals>> signals();
 
+  /// F24 items 20 and 21: per live hostel, its bed count, whether it has the
+  /// featured spot (80+ beds plan) and whether its deals are paused (plan 15+
+  /// days late). Empty before that SQL runs.
+  Future<Map<String, HostelFlags>> flags();
+
+  /// F24 item 17: the hostels where this user is a manager, not the owner
+  /// (plan, deals, rates and Fair Play are the owner's).
+  Future<Set<String>> managedHostels(String uid);
+
   /// F24 item 7: a fan, the AC or a window Working / Not working, saved for
   /// tenants; not working raises a complaint. The complaint's date (null when working).
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working);
@@ -250,6 +259,9 @@ const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
 
 /// F24: real counts behind "Usually replies in ~N min" and the ranking.
 typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
+
+/// F24: the featured spot and paused deals, from `hostel_flags()`.
+typedef HostelFlags = ({int beds, bool featured, bool dealsPaused});
 
 String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
@@ -431,6 +443,10 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmRefund(String stayKey, bool got) async {}
   @override
   Future<Map<String, HostelSignals>> signals() async => {};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {};
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {};
   @override
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async => working ? null : DateTime.now();
   @override
@@ -855,6 +871,15 @@ class SupabaseRepo implements HostelRepo {
   Future<Map<String, HostelSignals>> signals() async => {
     for (final r in (await db.rpc('hostel_signals') as List).cast<Map<String, dynamic>>())
       r['hostel_id'] as String: (replyMin: r['reply_minutes'] as int? ?? 0, replyN: r['reply_n'] as int? ?? 0, complaints30: r['complaints_30d'] as int? ?? 0, residents: r['residents'] as int? ?? 0, photos: r['photos'] as int? ?? 0, rooms: r['rooms'] as int? ?? 0, layouts: r['layouts'] as int? ?? 0),
+  };
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {
+    for (final r in (await db.rpc('hostel_flags') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (beds: r['beds'] as int? ?? 0, featured: r['featured'] == true, dealsPaused: r['deals_paused'] == true),
+  };
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {
+    for (final r in await db.from('hostel_staff').select('hostel_id').eq('user_id', uid).eq('role', 'manager')) r['hostel_id'] as String,
   };
   @override
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {

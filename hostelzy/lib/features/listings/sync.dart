@@ -132,6 +132,7 @@ extension SyncActions on AppState {
     try {
       final l = await data.live(me: account?.uid);
       if (l != null) applyLive(l);
+      if (l != null && l.myHostels.isNotEmpty) await loadManagerOf();
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
       debugPrint('live: $e');
