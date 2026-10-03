@@ -46,3 +46,15 @@ $P -d $DB -f tests/wave4b_test.sql
 $P -d $DB -f tests/strikedeals_test.sql
 $P -d $DB -f tests/rates_confirm_test.sql
 $P -d $DB -f tests/indexes_test.sql
+
+# Rerun safety: the founder's one-file bundle (docs/sql/run-all-pending.sql) must succeed twice on the
+# same database. Fresh database: the migrations already run in production (before the bundle's FROM),
+# then the bundle, then the bundle again.
+FROM=$(sed -n 's/^FROM=\([0-9]*\).*/\1/p' ../tools/sql-bundle.sh)
+$P -d postgres -c "drop database if exists ${DB}_bundle" -c "create database ${DB}_bundle"
+$P -d ${DB}_bundle -f tests/stub.sql
+for f in migrations/*.sql; do [ "$(basename "$f" | cut -c1-14)" \< "$FROM" ] && $P -d ${DB}_bundle -f "$f"; done
+$P -d ${DB}_bundle -f ../docs/sql/run-all-pending.sql
+$P -d ${DB}_bundle -f ../docs/sql/run-all-pending.sql
+$P -d postgres -c "drop database ${DB}_bundle"
+echo " ALL BUNDLE TESTS PASSED (run-all-pending.sql twice)"
