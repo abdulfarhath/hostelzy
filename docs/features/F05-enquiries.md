@@ -51,8 +51,10 @@ the tenant's own enquiries start at HZ-4822.
    From, Message, Status, the Manage → Residents hint, WhatsApp, Call, Mark as contacted.
 
 **Design defaults (unanswered design questions, easy to change)**
-- Enquiries stay a **section**; `enquiriesTile` in `screens_owner.dart` swaps the Complaints tile
-  for an Enquiries count.
+- Enquiries stay a **section**: owner Manage → Enquiries (`_Enquiries` in
+  `lib/features/owner/owner_manage_screen.dart`); one enquiry opens in the `enq` sheet
+  (`EnquirySheet`, `lib/features/owner/owner_sheets.dart`). On owner Today, each new enquiry is a
+  row in "Needs you now" (`NeedsYouNow`, `lib/features/owner/owner_today_screen.dart`).
 - Tenant note is **green**; `enquiryNoteGreen` in `shell.dart` gives the neutral version.
 
 **Tests:** `test/flows_test.dart` → "enquiry recorded before WhatsApp; owner sees and contacts it"

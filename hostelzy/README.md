@@ -38,11 +38,23 @@ Example: `/?start=picker&role=tenant&mode=list&theme=dark`.
 
 ## Code
 
-- `lib/data.dart`: sample Hyderabad data and helpers (bed generation, `₹`
-  formatting in Indian grouping, countdowns), ported 1:1 from the prototype.
-- `lib/state.dart`: one `AppState` shared by all roles. A tenant's free hold
-  shows in the owner's inbox, menu edits reach the resident's Food tab, rent
-  payments update the owner's rent list.
+- `lib/data.dart`: barrel that re-exports the models, sample Hyderabad data
+  and helpers in `lib/data/` (one file per domain: `hostels`, `format` (`₹` in
+  Indian grouping, dates, countdowns), `residents`, `holds`, `house`, `deals`,
+  `reviews`, `plan`, `layouts`, `onboarding`, `geo`, `amenities`).
+- `lib/state.dart`: one `AppState` shared by all roles (core: navigation,
+  sheets, persistence). Each area's state is a `part` in
+  `lib/features/<area>/<area>.dart` (data mixin + `<Area>Actions` extension).
+  A tenant's free hold shows in the owner's inbox, menu edits reach the
+  resident's Food tab, rent payments update the owner's rent list.
+- `lib/features/<area>/`: each feature folder owns its state part and its
+  screens and sheets (`*_screen(s).dart`, `*_sheets.dart`), e.g.
+  `explore/` (Explore, hostel page, filters), `holds/` (holds, bed picker),
+  `owner/` (Today, Beds, Rent, Manage, Invite), `residents/`, `session/`
+  (start, sign-in, Me, settings), `layouts/`, `onboarding/`, `team/`.
+- `lib/features/listings/repo.dart`: the `HostelRepo` interface; it re-exports
+  `sample_repo.dart` (`SampleRepo`), `supabase_repo.dart` (`SupabaseRepo`) and
+  `rows.dart` (row parsing).
 - `lib/ui/kit.dart`: design tokens (light and dark `Pal`) and CSS-fidelity
   primitives:
   - `T` / `CssLine`: text with CSS line boxes (exact `font-size × line-height`,
@@ -52,8 +64,8 @@ Example: `/?start=picker&role=tenant&mode=list&theme=dark`.
   - hatch and dashed painters, and the icons.
 - `lib/ui/common.dart`: shared pieces (buttons, segmented controls, chips,
   bed boxes, inputs).
-- `lib/ui/screens_*.dart`: start, tenant, resident and owner screens.
-- `lib/ui/shell.dart`: frame, tab bar, bottom sheets and toast.
+- `lib/ui/shell.dart`: frame, tab bar, the screen and sheet maps, and toast.
+  Screen and sheet bodies live in their feature folders.
 - `lib/ui/overview.dart`: the all-screens page.
 
 Fonts (Archivo 400/500/600/800, JetBrains Mono 400) are bundled in
