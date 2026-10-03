@@ -872,6 +872,13 @@ const fairRules = [
 /// Strike ladder (DECISIONS 2026-10-02). No fines.
 const strikeLadder = [('Strike 1', 'Warning', 'Nothing changes yet'), ('Strike 2', 'Deals hidden', 'For 30 days'), ('Strike 3', 'Removed', 'From Hostelzy')];
 
+/// What strike [n] means, in a sentence (DECISIONS F07: 1 warning, 2 deals
+/// hidden for 30 days, 3 removed). The server writes the same words.
+String strikeWords(int n) => switch (n) { <= 1 => 'warning', 2 => 'deals hidden for 30 days', _ => 'removed from Hostelzy' };
+
+/// "Strike 2 · deals hidden for 30 days".
+String strikeDecision(int n) => 'Strike ${n.clamp(1, 3)} · ${strikeWords(n)}';
+
 /// One dated fact from Hostelzy's own records.
 class CaseEvent {
   const CaseEvent(this.date, this.title, this.sub, {this.flag = false});

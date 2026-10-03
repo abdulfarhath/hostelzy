@@ -1129,6 +1129,8 @@ class _AddResidentSheet extends StatelessWidget {
                     child: Rich(
                       m != null
                           ? [sp(context, 'Joined via Hostelzy.', w: 800), sp(context, ' This number ${m.what} on Hostelzy ${s.now - m.at < 86400000 ? 'today' : 'on ${dayMon(DateTime.fromMillisecondsSinceEpoch(m.at))}'} (${m.ref}).')]
+                          : s.rBefore && s.canMarkBefore
+                          ? [sp(context, 'Joined before Hostelzy.', w: 800), sp(context, ' Lived here before the hostel went live on Hostelzy.')]
                           : [sp(context, 'Direct.', w: 800), sp(context, ' No Hostelzy enquiry, hold or booking from this number in the last $matchWindowDays days.')],
                       s: 13,
                       lh: 1.4,
@@ -1152,6 +1154,33 @@ class _AddResidentSheet extends StatelessWidget {
               if (s.rJoin == 'Pick date') wrap(6, [for (final d in past) ChipBtn(dayMon(appToday.subtract(Duration(days: d))), on: s.rPickBack == d, onTap: () => s.update(() => s.rPickBack = d), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
             ],
           ),
+          // F24 #18: before go-live, residents already living here are
+          // "Joined before Hostelzy" (never counted as joining off the app).
+          if (s.canMarkBefore)
+            Tap(
+              key: const ValueKey('rBefore'),
+              onTap: () => s.update(() => s.rBefore = !s.rBefore),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: box(w: 2, c: p.tx),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(width: 24, height: 24, alignment: Alignment.center, decoration: box(bg: s.rBefore ? p.tx : transparent, w: 2, c: p.tx), child: s.rBefore ? Ic('check', size: 16, color: p.bg) : null),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: VGap(
+                        gap: 2,
+                        children: [
+                          const T('Lived here before Hostelzy', w: 800, s: 14),
+                          T('Only until ${hostelById(s.ownHid).name} goes live. After that, the Hostelzy team marks it.', s: 12, c: p.mu, lh: 1.4),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

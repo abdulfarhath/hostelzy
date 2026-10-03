@@ -17,7 +17,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -119,7 +119,10 @@ abstract class HostelRepo {
   /// S2: the owner adds a resident on bed [bedKey]. The server matches the
   /// phone to Hostelzy (60 days), opens a Fair Play case when added late, and
   /// books the bed. Returns how it matched.
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn});
+  /// F24 #18: [before] marks someone who lived there before the hostel went
+  /// live ("Joined before Hostelzy"); the server allows it only before
+  /// go-live, and after it for the Hostelzy team.
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false});
 
   /// S3: owner edits. The rate card (keys from [rateKey]) and each room's
   /// type and rent, by room number.
@@ -150,6 +153,12 @@ abstract class HostelRepo {
   Future<void> replyCase(String key, String reply, {bool reopen = false});
   Future<void> fixCase(String key);
   Future<void> decideCase(String key, String hid, String how, String? decision);
+
+  /// F24 #18: the owner's "I agree" to the Fair Play rules, kept on the
+  /// server once per account; and whether this account has agreed (null
+  /// when the server can't say yet).
+  Future<void> acceptFairPlay();
+  Future<bool?> fairAccepted();
 
   /// S8: the owner's one-time manager code, and joining with it (returns the
   /// hostel's name). Throws with the server's reason; [UnsupportedError] on
@@ -390,7 +399,7 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> setHoldStatus(String id, String status) async {}
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) => throw UnsupportedError('sample data');
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) => throw UnsupportedError('sample data');
   @override
   Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms) async {}
   @override
@@ -431,6 +440,10 @@ class SampleRepo implements HostelRepo {
   Future<void> fixCase(String key) async {}
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {}
+  @override
+  Future<void> acceptFairPlay() async {}
+  @override
+  Future<bool?> fairAccepted() async => null;
   @override
   Future<String> managerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
   @override
@@ -714,10 +727,10 @@ class SupabaseRepo implements HostelRepo {
   Future<void> setHoldStatus(String id, String status) => db.from('holds').update({'status': status}).eq('id', id);
 
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
     final r = await db
         .from('stays')
-        .insert({'hostel_id': hid, 'bed_id': bedKey, 'name': name, 'phone': phone, 'rent': rent, 'advance': advance, 'joined_on': '${joinedOn.year}-${'${joinedOn.month}'.padLeft(2, '0')}-${'${joinedOn.day}'.padLeft(2, '0')}'})
+        .insert({'hostel_id': hid, 'bed_id': bedKey, 'name': name, 'phone': phone, 'rent': rent, 'advance': advance, if (before) 'via': 'before', 'joined_on': '${joinedOn.year}-${'${joinedOn.month}'.padLeft(2, '0')}-${'${joinedOn.day}'.padLeft(2, '0')}'})
         .select('via, late_days')
         .single();
     return (via: r['via'] as String, lateDays: r['late_days'] as int);
@@ -773,8 +786,31 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {
-    if (how == 'strike') await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
+    if (how == 'strike') {
+      try {
+        // F24 #18: the server adds the strike and writes what it means.
+        await db.rpc('give_strike', params: {'p_case': key});
+        return;
+      } on PostgrestException catch (e) {
+        // Before its SQL runs (FOUNDER-TODO 4zf1) the function isn't there.
+        if (!_missingFn(e)) rethrow;
+      }
+      await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
+    }
     await db.from('fair_cases').update({'status': how == 'more' ? 'waiting' : 'closed', 'decision': decision}).eq('id', key);
+  }
+
+  @override
+  Future<void> acceptFairPlay() => db.rpc('accept_fair_play');
+
+  @override
+  Future<bool?> fairAccepted() async {
+    try {
+      return (await db.from('fair_play_accepts').select('user_id').limit(1)).isNotEmpty;
+    } on PostgrestException catch (e) {
+      debugPrint('fair play accepted: ${e.message}');
+      return null;
+    }
   }
 
   @override
@@ -907,8 +943,18 @@ class SupabaseRepo implements HostelRepo {
       debugPrint('listings without amenities: ${e.message}');
       rows = await db.from('hostels').select(base);
     }
-    // S5: strike counts are public (they hide deals and listings).
-    final st = await db.rpc('strike_counts') as List;
+    // S5: strike counts are public (they hide deals and listings). F24 #18:
+    // fair_standing adds when strike 2's 30 days of hidden deals end; before
+    // its SQL runs (FOUNDER-TODO 4zf1) the plain counts are used.
+    List st;
+    var standing = <String, Standing>{};
+    try {
+      st = await db.rpc('fair_standing') as List;
+      standing = standingFromRows(st.cast<Map>());
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      st = await db.rpc('strike_counts') as List;
+    }
     // F19: "Checked by N residents · date" per room.
     final ck = await db.rpc('layout_checks') as List;
     final checks = <String, Map<int, (int, String)>>{};
@@ -917,7 +963,7 @@ class SupabaseRepo implements HostelRepo {
     }
     // F24 item 30: kept on the phone for the next time there's no network.
     unawaited(saveListingRows(rows));
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks);
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, standing: standing);
   }
 
   @override
@@ -1122,7 +1168,7 @@ Lead leadFromRow(Map<String, dynamic> r) {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, Standing> standing = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -1227,7 +1273,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final ams = <String, List<Amenity>>{
     for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
   };
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams, standing: standing);
 }
 
 /// The newest (or [oldest]) of some timestamps; null when there are none.
@@ -1305,3 +1351,21 @@ List<DayMenu>? menuFromRows(List<Map<String, dynamic>> rows) {
   }
   return w;
 }
+
+/// F24 #18: a hostel's Fair Play standing from `fair_standing()`: when strike
+/// 2's hidden deals come back ([until], null when not on strike 2) and why the
+/// last strike came (`case` | `fixes`, "3 fixes in 6 months").
+typedef Standing = ({DateTime? until, bool dealsHidden, bool removed, String? why});
+
+Map<String, Standing> standingFromRows(Iterable<Map> rows) => {
+  for (final r in rows)
+    r['hostel_id'] as String: (
+      until: r['hidden_until'] == null ? null : DateTime.parse(r['hidden_until'] as String).toLocal(),
+      dealsHidden: r['deals_hidden'] as bool? ?? false,
+      removed: r['removed'] as bool? ?? false,
+      why: r['last_reason'] as String?,
+    ),
+};
+
+/// A function the app calls isn't on the server yet (its SQL hasn't run).
+bool _missingFn(PostgrestException e) => e.code == 'PGRST202' || e.code == '42883' || e.message.contains('Could not find the function');

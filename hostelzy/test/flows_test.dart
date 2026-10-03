@@ -1905,7 +1905,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}, standing: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -3672,8 +3672,8 @@ class _FakeLive extends SampleRepo {
   @override
   Future<void> setHoldStatus(String id, String status) => _rec('holdstatus $id $status');
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
-    await _rec('stay $hid $bedKey $name $phone $rent $advance');
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
+    await _rec('stay $hid $bedKey $name $phone $rent $advance${before ? ' before' : ''}');
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,

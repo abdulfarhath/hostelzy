@@ -71,6 +71,25 @@ test('F24 item 14: "Did you join?" answers in words', async () => {
   assert.equal(joinSummary([{ answer: 'yes' }, { answer: 'deciding' }, { answer: 'yes' }, { answer: 'not_yet' }]), 'Joined 2 · Not yet 1 · Still deciding 1');
 });
 
+test('F24 item 18: strike words, standing and tenant reports', async () => {
+  // @ts-ignore plain JS module
+  const { strikeWords, strikeButton, standingLine, reportLine, casePhotoPath } = await import('../../../app/console/logic.js');
+  assert.deepEqual([1, 2, 3].map(strikeWords), ['warning', 'deals hidden for 30 days', 'removed from Hostelzy']);
+  assert.equal(strikeButton(0), 'Strike 1 · warning');
+  assert.equal(strikeButton(1), 'Strike 2 · deals hidden for 30 days');
+  assert.equal(strikeButton(2), 'Strike 3 · removed from Hostelzy');
+  assert.equal(strikeButton(3), 'Removed already');
+  const now = Date.parse('2026-10-20T00:00:00Z');
+  assert.equal(standingLine(undefined, now), 'No strikes');
+  assert.equal(standingLine({ n: 1, last_reason: 'fixes' }, now), '1 strike · warning (3 fixes in 6 months)');
+  assert.equal(standingLine({ n: 2, hidden_until: '2026-11-02T10:00:00Z' }, now), '2 strikes · deals hidden until 2 Nov');
+  assert.equal(standingLine({ n: 2, hidden_until: '2026-10-02T10:00:00Z' }, now), '2 strikes · deals back since 2 Oct');
+  assert.equal(standingLine({ n: 3, removed: true }, now), '3 strikes · removed from Hostelzy');
+  assert.equal(reportLine({ why: 'Asked to pay without the app', note: 'Said ₹500 less', created_at: '2026-10-03T06:00:00Z' }), 'Asked to pay without the app · “Said ₹500 less” · 3 Oct');
+  assert.equal(reportLine({ why: 'Something else', note: '', created_at: '2026-10-03T06:00:00Z' }), 'Something else · 3 Oct');
+  assert.equal(casePhotoPath('h1', 'fb-team', 42), 'h1/fb-team/tenant-42.jpg');
+});
+
 test('Go live goes through go_live(): the server reason in plain words', () => {
   assert.equal(goLiveWords('add 8 photos first'), 'Not live yet: add 8 photos first.');
   assert.equal(goLiveWords('PostgrestError: drop the map pin at the gate'), 'Not live yet: drop the map pin at the gate.');

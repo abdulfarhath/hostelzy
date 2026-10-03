@@ -2,9 +2,11 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, goLiveWords } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords } from './logic.js';
 
 const app = document.getElementById('app');
+/** The signed-in team member (for their own storage paths). */
+let me = null;
 
 /** Tiny DOM builder: el('div', {class: 'x', onclick}, 'text', child…). Text is never parsed as HTML. */
 function el(tag, attrs = {}, ...kids) {
@@ -79,6 +81,7 @@ const NAV = [
 ];
 
 function shell(user, db, out) {
+  me = user;
   const render = async () => {
     const view = (location.hash.slice(1) || 'onboarding');
     const main = el('main', { class: 'main' }, el('p', { class: 'pad mu' }, 'Loading…'));
@@ -180,43 +183,125 @@ const VIEWS = {
     // F24 item 14: tenants' "Did you join?" answers (90 days); empty before SQL 4zy3 runs.
     const since = new Date(Date.now() - 90 * 86400000).toISOString();
     const joins = await db.from('join_answers').select('hostel_id, answer, updated_at').gte('updated_at', since).then(({ data }) => data ?? []);
-    const joined = el('p', { class: 'note' });
+    // F24 item 18: strikes now, tenant reports and who agreed to the rules; empty before SQL 4zf1 runs.
+    const standing = await db.rpc('fair_standing').then(({ data }) => Object.fromEntries((data ?? []).map((r) => [r.hostel_id, r])));
+    const reportsQ = await db.from('fair_reports').select('*, hostels(name)').eq('status', 'new').order('created_at');
+    const reports = reportsQ.data ?? [];
+    const owners = await db.from('hostel_staff').select('hostel_id, user_id').eq('role', 'owner').then(({ data }) => data ?? []);
+    const accepts = await db.from('fair_play_accepts').select('user_id, accepted_at').then(({ data }) => Object.fromEntries((data ?? []).map((a) => [a.user_id, a.accepted_at])));
     const counts = Object.fromEntries(CASE_TABS.map(([k]) => [k, cases.filter((c) => c.status === k).length]));
     const shown = cases.filter((c) => c.status === tab);
     let sel = shown[0];
     const list = el('div', { class: 'list' });
-    let draw = () => list.replaceChildren(...(shown.length ? shown.map((c) => el('button', { class: 'row' + (c === sel ? ' hi' : ''), onclick: () => { sel = c; draw(); } },
+    const detail = el('div', {});
+    const signals = el('div', {});
+    const strikeBtn = el('button', { class: 'btn full primary', onclick: () => act('strike') });
+    const drawList = () => list.replaceChildren(...(shown.length ? shown.map((c) => el('button', { class: 'row' + (c === sel ? ' hi' : ''), onclick: () => { sel = c; draw(); } },
       el('span', { class: 't' }, `${c.ref} · ${c.hostels?.name ?? ''}`, el('span', { class: 'tag ' + (c.status === 'decided' ? 'red' : 'neutral') }, CASE_TABS.find(([k]) => k === c.status)[1])),
-      el('span', { class: 's' }, c.signal))) : [el('p', { class: 'empty' }, 'Nothing here.')]));
-    const drawJoined = () => joined.replaceChildren(...(sel ? [el('b', {}, `Did you join? · ${sel.hostels?.name ?? ''}`), ` · tenants whose hold ended, last 90 days: ${joinSummary(joins.filter((j) => j.hostel_id === sel.hostel_id))}. Only the team sees these.`] : []));
-    const pick = draw;
-    draw = () => { pick(); drawJoined(); };
+      el('span', { class: 's' }, c.decision ?? c.signal))) : [el('p', { class: 'empty' }, 'Nothing here.')]));
+    const photoLink = async (path, label) => {
+      const url = (await db.storage.from('case-photos').createSignedUrl(path, 3600)).data?.signedUrl;
+      return url ? el('a', { href: url, target: '_blank', rel: 'noopener' }, label) : el('span', { class: 'mu' }, label + ' (couldn’t open)');
+    };
+    // F24 #18 (Wave 1 left it open): the team attaches the tenant's photo to the case.
+    const attach = (c) => el('label', { class: 'btn sm' }, c.tenant_photo ? 'Replace tenant’s photo' : 'Attach tenant’s photo',
+      el('input', { type: 'file', accept: 'image/jpeg', style: 'display:none', onchange: async (e) => {
+        const f = e.target.files?.[0];
+        if (!f || !me) return;
+        const path = casePhotoPath(c.hostel_id, me.uid);
+        const up = await db.storage.from('case-photos').upload(path, f, { contentType: 'image/jpeg' });
+        if (up.error) return toast('Couldn’t upload: ' + up.error.message);
+        ok(await db.from('fair_cases').update({ tenant_photo: path }).eq('id', c.id));
+        toast('Photo added. The owner sees it with the case.');
+        again();
+      } }));
+    const drawDetail = async () => {
+      if (!sel) return detail.replaceChildren();
+      const st = standing[sel.hostel_id];
+      const owner = owners.find((o) => o.hostel_id === sel.hostel_id);
+      const agreed = owner && accepts[owner.user_id];
+      const n = st?.n ?? 0;
+      strikeBtn.replaceChildren(strikeButton(n), ' ⚑');
+      strikeBtn.disabled = n >= 3 || sel.status === 'decided' || sel.status === 'closed';
+      detail.replaceChildren(
+        el('div', { class: 'note', style: 'display:grid;gap:6px;padding-top:12px' },
+          el('b', { style: 'font-size:15px;color:var(--tx)' }, `${sel.hostels?.name ?? ''}: ${sel.title}`),
+          ...(sel.events ?? []).map((e) => el('span', {}, `${e.on} · ${e.what}${e.detail ? ' · ' + e.detail : ''}`)),
+          el('span', {}, el('b', {}, 'Owner’s reply: '), sel.owner_reply ? `“${sel.owner_reply}”` : 'none yet'),
+          el('span', {}, el('b', {}, 'Photos: '), sel.owner_photo ? await photoLink(sel.owner_photo, 'Owner’s photo') : 'none from the owner', ' · ',
+            sel.tenant_photo ? await photoLink(sel.tenant_photo, 'Tenant’s photo') : 'none from the tenant', ' ', attach(sel)),
+          el('span', {}, el('b', {}, 'Strikes: '), standingLine(st)),
+          el('span', {}, el('b', {}, 'Fair Play rules: '), agreed ? `agreed ${dayMon(agreed)}` : owner ? 'not agreed on the server yet' : 'no owner account linked'),
+          el('span', {}, el('b', {}, `Did you join? · `), `tenants whose hold ended, last 90 days: ${joinSummary(joins.filter((j) => j.hostel_id === sel.hostel_id))}. Only the team sees these.`)));
+    };
+    const drawSignals = async () => {
+      if (!sel) return signals.replaceChildren();
+      const { data, error } = await db.rpc('fair_signals', { p_hostel: sel.hostel_id });
+      if (error) return signals.replaceChildren(el('p', { class: 'note' }, 'Signals show once SQL step 4zf1 has run.'));
+      signals.replaceChildren(el('div', { class: 'list' }, data.map((g) => el('div', { class: 'row' },
+        el('span', { class: 't' }, g.label, el('span', { class: 'tag ' + (g.n > 0 ? 'red' : 'neutral') }, String(g.n))),
+        g.detail ? el('span', { class: 's' }, g.detail) : null))));
+    };
+    const draw = () => { drawList(); drawDetail(); drawSignals(); };
     draw();
     const act = async (what) => {
       if (!sel) return;
       if (what === 'close') ok(await db.from('fair_cases').update({ status: 'closed', decision: 'No issue' }).eq('id', sel.id));
       if (what === 'ask') ok(await db.from('fair_cases').update({ status: 'waiting' }).eq('id', sel.id));
       if (what === 'strike') {
-        ok(await db.from('strikes').insert({ hostel_id: sel.hostel_id, case_id: sel.id }));
-        ok(await db.from('fair_cases').update({ status: 'decided', decision: 'Strike · warning' }).eq('id', sel.id));
+        const n = standing[sel.hostel_id]?.n ?? 0;
+        if (!confirm(`${strikeButton(n)} for ${sel.hostels?.name ?? 'this hostel'}?`)) return;
+        // F24 #18: the server adds it and writes what it means.
+        const { error } = await db.rpc('give_strike', { p_case: sel.id });
+        if (error) {
+          if (!/give_strike|function/i.test(error.message)) throw new Error(error.message);
+          ok(await db.from('strikes').insert({ hostel_id: sel.hostel_id, case_id: sel.id }));
+          ok(await db.from('fair_cases').update({ status: 'decided', decision: `Strike ${Math.min(n + 1, 3)} · ${strikeWords(n + 1)}` }).eq('id', sel.id));
+        }
       }
       toast('Saved.');
       again();
     };
+    // Board cCases: tenant reports → "Open a case" (the owner sees the case, never who reported) or "No case · close".
+    const report = async (r, open) => {
+      if (open) {
+        const { data, error } = await db.rpc('report_case', { p_report: r.id });
+        if (error) return toast('Couldn’t open a case: ' + error.message);
+        toast(`${data} opened. The owner has 48 hours to reply.`);
+      } else {
+        ok(await db.from('fair_reports').update({ status: 'closed' }).eq('id', r.id));
+        toast('Report closed. No case.');
+      }
+      again();
+    };
+    const reportRows = reportsQ.error
+      ? [el('p', { class: 'note' }, 'Tenant reports show here once SQL step 4zf1 has run.')]
+      : reports.length
+      ? reports.map((r) => el('div', { class: 'row' },
+        el('span', { class: 't' }, r.hostels?.name ?? '', el('span', { class: 'tag neutral' }, 'New')),
+        el('span', { class: 's' }, reportLine(r)),
+        el('div', { style: 'display:flex;gap:8px;margin-top:6px' },
+          el('button', { class: 'btn sm primary', onclick: () => report(r, true) }, 'Open a case'),
+          el('button', { class: 'btn sm', onclick: () => report(r, false) }, 'No case · close'))))
+      : [el('p', { class: 'empty' }, 'No new tenant reports.')];
     return [el('div', { class: 'split' },
       el('section', {},
         el('h2', {}, 'Fair Play cases'),
         el('div', { class: 'seg', style: 'margin:0 16px 10px' }, CASE_TABS.map(([k, l]) => el('button', { class: k === tab ? 'on' : '', onclick: () => { sessionStorage.setItem('hzCaseTab', k); again(); } }, counts[k] ? `${l} ${counts[k]}` : l))),
         list,
-        joined,
+        detail,
         el('div', { class: 'acts' },
           el('button', { class: 'btn full', onclick: () => act('close') }, 'Close · no issue', '✓'),
           el('button', { class: 'btn full', onclick: () => act('ask') }, 'Ask for more', '…'),
-          el('button', { class: 'btn full primary', onclick: () => act('strike') }, 'Strike · warning', '⚑'))),
+          strikeBtn),
+        el('p', { class: 'note' }, 'Strikes: 1 warning · 2 deals hidden for 30 days · 3 removed from Hostelzy. 3 fixes within 48 hours in 6 months = 1 warning (counted by the server). No fines.')),
       el('section', {},
-        el('h2', {}, 'Layout help'),
+        el('h2', {}, 'Tenant reports'),
+        el('div', { class: 'list' }, reportRows),
+        el('h2', {}, sel ? `Signals · ${sel.hostels?.name ?? ''}` : 'Signals'),
+        signals,
         el('p', { class: 'note' }, 'Owners draw and publish their own layouts. When one asks us to draw a room, it shows in Layout help, due within 48 hours.'),
-        el('div', { style: 'padding:0 16px' }, el('a', { class: 'btn', href: '#layout' }, 'Open Layout help ›'))))];
+        el('div', { style: 'padding:0 16px 16px' }, el('a', { class: 'btn', href: '#layout' }, 'Open Layout help ›'))))];
   },
 
   // F24 board cLayoutHelp: owners who asked Hostelzy to draw a room. Oldest

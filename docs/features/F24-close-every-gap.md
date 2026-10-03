@@ -431,3 +431,42 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Server SQL:** `supabase/migrations/20261003060000_f24_enquiries_reviews.sql` → FOUNDER-TODO **4zr1**. Until it runs, enquiries insert as before (the app falls back when `send_enquiry` is missing), reviews work as before, and reports say they couldn't send.
 - **Screens:** added the `revReport` sheet (Report this review) and the console view "Reported reviews". Changed: `rReview` / `rExit` (Save changes, one-per-stay line), `rStay` (review row), `rHome` (card only once open), `oRank` / Reviews (Report abuse), `oLayouts` and `oLayout` (layout-wrong flag), the WhatsApp sheet (link line). Removed: none.
 - **Tests:** `test/wave4a_test.dart` (8), `supabase/tests/wave4a_test.sql`. Updated: `rls_test.sql` (the resident has 40 days; authors may edit, not reply), `reviews_test.sql` (40 days), `flows_test` / `tenant_test` (the message ends with the link).
+
+**Wave 3b: item 18, Fair Play hardening.** Branch `feature/f24-wave3b` (2026-10-03). DECISIONS F07: strikes are 1 warning, 2 deals hidden for 30 days, 3 removed. A fix within 48 hours means no strike, and 3 fixes in 6 months = 1 warning.
+- **Rules accepted on the server.** "Agree and continue" also calls `accept_fair_play()`, once per account, into `fair_play_accepts`. On sign-in the app asks the server. If the owner agreed on another phone, the rules aren't shown again. If they agreed on this phone before the server had it, it is sent then. Console › Fair Play shows "Fair Play rules: agreed 3 Oct" for the case's owner.
+- **Joined before Hostelzy.**
+  - `hostels.live_since` is set by the server when a hostel goes live (backfilled from `visited_on`). Owners can't change it.
+  - `stays.via = 'before'` is allowed only for someone who moved in on or before that day. The owner can set it only while the hostel isn't live yet (onboarding). After go-live only the team can.
+  - The wizard's residents step now saves its residents as "before" (it said so, but the server stored them as Direct).
+  - Add resident has a "Lived here before Hostelzy" tick, shown only before go-live. If the server says no, the owner sees "Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy."
+  - These residents never count in the collusion signals.
+- **Strikes now.**
+  - `strike_state(h)` and the public `fair_standing()` return the count, when strike 2's hidden deals come back (30 days from the day it was given), whether the hostel is removed, and why the last strike came (`case` | `fixes`).
+  - Strikes keep counting: DECISIONS gives no expiry for them, only for strike 2's hidden deals.
+  - `deal_for_bed` uses the 30 days. The app's `dealsOf` uses `dealsHidden()`: hidden until the server's date. With no date (sample data, or before the SQL runs), strike 2 keeps them hidden as before.
+  - The owner's Today card says "Deals hidden until 2 Nov", then "Deals back since 2 Nov".
+- **Strike 3 hides the hostel on the server.**
+  - `is_live()` and the hostels read policy leave out a hostel with 3 strikes. Tenants can't read it, its rooms, beds, deals or reviews, and can't hold or enquire there.
+  - Its owner and the team still see it, and the owner's strike notice says why. Its plan is paused, so no more invoices.
+- **3 fixes in 6 months = 1 warning, counted on the server.** `fix_case` stamps `fixed_at`. On the third uncounted fix in 6 months it adds a strike with reason `fixes` and marks those three fixes as counted. The owner's toast says "That's 3 fixes in 6 months, which counts as one warning (strike N of 3)". The strike notice says "Three fixes count as one warning".
+- **All 6 signals on the server.** `fair_signals(hostel)` is team only. It returns one row per F07 signal:
+  - held or enquired, then added as Direct (same name, another number);
+  - hold cancelled, same bed taken by a Direct resident within 7 days;
+  - tenant said "Yes, I joined" (Wave 2b `join_answers`) 3+ days ago and was never added;
+  - a Direct resident paying less than the walk-in price while deals are on;
+  - declining holds while occupancy rises. The new `holds.declined` is set when the owner or a manager (not the tenant) turns a hold down: 2+ declined and 2+ Direct residents added in 30 days;
+  - tenant reports (90 days).
+  Console › Fair Play shows the six for the selected case's hostel, each with its count and detail.
+- **Tenant reports in the console (board `cCases` + Tenant reports).**
+  - `fair_reports.status` is new → case | closed. **Open a case** runs `report_case()`, which opens an FP case for the owner. The case has the reason only, never the tenant's name or note.
+  - **No case · close** closes the report. Tenants can only file new reports.
+- **Case photo from the console.** In the case detail, **Attach tenant's photo** uploads to `case-photos` (`<hostel>/<team uid>/tenant-….jpg`) and sets `fair_cases.tenant_photo`. The owner's case shows "Photo from <tenant>" (Wave 1). The owner's and the tenant's photos open as signed links.
+- **Correct strike labels everywhere.**
+  - The team's strike goes through `give_strike()`, which writes "Strike 2 · deals hidden for 30 days". Before the SQL runs, the old insert is the fallback.
+  - The console button says the next strike ("Strike 2 · deals hidden for 30 days"), not always "Strike · warning".
+  - The app's aCases decision uses the same words (`strikeDecision`). The Today card, the strike notice and the aCases notes say "deals hidden for 30 days".
+  - aCases "Live since" shows the real go-live date, not a made-up "1 Oct 2026".
+- **Overlap with Wave 3a:** the only policies changed are the hostels read policy ("live hostels"), the tenant insert on `fair_reports` and the new team update on `fair_reports`. `fix_case` and `deal_for_bed` were redefined (owner/staff checks unchanged).
+- **SQL:** `20261003080000_f24_fair_play.sql` (FOUNDER-TODO **4zf1**). Test: `supabase/tests/fairhard_test.sql`.
+- **Screens:** none added or removed. Changed: sheet `addR` (Add resident: "Lived here before Hostelzy" tick before go-live), `oToday` Fair Play card (deals hidden until / back since), `oStrike` (server dates, deals back, 3-fixes wording), `aCases` (decision words, real "Live since"), console Fair Play `cCases` (case detail, six signals, Tenant reports with Open a case / No case · close, attach tenant's photo, strike button wording).
+- **Tests:** `test/wave3b_test.dart`; console `strikeWords` / `standingLine` / `reportLine` in `supabase/functions/tests/console.test.ts`.

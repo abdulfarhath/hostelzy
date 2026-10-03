@@ -42,7 +42,7 @@ extension ResidentsActions on AppState {
     return null;
   }
 
-  Resident _newResident(String name, String phone, String bed, int amt, int adv, int joinAt, {required bool confirmed}) {
+  Resident _newResident(String name, String phone, String bed, int amt, int adv, int joinAt, {required bool confirmed, bool before = false}) {
     final m = matchFor(phone, joinAt);
     final b = findBed(ownHid, bed).b;
     if (b != null) b.state = 'booked';
@@ -58,7 +58,7 @@ extension ResidentsActions on AppState {
         ...cases,
       ];
     }
-    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
+    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : before ? 'before' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
   }
 
   /// "Add resident": the resident is listed as Not confirmed until they
@@ -67,10 +67,10 @@ extension ResidentsActions on AppState {
     final name = rName.trim();
     if (name.isEmpty || rPhone.length != 10 || rBed == null) return toastMsg('Add a name, a 10-digit number and a bed.');
     if (onServer) {
-      addStayLive(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, DateTime.fromMillisecondsSinceEpoch(rJoinAt));
+      addStayLive(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, DateTime.fromMillisecondsSinceEpoch(rJoinAt), before: rBefore && canMarkBefore);
       return;
     }
-    final res = _newResident(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, rJoinAt, confirmed: false);
+    final res = _newResident(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, rJoinAt, confirmed: false, before: rBefore && canMarkBefore);
     update(() {
       residents = [res, ...residents];
       sheet = null;
@@ -321,26 +321,39 @@ extension ResidentsActions on AppState {
 
   /// S2: the owner adds a resident (or a booking) on the server; the list,
   /// the bed and any Fair Play case come back from it.
-  Future<bool> addStayLive(String name, String phone, String bedLabel, int rent, int advance, DateTime joinedOn, {bool booking = false}) async {
+  /// F24 #18: the owner may mark "Lived here before Hostelzy" only while the
+  /// hostel isn't live yet (the server checks the same).
+  bool get canMarkBefore => !hostelById(ownHid).live;
+
+  Future<bool> addStayLive(String name, String phone, String bedLabel, int rent, int advance, DateTime joinedOn, {bool booking = false, bool before = false}) async {
     final b = findBed(ownHid, bedLabel).b;
     if (b?.key == null) {
       toastMsg('Bed $bedLabel isn’t on the server. Pull down to refresh and try again.');
       return false;
     }
     ({String via, int lateDays})? res;
-    final ok = await _write(() async => res = await data.addStay(hid: ownHid, bedKey: b!.key, name: name, phone: phone, rent: rent, advance: advance, joinedOn: joinedOn));
-    if (!ok) return false;
+    try {
+      res = await data.addStay(hid: ownHid, bedKey: b!.key, name: name, phone: phone, rent: rent, advance: advance, joinedOn: joinedOn, before: before);
+    } catch (e) {
+      debugPrint('add stay: $e');
+      // F24 #18: the server's reason when "before Hostelzy" isn't allowed.
+      toastMsg('$e'.contains('joined before Hostelzy')
+          ? 'Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy. Message the team.'
+          : 'Couldn’t save it. Check your internet and try again.');
+      return false;
+    }
+    await refreshLive();
     update(() {
-      b!.state = 'booked';
+      b.state = 'booked';
       sheet = null;
       resF = 'All';
     });
     final first = name.split(' ')[0];
-    toastMsg(res!.lateDays > 0
-        ? 'Added, ${res!.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
+    toastMsg(res.lateDays > 0
+        ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
         : booking
         ? 'Booked bed $bedLabel. Send them a welcome on WhatsApp.'
-        : 'Added${res!.via == 'hz' ? ' (came through Hostelzy)' : ''}. $first confirms by joining with your invite code.');
+        : 'Added${res.via == 'hz' ? ' (came through Hostelzy)' : res.via == 'before' ? ' as joined before Hostelzy' : ''}. $first confirms by joining with your invite code.');
     return true;
   }
 

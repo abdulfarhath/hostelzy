@@ -167,6 +167,8 @@ extension SyncActions on AppState {
       _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
     });
     // F24 #16, #25: now that this is live, the level and the electricity.
+    // F24 #18: and whether this account agreed to the Fair Play rules.
+    unawaited(loadFairAccepted());
     unawaited(loadLevel());
     unawaited(loadMyMeter(force: true));
   }

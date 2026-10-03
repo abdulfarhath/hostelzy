@@ -285,7 +285,9 @@ extension OnboardingActions on AppState {
         return false;
       }
       try {
-        await data.addStay(hid: id, bedKey: b.b!.key, name: r.name, phone: r.phone, rent: b.r!.rent, advance: draft.advance, joinedOn: appToday);
+        // F24 #18: residents typed on the visit, before go-live, lived there
+        // before Hostelzy.
+        await data.addStay(hid: id, bedKey: b.b!.key, name: r.name, phone: r.phone, rent: b.r!.rent, advance: draft.advance, joinedOn: appToday, before: !hostels.any((h) => h.id == id && h.live));
         draft.savedResidents.add(k);
       } catch (e) {
         debugPrint('draft resident: $e');
