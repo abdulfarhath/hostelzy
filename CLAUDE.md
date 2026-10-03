@@ -1,93 +1,71 @@
-# Hostelzy: rules for every Claude chat working on this repo
+# Hostelzy: rules for every Claude working on this repo
 
-Hostelzy is a Hyderabad PG/hostel app: tenants find and hold beds, residents
-manage their stay, owners run their hostel. The Flutter app is in `hostelzy/`.
-The original Claude Design handoff is in `project/` and `chats/`.
+Hostelzy is a Hyderabad PG/hostel app. Tenants find and hold beds, residents manage their stay,
+owners run their hostel. Flutter app in `hostelzy/`, Supabase backend in `supabase/`, team console
+and public web pages in `app/`.
 
-Six chats work on this repo at the same time. Each has one role.
+**New here (new chat or new account)? Read `docs/START-HERE.md` first.** It covers the product, the
+current state, where everything lives, and how to carry on.
+
+## Always, first
+1. `git pull`, then read `docs/START-HERE.md`, `docs/BOARD.md` and `docs/DECISIONS.md` (start with its
+   "Current rules" section), plus the feature file you're working on in `docs/features/`.
+2. Never contradict `docs/DECISIONS.md`. If it seems wrong, ask the founder (through the hub).
+3. Before you end a turn, commit and push. The repo is the shared memory: chats can't see each
+   other's conversations.
+
+## The team: one hub, six chats
+The founder talks **only to the hub**. The hub hands out work with the Claude Code Remote tools
+(`create_session`, `send_message`), checks in, and reports milestones. The session IDs are in `docs/HUB.md`.
 
 | Chat | Role | Writes to |
 |---|---|---|
-| **Hostelzy · Ideas** | Founder's product partner: ideas, specs, status | `docs/` only |
-| **Hostelzy · Design** | Designer: mockups for spec-ready features | `docs/features/*` (Design section), artifacts |
-| **Hostelzy · Build** | Developer: builds design-approved features | `hostelzy/` code, `docs/features/*` (Build section), `docs/BOARD.md` status |
-| **Hostelzy · Marketing** | Marketing partner: owner pitch, tenant growth, reels, posters, launch plan | `docs/marketing/` only |
-| **Hostelzy · Brand** | Brand partner: app name (with trademark screening) and logo | `docs/brand/` only, artifacts |
-| **Hostelzy · Finance & Growth** | Money partner: budget, pricing, rewards caps, bills, cheap/free growth, hiring marketing help | `docs/finance/` only |
-
-## Always, first
-
-1. `git pull` then read `docs/BOARD.md`, `docs/DECISIONS.md` and the feature
-   file you are working on in `docs/features/`.
-2. Never contradict `docs/DECISIONS.md`. If something there seems wrong, ask
-   the founder; don't change it on your own.
-3. Before you finish a turn, commit and push what you changed (docs or code),
-   so the other chats see it. The repo is the shared memory: chats do not see
-   each other's conversations.
+| **Hub** (Ideas & status) | Founder's single contact: ideas, specs, decisions, status, orchestration | `docs/` (not `docs/marketing`, `finance`, `brand`) |
+| **Build** | Builds and merges features | `hostelzy/`, `supabase/`, `app/`, `tools/`, `.github/`, feature files' Build section, `docs/BOARD.md` status, `docs/SCREENS.md`, `docs/ARCHITECTURE.md`, `docs/FOUNDER-TODO.md` SQL/key steps |
+| **Design** | Keeps the design canvas 1:1 with the app | Feature files' Design section, the canvas artifact, the screen count line in `docs/BOARD.md` |
+| **Marketing** | Owner pitch, tenant growth, reels, posters, launch plan | `docs/marketing/` |
+| **Finance & Growth** | Budget, pricing proposals, bills, rewards caps | `docs/finance/` |
+| **Brand** | Name and logo assets, Play Store pack, brand guide | `docs/brand/` |
 
 ## Standing approval (founder, 2026-10-02)
+- Never wait for the founder's approval. Design marks its own work **Design approved**. Build merges
+  its own PR to `main` once `flutter analyze` is clean and `flutter test` passes.
+- **Only the founder** does physical steps (accounts, keys, SQL runs, payments, store listings) and
+  changes **money amounts** already in DECISIONS. Put those steps in `docs/FOUNDER-TODO.md` and
+  questions in the "Questions for the founder" tables (`docs/finance/plan.md`, `docs/marketing/README.md`).
+- The hub decides product details itself and records them in DECISIONS.md with the date.
 
-The founder has approved every design and every merge in advance. Design marks finished designs
-**Design approved** itself; Build merges its own PR to `main` once `flutter analyze` is clean and
-`flutter test` passes. Accounts, money and changes to business rules still need the founder.
-This overrides the "only the founder approves" lines below until the founder says otherwise.
-Founder, 2026-10-02 (later): "keep designing and building in parallel, never wait for my approval".
-The Ideas chat decides product details; **Design keeps the "Hostelzy · All screens" canvas
-(https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx) updated after every feature it designs or
-Build merges** (same URL, tag Updated/New).
-Founder, 2026-10-02 (evening): "take your own decisions… never take my approval for anything". The
-chats decide designs, product details and merges themselves. Only things the founder must physically
-do (accounts, keys, SQL runs, payments setup) or that change money amounts already in DECISIONS.md go
-to the founder.
+## Hard rules
+- **Design = app, 1:1.** `docs/SCREENS.md` lists every screen, sheet and full-screen state. The canvas has
+  exactly one main board per item, and its title starts with the SCREENS id (e.g. `[S8]`). Add a
+  screen → add a SCREENS entry → Design adds the board. Remove one → remove both. Each PR lists
+  the screens it adds or removes.
+- **Honest.** No fake numbers, no "Paid / Verified / Sent" unless it really happened, no "OTP"
+  wording until SMS OTP exists, no sample data in the real build.
+- **Simple.** One job per screen, plain words, light + dark, works on 360-px phones.
+- **Never touch** the site root `index.html` (farhath.me/hostelzy/ stays the old prototype, founder
+  decision). Public app pages live in `app/` (farhath.me/hostelzy/app/).
+- **Secrets.** Never commit or paste the Supabase service_role key or private keys.
 
-## Design ↔ app consistency (founder, 2026-10-02)
-- Every screen and sheet in the app has a board in "Hostelzy · Main design", and every board is a real,
-  reachable screen in the release app. Same count both ways. No feature we discussed is left out.
-- Design adds a board for every screen Build adds; Build builds every board Design adds. Retired
-  screens are removed from both. Each PR / canvas update lists the screens it adds or removes.
+## Build rules
+- Branch `feature/<id>-<name>`. Pushes to `main` publish an APK (`apk-N` release with
+  `hostelzy.apk` real + `hostelzy-demo.apk` sample data).
+- Run `tools/check.sh` (analyze + tests + SQL tests) before merging. Every feature gets a flow test in `hostelzy/test/`.
+- Design fidelity: use `T`, `CssLine`, `Pal`, `Cta`, `Seg`… from `lib/ui/kit.dart` and `common.dart`.
+  How the code is organised: `docs/ARCHITECTURE.md`.
+- A new SQL migration needs a matching step in `docs/FOUNDER-TODO.md` (the founder runs it in Supabase).
+  The app must still work, with an honest message, until the founder has run it.
+- After merging: update the feature file's Build section, `docs/BOARD.md` and `docs/SCREENS.md`.
 
-## Talking to the founder
-- APK links: always give the **GitHub release page** (https://github.com/abdulfarhath/hostelzy/releases/tag/apk-N),
-  never a direct .apk download link (founder, 2026-10-02).
+## Design rules
+- Archivo font. `#ec3013` red for actions. Green `#1f7a3d` / `#dcefe0` only for savings and Hostelzy
+  deals. 2px rules, square corners, light + dark. Phone boards are 390×844. Tokens come from `hostelzy/lib/ui/kit.dart` (`Pal`).
+- Canvas "Hostelzy · Main design": https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx. Update it after
+  every Build merge (same URL, tags New / Updated / Removed).
 
-## Feature stages (`docs/BOARD.md`)
-
-`Idea → Spec ready → Designing → Design ready → Design approved → Building → Built → Shipped`
-
-- Only the **founder** approves. "Spec approved", "Design approved" and
-  "Merge" happen only when the founder says so in the chat. Record it in the
-  board with the date.
-- Ideas chat moves features up to **Spec ready**.
-- Design chat takes **Spec ready / approved** features, moves them to
-  **Designing → Design ready**, adds the design link to the feature file.
-- Build chat only starts features marked **Design approved** (or marked
-  "no design needed" in the spec), moves them **Building → Built**.
-
-## Design chat rules
-
-- Match the existing app exactly: Archivo font, `#ec3013` red for actions,
-  green `#1f7a3d` / `#dcefe0` only for savings and Hostelzy deals, 2px rules,
-  square corners, light + dark. Tokens: `hostelzy/lib/ui/kit.dart` (`Pal`).
-- Phone screens are 390×844. Use the Claude Design canvas artifact type.
-  Existing mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn
-- Put the link and a short screen list in the feature file's **Design**
-  section. Ask the founder to approve.
-
-## Build chat rules
-
-- Work on a branch `feature/<id>-<name>` (e.g. `feature/f05-enquiries`).
-  Never push unapproved work to `main`: pushes to `main` publish an APK.
-- Keep the design fidelity rules in `hostelzy/README.md` (use `T`, `CssLine`,
-  `Pal` tokens, `Cta`, `Seg`, etc. from `lib/ui/kit.dart` and `common.dart`).
-- Every feature gets a flow test in `hostelzy/test/`. Before saying done:
-  `flutter analyze` clean and `flutter test` passing.
-- Open a pull request, write what changed in the feature file's **Build**
-  section, set the board to **Built**, and ask the founder to merge.
-- Until the backend exists, features run on sample data in `AppState`.
-
-## Ideas chat rules
-
-- Discuss, then write a short spec in `docs/features/<id>-<name>.md`
-  (problem, user stories per role, screens, rules, open questions).
-- Record agreed decisions in `docs/DECISIONS.md` with the date.
-- When asked for status, read the board and the other chats' progress.
+## Talking to the founder (hub only)
+- Visual and tabular, ADHD-friendly: short lines, one idea per row, colour = meaning, the next action
+  first. Longer things go on an artifact page with tables.
+- APK links: always the GitHub release page (`https://github.com/abdulfarhath/hostelzy/releases/tag/apk-N`),
+  never a direct .apk link.
+- Only interrupt for milestones, blockers that need the founder, or a chat that died.
