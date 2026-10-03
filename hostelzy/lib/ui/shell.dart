@@ -14,6 +14,11 @@ import '../features/map/map_screen.dart';
 import '../features/meter/stay_tools_screens.dart';
 import '../features/moves/refunds_screens.dart';
 import '../features/onboarding/rooms_screens.dart';
+import '../features/owner/owner_beds_screen.dart';
+import '../features/owner/owner_invite_screen.dart';
+import '../features/owner/owner_manage_screen.dart';
+import '../features/owner/owner_rent_screen.dart';
+import '../features/owner/owner_today_screen.dart';
 import '../features/payments/payments_sheets.dart';
 import '../features/photos/photos_screens.dart';
 import '../features/plan/plan_screens.dart';
@@ -31,7 +36,6 @@ import 'common.dart';
 import 'kit.dart';
 import 'layout.dart';
 import 'onboarding.dart';
-import 'screens_owner.dart';
 import 'screens_resident.dart';
 
 /// Body text: Archivo 16px, line-height 1.4 (`[data-hz]`).
