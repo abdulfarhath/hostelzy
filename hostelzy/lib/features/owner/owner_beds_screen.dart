@@ -4,6 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../holds/building_view.dart';
 import 'owner_today_screen.dart';
 
 const ownerLegend = [('Free', 'free'), ('Free soon', 'soon'), ('On hold', 'held'), ('Taken', 'booked')];
@@ -104,6 +105,12 @@ class OwnerBedsScreen extends StatelessWidget {
           children: [
             PageHead(kicker: occCounts(s), title: 'Beds'),
             const SizedBox(height: 12),
+            // F25 (hub): Rooms · Building; Building is the tenant picker's component.
+            Seg(key: const ValueKey('obView'), opts: const [('rooms', 'Rooms'), ('building', 'Building')], cur: s.obView, onPick: (v) => s.update(() => s.obView = v), center: true),
+            const SizedBox(height: 12),
+            if (s.obView == 'building')
+              BuildingView(hid: s.ownHid, rooms: a, tenant: false, selected: s.sheet == 'bed' ? s.obed : null, onBed: openBed)
+            else ...[
             Row(
               children: [
                 for (final f in floors) ...[
@@ -127,7 +134,8 @@ class OwnerBedsScreen extends StatelessWidget {
             const SizedBox(height: 10),
             ...grid,
             const SizedBox(height: 12),
-            Wrap(
+            ],
+            if (s.obView == 'rooms') Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 12,

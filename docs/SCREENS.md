@@ -16,7 +16,7 @@
 | Web pages (app/): pages 6 + states 2 | **8** |
 | **Overall total** | **182** |
 
-Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 31 · Team mode 13 · Shared 8.
+Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 13 · Shared 8.
 Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
@@ -53,7 +53,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 6 | `roleGate` (owner) | List your PG (Request a visit, owner link, "Manager at a PG?") | `screens_start.dart:369` (`if (owner)`, `:386`) | Role › I run a PG, without a live hostel |
 | 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
 
-### Tenant (15)
+### Tenant (16)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -72,6 +72,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 20 | `hold` | Your hold (timer / pay to book / booked / ended) | `screens_tenant.dart:1425` | After a hold (`residents.dart:312,426`); Holds row (`screens_tenant.dart:491`) |
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
+| 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Picker tab Building (`pickTab-building`); Hostel page › See the whole building (`residents.dart:openBuilding`) |
 
 ### Resident (13)
 
@@ -91,12 +92,12 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
 
-### Owner (31)
+### Owner (30)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
 | 36 | `oToday` | Today (tab) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
-| 37 | `oBeds` | Beds · bed map (tab) | `screens_owner.dart:510` | Owner tab 2 |
+| 37 | `oBeds` | Beds · bed map (tab); toggle Rooms · Building (Building = the S87 component, a bed → H18) | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
 | 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
 | 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
 | 40 | `oMore` · residents | Manage › Residents | `screens_owner.dart:1129` | Manage › Residents |
@@ -104,7 +105,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 42 | `oMore` · complaints | Manage › Complaints | `screens_owner.dart:849` | Manage › Complaints |
 | 43 | `oMore` · deals | Manage › Deals | `deals.dart:13` | Manage › Deals (`state.openDeals`, `state.dart:241`) |
 | 44 | `oMore` · rates | Manage › Rates and UPI | `screens_owner.dart:1434` (`RateCard`) | Manage › Rates and UPI (`residents.dart:120`) |
-| 45 | `oMore` · menu | Manage › Food menu (+ meal times) | `screens_owner.dart:926` | Manage › Food menu (`food.dart:126`) |
+| 45 | `oMore` · menu | Manage › Food menu (+ meal times; toggle Edit by day · Week table, the Week table is a variant here, not its own screen: F25 hub decision, board `w4-oMenuWeek`) | `screens_owner.dart:926` | Manage › Food menu (`food.dart:126`) |
 | 46 | `oMore` · rules | Manage › House rules (+ laundry day) | `screens_owner.dart:1005` | Manage › House rules |
 | 47 | `oInvite` | Invite residents (code, QR, share, poster) | `screens_owner.dart:1289` | Manage › Residents › QR (`screens_owner.dart:1157`) |
 | 48 | `oTeam` | Team (owner's managers) | `onboarding.dart:1120` | Manage › Team (`screens_owner.dart:1077`) |
@@ -125,7 +126,6 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 63 | `oCase` | Fair Play check (case + reply) | `fairplay.dart:336` | Today › case card (`screens_owner.dart:332`); push |
 | 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
 | 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
-| 87 | `oMore` · menu (week) | Manage › Food menu › Week table (Mon–Sun × 3 meals, today highlighted, "Not set"; F25 NEW-4 `w4-oMenuWeek`) | `features/owner/owner_manage_screen.dart` (`_MenuWeek`) | Food menu › seg Week table (`s.mView`); a day → Edit by day on it |
 
 ### Hostelzy team mode (13) — release, only for Google accounts with the `team` claim
 
@@ -244,7 +244,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 7 | `holds` | No holds yet · Find a bed | `holds.isEmpty` | `screens_tenant.dart:548` |
 | 8 | `saved` | Nothing saved yet · Find a bed | nothing saved | `screens_tenant.dart:1617` |
 | 9 | `hold` | This hold isn't on this phone any more | hold id not found | `screens_tenant.dart:1432` |
-| 10 | `picker` (plan) | Floor plan shows after you hold a bed | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
+| 10 | `picker` (plan, building) | Floor plan shows after you hold a bed (also on the Building tab, F25) | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
 | 11 | `picker` (room) | Sign in to see room layouts | guest | `layout.dart:367` |
 | 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one | `layout.dart:375` |
 | 13 | `picker` (room) | Floor plan shows after you hold a bed (daily cap) | server `capped` | `layout.dart:379` |

@@ -322,5 +322,31 @@ capture machine can't reach OpenStreetMap). On a phone the tiles are there. Not 
   residents see an empty slot, so the line doesn't claim they see "Not set".
 - **Screens:** +1 → **S87** `oMore` · menu (week). App screens 86 → 87, release 160 → 161, overall 181 → 182.
   Canvas: rename `[NEW-4] w4-oMenuWeek` → `[S87]`.
+- **Later (hub decision, same day):** the Week table is a toggle on S45, not its own screen. Its SCREENS row is folded into
+  S45 and **S87 now belongs to the Building view** (below); `w4-oMenuWeek` is a variant of `[S45]`.
 - **Tests:** `hostelzy/test/menu_week_test.dart` (seg switch, draft shown, "Not set", today highlighted, tap a day → Edit
   by day on it, Save still works, empty week, 360 px × 1×/2× text × light/dark).
+
+### NEW-1 · Building view (S87), NEW-2 merged in · Built 2026-10-03
+Follows the hub decision above: one new screen, no separate floor map, no owner corridor plan, no thing positions.
+- **Picker tabs Plan · Room · Building** (`PickerTabs` in `lib/features/holds/picker_screen.dart`). The Room tab's old
+  "Floor view" button is gone (the Plan tab keeps its `floorView` key). Plan and the cheapest-beds link are unchanged.
+- **Building view** `lib/features/holds/building_view.dart` (`BuildingView`), the founder's pick: the 417c385 cross-section
+  rebuilt with the kit: roof, F3/F2/F1 rows with a 40 px label column (free count under it), rooms with bed boxes
+  (free / on hold / taken / your pick), base slab, legend. **Shared-thing chips on top of each floor row** (F23 data, floor
+  things only; red "· not working"). Floors come from the real rooms; **G shows only when the data has floor 0** (rooms, or
+  shared things there) with only those things and "Ground floor" (the old "Reception · dining hall · bike parking" was
+  invented and is gone). Tap a free bed → picked → the existing Continue bar (a taken bed toasts). **Tap a floor (its
+  label or its chips) → the existing floor sheet `amFloor` (H42).**
+- **Reached from** the picker tab and the hostel page's new "See the whole building ›" (`openBuilding`).
+- **Women's PGs:** the Building tab shows "Floor plan shows after you hold a bed" until a hold (same `floorLocked` as Plan).
+- **Owner › Beds:** seg **Rooms · Building** (`s.obView`, Rooms first). Building is the same component (`tenant: false`);
+  a bed opens the existing bed sheet (H18).
+- **No SQL, no FOUNDER-TODO step.** (An earlier version of this branch had thing positions and a migration; removed.)
+- **Screens:** +1 → **S87** `picker` (building), taking the id freed by the Week table, which is now noted as a toggle on
+  S45 (Food menu) instead of its own row. S37 notes the Rooms · Building toggle, T10 also covers the Building tab.
+  Totals: app screens 87 (86 before F25 + 1), release **161** (160 + 1), overall **182** (181 + 1).
+  Canvas: `[NEW-1]` → `[S87]`; `[NEW-2]` and `[NEW-3]` retire (merged); `w4-oMenuWeek` becomes a variant of `[S45]`.
+- **Tests:** `hostelzy/test/f25_test.dart` (hostel page → Building, floors top-down, G from data, chips + red, pick a free
+  bed → Continue, taken bed toast, floor → amFloor, tabs; women's PG locked then open after a hold; owner Beds › Building,
+  bed → bed sheet, back to Rooms; 360 px × 2× text × light/dark). `flows_test` picker-tabs test updated.
