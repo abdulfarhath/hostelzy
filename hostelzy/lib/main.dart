@@ -13,6 +13,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/photos/pick.dart' show GalleryPicker;
+import 'features/links/scan.dart' show CameraScanner;
 import 'l10n.dart';
 import 'state.dart';
 import 'ui/overview.dart';
@@ -74,6 +75,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     state.signIn = signIn;
     state.locator = platformLocator();
     state.picker = const GalleryPicker();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) state.scanner = const CameraScanner();
     state.store = store;
     // Dev start states (debug ?start=…) skip the saved login.
     if (q['start'] == null) state.restore(saved, firebaseUser: signIn.current);
@@ -124,7 +126,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
             state.cachedAt = c.at;
           });
         } else {
-          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
+          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}, standing: const {}));
           state.update(() => state.listState = 'offline');
         }
       }

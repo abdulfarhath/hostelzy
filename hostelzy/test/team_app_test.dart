@@ -85,9 +85,12 @@ void main() {
     expect(d.food, '3 meals');
     await _tap(tester, find.byKey(const ValueKey('aAddFood')));
     expect(d.food, '2 meals');
-    await _tap(tester, find.text('Map pin · check it at the gate'));
-    expect(d.pinChecked, isTrue);
-    expect(find.text('Map pin · checked at the gate'), findsOneWidget);
+    await _tap(tester, find.text('Map pin · drop it at the gate'));
+    expect(s.screen, 'aPin');
+    s.pinPanned((17.4622, 78.3568));
+    await _tap(tester, find.byKey(const ValueKey('pinSave')));
+    expect((d.pinChecked, d.pin), (true, (17.4622, 78.3568)));
+    expect(find.text('Map pin · dropped at the gate'), findsOneWidget);
     await _tap(tester, find.text('Next: rooms'));
 
     // Step 2: floor cards with room chips.

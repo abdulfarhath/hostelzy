@@ -1037,7 +1037,9 @@ void main() {
     await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
     expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
-    await tap(tester, find.text('Map pin · check it at the gate'));
+    await tap(tester, find.text('Map pin · drop it at the gate'));
+    s.pinPanned((17.4622, 78.3568));
+    await tap(tester, find.byKey(const ValueKey('pinSave')));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
 
@@ -1903,7 +1905,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}, standing: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -3670,8 +3672,8 @@ class _FakeLive extends SampleRepo {
   @override
   Future<void> setHoldStatus(String id, String status) => _rec('holdstatus $id $status');
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
-    await _rec('stay $hid $bedKey $name $phone $rent $advance');
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
+    await _rec('stay $hid $bedKey $name $phone $rent $advance${before ? ' before' : ''}');
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
@@ -3707,7 +3709,7 @@ class _FakeLocator implements Locator {
   final LocateFail? fail;
   int asked = 0;
   @override
-  Future<((double, double)?, LocateFail?)> locate() async {
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false}) async {
     asked++;
     return (pos, fail);
   }

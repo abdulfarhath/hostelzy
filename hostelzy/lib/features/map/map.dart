@@ -157,7 +157,7 @@ extension MapAreaActions on AppState {
     final e = _record(hid, body, bed: bed, from: from);
     sheet = 'wa';
     waTo = hostelById(hid).owner;
-    waPhone = ownerPhones[hid] ?? '';
+    waPhone = ownerWa(hid);
     waMsg = body;
     waRef = e.ref;
     waHid = hid;

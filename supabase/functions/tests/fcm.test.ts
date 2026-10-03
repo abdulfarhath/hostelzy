@@ -25,7 +25,7 @@ test('service account JWT is RS256-signed for the FCM scope', async () => {
 
 test('FCM message carries the title, body and string data', () => {
   const row: OutboxRow = { id: 1, user_id: 'u', title: 'New hold on bed 101-A', body: 'HZ-5002', data: { screen: 'oToday', n: 2 } };
-  assert.deepEqual(fcmMessage('tok', row), { message: { token: 'tok', notification: { title: 'New hold on bed 101-A', body: 'HZ-5002' }, data: { screen: 'oToday', n: '2' }, android: { priority: 'high' } } });
+  assert.deepEqual(fcmMessage('tok', row), { message: { token: 'tok', notification: { title: 'New hold on bed 101-A', body: 'HZ-5002' }, data: { screen: 'oToday', n: '2' }, android: { priority: 'high', notification: { icon: 'ic_stat_hostelzy', color: '#EC3013' } } } });
   assert.ok(tokenGone(404, ''));
   assert.ok(tokenGone(400, '{"error":{"details":[{"errorCode":"UNREGISTERED"}]}}'));
   assert.ok(!tokenGone(500, 'internal'));

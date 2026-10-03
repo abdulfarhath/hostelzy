@@ -73,18 +73,33 @@ extension OwnerLayoutsActions on AppState {
   /// Owner publishes: tenants see this version now, no approval needed.
   void publishLayout(RoomLayout l) {
     if (onServer) {
+      // F12: one editor at a time; the server refuses too.
+      final by = edLockedBy;
+      if (by != null) return toastMsg('${by.name} is editing this room. Try again when they’re done.');
       // F19 server: owners publish their own layouts (the server checks them).
-      _write(() => data.publishLayout(l.hid, l.room, layoutJson(l.snap()))).then((ok) async {
-        if (!ok) return;
+      () async {
+        try {
+          await data.publishLayout(l.hid, l.room, layoutJson(l.snap()));
+        } catch (e) {
+          debugPrint('publish: $e');
+          final who = RegExp(r'([^,:(]+?) is editing this room').firstMatch('$e')?.group(1)?.trim();
+          if (who != null) {
+            update(() => edLock = (hid: l.hid, room: l.room, name: who, mine: false));
+            return toastMsg('$who is editing this room. Try again when they’re done.');
+          }
+          return toastMsg('Couldn’t save it. Check your internet and try again.');
+        }
+        await refreshLive();
         await refreshListings();
         // F24: publishing closed the room's answered shape request.
         await loadShapeRequests(l.hid);
+        await releaseLayoutLock();
         update(() {
           edOwner = false;
           screen = 'oPublished';
           sheet = null;
         });
-      });
+      }();
       return;
     }
     final wasLive = l.live;

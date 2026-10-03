@@ -38,14 +38,30 @@ extension FairPlayActions on AppState {
 
   FairCase? get ownerCase => cases.where((c) => c.hid == ownHid && c.status != 'closed').firstOrNull;
 
-  /// Strike 3: the listing is hidden from tenants.
+  /// Strike 3: the listing is hidden from tenants (on the server too).
   bool removed(String hid) => (strikes[hid] ?? 0) >= 3;
+
+  /// The owner's one line for their strikes: "Warning", "Deals hidden until
+  /// 2 Nov", "Deals back since 2 Nov", "Removed from Hostelzy".
+  String strikeLine(String hid) {
+    final n = strikes[hid] ?? 0;
+    final back = dealsBackOn(hid);
+    if (n == 2 && back != null) return DateTime.now().isBefore(back) ? 'Deals hidden until ${dayMon(back)}' : 'Deals back since ${dayMon(back)}';
+    final w = strikeWords(n);
+    return '${w[0].toUpperCase()}${w.substring(1)}';
+  }
+
+  /// The last strike came from three fixes in 6 months (not from a case).
+  bool strikeFromFixes(String hid) => standing[hid]?.why == 'fixes';
 
   /// The tenant has a live hold or booking here, so the owner's number shows.
   bool heldAt(String hid) => holds.any((h) => h.hid == hid && h.status != 'released');
 
   void acceptFairPlay() {
     if (!fpAgree) return toastMsg('Tick “I agree” first.');
+    // F24 #18: kept on the server once per account (sent again on the next
+    // sign-in if this one doesn't get through).
+    if (onServer) data.acceptFairPlay().catchError((Object e) => debugPrint('accept fair play: $e'));
     update(() {
       fairAccepted = true;
       fpAgree = false;
@@ -56,14 +72,39 @@ extension FairPlayActions on AppState {
     toastMsg('Fair Play rules accepted. Welcome to Hostelzy.');
   }
 
+  /// F24 #18: the owner agreed on another phone (or before reinstalling):
+  /// don't ask again. Agreed here but not on the server yet: send it.
+  Future<void> loadFairAccepted() async {
+    if (!onServer) return;
+    final got = await data.fairAccepted();
+    if (got == null) return;
+    if (got && !fairAccepted) {
+      update(() {
+        fairAccepted = true;
+        if (screen == 'oRules' && !fpFull) {
+          screen = 'oToday';
+          hist = [];
+        }
+      });
+    } else if (!got && fairAccepted) {
+      data.acceptFairPlay().catchError((Object e) => debugPrint('accept fair play: $e'));
+    }
+  }
+
   /// "Change Teja to Via Hostelzy": fixed within 48 h, case closed, no strike.
   void fixCase(FairCase c) {
     final key = c.key;
     if (onServer && key != null) {
       // S5: the server checks the 48 hours, switches the resident and closes it.
+      // F24 #18: the third fix in 6 months is a warning (the server counts).
+      final had = strikes[c.hid] ?? 0;
       data.fixCase(key).then((_) async {
         await refreshLive();
-        toastMsg('${c.resident} now shows as came from the app. Case closed, no strike.');
+        await refreshListings();
+        final now = strikes[c.hid] ?? 0;
+        toastMsg(now > had
+            ? '${c.resident} now shows as came from the app. Case closed. That’s 3 fixes in 6 months, which counts as one warning (strike $now of 3).'
+            : '${c.resident} now shows as came from the app. Case closed, no strike.');
       }, onError: (Object e) {
         final m = '$e';
         toastMsg(m.contains('48 hours are over')
@@ -138,12 +179,12 @@ extension FairPlayActions on AppState {
   }
 
   /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals
-  /// hidden 30 days, 3 removed).
+  /// hidden for 30 days, 3 removed). On the server `give_strike` adds it.
   void decideCase(FairCase c, String how) {
     final key = c.key;
     if (onServer && key != null) {
       final n = (strikes[c.hid] ?? 0) + 1;
-      final decision = switch (how) { 'close' => 'Closed · no issue', 'more' => null, _ => 'Strike $n · ${strikeLadder[(n - 1).clamp(0, 2)].$2.toLowerCase()}' };
+      final decision = switch (how) { 'close' => 'Closed · no issue', 'more' => null, _ => strikeDecision(n) };
       _write(() => data.decideCase(key, c.hid, how, decision)).then((ok) {
         if (!ok) return;
         if (how == 'strike') update(() => strikes[c.hid] = n);
@@ -163,7 +204,7 @@ extension FairPlayActions on AppState {
           final n = (strikes[c.hid] ?? 0) + 1;
           strikes[c.hid] = n;
           c.status = 'closed';
-          c.result = 'Strike $n · ${strikeLadder[(n - 1).clamp(0, 2)].$2.toLowerCase()}';
+          c.result = strikeDecision(n);
       }
     });
     toastMsg(how == 'close' ? '${c.id} closed. No strike.' : how == 'more' ? 'Asked the owner for more. 48 hours again.' : '${c.id}: ${c.result}.');

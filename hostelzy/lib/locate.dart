@@ -9,19 +9,21 @@ import 'package:geolocator/geolocator.dart';
 enum LocateFail { off, denied, never, unavailable, failed }
 
 abstract class Locator {
-  Future<((double, double)?, LocateFail?)> locate();
+  /// [exact]: the team dropping a hostel's pin at its gate (F24 Wave 4c)
+  /// wants GPS accuracy; finding nearby hostels doesn't.
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false});
 }
 
 class NoLocator implements Locator {
   const NoLocator();
   @override
-  Future<((double, double)?, LocateFail?)> locate() async => (null, LocateFail.unavailable);
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false}) async => (null, LocateFail.unavailable);
 }
 
 class GeoLocator implements Locator {
   const GeoLocator();
   @override
-  Future<((double, double)?, LocateFail?)> locate() async {
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false}) async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return (null, LocateFail.off);
       var perm = await Geolocator.checkPermission();
@@ -29,7 +31,7 @@ class GeoLocator implements Locator {
       if (perm == LocationPermission.deniedForever) return (null, LocateFail.never);
       if (perm == LocationPermission.denied || perm == LocationPermission.unableToDetermine) return (null, LocateFail.denied);
       // Coarse is enough to show nearby hostels (and kinder to privacy).
-      final p = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 15)));
+      final p = await Geolocator.getCurrentPosition(locationSettings: LocationSettings(accuracy: exact ? LocationAccuracy.best : LocationAccuracy.low, timeLimit: const Duration(seconds: 15)));
       return ((p.latitude, p.longitude), null);
     } catch (e) {
       debugPrint('Location: $e');

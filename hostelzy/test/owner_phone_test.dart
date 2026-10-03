@@ -58,9 +58,9 @@ class _Server extends SampleRepo {
   }
 
   @override
-  Future<Map<String, String>> ownerContacts(List<String> hids) async {
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async {
     asked.add(hids);
-    return {for (final h in hids) if (allowed[h] != null) h: allowed[h]!};
+    return {for (final h in hids) if (allowed[h] != null) h: (phone: allowed[h]!, wa: '')};
   }
 }
 

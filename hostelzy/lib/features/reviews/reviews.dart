@@ -9,6 +9,10 @@ mixin _ReviewsData {
   /// Fair Play strikes per hostel (F07); each lowers the rank.
   final Map<String, int> strikes = {};
 
+  /// F24 #18: the server's Fair Play standing (when strike 2's hidden deals
+  /// come back, why the last strike came). Empty on sample data.
+  final Map<String, Standing> standing = {};
+
   /// Resident review forms (30-day and exit) and the owner's reply screen.
   int rvStars = 0, exStars = 0;
   Map<String, int> rvCats = {};
@@ -81,6 +85,10 @@ mixin _ReviewsData {
   String resQ = '';
   List<Signup> signups = List.of(seedSignups);
   String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
+
+  /// F24 #18: "Lived here before Hostelzy" on Add resident (only before the
+  /// hostel goes live; after that the Hostelzy team marks it).
+  bool rBefore = false;
   String? rBed;
   int rPickBack = 3;
   String rentF = 'All';
@@ -305,10 +313,25 @@ extension ReviewsActions on AppState {
     toastMsg('Reply posted under ${r.name.split(' ')[0]}’s review.');
   }
 
-  /// Strike 2+ hides the hostel's deals (F07).
-  /// Deals are hidden at 2 Fair Play strikes (F07) and paused while the
-  /// owner's plan is 15+ days late (F10).
-  Deals dealsOf(String hid) => (strikes[hid] ?? 0) >= 2 || dealsPaused(hid) ? const Deals() : deals[hid] ?? const Deals();
+  /// Deals are hidden by Fair Play strike 2 for 30 days (F07) and paused
+  /// while the owner's plan is 15+ days late (F10).
+  Deals dealsOf(String hid) => dealsHidden(hid) || dealsPaused(hid) ? const Deals() : deals[hid] ?? const Deals();
+
+  /// F07 / F24 #18: strike 2 hides deals for 30 days, then they come back;
+  /// strike 3 removes the hostel. Without the server's dates (sample data, or
+  /// before its SQL runs) strike 2 keeps them hidden.
+  bool dealsHidden(String hid) {
+    final n = strikes[hid] ?? 0;
+    if (n < 2) return false;
+    if (n >= 3) return true;
+    final st = standing[hid];
+    if (st == null) return true;
+    final u = st.until;
+    return u != null && DateTime.now().isBefore(u);
+  }
+
+  /// When strike 2's hidden deals come back (null when not known).
+  DateTime? dealsBackOn(String hid) => (strikes[hid] ?? 0) == 2 ? standing[hid]?.until : null;
 
   /// Walk-in vs Hostelzy quote for a room type ([ac], [share]) at [hid].
   DealQuote quote(String hid, bool ac, int share) {

@@ -337,7 +337,7 @@ void main() {
     expect(find.text('MGR-'), findsOneWidget);
     expect(find.byKey(const ValueKey('mgrHint')), findsOneWidget);
     expect(find.text('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.'), findsOneWidget);
-    expect(find.text('Scan the poster QR'), findsNothing);
+    expect(find.text('Scan the QR'), findsNothing);
     s.dispose();
   });
 

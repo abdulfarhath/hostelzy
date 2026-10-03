@@ -12,6 +12,7 @@ import 'layout.dart' show ConfirmLayoutsCard;
 import 'layout_fixes.dart' show FixPhotoThumb;
 import 'payments.dart';
 import 'plan.dart';
+import '../reminders.dart' show clock;
 import 'onboarding.dart';
 import 'stay_tools.dart';
 
@@ -343,7 +344,7 @@ class _FairPlayCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: c != null
                     ? [T('Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title}. Your reply is with the founder.' : '${c.title}. 47 h left to explain or fix it.', s: 13, lh: 1.4)]
-                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(strikeLadder[(n - 1).clamp(0, 2)].$2, s: 13)],
+                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(s.strikeLine(s.ownHid), s: 13)],
               ),
             ),
             Ic('chev', size: 18, color: p.ad),
@@ -948,6 +949,7 @@ class _MenuEditor extends StatelessWidget {
               decoration: box(w: 2, c: p.tx),
               child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600), T('Counts only. Hostelzy never shows who said what.', s: 12, c: p.mu)]),
             ),
+          const _MealTimes(),
           if (s.menuOf(s.ownHid) == null && !s.menuDirty)
             T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuEmpty'), s: 13, c: p.mu, lh: 1.4),
           Row(
@@ -973,7 +975,7 @@ class _MenuEditor extends StatelessWidget {
             VGap(
               gap: 6,
               children: [
-                T('${m[1]} · ${m[2]}', w: 800, s: 13),
+                T('${m[1]} · ${mealSpan(s.timesDraft[m[0]] ?? usualMealTimes[m[0]]!)}', w: 800, s: 13),
                 Field(
                   key: ValueKey('menu-$d-${m[0]}'),
                   value: week[d].of(m[0]),
@@ -1578,6 +1580,62 @@ class RateCard extends StatelessWidget {
           child: T('An AC room needs an AC unit in its layout. If a room’s layout has none, add it there and publish first, then make the room AC.', s: 13, c: p.mu, lh: 1.4),
         ),
       ],
+    );
+  }
+}
+
+/// F24 Wave 4c: Food menu › Meal times. Residents' meal reminders ring at
+/// these; until they're set the app uses the usual times and says so.
+class _MealTimes extends StatelessWidget {
+  const _MealTimes();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final t = s.timesDraft;
+    Widget step(String key, VoidCallback on, String label) => Tap(
+      key: ValueKey(key),
+      onTap: on,
+      child: Container(width: 40, height: 40, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: T(label, w: 800, s: 18)),
+    );
+    Widget clockStep(String k, bool end, int m) => Row(
+      children: [
+        step('mt-$k-${end ? 'e' : 's'}-', () => s.nudgeMealTime(k, end: end, by: -15), '−'),
+        Expanded(child: Center(child: T(clock(m), w: 800, s: 14, nowrap: true))),
+        step('mt-$k-${end ? 'e' : 's'}+', () => s.nudgeMealTime(k, end: end, by: 15), '+'),
+      ],
+    );
+    return Container(
+      key: const ValueKey('mealTimes'),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(
+        gap: 10,
+        children: [
+          const Kicker('Meal times'),
+          if (t.isEmpty) ...[
+            T('Not set. Residents’ meal reminders use the usual times: breakfast 7:30, lunch 12:30, dinner 8:00.', s: 13, c: p.mu, lh: 1.4),
+            OutlineCta('Set meal times', key: const ValueKey('mealTimesSet'), icon: 'clock', height: 46, fs: 14, onTap: s.startMealTimes),
+          ] else ...[
+            for (final m in meals)
+              VGap(
+                gap: 6,
+                children: [
+                  T(m[1], w: 800, s: 13),
+                  Row(
+                    children: [
+                      Expanded(child: clockStep(m[0], false, (t[m[0]] ?? usualMealTimes[m[0]]!).$1)),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: T('to', s: 13, c: p.mu)),
+                      Expanded(child: clockStep(m[0], true, (t[m[0]] ?? usualMealTimes[m[0]]!).$2)),
+                    ],
+                  ),
+                ],
+              ),
+            T('Residents’ meal reminders ring at the start time.', s: 12, c: p.mu),
+            Tap(key: const ValueKey('mealTimesClear'), onTap: s.clearMealTimes, child: T('Use the usual times', s: 13, w: 700, c: p.ad, underline: true)),
+          ],
+        ],
+      ),
     );
   }
 }

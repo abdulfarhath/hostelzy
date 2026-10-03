@@ -186,16 +186,20 @@ class _Basics extends StatelessWidget {
               ),
             ],
           ),
+          // F24 Wave 4c: house rules typed on the visit go on the server too.
+          _field('Visitors', d.visitors, (v) => s.update(() => d.visitors = v), ph: 'Common area only, till 8 pm'),
+          // F24 Wave 4c (board `aPin`): the real pin, dropped at the gate.
           Cta(
-            d.pinChecked ? 'Map pin · checked at the gate' : 'Map pin · check it at the gate',
-            icon: d.pinChecked ? 'check' : 'pin',
+            d.pin != null ? 'Map pin · dropped at the gate' : 'Map pin · drop it at the gate',
+            key: const ValueKey('aAddPin'),
+            icon: d.pin != null ? 'check' : 'pin',
             height: 48,
             px: 16,
             fs: 14,
             bg: transparent,
             fg: p.tx,
             border: p.tx,
-            onTap: () => s.update(() => d.pinChecked = !d.pinChecked),
+            onTap: s.openPin,
           ),
           _label('Amenities'),
           Wrap(
@@ -747,7 +751,9 @@ class _OwnerAccount extends StatelessWidget {
         children: [
           T('The owner runs ${d.name.trim().isEmpty ? 'the hostel' : d.name.trim()} from their phone: beds, rent, residents and enquiries. They sign in with Google; no password.', s: 14, c: p.mu, lh: 1.45),
           VGap(gap: 6, children: [const T('Owner’s name', w: 800, s: 13), Field(key: const ValueKey('ownerName'), value: d.ownerName, placeholder: 'As tenants will see it', onChanged: (v) => s.update(() => d.ownerName = v))]),
-          VGap(gap: 6, children: [const T('Owner’s WhatsApp number', w: 800, s: 13), Field(key: const ValueKey('ownerPhone6'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), '')))]),
+          VGap(gap: 6, children: [const T('Owner’s phone', w: 800, s: 13), Field(key: const ValueKey('ownerPhone6'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), '')))]),
+          // F24 Wave 4c: only when they chat on another number.
+          VGap(gap: 6, children: [const T('WhatsApp, if different', w: 800, s: 13), Field(key: const ValueKey('ownerWa6'), value: d.ownerWa, numeric: true, placeholder: 'Same as phone', onChanged: (v) => s.update(() => d.ownerWa = v.replaceAll(RegExp(r'\D'), '')))]),
           Container(
             key: const ValueKey('ownerStatus'),
             padding: const EdgeInsets.all(12),
@@ -797,7 +803,7 @@ class _GoLive extends StatelessWidget {
       (s.draftPhotos >= HostelDraft.minPhotos, '${HostelDraft.minPhotos} photos', s.draftPhotos >= HostelDraft.minPhotos ? '${s.draftPhotos} of ${HostelDraft.minPhotos}' : '${s.draftPhotos} of ${HostelDraft.minPhotos}${s.onServer ? '' : ' · add $missingPhotos'}', () => s.update(() => s.addStep = 4)),
       (d.missingPrices.isEmpty, 'Every room type has a price', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
       (d.bedsChecked, 'Bed status checked on the visit', '$taken taken · ${d.bedCount - taken} free · 0 on hold', () => s.update(() => d.bedsChecked = !d.bedsChecked)),
-      (d.pinChecked, 'Map pin checked at the gate', d.pinChecked ? 'Done' : 'Check the pin at the gate', () => s.update(() => d.pinChecked = !d.pinChecked)),
+      (d.pinChecked && d.pin != null, 'Map pin dropped at the gate', d.pin != null ? '${d.pin!.$1.toStringAsFixed(5)}, ${d.pin!.$2.toStringAsFixed(5)}' : 'Drop the pin at the gate', s.openPin),
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

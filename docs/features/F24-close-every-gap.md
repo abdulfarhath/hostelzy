@@ -374,6 +374,42 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Screens:** added `oMeter` (screen), `laundry` and `perks` (sheets). Changed: `oRefund` from a screen to a sheet; `rRefund`, `oRent` (Electricity row), `rPay` (meter line), Manage › House rules (Laundry day row), Reminders (Laundry day row), `oCase` (photo), `rewards` (Trusted row), the Trusted badge sheet, role gates (manager join). Removed: none.
 - **Tests:** `test/wave1_test.dart`, `supabase/tests/wave1_test.sql`. Updated: `moves_test` (refund boards), `resident_test` (meter line), `flows_test` (manager toast).
 
+**Wave 4c: the rest of Wave A items 1, 2 and 4.** Branch `feature/f24-wave4c`.
+- **Server** (`20261003090000_f24_wave4c.sql`, FOUNDER-TODO **4zp1**; tests: `supabase/tests/wave4c_test.sql`):
+  - `profiles.whatsapp` (10 digits or empty) and `hostel_leads.owner_whatsapp`. `owner_contacts` now returns `(hostel_id, phone, whatsapp)` to the same people as before: the owner's own WhatsApp, else the team's note, else empty.
+  - `save_hostel` also saves `rules` (house rules) and `amenities` (new `hostels.amenities`) when sent, and the owner's WhatsApp. It refuses a pin outside Hyderabad.
+  - `go_live` also needs the pin: "drop the map pin at the gate".
+  - `menus.breakfast_time / lunch_time / dinner_time` ("07:30-09:30" or empty) and `save_meal_times(hostel, {b, l, n})` for staff or the team: the same times on all 7 days, and each meal must end after it starts.
+- **#1 Owner phone.**
+  - The owner's bed sheet **Message <resident>** opens WhatsApp on the resident's own number (from `stays`), for a taken bed and for one marked leaving.
+  - Settings › You has a **WhatsApp** row for owners ("Same as phone" or the number). It opens the sheet "Your WhatsApp number": **Save WhatsApp number**, and **Use my phone number** to clear it. The number is kept on the profile and on the phone.
+  - Wizard step 6 has "Owner's phone" and "WhatsApp, if different". The sign-in link goes to the WhatsApp number.
+  - Every WhatsApp link to an owner (Message owner, Remind, Talk to, notice, refunds, layout fixes, enquiries, plan reminders) uses `ownerWa(hostel)`: the WhatsApp number, else the phone. **Call** keeps the phone.
+- **#2 Onboard a real hostel.**
+  - Basics: the pin row opens the new screen **Map pin** (`aPin`). The pin stays in the middle and the map moves under it. **Use my location** asks for an exact GPS fix at the gate.
+  - **Save pin** works only after the team moved the map or used their location, so a hostel is never saved on its area's centre. The draft sends only that pin, and the go-live row reads "Map pin dropped at the gate" with its coordinates.
+  - Basics also has **Visitors**. The gate time and visitors go up as the hostel's house rules, the rest from the rate card's terms. Every amenity picked is saved (all in `tags`, plus `amenities`), not just three. A real draft starts with no gate time or visitors.
+  - Console › Hostels › **Go live** calls `go_live()`, so it gets the checklist and the 30-day trial. The server's reason shows as "Not live yet: add 8 photos first." Pause is unchanged.
+- **#4 Meal times.**
+  - Owner Food menu has a **Meal times** box. When none are set it reads "Not set. Residents' meal reminders use the usual times…", with **Set meal times**. Once set, each meal has start and end steppers (15 minutes) and a **Use the usual times** link. They save with **Save menu**. Before 4zp1 runs, the menu saves and the toast says the times save after the server update.
+  - Residents' meal reminders ring at the menu's start times, and "served till" uses its end times. A meal with no time keeps the usual one. Reminders › Meal times reads "From the food menu · …", or "Usual times, the menu has none yet · …". The times shown in Food, on Home and in the tenant's food peek and week sheet follow the menu too.
+- **#3 leftover:** none. No "Hostelzy draws its layout" toast is left (Wave 0 removed it; `wave0_test` checks it).
+- **Screens:** added `aPin` (screen) and `waNum` (sheet). Changed: `aAdd` step 1 (Visitors field, pin row opens `aPin`), `aAdd` step 6 (WhatsApp, if different), `aAdd` step 7 (pin row), `settings` (owner WhatsApp row), owner Food menu (Meal times box), owner bed sheet (Message resident with the number), Reminders (meal line), console Hostels (Go live). Removed: none.
+- **Tests:** `test/wave4c_test.dart`, `supabase/tests/wave4c_test.sql`, console `goLiveWords` test. Updated: `onboard_test.sql` (sends a pin), `team_app_test`, `flows_test` and `onboard_test` (the pin screen), `owner_phone_test` (contacts with WhatsApp).
+**Wave 4b: F12 women's PG floor + one editor at a time, F14 scan the invite QR, #27 "Tell me when it's ready", brand push icon + dark splash.** Branch `feature/f24-wave4b`.
+- **Server** (`20261003070000_f24_wave4b.sql`, FOUNDER-TODO **4zs1**; tests: `supabase/tests/wave4b_test.sql`):
+  - `sees_floor(h)`: the hostel's staff, the team, its residents, and a tenant with a hold there (asked, held or booked). The "read published layouts" policy now also needs it for a **Women** PG, so nobody else can list all its rooms (DECISIONS F12: whole-floor plans only after a hold).
+  - `room_layout(hostel, room)`: one room's published layout for any signed-in (Google) user, so the Room tab still shows room layouts (DECISIONS F12). In a women's PG, before a hold, at most **6 different rooms a day per PG** (`layout_peeks`); after that "hold a bed to see more rooms here". Build's call: enough to compare rooms, too few to piece the floor together.
+  - `layout_locks` + `lock_layout(hostel, room)` / `unlock_layout`: one editor per room. The lock lasts 10 minutes and the app refreshes it every 4 minutes while the editor is open. Others get the holder's first name ("The owner" / "A manager" / "The Hostelzy team" when the profile has no name). A trigger refuses any new published version (publish, an approved fix, undo) from anyone else while the lock is held: "<name> is editing this room. Try again when they're done."
+  - `layout_waits` + `wait_for_layout(hostel, room)`: "Tell me when it's ready" (signed-in, live hostel, room without a layout, at most 30 open). When the room's layout is published, everyone waiting gets one push ("Room 204's layout is ready", `data.kind` = `hold`, so Settings › Holds and bookings switches it off) and the waits close. Later versions don't push again.
+- **App:**
+  - Room tab, women's PG on the server: a room missing from the list is fetched on its own ("Loading the layout…"). Past the day's rooms it shows the existing lock message "Floor plan shows after you hold a bed" with "Pick a bed from Plan". Offline: "Couldn't load this room" + Try again.
+  - Layout editor: taking the lock on open, letting it go on back, on switching rooms (room chips) and after publishing. While someone else has it, the header says "<name> is editing this room", Publish / Send to owner is dimmed and says why, and **Check again** sits beside it. The server's refusal shows the same words. The room chips no longer crash on a room with no layout yet.
+  - "Tell me when it's ready" (#27): saved on the server; the button turns into **We'll tell you** with "You get a notification when the owner publishes room 204's layout." The toast-only version is gone. Sample data keeps it on the phone.
+  - F14 **Scan the QR** on Join your PG (`mobile_scanner`, Android CAMERA permission). The first time, a camera explainer sheet (`scanCam`: "Only to read the QR on your PG's Hostelzy poster…", **Allow camera** · "Your phone asks next", Type the code instead). Then the `scan` screen: camera square, "Point it at the QR on the Hostelzy poster…", **Type the code instead**. The QR's j/ link (or a bare code) fills in the code and asks to join; another app's QR says "That QR isn't a Hostelzy invite". Camera refused: "The camera is off for Hostelzy" with where to allow it. Without a camera (web, tests) the button says how to use the phone's camera.
+  - Brand (docs/brand/app-assets.md): server pushes set `android.notification.icon = ic_stat_hostelzy` and colour `#EC3013` (`fcm.ts`); the manifest has the FCM default icon/colour; the new vector `ic_stat_hostelzy.xml` replaces the 5 PNGs; reminders use the red too. Splash: `splash_bg` #F3F2F2 / #161514 (Pal light/dark bg) with `splash_icon` light/dark, Android 12+ styles in `values-v31` and `values-night-v31`, and NormalTheme on the same ground (no white flash).
+- **Screens:** added `scan` (screen) and `scanCam` (sheet). Changed: Join your PG (Scan the QR), tenant Room tab (Loading, women's PG lock, Couldn't load, We'll tell you), layout editor `aLayout` (lock line + Check again). Removed: none.
+- **Tests:** `test/wave4b_test.dart`, `supabase/tests/wave4b_test.sql`, `supabase/functions/tests/fcm.test.ts`. Updated: `start_test`, `wave1_test` (button name).
 **Wave 4a: enquiries and reviews gaps (audit §3).** Branch `feature/f24-wave4a`.
 - **F05 enquiry link.** The WhatsApp message now ends with the booking code line and then the enquiry's https link (`enquiryLink`, e.g. `https://farhath.me/hostelzy/app/r/?c=HZ-4822`), the same link Android App Links open in the app. The owner taps it and lands on Today with that enquiry open.
 - **F05 one open enquiry per bed (server).** The app now calls `send_enquiry(...)`. It returns the tenant's open enquiry for that hostel + bed, or one the owner answered in the last 60 days. Only when there is none does it record a new one. A unique index (`enquiries_one_open`) also stops a second open enquiry inserted directly. If the server refuses a duplicate, the app reuses the existing code and says "You already asked about this bed, so it's the same booking code: HZ-…". Old duplicates are kept: the newest stays open and the older ones point at it (`dup_of`).
@@ -395,6 +431,45 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Server SQL:** `supabase/migrations/20261003060000_f24_enquiries_reviews.sql` → FOUNDER-TODO **4zr1**. Until it runs, enquiries insert as before (the app falls back when `send_enquiry` is missing), reviews work as before, and reports say they couldn't send.
 - **Screens:** added the `revReport` sheet (Report this review) and the console view "Reported reviews". Changed: `rReview` / `rExit` (Save changes, one-per-stay line), `rStay` (review row), `rHome` (card only once open), `oRank` / Reviews (Report abuse), `oLayouts` and `oLayout` (layout-wrong flag), the WhatsApp sheet (link line). Removed: none.
 - **Tests:** `test/wave4a_test.dart` (8), `supabase/tests/wave4a_test.sql`. Updated: `rls_test.sql` (the resident has 40 days; authors may edit, not reply), `reviews_test.sql` (40 days), `flows_test` / `tenant_test` (the message ends with the link).
+
+**Wave 3b: item 18, Fair Play hardening.** Branch `feature/f24-wave3b` (2026-10-03). DECISIONS F07: strikes are 1 warning, 2 deals hidden for 30 days, 3 removed. A fix within 48 hours means no strike, and 3 fixes in 6 months = 1 warning.
+- **Rules accepted on the server.** "Agree and continue" also calls `accept_fair_play()`, once per account, into `fair_play_accepts`. On sign-in the app asks the server. If the owner agreed on another phone, the rules aren't shown again. If they agreed on this phone before the server had it, it is sent then. Console › Fair Play shows "Fair Play rules: agreed 3 Oct" for the case's owner.
+- **Joined before Hostelzy.**
+  - `hostels.live_since` is set by the server when a hostel goes live (backfilled from `visited_on`). Owners can't change it.
+  - `stays.via = 'before'` is allowed only for someone who moved in on or before that day. The owner can set it only while the hostel isn't live yet (onboarding). After go-live only the team can.
+  - The wizard's residents step now saves its residents as "before" (it said so, but the server stored them as Direct).
+  - Add resident has a "Lived here before Hostelzy" tick, shown only before go-live. If the server says no, the owner sees "Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy."
+  - These residents never count in the collusion signals.
+- **Strikes now.**
+  - `strike_state(h)` and the public `fair_standing()` return the count, when strike 2's hidden deals come back (30 days from the day it was given), whether the hostel is removed, and why the last strike came (`case` | `fixes`).
+  - Strikes keep counting: DECISIONS gives no expiry for them, only for strike 2's hidden deals.
+  - `deal_for_bed` uses the 30 days. The app's `dealsOf` uses `dealsHidden()`: hidden until the server's date. With no date (sample data, or before the SQL runs), strike 2 keeps them hidden as before.
+  - The owner's Today card says "Deals hidden until 2 Nov", then "Deals back since 2 Nov".
+- **Strike 3 hides the hostel on the server.**
+  - `is_live()` and the hostels read policy leave out a hostel with 3 strikes. Tenants can't read it, its rooms, beds, deals or reviews, and can't hold or enquire there.
+  - Its owner and the team still see it, and the owner's strike notice says why. Its plan is paused, so no more invoices.
+- **3 fixes in 6 months = 1 warning, counted on the server.** `fix_case` stamps `fixed_at`. On the third uncounted fix in 6 months it adds a strike with reason `fixes` and marks those three fixes as counted. The owner's toast says "That's 3 fixes in 6 months, which counts as one warning (strike N of 3)". The strike notice says "Three fixes count as one warning".
+- **All 6 signals on the server.** `fair_signals(hostel)` is team only. It returns one row per F07 signal:
+  - held or enquired, then added as Direct (same name, another number);
+  - hold cancelled, same bed taken by a Direct resident within 7 days;
+  - tenant said "Yes, I joined" (Wave 2b `join_answers`) 3+ days ago and was never added;
+  - a Direct resident paying less than the walk-in price while deals are on;
+  - declining holds while occupancy rises. The new `holds.declined` is set when the owner or a manager (not the tenant) turns a hold down: 2+ declined and 2+ Direct residents added in 30 days;
+  - tenant reports (90 days).
+  Console › Fair Play shows the six for the selected case's hostel, each with its count and detail.
+- **Tenant reports in the console (board `cCases` + Tenant reports).**
+  - `fair_reports.status` is new → case | closed. **Open a case** runs `report_case()`, which opens an FP case for the owner. The case has the reason only, never the tenant's name or note.
+  - **No case · close** closes the report. Tenants can only file new reports.
+- **Case photo from the console.** In the case detail, **Attach tenant's photo** uploads to `case-photos` (`<hostel>/<team uid>/tenant-….jpg`) and sets `fair_cases.tenant_photo`. The owner's case shows "Photo from <tenant>" (Wave 1). The owner's and the tenant's photos open as signed links.
+- **Correct strike labels everywhere.**
+  - The team's strike goes through `give_strike()`, which writes "Strike 2 · deals hidden for 30 days". Before the SQL runs, the old insert is the fallback.
+  - The console button says the next strike ("Strike 2 · deals hidden for 30 days"), not always "Strike · warning".
+  - The app's aCases decision uses the same words (`strikeDecision`). The Today card, the strike notice and the aCases notes say "deals hidden for 30 days".
+  - aCases "Live since" shows the real go-live date, not a made-up "1 Oct 2026".
+- **Overlap with Wave 3a:** the only policies changed are the hostels read policy ("live hostels"), the tenant insert on `fair_reports` and the new team update on `fair_reports`. `fix_case` and `deal_for_bed` were redefined (owner/staff checks unchanged).
+- **SQL:** `20261003080000_f24_fair_play.sql` (FOUNDER-TODO **4zf1**). Test: `supabase/tests/fairhard_test.sql`.
+- **Screens:** none added or removed. Changed: sheet `addR` (Add resident: "Lived here before Hostelzy" tick before go-live), `oToday` Fair Play card (deals hidden until / back since), `oStrike` (server dates, deals back, 3-fixes wording), `aCases` (decision words, real "Live since"), console Fair Play `cCases` (case detail, six signals, Tenant reports with Open a case / No case · close, attach tenant's photo, strike button wording).
+- **Tests:** `test/wave3b_test.dart`; console `strikeWords` / `standingLine` / `reportLine` in `supabase/functions/tests/console.test.ts`.
 
 **Wave 4d: F03 gaps (audit §3).** Branch `feature/f24-wave4d`.
 - **"Best deals" sort (F03).** Filters › Sort by now has **Recommended / Nearest / Best deals / Lowest price**, so the owner Deals screen's "find you in Best deals" is true. Best deals orders hostels by the 6-month saving (`DealQuote.save6`, the same number as the Explore ribbon and the hostel page headline, for the AC / Non-AC filter in use), then nearest. A hostel with no deal, deals hidden by 2 strikes (F07) or paused by a 15+ days late plan (Wave 3a `deals_paused`) counts as 0 and sorts last. Featured hostels (Wave 3a) lead only Recommended, never Best deals.

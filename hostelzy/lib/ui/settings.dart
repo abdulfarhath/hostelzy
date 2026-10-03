@@ -106,6 +106,8 @@ class SettingsScreen extends StatelessWidget {
                 group('You', [
                   _Row('Name', value: name, onTap: s.editName),
                   _Row('Phone', value: phone, onTap: () => s.toastMsg('To change your number, log out and sign in with the new one.')),
+                  // F24 Wave 4c: owners may chat on another number than they take calls on.
+                  if (s.role == 'owner') _Row('WhatsApp', value: s.myWa.isEmpty ? 'Same as phone' : '+91 ${phoneSpaced(s.myWa)}', onTap: s.editWa),
                 ]),
                 group('Notifications', [
                   toggle('hold', 'Holds and bookings', 'When the owner confirms or replies'),
@@ -406,6 +408,29 @@ class NameSheet extends StatelessWidget {
           Field(key: const ValueKey('nameEdit'), value: s.nameDraft, placeholder: now.isEmpty ? 'Full name' : now, onChanged: (v) => s.update(() => s.nameDraft = v)),
           T('Owners see this name on your holds, enquiries and stay.', s: 12, c: p.mu, lh: 1.4),
           Cta('Save name', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveName),
+        ],
+      ),
+    );
+  }
+}
+
+/// F24 Wave 4c: Settings › WhatsApp (owners). Empty means the phone number.
+class WaNumberSheet extends StatelessWidget {
+  const WaNumberSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 10,
+        children: [
+          const T('WhatsApp number', w: 800, s: 13),
+          Field(key: const ValueKey('waEdit'), value: s.waDraft, placeholder: s.myPhone.isEmpty ? '10-digit number' : phoneSpaced(s.myPhone), numeric: true, onChanged: (v) => s.update(() => s.waDraft = v)),
+          T('Only if you chat on a different number than you take calls on. Tenants who held a bed and your residents message you here.', s: 12, c: p.mu, lh: 1.4),
+          Cta('Save WhatsApp number', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveWa),
+          if (s.myWa.isNotEmpty) OutlineCta('Use my phone number', height: 50, onTap: () => s.saveWa(clear: true)),
         ],
       ),
     );

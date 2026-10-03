@@ -18,9 +18,10 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
+import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
+import 'features/links/scan.dart';
 
 part 'features/fair_play/fair_play.dart';
 part 'features/rewards/rewards.dart';
@@ -115,7 +116,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter', 'scan'];
   static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -188,7 +189,13 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   // team mode
 
-  void openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
+  void openLayout(int n, {bool editor = false, bool owner = false}) {
+    _openLayout(n, editor: editor, owner: owner);
+    // F12: one editor at a time (on the server).
+    if (editor) unawaited(takeLayoutLock());
+  }
+
+  void _openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
     // F18: a room without a layout gets a starting one to edit (no crash);
     // tenants don't see it until it is published.
     final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
@@ -250,6 +257,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     _ticker?.cancel();
     _toastTimer?.cancel();
     _tokenSub?.cancel();
+    _edLockTimer?.cancel();
     stopLive();
     super.dispose();
   }
@@ -274,11 +282,13 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     final a = m['account'] as Map<String, dynamic>?;
     myName = m['name'] as String? ?? '';
     phone = m['phone'] as String? ?? '';
+    myWa = m['wa'] as String? ?? '';
     role = m['role'] as String? ?? 'tenant';
     theme = m['theme'] as String? ?? 'light';
     lang = m['lang'] as String? ?? 'en';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
     pushAsked = m['pushAsked'] as bool? ?? false;
+    camAsked = m['camAsked'] as bool? ?? false;
     for (final e in ((m['notif'] as Map?) ?? const {}).entries) {
       if (notif.containsKey(e.key) && e.value is bool) notif[e.key as String] = e.value as bool;
     }
@@ -339,6 +349,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void back() => update(() {
+    // F12: leaving the layout editor lets the room's edit lock go.
+    if (screen == 'aLayout') unawaited(releaseLayoutLock());
     final h = List.of(hist);
     final prev = h.isNotEmpty ? h.removeLast() : homeOf[role]!;
     screen = prev;
@@ -485,6 +497,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     rName = '';
     rPhone = '';
     rJoin = 'Today';
+    rBefore = false;
     rBed = free.isNotEmpty ? free.first : null;
     final r = rBed != null ? findBed(ownHid, rBed).r : null;
     rFee = r != null ? '${r.rent}' : '';
@@ -596,6 +609,11 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;
+      if (l.standing[h.id] != null) {
+        standing[h.id] = l.standing[h.id]!;
+      } else {
+        standing.remove(h.id);
+      }
       if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
       // F24: "Visited by Hostelzy" is the team's go-live date on the server.

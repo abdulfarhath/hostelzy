@@ -63,7 +63,7 @@ class ResidentRoomScreen extends StatelessWidget {
           s.update(() => s.fixSeen.add(f.id));
           s.openFixEditor(s.fixHid, room!.n);
         }),
-        OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', height: 46, fs: 14, onTap: () => s.openWA(owner, 'Hi $owner, about my layout fix for room ${room!.label}.', phone: ownerPhones[s.fixHid] ?? '')),
+        OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', height: 46, fs: 14, onTap: () => s.openWA(owner, 'Hi $owner, about my layout fix for room ${room!.label}.', phone: ownerWa(s.fixHid))),
       ]);
     }
     return Column(
