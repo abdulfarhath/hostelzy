@@ -263,3 +263,19 @@ capture machine can't reach OpenStreetMap). On a phone the tiles are there. Not 
 
 ## Build
 (Build writes here.)
+
+### NEW-4 · Owner Food menu › Week table (S87) · Built 2026-10-03
+- **What:** Manage › Food menu now opens with a seg **Edit by day · Week table** (`s.mView`, `day` by default). Week table
+  (`_MenuWeek` in `lib/features/owner/owner_manage_screen.dart`) follows board `w4-oMenuWeek`: a 44 px day column +
+  Breakfast / Lunch / Dinner, 12 px cells, 2 px rules, no sideways scroll on a 360 px phone (labels scale down at 2× text,
+  cells wrap). Today's row is highlighted (`p.ab`, day in `p.ad`). Empty slots say **Not set** (muted).
+- **Data:** the week being typed (`menuDraft`: the saved `menus` row + any unsaved edits). Nothing new on the server, no SQL.
+  Unsaved edits behave as before: the footer **Save menu** saves the draft; the table repeats "Not saved yet…" while dirty.
+- **Tap a day** → Edit by day on that day (`mDay`, `mView = 'day'`).
+- **Lines under the table:** "Today is highlighted. Tap a day to edit it. Residents and tenants see the same week." plus,
+  in red, "Sunday dinner is not set yet." (one slot) / "N meals are not set yet." / "No menu yet…" (empty week). Honest:
+  residents see an empty slot, so the line doesn't claim they see "Not set".
+- **Screens:** +1 → **S87** `oMore` · menu (week). App screens 86 → 87, release 160 → 161, overall 181 → 182.
+  Canvas: rename `[NEW-4] w4-oMenuWeek` → `[S87]`.
+- **Tests:** `hostelzy/test/menu_week_test.dart` (seg switch, draft shown, "Not set", today highlighted, tap a day → Edit
+  by day on it, Save still works, empty week, 360 px × 1×/2× text × light/dark).

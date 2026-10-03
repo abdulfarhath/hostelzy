@@ -8,15 +8,15 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **86** |
+| App screens (routes + their separate pages/views) | **87** |
 | App sheets (bottom sheets) | **43** |
 | App full-screen states | **31** |
-| **Release app total** | **160** |
+| **Release app total** | **161** |
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **181** |
+| **Overall total** | **182** |
 
-Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 30 · Team mode 13 · Shared 8.
+Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 31 · Team mode 13 · Shared 8.
 Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
@@ -39,7 +39,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (86)
+## 1. App screens (87)
 
 ### Start and sign-in (7)
 
@@ -91,7 +91,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
 
-### Owner (30)
+### Owner (31)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -125,6 +125,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 63 | `oCase` | Fair Play check (case + reply) | `fairplay.dart:336` | Today › case card (`screens_owner.dart:332`); push |
 | 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
 | 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
+| 87 | `oMore` · menu (week) | Manage › Food menu › Week table (Mon–Sun × 3 meals, today highlighted, "Not set"; F25 NEW-4 `w4-oMenuWeek`) | `features/owner/owner_manage_screen.dart` (`_MenuWeek`) | Food menu › seg Week table (`s.mView`); a day → Edit by day on it |
 
 ### Hostelzy team mode (13) — release, only for Google accounts with the `team` claim
 
