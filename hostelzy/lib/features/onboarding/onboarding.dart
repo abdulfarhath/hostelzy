@@ -6,6 +6,16 @@ mixin _OnboardingData {
   /// Days since each owner confirmed their free beds.
   final Map<String, int> confirmed = Map.of(seedConfirmed);
 
+  /// F24 Wave 4d (F03): when each owner last confirmed their rates (the
+  /// oldest rate card on the server); sample dates in the demo only.
+  final Map<String, DateTime> ratesConfirmedAt = {
+    if (AppState.samples)
+      for (final e in seedRatesConfirmed.entries) e.key: appToday.subtract(Duration(days: e.value)),
+  };
+
+  /// Real hostels whose rates the server tracks but the owner never confirmed.
+  final Set<String> ratesNeverConfirmed = {};
+
   /// "Visited by Hostelzy" dates.
   final Map<String, String> visited = Map.of(seedVisited);
 
@@ -57,6 +67,44 @@ extension OnboardingActions on AppState {
     }
     update(() => confirmed[hid] = 0);
     toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+  }
+
+  /// F03: days since the owner last confirmed the rates; null when unknown.
+  int? ratesDays(String hid) {
+    final at = ratesConfirmedAt[hid];
+    return at == null ? null : daysSince(at);
+  }
+
+  /// Tenants see "Not confirmed in over a month" after 31 days.
+  bool ratesStale(String hid) => (ratesDays(hid) ?? 0) > ratesStaleAfterDays;
+
+  /// Owner Today asks monthly ("Are your rates still right?"). Rates are the
+  /// owner's (Wave 3a): never a manager.
+  bool needsRatesConfirm(String hid) {
+    if (managerOf.contains(hid)) return false;
+    if (ratesNeverConfirmed.contains(hid)) return true;
+    final d = ratesDays(hid);
+    return d != null && d >= ratesConfirmEvery;
+  }
+
+  /// "Rates still right": saved on the server for a real hostel (the server
+  /// stores its own time), so tenants see "Confirmed by the owner" with today's date.
+  void confirmRates(String hid) {
+    void done() {
+      update(() {
+        ratesConfirmedAt[hid] = appToday;
+        ratesNeverConfirmed.remove(hid);
+      });
+      toastMsg('Thanks. Tenants see your rates as confirmed today.');
+    }
+
+    if (onServer && !isSeedHostel(hid)) {
+      _write(() => data.confirmRates(hid)).then((ok) {
+        if (ok) done();
+      });
+      return;
+    }
+    done();
   }
 
   void addManager() {

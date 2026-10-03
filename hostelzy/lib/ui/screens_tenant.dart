@@ -31,9 +31,11 @@ List<Hostel> filtered(AppState s) {
   final out = browsable.where(ok).toList();
   // Array.prototype.sort is stable; List.sort is not guaranteed to be, so sort by (mins, index).
   final idx = {for (var i = 0; i < hostels.length; i++) hostels[i].id: i};
+  // F03 Best deals: the 6-month saving (the Explore ribbon and the hostel
+  // page headline); paused or hidden deals (F07, F10) have none, so 0.
   int saving(Hostel h) {
     final q = s.bestQuote(h.id, f: s.fR);
-    return q == null ? -1 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
+    return q == null ? 0 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
   }
 
   int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
@@ -921,6 +923,15 @@ class DetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: T('Same price for every bed of a type.${h.food ? ' Food included.' : ''} Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}.', s: 13, c: p.mu, lh: 1.4),
                 ),
+                // F03 (F24 Wave 4d): when the owner last stood by these prices; nothing when unknown.
+                if (s.ratesConfirmedAt[h.id] case final at?)
+                  Padding(
+                    key: const ValueKey('ratesConfirmed'),
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                    child: s.ratesStale(h.id)
+                        ? Rich([sp(context, 'Not confirmed in over a month', w: 800, c: p.ad), sp(context, ' · ask the owner before you visit.')], s: 13, lh: 1.4)
+                        : Rich([sp(context, 'Confirmed by the owner', w: 800), sp(context, ' · ${dayMon(at.toLocal())}')], s: 13, lh: 1.4),
+                  ),
                 // F23: the shared things on each floor (and the geyser in rooms).
                 OnEachFloor(hid: h.id),
                 // Today's food, then the whole week, when the owner has put a menu.
