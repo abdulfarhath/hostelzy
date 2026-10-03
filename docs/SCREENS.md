@@ -8,16 +8,16 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **87** |
-| App sheets (bottom sheets) | **43** |
+| App screens (routes + their separate pages/views) | **90** |
+| App sheets (bottom sheets) | **44** |
 | App full-screen states | **31** |
-| **Release app total** | **161** |
+| **Release app total** | **165** |
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **182** |
+| **Overall total** | **186** |
 
-Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 31 · Team mode 13 · Shared 8.
-Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 33 · Team mode 13 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 8. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
 
@@ -39,7 +39,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (87)
+## 1. App screens (90)
 
 ### Start and sign-in (7)
 
@@ -53,7 +53,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 6 | `roleGate` (owner) | List your PG (Request a visit, owner link, "Manager at a PG?") | `screens_start.dart:369` (`if (owner)`, `:386`) | Role › I run a PG, without a live hostel |
 | 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
 
-### Tenant (15)
+### Tenant (16)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -65,13 +65,14 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 13 | `detail` | Hostel page | `screens_tenant.dart:661` | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
 | 14 | `gallery` | Photos (full-screen gallery) | `photos.dart:291` | Hostel page › photo (`photos.dart:210`) |
 | 15 | `reviews` | Reviews of a hostel | `reviews.dart:173` | Hostel page › reviews (`screens_tenant.dart:799`) |
-| 16 | `picker` (plan) | Pick a bed · room plan / floor view | `screens_tenant.dart:1053` (`_PlanMode` `:1199`) | Hostel page › See beds (`residents.dart:245`) |
+| 16 | `picker` (plan) | Pick a bed · Plan: floor chips + the floor as a corridor map (rooms either side, beds, shared things placed, "Not placed yet" strip; F25 NEW-2 `w4-floorMap`) | `features/holds/picker_screen.dart` (`_PlanMode`), `features/amenities/floor_map.dart` (`FloorMap`) | Picker tab Plan (`floorView`); Hostel page › Pick a bed (`residents.dart:openPicker`) |
 | 17 | `picker` (room) | Room 101 · room layout, layers, bed facts | `layout.dart:354` (`RoomMode`) | Picker › tap a room (`state.dart:openRoom`) |
 | 18 | `picker` (list) | Pick a bed · cheapest first | `screens_tenant.dart:1340` (`_ListMode`) | Picker › See cheapest beds |
 | 19 | `compare` | Compare two beds | `layout.dart:644` | Room view › Compare with another bed (`room_layouts.dart:122`) |
 | 20 | `hold` | Your hold (timer / pay to book / booked / ended) | `screens_tenant.dart:1425` | After a hold (`residents.dart:312,426`); Holds row (`screens_tenant.dart:491`) |
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
+| 88 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared things on top of each floor, every room's beds; tap a free bed → Continue (F25 NEW-1 `w4-building`) | `features/holds/building_view.dart` (`BuildingView`), `picker_screen.dart` (`_BuildingMode`) | Picker tab Building (`pickTab-building`); Hostel page › See the whole building (`residents.dart:openBuilding`) |
 
 ### Resident (13)
 
@@ -91,12 +92,13 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
 
-### Owner (31)
+### Owner (33)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
 | 36 | `oToday` | Today (tab) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
-| 37 | `oBeds` | Beds · bed map (tab) | `screens_owner.dart:510` | Owner tab 2 |
+| 37 | `oBeds` (all) | Beds · All floors (every floor's rooms as cards) | `features/owner/owner_beds_screen.dart` | Owner tab 2 › seg All floors |
+| 89 | `oBeds` (plan) | Beds · Floor plan: corridor map, each bed with initials / Free / Hold / free-from date, shared things placed, broken ones red + Mark Fixed (F25 NEW-3 `w4-oFloorPlan`) | `features/owner/owner_beds_screen.dart` (`s.obView == 'plan'`, default) | Owner tab 2 (seg Floor plan) |
 | 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
 | 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
 | 40 | `oMore` · residents | Manage › Residents | `screens_owner.dart:1129` | Manage › Residents |
@@ -113,7 +115,8 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 51 | `oRooms` | Rooms (add / change rooms) | `rooms.dart:11` | Beds › Rooms (`screens_owner.dart:1518`) |
 | 52 | `oMeter` | Electricity (meter readings) | `stay_tools.dart:13` | Rent › Electricity (`features/meter/meter.dart:74`) |
 | 53 | `oLayouts` (rooms) | Room layouts | `team.dart:113` | Manage › Room layouts (`screens_owner.dart:1073`) |
-| 54 | `oLayouts` (things) | Layouts › Shared things (by floor) | `amenities.dart:333` (`OwnerSharedThings`) | Room layouts › Shared things tab (`team.dart:158`) |
+| 54 | `oLayouts` (things) | Layouts › Shared things (by floor; each floor thing shows "On the floor map" / "Not placed yet" and a Place button) | `amenities.dart:333` (`OwnerSharedThings`) | Room layouts › Shared things tab (`team.dart:158`) |
+| 90 | `oLayouts` (building) | Layouts › Building (owner cross-section, same widget as S88; a bed opens H18) | `features/team/team_screens.dart` (`amOwnerTab == 'building'`) | Room layouts › Building tab |
 | 55 | `oLayout` | Room N · layout (owner view) | `layout.dart:777` | Room layouts › a room (`owner_layouts.dart:133`) |
 | 56 | `oCreate` | Create a layout · pick the shape | `layout.dart:1269` | Room layouts › Create (`owner_layouts.dart:34`) |
 | 57 | `aLayout` | Layout editor (owner and team) | `layout.dart:989` | Room › Edit layout (`layout.dart:924`); Team home (`team.dart:54`) |
@@ -158,7 +161,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (43)
+## 2. App sheets (44)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
@@ -218,7 +221,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 |---|---|---|---|---|
 | 36 | `team` | Hostelzy team (check the team account) | `team.dart:13` | Settings › Hostelzy team, not yet unlocked (`team_mode.dart:18`) |
 
-### Shared (7)
+### Shared (8)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
@@ -229,6 +232,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 41 | `waterOffer` | Want water reminders? | `reminders.dart:506` | 3rd app open (`features/reminders/reminders.dart:357`) |
 | 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
+| 44 | `amPlace` | Place X on the floor (tap the corridor, Save the spot / Take it off the map; owner, manager, team) | `features/amenities/floor_map.dart` (`PlaceThingSheet`) | Layouts › Shared things › pin button (`amenities.dart:openPlaceThing`) |
 
 ## 3. App full-screen states (31)
 
@@ -244,7 +248,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 7 | `holds` | No holds yet · Find a bed | `holds.isEmpty` | `screens_tenant.dart:548` |
 | 8 | `saved` | Nothing saved yet · Find a bed | nothing saved | `screens_tenant.dart:1617` |
 | 9 | `hold` | This hold isn't on this phone any more | hold id not found | `screens_tenant.dart:1432` |
-| 10 | `picker` (plan) | Floor plan shows after you hold a bed | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
+| 10 | `picker` (plan, building) | Floor plan shows after you hold a bed (same state on the Building tab, F25) | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
 | 11 | `picker` (room) | Sign in to see room layouts | guest | `layout.dart:367` |
 | 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one | `layout.dart:375` |
 | 13 | `picker` (room) | Floor plan shows after you hold a bed (daily cap) | server `capped` | `layout.dart:379` |
