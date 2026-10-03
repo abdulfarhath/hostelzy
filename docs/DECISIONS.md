@@ -1,11 +1,33 @@
 # Decisions
 
-Agreed with the founder. Newest last. Don't contradict these; ask instead.
+Agreed with the founder. The log below is newest last; don't contradict it, ask instead.
+Older entries that were later replaced are marked **(replaced)**.
+
+## Current rules at a glance (hub, 2026-10-03; the log below has the details)
+| Area | Rule today |
+|---|---|
+| Roles | Tenant, resident, owner (+ manager). Hostelzy team via a Google account with the `team` claim |
+| Login | Sign in with Google; the user types their phone ("Not verified"). SMS OTP later, when Firebase Blaze billing works. No OTP wording until then |
+| Money in | Tenants pay Hostelzy ₹0. Owners pay Plan A ₹499 / ₹999 / ₹1,499 a month (≤30 / 31–80 / 80+ beds), 30-day free trial from go-live, by UPI `9059790014@axl` + UTR, checked by the team |
+| Money out | Hostelzy never holds money. ₹3,000 advance + first month go straight to the owner. On leaving, the owner keeps ₹1,000–1,500 maintenance. 30-day notice, fee due on the joining date, electricity extra by meter, food included where served |
+| Holds | Free 1 h (2 h for Members). No paid hold |
+| Deals | Owner picks from a 6-deal menu, max 3 active. Headline = 6-month saving. Paused for tenants when the plan is 15+ days late or at strike 2 |
+| Rewards | ₹100 next-stay credit (credited on the owner's invoice), referral ₹100 each. Monthly cap: founder to confirm (Finance Q2) |
+| Fair Play | Owner adds every resident; phone matched within 60 days → Via Hostelzy / Direct. 3 strikes: warning / deals hidden 30 days / removed. Fixing a wrong "Direct" within 48 h = no strike; 3 fixes in 6 months = 1 warning. No move-off fee |
+| Owner phone | Shown to a tenant only after a hold, an enquiry (recorded with an HZ code) or a stay |
+| Ranking | Rank #N with reasons, never a score. Reviews 50%, reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
+| Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. Women's PGs: full floor only after a hold |
+| Listings | Live only when complete (rooms, a price for every type, linked owner, 8 photos). Availability confirmed every 3 days |
+| Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
+| Web | Public pages at farhath.me/hostelzy/app/ until hostelzy.in. The site root farhath.me/hostelzy/ stays the old prototype |
+| Brand | Name Hostelzy. Logo B3-a2 "Full room" |
+| Approvals | Standing approval: chats decide and merge. Founder only for accounts, keys, SQL runs, payments and changes to money amounts |
+
 
 ## 2026-10-01
 
 **Product**
-- One app, three roles picked after OTP: tenant, resident, owner. No parent role.
+- One app, three roles picked after sign-in (OTP replaced by Google sign-in, Plan B): tenant, resident, owner. No parent role.
 - Hyderabad first. Start dense in one area (e.g. Madhapur / Hitec City / Kondapur / Gachibowli).
 - Pixel-faithful to the Claude Design prototype (`project/HostelzyApp.dc.html`).
 
@@ -26,7 +48,7 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
   to tell "Joined via Hostelzy" from "Direct".
 - Collusion (owner + tenant joining off-app) → owner is warned, then banned. Rules are shown and
   accepted when the owner joins.
-- Reviews only from OTP-verified users with a confirmed stay.
+- Reviews only from users with a confirmed stay (OTP verification comes later, see Plan B login).
 - Tenants get a discount on their **next** hostel after joining one through Hostelzy (loyalty).
 
 **Business**
@@ -54,7 +76,7 @@ Agreed with the founder. Newest last. Don't contradict these; ask instead.
 - **Electricity is extra**; **food is included** in the fee where the hostel serves meals.
 
 **Room layouts (F12)**
-- The **Hostelzy team draws every room layout** (admin editor on a laptop). Owners don't draw; they
+- **(replaced 2026-10-02: owners draw their own layouts, see "Owner edits layouts")** The **Hostelzy team draws every room layout** (admin editor on a laptop). Owners don't draw; they
   approve layouts, mark items working / not working, and request changes in the app.
 - New room shapes and layout changes are **free**, done **within 48 hours**.
 
@@ -94,7 +116,7 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   never holds money, and the advance is paid straight to the owner.
 
 **Room layouts (F12)** *(Ideas chat)*
-- Women's PGs: room layouts only for logged-in (OTP) users; whole-floor plans only after a hold.
+- Women's PGs: room layouts only for signed-in users; whole-floor plans only after a hold.
   Every hostel: never show gates, CCTV, exits or residents' names.
 - **No power sockets in phase 1** (phase 2).
 - The room view **sits beside the bed picker's Plan tab** as a new **Room** tab. Tapping a room in
@@ -144,7 +166,7 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - **Name stays "Hostelzy"** for now; the founder may rename later. No rename work until then.
 - Founder: "take your own decisions and keep building". The Ideas chat decides open product
   questions from here and records them here.
-- **Logo: concept C "H made of beds"** (7 bed blocks form an H, the middle one red = your bed),
+- **(replaced by "Logo final" B3-a2)** **Logo: concept C "H made of beds"** (7 bed blocks form an H, the middle one red = your bed),
   picked by the Ideas chat on the founder's delegation, from the Brand chat's 6 concepts
   (https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq1). Brand chat refines it; Build makes it the
   app icon.

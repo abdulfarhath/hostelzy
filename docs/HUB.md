@@ -1,6 +1,6 @@
 # Hostelzy hub
 
-The founder talks to one chat only: **Hostelzy app review** (the hub). The hub hands out tasks, checks every
+The founder talks to one chat only: **Hostelzy app review** (the hub). New account? See `docs/START-HERE.md` §6. The hub hands out tasks, checks every
 2 hours, nudges anyone who stops, and reports milestones. Each chat follows CLAUDE.md for its role.
 Started 2026-10-03.
 
