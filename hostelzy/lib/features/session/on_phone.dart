@@ -13,6 +13,10 @@ mixin _OnPhoneData {
   /// F24 item 23: Settings › Name, what's typed in the sheet (starts empty).
   String nameDraft = '';
 
+  /// F24 Wave 4c: an owner's WhatsApp number when it isn't their phone
+  /// ('' = same as the phone), and what's typed in its sheet.
+  String myWa = '', waDraft = '';
+
   /// F21 W4: the toast's Undo, while it shows.
   VoidCallback? toastUndo;
 }
@@ -54,6 +58,35 @@ extension OnPhoneActions on AppState {
     toastMsg('Name saved.');
   }
 
+  /// F24 Wave 4c: Settings › WhatsApp (owners): the number tenants and
+  /// residents message, when it isn't the phone they call.
+  void editWa() => update(() {
+    waDraft = myWa;
+    sheet = 'waNum';
+  });
+
+  /// Saves it on this phone and, when signed in, on the server; '' clears it
+  /// (WhatsApp then uses the phone number).
+  Future<void> saveWa({bool clear = false}) async {
+    final n = clear ? '' : waDraft.replaceAll(RegExp(r'\D'), '');
+    if (n.isNotEmpty && n.length != 10) return toastMsg('Enter all 10 digits.');
+    final a = account;
+    if (a != null && onServer) {
+      try {
+        await data.saveWhatsApp(a.uid, n == myPhone ? '' : n);
+      } catch (e) {
+        debugPrint('WhatsApp number: $e');
+        return toastMsg('Couldn’t save it. Check your internet and try again.');
+      }
+    }
+    update(() {
+      myWa = n == myPhone ? '' : n;
+      waDraft = '';
+      sheet = null;
+    });
+    toastMsg(myWa.isEmpty ? 'WhatsApp uses your phone number.' : 'Saved. Tenants and residents message you on +91 ${phoneSpaced(myWa)}.');
+  }
+
   /// "Asha K." for reviews and payment lines.
   String get meShort {
     final w = meName.split(RegExp(r'\s+')).where((x) => x.isNotEmpty).toList();
@@ -70,6 +103,7 @@ extension OnPhoneActions on AppState {
     'lang': lang,
     'name': myName,
     'phone': phone,
+    'wa': myWa,
     if (account != null) 'account': {'uid': account!.uid, 'name': account!.name, 'email': account!.email},
     'saved': [for (final e in saved.entries) if (e.value) e.key],
     'holds': [
@@ -80,6 +114,7 @@ extension OnPhoneActions on AppState {
     ],
     'fairAccepted': fairAccepted,
     'pushAsked': pushAsked,
+    'camAsked': camAsked,
     'opens': opens,
     // F24 item 22: the Settings switches and searched areas (also on the profile).
     'notif': notif,

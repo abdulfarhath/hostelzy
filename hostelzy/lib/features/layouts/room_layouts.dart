@@ -28,6 +28,17 @@ mixin _RoomLayoutsData {
   List<ShapeRequest> shapeReqs = [];
   final Map<String, List<Uint8List>> shapePhotosLocal = {};
 
+  /// F24 Wave 4b (F12): a women's PG's rooms fetched one by one for the Room
+  /// tab (`hid|room` → layout), and how each fetch went: loading | done |
+  /// capped (the server wants a hold first) | failed.
+  final Map<String, RoomLayout> peekLayouts = {};
+  final Map<String, String> roomFetch = {};
+
+  /// F24 item 27: rooms (`hid|room`) this tenant asked "Tell me when it's
+  /// ready" for, and whether the server's list was loaded this session.
+  final Set<String> layoutWaitSet = {};
+  bool layoutWaitsLoaded = false;
+
   /// Admin editor: the selected AC unit's properties.
   final Map<String, String> acProps = {'Wall': 'Right', 'Blows': 'Left', 'Reach': '8 ft', 'Status': 'Working'};
 }
@@ -38,8 +49,64 @@ extension RoomLayoutsActions on AppState {
 
   /// What tenants see: the last approved version.
   RoomLayout? liveLayout(String hid, int n) {
-    final l = layoutOf(hid, n);
+    final l = layoutOf(hid, n) ?? peekLayouts['$hid|$n'];
     return l != null && l.live ? l.forTenants : null;
+  }
+
+  /// F24 Wave 4b: a women's PG on the server lists its layouts only to
+  /// people with a hold there, so the Room tab asks for this one room.
+  bool needsRoomFetch(String hid, int n) => onServer && signedIn && hostelById(hid).gender == 'Women' && layoutOf(hid, n) == null && !roomFetch.containsKey('$hid|$n');
+
+  Future<void> fetchRoomLayout(String hid, int n) async {
+    final k = '$hid|$n';
+    if (roomFetch[k] == 'loading') return;
+    update(() => roomFetch[k] = 'loading');
+    try {
+      final l = await data.roomLayout(hid, n);
+      update(() {
+        if (l != null) peekLayouts[k] = l;
+        roomFetch[k] = 'done';
+      });
+    } catch (e) {
+      debugPrint('room layout: $e');
+      update(() => roomFetch[k] = '$e'.contains('hold a bed') ? 'capped' : 'failed');
+    }
+  }
+
+  /// F24 item 27: the rooms this tenant waits for, once a session.
+  Future<void> loadLayoutWaits() async {
+    if (!onServer || layoutWaitsLoaded || account == null) return;
+    layoutWaitsLoaded = true;
+    try {
+      final w = await data.layoutWaits();
+      update(() => layoutWaitSet.addAll(w));
+    } catch (e) {
+      debugPrint('layout waits: $e');
+    }
+  }
+
+  bool waitingForLayout(String hid, int n) => layoutWaitSet.contains('$hid|$n');
+
+  /// "Tell me when it's ready": saved on the server; when the owner publishes
+  /// this room's layout the tenant gets one notification.
+  Future<void> tellMeWhenReady(String hid, int n) async {
+    final k = '$hid|$n';
+    if (layoutWaitSet.contains(k)) return;
+    final label = rooms[hid]?.where((r) => r.n == n).firstOrNull?.label ?? '$n';
+    if (onServer) {
+      try {
+        await data.waitForLayout(hid, n);
+      } catch (e) {
+        debugPrint('wait for layout: $e');
+        if ('$e'.contains('layout is ready')) {
+          await refreshListings();
+          return toastMsg('Room $label’s layout is ready now.');
+        }
+        return toastMsg('Couldn’t save it. Check your internet and try again.');
+      }
+    }
+    update(() => layoutWaitSet.add(k));
+    toastMsg('We’ll tell you when room $label’s layout is ready.');
   }
 
   /// Women's PGs: whole-floor plans only after a hold here.

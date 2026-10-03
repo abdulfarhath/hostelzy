@@ -172,7 +172,7 @@ extension MoveActions on AppState {
   });
 
   /// An owner's number, when the server gave it (F24 item 1).
-  String ownerPhoneFor(String hid) => ownerPhones[hid] ?? '';
+  String ownerPhoneFor(String hid) => ownerWa(hid);
 
   /// Former resident: their refund page.
   void openMyRefund() => update(() {

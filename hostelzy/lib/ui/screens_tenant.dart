@@ -1455,7 +1455,7 @@ class HoldScreen extends StatelessWidget {
         big: amt,
         line: 'You sent the UPI reference. It says Booked only after $owner sees the money, so it’s not booked yet.',
         rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!), if (code != null) ('Booking code', code)],
-        main: ('Remind $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}. Please confirm on Hostelzy.')),
+        main: ('Remind $owner', 'msg', () => s.whatsapp(ownerWa(pay!.hid), 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}. Please confirm on Hostelzy.')),
         alt: ('Fix the UPI reference', 'chev', () => s.openPayUtr(pay!)),
         green: false,
       ),
@@ -1465,7 +1465,7 @@ class HoldScreen extends StatelessWidget {
         line: '$owner didn’t see this payment. Check the UPI reference in your UPI app. If the money left your account, send $owner the UPI receipt on WhatsApp.',
         rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!)],
         main: ('Fix the UPI reference', 'arrow', () => s.openPayUtr(pay!)),
-        alt: ('Talk to $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, about my advance for bed ${pay.bed}: UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}.')),
+        alt: ('Talk to $owner', 'msg', () => s.whatsapp(ownerWa(pay!.hid), 'Hi $owner, about my advance for bed ${pay.bed}: UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}.')),
         green: false,
       ),
       'paying' => (
@@ -1728,7 +1728,7 @@ class FoodPeek extends StatelessWidget {
                                   width: 92,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [T(ml[1], w: 800, s: 14), T(ml[2], s: 11, c: p.mu)],
+                                    children: [T(ml[1], w: 800, s: 14), T(s.mealTimeText(hid, ml[0]), s: 11, c: p.mu)],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -1796,7 +1796,7 @@ class FoodWeekSheet extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(ml[2], s: 12, c: p.mu)])),
+                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(s.mealTimeText(s.foodFor ?? s.hid, ml[0]), s: 12, c: p.mu)])),
                         const SizedBox(width: 8),
                         Expanded(child: T(m[d].of(ml[0]).trim().isEmpty ? '—' : m[d].of(ml[0]), s: 14, lh: 1.4)),
                       ],

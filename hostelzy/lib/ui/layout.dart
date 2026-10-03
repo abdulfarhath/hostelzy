@@ -372,13 +372,47 @@ class RoomMode extends StatelessWidget {
           T('It takes one tap with Google. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
+    } else if (l == null && (s.needsRoomFetch(h.id, room.n) || s.roomFetch['${h.id}|${room.n}'] == 'loading')) {
+      // F24 Wave 4b: a women's PG's room comes from the server one by one.
+      if (s.needsRoomFetch(h.id, room.n)) WidgetsBinding.instance.addPostFrameCallback((_) => s.fetchRoomLayout(h.id, room.n));
+      body = Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Center(child: T('Loading the layout…', key: const ValueKey('roomLoading'), s: 14, c: p.mu)));
+    } else if (l == null && s.roomFetch['${h.id}|${room.n}'] == 'capped') {
+      // The server shows a women's PG a few rooms a day before a hold.
+      body = VGap(
+        key: const ValueKey('roomCapped'),
+        gap: 14,
+        children: [
+          const LayoutEmpty(icon: 'lock', head: 'Floor plan shows after you hold a bed', body: 'For residents’ safety, a women’s PG shows a few rooms a day before a hold. Hold a bed to see every room.'),
+          OutlineCta('Pick a bed from Plan', height: 50, onTap: () => s.update(() => s.mode = 'plan')),
+          T('Hostelzy never shows gates, CCTV, exits or residents’ names on any plan.', s: 12, c: p.mu, lh: 1.4),
+        ],
+      );
+    } else if (l == null && s.roomFetch['${h.id}|${room.n}'] == 'failed') {
+      body = VGap(
+        gap: 14,
+        children: [
+          const LayoutEmpty(icon: 'warn', head: 'Couldn’t load this room', body: 'Check your internet and try again. You can still pick a bed from Plan or List.'),
+          OutlineCta('Try again', key: const ValueKey('roomRetry'), height: 50, onTap: () => s.fetchRoomLayout(h.id, room.n)),
+        ],
+      );
     } else if (l == null) {
+      if (s.onServer && !s.layoutWaitsLoaded) WidgetsBinding.instance.addPostFrameCallback((_) => s.loadLayoutWaits());
+      final waiting = s.waitingForLayout(h.id, room.n);
       body = VGap(
         gap: 14,
         children: [
           const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from Plan or List, and see the photos.'),
-          OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('Alerts come once the app is online. Check back here for now.')),
-          T('Owners draw their rooms and residents correct them, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
+          // F24 item 27: saved on the server; a notification when it's published.
+          waiting
+              ? Container(
+                  key: const ValueKey('layoutWaiting'),
+                  height: 50,
+                  alignment: Alignment.center,
+                  color: p.sf,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('bell', size: 16, color: p.tx), const SizedBox(width: 8), const T('We’ll tell you', w: 800, s: 15)]),
+                )
+              : OutlineCta('Tell me when it’s ready', key: const ValueKey('layoutNotify'), icon: 'bell', height: 50, onTap: () => s.tellMeWhenReady(h.id, room.n)),
+          T(waiting ? 'You get a notification when the owner publishes room ${room.label}’s layout.' : 'Owners draw their rooms and residents correct them, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
     } else {
@@ -997,6 +1031,9 @@ class AdminLayoutScreen extends StatelessWidget {
     );
     // F24: the owner's "Ask Hostelzy to draw it" request for this room.
     final req = s.shapeReqFor(h.id, room.n);
+    final lockedBy = s.edLockedBy;
+    final ready = checks.every((c) => c.$1) && lockedBy == null;
+    void blocked() => s.toastMsg(lockedBy != null ? '${lockedBy.name} is editing this room. Try again when they’re done.' : 'Fix the checks first.');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1012,7 +1049,11 @@ class AdminLayoutScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Rich([sp(context, 'Layout editor · '), sp(context, '${h.name} · Room ${room.label}', c: p.ac)], w: 800, s: 15),
-                    T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live · edits make a new version', s: 12, c: p.mu),
+                    // F12: one editor at a time. Someone else has this room open.
+                    if (lockedBy != null)
+                      T('${lockedBy.name} is editing this room', key: const ValueKey('edLocked'), s: 12, w: 800, c: p.ad, ell: true)
+                    else
+                      T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live · edits make a new version', s: 12, c: p.mu),
                   ],
                 ),
               ),
@@ -1023,10 +1064,7 @@ class AdminLayoutScreen extends StatelessWidget {
           horizontal: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Row(children: [for (final r in rs) ...[ChipBtn(r.label, on: r.n == room.n, onTap: () => s.update(() {
-              s.lRoom = r.n;
-              s.edSel = null;
-            })), const SizedBox(width: 6)]]),
+            child: Row(children: [for (final r in rs) ...[ChipBtn(r.label, on: r.n == room.n, onTap: () => s.edSwitchRoom(r.n)), const SizedBox(width: 6)]]),
           ),
         ),
         // The map stays out of the scroll so dragging never scrolls the page.
@@ -1143,9 +1181,20 @@ class AdminLayoutScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           // F18: owners publish straight away; the team sends its drawing to the owner.
-          child: s.edOwner
-              ? Cta('Publish', icon: 'check', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.publishLayout(l) : s.toastMsg('Fix the checks first.'))
-              : Cta('Send to owner', height: 52, px: 16, fs: 15, opacity: checks.every((c) => c.$1) ? 1 : .4, onTap: () => checks.every((c) => c.$1) ? s.sendLayoutToOwner(l) : s.toastMsg('Fix the checks first.')),
+          child: Row(
+            children: [
+              Expanded(
+                child: s.edOwner
+                    ? Cta('Publish', key: const ValueKey('edPublish'), icon: 'check', height: 52, px: 16, fs: 15, opacity: ready ? 1 : .4, onTap: () => ready ? s.publishLayout(l) : blocked())
+                    : Cta('Send to owner', height: 52, px: 16, fs: 15, opacity: ready ? 1 : .4, onTap: () => ready ? s.sendLayoutToOwner(l) : blocked()),
+              ),
+              // F12: publishing waits until the other editor is done (10 minutes after they stop).
+              if (lockedBy != null) ...[
+                const SizedBox(width: 8),
+                Cta('Check again', key: const ValueKey('edLockRetry'), height: 52, px: 14, fs: 15, expand: false, bg: transparent, fg: p.ad, border: p.ad, onTap: s.takeLayoutLock),
+              ],
+            ],
+          ),
         ),
       ],
     );

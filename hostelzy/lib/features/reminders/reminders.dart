@@ -147,16 +147,23 @@ extension RemindersActions on AppState {
   }
 
   /// Meal reminders inside the awake hours: (index, meal, start, served till).
+  /// F24 Wave 4c: the times the owner set on the menu; a meal without one
+  /// keeps the usual time.
   List<(int, String, int, String)> get mealRings => [
-    for (final (k, name, at, end) in const [(0, 'Breakfast', 7 * 60 + 30, '9:30 am'), (1, 'Lunch', 12 * 60 + 30, '2 pm'), (2, 'Dinner', 20 * 60, '10 pm')])
-      if (awake(at, end: true)) (k, name, at, end),
+    for (final (k, name, key) in const [(0, 'Breakfast', 'b'), (1, 'Lunch', 'l'), (2, 'Dinner', 'n')])
+      if ((remHostel == null ? null : mealTimeOf(remHostel!, key)) ?? usualMealTimes[key]! case (final at, final end) when awake(at, end: true)) (k, name, at, clock(end, short: true)),
   ];
 
-  /// "From the food menu · lunch 12:30, dinner 8:00" (only what rings).
+  /// Whether the hostel's menu has its own meal times.
+  bool get menuHasTimes => remHostel != null && (mealTimes[remHostel!]?.isNotEmpty ?? false);
+
+  /// "From the food menu · lunch 12:30, dinner 8:00" (only what rings), or
+  /// "Usual times · …" while the owner hasn't set them.
   String get mealLine {
     final m = mealRings;
-    if (m.isEmpty) return 'From the food menu · none inside your awake hours';
-    return 'From the food menu · ${m.map((x) => '${x.$2.toLowerCase()} ${clock(x.$3).replaceAll(RegExp(r' [ap]m'), '')}').join(', ')}';
+    final from = menuHasTimes ? 'From the food menu' : 'Usual times, the menu has none yet';
+    if (m.isEmpty) return '$from · none inside your awake hours';
+    return '$from · ${m.map((x) => '${x.$2.toLowerCase()} ${clock(x.$3).replaceAll(RegExp(r' [ap]m'), '')}').join(', ')}';
   }
 
   Future<void> _reschedule() async {

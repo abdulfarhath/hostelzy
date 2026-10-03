@@ -171,7 +171,8 @@ void main() {
         ..ownerVerified = true
         ..fairPlay = true
         ..bedsChecked = true
-        ..pinChecked = true;
+        ..pinChecked = true
+        ..pin = (17.4622, 78.3568);
       s.draft.prices['non4'] = 6500;
     });
     expect(s.goLiveLeft, isEmpty);

@@ -432,6 +432,7 @@ class _AppBody extends StatelessWidget {
     'oFix' => const OwnerFixScreen(),
     'oFixDone' => const FixDoneScreen(),
     'aAdd' => const AddHostelScreen(),
+    'aPin' => const PinScreen(),
     'aTrack' => const TrackerScreen(),
     'oTeam' => const TeamScreen(),
     'settings' => const SettingsScreen(),
@@ -439,6 +440,7 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
+    'scan' => const ScanScreen(),
     'rRefund' => const ResidentRefundScreen(),
     'oMeter' => const OwnerMeterScreen(),
     'reminders' => const RemindersScreen(),
@@ -592,6 +594,7 @@ class _Sheet extends StatelessWidget {
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
+      'scanCam' => 'Use your camera?',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
         'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
@@ -615,6 +618,7 @@ class _Sheet extends StatelessWidget {
       'payUtr' => 'Enter the UPI reference',
       'manager' => 'Add a manager',
       'name' => 'Change your name',
+      'waNum' => 'Your WhatsApp number',
       'photo' => 'This photo',
       'fixLock' => 'Fix this room?',
       'fixLimit' => 'Can’t send yet',
@@ -633,6 +637,7 @@ class _Sheet extends StatelessWidget {
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
+      'scanCam' => 'Join your PG',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom} · ${s.lReqShape == 'Custom' ? 'Custom shape' : s.lReqShape}',
@@ -641,6 +646,7 @@ class _Sheet extends StatelessWidget {
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
       'name' => 'Settings',
+      'waNum' => 'Settings',
       'quickFix' => 'Quick fix · Room ${s.fixRoom}',
       'fixMute' => 'Layout fixes',
       'report' => s.endedHold != null || AppState.samples ? '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private' : 'Private',
@@ -672,6 +678,7 @@ class _Sheet extends StatelessWidget {
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
+      'scanCam' => const CameraSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
@@ -691,6 +698,7 @@ class _Sheet extends StatelessWidget {
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
       'name' => const NameSheet(),
+      'waNum' => const WaNumberSheet(),
       'photo' => const PhotoSheet(),
       'fixLock' => const FixLockSheet(),
       'fixLimit' => const FixLimitSheet(),
@@ -1332,7 +1340,7 @@ class _BedSheet extends StatelessWidget {
     final first = res?.name.split(' ').first ?? '';
     final actions = <(String, VoidCallback, bool, String)>[];
     if (b.state == 'booked') {
-      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), true, 'msg'));
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: res?.phone ?? ''), true, 'msg'));
       actions.add((
         'Mark as leaving $leave',
         () => res != null ? s.markLeaving(res, b, leaveDays(terms).first) : () {
@@ -1355,7 +1363,7 @@ class _BedSheet extends StatelessWidget {
       ));
     } else if (b.state == 'soon' && res != null) {
       // F24: leaving: when they've gone, the bed frees and the refund is due.
-      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), false, 'msg'));
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: res.phone), false, 'msg'));
       actions.add(('${first.isEmpty ? 'They' : first} moved out', () => s.movedOut(res, b), true, 'logout'));
     } else {
       actions.add((

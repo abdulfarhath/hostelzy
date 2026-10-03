@@ -279,3 +279,88 @@ class LocationSheet extends StatelessWidget {
   }
 }
 
+
+/// F24 Wave 4c (board `aPin`): the team drops the hostel's pin at its gate.
+/// The pin stays in the middle; the map moves under it, or "Use my location"
+/// puts it where the phone is. Saved only after one of those, so a hostel is
+/// never pinned on its area's centre.
+class PinScreen extends StatelessWidget {
+  const PinScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final c = s.pinNow ?? landmarkLatLng['Hitec City']!;
+    final d = s.draft;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              Expanded(child: PageHead(kicker: '${d.name.trim().isEmpty ? 'New hostel' : d.name.trim()}${d.area.isEmpty ? '' : ' · ${d.area}'}', title: 'Map pin', gap: 2)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: FlutterMap(
+                  key: ValueKey('pin${s.pinFocus}'),
+                  options: MapOptions(
+                    initialCenter: _ll(c),
+                    initialZoom: 17,
+                    minZoom: 11,
+                    maxZoom: 19,
+                    backgroundColor: p.sf,
+                    onPositionChanged: (camera, hasGesture) {
+                      if (hasGesture) s.pinPanned((camera.center.latitude, camera.center.longitude));
+                    },
+                  ),
+                  children: [if (mapTiles) TileLayer(urlTemplate: mapTileUrl, userAgentPackageName: mapUserAgent)],
+                ),
+              ),
+              // The pin: its tip sits on the map's centre.
+              IgnorePointer(
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(0, -18),
+                    child: Column(
+                      key: const ValueKey('pinMark'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(width: 26, height: 26, decoration: BoxDecoration(color: p.ac, shape: BoxShape.circle, border: Border.all(color: p.bg, width: 3))),
+                        Container(width: 3, height: 10, color: p.ac),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: Container(color: p.bg.withValues(alpha: .85), padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T(mapAttribution, s: 10, c: p.mu)),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: BoxDecoration(color: p.bg, border: Border(top: bs(2, p.tx))),
+          child: VGap(
+            gap: 10,
+            children: [
+              T(s.pinTouched ? 'Pin at ${c.$1.toStringAsFixed(5)}, ${c.$2.toStringAsFixed(5)}' : 'Stand at the gate and use your location, or move the map so the pin sits on the gate.', s: 13, c: s.pinTouched ? p.tx : p.mu, w: s.pinTouched ? 800 : 400, lh: 1.4),
+              OutlineCta('Use my location', key: const ValueKey('pinLocate'), icon: 'pin', height: 48, fs: 14, onTap: s.locatePin),
+              Cta('Save pin', key: const ValueKey('pinSave'), icon: 'check', height: 54, px: 16, fs: 15, bg: s.pinTouched ? null : p.tk, fg: s.pinTouched ? null : p.mu, onTap: s.savePin),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

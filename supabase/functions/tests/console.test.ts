@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 // @ts-ignore plain JS module served by GitHub Pages
-import { columns, fmtUtr, invoiceTag, waLink, rupees } from '../../../app/console/logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, goLiveWords } from '../../../app/console/logic.js';
 
 test('onboarding columns: drafts by lead stage, live by plan', () => {
   const cols = columns(
@@ -88,4 +88,11 @@ test('F24 item 18: strike words, standing and tenant reports', async () => {
   assert.equal(reportLine({ why: 'Asked to pay without the app', note: 'Said ₹500 less', created_at: '2026-10-03T06:00:00Z' }), 'Asked to pay without the app · “Said ₹500 less” · 3 Oct');
   assert.equal(reportLine({ why: 'Something else', note: '', created_at: '2026-10-03T06:00:00Z' }), 'Something else · 3 Oct');
   assert.equal(casePhotoPath('h1', 'fb-team', 42), 'h1/fb-team/tenant-42.jpg');
+});
+
+test('Go live goes through go_live(): the server reason in plain words', () => {
+  assert.equal(goLiveWords('add 8 photos first'), 'Not live yet: add 8 photos first.');
+  assert.equal(goLiveWords('PostgrestError: drop the map pin at the gate'), 'Not live yet: drop the map pin at the gate.');
+  assert.equal(goLiveWords('add a price for 3 sharing AC'), 'Not live yet: add a price for 3 sharing AC.');
+  assert.equal(goLiveWords('fetch failed'), 'Couldn’t put it live. Check your internet and try again.');
 });

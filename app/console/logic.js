@@ -171,3 +171,16 @@ export function helpStatus(req, now = Date.now()) {
   if (new Date(req.due_at).getTime() < now) return ['Late', 'red'];
   return req.status === 'drawing' ? ['Drawing', 'solid'] : ['New', 'red'];
 }
+
+/** F24 Wave 4c: why go_live() said no, in the team's words. */
+export function goLiveWords(message) {
+  const m = String(message || '');
+  for (const k of ['add at least one room', 'add a price for', 'link the owner', 'add 8 photos', 'drop the map pin', 'only the Hostelzy team']) {
+    const i = m.indexOf(k);
+    if (i >= 0) {
+      const w = m.slice(i).split(/[\n}]/)[0].trim().replace(/\.$/, '');
+      return `Not live yet: ${w}.`;
+    }
+  }
+  return 'Couldn’t put it live. Check your internet and try again.';
+}

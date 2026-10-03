@@ -41,3 +41,5 @@ $P -d $DB -f tests/wave1_test.sql
 $P -d $DB -f tests/wave4a_test.sql
 $P -d $DB -f tests/wave3a_test.sql
 $P -d $DB -f tests/fairhard_test.sql
+$P -d $DB -f tests/wave4c_test.sql
+$P -d $DB -f tests/wave4b_test.sql

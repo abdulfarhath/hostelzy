@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords } from './logic.js';
 
 const app = document.getElementById('app');
 /** The signed-in team member (for their own storage paths). */
@@ -508,7 +508,12 @@ const VIEWS = {
     const hs = await db.from('hostels').select('id, name, area, gender, status').order('name').then(ok);
     const set = async (h, status) => {
       if (!confirm(`${status === 'live' ? 'Put' : 'Take'} ${h.name} ${status === 'live' ? 'live for tenants' : 'off Explore'}?`)) return;
-      ok(await db.from('hostels').update({ status }).eq('id', h.id));
+      if (status === 'live') {
+        // F24 Wave 4c: through go_live(): rooms, prices, owner linked, 8 photos, the pin; starts the 30-day trial once.
+        const { error } = await db.rpc('go_live', { h: h.id });
+        if (error) return toast(goLiveWords(error.message));
+        toast(`${h.name} is live.`);
+      } else ok(await db.from('hostels').update({ status }).eq('id', h.id));
       again();
     };
     return [

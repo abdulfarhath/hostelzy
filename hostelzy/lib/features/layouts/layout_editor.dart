@@ -11,9 +11,76 @@ mixin _LayoutEditorData {
 
   /// Days since the owner confirmed the layouts still match the rooms.
   final Map<String, int> layoutConfirmed = Map.of(seedLayoutConfirmed);
+
+  /// F12 one editor at a time (server): the open room's edit lock, and who
+  /// holds it. Refreshed every 4 minutes while the editor stays open; it
+  /// runs out on the server 10 minutes after the last refresh.
+  ({String hid, int room, String name, bool mine})? edLock;
+  Timer? _edLockTimer;
 }
 
 extension LayoutEditorActions on AppState {
+  /// Someone else is editing the open room: look, but don't publish.
+  ({String name})? get edLockedBy {
+    final k = edLock;
+    return k != null && !k.mine && k.hid == ownHid && k.room == lRoom ? (name: k.name) : null;
+  }
+
+  /// Take (or refresh) the open room's edit lock. Before the SQL runs (or
+  /// offline) there is no lock and the editor works as before.
+  Future<void> takeLayoutLock() async {
+    if (!onServer || screen != 'aLayout') return;
+    final hid = ownHid, n = lRoom;
+    _edLockTimer ??= Timer.periodic(const Duration(minutes: 4), (_) {
+      if (screen == 'aLayout') {
+        takeLayoutLock();
+      } else {
+        releaseLayoutLock();
+      }
+    });
+    try {
+      final r = await data.lockLayout(hid, n);
+      if (screen != 'aLayout' || ownHid != hid || lRoom != n) {
+        if (r.mine) await data.unlockLayout(hid, n);
+        return;
+      }
+      update(() => edLock = (hid: hid, room: n, name: r.name, mine: r.mine));
+    } catch (e) {
+      debugPrint('layout lock: $e');
+    }
+  }
+
+  /// Let the lock go (leaving the editor, or another room).
+  Future<void> releaseLayoutLock() async {
+    _edLockTimer?.cancel();
+    _edLockTimer = null;
+    final k = edLock;
+    edLock = null;
+    if (k == null || !k.mine || !onServer) return;
+    try {
+      await data.unlockLayout(k.hid, k.room);
+    } catch (e) {
+      debugPrint('layout unlock: $e');
+    }
+  }
+
+  /// The editor's room chips: the old room's lock goes, the new one's is taken.
+  void edSwitchRoom(int n) {
+    if (n == lRoom) return;
+    unawaited(releaseLayoutLock());
+    update(() {
+      // A room without a layout gets a starting one (tenants don't see it).
+      final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
+      if (r != null && layoutOf(ownHid, n) == null) {
+        (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)
+          ..published = null
+          ..live = false;
+      }
+      lRoom = n;
+      edSel = null;
+    });
+    unawaited(takeLayoutLock());
+  }
   bool get canUndo => _undo.isNotEmpty;
   bool get canRedo => _redo.isNotEmpty;
 
