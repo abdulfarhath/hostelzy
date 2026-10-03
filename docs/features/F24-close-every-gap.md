@@ -108,6 +108,23 @@ Add a manager. Picker frame: Floor view opens first only for guests or rooms wit
 **v23 (after #77 merged):** owner Food menu button "Save menu" (all 7 days); removed `r-stay`
 (rConfirm, retired) and `r-where` (old Where sheet; the app has only the full-screen Where?). **204 boards.**
 
+**v24 · 2026-10-03 (new artifact on the Design account, same URL as above).** Canvas copied 1:1 (205 boards),
+then **+21 boards**, two new rows at the bottom. **226 boards.**
+- *App states that had no board (audit §2):* `w1-exploreCached` (Offline banner, last list kept) · `w1-mapEmpty`
+  (No hostels in this area yet) · `w1-holdsEnded` (Ended / Released) · `w1-meRefund` (Me › Your refund on top) ·
+  `w1-rNotYet` (Rent: your stay isn’t on Hostelzy yet) · `w1-oTodayMoves` (Today: notice, move, refund cards) ·
+  `w1-bedSheetLeaving` (Free from 31 Oct · “Rahul moved out”) · console `w1-cNotSetup`, `w1-cError` (with Try again).
+- *F24 items:* `w1-oPriceFixed` (#13 owner bed sheet: price fixed + deal) · `w1-featured` (#20 “Featured in
+  Madhapur”, then “Ranked by residents · never paid”) · `w1-editName` (#23 sheet) · `w1-aboutEmpty` (#23 empty
+  field, “Use ‘Ravi Teja’” hint) · `w1-dealsPaused` (#21 “Hostelzy deals paused · Walk-in prices for now”) ·
+  `w1-acRepair` (#7 red band, real date) · `w1-walkInHold`, `w1-walkInHeld` (#8) · `w1-didJoin` (#14 Yes, I joined /
+  Not yet / Still deciding; no reward promise) · `w1-notifyReady` (#27 on state) · `w1-notifSwitches` (#22 incl.
+  New free beds, Layout ready) · console `w1-cStrikes` (#18 Hostels with “Strike N of 3 · label · date”, deals back
+  on a date).
+- *Updated:* `oEditor` heading “Layout editor” (no “Hostelzy admin”), named shape tiles, “Shape not on the list? →
+  Ask Hostelzy to draw it”, “Checks before publishing”; `cCases` strike button “Strike 1 of 3 · warning”; Main cover
+  counts.
+
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
