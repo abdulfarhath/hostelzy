@@ -108,5 +108,5 @@ extension PlanActions on AppState {
     toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
   }
 
-  void sendReminder(Invoice i) => whatsapp(ownerPhones[i.hid] ?? '', 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
+  void sendReminder(Invoice i) => whatsapp(ownerWa(i.hid), 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
 }

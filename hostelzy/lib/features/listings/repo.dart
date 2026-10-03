@@ -43,6 +43,11 @@ abstract class HostelRepo {
 
   /// F24 item 23: the user's own name on their profile.
   Future<void> saveName(String uid, String name);
+
+  /// F24 Wave 4c: an owner's WhatsApp number when it isn't their phone
+  /// ('' = same as the phone). Null when the server has no such field yet.
+  Future<String?> myWhatsApp(String uid);
+  Future<void> saveWhatsApp(String uid, String wa);
   Future<Map<String, dynamic>?> loadReminders(String uid);
 
   /// This phone's push token (FCM).
@@ -187,6 +192,11 @@ abstract class HostelRepo {
   Future<List<DayMenu>?> menu(String hid);
   Future<void> saveMenu(String hid, List<DayMenu> week);
 
+  /// F24 Wave 4c: the menu's meal times, b | l | n → (start, end) minutes;
+  /// only the ones set. Staff (and the team) save all three at once.
+  Future<Map<String, (int, int)>> mealTimes(String hid);
+  Future<void> saveMealTimes(String hid, Map<String, String> times);
+
   /// A resident's Good / Okay / Poor for today's [meal] ('b', 'l' or 'n');
   /// staff get this week's counts per meal, never who.
   Future<void> rateMeal(String hid, String meal, String rating);
@@ -194,7 +204,8 @@ abstract class HostelRepo {
 
   /// F24: owners' numbers, only for hostels where this user holds, enquired,
   /// stays or works (DECISIONS F07: the number shows after a hold).
-  Future<Map<String, String>> ownerContacts(List<String> hids);
+  /// F24 Wave 4c: with the owner's WhatsApp number ('' = same as the phone).
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids);
 
   /// F24: the team onboards a hostel: [saveHostel] creates (null [id]) or
   /// updates the draft (basics, rate card, owner's number, rooms); the owner
@@ -294,6 +305,10 @@ class SampleRepo implements HostelRepo {
 
   @override
   Future<void> saveName(String uid, String name) async {}
+  @override
+  Future<String?> myWhatsApp(String uid) async => null;
+  @override
+  Future<void> saveWhatsApp(String uid, String wa) async {}
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async => null;
   @override
@@ -432,11 +447,15 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> saveMenu(String hid, List<DayMenu> week) async {}
   @override
+  Future<Map<String, (int, int)>> mealTimes(String hid) async => {};
+  @override
+  Future<void> saveMealTimes(String hid, Map<String, String> times) async {}
+  @override
   Future<void> rateMeal(String hid, String meal, String rating) async {}
   @override
   Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
   @override
-  Future<Map<String, String>> ownerContacts(List<String> hids) async => {};
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {};
   @override
   Future<String> saveHostel(String? id, Map<String, dynamic> p) => throw UnsupportedError('sample data');
   @override
@@ -828,6 +847,10 @@ class SupabaseRepo implements HostelRepo {
   // "edit own profile" lets a user update their own row; guard_profile leaves the name alone.
   @override
   Future<void> saveName(String uid, String name) => db.from('profiles').update({'name': name}).eq('id', uid);
+  @override
+  Future<String?> myWhatsApp(String uid) async => (await db.from('profiles').select('whatsapp').eq('id', uid).maybeSingle())?['whatsapp'] as String?;
+  @override
+  Future<void> saveWhatsApp(String uid, String wa) => db.from('profiles').update({'whatsapp': wa}).eq('id', uid);
 
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async {
@@ -850,6 +873,19 @@ class SupabaseRepo implements HostelRepo {
   ], onConflict: 'hostel_id,day');
 
   @override
+  Future<Map<String, (int, int)>> mealTimes(String hid) async {
+    final r = await db.from('menus').select('breakfast_time, lunch_time, dinner_time').eq('hostel_id', hid).limit(1).maybeSingle();
+    if (r == null) return {};
+    return {
+      for (final (k, c) in const [('b', 'breakfast_time'), ('l', 'lunch_time'), ('n', 'dinner_time')])
+        k: ?parseMealTime(r[c] as String?),
+    };
+  }
+
+  @override
+  Future<void> saveMealTimes(String hid, Map<String, String> times) => db.rpc('save_meal_times', params: {'p_hostel': hid, 'p': times});
+
+  @override
   Future<void> rateMeal(String hid, String meal, String rating) => db.rpc('rate_meal', params: {'p_hostel': hid, 'p_meal': meal, 'p_rating': rating});
 
   @override
@@ -862,9 +898,9 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<Map<String, String>> ownerContacts(List<String> hids) async => {
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {
     for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
-      if ((r['phone'] as String? ?? '').isNotEmpty) r['hostel_id'] as String: r['phone'] as String,
+      if ('${r['phone'] ?? ''}${r['whatsapp'] ?? ''}'.isNotEmpty) r['hostel_id'] as String: (phone: r['phone'] as String? ?? '', wa: r['whatsapp'] as String? ?? ''),
   };
 
   @override

@@ -31,6 +31,13 @@ mixin _OnboardingData {
   /// Tracker tab (F22 Area 4): 0 Lead, 1 Visited, 2 Signed up (and data
   /// complete), 3 Live (live, trial, paying).
   int trackTab = 0;
+
+  /// F24 Wave 4c (board `aPin`): the map under the fixed pin while the team
+  /// places it, whether they moved it or used their location, and a bump to
+  /// recentre the map.
+  (double, double)? pinNow;
+  bool pinTouched = false;
+  int pinFocus = 0;
 }
 
 extension OnboardingActions on AppState {
@@ -129,7 +136,7 @@ extension OnboardingActions on AppState {
       if (draftPhotos < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
       if (d.missingPrices.isNotEmpty) 'Every room type priced',
       if (!d.bedsChecked) 'Bed status checked on the visit',
-      if (!d.pinChecked) 'Map pin checked',
+      if (!d.pinChecked || d.pin == null) 'Map pin dropped at the gate',
     ];
   }
 
@@ -150,7 +157,7 @@ extension OnboardingActions on AppState {
         rs.add({'number': n, 'label': dr.label == '$n' ? null : dr.label, 'floor': fi, 'share': dr.share, 'ac': dr.ac, 'rent': d.prices[rateKey(dr.ac, dr.share)] ?? 0, 'bath': 'Attached'});
       }
     }
-    final ll = areaLatLng[d.area];
+    final ll = d.pin;
     return {
       'name': d.name.trim(),
       'gender': d.gender,
@@ -160,18 +167,84 @@ extension OnboardingActions on AppState {
       'food': d.food != 'No food',
       'ac': rs.any((r) => r['ac'] == true),
       'only_ac': rs.isNotEmpty && rs.every((r) => r['ac'] == true),
-      'tags': [if (d.food != 'No food') '${d.food} a day', ...d.amenities.take(3)],
+      'tags': [if (d.food != 'No food') '${d.food} a day', ...d.amenities],
+      'amenities': d.amenities.toList(),
       'terms': {'advance': d.advance, 'maintenance': d.kept, 'noticeDays': d.notice, 'dueOnJoining': d.dueOnJoining, 'electricityExtra': true},
+      'rules': [for (final r in draftRules) {'k': r.k, 'v': r.v}],
+      if (d.ownerWa.length == 10) 'owner_whatsapp': d.ownerWa,
+      // F24 Wave 4c: only the pin the team dropped at the gate, never the area's centre.
       if (ll != null) ...{'lat': ll.$1, 'lng': ll.$2},
       'rates': [for (final e in d.prices.entries) if (e.value > 0) {'ac': e.key.startsWith('ac'), 'share': int.parse(e.key.replaceFirst(RegExp('^(ac|non)'), '')), 'rent': e.value}],
       'rooms': rs,
     };
   }
 
+  Terms get draftTerms => Terms(advance: draft.advance, maintenance: draft.kept, noticeDays: draft.notice, dueOnJoining: draft.dueOnJoining);
+
+  /// House rules from the visit: the gate time and visitors typed in Basics,
+  /// the rest from the rate card's terms (the owner edits them later).
+  List<Rule> get draftRules => [
+    for (final r in blankRules(draftTerms))
+      switch (r.k) {
+        'Gate closes' => Rule(r.k, draft.gate.trim()),
+        'Visitors' => Rule(r.k, draft.visitors.trim()),
+        _ => r,
+      },
+  ];
+
+  /// F24 Wave 4c (board `aPin`): opens the map with the pin where it was
+  /// dropped, else on the area (to be moved to the gate).
+  void openPin() => update(() {
+    final d = draft;
+    pinNow = d.pin ?? areaLatLng[d.area] ?? landmarkLatLng['Hitec City']!;
+    pinTouched = d.pin != null;
+    pinFocus++;
+    hist = [...hist, screen];
+    screen = 'aPin';
+  });
+
+  /// The team moved the map under the pin.
+  void pinPanned((double, double) c) {
+    pinNow = c;
+    if (!pinTouched) update(() => pinTouched = true);
+  }
+
+  /// "Use my location": standing at the gate, the phone's GPS.
+  Future<void> locatePin() async {
+    final (pos, fail) = await locator.locate(exact: true);
+    if (pos != null) {
+      update(() {
+        pinNow = pos;
+        pinTouched = true;
+        pinFocus++;
+      });
+      return toastMsg('Pin moved to where you are. Check it sits on the gate.');
+    }
+    toastMsg(switch (fail) {
+      LocateFail.off => 'Location is switched off on this phone. Move the map instead.',
+      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or move the map.',
+      LocateFail.unavailable => 'Location works in the Android app. Move the map instead.',
+      _ => 'Couldn’t find your location. Move the map instead.',
+    });
+  }
+
+  /// Saves the pin where the map is. Only after the team moved it or used
+  /// their location, so it's never just the area's centre.
+  void savePin() {
+    final c = pinNow;
+    if (!pinTouched || c == null) return toastMsg('Move the map so the pin sits on the gate, or use your location.');
+    update(() {
+      draft
+        ..pin = c
+        ..pinChecked = true;
+    });
+    back();
+  }
+
   /// Server words → the team's.
   String _onboardWords(Object e) {
     final m = '$e';
-    for (final k in const ['add the hostel name', 'add a price for', 'link the owner', 'add 8 photos', 'add at least one room', 'has someone in it', 'already has an owner']) {
+    for (final k in const ['add the hostel name', 'add a price for', 'link the owner', 'add 8 photos', 'add at least one room', 'has someone in it', 'already has an owner', 'drop the map pin', 'isn\'t in Hyderabad', 'needs 10 digits']) {
       if (m.contains(k)) {
         final i = m.indexOf(k);
         final end = m.indexOf(RegExp(r'[,}\n]'), i);
@@ -258,7 +331,7 @@ extension OnboardingActions on AppState {
     try {
       final code = d.ownerCode.isNotEmpty ? d.ownerCode : await data.ownerInvite(d.serverId!, d.ownerName.trim(), d.ownerPhone);
       update(() => d.ownerCode = code);
-      whatsapp(d.ownerPhone, 'Hi ${d.ownerName.trim().split(' ').first}, ${d.name.trim()} is on Hostelzy. Open this link, sign in with Google and pick “I run a PG” to run it from your phone: ${inviteLink(code)} (works once, for 7 days).');
+      whatsapp(d.ownerChat, 'Hi ${d.ownerName.trim().split(' ').first}, ${d.name.trim()} is on Hostelzy. Open this link, sign in with Google and pick “I run a PG” to run it from your phone: ${inviteLink(code)} (works once, for 7 days).');
     } catch (e) {
       debugPrint('owner invite: $e');
       toastMsg(_onboardWords(e));
@@ -332,12 +405,15 @@ extension OnboardingActions on AppState {
       x: spot.x,
       y: spot.y,
       tags: [if (d.food != 'No food') '${d.food} a day', ...d.amenities.take(3)],
-      terms: Terms(advance: d.advance, maintenance: d.kept, noticeDays: d.notice, dueOnJoining: d.dueOnJoining),
+      terms: draftTerms,
       onlyAc: rs.every((r) => r.ac),
     );
     update(() {
       hostels.add(h);
       ownerPhones[id] = d.ownerPhone;
+      if (d.ownerWa.length == 10) ownerWhatsApps[id] = d.ownerWa;
+      if (d.pin != null) livePos[id] = d.pin!;
+      hostelRules[id] = draftRules;
       rooms[id] = rs;
       rates[id] = {...seedRates(h), ...d.prices};
       stats[id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);

@@ -156,7 +156,7 @@ class ResidentHomeScreen extends StatelessWidget {
                             width: 76,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 2),
-                              child: T(meals[i][2], s: 12, c: p.mu),
+                              child: T(s.mealTimeText(h.id, meals[i][0]), s: 12, c: p.mu),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -444,7 +444,7 @@ class _WeekTableState extends State<WeekTable> {
                                       children: [
                                         T(m[1], w: 800, s: 14),
                                         const SizedBox(height: 1),
-                                        T(m[2], s: 11, c: p.mu),
+                                        T(s.mealTimeText(s.foodHid, m[0]), s: 11, c: p.mu),
                                       ],
                                     ),
                                   ),
@@ -600,7 +600,7 @@ class FoodScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Rich([sp(context, m[1], w: 800, s: 18), sp(context, '  ${m[2]}', s: 13, c: p.mu)]),
+                              Rich([sp(context, m[1], w: 800, s: 18), sp(context, '  ${s.mealTimeText(s.foodHid, m[0])}', s: 13, c: p.mu)]),
                               const SizedBox(height: 2),
                               T(dm.of(m[0]), s: 15, lh: 1.4),
                             ],

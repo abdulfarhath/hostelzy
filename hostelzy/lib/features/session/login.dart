@@ -236,6 +236,13 @@ extension LoginActions on AppState {
     } catch (e) {
       debugPrint('notify load: $e');
     }
+    // F24 Wave 4c: the owner's WhatsApp number (until FOUNDER-TODO 4zp1 runs there is none).
+    try {
+      final wa = await data.myWhatsApp(a.uid);
+      if (wa != null && wa != myWa) update(() => myWa = wa);
+    } catch (e) {
+      debugPrint('whatsapp load: $e');
+    }
   }
 
   /// F24 item 22: an area picked in Where? or on the map, for "New free beds".

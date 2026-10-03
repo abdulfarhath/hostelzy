@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 // @ts-ignore plain JS module served by GitHub Pages
-import { columns, fmtUtr, invoiceTag, waLink, rupees } from '../../../app/console/logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, goLiveWords } from '../../../app/console/logic.js';
 
 test('onboarding columns: drafts by lead stage, live by plan', () => {
   const cols = columns(
@@ -69,4 +69,11 @@ test('F24 item 14: "Did you join?" answers in words', async () => {
   const { joinSummary } = await import('../../../app/console/logic.js');
   assert.equal(joinSummary([]), 'No answers yet');
   assert.equal(joinSummary([{ answer: 'yes' }, { answer: 'deciding' }, { answer: 'yes' }, { answer: 'not_yet' }]), 'Joined 2 · Not yet 1 · Still deciding 1');
+});
+
+test('Go live goes through go_live(): the server reason in plain words', () => {
+  assert.equal(goLiveWords('add 8 photos first'), 'Not live yet: add 8 photos first.');
+  assert.equal(goLiveWords('PostgrestError: drop the map pin at the gate'), 'Not live yet: drop the map pin at the gate.');
+  assert.equal(goLiveWords('add a price for 3 sharing AC'), 'Not live yet: add a price for 3 sharing AC.');
+  assert.equal(goLiveWords('fetch failed'), 'Couldn’t put it live. Check your internet and try again.');
 });
