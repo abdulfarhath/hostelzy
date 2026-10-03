@@ -312,8 +312,114 @@ class _ComplaintsState extends State<_Complaints> {
 }
 
 /// F22 Area 3 `menu`: day chips, the day's three meals, copy to the next day.
+/// F25 NEW-4 (board `w4-oMenuWeek`): a seg *Edit by day · Week table* on top.
 class _MenuEditor extends StatelessWidget {
   const _MenuEditor();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final seg = Seg(
+      key: const ValueKey('menuView'),
+      opts: const [('day', 'Edit by day'), ('week', 'Week table')],
+      cur: s.mView,
+      onPick: (v) => s.update(() => s.mView = v),
+      pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      center: true,
+    );
+    if (s.mView == 'week') return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 10), child: seg), const _MenuWeek()]);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: seg), const _MenuDay()]);
+  }
+}
+
+/// F25 NEW-4 `w4-oMenuWeek`: Mon–Sun × breakfast / lunch / dinner from the
+/// week being typed (saved or not), today's row highlighted, empty slots say
+/// "Not set". Tap a day to edit it. Fits a 360 px phone without sideways
+/// scrolling.
+class _MenuWeek extends StatelessWidget {
+  const _MenuWeek();
+  static const _full = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final week = s.menuDraft ?? blankWeek;
+    final empty = weekEmpty(week);
+    final unset = [
+      for (var i = 0; i < week.length; i++)
+        for (final m in meals)
+          if (week[i].of(m[0]).trim().isEmpty) '${_full[i]} ${m[1].toLowerCase()}',
+    ];
+    Widget fit(Widget w) => FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: w);
+    Widget cell(Widget child, {double? width}) => Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      child: child,
+    );
+    return Container(
+      decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+            child: Row(
+              children: [
+                const SizedBox(width: 44),
+                for (final m in meals) Expanded(child: cell(fit(Kicker(m[1], nowrap: true)))),
+              ],
+            ),
+          ),
+          for (var i = 0; i < week.length; i++)
+            Tap(
+              key: ValueKey('menuWeek-$i'),
+              onTap: () => s.update(() {
+                s.mDay = i;
+                s.mView = 'day';
+              }),
+              child: Container(
+                decoration: BoxDecoration(color: i == todayIdx ? p.ab : transparent, border: Border(bottom: bs(1, p.hl))),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      cell(fit(T(weekDays[i][0], s: 12, w: 800, c: i == todayIdx ? p.ad : p.tx, nowrap: true)), width: 44),
+                      for (final m in meals)
+                        Expanded(
+                          child: cell(
+                            week[i].of(m[0]).trim().isEmpty
+                                ? T('Not set', key: ValueKey('menuSlot-$i-${m[0]}'), s: 12, c: p.mu, lh: 1.35)
+                                : T(week[i].of(m[0]), key: ValueKey('menuSlot-$i-${m[0]}'), s: 12, lh: 1.35),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 10, 6, 16),
+            child: VGap(
+              gap: 6,
+              children: [
+                T('Today is highlighted. Tap a day to edit it. Residents and tenants see the same week.', s: 12, c: p.mu, lh: 1.45),
+                if (empty)
+                  T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuWeekNote'), s: 12, c: p.ad, w: 600, lh: 1.45)
+                else if (unset.isNotEmpty)
+                  T(unset.length == 1 ? '${unset.first} is not set yet.' : '${unset.length} meals are not set yet.', key: const ValueKey('menuWeekNote'), s: 12, c: p.ad, w: 600, lh: 1.45),
+                if (s.menuDirty) T('Not saved yet. Residents and tenants see it after you tap Save.', s: 12, c: p.ad),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F22 Area 3 `menu`, Edit by day.
+class _MenuDay extends StatelessWidget {
+  const _MenuDay();
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);

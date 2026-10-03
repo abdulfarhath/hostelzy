@@ -205,7 +205,7 @@ Rules for Build:
 | F21 Before → after · Before · Explore (`z-f21b-e-before.dc.html`) | S8 (before, ranked list) |  | older version of the same screen |
 | F21 Before → after · After · Explore (`z-f21b-e-after.dc.html`) | S8 |  |  |
 | F21 Before → after · Before · Hostel page (`z-f21b-d-before.dc.html`) | S13 (before) |  | older version of the same screen |
-| F21 Before → after · Before · Hold sheet (`z-f21b-h-before.dc.html`) | H4 (before: 2-hour Member hold) |  | older version of the same screen |
+| F21 Before → after · Before · Hold sheet (`z-f21b-h-before.dc.html`) | H4 · Member variant (board `r-holdSheetMember`: "Hold free · 2 hours", `holds_sheets.dart:67`) |  | current rule (DECISIONS: 2 h for Members) |
 | F21 Before → after · After · Hostel page (`z-f21b-d-after.dc.html`) | S13 |  |  |
 | F21 Before → after · After · Hold or book (`z-f21b-h-after.dc.html`) | H4 |  |  |
 | F21 Before → after · After · UPI reference, plain words (`z-f21b-u-after.dc.html`) | H12 |  |  |
@@ -254,6 +254,12 @@ Rules for Build:
 | Old main canvas: boards retired from the main area · f19-ConsoleDark (`z-old-f19-ConsoleDark.dc.html`) | C7 dark |  |  |
 | Old main canvas: boards retired from the main area · room (`z-old-room.dc.html`) | S17 (before F23) |  | older version of the same screen |
 
+**Member hold (hub check, v32):** the 2-hour Member hold is a current rule, not old pricing. The app covers it: the hold
+sheet says "Hold free · 2 hours" for Members (H4), the sign-in sheet says "free 2-hour hold", and Rewards and Perks list
+"2-hour holds". New variant board `r-holdSheetMember`. **For Build:** the line under the hold button still says
+"If <owner> doesn't keep it within the hour…" for Members. It should say "within 2 hours" (`holds_sheets.dart`, the
+`T(book ? … : …)` under `holdGo`). Only the ₹299 paid hold was dropped (DECISIONS).
+
 ### Map boards = real app screenshots (v31)
 The founder says the app's map looks better than the old design, so the map boards now show Build's real
 screenshots (`docs/design/screens/`, PR #105), uploaded to the canvas: `[S9] map`, `[dark] map-dark`, `[H2] loc`,
@@ -263,3 +269,19 @@ capture machine can't reach OpenStreetMap). On a phone the tiles are there. Not 
 
 ## Build
 (Build writes here.)
+
+### NEW-4 · Owner Food menu › Week table (S87) · Built 2026-10-03
+- **What:** Manage › Food menu now opens with a seg **Edit by day · Week table** (`s.mView`, `day` by default). Week table
+  (`_MenuWeek` in `lib/features/owner/owner_manage_screen.dart`) follows board `w4-oMenuWeek`: a 44 px day column +
+  Breakfast / Lunch / Dinner, 12 px cells, 2 px rules, no sideways scroll on a 360 px phone (labels scale down at 2× text,
+  cells wrap). Today's row is highlighted (`p.ab`, day in `p.ad`). Empty slots say **Not set** (muted).
+- **Data:** the week being typed (`menuDraft`: the saved `menus` row + any unsaved edits). Nothing new on the server, no SQL.
+  Unsaved edits behave as before: the footer **Save menu** saves the draft; the table repeats "Not saved yet…" while dirty.
+- **Tap a day** → Edit by day on that day (`mDay`, `mView = 'day'`).
+- **Lines under the table:** "Today is highlighted. Tap a day to edit it. Residents and tenants see the same week." plus,
+  in red, "Sunday dinner is not set yet." (one slot) / "N meals are not set yet." / "No menu yet…" (empty week). Honest:
+  residents see an empty slot, so the line doesn't claim they see "Not set".
+- **Screens:** +1 → **S87** `oMore` · menu (week). App screens 86 → 87, release 160 → 161, overall 181 → 182.
+  Canvas: rename `[NEW-4] w4-oMenuWeek` → `[S87]`.
+- **Tests:** `hostelzy/test/menu_week_test.dart` (seg switch, draft shown, "Not set", today highlighted, tap a day → Edit
+  by day on it, Save still works, empty week, 360 px × 1×/2× text × light/dark).
