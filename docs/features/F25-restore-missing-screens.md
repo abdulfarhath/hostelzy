@@ -254,5 +254,12 @@ Rules for Build:
 | Old main canvas: boards retired from the main area · f19-ConsoleDark (`z-old-f19-ConsoleDark.dc.html`) | C7 dark |  |  |
 | Old main canvas: boards retired from the main area · room (`z-old-room.dc.html`) | S17 (before F23) |  | older version of the same screen |
 
+### Map boards = real app screenshots (v31)
+The founder says the app's map looks better than the old design, so the map boards now show Build's real
+screenshots (`docs/design/screens/`, PR #105), uploaded to the canvas: `[S9] map`, `[dark] map-dark`, `[H2] loc`,
+new `[dark] loc-dark`, `[S12] add-whereFull`, new `[dark] where-dark`. Map tiles aren't in the capture (the
+capture machine can't reach OpenStreetMap). On a phone the tiles are there. Not swapped yet: `mapMe`
+(variant), `w1-mapEmpty` (T6). They have no screenshot yet.
+
 ## Build
 (Build writes here.)
