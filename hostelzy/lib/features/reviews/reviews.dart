@@ -158,7 +158,7 @@ extension ReviewsActions on AppState {
       toastMsg('Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
       return false;
     }
-    final ok = await _write(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
+    final ok = await _reviewWrite(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
     if (ok) await refreshListings();
     return ok;
   }
@@ -191,6 +191,17 @@ extension ReviewsActions on AppState {
 
   void postReview() {
     if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    // F24 4a: one review per stay; posting again changes it.
+    final mine = myReview('30-day');
+    if (mine != null) {
+      _editReview(mine, stars: rvStars, body: rvText.trim(), cats: Map.of(rvCats), layout: rvLayout, clear: () {
+        rvStars = 0;
+        rvCats = {};
+        rvLayout = null;
+        rvText = '';
+      });
+      return;
+    }
     if (onServer) {
       _postReviewLive(kind: 'stay', stars: rvStars, body: rvText.trim(), cats: Map.of(rvCats), layout: rvLayout).then((ok) {
         if (!ok) return;
@@ -206,9 +217,9 @@ extension ReviewsActions on AppState {
       return;
     }
     update(() {
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
-      // F12: a resident who says the layout is wrong flags it for the team.
-      if (rvLayout == 'No') layoutOf('anjani', 204)?.disputes++;
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true, author: 'me'), ...reviews];
+      // F12, F13 S4: a resident who says the layout is wrong flags their room.
+      if (rvLayout == 'No') _flagMyRoom('anjani', 1);
       rvStars = 0;
       rvCats = {};
       rvLayout = null;
@@ -223,6 +234,16 @@ extension ReviewsActions on AppState {
     final adv = exAdv;
     if (adv == null) return toastMsg('Tell us if you got your advance back.');
     if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    final mine = myReview('exit');
+    if (mine != null) {
+      _editReview(mine, stars: exStars, body: exText.trim(), advance: adv, again: exAgain, clear: () {
+        exAdv = null;
+        exStars = 0;
+        exAgain = null;
+        exText = '';
+      });
+      return;
+    }
     if (onServer) {
       _postReviewLive(kind: 'exit', stars: exStars, body: exText.trim(), advance: adv, again: exAgain).then((ok) {
         if (!ok) return;
@@ -240,7 +261,7 @@ extension ReviewsActions on AppState {
     final st = stats['anjani']!;
     update(() {
       stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: exText.trim(), stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: exText.trim(), stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true, author: 'me'), ...reviews];
       exAdv = null;
       exStars = 0;
       exAgain = null;
@@ -251,10 +272,12 @@ extension ReviewsActions on AppState {
   }
 
   void postReply(Review r) {
+    if (r.reply != null) return toastMsg('You already replied to this review. Each review gets one reply.');
     if (replyText.trim().isEmpty) return toastMsg('Write a reply first.');
     if (onServer) {
       final text = replyText.trim();
-      _write(() => data.replyReview(r.id, text)).then((ok) async {
+      // F24 4a: the server allows one reply per review.
+      _reviewWrite(() => data.replyReview(r.id, text)).then((ok) async {
         if (!ok) return;
         await refreshListings();
         update(() {

@@ -102,10 +102,10 @@ class ResidentHomeScreen extends StatelessWidget {
             ),
             ),
           ),
-          // F08: the 30-day review (one per stay).
-          if (!s.reviews.any((r) => r.name == s.meShort && r.kind == '30-day'))
+          // F08: the 30-day review (one per stay), once 30 days in (F24 4a).
+          if (s.myReview('30-day') == null && s.reviewOpensOn == null)
             Tap(
-              onTap: () => s.go('rReview'),
+              onTap: s.openReview,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
@@ -771,7 +771,8 @@ class StayScreen extends StatelessWidget {
     final rows = <(String, String, String, VoidCallback)>[
       ('swap', 'Move to another bed', free == 0 ? 'No free beds right now' : '$free free bed${free == 1 ? '' : 's'} here', () => move('swap')),
       ('logout', 'Give notice', '${terms.noticeDays} days · earliest last day ${leaveDates(terms).first}', () => move('vacate')),
-      ('star', 'Review your stay', '30-day review', () => s.go('rReview')),
+      // F24 4a: opens after 30 days; the resident's own review comes back to change.
+      ('star', 'Review your stay', s.myReview('30-day') != null ? 'Change your 30-day review' : s.reviewOpensOn != null ? 'Opens ${dayMon(s.reviewOpensOn!)} · after 30 days' : '30-day review', s.openReview),
       ('pencil', 'Fix a room layout', 'Any room in ${h.name}', () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[h.id]?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101)),
     ];
     return Column(
@@ -995,7 +996,7 @@ class MoveScreen extends StatelessWidget {
         ],
       );
       // F08: exit review with the advance check.
-      bar = OutlineCta('Review your stay', icon: 'star', height: 52, fs: 14, onTap: () => s.go('rExit'));
+      bar = OutlineCta(s.myReview('exit') != null ? 'Change your exit review' : 'Review your stay', icon: 'star', height: 52, fs: 14, onTap: s.openExitReview);
     } else {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
