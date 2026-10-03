@@ -180,16 +180,15 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('real owner, plan 15 days late: no "tenants see walk-in prices only" (the server doesn’t pause deals yet)', (tester) async {
+  testWidgets('real owner, plan 15 days late: deals paused, tenants see walk-in prices only (F24 item 21: the server pauses them)', (tester) async {
     final s = AppState(start: 'oToday', role: 'owner');
     s.data = _Server();
     s.update(() => s.account = (uid: 'fb-owner', name: 'Srinivas', email: 's@gmail.com'));
     await s.startLive();
     s.update(() => s.invoice = Invoice(ref: 'HZ-INV-2001', hid: s.ownHid, beds: 30, amt: 499, due: appToday.subtract(const Duration(days: 15)), status: 'due', late: 15));
     await _pump(tester, s);
-    expect(find.text('Your Hostelzy plan is 15 days late'), findsOneWidget);
-    expect(find.textContaining('walk-in prices only'), findsNothing);
-    expect(find.textContaining('keep your deals on'), findsOneWidget);
+    expect(find.text('Deals paused: plan 15 days late'), findsOneWidget);
+    expect(find.textContaining('Tenants see walk-in prices only'), findsOneWidget);
     s.stopLive();
     s.dispose();
   });

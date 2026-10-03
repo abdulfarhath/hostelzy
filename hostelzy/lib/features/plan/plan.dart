@@ -12,6 +12,12 @@ mixin _PlanData {
 
   /// Founder payments filter: check | late | paid | soon (trial or not due).
   String payTab = 'check';
+
+  /// F24 items 20, 21: the server's featured spots and paused deals per live hostel.
+  Map<String, HostelFlags> flags = {};
+
+  /// F24 item 17: hostels this user runs as a manager (not the owner).
+  Set<String> managerOf = {};
 }
 
 extension PlanActions on AppState {
@@ -25,7 +31,46 @@ extension PlanActions on AppState {
   /// On Supabase it is the server's invoice amount.
   int get invoiceAmt => invoice.key != null ? invoice.amt : (planPrice - planCredit).clamp(0, planPrice);
   int get trialLeft => invoice.status == 'upcoming' ? trialEnd.difference(appToday).inDays : 0;
-  bool dealsPaused(String hid) => invoices.any((i) => i.hid == hid && i.pausesDeals);
+  /// Deals pause while the plan is 15+ days late (F10): the server says so
+  /// for every hostel (`hostel_flags`); the owner also knows from their invoice.
+  bool dealsPaused(String hid) => flags[hid]?.dealsPaused == true || invoices.any((i) => i.hid == hid && i.pausesDeals);
+
+  /// F10: an 80+ bed hostel's plan includes a featured spot in its area. On
+  /// the server it comes from `hostel_flags` (more than 80 beds, plan not 15+
+  /// days late); sample hostels by their own bed count.
+  bool featured(String hid) {
+    final f = flags[hid];
+    if (f != null) return f.featured;
+    if (!isSeedHostel(hid) || !AppState.samples) return false;
+    return (rooms[hid] ?? const []).fold<int>(0, (a, r) => a + r.beds.length) > featuredBeds && !dealsPaused(hid);
+  }
+
+  /// F14: plan, deals, rates and Fair Play are the owner's; a manager doesn't get them.
+  bool get managerHere => managerOf.contains(ownHid);
+
+  /// What a manager can't open, by screen (and Manage page): null if they can.
+  String? ownerOnlyWhat(String screen, String moreTab) {
+    if (!managerHere) return null;
+    return switch (screen) {
+      'oPlan' || 'oInvoice' || 'oPayStatus' => 'see the Hostelzy plan and its invoices',
+      'oCase' || 'oStrike' => 'see and answer Fair Play checks',
+      'oMore' when moreTab == 'deals' => 'change Hostelzy deals',
+      'oMore' when moreTab == 'rates' => 'change rates, AC rooms and the UPI ID',
+      _ => null,
+    };
+  }
+
+  /// F24 item 17: which hostels this user only manages.
+  Future<void> loadManagerOf() async {
+    final uid = account?.uid;
+    if (uid == null || !data.remote) return;
+    try {
+      final m = await data.managedHostels(uid);
+      if (!setEquals(m, managerOf)) update(() => managerOf = m);
+    } catch (e) {
+      debugPrint('managers: $e');
+    }
+  }
 
   /// Demo states for the overview and `?plan=`: late5 | late15 | checking | paid | missing.
   void _planDemo(String? plan) {

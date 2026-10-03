@@ -350,7 +350,11 @@ class _AppBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                Expanded(child: _screen(s.screen)),
+                // F24 item 17: plan, deals, rates and Fair Play are the owner's.
+                Expanded(child: switch (s.ownerOnlyWhat(s.screen, s.moreTab)) {
+                  final String what => OwnerOnlyScreen(what),
+                  null => _screen(s.screen),
+                }),
                 if (showTabs) const _TabBar(),
                 bottom,
               ],

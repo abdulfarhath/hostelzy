@@ -496,6 +496,8 @@ class RankSheet extends StatelessWidget {
           T('Hostels are ranked by what residents and Hostelzy can check, never by who pays.', s: 14, lh: 1.45),
           for (final k in rankWeights.keys) Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(rankLabel[k]!, s: 14), T('${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)]),
           T('Reviews count only from residents with a confirmed stay. Fair Play strikes lower the rank.', s: 12, c: p.mu, lh: 1.4),
+          // F24 item 20 (DECISIONS F10): the 80+ bed plan's featured spot, said plainly.
+          T('Hostels with more than 80 beds get a featured spot at the top of Recommended with their Hostelzy plan. They are always marked Featured, and their rank doesn’t change.', key: const ValueKey('rankFeatured'), s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );

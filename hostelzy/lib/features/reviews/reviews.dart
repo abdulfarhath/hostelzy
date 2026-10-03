@@ -178,6 +178,13 @@ extension ReviewsActions on AppState {
     } catch (e) {
       debugPrint('signals: $e');
     }
+    // F24 items 20, 21: featured spots and paused deals; missing before their SQL runs.
+    try {
+      final fl = await data.flags();
+      if (fl.isNotEmpty) update(() => flags = fl);
+    } catch (e) {
+      debugPrint('flags: $e');
+    }
   }
 
   /// Minutes the owner usually takes to reply: the server's median once

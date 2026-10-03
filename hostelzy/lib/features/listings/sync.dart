@@ -139,6 +139,8 @@ extension SyncActions on AppState {
         // F24 #16, #25: the tenant's level and the resident's electricity.
         unawaited(loadLevel());
         unawaited(loadMyMeter(force: true));
+        // F24 #17: the hostels this user only manages.
+        if (l.myHostels.isNotEmpty) await loadManagerOf();
       }
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
