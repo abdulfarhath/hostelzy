@@ -183,13 +183,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   /// A bed a tenant can hold: free, or freeing up soon.
   static bool _open(Bed b) => (b.state == 'free' || b.state == 'soon') && !b.mine;
 
-  void openLayoutRequest() => update(() {
-    lReqText = '';
-    lReqLen = '';
-    lReqWid = '';
-    lReqAdded = {};
-    sheet = 'layoutReq';
-  });
+  void openLayoutRequest() => openShapeRequest();
 
   // team mode
 
@@ -208,6 +202,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     hist = [...hist, screen];
     screen = editor ? 'aLayout' : 'oLayout';
     sheet = null;
+    // F24: the owner's "Ask Hostelzy" requests and the team's drawings.
+    loadShapeRequests(ownHid);
   });
 
   // layout editor

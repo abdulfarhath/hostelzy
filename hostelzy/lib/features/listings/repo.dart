@@ -169,6 +169,14 @@ abstract class HostelRepo {
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
 
+  /// F24 item 11: "Ask Hostelzy to draw it" (staff) and the hostel's
+  /// requests, with the team's drawing once sent. Photos go up with
+  /// [uploadFixPhoto]. Publishing the room closes its sent request. The team
+  /// sends a drawing from the app's team mode (or the console).
+  Future<List<ShapeRequest>> shapeRequests(String hid);
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []});
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing);
+
   /// F23: add or change a floor / room amenity (staff or a resident of the
   /// hostel); returns the row id. Residents: at most 20 changes a day.
   Future<String> saveAmenity(Amenity a);
@@ -391,6 +399,15 @@ class SampleRepo implements HostelRepo {
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) async {}
   @override
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
+
+  @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async => const [];
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) => throw UnsupportedError('sample data');
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
 
@@ -708,6 +725,19 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async {
+    final rows = await db.from('shape_requests').select().eq('hostel_id', hid).order('created_at');
+    return [for (final r in rows) shapeRequestFromRow(r)];
+  }
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) async =>
+      await db.rpc('request_shape', params: {'p_hostel': hid, 'p_room': room, 'p_shape': shape, 'p_note': note, 'p_w': w, 'p_h': h, 'p_photos': photos}) as String;
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) => db.rpc('send_shape_drawing', params: {'p_id': id, 'p_drawing': drawing});
 
   @override
   Future<String> saveAmenity(Amenity a) async => await db.rpc('save_amenity', params: {
@@ -1044,8 +1074,27 @@ RoomLayout layoutFromRow(String hid, Map<String, dynamic> r) {
   ];
   final at = DateTime.tryParse(r['updated_at'] as String? ?? '');
   return RoomLayout(hid: hid, room: r['room'] as int, w: n(r['w']).toDouble(), h: n(r['h']).toDouble(), beds: beds, items: items, version: r['version'] as int? ?? 1, drawn: at == null ? '' : dayMon(at), verified: at == null ? '' : dayMon(at))
-    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String});
+    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String})
+    // F24: rows from before shapes have none: a rectangle.
+    ..shape = r['shape'] as String? ?? 'Rectangle'
+    ..outline = outlineFromJson(r['outline']);
 }
+
+/// F24: a `shape_requests` row → [ShapeRequest].
+ShapeRequest shapeRequestFromRow(Map<String, dynamic> r) => ShapeRequest(
+  id: r['id'] as String,
+  hid: r['hostel_id'] as String,
+  room: r['room'] as int,
+  shape: r['shape'] as String? ?? 'Custom',
+  note: r['note'] as String? ?? '',
+  w: (r['w'] as num? ?? 0).toDouble(),
+  h: (r['h'] as num? ?? 0).toDouble(),
+  photos: [for (final x in (r['photos'] as List? ?? const [])) x as String],
+  status: r['status'] as String? ?? 'requested',
+  at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
+  drawing: (r['drawing'] as Map?)?.cast<String, dynamic>(),
+  sentAt: r['sent_at'] == null ? null : DateTime.parse(r['sent_at'] as String).millisecondsSinceEpoch,
+);
 
 RemoteSettings settingsFromRows(List<Map<String, dynamic>> rows) {
   final m = {for (final r in rows) r['key'] as String: r['value'] as String? ?? ''};

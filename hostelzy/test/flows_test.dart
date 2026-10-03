@@ -984,18 +984,19 @@ void main() {
     expect(l.pending, isFalse);
     expect(find.text('Live for tenants'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    // Ask Hostelzy for help: saved as pending (no backend yet).
+    // Ask Hostelzy to draw it (F24): saved in the app, done within 48 h.
     await tap(tester, find.text('Ask Hostelzy'));
     expect(w.sheet, 'layoutReq');
     await tap(tester, find.text('Send request'));
-    expect(l.request, isNull);
+    expect(w.shapeReqFor('anjani', 204), isNull);
     await tester.enterText(find.byType(TextField).first, 'Bed C is against the washroom wall.');
     await tap(tester, find.text('Send request'));
-    expect(l.request?.text, 'Bed C is against the washroom wall.');
-    expect(l.request?.added, isEmpty); // no fake photos: they go on WhatsApp
-    expect(find.text('Help requested · WhatsApp us the photos'), findsOneWidget);
+    final q = w.shapeReqFor('anjani', 204)!;
+    expect((q.note, q.photos.length, q.status), ('Bed C is against the washroom wall.', 0, 'requested'));
+    expect(find.textContaining('Asked Hostelzy · '), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
 
-    // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
+    // Hostelzy team: sees the request, mirrors, sends it back to the owner.
     w.update(() => w.screen = 'aLayout');
     await tester.pump();
     expect(find.text('“Bed C is against the washroom wall.”'), findsOneWidget);
@@ -1004,7 +1005,16 @@ void main() {
     expect(l.bedRect('A').left, l.w - before.right);
     await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('Send to owner'));
-    expect((l.version, l.pending, l.request), (3, true, null));
+    // Tenants keep v2 until the owner publishes the drawing.
+    expect((l.version, l.pending, q.status), (2, false, 'sent'));
+    expect(l.bedRect('A'), before);
+    await tester.pump(const Duration(seconds: 4));
+    w.update(() => w.screen = 'oLayout');
+    await tester.pump();
+    expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
+    await tap(tester, find.text('Publish v3'));
+    expect((l.version, l.live, q.status, w.screen), (3, true, 'published', 'oPublished'));
+    expect(l.bedRect('A').left, l.w - before.right);
     w.dispose();
   });
 
