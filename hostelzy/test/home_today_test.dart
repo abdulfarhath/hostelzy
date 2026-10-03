@@ -160,7 +160,7 @@ void main() {
   testWidgets('F21 W3: owner Today is one "Needs you now" list; Manage is one vertical list', (tester) async {
     final s = AppState(start: 'oToday', role: 'owner');
     await _pump(tester, s);
-    final n = allRequests(s).length + s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting').length + s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted).length + s.fixesWaiting.length + s.brokenThings.length;
+    final n = allRequests(s).length + s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting').length + s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted).length + s.fixesWaiting.length + s.brokenThings.length + s.openMoves.length + s.refundsToDo.length;
     expect(n, greaterThan(2));
     expect(find.text('NEEDS YOU NOW · $n'), findsOneWidget);
     expect(find.text('THIS MONTH'), findsOneWidget);

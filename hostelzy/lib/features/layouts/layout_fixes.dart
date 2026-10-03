@@ -24,6 +24,9 @@ mixin _LayoutFixesData {
   /// Public "Checked by N residents · date": hostel → room → (N, date).
   final Map<String, Map<int, (int, String)>> layoutChecks = {};
 
+  /// F24 #15: hostel → how many different residents checked its layouts (server).
+  final Map<String, int> hostelCheckers = {};
+
   /// F19 extras. Try mode: a visitor plays with the editor, nothing is saved.
   bool fixTry = false;
 
@@ -110,7 +113,7 @@ extension LayoutFixesActions on AppState {
     });
     // F19 extras: a visitor tries the editor (nothing is saved); only Send is locked.
     final trying = !livesAt(hid);
-    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('This room has no layout yet. The owner or the Hostelzy team draws it first.');
+    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('This room has no layout yet. The owner draws it first.');
     if (!trying && mutedAt(hid)) return toastMsg('Suggestions are off for this hostel.');
     final open = myWaiting(hid);
     if (!trying && open.length >= 3 && !open.any((f) => f.room == room && !f.quick)) return update(() => sheet = 'fixLimit');
@@ -171,6 +174,8 @@ extension LayoutFixesActions on AppState {
       if (room.ac) (l.ac != null, l.ac != null ? 'AC room has an AC unit' : 'AC room needs an AC unit') else (true, 'Non-AC room · no AC unit needed'),
       (l.beds.length == room.share, '${l.beds.length} beds placed · ${room.share} sharing'),
       (gone == null, gone == null ? 'Beds with a resident stay in place' : 'Bed $gone has a resident · it can’t be deleted'),
+      // F24: beds and things stay inside the room's shape.
+      if (l.outline != null) wallsCheck(l, room.label),
       (true, 'No gates, CCTV or exits drawn'),
     ];
   }
@@ -402,7 +407,7 @@ extension LayoutFixesActions on AppState {
       final id = 'qf${DateTime.now().millisecondsSinceEpoch}';
       if (photo != null) fixPhotosLocal[id] = photo;
       final live = liveLayout(hid, room);
-      update(() => fixes = [...fixes, LayoutFix(id: id, hid: hid, room: room, snap: live?.snap() ?? (w: 0, h: 0, beds: const {}, items: const [], bunks: const {}), at: DateTime.now().millisecondsSinceEpoch, note: note, author: meShort, authorBed: '204-B', since: 'Mar 2026', mine: true, kind: 'quick', issue: issue, item: item, photo: photo == null ? null : id, authorId: 'me')]);
+      update(() => fixes = [...fixes, LayoutFix(id: id, hid: hid, room: room, snap: live?.snap() ?? emptySnap, at: DateTime.now().millisecondsSinceEpoch, note: note, author: meShort, authorBed: '204-B', since: 'Mar 2026', mine: true, kind: 'quick', issue: issue, item: item, photo: photo == null ? null : id, authorId: 'me')]);
     }
     update(() {
       sheet = null;
@@ -486,6 +491,12 @@ extension LayoutFixesActions on AppState {
     } catch (_) {
       return null;
     }
+  }
+
+  /// F24 #15: "Layouts checked by 6 residents" on the hostel page, or null.
+  String? hostelCheckedLabel(String hid) {
+    final n = hostelCheckers[hid] ?? 0;
+    return n == 0 ? null : 'Layouts checked by ${n == 1 ? 'a resident' : '$n residents'}';
   }
 
   /// "Checked by 3 residents · 2 Oct" for tenants, or null.

@@ -189,8 +189,9 @@ class PhoneScreen extends StatelessWidget {
             if (!phoneOtpLogin) ...[
               const T('Your name', w: 800, s: 13),
               const SizedBox(height: 6),
-              Field(key: const ValueKey('myName'), value: s.myName, placeholder: 'Full name', onChanged: (v) => s.update(() => s.myName = v)),
-              if (s.account != null) ...[const SizedBox(height: 4), T('From your Google account. Change it if you like.', s: 12, c: p.mu)],
+              // F24 item 23: never pre-filled; the Google name is only the hint.
+              Field(key: const ValueKey('myName'), value: s.myName, placeholder: (s.account?.name ?? '').trim().isEmpty ? 'Full name' : s.account!.name, onChanged: (v) => s.update(() => s.myName = v)),
+              if (s.account != null) ...[const SizedBox(height: 4), T('Type the name owners should see.', s: 12, c: p.mu)],
               const SizedBox(height: 16),
               Row(children: [const Expanded(child: T('Mobile number', w: 800, s: 13)), Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('NOT VERIFIED', w: 800, s: 11, c: p.mu, ls: .05))]),
               const SizedBox(height: 6),
@@ -407,12 +408,27 @@ class RoleGateScreen extends StatelessWidget {
           ]),
         ));
       }
+      // F24 (board `mgrJoin`): a manager joins with the owner's MGR- code.
+      body.add(Tap(
+        key: const ValueKey('mgrJoinOpen'),
+        onTap: () => s.update(() {
+          s.roleGate = 'resident';
+          s.inviteDraft = 'MGR-';
+        }),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          color: p.sf,
+          child: Row(children: [Expanded(child: VGap(gap: 2, children: [const T('Manager at a PG?', w: 800, s: 14), T('Join it with the MGR- code your owner sent you.', s: 13, c: p.mu, lh: 1.4)])), const Ic('chev', size: 18)]),
+        ),
+      ));
       foot = [
         Cta('Request a visit', onTap: s.requestVisit, height: 54, px: 16, fs: 15),
         OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),
       ];
     } else {
       final num = s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : null;
+      final code = s.inviteDraft.isEmpty ? s.pendingInvite ?? '' : s.inviteDraft;
+      final mgr = code.toUpperCase().startsWith('MGR');
       body = [
         T('Your owner gives you a code, or scan the Hostelzy poster at your PG.', s: 15, c: p.mu, lh: 1.5),
         // C: type the code (filled in when the invite link opened the app).
@@ -423,8 +439,10 @@ class RoleGateScreen extends StatelessWidget {
             Cta(s.joining ? 'Sending…' : 'Join', key: const ValueKey('joinGo'), height: 54, px: 16, fs: 15, expand: false, onTap: s.joinInvite),
           ],
         ),
-        // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
-        OutlineCta('Scan the poster QR', icon: 'qr', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.')),
+        if (mgr) T('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.', key: const ValueKey('mgrHint'), s: 13, c: p.mu, lh: 1.45),
+        if (!mgr) ...[
+        // F14: the in-app scanner reads the poster's QR (the j/ invite link).
+        OutlineCta('Scan the QR', key: const ValueKey('scanQr'), icon: 'qr', onTap: s.openScan),
         Container(
           margin: const EdgeInsets.only(top: 8),
           padding: const EdgeInsets.all(12),
@@ -438,6 +456,7 @@ class RoleGateScreen extends StatelessWidget {
             ],
           ),
         ),
+        ],
       ];
       foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed ›', w: 800, s: 15, c: p.tx))];
     }
@@ -471,6 +490,103 @@ class _Agree extends StatelessWidget {
         T(' and ', s: 13, c: p.mu),
         Tap(onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser'), child: T('Privacy policy', s: 13, w: 800, c: p.tx)),
         T('.', s: 13, c: p.mu),
+      ],
+    );
+  }
+}
+
+/// F14: the camera explainer before Android's own prompt (first scan only).
+class CameraSheet extends StatelessWidget {
+  const CameraSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 12,
+        children: [
+          T('Only to read the QR on your PG’s Hostelzy poster. Nothing is recorded or saved, and nobody sees your camera.', s: 15, c: p.mu, lh: 1.5),
+          Tap(
+            key: const ValueKey('allowCamera'),
+            onTap: s.allowCamera,
+            child: Container(
+              height: 54,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              color: p.ac,
+              child: Row(
+                children: [
+                  Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [T('Allow camera', w: 800, s: 15, c: p.ai), T('Your phone asks next', w: 600, s: 11, c: p.ai.withValues(alpha: .8))])),
+                  Ic('arrow', size: 18, color: p.ai),
+                ],
+              ),
+            ),
+          ),
+          OutlineCta('Type the code instead', icon: 'pencil', onTap: () => s.update(() => s.sheet = null)),
+        ],
+      ),
+    );
+  }
+}
+
+/// F14: scan the invite QR on the PG's poster; the code fills in and joins.
+class ScanScreen extends StatelessWidget {
+  const ScanScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    Widget error(bool denied) => Container(
+      key: const ValueKey('scanError'),
+      color: p.sf,
+      padding: const EdgeInsets.all(20),
+      alignment: Alignment.center,
+      child: VGap(
+        gap: 8,
+        children: [
+          Ic('lock', size: 24, color: p.tx),
+          T(denied ? 'The camera is off for Hostelzy' : 'The camera didn’t start', w: 800, s: 17, align: TextAlign.center),
+          T(denied ? 'Allow it in your phone’s Settings → Apps → Hostelzy → Permissions, or type the code.' : 'Type the code from the poster instead.', s: 13, c: p.mu, lh: 1.45, align: TextAlign.center),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Join your PG', title: 'Scan the QR', size: 30, gap: 2))],
+          ),
+        ),
+        Expanded(
+          child: Scroll(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: VGap(
+                gap: 12,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: box(w: 2, c: p.tx),
+                      clipBehavior: Clip.hardEdge,
+                      child: s.scanner.view(s.scannedQr, error),
+                    ),
+                  ),
+                  T('Point it at the QR on the Hostelzy poster at your PG. The code fills in by itself and your owner gets the request.', s: 14, c: p.mu, lh: 1.5),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: OutlineCta('Type the code instead', key: const ValueKey('scanType'), icon: 'pencil', onTap: s.back),
+        ),
       ],
     );
   }

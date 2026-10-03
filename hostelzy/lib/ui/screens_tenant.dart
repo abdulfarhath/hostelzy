@@ -31,17 +31,22 @@ List<Hostel> filtered(AppState s) {
   final out = browsable.where(ok).toList();
   // Array.prototype.sort is stable; List.sort is not guaranteed to be, so sort by (mins, index).
   final idx = {for (var i = 0; i < hostels.length; i++) hostels[i].id: i};
+  // F03 Best deals: the 6-month saving (the Explore ribbon and the hostel
+  // page headline); paused or hidden deals (F07, F10) have none, so 0.
   int saving(Hostel h) {
     final q = s.bestQuote(h.id, f: s.fR);
-    return q == null ? -1 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
+    return q == null ? 0 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
   }
 
   int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
   final score = {for (final h in out) h.id: s.rankScore(h.id)};
+  // F10: an 80+ bed hostel's plan has a featured spot: first under Recommended.
+  final feat = {for (final h in out) if (s.featured(h.id)) h.id};
 
   out.sort((a, b) {
     // F08 Recommended (Hostelzy rank), F03 Best deals, or Lowest price; then nearest.
     final d = switch (s.sortBy) {
+      'rec' when feat.contains(a.id) != feat.contains(b.id) => feat.contains(a.id) ? -1 : 1,
       'rec' => score[b.id]!.compareTo(score[a.id]!),
       'deals' => saving(b).compareTo(saving(a)),
       'price' => cheapest(a).compareTo(cheapest(b)),
@@ -52,6 +57,17 @@ List<Hostel> filtered(AppState s) {
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
   return out;
+}
+
+/// The best-ranked hostel among [results] (the "#1 near you" card).
+String? topRanked(AppState s, List<Hostel> results) {
+  String? top;
+  var best = double.negativeInfinity;
+  for (final h in results) {
+    final v = s.rankScore(h.id);
+    if (v > best) (top, best) = (h.id, v);
+  }
+  return top;
 }
 
 String searchSummary(AppState s) {
@@ -85,6 +101,7 @@ class ExploreScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final results = filtered(s);
+    final top = s.sortBy == 'rec' ? topRanked(s, results) : null;
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
     // F21 W2: one search bar, one row of filters; sort lives in Filters.
@@ -140,8 +157,22 @@ class ExploreScreen extends StatelessWidget {
                 if (s.listState == 'loading') ...const [SkeletonCard(), SkeletonCard()]
                 else if (s.listState == 'offline') const OfflineBlock()
                 else ...[
+                  // F24: the last list from the server, kept on this phone: the banner,
+                  // then the saved cards under it (Design w1-exploreCached).
+                  if (s.listState == 'cached' && s.cachedAt != null)
+                  Tap(
+                    key: const ValueKey('cachedBanner'),
+                    onTap: () => s.reconnect?.call(),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: box(w: 2, c: p.tx),
+                      child: Row(children: [Ic('wifi', size: 18, color: p.tx), const SizedBox(width: 10), Expanded(child: T('Offline. Hostels as of ${dayMon(s.cachedAt!)}, ${clockTime(s.cachedAt!.millisecondsSinceEpoch).replaceFirst('Today, ', '')}. Tap to try again.', s: 13, w: 600, lh: 1.35))]),
+                    ),
+                  ),
                 // F21 W2: the rank shows once, on the first card.
-                for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
+                // F10: featured hostels come first, so "#1" goes to the best rank among the results.
+                for (final h in results) HostelCard(h, first: h.id == top),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -340,6 +371,7 @@ class HostelCard extends StatelessWidget {
     final best = s.bestQuote(h.id, f: s.fR);
     final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
     final free = s.freeOf(h.id).f;
+    final featured = s.featured(h.id);
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -363,8 +395,9 @@ class HostelCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
-                      if (first)
-                        Positioned(left: 8, top: 8, child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T('#1 near you', s: 13, w: 800, c: p.bg))),
+                      // F10: the 80+ bed plan's featured spot is labelled, never passed off as rank.
+                      if (first || featured)
+                        Positioned(left: 8, top: 8, child: Container(key: featured ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (featured) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
                       Positioned(
                         right: 8,
                         top: 8,
@@ -421,7 +454,7 @@ class HostelCard extends StatelessWidget {
 ({Hostel hh, Room r, double left}) holdInfo(AppState s, Hold h) {
   final hh = hostelById(h.hid);
   final r = s.findBed(h.hid, h.bed).r!;
-  final secs = s.holdSecs;
+  final secs = s.holdSecsOf(h);
   return (hh: hh, r: r, left: secs - (s.now - h.start) / 1000);
 }
 
@@ -486,7 +519,8 @@ class HoldsScreen extends StatelessWidget {
                 ),
               );
             }(),
-          if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
+          // Only about a real ended hold; the demo build may show a sample one.
+          if (s.askJoined)
             Container(
               key: const ValueKey('joinedAsk'),
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -496,14 +530,17 @@ class HoldsScreen extends StatelessWidget {
                 gap: 8,
                 children: [
                   T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
-                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair, and a yes unlocks your ₹100 Member reward.', s: 13, c: p.mu, lh: 1.4),
+                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair.${s.onServer ? ' If you joined, your ₹100 Member reward unlocks once the owner confirms your stay.' : ' A yes unlocks your ₹100 Member reward.'}', s: 13, c: p.mu, lh: 1.4),
+                  // F07 / F24 item 14: Yes / Not yet / Still deciding.
+                  Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes')),
                   Row(
                     children: [
-                      Expanded(child: Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes'))),
+                      Expanded(child: OutlineCta('Not yet', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('not_yet'))),
                       const SizedBox(width: 8),
-                      Expanded(child: OutlineCta('No', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('no'))),
+                      Expanded(child: OutlineCta('Still deciding', icon: 'clock', height: 46, fs: 14, onTap: () => s.answerJoined('deciding'))),
                     ],
                   ),
+                  if (s.onServer) T('Only the Hostelzy team sees your answer, never the owner.', s: 12, c: p.mu, lh: 1.4),
                   Tap(onTap: () => s.update(() => s.sheet = 'report'), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: T('The owner asked me to skip the app ›', s: 13, w: 800, c: p.ad))),
                 ],
               ),
@@ -544,6 +581,8 @@ class MeScreen extends StatelessWidget {
     final nSaved = s.saved.values.where((v) => v).length;
     final rows = <(String, String, VoidCallback)>[
       // F22 Area 2: the resident's stay is one row; its actions live in My stay.
+      // F24: an advance refund still open after moving out.
+      if (s.myRefund case final r?) ('Your refund', '${fmt(r.amt)} · ${r.status == 'sent' ? 'did it arrive?' : r.status == 'not_received' ? 'not received' : 'due ${dayMon(r.due)}'}', s.openMyRefund),
       if (s.role == 'resident') ('My stay', s.myStay == null ? 'Not on Hostelzy yet' : [if (s.myStay!.bed.isNotEmpty) 'Bed ${s.myStay!.bed}', s.stayHostel.name].join(' · '), () => s.go('rStay')),
       if (!isOwner) ('Saved', nSaved == 0 ? 'Nothing yet' : '$nSaved hostel${nSaved == 1 ? '' : 's'}', () => s.go('saved')),
       if (!isOwner) ('Holds', live.isEmpty ? 'None right now' : [if (held > 0) '$held held', if (booked > 0) '$booked booked'].join(' · '), () => s.tab('holds')),
@@ -648,7 +687,7 @@ class DetailScreen extends StatelessWidget {
     final rules = ownRules != null
         ? [
             for (final r in ownRules)
-              if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
+              if (r.v.trim().isNotEmpty && !moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
         : h.id == 'anjani'
@@ -657,6 +696,9 @@ class DetailScreen extends StatelessWidget {
               if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
+        // F24: a real hostel's page never shows rules its owner didn't add.
+        : !isSeedHostel(h.id)
+        ? moneyRules(h)
         : [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],
@@ -775,6 +817,39 @@ class DetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // F24 item 12 (DECISIONS F03, Design v22 r-detail): the deal's headline is the
+                // 6-month saving, its parts under it, from this hostel's real deals only.
+                if (dealHeadline(s.bestQuote(h.id)) case (final head, final parts))
+                  Container(
+                    key: const ValueKey('dealHeadline'),
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: box(bg: p.gb, w: 2, c: p.gn),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        T(head, w: 800, s: 20, c: p.gn, lh: 1.15),
+                        if (parts.isNotEmpty) ...[const SizedBox(height: 2), T(parts, s: 13, w: 600, c: p.gn, lh: 1.35)],
+                      ],
+                    ),
+                  ),
+                // Design v25 w1-dealsPaused: the owner's deals are paused (plan 15+ days late)
+                // or hidden (strike 2). Say so instead of letting them vanish.
+                if (s.dealsPaused(h.id) || s.dealsHidden(h.id))
+                  Container(
+                    key: const ValueKey('dealsPaused'),
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: box(bg: p.sf, w: 2, c: p.tx),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Ic('shield', size: 18, color: p.tx),
+                        const SizedBox(width: 10),
+                        Expanded(child: T('Hostelzy deals are paused for this hostel. Walk-in prices shown.', s: 14, w: 700, lh: 1.35)),
+                      ],
+                    ),
+                  ),
                 // F21 W2: one table. The Hostelzy price sits in it, walk-in struck through.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -865,6 +940,15 @@ class DetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: T('Same price for every bed of a type.${h.food ? ' Food included.' : ''} Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}.', s: 13, c: p.mu, lh: 1.4),
                 ),
+                // F03 (F24 Wave 4d): when the owner last stood by these prices; nothing when unknown.
+                if (s.ratesConfirmedAt[h.id] case final at?)
+                  Padding(
+                    key: const ValueKey('ratesConfirmed'),
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                    child: s.ratesStale(h.id)
+                        ? Rich([sp(context, 'Not confirmed in over a month', w: 800, c: p.ad), sp(context, ' · ask the owner before you visit.')], s: 13, lh: 1.4)
+                        : Rich([sp(context, 'Confirmed by the owner', w: 800), sp(context, ' · ${dayMon(at.toLocal())}')], s: 13, lh: 1.4),
+                  ),
                 // F23: the shared things on each floor (and the geyser in rooms).
                 OnEachFloor(hid: h.id),
                 // Today's food, then the whole week, when the owner has put a menu.
@@ -950,6 +1034,28 @@ class DetailScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// F24 item 12: "Save ₹1,700 in 6 months" over "₹1,000 off the advance + ₹200
+/// off every month", from the hostel's best quote; null when it has no deal.
+(String, String)? dealHeadline(DealQuote? q) {
+  if (q == null || !q.any) return null;
+  final parts = [
+    if (q.hzAdv < q.adv) '${fmt(q.adv - q.hzAdv)} off the advance',
+    if (q.join > 0) 'no ${fmt(q.join)} joining fee',
+    if (q.firstOffNow > 0) '${fmt(q.firstOffNow)} off the first month',
+    if (q.hzFee < q.fee) '${fmt(q.fee - q.hzFee)} off every month',
+    if (q.moreBack > 0) '${fmt(q.moreBack)} more back when you leave',
+    if (q.laundry) 'free laundry',
+  ];
+  final head = q.save6 > 0
+      ? 'Save ${fmt(q.save6)} in 6 months'
+      : q.upfront > 0
+      ? '${fmt(q.upfront)} less upfront'
+      : q.moreBack > 0
+      ? '${fmt(q.moreBack)} more back when you leave'
+      : 'Hostelzy deal';
+  return (head, parts.join(' + '));
 }
 
 /// "Hostelzy price: ₹200 off every month · ₹500 exit" (F21 W2 table footer).
@@ -1225,7 +1331,7 @@ class _PlanMode extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('Room ${r.label}: AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('Room ${r.label}: AC under repair.${r.acSince.isEmpty ? '' : ' Complaint raised ${r.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           const SizedBox(height: 12),
           Wrap(
@@ -1377,7 +1483,7 @@ class HoldScreen extends StatelessWidget {
         big: amt,
         line: 'You sent the UPI reference. It says Booked only after $owner sees the money, so it’s not booked yet.',
         rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!), if (code != null) ('Booking code', code)],
-        main: ('Remind $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}. Please confirm on Hostelzy.')),
+        main: ('Remind $owner', 'msg', () => s.whatsapp(ownerWa(pay!.hid), 'Hi $owner, I paid the ${fmt(pay.amt)} advance for bed ${pay.bed} by UPI. UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}. Please confirm on Hostelzy.')),
         alt: ('Fix the UPI reference', 'chev', () => s.openPayUtr(pay!)),
         green: false,
       ),
@@ -1387,14 +1493,14 @@ class HoldScreen extends StatelessWidget {
         line: '$owner didn’t see this payment. Check the UPI reference in your UPI app. If the money left your account, send $owner the UPI receipt on WhatsApp.',
         rows: [('UPI reference', utr), if (pay?.sent != null) ('Sent', pay!.sent!)],
         main: ('Fix the UPI reference', 'arrow', () => s.openPayUtr(pay!)),
-        alt: ('Talk to $owner', 'msg', () => s.whatsapp(ownerPhones[pay!.hid] ?? '', 'Hi $owner, about my advance for bed ${pay.bed}: UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}.')),
+        alt: ('Talk to $owner', 'msg', () => s.whatsapp(ownerWa(pay!.hid), 'Hi $owner, about my advance for bed ${pay.bed}: UPI reference ${utrSpaced(pay.utr ?? '')}, booking code ${pay.note}.')),
         green: false,
       ),
       'paying' => (
         label: 'Pay to book',
         big: amt,
         line: 'Pay $owner by UPI, then enter the UPI reference. The bed is kept for you meanwhile; it says Booked once $owner sees the money.',
-        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(q.hzFee)} a month')],
+        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: pay == null ? null : ('Pay $amt by UPI', 'arrow', () => s.payByUpi(pay)),
         alt: pay == null ? null : ('I’ve paid · enter UPI reference', 'chev', () => s.openPayUtr(pay)),
         green: false,
@@ -1403,7 +1509,7 @@ class HoldScreen extends StatelessWidget {
         label: 'Booked',
         big: 'Yours.',
         line: pay?.done != null ? '$owner confirmed $amt on ${pay!.done}. Show ${code ?? 'your booking code'} when you move in.' : 'Advance paid to $owner. Show ${code ?? 'your booking code'} when you move in.',
-        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
+        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: ('Moving in · see what to pay', 'arrow', () => s.go('moveIn')),
         alt: ('Directions', 'pin', () => s.directions(i.hh)),
         green: true,
@@ -1650,7 +1756,7 @@ class FoodPeek extends StatelessWidget {
                                   width: 92,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [T(ml[1], w: 800, s: 14), T(ml[2], s: 11, c: p.mu)],
+                                    children: [T(ml[1], w: 800, s: 14), T(s.mealTimeText(hid, ml[0]), s: 11, c: p.mu)],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -1718,7 +1824,7 @@ class FoodWeekSheet extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(ml[2], s: 12, c: p.mu)])),
+                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(s.mealTimeText(s.foodFor ?? s.hid, ml[0]), s: 12, c: p.mu)])),
                         const SizedBox(width: 8),
                         Expanded(child: T(m[d].of(ml[0]).trim().isEmpty ? '—' : m[d].of(ml[0]), s: 14, lh: 1.4)),
                       ],

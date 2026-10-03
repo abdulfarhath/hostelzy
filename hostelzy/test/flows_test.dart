@@ -228,7 +228,8 @@ void main() {
     // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
     expect(find.text('Ask Srinivas'), findsOneWidget);
     expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code $ref'));
+    // F24 4a: the message ends with the enquiry's link the owner can open.
+    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
     expect(find.text(s.waFull), findsOneWidget);
     await tap(tester, find.text('Open WhatsApp'));
     expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));
@@ -478,6 +479,16 @@ void main() {
     expect(o.acDraft![204], isFalse);
     await tap(tester, find.text('+ Add'));
     expect(o.rateDraft![rateKey(true, 4)], 7600 + 1200);
+    // F24 item 19: 204's layout has no AC unit, so it can't be made AC yet.
+    o.setRoomAc(r204, true);
+    await tester.pump();
+    expect(o.acDraft![204], isFalse);
+    expect(o.toast, 'Room 204’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.');
+    // With the AC unit in its published layout, it can.
+    final l204 = o.layoutOf('anjani', 204)!;
+    l204.items.add(LItem('ac1', 'ac', 1, 0, 3, 1));
+    l204.published?.items.add(LItem('ac1', 'ac', 1, 0, 3, 1));
+    expect(o.liveLayout('anjani', 204)!.ac, isNotNull);
     o.setRoomAc(r204, true);
     await tester.pump(const Duration(seconds: 3)); // let the "Add a price first" toast go
     await tap(tester, find.byKey(const ValueKey('saveRates')));
@@ -959,12 +970,12 @@ void main() {
     expect(s.floorLocked('saisri'), isFalse);
     s.dispose();
 
-    // Signed out: layouts need a verified phone.
+    // Signed out: layouts need sign-in.
     final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
     await pumpApp(tester, o);
     expect(find.text('Sign in to see room layouts'), findsOneWidget);
-    await tap(tester, find.text('Verify my phone'));
-    expect(o.screen, 'phone');
+    await tap(tester, find.text('Sign in'));
+    expect(o.screen, 'login');
     o.dispose();
 
     // Owner: Beds → room 204 → mark a fan not working → approve.
@@ -984,18 +995,19 @@ void main() {
     expect(l.pending, isFalse);
     expect(find.text('Live for tenants'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
-    // Ask Hostelzy for help: saved as pending (no backend yet).
+    // Ask Hostelzy to draw it (F24): saved in the app, done within 48 h.
     await tap(tester, find.text('Ask Hostelzy'));
     expect(w.sheet, 'layoutReq');
     await tap(tester, find.text('Send request'));
-    expect(l.request, isNull);
+    expect(w.shapeReqFor('anjani', 204), isNull);
     await tester.enterText(find.byType(TextField).first, 'Bed C is against the washroom wall.');
     await tap(tester, find.text('Send request'));
-    expect(l.request?.text, 'Bed C is against the washroom wall.');
-    expect(l.request?.added, isEmpty); // no fake photos: they go on WhatsApp
-    expect(find.text('Help requested · Hostelzy replies within 48 h'), findsOneWidget);
+    final q = w.shapeReqFor('anjani', 204)!;
+    expect((q.note, q.photos.length, q.status), ('Bed C is against the washroom wall.', 0, 'requested'));
+    expect(find.textContaining('Asked Hostelzy · '), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
 
-    // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
+    // Hostelzy team: sees the request, mirrors, sends it back to the owner.
     w.update(() => w.screen = 'aLayout');
     await tester.pump();
     expect(find.text('“Bed C is against the washroom wall.”'), findsOneWidget);
@@ -1004,7 +1016,16 @@ void main() {
     expect(l.bedRect('A').left, l.w - before.right);
     await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('Send to owner'));
-    expect((l.version, l.pending, l.request), (3, true, null));
+    // Tenants keep v2 until the owner publishes the drawing.
+    expect((l.version, l.pending, q.status), (2, false, 'sent'));
+    expect(l.bedRect('A'), before);
+    await tester.pump(const Duration(seconds: 4));
+    w.update(() => w.screen = 'oLayout');
+    await tester.pump();
+    expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
+    await tap(tester, find.text('Publish v3'));
+    expect((l.version, l.live, q.status, w.screen), (3, true, 'published', 'oPublished'));
+    expect(l.bedRect('A').left, l.w - before.right);
     w.dispose();
   });
 
@@ -1016,7 +1037,9 @@ void main() {
     await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
     expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
-    await tap(tester, find.text('Map pin · check it at the gate'));
+    await tap(tester, find.text('Map pin · drop it at the gate'));
+    s.pinPanned((17.4622, 78.3568));
+    await tap(tester, find.byKey(const ValueKey('pinSave')));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
 
@@ -1437,7 +1460,7 @@ void main() {
     await tap(tester, find.text('Open team tools'));
     await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
-    expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
+    expect(find.text('TEAM TOOLS · SAMPLE DATA'), findsOneWidget);
     for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
       expect(find.text(t), findsOneWidget);
     }
@@ -1882,7 +1905,7 @@ void main() {
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
-    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
+    e.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, checkers: const {}, amenities: const {}, standing: const {}));
     await pumpApp(tester, e);
     expect(find.text('No hostels in this area yet'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
@@ -1940,14 +1963,16 @@ void main() {
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
     expect(find.text('asha@gmail.com'.toUpperCase()), findsOneWidget);
     expect(find.textContaining('“not verified”'), findsOneWidget);
-    // The Google name is prefilled but editable.
-    expect(s.myName, 'Asha K');
+    // F24 item 23: never pre-filled; the Google name is only the hint.
+    expect(s.myName, '');
+    expect(find.text('Asha K'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('myName')), matching: find.byType(TextField)), 'Asha Kumari');
     await tester.enterText(find.byType(TextField).last, '9000000007');
     await tester.pump();
     await tap(tester, find.text('Continue'));
     await tap(tester, find.text('I run a PG'));
     await tester.pump();
-    expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
+    expect(data.profile, (name: 'Asha Kumari', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
     final fp = _FakePush(true);
     s.push = fp;
@@ -2966,7 +2991,8 @@ void main() {
     s.update(() => s.inviteDraft = 'mgr-abcd2345');
     await s.joinInvite();
     expect(fake.calls.last, 'joinmgr MGR-ABCD2345');
-    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a hostel” to start.');
+    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a PG” to start.');
+    expect(s.screen, 'role');
     s.stopLive();
     s.dispose();
   });
@@ -3521,7 +3547,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
     return 'HZ-5009';
   }
 
@@ -3550,7 +3576,7 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
@@ -3646,19 +3672,19 @@ class _FakeLive extends SampleRepo {
   @override
   Future<void> setHoldStatus(String id, String status) => _rec('holdstatus $id $status');
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
-    await _rec('stay $hid $bedKey $name $phone $rent $advance');
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
+    await _rec('stay $hid $bedKey $name $phone $rent $advance${before ? ' before' : ''}');
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
   }
 }
 
@@ -3683,7 +3709,7 @@ class _FakeLocator implements Locator {
   final LocateFail? fail;
   int asked = 0;
   @override
-  Future<((double, double)?, LocateFail?)> locate() async {
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false}) async {
     asked++;
     return (pos, fail);
   }

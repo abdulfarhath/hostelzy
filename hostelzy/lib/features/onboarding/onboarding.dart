@@ -6,6 +6,16 @@ mixin _OnboardingData {
   /// Days since each owner confirmed their free beds.
   final Map<String, int> confirmed = Map.of(seedConfirmed);
 
+  /// F24 Wave 4d (F03): when each owner last confirmed their rates (the
+  /// oldest rate card on the server); sample dates in the demo only.
+  final Map<String, DateTime> ratesConfirmedAt = {
+    if (AppState.samples)
+      for (final e in seedRatesConfirmed.entries) e.key: appToday.subtract(Duration(days: e.value)),
+  };
+
+  /// Real hostels whose rates the server tracks but the owner never confirmed.
+  final Set<String> ratesNeverConfirmed = {};
+
   /// "Visited by Hostelzy" dates.
   final Map<String, String> visited = Map.of(seedVisited);
 
@@ -24,22 +34,84 @@ mixin _OnboardingData {
   bool resPasteMode = false;
 
   /// Onboarding tracker.
-  final List<Lead> leads = seedLeads();
+  /// F24 item 29: from the server in the real app; sample leads only in the demo.
+  final List<Lead> leads = AppState.samples ? seedLeads() : [];
   int trackCl = -1;
 
   /// Tracker tab (F22 Area 4): 0 Lead, 1 Visited, 2 Signed up (and data
   /// complete), 3 Live (live, trial, paying).
   int trackTab = 0;
+
+  /// F24 Wave 4c (board `aPin`): the map under the fixed pin while the team
+  /// places it, whether they moved it or used their location, and a bump to
+  /// recentre the map.
+  (double, double)? pinNow;
+  bool pinTouched = false;
+  int pinFocus = 0;
 }
 
 extension OnboardingActions on AppState {
 
-  bool stale(String hid) => (confirmed[hid] ?? staleAfterDays) >= staleAfterDays;
-  bool needsConfirm(String hid) => (confirmed[hid] ?? 0) >= confirmEveryDays;
+  /// Unknown (no confirmation yet) is not called stale: we just don't say.
+  bool stale(String hid) => (confirmed[hid] ?? 0) >= staleAfterDays;
+  /// Every 3 days; a real hostel that was never confirmed asks right away.
+  bool needsConfirm(String hid) {
+    final d = confirmed[hid];
+    if (d == null) return onServer && !isSeedHostel(hid);
+    return d >= confirmEveryDays;
+  }
 
+  /// "Yes, all free": saved on the server for a real hostel (F24 item 9), so
+  /// tenants see "confirmed by the owner today".
   void confirmBeds(String hid) {
+    if (onServer && !isSeedHostel(hid)) {
+      _write(() => data.confirmBeds(hid)).then((ok) {
+        if (!ok) return;
+        update(() => confirmed[hid] = 0);
+        toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+      });
+      return;
+    }
     update(() => confirmed[hid] = 0);
     toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+  }
+
+  /// F03: days since the owner last confirmed the rates; null when unknown.
+  int? ratesDays(String hid) {
+    final at = ratesConfirmedAt[hid];
+    return at == null ? null : daysSince(at);
+  }
+
+  /// Tenants see "Not confirmed in over a month" after 31 days.
+  bool ratesStale(String hid) => (ratesDays(hid) ?? 0) > ratesStaleAfterDays;
+
+  /// Owner Today asks monthly ("Are your rates still right?"). Rates are the
+  /// owner's (Wave 3a): never a manager.
+  bool needsRatesConfirm(String hid) {
+    if (managerOf.contains(hid)) return false;
+    if (ratesNeverConfirmed.contains(hid)) return true;
+    final d = ratesDays(hid);
+    return d != null && d >= ratesConfirmEvery;
+  }
+
+  /// "Rates still right": saved on the server for a real hostel (the server
+  /// stores its own time), so tenants see "Confirmed by the owner" with today's date.
+  void confirmRates(String hid) {
+    void done() {
+      update(() {
+        ratesConfirmedAt[hid] = appToday;
+        ratesNeverConfirmed.remove(hid);
+      });
+      toastMsg('Thanks. Tenants see your rates as confirmed today.');
+    }
+
+    if (onServer && !isSeedHostel(hid)) {
+      _write(() => data.confirmRates(hid)).then((ok) {
+        if (ok) done();
+      });
+      return;
+    }
+    done();
   }
 
   void addManager() {
@@ -112,7 +184,7 @@ extension OnboardingActions on AppState {
       if (draftPhotos < HostelDraft.minPhotos) 'At least ${HostelDraft.minPhotos} photos',
       if (d.missingPrices.isNotEmpty) 'Every room type priced',
       if (!d.bedsChecked) 'Bed status checked on the visit',
-      if (!d.pinChecked) 'Map pin checked',
+      if (!d.pinChecked || d.pin == null) 'Map pin dropped at the gate',
     ];
   }
 
@@ -133,7 +205,7 @@ extension OnboardingActions on AppState {
         rs.add({'number': n, 'label': dr.label == '$n' ? null : dr.label, 'floor': fi, 'share': dr.share, 'ac': dr.ac, 'rent': d.prices[rateKey(dr.ac, dr.share)] ?? 0, 'bath': 'Attached'});
       }
     }
-    final ll = areaLatLng[d.area];
+    final ll = d.pin;
     return {
       'name': d.name.trim(),
       'gender': d.gender,
@@ -143,18 +215,84 @@ extension OnboardingActions on AppState {
       'food': d.food != 'No food',
       'ac': rs.any((r) => r['ac'] == true),
       'only_ac': rs.isNotEmpty && rs.every((r) => r['ac'] == true),
-      'tags': [if (d.food != 'No food') '${d.food} a day', ...d.amenities.take(3)],
+      'tags': [if (d.food != 'No food') '${d.food} a day', ...d.amenities],
+      'amenities': d.amenities.toList(),
       'terms': {'advance': d.advance, 'maintenance': d.kept, 'noticeDays': d.notice, 'dueOnJoining': d.dueOnJoining, 'electricityExtra': true},
+      'rules': [for (final r in draftRules) {'k': r.k, 'v': r.v}],
+      if (d.ownerWa.length == 10) 'owner_whatsapp': d.ownerWa,
+      // F24 Wave 4c: only the pin the team dropped at the gate, never the area's centre.
       if (ll != null) ...{'lat': ll.$1, 'lng': ll.$2},
       'rates': [for (final e in d.prices.entries) if (e.value > 0) {'ac': e.key.startsWith('ac'), 'share': int.parse(e.key.replaceFirst(RegExp('^(ac|non)'), '')), 'rent': e.value}],
       'rooms': rs,
     };
   }
 
+  Terms get draftTerms => Terms(advance: draft.advance, maintenance: draft.kept, noticeDays: draft.notice, dueOnJoining: draft.dueOnJoining);
+
+  /// House rules from the visit: the gate time and visitors typed in Basics,
+  /// the rest from the rate card's terms (the owner edits them later).
+  List<Rule> get draftRules => [
+    for (final r in blankRules(draftTerms))
+      switch (r.k) {
+        'Gate closes' => Rule(r.k, draft.gate.trim()),
+        'Visitors' => Rule(r.k, draft.visitors.trim()),
+        _ => r,
+      },
+  ];
+
+  /// F24 Wave 4c (board `aPin`): opens the map with the pin where it was
+  /// dropped, else on the area (to be moved to the gate).
+  void openPin() => update(() {
+    final d = draft;
+    pinNow = d.pin ?? areaLatLng[d.area] ?? landmarkLatLng['Hitec City']!;
+    pinTouched = d.pin != null;
+    pinFocus++;
+    hist = [...hist, screen];
+    screen = 'aPin';
+  });
+
+  /// The team moved the map under the pin.
+  void pinPanned((double, double) c) {
+    pinNow = c;
+    if (!pinTouched) update(() => pinTouched = true);
+  }
+
+  /// "Use my location": standing at the gate, the phone's GPS.
+  Future<void> locatePin() async {
+    final (pos, fail) = await locator.locate(exact: true);
+    if (pos != null) {
+      update(() {
+        pinNow = pos;
+        pinTouched = true;
+        pinFocus++;
+      });
+      return toastMsg('Pin moved to where you are. Check it sits on the gate.');
+    }
+    toastMsg(switch (fail) {
+      LocateFail.off => 'Location is switched off on this phone. Move the map instead.',
+      LocateFail.never => 'Location is blocked for Hostelzy. Allow it in Settings → Apps → Hostelzy, or move the map.',
+      LocateFail.unavailable => 'Location works in the Android app. Move the map instead.',
+      _ => 'Couldn’t find your location. Move the map instead.',
+    });
+  }
+
+  /// Saves the pin where the map is. Only after the team moved it or used
+  /// their location, so it's never just the area's centre.
+  void savePin() {
+    final c = pinNow;
+    if (!pinTouched || c == null) return toastMsg('Move the map so the pin sits on the gate, or use your location.');
+    update(() {
+      draft
+        ..pin = c
+        ..pinChecked = true;
+    });
+    back();
+  }
+
   /// Server words → the team's.
   String _onboardWords(Object e) {
     final m = '$e';
-    for (final k in const ['add the hostel name', 'add a price for', 'link the owner', 'add 8 photos', 'add at least one room', 'has someone in it', 'already has an owner']) {
+    for (final k in const ['add the hostel name', 'add a price for', 'link the owner', 'add 8 photos', 'add at least one room', 'has someone in it', 'already has an owner', 'drop the map pin', 'isn\'t in Hyderabad', 'needs 10 digits']) {
       if (m.contains(k)) {
         final i = m.indexOf(k);
         final end = m.indexOf(RegExp(r'[,}\n]'), i);
@@ -195,7 +333,9 @@ extension OnboardingActions on AppState {
         return false;
       }
       try {
-        await data.addStay(hid: id, bedKey: b.b!.key, name: r.name, phone: r.phone, rent: b.r!.rent, advance: draft.advance, joinedOn: appToday);
+        // F24 #18: residents typed on the visit, before go-live, lived there
+        // before Hostelzy.
+        await data.addStay(hid: id, bedKey: b.b!.key, name: r.name, phone: r.phone, rent: b.r!.rent, advance: draft.advance, joinedOn: appToday, before: !hostels.any((h) => h.id == id && h.live));
         draft.savedResidents.add(k);
       } catch (e) {
         debugPrint('draft resident: $e');
@@ -241,7 +381,7 @@ extension OnboardingActions on AppState {
     try {
       final code = d.ownerCode.isNotEmpty ? d.ownerCode : await data.ownerInvite(d.serverId!, d.ownerName.trim(), d.ownerPhone);
       update(() => d.ownerCode = code);
-      whatsapp(d.ownerPhone, 'Hi ${d.ownerName.trim().split(' ').first}, ${d.name.trim()} is on Hostelzy. Open this link, sign in with Google and pick “I run a PG” to run it from your phone: ${inviteLink(code)} (works once, for 7 days).');
+      whatsapp(d.ownerChat, 'Hi ${d.ownerName.trim().split(' ').first}, ${d.name.trim()} is on Hostelzy. Open this link, sign in with Google and pick “I run a PG” to run it from your phone: ${inviteLink(code)} (works once, for 7 days).');
     } catch (e) {
       debugPrint('owner invite: $e');
       toastMsg(_onboardWords(e));
@@ -315,18 +455,20 @@ extension OnboardingActions on AppState {
       x: spot.x,
       y: spot.y,
       tags: [if (d.food != 'No food') '${d.food} a day', ...d.amenities.take(3)],
-      terms: Terms(advance: d.advance, maintenance: d.kept, noticeDays: d.notice, dueOnJoining: d.dueOnJoining),
+      terms: draftTerms,
       onlyAc: rs.every((r) => r.ac),
     );
     update(() {
       hostels.add(h);
       ownerPhones[id] = d.ownerPhone;
+      if (d.ownerWa.length == 10) ownerWhatsApps[id] = d.ownerWa;
+      if (d.pin != null) livePos[id] = d.pin!;
+      hostelRules[id] = draftRules;
       rooms[id] = rs;
       rates[id] = {...seedRates(h), ...d.prices};
       stats[id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
       emptyFloors[id] = [for (final f in d.floors) if (f.noBeds) f.name];
       visited[id] = '${dayMon(appToday)} ${appToday.year}';
-      confirmed[id] = 0;
       ownerHostels.add(id);
       leads.add(Lead(d.name, d.area, 'Trial ends ${dayMon(appToday.add(const Duration(days: 30)))}', 5, hid: id));
       screen = 'aTrack';
@@ -350,6 +492,7 @@ extension OnboardingActions on AppState {
         hist = [];
       });
       toastMsg('${d.name.trim()} is live. The 30-day trial starts today.');
+      await loadTeam();
     } catch (e) {
       debugPrint('go live: $e');
       toastMsg(_onboardWords(e));

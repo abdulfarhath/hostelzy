@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../state.dart';
 import 'amenities.dart';
+import 'refunds.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
@@ -27,6 +28,7 @@ import 'screens_owner.dart';
 import 'screens_resident.dart';
 import 'screens_start.dart';
 import 'screens_tenant.dart';
+import 'stay_tools.dart';
 
 /// Body text: Archivo 16px, line-height 1.4 (`[data-hz]`).
 TextStyle rootTextStyle(Pal p) => TextStyle(fontFamily: 'Archivo', fontSize: 16, height: 1.4, letterSpacing: 0, color: p.tx, fontWeight: FontWeight.w400, leadingDistribution: TextLeadingDistribution.even, decoration: TextDecoration.none);
@@ -141,7 +143,7 @@ class _JumpPanel extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     const groups = [
-      ('Start', [('welcome', 'Welcome', 'tenant'), ('phone', 'Phone number', 'tenant'), ('otp', 'OTP', 'tenant'), ('role', 'Pick a role', 'tenant')]),
+      ('Start', [('welcome', 'Welcome', 'tenant'), ('phone', 'Phone number', 'tenant'), ('login', 'Sign in', 'tenant'), ('role', 'Pick a role', 'tenant')]),
       ('Tenant', [('explore', 'Explore', 'tenant'), ('map', 'Map', 'tenant'), ('detail', 'Hostel detail', 'tenant'), ('picker', 'Bed picker', 'tenant'), ('hold', 'Hold status', 'tenant'), ('holds', 'Holds', 'tenant')]),
       ('Resident', [('rHome', 'Home', 'resident'), ('rPay', 'Pay rent', 'resident'), ('food', 'Food', 'resident'), ('help', 'Complaints', 'resident'), ('move', 'Vacate / swap', 'resident')]),
       ('Owner', [('oToday', 'Today', 'owner'), ('oBeds', 'Bed map', 'owner'), ('oRent', 'Rent', 'owner'), ('oMore', 'Manage', 'owner')]),
@@ -348,7 +350,11 @@ class _AppBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                Expanded(child: _screen(s.screen)),
+                // F24 item 17: plan, deals, rates and Fair Play are the owner's.
+                Expanded(child: switch (s.ownerOnlyWhat(s.screen, s.moreTab)) {
+                  final String what => OwnerOnlyScreen(what),
+                  null => _screen(s.screen),
+                }),
                 if (showTabs) const _TabBar(),
                 bottom,
               ],
@@ -426,6 +432,7 @@ class _AppBody extends StatelessWidget {
     'oFix' => const OwnerFixScreen(),
     'oFixDone' => const FixDoneScreen(),
     'aAdd' => const AddHostelScreen(),
+    'aPin' => const PinScreen(),
     'aTrack' => const TrackerScreen(),
     'oTeam' => const TeamScreen(),
     'settings' => const SettingsScreen(),
@@ -433,6 +440,9 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
+    'scan' => const ScanScreen(),
+    'rRefund' => const ResidentRefundScreen(),
+    'oMeter' => const OwnerMeterScreen(),
     'reminders' => const RemindersScreen(),
     'gate' => const GateScreen(),
     'aHome' => const TeamHomeScreen(),
@@ -584,6 +594,7 @@ class _Sheet extends StatelessWidget {
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
+      'scanCam' => 'Use your camera?',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
         'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
@@ -594,17 +605,20 @@ class _Sheet extends StatelessWidget {
       'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
+      'revReport' => 'Report this review',
       'report' => 'Tell us what happened',
-      'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
+      'trusted' => '${allRequests(s).where((r) => r.id == s.trustedReq && r.name != 'Hostelzy tenant').firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
       'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
-      'layoutReq' => 'Request a change',
+      'layoutReq' => 'Ask Hostelzy to draw it',
       'switch' => 'Switch hostel',
       'team' => 'Hostelzy team',
       'addRoom' => 'Add a room',
       'payAdv' => 'Pay the advance',
       'payUtr' => 'Enter the UPI reference',
       'manager' => 'Add a manager',
+      'name' => 'Change your name',
+      'waNum' => 'Your WhatsApp number',
       'photo' => 'This photo',
       'fixLock' => 'Fix this room?',
       'fixLimit' => 'Can’t send yet',
@@ -615,36 +629,46 @@ class _Sheet extends StatelessWidget {
       'water' => 'Drink water',
       'addRem' => s.remEdit == null ? 'Add a reminder' : 'Edit reminder',
       'waterOffer' => 'Want water reminders?',
+      'refund' => refundSheetTitle(s.refundOpen),
+      'laundry' => 'Laundry day',
+      'perks' => s.level == 'trusted' ? 'You’re a Trusted tenant' : 'What Trusted tenants get',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
+      'scanCam' => 'Join your PG',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
-      'layoutReq' => 'Room ${s.lRoom}',
+      'layoutReq' => 'Room ${s.lRoom} · ${s.lReqShape == 'Custom' ? 'Custom shape' : s.lReqShape}',
       'switch' => 'Your hostels',
       'payAdv' => 'Book bed ${s.pay?.bed ?? ''} · deal ${s.pay?.note ?? ''}',
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
+      'name' => 'Settings',
+      'waNum' => 'Settings',
       'quickFix' => 'Quick fix · Room ${s.fixRoom}',
       'fixMute' => 'Layout fixes',
-      'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
+      'report' => s.endedHold != null || AppState.samples ? '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private' : 'Private',
       'water' => 'Reminders',
       'hold' => hostelById(s.hid).name,
       'signIn' => s.afterSignIn == 'enquiry' ? hostelById(s.hid).name : sb?.b != null ? 'Bed ${sb!.b!.id} · ${s.afterSignIn == 'book' ? 'pay the advance to book' : 'free ${s.isMember ? '2-hour' : '1-hour'} hold'}' : null,
       'holdNotify' => () {
         final h = s.holds.where((h) => h.id == s.holdId).firstOrNull;
-        return h == null ? null : 'Held · ${cd(s.holdSecs - (s.now - h.start) / 1000)} left';
+        return h == null ? null : 'Held · ${cd(s.holdSecsOf(h) - (s.now - h.start) / 1000)} left';
       }(),
       'addRem' => 'My reminders',
+      'revReport' => '${s.reviews.where((r) => r.id == s.revReportFor).firstOrNull?.name ?? 'A resident'}’s review',
       'waterOffer' => 'New in Hostelzy · stay on track',
-      'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
+      'trusted' => 'Hold request · bed ${allRequests(s).where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
       'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
+      'refund' => refundSheetKicker(s.refundOpen),
+      'laundry' => 'House rules',
+      'perks' => 'Stay Rewards',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -654,6 +678,7 @@ class _Sheet extends StatelessWidget {
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
+      'scanCam' => const CameraSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
@@ -661,6 +686,7 @@ class _Sheet extends StatelessWidget {
       'enq' => const _EnquirySheet(),
       'addR' => const _AddResidentSheet(),
       'rank' => const RankSheet(),
+      'revReport' => const ReviewReportSheet(),
       'report' => const ReportSheet(),
       'trusted' => const TrustedSheet(),
       'utr' => const UtrSheet(),
@@ -671,6 +697,8 @@ class _Sheet extends StatelessWidget {
       'payAdv' => const PayAdvSheet(),
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
+      'name' => const NameSheet(),
+      'waNum' => const WaNumberSheet(),
       'photo' => const PhotoSheet(),
       'fixLock' => const FixLockSheet(),
       'fixLimit' => const FixLimitSheet(),
@@ -684,6 +712,9 @@ class _Sheet extends StatelessWidget {
       'amFloor' => const AmenityFloorSheet(),
       'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
+      'refund' => const RefundSheet(),
+      'laundry' => const LaundrySheet(),
+      'perks' => const PerksSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {
@@ -775,7 +806,7 @@ class _SearchSheet extends StatelessWidget {
       child: VGap(
         gap: 18,
         children: [
-          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
+          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('deals', 'Best deals'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
           group('For', Seg(opts: const [('Any', 'Anyone'), ('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad, center: true)),
           group(
             'Room',
@@ -1098,6 +1129,8 @@ class _AddResidentSheet extends StatelessWidget {
                     child: Rich(
                       m != null
                           ? [sp(context, 'Joined via Hostelzy.', w: 800), sp(context, ' This number ${m.what} on Hostelzy ${s.now - m.at < 86400000 ? 'today' : 'on ${dayMon(DateTime.fromMillisecondsSinceEpoch(m.at))}'} (${m.ref}).')]
+                          : s.rBefore && s.canMarkBefore
+                          ? [sp(context, 'Joined before Hostelzy.', w: 800), sp(context, ' Lived here before the hostel went live on Hostelzy.')]
                           : [sp(context, 'Direct.', w: 800), sp(context, ' No Hostelzy enquiry, hold or booking from this number in the last $matchWindowDays days.')],
                       s: 13,
                       lh: 1.4,
@@ -1121,6 +1154,33 @@ class _AddResidentSheet extends StatelessWidget {
               if (s.rJoin == 'Pick date') wrap(6, [for (final d in past) ChipBtn(dayMon(appToday.subtract(Duration(days: d))), on: s.rPickBack == d, onTap: () => s.update(() => s.rPickBack = d), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
             ],
           ),
+          // F24 #18: before go-live, residents already living here are
+          // "Joined before Hostelzy" (never counted as joining off the app).
+          if (s.canMarkBefore)
+            Tap(
+              key: const ValueKey('rBefore'),
+              onTap: () => s.update(() => s.rBefore = !s.rBefore),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: box(w: 2, c: p.tx),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(width: 24, height: 24, alignment: Alignment.center, decoration: box(bg: s.rBefore ? p.tx : transparent, w: 2, c: p.tx), child: s.rBefore ? Ic('check', size: 16, color: p.bg) : null),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: VGap(
+                        gap: 2,
+                        children: [
+                          const T('Lived here before Hostelzy', w: 800, s: 14),
+                          T('Only until ${hostelById(s.ownHid).name} goes live. After that, the Hostelzy team marks it.', s: 12, c: p.mu, lh: 1.4),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1280,14 +1340,14 @@ class _BedSheet extends StatelessWidget {
     final first = res?.name.split(' ').first ?? '';
     final actions = <(String, VoidCallback, bool, String)>[];
     if (b.state == 'booked') {
-      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.'), true, 'msg'));
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res != null ? res.name : 'Resident', 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: res?.phone ?? ''), true, 'msg'));
       actions.add((
         'Mark as leaving $leave',
-        () {
+        () => res != null ? s.markLeaving(res, b, leaveDays(terms).first) : () {
           b.state = 'soon';
           b.soon = leave;
           done('Bed ${b.id} is listed as free from $leave.');
-        },
+        }(),
         false,
         'logout',
       ));
@@ -1301,6 +1361,10 @@ class _BedSheet extends StatelessWidget {
         true,
         'x',
       ));
+    } else if (b.state == 'soon' && res != null) {
+      // F24: leaving: when they've gone, the bed frees and the refund is due.
+      actions.add(('Message ${first.isEmpty ? 'resident' : first}', () => s.openWA(res.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: res.phone), false, 'msg'));
+      actions.add(('${first.isEmpty ? 'They' : first} moved out', () => s.movedOut(res, b), true, 'logout'));
     } else {
       actions.add((
         'Add tenant to this bed',
@@ -1324,6 +1388,8 @@ class _BedSheet extends StatelessWidget {
     // F22 Area 3 (board `bedSheet`): who's in it, the room, the rent, since
     // when and how they came; then one main action.
     final via = res == null ? null : residentTag(p, res.tag).label.toLowerCase();
+    // F24 item 13: the deal the tenant booked with, locked on the server.
+    final deal = res != null && res.perks.isNotEmpty ? res.perks : s.holds.where((h) => h.hid == s.ownHid && h.bed == b.id && h.status != 'released' && h.perks.isNotEmpty).firstOrNull?.perks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1333,6 +1399,7 @@ class _BedSheet extends StatelessWidget {
         KV('Rent', '${fmt(r.rent)} a month', keyWidth: 110),
         if (res != null) KV('Since', [res.since.replaceFirst('Joined ', '').replaceFirst('Added ', ''), ?via].join(' · '), keyWidth: 110),
         KV('Advance', '${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', keyWidth: 110),
+        if (deal != null) KV('Hostelzy deal', 'Price fixed · ${deal.join(' · ')}', keyWidth: 110),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
           child: VGap(

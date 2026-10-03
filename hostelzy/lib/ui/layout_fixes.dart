@@ -15,7 +15,7 @@ import 'layout.dart';
 String _what(LItem i) => const {'fan': 'Fan', 'ac': 'AC unit', 'window': 'Window', 'door': 'Door', 'wash': 'Washroom', 'pillar': 'Pillar'}[i.kind] ?? i.kind;
 
 /// "18 × 15 ft · 3 sharing · AC"
-String _roomLine(RoomLayout l, Room r) => '${l.w.round()} × ${l.h.round()} ft · ${r.share} sharing · ${r.ac ? 'AC' : 'Non-AC'}';
+String _roomLine(RoomLayout l, Room r) => '${l.w.round()} × ${l.h.round()} ft${l.outline == null ? '' : ' · ${l.shape}'} · ${r.share} sharing · ${r.ac ? 'AC' : 'Non-AC'}';
 
 /// Board 1 + 5: a room at the resident's hostel, with "Edit room" and the
 /// state of their latest fix for it.
@@ -63,7 +63,7 @@ class ResidentRoomScreen extends StatelessWidget {
           s.update(() => s.fixSeen.add(f.id));
           s.openFixEditor(s.fixHid, room!.n);
         }),
-        OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', height: 46, fs: 14, onTap: () => s.openWA(owner, 'Hi $owner, about my layout fix for room ${room!.label}.', phone: ownerPhones[s.fixHid] ?? '')),
+        OutlineCta('Talk to $owner on WhatsApp', icon: 'msg', height: 46, fs: 14, onTap: () => s.openWA(owner, 'Hi $owner, about my layout fix for room ${room!.label}.', phone: ownerWa(s.fixHid))),
       ]);
     }
     return Column(
@@ -96,12 +96,13 @@ class ResidentRoomScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (room == null || l == null)
-                  const Padding(padding: EdgeInsets.all(16), child: LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'The owner or the Hostelzy team draws this room first. Then you can fix it.'))
+                  const Padding(padding: EdgeInsets.all(16), child: LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'The owner draws this room first. Then you can fix it.'))
                 else ...[
                   // F19 extras: tap an item for a quick fix.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true, onSelect: muted ? null : (id) {
+                    // F24 item 10: rings only with the layer on (F12).
+                    child: LayoutMap(l: l, room: room, mode: 'plain', fan: s.showFan, ac: s.showAc, onSelect: muted ? null : (id) {
                       final i = l.items.where((x) => x.id == id).firstOrNull;
                       if (i != null) s.openQuickFix('${_what(i)}${wallOf(i.rect, l.w, l.h) == null ? '' : ' · ${wallOf(i.rect, l.w, l.h)} wall'}');
                     }),
@@ -117,6 +118,7 @@ class ResidentRoomScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: LayerChips(l: l)),
                   if (muted)
                     card([
                       const T('Suggestions are off for this hostel', w: 800, s: 15),
@@ -566,7 +568,7 @@ class QuickFixSheet extends StatelessWidget {
       ('broken', 'wrench', 'Broken', 'Also goes to $owner as a repair'),
       ('not_here', 'warn', 'Not in this room', 'Take it off the layout'),
     ];
-    final probe = LayoutFix(id: '', hid: '', room: 0, snap: (w: 0, h: 0, beds: const {}, items: const [], bunks: const {}), at: 0, kind: 'quick', issue: s.qfIssue, item: name);
+    final probe = LayoutFix(id: '', hid: '', room: 0, snap: emptySnap, at: 0, kind: 'quick', issue: s.qfIssue, item: name);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

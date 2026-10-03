@@ -226,7 +226,7 @@ class OwnerContact extends StatelessWidget {
               children: [
                 Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(initials(h.owner.isEmpty ? h.name : h.owner), w: 800)),
                 const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T('Usually replies in ~${h.reply} min', s: 12, c: p.mu)])),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T(s.replyMins(h.id) == 0 ? 'Replies through Hostelzy' : 'Usually replies in ~${replyWords(s.replyMins(h.id))}', s: 12, c: p.mu)])),
               ],
             ),
           ),
@@ -393,12 +393,47 @@ class OwnerCaseScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                // F24 #18 (board `oCasePhoto`): the tenant's photo proof.
+                if (c.tenantPhoto != null) ...[
+                  Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Photo from $first', c: p.mu)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Semantics(
+                          label: 'Open the photo from $first',
+                          button: true,
+                          child: Tap(
+                            key: const ValueKey('casePhoto'),
+                            onTap: () => s.openCasePhoto(c.tenantPhoto),
+                            child: Container(
+                              width: 96,
+                              height: 72,
+                              padding: const EdgeInsets.all(6),
+                              alignment: Alignment.bottomLeft,
+                              decoration: box(bg: p.sf, w: 1, c: p.hl),
+                              child: Row(children: [Ic('camera', size: 14, color: p.mu), const SizedBox(width: 4), Flexible(child: T('Open', s: 11, w: 800, c: p.mu, ell: true))]),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(child: T('Shown only to you and the Hostelzy team.', s: 13, c: p.mu, lh: 1.45)),
+                      ],
+                    ),
+                  ),
+                ],
                 if (open)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                    child: Semantics(
-                      label: 'Your reply',
-                      child: Field(key: const ValueKey('caseReply'), value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'Your side, in a line or two', maxLines: 2, height: null, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+                    child: VGap(
+                      gap: 8,
+                      children: [
+                        Semantics(
+                          label: 'Your reply',
+                          child: Field(key: const ValueKey('caseReply'), value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'Your side, in a line or two', maxLines: 2, height: null, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+                        ),
+                        OutlineCta(s.fpPhoto != null ? 'Photo added · change it' : c.ownerPhoto != null ? 'Photo sent · add another' : 'Add a photo to your reply', key: const ValueKey('casePhotoAdd'), icon: 'camera', height: 44, fs: 14, onTap: s.pickCasePhoto),
+                      ],
                     ),
                   )
                 else if (c.ownerReply != null) ...[
@@ -446,15 +481,21 @@ class StrikeScreen extends StatelessWidget {
       2 => 'Strike 2 of 3: deals hidden for 30 days',
       _ => 'Strike 3 of 3: removed from Hostelzy',
     };
-    final until = dayName(appToday.add(const Duration(days: 30)));
+    // F24 #18: strike 2's 30 days run from the day it was given (server).
+    final backOn = s.dealsBackOn(h.id) ?? appToday.add(const Duration(days: 30));
+    final back = !DateTime.now().isBefore(backOn);
+    final until = dayName(backOn);
+    final fixes = s.strikeFromFixes(h.id);
     final body = switch (n) {
-      1 => 'A Fair Play case was decided against ${h.name}. This is a warning.',
-      2 => 'A second case was decided against ${h.name}. Until $until, tenants see walk-in prices only.',
-      _ => '${h.name} is hidden from tenants from ${dayName(appToday)}.',
+      1 => fixes ? '${h.name} fixed 3 cases within 48 hours in 6 months. Three fixes count as one warning.' : 'A Fair Play case was decided against ${h.name}. This is a warning.',
+      2 when back => 'Your 30 days of hidden deals ended on $until. Tenants see your deals again. Strikes still count: a third removes the hostel.',
+      2 => '${fixes ? '3 fixes in 6 months count as a strike.' : 'A second case was decided against ${h.name}.'} Until $until, tenants see walk-in prices only.',
+      _ => '${h.name} is hidden from tenants. Talk to the Hostelzy team about the case.',
     };
     final changes = switch (n) {
       1 => [('Nothing changes for now', 'Your deals and listing stay as they are'), ('Next strike hides your deals', 'For 30 days')],
-      2 => [('Deals hidden until ${until.split(' ').skip(1).join(' ')}', 'You drop out of Best deals'), ('Bookings and residents work as normal', 'Holds, rent and complaints keep going'), ('A third strike removes the hostel', '')],
+      2 when back => [('Deals back since ${dayMon(backOn)}', 'You’re in Best deals again'), ('A third strike removes the hostel', '')],
+      2 => [('Deals hidden until ${dayMon(backOn)}', 'You drop out of Best deals'), ('Bookings and residents work as normal', 'Holds, rent and complaints keep going'), ('A third strike removes the hostel', '')],
       _ => [('Listing hidden', 'No new enquiries, holds or bookings'), ('Residents keep their records', 'Stay history and receipts stay available to them'), ('Your plan stops', 'No more invoices')],
     };
     return Column(
@@ -488,7 +529,7 @@ class StrikeScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Strikes come only from a decided case. Each case gets 48 hours for your side. No fines, ever.', s: 12, c: p.mu, lh: 1.45))],
+                    children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Strikes come from a decided case, or from 3 fixes in 6 months (one warning). Each case gets 48 hours for your side. No fines, ever.', s: 12, c: p.mu, lh: 1.45))],
                   ),
                 ),
               ],
@@ -587,7 +628,7 @@ class AdminCasesScreen extends StatelessWidget {
                   if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('No cases here.', s: 14, c: p.mu)),
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: T('Decide after the 48-hour window or the owner’s reply. A proven fake “Direct” for an app tenant is one strike. The tenant’s answer and our records count more than screenshots. Strikes: 1 warning · 2 deals hidden 30 days · 3 removed. No fines.', s: 13, c: p.mu, lh: 1.5),
+                    child: T('Decide after the 48-hour window or the owner’s reply. A proven fake “Direct” for an app tenant is one strike. The tenant’s answer and our records count more than screenshots. Strikes: 1 warning · 2 deals hidden for 30 days · 3 removed. 3 fixes in 6 months = 1 warning. No fines.', s: 13, c: p.mu, lh: 1.5),
                   ),
                 ],
               ),
@@ -647,7 +688,7 @@ class _AdminCase extends StatelessWidget {
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('“${c.tenantNote}”', s: 14, w: 800, lh: 1.5)),
           ],
           const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Owner history')),
-          for (final (k, v) in [('Strikes', '${s.strikes[c.hid] ?? 0} of 3'), ('Live since', '1 Oct 2026'), if (residents.isNotEmpty) ('Residents', '${residents.length} · ${residents.where((r) => r.via == 'hz').length} via Hostelzy')])
+          for (final (k, v) in [('Strikes', '${s.strikes[c.hid] ?? 0} of 3${(s.strikes[c.hid] ?? 0) > 0 ? ' · ${s.strikeLine(c.hid).toLowerCase()}' : ''}'), if (s.visited[c.hid] != null) ('Live since', s.visited[c.hid]!), if (residents.isNotEmpty) ('Residents', '${residents.length} · ${residents.where((r) => r.via == 'hz').length} via Hostelzy')])
             KV(k, v, keyWidth: 110),
           // A decide case has its buttons on the row; new and waiting ones decide here.
           if (c.status == 'new' || c.status == 'waiting') Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0), child: _Decide(c)),

@@ -1,7 +1,7 @@
 // Run: node --experimental-strip-types --test supabase/functions/tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accessToken, fcmMessage, pushHandler, sendOutbox, serviceAccountJwt, tokenGone, type Db, type OutboxRow } from '../_shared/fcm.ts';
+import { accessToken, fcmMessage, pushHandler, sendOutbox, serviceAccountJwt, tokenGone, wantsPush, type Db, type OutboxRow } from '../_shared/fcm.ts';
 
 async function fakeAccount() {
   const kp = await crypto.subtle.generateKey({ name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['sign', 'verify']);
@@ -25,7 +25,7 @@ test('service account JWT is RS256-signed for the FCM scope', async () => {
 
 test('FCM message carries the title, body and string data', () => {
   const row: OutboxRow = { id: 1, user_id: 'u', title: 'New hold on bed 101-A', body: 'HZ-5002', data: { screen: 'oToday', n: 2 } };
-  assert.deepEqual(fcmMessage('tok', row), { message: { token: 'tok', notification: { title: 'New hold on bed 101-A', body: 'HZ-5002' }, data: { screen: 'oToday', n: '2' }, android: { priority: 'high' } } });
+  assert.deepEqual(fcmMessage('tok', row), { message: { token: 'tok', notification: { title: 'New hold on bed 101-A', body: 'HZ-5002' }, data: { screen: 'oToday', n: '2' }, android: { priority: 'high', notification: { icon: 'ic_stat_hostelzy', color: '#EC3013' } } } });
   assert.ok(tokenGone(404, ''));
   assert.ok(tokenGone(400, '{"error":{"details":[{"errorCode":"UNREGISTERED"}]}}'));
   assert.ok(!tokenGone(500, 'internal'));
@@ -135,4 +135,31 @@ test('send-push answers 500 with the reason, never the secret', async () => {
   const ok = await pushHandler(req(), env({ ...base, FCM_SERVICE_ACCOUNT: JSON.stringify(escaped) }),
     (async (url: string) => new Response(url.startsWith('https://oauth2') ? '{"access_token":"x"}' : '{}')) as typeof fetch, 0, () => memDb([], []).db);
   assert.deepEqual(await ok.json(), { rows: 0, sent: 0, failed: 0, dropped: 0, errored: 0 });
+});
+
+test('F24: a kind the user switched off is closed, not sent; other kinds still go', async () => {
+  const { sa } = await fakeAccount();
+  assert.ok(wantsPush({}, 'u', 'hold'));
+  assert.ok(!wantsPush({}, 'u', 'beds'));
+  assert.ok(wantsPush({ u: { beds: true } }, 'u', 'beds'));
+  assert.ok(wantsPush({ u: { hold: false } }, 'u', null));
+  const m = memDb([
+    { id: 1, user_id: 'a', title: 'Bed kept', body: '', data: {}, kind: 'hold' },
+    { id: 2, user_id: 'a', title: 'Fix approved', body: '', data: {} },
+    { id: 3, user_id: 'b', title: 'A bed is free', body: '', data: { kind: 'beds' } },
+  ], [{ token: 'pa', user_id: 'a' }, { token: 'pb', user_id: 'b' }]);
+  const asked: string[][] = [];
+  m.db.prefs = async (ids) => { asked.push(ids); return { a: { hold: false, rent: true, beds: false } }; };
+  const f = (async (url: string) => new Response(url.startsWith('https://oauth2') ? '{"access_token":"x"}' : '{}')) as typeof fetch;
+  assert.deepEqual(await sendOutbox(m.db, sa, f, 0), { rows: 3, sent: 1, failed: 0, dropped: 0, errored: 0 });
+  assert.deepEqual(asked, [['a', 'b']]);
+  assert.deepEqual(m.sent, [[1, 'switched off'], [3, 'switched off'], [2, null]]);
+});
+
+test('F24: switches can\'t be read (before the SQL runs): everything is sent as before', async () => {
+  const { sa } = await fakeAccount();
+  const m = memDb([{ id: 1, user_id: 'a', title: 'Bed kept', body: '', data: {}, kind: 'hold' }], [{ token: 'pa', user_id: 'a' }]);
+  m.db.prefs = async () => { throw new Error('column profiles.notify does not exist'); };
+  const f = (async (url: string) => new Response(url.startsWith('https://oauth2') ? '{"access_token":"x"}' : '{}')) as typeof fetch;
+  assert.deepEqual(await sendOutbox(m.db, sa, f, 0), { rows: 1, sent: 1, failed: 0, dropped: 0, errored: 0 });
 });

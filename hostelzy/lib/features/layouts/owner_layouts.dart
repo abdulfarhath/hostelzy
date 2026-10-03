@@ -10,8 +10,8 @@ mixin _OwnerLayoutsData {
   /// Room layouts list filter: all | live | draft | none.
   String layoutsF = 'all';
 
-  /// Create-a-layout draft (feet).
-  String clLen = '', clWid = '';
+  /// Create-a-layout draft (feet: width, length) and the room's shape (F24).
+  String clLen = '', clWid = '', clShape = 'Rectangle';
 
   /// What tenants saw before the last publish, for "Undo publish".
   ({int room, LayoutSnap? snap, int version})? lastPublish;
@@ -20,18 +20,21 @@ mixin _OwnerLayoutsData {
 extension OwnerLayoutsActions on AppState {
 
   /// Owner taps a room: its layout, or "Create a layout" when it has none.
-  void ownerLayout(int n) {
-    if (layoutOf(ownHid, n) != null) return openLayout(n);
+  /// F24: a room Hostelzy is drawing opens its status ([create]: draw anyway).
+  void ownerLayout(int n, {bool create = false}) {
+    if (layoutOf(ownHid, n) != null || (!create && shapeReqFor(ownHid, n) != null)) return openLayout(n);
     final r = rooms[ownHid]!.firstWhere((x) => x.n == n);
     final l = mkLayout(ownHid, r, street: true);
     update(() {
       lRoom = n;
       clLen = '${l.w.round()}';
       clWid = '${l.h.round()}';
+      clShape = 'Rectangle';
       hist = [...hist, screen];
       screen = 'oCreate';
       sheet = null;
     });
+    loadShapeRequests(ownHid);
   }
 
   /// The nearest room of the same type that already has a layout to copy.
@@ -40,8 +43,10 @@ extension OwnerLayoutsActions on AppState {
     return rooms[ownHid]!.where((x) => x.n != n && x.share == r.share && x.ac == r.ac && layoutOf(ownHid, x.n) != null).firstOrNull;
   }
 
-  /// Start drawing: a rectangle of the given size, or a copy of [from].
+  /// Start drawing: a room of the picked shape and size, or a copy of [from].
+  /// F24: beds and things start inside the shape's walls.
   void createLayout({int? from}) {
+    if (from == null && clShape == 'Custom') return openShapeRequest(shape: 'Custom');
     final r = rooms[ownHid]!.firstWhere((x) => x.n == lRoom);
     final len = double.tryParse(clLen) ?? 0, wid = double.tryParse(clWid) ?? 0;
     if (from == null && (len < 6 || wid < 6 || len > 60 || wid > 60)) return toastMsg('Enter the room size in feet (6 to 60).');
@@ -52,7 +57,10 @@ extension OwnerLayoutsActions on AppState {
     if (from != null) {
       l.restore(layoutOf(ownHid, from)!.snap());
     } else {
-      l.mirrorTo(len, wid);
+      l
+        ..mirrorTo(len, wid)
+        ..setShape(clShape)
+        ..fitInside();
     }
     update(() {
       (layouts[ownHid] ??= {})[lRoom] = l;
@@ -65,16 +73,33 @@ extension OwnerLayoutsActions on AppState {
   /// Owner publishes: tenants see this version now, no approval needed.
   void publishLayout(RoomLayout l) {
     if (onServer) {
+      // F12: one editor at a time; the server refuses too.
+      final by = edLockedBy;
+      if (by != null) return toastMsg('${by.name} is editing this room. Try again when they’re done.');
       // F19 server: owners publish their own layouts (the server checks them).
-      _write(() => data.publishLayout(l.hid, l.room, layoutJson(l.snap()))).then((ok) async {
-        if (!ok) return;
+      () async {
+        try {
+          await data.publishLayout(l.hid, l.room, layoutJson(l.snap()));
+        } catch (e) {
+          debugPrint('publish: $e');
+          final who = RegExp(r'([^,:(]+?) is editing this room').firstMatch('$e')?.group(1)?.trim();
+          if (who != null) {
+            update(() => edLock = (hid: l.hid, room: l.room, name: who, mine: false));
+            return toastMsg('$who is editing this room. Try again when they’re done.');
+          }
+          return toastMsg('Couldn’t save it. Check your internet and try again.');
+        }
+        await refreshLive();
         await refreshListings();
+        // F24: publishing closed the room's answered shape request.
+        await loadShapeRequests(l.hid);
+        await releaseLayoutLock();
         update(() {
           edOwner = false;
           screen = 'oPublished';
           sheet = null;
         });
-      });
+      }();
       return;
     }
     final wasLive = l.live;
@@ -85,7 +110,6 @@ extension OwnerLayoutsActions on AppState {
         ..live = true
         ..pending = false
         ..published = null
-        ..request = null
         ..drawn = dayMon(appToday);
       edOwner = false;
       screen = 'oPublished';

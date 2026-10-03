@@ -25,14 +25,14 @@ Story: "see the real room, pick your bed".
 | `ic_launcher_foreground-{mdpi…xxxhdpi}.png` (108–432 px) | Room on transparent, 48dp inside 108dp (fits round masks) | `res/mipmap-*/ic_launcher_foreground.png` |
 | `ic_launcher_monochrome-{mdpi…xxxhdpi}.png` | One-colour simple room | `res/mipmap-*/ic_launcher_monochrome.png` (Android 13 themed icons) |
 | `ic_launcher_background.svg/.png` | Plain white | use a colour resource `#FFFFFF` instead |
-| `splash-icon-light.png`, `splash-icon-dark.png` (1152×1152) | Room on transparent, inside the Android 12 splash circle | Splash screen: icon on background `#F3F2F2` (light) / `#161514` (dark), e.g. via `flutter_native_splash` (`image` + `android_12.image`, plus `_dark` variants). For the splash lockup on old Android use `lockup-light/dark@2x.png` |
+| `splash/splash_icon-{light,dark}-{mdpi…xxxhdpi}.png` (288–1152) | Room on transparent, inside the Android 12 splash circle | Splash on `#F3F2F2` / `#161514`: full steps in **`app-assets.md`** (2026-10-03) |
 | `ic_launcher-{mdpi…xxxhdpi}.png` (48–192) | Square white tile + room | `res/mipmap-*/ic_launcher.png` (Android 7 and older) |
-| `ic_stat_hostelzy-{mdpi…xxxhdpi}.png` (24–96) | White simple room, transparent | `res/drawable-*/ic_stat_hostelzy.png` (push notifications, when Firebase lands) |
+| `notification/ic_stat_hostelzy.xml` (+ PNGs 24–96) | **New 2026-10-03:** one-colour room for the status bar (other beds outlined, your bed filled) | `res/drawable/ic_stat_hostelzy.xml`: steps in **`app-assets.md`** |
 | `play-store-icon-512.png` | 512×512, full-bleed white (Play rounds it) | Play Console listing (F15) |
 | `web-favicon.png`, `web-Icon-192/512.png`, `web-Icon-maskable-192/512.png` | Web build icons | `web/favicon.png`, `web/icons/Icon-*.png` (same names) |
 | `mark-light.svg`, `mark-dark.svg`, `mark-mono.svg` (+ `-512.png`) | The room alone, transparent | In-app (with `flutter_svg`), splash, posters |
 | `lockup-light/dark.svg` (+`@2x.png`), `lockup-on-light/on-dark` | Room + "hostelzy", text outlined | Website, QR poster, slides |
-| `ic_launcher_foreground.svg`, `ic_launcher.svg`, `ic_stat_hostelzy.svg`, `*_monochrome.svg` | Vector sources | reference |
+| `ic_launcher_foreground.svg`, `ic_launcher.svg`, `*_monochrome.svg` | Vector sources | reference |
 
 ### Build steps (Build chat: please do these on a branch, then merge per standing approval)
 1. Copy the PNGs above into `hostelzy/android/app/src/main/res/` (rename `-mdpi` etc. into the
@@ -50,7 +50,7 @@ Story: "see the real room, pick your bed".
 4. In the app header (`screens_start.dart` start screen, `shell.dart` header) put the room mark
    (`mark-light.svg` / `mark-dark.svg` by theme, via `flutter_svg`, already a dependency) to the
    left of the live `hostelzy` text, mark height ≈ 1.2× the text's x-height. Keep the text as text.
-5. Splash: room icon centred on the app ground colour (light `#F3F2F2`, dark `#161514`), files above.
+5. Splash (superseded by `app-assets.md`, 2026-10-03): room icon centred on the app ground colour (light `#F3F2F2`, dark `#161514`), files above.
    Optional later: the "bed mila!" animation (walls → grey beds → red bed drops in), storyboard on the
    Room logo options canvas.
 6. App name stays **Hostelzy** (DECISIONS.md). No rename.

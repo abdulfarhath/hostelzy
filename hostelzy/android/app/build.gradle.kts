@@ -38,6 +38,8 @@ android {
         if (demo) applicationIdSuffix = ".demo"
         manifestPlaceholders["appLabel"] = if (demo) "Hostelzy Demo" else "Hostelzy"
         manifestPlaceholders["linkScheme"] = if (demo) "hostelzy-demo" else "hostelzy"
+        // F24: https links open only the real app, never the demo.
+        manifestPlaceholders["appLinkHost"] = if (demo) "demo.invalid" else "farhath.me"
     }
 
     // F13: test APKs need a fixed signing key (stable SHA-1) for Google
@@ -45,7 +47,18 @@ android {
     // never in the repo. Without it (local builds), the debug key is used.
     // NOT the Play Store upload key: that one stays separate and secret.
     val testKeystore = System.getenv("HZ_TEST_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+    // F24 item 31: the Play Store upload key, only in the Play build workflow
+    // (android-aab.yml) from GitHub secrets. Never in the repo.
+    val uploadKeystore = System.getenv("HZ_UPLOAD_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
     signingConfigs {
+        if (uploadKeystore != null) {
+            create("hostelzyUpload") {
+                storeFile = uploadKeystore
+                storePassword = System.getenv("HZ_UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("HZ_UPLOAD_KEY_ALIAS") ?: "upload"
+                keyPassword = System.getenv("HZ_UPLOAD_KEY_PASSWORD") ?: System.getenv("HZ_UPLOAD_KEYSTORE_PASSWORD")
+            }
+        }
         if (testKeystore != null) {
             create("hostelzyTest") {
                 storeFile = testKeystore
@@ -58,7 +71,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName(if (testKeystore != null) "hostelzyTest" else "debug")
+            signingConfig = signingConfigs.getByName(if (uploadKeystore != null) "hostelzyUpload" else if (testKeystore != null) "hostelzyTest" else "debug")
         }
     }
 }

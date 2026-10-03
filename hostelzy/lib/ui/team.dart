@@ -45,11 +45,17 @@ class TeamHomeScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final tools = <(String, String, String, VoidCallback)>[
       ('plus', 'Add hostel', 'On a visit: basics, rooms floor by floor, rates, photos, residents, go live', s.openAddHostel),
-      ('chart', 'Onboarding tracker', 'Lead → Visited → Signed up → Live → Trial → Paying', () => s.go('aTrack')),
+      ('chart', 'Onboarding tracker', 'Lead → Visited → Signed up → Live → Trial → Paying', () {
+        s.go('aTrack');
+        s.loadTeam();
+      }),
       ('wallet', 'Payments check', 'Owners’ plan invoices and UTRs to match in the bank', () => s.go('aPay')),
       ('flag', 'Fair Play cases', 'Signals, owner replies, strikes', () => s.go('aCases')),
       ('room', 'Layout editor', 'Draw and move beds, fans, AC, windows; send to the owner', () => s.openLayout(s.lRoom, editor: true)),
-      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () => s.go('aTeam')),
+      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () {
+        s.go('aTeam');
+        s.loadTeam();
+      }),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +64,7 @@ class TeamHomeScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Team tools · sample data until the backend is connected', title: 'Hostelzy team', size: 28))],
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: AppState.samples && !s.onServer ? 'Team tools · sample data' : 'Team tools', title: 'Hostelzy team', size: 28))],
           ),
         ),
         Expanded(
@@ -122,8 +128,10 @@ class OwnerLayoutsScreen extends StatelessWidget {
 
     ({String label, Color bg, Color fg}) state(int n) {
       final l = s.layoutOf(h.id, n);
+      // F24: an "Ask Hostelzy to draw it" request, or its drawing back.
+      final q = s.shapeReqFor(h.id, n);
+      if (q != null) return q.status == 'sent' ? (label: 'Drawn · publish it', bg: p.tx, fg: p.bg) : (label: 'Help requested', bg: p.ab, fg: p.ad);
       if (l == null) return (label: 'No layout', bg: p.ab, fg: p.ad);
-      if (l.request != null) return (label: 'Help requested', bg: p.ab, fg: p.ad);
       if (l.disputes > 0) return (label: 'Resident: not accurate', bg: p.ab, fg: p.ad);
       if (kind(n) == 'draft') return (label: 'Draft', bg: transparent, fg: p.tx);
       return (label: 'Live', bg: p.tx, fg: p.bg);
@@ -131,6 +139,8 @@ class OwnerLayoutsScreen extends StatelessWidget {
 
     String sub(Room r) {
       final l = s.layoutOf(h.id, r.n);
+      // F13 S4, F24 4a: residents' 30-day reviews say the layout is wrong.
+      if (l != null && l.disputes > 0) return 'Residents say this layout is wrong';
       final note = l == null ? '' : (l.pending ? ' · Hostelzy drew a new version' : (kind(r.n) == 'draft' ? ' · changes not published' : ' · edited ${l.drawn}'));
       return '${r.share} sharing · ${r.type}$note';
     }
@@ -194,7 +204,7 @@ class OwnerLayoutsScreen extends StatelessWidget {
                             decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                             child: Row(
                               children: [
-                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T(sub(r), s: 12, c: p.mu)])),
+                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('Room ${r.label}', w: 800, s: 15), T(sub(r), s: 12, c: (s.layoutOf(h.id, r.n)?.disputes ?? 0) > 0 ? p.ad : p.mu)])),
                                 Container(decoration: st.bg == transparent ? box(w: 1, c: p.tx) : null, child: Tag(st.label, bg: st.bg, fg: st.fg)),
                                 const SizedBox(width: 6),
                                 Ic('chev', size: 18, color: p.mu),

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
+import 'features/listings/cache.dart';
 import 'features/listings/repo.dart';
 import 'push.dart';
 import 'reminders.dart';
@@ -12,6 +13,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/photos/pick.dart' show GalleryPicker;
+import 'features/links/scan.dart' show CameraScanner;
 import 'l10n.dart';
 import 'state.dart';
 import 'ui/overview.dart';
@@ -54,7 +56,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
     theme: _pick(q['theme'], const ['light', 'dark', 'system']),
     mode: _pick(q['mode'], const ['plan', 'room', 'list']),
-    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom', 'fixLock', 'fixLimit', 'fixSend', 'fixReject']),
+    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'add', 'bed', 'enq', 'addR', 'rank', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom', 'fixLock', 'fixLimit', 'fixSend', 'fixReject', 'laundry', 'perks']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
     moreTab: _pick(q['moreTab'], const ['home', 'residents', 'complaints', 'deals', 'rates', 'menu', 'rules']),
     foodView: _pick(q['foodView'], const ['day', 'week']),
@@ -73,6 +75,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     state.signIn = signIn;
     state.locator = platformLocator();
     state.picker = const GalleryPicker();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) state.scanner = const CameraScanner();
     state.store = store;
     // Dev start states (debug ?start=…) skip the saved login.
     if (q['start'] == null) state.restore(saved, firebaseUser: signIn.current);
@@ -106,13 +109,26 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       await state.startLive();
       // F20: a new phone gets its reminders back.
       await state.restoreRemFromServer();
+      // F24 item 22: the notification switches kept on the profile.
+      await state.loadNotifyFromServer();
       // Push fix: every start, the server gets this phone's token if allowed.
       await state.syncPushToken();
     } catch (e) {
-      // Never show sample hostels as if they were live: an honest empty list.
+      // Never show sample hostels as if they were live: the last list from the
+      // server if this phone has one (marked offline, F24), else an honest
+      // empty list.
       if (state.listState == 'loading') {
-        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
-        state.update(() => state.listState = 'offline');
+        final c = await loadListingRows();
+        if (c != null) {
+          state.applyListings(listingsFromRows(c.rows));
+          state.update(() {
+            state.listState = 'cached';
+            state.cachedAt = c.at;
+          });
+        } else {
+          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, checkers: const {}, amenities: const {}, standing: const {}));
+          state.update(() => state.listState = 'offline');
+        }
       }
       debugPrint('Supabase: $e');
     }

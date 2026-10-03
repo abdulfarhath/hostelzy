@@ -51,8 +51,8 @@ insert into public.beds (id, hostel_id, room_id, letter) values
   ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'D'),
   ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'A'),
   ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'C');
-insert into public.stays (hostel_id, bed_id, user_id, name, confirmed) values
-  ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 'fb-resident', 'Rahul Varma', true);
+insert into public.stays (hostel_id, bed_id, user_id, name, confirmed, joined_on) values
+  ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 'fb-resident', 'Rahul Varma', true, current_date - 40);
 insert into public.layouts (hostel_id, room, stage, w, h) values
   ('10000000-0000-0000-0000-000000000001', 204, 'draft', 12, 10),
   ('10000000-0000-0000-0000-000000000001', 204, 'published', 12, 10);
@@ -113,7 +113,7 @@ select test.act('authenticated', 'fb-resident');
 select test.rows('select count(*) from public.stays', 1);
 select test.rows('select count(*) from public.payments', 0);         -- not theirs
 select test.rows($$insert into public.reviews (id, hostel_id, author_name, stars, layout) values ('60000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Rahul V.', 4, 'No')$$, 1);
-select test.blocked($$update public.reviews set stars = 5$$);
+select test.blocked($$update public.reviews set reply = 'self reply'$$);   -- the author edits their words, never the reply (F24 4a)
 select test.rows($$insert into public.complaints (hostel_id, cat, body) values ('10000000-0000-0000-0000-000000000001', 'Water', 'No hot water')$$, 1);
 select test.blocked($$update public.complaints set status = 'Fixed'$$);
 

@@ -56,6 +56,35 @@ export const CASE_TABS = [
   ['closed', 'Closed'],
 ];
 
+/** F07 / DECISIONS: what strike n means. The server writes the same words. */
+export const strikeWords = (n) => (n <= 1 ? 'warning' : n === 2 ? 'deals hidden for 30 days' : 'removed from Hostelzy');
+
+/** The team's strike button: the next strike and what it does. */
+export const strikeButton = (n) => (n >= 3 ? 'Removed already' : `Strike ${n + 1} · ${strikeWords(n + 1)}`);
+
+/** A hostel's strikes now, from fair_standing(): strike 2 hides deals for 30 days, then they come back. */
+export function standingLine(st, now = Date.now()) {
+  if (!st || !st.n) return 'No strikes';
+  if (st.removed) return `${st.n} strikes · removed from Hostelzy`;
+  if (st.n === 2 && st.hidden_until) {
+    return new Date(st.hidden_until).getTime() > now ? `2 strikes · deals hidden until ${dayMon(st.hidden_until)}` : `2 strikes · deals back since ${dayMon(st.hidden_until)}`;
+  }
+  return `${st.n} ${st.n === 1 ? 'strike' : 'strikes'} · ${strikeWords(st.n)}${st.last_reason === 'fixes' ? ' (3 fixes in 6 months)' : ''}`;
+}
+
+/** A tenant report, for the team: what happened, their note, when. */
+export const reportLine = (r) => [r.why, r.note ? `“${r.note}”` : null, dayMon(r.created_at)].filter(Boolean).join(' · ');
+
+/** Where the team puts a tenant's photo for a case (the `case-photos` bucket). */
+export const casePhotoPath = (hostelId, uid, now = Date.now()) => `${hostelId}/${uid}/tenant-${now}.jpg`;
+
+/** F24 item 14: tenants' "Did you join?" answers for one hostel, in words. */
+export function joinSummary(rows) {
+  if (!rows.length) return 'No answers yet';
+  const n = (a) => rows.filter((r) => r.answer === a).length;
+  return [['yes', 'Joined'], ['not_yet', 'Not yet'], ['deciding', 'Still deciding']].filter(([a]) => n(a)).map(([a, l]) => `${l} ${n(a)}`).join(' · ');
+}
+
 /** Owner phone for WhatsApp, or null. */
 export function waLink(phone, text) {
   const d = String(phone ?? '').replace(/\D/g, '').slice(-10);
@@ -100,4 +129,58 @@ export function layoutChanges(before, after) {
 export function quickLine(f) {
   const what = { broken: 'Broken', missing: 'Missing', not_here: 'Not in this room', wrong_place: 'Wrong place' }[f.issue] ?? 'Quick fix';
   return `${what}: ${f.item ?? 'an item'}`;
+}
+
+// F24 item 11: room shapes (same presets as the app's shapeOutline in data.dart).
+export const SHAPES = ['Rectangle', 'L shape', 'T shape', 'U shape', 'Angled corner', 'Narrow end', 'Alcove', 'Custom'];
+
+/** A preset shape's walls in a w × h ft room, [[x, y], …]; null for a rectangle or Custom. */
+export function shapeOutline(shape, w, h) {
+  const r = (v) => Math.round(v * 2) / 2;
+  const m = Math.min(w, h) * 0.35;
+  switch (shape) {
+    case 'L shape': return [[0, 0], [r(w * 0.55), 0], [r(w * 0.55), r(h * 0.45)], [w, r(h * 0.45)], [w, h], [0, h]];
+    case 'T shape': return [[0, 0], [w, 0], [w, r(h * 0.45)], [r(w * 0.8), r(h * 0.45)], [r(w * 0.8), h], [r(w * 0.2), h], [r(w * 0.2), r(h * 0.45)], [0, r(h * 0.45)]];
+    case 'U shape': return [[0, 0], [r(w * 0.3), 0], [r(w * 0.3), r(h * 0.4)], [r(w * 0.7), r(h * 0.4)], [r(w * 0.7), 0], [w, 0], [w, h], [0, h]];
+    case 'Angled corner': return [[0, 0], [r(w - m), 0], [w, r(m)], [w, h], [0, h]];
+    case 'Narrow end': return [[0, 0], [w, 0], [r(w * 0.78), h], [r(w * 0.22), h]];
+    case 'Alcove': return [[0, 0], [w, 0], [w, h], [r(w * 0.62), h], [r(w * 0.62), r(h - 2.5)], [r(w * 0.38), r(h - 2.5)], [r(w * 0.38), h], [0, h]];
+    default: return null;
+  }
+}
+
+/** "0,0 14,0 14,8 10,12 0,12" (typed by the team) → [[x, y], …] inside w × h, or null when it isn't one. */
+export function parsePoints(text, w, h) {
+  const pts = String(text ?? '').trim().split(/\s+/).filter(Boolean).map((p) => p.split(',').map(Number));
+  if (pts.length < 3 || pts.length > 40) return null;
+  if (pts.some((p) => p.length !== 2 || p.some((v) => !Number.isFinite(v)) || p[0] < 0 || p[0] > w || p[1] < 0 || p[1] > h)) return null;
+  return pts;
+}
+
+/** Hours left until [dueIso]: "22 h left", "Due now", or "Late 5 h". */
+export function hoursLeft(dueIso, now = Date.now()) {
+  const h = Math.ceil((new Date(dueIso).getTime() - now) / 3600000);
+  if (h > 0) return `${h} h left`;
+  return h === 0 ? 'Due now' : `Late ${-h} h`;
+}
+
+/** Layout help status: [label, tag kind]. */
+export function helpStatus(req, now = Date.now()) {
+  if (req.status === 'sent') return ['With owner', 'neutral'];
+  if (req.status === 'published') return ['Published', 'neutral'];
+  if (new Date(req.due_at).getTime() < now) return ['Late', 'red'];
+  return req.status === 'drawing' ? ['Drawing', 'solid'] : ['New', 'red'];
+}
+
+/** F24 Wave 4c: why go_live() said no, in the team's words. */
+export function goLiveWords(message) {
+  const m = String(message || '');
+  for (const k of ['add at least one room', 'add a price for', 'link the owner', 'add 8 photos', 'drop the map pin', 'only the Hostelzy team']) {
+    const i = m.indexOf(k);
+    if (i >= 0) {
+      const w = m.slice(i).split(/[\n}]/)[0].trim().replace(/\.$/, '');
+      return `Not live yet: ${w}.`;
+    }
+  }
+  return 'Couldn’t put it live. Check your internet and try again.';
 }

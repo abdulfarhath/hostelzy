@@ -19,9 +19,11 @@ mixin _GuestData {
   /// Hostel page: House rules folded open.
   bool rulesOpen = false;
 
-  /// F21 W4: hostels from the server: ready | loading | offline. Never
-  /// "No hostels" while loading or offline.
+  /// F21 W4: hostels from the server: ready | loading | offline | cached
+  /// (F24: the last list kept on this phone, from [cachedAt]). Never "No
+  /// hostels" while loading or offline.
   String listState = 'ready';
+  DateTime? cachedAt;
 
   /// F21 W4: the last refresh of your holds, payments and stay failed.
   bool liveFailed = false;
@@ -155,6 +157,7 @@ extension GuestActions on AppState {
 
   /// Where? → an area (the map follows it too).
   void pickWhereArea(String a) => update(() {
+    noteSearchedArea(a);
     mapArea = a;
     areaCenter = null;
     mapMoved = false;

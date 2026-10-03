@@ -2,8 +2,8 @@
 // sample hostels (offline, tests); `SupabaseRepo` reads live hostels from the
 // database. Row Level Security decides what each user may read or write.
 
-import 'dart:typed_data';
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -12,11 +12,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
 import '../../data.dart';
 import '../photos/photo.dart';
+import 'cache.dart';
 import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, int> checkers, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -39,6 +40,14 @@ abstract class HostelRepo {
   /// F20: the user's reminder settings, backed up on their profile so a new
   /// phone gets them back. Null on sample data or when nothing is saved.
   Future<void> saveReminders(String uid, Map<String, dynamic> settings);
+
+  /// F24 item 23: the user's own name on their profile.
+  Future<void> saveName(String uid, String name);
+
+  /// F24 Wave 4c: an owner's WhatsApp number when it isn't their phone
+  /// ('' = same as the phone). Null when the server has no such field yet.
+  Future<String?> myWhatsApp(String uid);
+  Future<void> saveWhatsApp(String uid, String wa);
   Future<Map<String, dynamic>?> loadReminders(String uid);
 
   /// This phone's push token (FCM).
@@ -110,7 +119,10 @@ abstract class HostelRepo {
   /// S2: the owner adds a resident on bed [bedKey]. The server matches the
   /// phone to Hostelzy (60 days), opens a Fair Play case when added late, and
   /// books the bed. Returns how it matched.
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn});
+  /// F24 #18: [before] marks someone who lived there before the hostel went
+  /// live ("Joined before Hostelzy"); the server allows it only before
+  /// go-live, and after it for the Hostelzy team.
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false});
 
   /// S3: owner edits. The rate card (keys from [rateKey]) and each room's
   /// type and rent, by room number.
@@ -129,6 +141,11 @@ abstract class HostelRepo {
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
   Future<void> replyReview(String id, String reply);
 
+  /// F24 4a: the author changes their own review; anyone reports one for
+  /// abuse (the Hostelzy team decides).
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
+  Future<void> reportReview(String id, String why);
+
   /// S5: Fair Play. A tenant's private report; the owner's reply (sending a
   /// case the team returned back to them); the owner's 48-hour fix; the
   /// team's decision (`close` | `more` | `strike`, with the result text).
@@ -136,6 +153,12 @@ abstract class HostelRepo {
   Future<void> replyCase(String key, String reply, {bool reopen = false});
   Future<void> fixCase(String key);
   Future<void> decideCase(String key, String hid, String how, String? decision);
+
+  /// F24 #18: the owner's "I agree" to the Fair Play rules, kept on the
+  /// server once per account; and whether this account has agreed (null
+  /// when the server can't say yet).
+  Future<void> acceptFairPlay();
+  Future<bool?> fairAccepted();
 
   /// S8: the owner's one-time manager code, and joining with it (returns the
   /// hostel's name). Throws with the server's reason; [UnsupportedError] on
@@ -165,6 +188,29 @@ abstract class HostelRepo {
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
 
+  /// F24 Wave 4b (F12): one room's published layout for the Room tab. A
+  /// women's PG lists its layouts only to people with a hold there; others
+  /// get room by room (a few a day; then it throws "hold a bed to see more").
+  Future<RoomLayout?> roomLayout(String hid, int room);
+
+  /// F12 one editor at a time: take (or refresh) the room's 10-minute edit
+  /// lock; [mine] false names whoever holds it. Let it go when leaving.
+  Future<({String name, bool mine})> lockLayout(String hid, int room);
+  Future<void> unlockLayout(String hid, int room);
+
+  /// F24 item 27: "Tell me when it's ready" on a room with no layout, and
+  /// the rooms (`hid|room`) this tenant still waits for.
+  Future<void> waitForLayout(String hid, int room);
+  Future<Set<String>> layoutWaits();
+
+  /// F24 item 11: "Ask Hostelzy to draw it" (staff) and the hostel's
+  /// requests, with the team's drawing once sent. Photos go up with
+  /// [uploadFixPhoto]. Publishing the room closes its sent request. The team
+  /// sends a drawing from the app's team mode (or the console).
+  Future<List<ShapeRequest>> shapeRequests(String hid);
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []});
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing);
+
   /// F23: add or change a floor / room amenity (staff or a resident of the
   /// hostel); returns the row id. Residents: at most 20 changes a day.
   Future<String> saveAmenity(Amenity a);
@@ -175,6 +221,11 @@ abstract class HostelRepo {
   Future<List<DayMenu>?> menu(String hid);
   Future<void> saveMenu(String hid, List<DayMenu> week);
 
+  /// F24 Wave 4c: the menu's meal times, b | l | n → (start, end) minutes;
+  /// only the ones set. Staff (and the team) save all three at once.
+  Future<Map<String, (int, int)>> mealTimes(String hid);
+  Future<void> saveMealTimes(String hid, Map<String, String> times);
+
   /// A resident's Good / Okay / Poor for today's [meal] ('b', 'l' or 'n');
   /// staff get this week's counts per meal, never who.
   Future<void> rateMeal(String hid, String meal, String rating);
@@ -182,7 +233,8 @@ abstract class HostelRepo {
 
   /// F24: owners' numbers, only for hostels where this user holds, enquired,
   /// stays or works (DECISIONS F07: the number shows after a hold).
-  Future<Map<String, String>> ownerContacts(List<String> hids);
+  /// F24 Wave 4c: with the owner's WhatsApp number ('' = same as the phone).
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids);
 
   /// F24: the team onboards a hostel: [saveHostel] creates (null [id]) or
   /// updates the draft (basics, rate card, owner's number, rooms); the owner
@@ -193,7 +245,93 @@ abstract class HostelRepo {
   Future<String> joinAsOwner(String code);
   Future<bool> ownerLinked(String hid);
   Future<void> goLive(String hid);
+
+  /// F24 item 5: notice, moves, moving out and the refund.
+  Future<void> giveNotice(DateTime lastDay, String reason);
+  Future<void> askMove(String toBedKey);
+  Future<void> withdrawMove(String id);
+  Future<void> answerMove(String id, bool accept);
+  Future<void> markLeaving(String stayKey, DateTime day);
+  Future<void> movedOut(String stayKey);
+  Future<void> sendRefund(String stayKey, String utr);
+  Future<void> confirmRefund(String stayKey, bool got);
+
+  /// F24 item 6: counts per live hostel (reply speed, complaints, residents,
+  /// photos, rooms, layouts) for the hostel page and the ranking.
+  Future<Map<String, HostelSignals>> signals();
+
+  /// F24 items 20 and 21: per live hostel, its bed count, whether it has the
+  /// featured spot (80+ beds plan) and whether its deals are paused (plan 15+
+  /// days late). Empty before that SQL runs.
+  Future<Map<String, HostelFlags>> flags();
+
+  /// F24 item 17: the hostels where this user is a manager, not the owner
+  /// (plan, deals, rates and Fair Play are the owner's).
+  Future<Set<String>> managedHostels(String uid);
+
+  /// F24 item 9: the owner's "Yes, all free" (every bed of the hostel; the
+  /// server stores its own time) and "All still correct" for the layouts.
+  Future<void> confirmBeds(String hid);
+  Future<void> confirmLayouts(String hid);
+
+  /// F24 Wave 4d (F03): the owner's "Rates still right" (every rate card of
+  /// the hostel; the server stores its own time). Owner only.
+  Future<void> confirmRates(String hid);
+
+  /// F24 item 14: the tenant's "Did you join?" for an ended hold (yes |
+  /// not_yet | deciding), and the holds they already answered. Only the
+  /// Hostelzy team reads the answers.
+  Future<void> answerJoined(String holdId, String answer);
+  Future<Set<String>> joinAnswers();
+  /// F24 #25: meter readings for [month] and the month before (staff: their
+  /// hostel's; a resident: their own room's), and saving a month's readings
+  /// (rooms by number). Throws before the Wave 1 SQL has run.
+  Future<List<MeterRow>> meters(String hid, DateTime month);
+  Future<int> saveMeter(String hid, DateTime month, double rate, List<({int room, int reading})> rows);
+
+  /// F24 #16: the signed-in tenant's level from the server.
+  Future<Level?> myLevel();
+
+  /// F24 #18: a photo with the owner's Fair Play reply (private bucket).
+  Future<String> uploadCasePhoto(String hid, String uid, Uint8List jpg);
+  Future<String?> casePhotoUrl(String path);
+  Future<void> addCasePhoto(String caseKey, String path);
+
+  /// F24 item 7: a fan, the AC or a window Working / Not working, saved for
+  /// tenants; not working raises a complaint. The complaint's date (null when working).
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working);
+
+  /// F24 item 8: the owner keeps a bed for a walk-in (1 hour); when it ends.
+  Future<DateTime> holdWalkIn(String bedKey);
+  Future<void> releaseWalkIn(String bedKey);
+
+  /// F24 item 22: the Settings switches and the areas the tenant searched,
+  /// kept on the profile (null before that SQL runs).
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid);
+  Future<void> saveNotify(String uid, Map<String, bool> notify);
+  Future<void> saveSearchedAreas(String uid, List<String> areas);
+
+  /// F24 item 29: team mode from the server (team accounts only).
+  Future<void> teamHello();
+  Future<List<TeamMember>> teamMembers();
+  Future<void> inviteTeamMember(String name, String phone, String role);
+  Future<List<Lead>> teamTracker();
+  Future<void> setLeadStage(String hid, int stage);
 }
+
+/// F24 item 29: one person on the Hostelzy team.
+typedef TeamMember = ({String name, String phone, String role, bool joined});
+
+/// The tracker's first four stages as `hostel_leads.stage` has them.
+const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
+
+/// F24: real counts behind "Usually replies in ~N min" and the ranking.
+typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
+
+/// F24: the featured spot and paused deals, from `hostel_flags()`.
+typedef HostelFlags = ({int beds, bool featured, bool dealsPaused});
+
+String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
 class SampleRepo implements HostelRepo {
   const SampleRepo();
@@ -209,6 +347,13 @@ class SampleRepo implements HostelRepo {
   Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) => throw UnsupportedError('sample data');
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) async {}
+
+  @override
+  Future<void> saveName(String uid, String name) async {}
+  @override
+  Future<String?> myWhatsApp(String uid) async => null;
+  @override
+  Future<void> saveWhatsApp(String uid, String wa) async {}
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async => null;
   @override
@@ -258,7 +403,7 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> setHoldStatus(String id, String status) async {}
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) => throw UnsupportedError('sample data');
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) => throw UnsupportedError('sample data');
   @override
   Future<void> saveRates(String hid, Map<String, int> rates, Map<int, ({bool ac, int rent})> rooms) async {}
   @override
@@ -276,6 +421,22 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> replyReview(String id, String reply) async {}
   @override
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {}
+  @override
+  Future<void> reportReview(String id, String why) async {}
+  @override
+  Future<List<MeterRow>> meters(String hid, DateTime month) async => const [];
+  @override
+  Future<int> saveMeter(String hid, DateTime month, double rate, List<({int room, int reading})> rows) => throw UnsupportedError('sample data');
+  @override
+  Future<Level?> myLevel() async => null;
+  @override
+  Future<String> uploadCasePhoto(String hid, String uid, Uint8List jpg) => throw UnsupportedError('sample data');
+  @override
+  Future<String?> casePhotoUrl(String path) async => null;
+  @override
+  Future<void> addCasePhoto(String caseKey, String path) async {}
+  @override
   Future<void> sendReport(String hid, String why, String note) async {}
   @override
   Future<void> replyCase(String key, String reply, {bool reopen = false}) async {}
@@ -283,6 +444,10 @@ class SampleRepo implements HostelRepo {
   Future<void> fixCase(String key) async {}
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {}
+  @override
+  Future<void> acceptFairPlay() async {}
+  @override
+  Future<bool?> fairAccepted() async => null;
   @override
   Future<String> managerInvite(String hid, String name, String phone) => throw UnsupportedError('sample data');
   @override
@@ -312,8 +477,27 @@ class SampleRepo implements HostelRepo {
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) async {}
   @override
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
+
+  @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async => const [];
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) => throw UnsupportedError('sample data');
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
+  @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async => null;
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async => (name: '', mine: true);
+  @override
+  Future<void> unlockLayout(String hid, int room) async {}
+  @override
+  Future<void> waitForLayout(String hid, int room) => throw UnsupportedError('sample data');
+  @override
+  Future<Set<String>> layoutWaits() async => {};
 
   @override
   Future<String> saveAmenity(Amenity a) async => a.key ?? a.id;
@@ -326,11 +510,15 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> saveMenu(String hid, List<DayMenu> week) async {}
   @override
+  Future<Map<String, (int, int)>> mealTimes(String hid) async => {};
+  @override
+  Future<void> saveMealTimes(String hid, Map<String, String> times) async {}
+  @override
   Future<void> rateMeal(String hid, String meal, String rating) async {}
   @override
   Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
   @override
-  Future<Map<String, String>> ownerContacts(List<String> hids) async => {};
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {};
   @override
   Future<String> saveHostel(String? id, Map<String, dynamic> p) => throw UnsupportedError('sample data');
   @override
@@ -343,6 +531,60 @@ class SampleRepo implements HostelRepo {
   Future<bool> ownerLinked(String hid) async => false;
   @override
   Future<void> goLive(String hid) => throw UnsupportedError('sample data');
+  @override
+  Future<void> giveNotice(DateTime lastDay, String reason) async {}
+  @override
+  Future<void> askMove(String toBedKey) async {}
+  @override
+  Future<void> withdrawMove(String id) async {}
+  @override
+  Future<void> answerMove(String id, bool accept) async {}
+  @override
+  Future<void> markLeaving(String stayKey, DateTime day) async {}
+  @override
+  Future<void> movedOut(String stayKey) async {}
+  @override
+  Future<void> sendRefund(String stayKey, String utr) async {}
+  @override
+  Future<void> confirmRefund(String stayKey, bool got) async {}
+  @override
+  Future<Map<String, HostelSignals>> signals() async => {};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {};
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {};
+  @override
+  Future<void> confirmBeds(String hid) async {}
+  @override
+  Future<void> confirmLayouts(String hid) async {}
+  @override
+  Future<void> confirmRates(String hid) async {}
+  @override
+  Future<void> answerJoined(String holdId, String answer) async {}
+  @override
+  Future<Set<String>> joinAnswers() async => {};
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async => working ? null : DateTime.now();
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.now().add(const Duration(hours: 1));
+  @override
+  Future<void> releaseWalkIn(String bedKey) async {}
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async => null;
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) async {}
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) async {}
+  @override
+  Future<void> teamHello() async {}
+  @override
+  Future<List<TeamMember>> teamMembers() async => const [];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) async {}
+  @override
+  Future<List<Lead>> teamTracker() async => const [];
+  @override
+  Future<void> setLeadStage(String hid, int stage) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -408,7 +650,7 @@ class SupabaseRepo implements HostelRepo {
       db.from('enquiries').select().order('created_at', ascending: false),
       db.from('payments').select('*, holds(beds(letter, rooms(number, label)))').order('created_at', ascending: false),
       db.from('complaints').select().order('created_at', ascending: false),
-      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').isFilter('left_on', null).order('joined_on', ascending: false),
+      me == null ? Future.value(<Map<String, dynamic>>[]) : db.from('stays').select('*, beds(letter, rooms(number, label))').or('left_on.is.null,refund_status.in.(due,sent,not_received)').order('joined_on', ascending: false),
       db.from('invite_signups').select().eq('status', 'pending').order('created_at', ascending: false),
       db.from('invoices').select(),
       db.from('owner_plans').select('hostel_id, trial_ends'),
@@ -419,12 +661,22 @@ class SupabaseRepo implements HostelRepo {
       db.from('reward_ledger').select().order('created_at'),
       db.from('layout_fixes').select().neq('status', 'withdrawn').order('created_at'),
       db.from('layout_fix_mutes').select('hostel_id, user_id, name'),
+      // F24: notices and moves; empty before its SQL runs.
+      db.from('move_requests').select('*, stays(name, beds(letter, rooms(number, label)))').neq('status', 'withdrawn').order('created_at', ascending: false).limit(100).then((v) => v, onError: (_) => <Map<String, dynamic>>[]),
     ]);
-    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], mutes: r[14], me: me);
+    return liveFromRows(holds: r[0], enquiries: r[1], payments: r[2], complaints: r[3], stays: r[4], signups: r[5], invoices: r[6], plans: r[7], cases: r[8], staff: r[9], managers: r[10], profile: me == null ? null : r[11], ledger: r[12], fixes: r[13], mutes: r[14], moves: r[15], me: me);
   }
 
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
+    // F24 4a: the server reuses the tenant's open enquiry for this bed, or
+    // records a new one and sets its HZ code.
+    try {
+      return await db.rpc('send_enquiry', params: {'p_hostel': hid, 'p_name': name, 'p_phone': phone, 'p_bed': bed, 'p_source': source, 'p_msg': msg}) as String;
+    } on PostgrestException catch (e) {
+      // Until FOUNDER-TODO 4zr1 runs there is no send_enquiry: insert as before.
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+    }
     // The server sets the HZ code (B5); 'new' is replaced.
     final row = await db.from('enquiries').insert({'hostel_id': hid, 'ref': 'new', 'name': name, 'phone': phone, 'bed': bed, 'source': source, 'msg': msg}).select('ref').single();
     return row['ref'] as String;
@@ -481,10 +733,10 @@ class SupabaseRepo implements HostelRepo {
   Future<void> setHoldStatus(String id, String status) => db.from('holds').update({'status': status}).eq('id', id);
 
   @override
-  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn}) async {
+  Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
     final r = await db
         .from('stays')
-        .insert({'hostel_id': hid, 'bed_id': bedKey, 'name': name, 'phone': phone, 'rent': rent, 'advance': advance, 'joined_on': '${joinedOn.year}-${'${joinedOn.month}'.padLeft(2, '0')}-${'${joinedOn.day}'.padLeft(2, '0')}'})
+        .insert({'hostel_id': hid, 'bed_id': bedKey, 'name': name, 'phone': phone, 'rent': rent, 'advance': advance, if (before) 'via': 'before', 'joined_on': '${joinedOn.year}-${'${joinedOn.month}'.padLeft(2, '0')}-${'${joinedOn.day}'.padLeft(2, '0')}'})
         .select('via, late_days')
         .single();
     return (via: r['via'] as String, lateDays: r['late_days'] as int);
@@ -523,6 +775,13 @@ class SupabaseRepo implements HostelRepo {
   Future<void> replyReview(String id, String reply) => db.from('reviews').update({'reply': reply}).eq('id', id);
 
   @override
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) =>
+      db.from('reviews').update({'stars': stars, 'body': body, 'cats': cats, 'layout': layout, 'advance': advance, 'again': again}).eq('id', id);
+
+  @override
+  Future<void> reportReview(String id, String why) => db.rpc('report_review', params: {'p_review': id, 'p_why': why});
+
+  @override
   Future<void> sendReport(String hid, String why, String note) => db.from('fair_reports').insert({'hostel_id': hid, 'why': why, 'note': note});
 
   @override
@@ -533,8 +792,31 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> decideCase(String key, String hid, String how, String? decision) async {
-    if (how == 'strike') await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
+    if (how == 'strike') {
+      try {
+        // F24 #18: the server adds the strike and writes what it means.
+        await db.rpc('give_strike', params: {'p_case': key});
+        return;
+      } on PostgrestException catch (e) {
+        // Before its SQL runs (FOUNDER-TODO 4zf1) the function isn't there.
+        if (!_missingFn(e)) rethrow;
+      }
+      await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
+    }
     await db.from('fair_cases').update({'status': how == 'more' ? 'waiting' : 'closed', 'decision': decision}).eq('id', key);
+  }
+
+  @override
+  Future<void> acceptFairPlay() => db.rpc('accept_fair_play');
+
+  @override
+  Future<bool?> fairAccepted() async {
+    try {
+      return (await db.from('fair_play_accepts').select('user_id').limit(1)).isNotEmpty;
+    } on PostgrestException catch (e) {
+      debugPrint('fair play accepted: ${e.message}');
+      return null;
+    }
   }
 
   @override
@@ -589,6 +871,44 @@ class SupabaseRepo implements HostelRepo {
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
 
   @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async {
+    final rows = (await db.rpc('room_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    return rows.isEmpty ? null : layoutFromRow(hid, rows.first);
+  }
+
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async {
+    final rows = (await db.rpc('lock_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    final r = rows.first;
+    return (name: r['name'] as String? ?? '', mine: r['mine'] as bool? ?? false);
+  }
+
+  @override
+  Future<void> unlockLayout(String hid, int room) => db.rpc('unlock_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<void> waitForLayout(String hid, int room) => db.rpc('wait_for_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<Set<String>> layoutWaits() async {
+    final rows = (await db.from('layout_waits').select('hostel_id, room').isFilter('told_at', null) as List).cast<Map<String, dynamic>>();
+    return {for (final r in rows) '${r['hostel_id']}|${r['room']}'};
+  }
+
+  @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async {
+    final rows = await db.from('shape_requests').select().eq('hostel_id', hid).order('created_at');
+    return [for (final r in rows) shapeRequestFromRow(r)];
+  }
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) async =>
+      await db.rpc('request_shape', params: {'p_hostel': hid, 'p_room': room, 'p_shape': shape, 'p_note': note, 'p_w': w, 'p_h': h, 'p_photos': photos}) as String;
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) => db.rpc('send_shape_drawing', params: {'p_id': id, 'p_drawing': drawing});
+
+  @override
   Future<String> saveAmenity(Amenity a) async => await db.rpc('save_amenity', params: {
     'p_hostel': a.hid,
     'p_id': a.key,
@@ -629,15 +949,36 @@ class SupabaseRepo implements HostelRepo {
       debugPrint('listings without amenities: ${e.message}');
       rows = await db.from('hostels').select(base);
     }
-    // S5: strike counts are public (they hide deals and listings).
-    final st = await db.rpc('strike_counts') as List;
+    // S5: strike counts are public (they hide deals and listings). F24 #18:
+    // fair_standing adds when strike 2's 30 days of hidden deals end; before
+    // its SQL runs (FOUNDER-TODO 4zf1) the plain counts are used.
+    List st;
+    var standing = <String, Standing>{};
+    try {
+      st = await db.rpc('fair_standing') as List;
+      standing = standingFromRows(st.cast<Map>());
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      st = await db.rpc('strike_counts') as List;
+    }
     // F19: "Checked by N residents · date" per room.
     final ck = await db.rpc('layout_checks') as List;
     final checks = <String, Map<int, (int, String)>>{};
     for (final r in ck.cast<Map>()) {
       (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
     }
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks);
+    // F24 #15: how many different residents checked the hostel's layouts.
+    final checkers = <String, int>{};
+    try {
+      for (final r in (await db.rpc('hostel_layout_checks') as List).cast<Map>()) {
+        checkers[r['hostel_id'] as String] = r['n'] as int;
+      }
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+    }
+    // F24 item 30: kept on the phone for the next time there's no network.
+    unawaited(saveListingRows(rows));
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, checkers: checkers, standing: standing);
   }
 
   @override
@@ -653,6 +994,14 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) => db.from('profiles').update({'reminders': settings}).eq('id', uid);
+
+  // "edit own profile" lets a user update their own row; guard_profile leaves the name alone.
+  @override
+  Future<void> saveName(String uid, String name) => db.from('profiles').update({'name': name}).eq('id', uid);
+  @override
+  Future<String?> myWhatsApp(String uid) async => (await db.from('profiles').select('whatsapp').eq('id', uid).maybeSingle())?['whatsapp'] as String?;
+  @override
+  Future<void> saveWhatsApp(String uid, String wa) => db.from('profiles').update({'whatsapp': wa}).eq('id', uid);
 
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async {
@@ -675,6 +1024,19 @@ class SupabaseRepo implements HostelRepo {
   ], onConflict: 'hostel_id,day');
 
   @override
+  Future<Map<String, (int, int)>> mealTimes(String hid) async {
+    final r = await db.from('menus').select('breakfast_time, lunch_time, dinner_time').eq('hostel_id', hid).limit(1).maybeSingle();
+    if (r == null) return {};
+    return {
+      for (final (k, c) in const [('b', 'breakfast_time'), ('l', 'lunch_time'), ('n', 'dinner_time')])
+        k: ?parseMealTime(r[c] as String?),
+    };
+  }
+
+  @override
+  Future<void> saveMealTimes(String hid, Map<String, String> times) => db.rpc('save_meal_times', params: {'p_hostel': hid, 'p': times});
+
+  @override
   Future<void> rateMeal(String hid, String meal, String rating) => db.rpc('rate_meal', params: {'p_hostel': hid, 'p_meal': meal, 'p_rating': rating});
 
   @override
@@ -687,9 +1049,9 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<Map<String, String>> ownerContacts(List<String> hids) async => {
+  Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {
     for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
-      if ((r['phone'] as String? ?? '').isNotEmpty) r['hostel_id'] as String: r['phone'] as String,
+      if ('${r['phone'] ?? ''}${r['whatsapp'] ?? ''}'.isNotEmpty) r['hostel_id'] as String: (phone: r['phone'] as String? ?? '', wa: r['whatsapp'] as String? ?? ''),
   };
 
   @override
@@ -704,10 +1066,126 @@ class SupabaseRepo implements HostelRepo {
   Future<bool> ownerLinked(String hid) async => (await db.from('hostel_staff').select('user_id').eq('hostel_id', hid).eq('role', 'owner').limit(1)).isNotEmpty;
   @override
   Future<void> goLive(String hid) => db.rpc('go_live', params: {'h': hid});
+  @override
+  Future<void> giveNotice(DateTime lastDay, String reason) => db.rpc('give_notice', params: {'p_last_day': _ymd(lastDay), 'p_reason': reason});
+  @override
+  Future<void> askMove(String toBedKey) => db.rpc('ask_move', params: {'p_to_bed': toBedKey});
+  @override
+  Future<void> withdrawMove(String id) => db.rpc('withdraw_move', params: {'p_id': id});
+  @override
+  Future<void> answerMove(String id, bool accept) => db.rpc('answer_move', params: {'p_id': id, 'p_accept': accept});
+  @override
+  Future<void> markLeaving(String stayKey, DateTime day) => db.rpc('mark_leaving', params: {'p_stay': stayKey, 'p_day': _ymd(day)});
+  @override
+  Future<void> movedOut(String stayKey) => db.rpc('moved_out', params: {'p_stay': stayKey});
+  @override
+  Future<void> sendRefund(String stayKey, String utr) => db.rpc('send_refund', params: {'p_stay': stayKey, 'p_utr': utr});
+  @override
+  Future<void> confirmRefund(String stayKey, bool got) => db.rpc('confirm_refund', params: {'p_stay': stayKey, 'p_got': got});
+  @override
+  Future<List<MeterRow>> meters(String hid, DateTime month) async => [
+    for (final r in await db.from('meter_readings').select('*, rooms(number)').eq('hostel_id', hid).gte('month', _ymd(DateTime(month.year, month.month - 1))).lte('month', _ymd(DateTime(month.year, month.month))).order('month')) meterFromRow(r),
+  ];
+  @override
+  Future<int> saveMeter(String hid, DateTime month, double rate, List<({int room, int reading})> rows) async =>
+      (await db.rpc('save_meter', params: {'p_hostel': hid, 'p_month': _ymd(DateTime(month.year, month.month)), 'p_rate': rate, 'p_rows': [for (final r in rows) {'room': r.room, 'reading': r.reading}]}) as num).toInt();
+  @override
+  Future<Level?> myLevel() async {
+    final r = await db.rpc('my_level');
+    return r is Map ? levelFrom(r.cast<String, dynamic>()) : null;
+  }
+
+  @override
+  Future<String> uploadCasePhoto(String hid, String uid, Uint8List jpg) async {
+    final path = '$hid/$uid/${DateTime.now().microsecondsSinceEpoch}.jpg';
+    await db.storage.from('case-photos').uploadBinary(path, jpg, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    return path;
+  }
+
+  @override
+  Future<String?> casePhotoUrl(String path) async => db.storage.from('case-photos').createSignedUrl(path, 3600);
+  @override
+  Future<void> addCasePhoto(String caseKey, String path) => db.rpc('case_photo', params: {'p_case': caseKey, 'p_path': path});
+  @override
+  Future<Map<String, HostelSignals>> signals() async => {
+    for (final r in (await db.rpc('hostel_signals') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (replyMin: r['reply_minutes'] as int? ?? 0, replyN: r['reply_n'] as int? ?? 0, complaints30: r['complaints_30d'] as int? ?? 0, residents: r['residents'] as int? ?? 0, photos: r['photos'] as int? ?? 0, rooms: r['rooms'] as int? ?? 0, layouts: r['layouts'] as int? ?? 0),
+  };
+  // Staff may update their beds; the server stamps the time (F24 SQL 4zy1).
+  @override
+  Future<void> confirmBeds(String hid) => db.from('beds').update({'confirmed_at': DateTime.now().toUtc().toIso8601String()}).eq('hostel_id', hid);
+  @override
+  Future<void> confirmLayouts(String hid) => db.rpc('confirm_layouts', params: {'p_hostel': hid});
+  @override
+  Future<void> confirmRates(String hid) => db.rpc('confirm_rates', params: {'p_hostel': hid});
+  @override
+  Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
+  @override
+  Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {
+    for (final r in (await db.rpc('hostel_flags') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (beds: r['beds'] as int? ?? 0, featured: r['featured'] == true, dealsPaused: r['deals_paused'] == true),
+  };
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {
+    for (final r in await db.from('hostel_staff').select('hostel_id').eq('user_id', uid).eq('role', 'manager')) r['hostel_id'] as String,
+  };
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {
+    final at = await db.rpc('set_item_working', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_working': working});
+    return at == null ? null : DateTime.parse(at as String).toLocal();
+  }
+
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.parse(await db.rpc('hold_walk_in', params: {'p_bed': bedKey}) as String).toLocal();
+  @override
+  Future<void> releaseWalkIn(String bedKey) => db.rpc('release_walk_in', params: {'p_bed': bedKey});
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async {
+    final r = await db.from('profiles').select('notify, searched_areas').eq('id', uid).maybeSingle();
+    if (r == null) return null;
+    return (
+      notify: {for (final e in ((r['notify'] as Map?) ?? const {}).entries) if (e.value is bool) e.key as String: e.value as bool},
+      areas: [for (final a in (r['searched_areas'] as List? ?? const [])) a as String],
+    );
+  }
+
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) => db.from('profiles').update({'notify': notify}).eq('id', uid);
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) => db.from('profiles').update({'searched_areas': areas}).eq('id', uid);
+  @override
+  Future<void> teamHello() => db.rpc('team_hello');
+  @override
+  Future<List<TeamMember>> teamMembers() async => [
+    for (final r in await db.from('team_members').select().order('created_at'))
+      (name: r['name'] as String? ?? '', phone: r['phone'] as String? ?? '', role: r['role'] as String? ?? 'Everything', joined: r['joined_at'] != null),
+  ];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) => db.from('team_members').insert({'name': name, 'phone': phone, 'role': role});
+  @override
+  Future<List<Lead>> teamTracker() async => [for (final r in (await db.rpc('team_tracker') as List).cast<Map<String, dynamic>>()) leadFromRow(r)];
+  @override
+  Future<void> setLeadStage(String hid, int stage) => db.from('hostel_leads').upsert({'hostel_id': hid, 'stage': leadStages[stage], 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+}
+
+/// F24 item 29: a `team_tracker()` row → the tracker's [Lead]. With no next
+/// step noted, the stage says what comes next.
+Lead leadFromRow(Map<String, dynamic> r) {
+  final stage = (r['stage'] as num?)?.toInt() ?? 0;
+  final trial = r['trial_ends'] == null ? null : DateTime.parse(r['trial_ends'] as String);
+  final note = (r['next_step'] as String? ?? '').trim();
+  final next = stage == 5 && trial != null
+      ? 'Trial ends ${dayMon(trial)}'
+      : note.isNotEmpty
+      ? note
+      : const ['Visit the hostel', 'Sign up the owner', 'Add rooms, rates and photos', 'Go live', 'Start the trial', 'Trial running', 'Paying'][stage.clamp(0, 6)];
+  return Lead(r['name'] as String? ?? '', r['area'] as String? ?? '', next, stage, hid: r['hostel_id'] as String?);
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, int> checkers = const {}, Map<String, Standing> standing = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -715,7 +1193,8 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final reviews = <String, List<Review>>{};
   for (final h in rows) {
     // S4: verified residents' reviews, newest first; the rating comes from them.
-    final revRows = (h['reviews'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
+    // F24 4a: reviews the team hid (abuse, duplicates) never count.
+    final revRows = (h['reviews'] as List? ?? const []).cast<Map<String, dynamic>>().where((r) => r['hidden'] != true).toList()..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
     final revs = reviews[h['id'] as String] = [for (final r in revRows) reviewFromRow(r)];
     final id = h['id'] as String;
     final rs = <Room>[
@@ -743,12 +1222,18 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
                   state: b['state'] as String? ?? 'free',
                   soon: b['free_from'] == null ? '' : dayMon(DateTime.parse(b['free_from'] as String)),
                   key: b['id'] as String?,
-                ),
+                )
+                  ..freedAt = b['freed_at'] == null ? null : DateTime.parse(b['freed_at'] as String).toLocal()
+                  ..walkInUntil = b['walk_in_until'] == null ? 0 : DateTime.parse(b['walk_in_until'] as String).millisecondsSinceEpoch,
             ],
-          );
+          )..acSince = r['ac_repair_since'] == null ? '' : dayMon(DateTime.parse(r['ac_repair_since'] as String));
         }(),
     ]..sort((a, b) => a.n.compareTo(b.n));
-    final rate = <String, int>{for (final c in (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>()) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    final cards = (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>();
+    final rate = <String, int>{for (final c in cards) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    // F24 Wave 4d: the oldest card's confirmation (a card never confirmed: none).
+    final ratesTracked = cards.isNotEmpty && cards.every((c) => c.containsKey('confirmed_at'));
+    final ratesAt = ratesTracked && cards.every((c) => c['confirmed_at'] != null) ? _latest([for (final c in cards) c['confirmed_at']], oldest: true) : null;
     final prices = [...rate.values, ...rs.map((r) => r.rent)];
     final t = (h['terms'] as Map?)?.cast<String, dynamic>() ?? const {};
     final area = h['area'] as String;
@@ -781,6 +1266,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           electricityExtra: t['electricityExtra'] as bool? ?? true,
         ),
         live: (h['status'] as String? ?? 'live') == 'live',
+        // F24 item 9: the owner's confirmations, from the server.
+        bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
+        layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),
+        ratesCheckedAt: ratesAt,
+        ratesTracked: ratesTracked,
         visitedOn: h['visited_on'] == null ? '' : () {
           final v = DateTime.parse(h['visited_on'] as String);
           return '${dayMon(v)} ${v.year}';
@@ -806,7 +1296,17 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final ams = <String, List<Amenity>>{
     for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
   };
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, checkers: checkers, amenities: ams, standing: standing);
+}
+
+/// The newest (or [oldest]) of some timestamps; null when there are none.
+DateTime? _latest(List<Object?> ts, {bool oldest = false}) {
+  DateTime? out;
+  for (final t in ts) {
+    final d = t is String ? DateTime.tryParse(t) : null;
+    if (d != null && (out == null || (oldest ? d.isBefore(out) : d.isAfter(out)))) out = d;
+  }
+  return out;
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in
@@ -819,8 +1319,29 @@ RoomLayout layoutFromRow(String hid, Map<String, dynamic> r) {
   ];
   final at = DateTime.tryParse(r['updated_at'] as String? ?? '');
   return RoomLayout(hid: hid, room: r['room'] as int, w: n(r['w']).toDouble(), h: n(r['h']).toDouble(), beds: beds, items: items, version: r['version'] as int? ?? 1, drawn: at == null ? '' : dayMon(at), verified: at == null ? '' : dayMon(at))
-    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String});
+    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String})
+    // F24: rows from before shapes have none: a rectangle.
+    ..shape = r['shape'] as String? ?? 'Rectangle'
+    ..outline = outlineFromJson(r['outline'])
+    // F24 4a: residents' "layout is wrong" answers since it was last published.
+    ..disputes = r['disputes'] as int? ?? 0;
 }
+
+/// F24: a `shape_requests` row → [ShapeRequest].
+ShapeRequest shapeRequestFromRow(Map<String, dynamic> r) => ShapeRequest(
+  id: r['id'] as String,
+  hid: r['hostel_id'] as String,
+  room: r['room'] as int,
+  shape: r['shape'] as String? ?? 'Custom',
+  note: r['note'] as String? ?? '',
+  w: (r['w'] as num? ?? 0).toDouble(),
+  h: (r['h'] as num? ?? 0).toDouble(),
+  photos: [for (final x in (r['photos'] as List? ?? const [])) x as String],
+  status: r['status'] as String? ?? 'requested',
+  at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
+  drawing: (r['drawing'] as Map?)?.cast<String, dynamic>(),
+  sentAt: r['sent_at'] == null ? null : DateTime.parse(r['sent_at'] as String).millisecondsSinceEpoch,
+);
 
 RemoteSettings settingsFromRows(List<Map<String, dynamic>> rows) {
   final m = {for (final r in rows) r['key'] as String: r['value'] as String? ?? ''};
@@ -853,3 +1374,21 @@ List<DayMenu>? menuFromRows(List<Map<String, dynamic>> rows) {
   }
   return w;
 }
+
+/// F24 #18: a hostel's Fair Play standing from `fair_standing()`: when strike
+/// 2's hidden deals come back ([until], null when not on strike 2) and why the
+/// last strike came (`case` | `fixes`, "3 fixes in 6 months").
+typedef Standing = ({DateTime? until, bool dealsHidden, bool removed, String? why});
+
+Map<String, Standing> standingFromRows(Iterable<Map> rows) => {
+  for (final r in rows)
+    r['hostel_id'] as String: (
+      until: r['hidden_until'] == null ? null : DateTime.parse(r['hidden_until'] as String).toLocal(),
+      dealsHidden: r['deals_hidden'] as bool? ?? false,
+      removed: r['removed'] as bool? ?? false,
+      why: r['last_reason'] as String?,
+    ),
+};
+
+/// A function the app calls isn't on the server yet (its SQL hasn't run).
+bool _missingFn(PostgrestException e) => e.code == 'PGRST202' || e.code == '42883' || e.message.contains('Could not find the function');

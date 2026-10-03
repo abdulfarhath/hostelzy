@@ -84,15 +84,67 @@ extension HoldsActions on AppState {
   void ownerReleaseBed(String hid, Bed b) {
     final h = holds.where((x) => x.hid == hid && x.bed == b.id && x.status != 'released').firstOrNull;
     if (h != null) return releaseHold(h);
-    walkIns.remove('$hid|${b.id}');
-    update(() => _freeBed(hid, b.id));
+    final k = '$hid|${b.id}';
+    final was = walkIns.remove(k);
+    final before = _bedBefore[k] ?? 'free';
+    update(() {
+      _freeBed(hid, b.id);
+      b.walkInUntil = 0;
+    });
+    // F24 item 8: a walk-in hold on the server ends there too.
+    final key = b.key;
+    if (!onServer || key == null || isSeedHostel(hid)) return;
+    data.releaseWalkIn(key).then((_) {}, onError: (Object e) {
+      debugPrint('walk-in release: $e');
+      update(() {
+        b.state = 'held';
+        if (was != null) {
+          walkIns[k] = was;
+          _bedBefore[k] = before;
+        }
+      });
+      toastMsg('Couldn’t release it. Check your internet and try again.');
+    });
   }
 
   /// Owner holds a bed for a walk-in for one hour; it frees itself after (F8).
+  /// F24 item 8: on the server every tenant sees it held, and the server
+  /// ends it after the hour.
   void holdWalkIn(String hid, Bed b) {
-    _bedBefore['$hid|${b.id}'] = b.state;
-    walkIns['$hid|${b.id}'] = DateTime.now().millisecondsSinceEpoch + 3600 * 1000;
+    final k = '$hid|${b.id}';
+    final before = b.state;
+    _bedBefore[k] = before;
+    walkIns[k] = DateTime.now().millisecondsSinceEpoch + 3600 * 1000;
     update(() => b.state = 'held');
+    final key = b.key;
+    if (!onServer || key == null || isSeedHostel(hid)) return;
+    data.holdWalkIn(key).then((until) {
+      if (walkIns.containsKey(k)) update(() => walkIns[k] = b.walkInUntil = until.millisecondsSinceEpoch);
+    }, onError: (Object e) {
+      debugPrint('walk-in: $e');
+      walkIns.remove(k);
+      _bedBefore.remove(k);
+      update(() => b.state = before);
+      toastMsg('$e'.contains("isn't free") ? 'Bed ${b.id} isn’t free any more.' : 'Couldn’t hold it. Check your internet and try again.');
+    });
+  }
+
+  /// F24 item 8: walk-in holds the server has for the owner's hostels (after
+  /// the hostels load), so the countdown and Release work on any phone.
+  void syncWalkIns() {
+    final n = DateTime.now().millisecondsSinceEpoch;
+    for (final hid in ownerHostels) {
+      for (final r in rooms[hid] ?? const <Room>[]) {
+        for (final b in r.beds) {
+          final k = '$hid|${b.id}';
+          if (b.walkInUntil > n && b.state == 'held') {
+            walkIns[k] = b.walkInUntil;
+          } else if (b.key != null && b.state != 'held') {
+            walkIns.remove(k);
+          }
+        }
+      }
+    }
   }
 
   bool _expireWalkIns(int n) {

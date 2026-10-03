@@ -43,10 +43,10 @@ Future<Uint8List> residentPoster({required String hostel, required String link})
           pw.Container(
             color: red,
             padding: const pw.EdgeInsets.all(14),
-            child: pw.Text('Scan  >  Verify your phone  >  Confirm your bed', style: st(18, b: true, c: PdfColors.white)),
+            child: pw.Text('Scan  >  Sign in with Google, one tap  >  Confirm your bed', style: st(18, b: true, c: PdfColors.white)),
           ),
           pw.Spacer(),
-          pw.Text('Hostelzy never asks for your OTP or password.', style: st(12, b: true)),
+          pw.Text('Hostelzy never asks for your password or UPI PIN.', style: st(12, b: true)),
         ],
       ),
     ),

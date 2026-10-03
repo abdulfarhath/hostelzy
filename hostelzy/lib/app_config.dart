@@ -38,6 +38,12 @@ const maintenanceUntil = ''; // e.g. '6:30 pm'; empty = no maintenance
 /// NEVER put the service_role key in the app or the repo. Override per build:
 /// `--dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…`.
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://oafiaczotlilomlvhphp.supabase.co');
+
+/// F24 item 31: which backend this build talks to: `production` (default) or
+/// `staging` (a second Supabase project for trying changes; set by the Play
+/// build workflow with its own SUPABASE_URL / SUPABASE_ANON_KEY).
+const appEnv = String.fromEnvironment('HZ_ENV', defaultValue: 'production');
+bool get isStaging => appEnv == 'staging';
 const supabaseAnonKey = String.fromEnvironment(
   'SUPABASE_ANON_KEY',
   defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZmlhY3pvdGxpbG9tbHZocGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTk4NjMsImV4cCI6MjEwNjQ5NTg2M30.pG_zORLu3ww6vxVNl4aNNekNirwGAWVC0KTRYAipKYo',

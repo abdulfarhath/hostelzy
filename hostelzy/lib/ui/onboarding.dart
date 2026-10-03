@@ -186,16 +186,20 @@ class _Basics extends StatelessWidget {
               ),
             ],
           ),
+          // F24 Wave 4c: house rules typed on the visit go on the server too.
+          _field('Visitors', d.visitors, (v) => s.update(() => d.visitors = v), ph: 'Common area only, till 8 pm'),
+          // F24 Wave 4c (board `aPin`): the real pin, dropped at the gate.
           Cta(
-            d.pinChecked ? 'Map pin · checked at the gate' : 'Map pin · check it at the gate',
-            icon: d.pinChecked ? 'check' : 'pin',
+            d.pin != null ? 'Map pin · dropped at the gate' : 'Map pin · drop it at the gate',
+            key: const ValueKey('aAddPin'),
+            icon: d.pin != null ? 'check' : 'pin',
             height: 48,
             px: 16,
             fs: 14,
             bg: transparent,
             fg: p.tx,
             border: p.tx,
-            onTap: () => s.update(() => d.pinChecked = !d.pinChecked),
+            onTap: s.openPin,
           ),
           _label('Amenities'),
           Wrap(
@@ -747,7 +751,9 @@ class _OwnerAccount extends StatelessWidget {
         children: [
           T('The owner runs ${d.name.trim().isEmpty ? 'the hostel' : d.name.trim()} from their phone: beds, rent, residents and enquiries. They sign in with Google; no password.', s: 14, c: p.mu, lh: 1.45),
           VGap(gap: 6, children: [const T('Owner’s name', w: 800, s: 13), Field(key: const ValueKey('ownerName'), value: d.ownerName, placeholder: 'As tenants will see it', onChanged: (v) => s.update(() => d.ownerName = v))]),
-          VGap(gap: 6, children: [const T('Owner’s WhatsApp number', w: 800, s: 13), Field(key: const ValueKey('ownerPhone6'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), '')))]),
+          VGap(gap: 6, children: [const T('Owner’s phone', w: 800, s: 13), Field(key: const ValueKey('ownerPhone6'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = v.replaceAll(RegExp(r'\D'), '')))]),
+          // F24 Wave 4c: only when they chat on another number.
+          VGap(gap: 6, children: [const T('WhatsApp, if different', w: 800, s: 13), Field(key: const ValueKey('ownerWa6'), value: d.ownerWa, numeric: true, placeholder: 'Same as phone', onChanged: (v) => s.update(() => d.ownerWa = v.replaceAll(RegExp(r'\D'), '')))]),
           Container(
             key: const ValueKey('ownerStatus'),
             padding: const EdgeInsets.all(12),
@@ -797,7 +803,7 @@ class _GoLive extends StatelessWidget {
       (s.draftPhotos >= HostelDraft.minPhotos, '${HostelDraft.minPhotos} photos', s.draftPhotos >= HostelDraft.minPhotos ? '${s.draftPhotos} of ${HostelDraft.minPhotos}' : '${s.draftPhotos} of ${HostelDraft.minPhotos}${s.onServer ? '' : ' · add $missingPhotos'}', () => s.update(() => s.addStep = 4)),
       (d.missingPrices.isEmpty, 'Every room type has a price', d.missingPrices.isEmpty ? '${d.types.length} of ${d.types.length}' : '${d.missingPrices.map(d.typeLabel).join(', ')} has no price', () => s.update(() => s.addStep = 3)),
       (d.bedsChecked, 'Bed status checked on the visit', '$taken taken · ${d.bedCount - taken} free · 0 on hold', () => s.update(() => d.bedsChecked = !d.bedsChecked)),
-      (d.pinChecked, 'Map pin checked at the gate', d.pinChecked ? 'Done' : 'Check the pin at the gate', () => s.update(() => d.pinChecked = !d.pinChecked)),
+      (d.pinChecked && d.pin != null, 'Map pin dropped at the gate', d.pin != null ? '${d.pin!.$1.toStringAsFixed(5)}, ${d.pin!.$2.toStringAsFixed(5)}' : 'Drop the pin at the gate', s.openPin),
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -908,10 +914,11 @@ class VisitedBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           color: stale ? p.ab : p.sf,
           child: stale
-              ? Rich([sp(context, 'Availability not confirmed', w: 800, c: p.ad), sp(context, ' · owner hasn’t confirmed for ${days ?? staleAfterDays} days. Ask before you visit.')], s: 13, lh: 1.4)
+              ? Rich([sp(context, 'Availability not confirmed', w: 800, c: p.ad), sp(context, ' · owner hasn’t confirmed for $days days. Ask before you visit.')], s: 13, lh: 1.4)
               : Rich(
                   [
                     sp(context, '$free free ${free == 1 ? 'bed' : 'beds'}', w: 800),
+                    if (days != null)
                     sp(
                       context,
                       ' · confirmed by the owner ${days == 0
@@ -925,6 +932,12 @@ class VisitedBlock extends StatelessWidget {
                   lh: 1.4,
                 ),
         ),
+        // F24 #15 (Design v22 r-detail): residents' approved layout fixes, from the server.
+        if (s.hostelCheckedLabel(h.id) case final ck?)
+          Row(
+            key: const ValueKey('hostelChecked'),
+            children: [Ic('check', size: 16, color: p.tx), const SizedBox(width: 8), Expanded(child: T(ck, s: 13, w: 700))],
+          ),
       ],
     );
   }
@@ -941,7 +954,7 @@ class FreeBedsCard extends StatelessWidget {
     if (!s.needsConfirm(hid)) return const SizedBox();
     final free = s.rooms[hid]!.expand((r) => r.beds).where((b) => b.state == 'free').toList();
     final n = free.length;
-    final days = s.confirmed[hid]!;
+    final days = s.confirmed[hid];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(12),
@@ -950,7 +963,7 @@ class FreeBedsCard extends StatelessWidget {
         gap: 8,
         children: [
           T('Still $n free ${n == 1 ? 'bed' : 'beds'}?', w: 800, s: 18),
-          T('Last confirmed $days days ago. Fresh beds rank higher.', s: 13, c: p.mu),
+          T(days == null ? 'Not confirmed yet. Fresh beds rank higher.' : 'Last confirmed $days days ago. Fresh beds rank higher.', s: 13, c: p.mu),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -973,6 +986,56 @@ class FreeBedsCard extends StatelessWidget {
             ],
           ),
           T('Not confirmed for $staleAfterDays days: tenants see “Availability not confirmed” and you rank lower.', s: 12, c: p.mu, lh: 1.4),
+        ],
+      ),
+    );
+  }
+}
+
+/// F03 (F24 Wave 4d): "Are your rates still right?" on owner Today, monthly.
+/// Owner only (rates are the owner's, Wave 3a).
+class RatesConfirmCard extends StatelessWidget {
+  const RatesConfirmCard({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final hid = s.ownHid;
+    if (!s.needsRatesConfirm(hid)) return const SizedBox();
+    final at = s.ratesConfirmedAt[hid];
+    final rc = s.rates[hid] ?? const <String, int>{};
+    final keys = rc.keys.toList()..sort((a, b) => (a.startsWith('ac') ? 1 : 0).compareTo(b.startsWith('ac') ? 1 : 0));
+    return Container(
+      key: const ValueKey('ratesCard'),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(
+        gap: 8,
+        children: [
+          const T('Are your rates still right?', w: 800, s: 18),
+          T(at == null ? 'Not confirmed yet. Tenants see the date you last confirmed them.' : 'Last confirmed ${dayMon(at.toLocal())}. Tenants see the date you last confirmed them.', s: 13, c: p.mu, lh: 1.4),
+          if (keys.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final k in keys)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    decoration: box(w: 1, c: p.tx),
+                    child: T('${k.replaceFirst(RegExp('^(ac|non)'), '')} sharing ${k.startsWith('ac') ? 'AC' : 'non-AC'} · ${fmt(rc[k]!)}', s: 12, w: 800),
+                  ),
+              ],
+            ),
+          Row(
+            children: [
+              Expanded(child: Cta('Rates still right', icon: 'check', height: 46, px: 12, fs: 14, onTap: () => s.confirmRates(hid))),
+              const SizedBox(width: 8),
+              Cta('Change', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: s.openRates),
+            ],
+          ),
+          T('Not confirmed for a month: tenants see “Not confirmed in over a month” on your prices.', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );
@@ -1178,7 +1241,7 @@ class ManagerSheet extends StatelessWidget {
             ],
           ),
           Cta('Send invite', icon: 'msg', height: 54, px: 16, fs: 15, onTap: s.addManager),
-          T('${s.mgrName.trim().isEmpty ? 'They' : s.mgrName.trim()} join${s.mgrName.trim().isEmpty ? '' : 's'} by signing in with this number (OTP).', s: 12, c: p.mu),
+          T('${s.mgrName.trim().isEmpty ? 'They' : s.mgrName.trim()} join${s.mgrName.trim().isEmpty ? '' : 's'} by signing in with Google and the code we send on WhatsApp.', s: 12, c: p.mu),
         ],
       ),
     );
@@ -1250,10 +1313,10 @@ class TrackerScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (l.stage < onboardStages.length - 1) ...[
+                          if (l.stage < onboardStages.length - 1 && !(s.data.remote && l.stage >= 4 && l.hid != null && !isSeedHostel(l.hid!))) ...[
                             const SizedBox(width: 10),
                             Tap(
-                              onTap: () => l.stage == 3 && l.hid == null ? s.openAddHostel() : s.update(() => l.stage++),
+                              onTap: () => s.advanceLead(l),
                               child: Container(
                                 constraints: const BoxConstraints(minHeight: 40),
                                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),

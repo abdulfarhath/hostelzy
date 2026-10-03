@@ -29,9 +29,10 @@ extension SyncActions on AppState {
   /// replace the lists. Never mixed with samples: on Supabase the lists start
   /// empty (AppState.samples is false).
   void applyLive(LiveRows l) => update(() {
-    // S1: the locked deal is shown from what this phone saw when booking.
+    // F24 item 13: the server's locked deal; before its SQL runs, what this
+    // phone saw when booking.
     final perks = {for (final h in holds) if (h.perks.isNotEmpty) h.id: h.perks};
-    holds = [for (final h in l.holds) perks[h.id] == null ? h : h.withPerks(perks[h.id]!)];
+    holds = [for (final h in l.holds) h.perks.isNotEmpty || perks[h.id] == null ? h : h.withPerks(perks[h.id]!)];
     enquiries = l.enquiries;
     payments = l.payments;
     complaints = l.complaints;
@@ -62,6 +63,10 @@ extension SyncActions on AppState {
     }
     fixes = l.fixes;
     fixMutes = l.mutes;
+    // F24: notices, moves and refunds.
+    moves = l.moves;
+    refunds = l.refunds;
+    myRefund = l.myRefund;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
     final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];
@@ -78,9 +83,10 @@ extension SyncActions on AppState {
         ..addAll(known);
       if (ownerHostels.isNotEmpty && !ownerHostels.contains(ownHid)) {
         ownHid = ownerHostels.first;
-        if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
+        rules = hostelRules[ownHid] != null ? List.of(hostelRules[ownHid]!) : blankRules(hostelById(ownHid).terms);
       }
     }
+    syncWalkIns();
     managers
       ..clear()
       ..addAll([for (final m in l.managers) if (m.hid == ownHid) (name: m.name, phone: m.phone, joined: m.joined)]);
@@ -93,6 +99,8 @@ extension SyncActions on AppState {
     // F24: owners' numbers for the hostels this user holds at, asked or lives in.
     final want = {for (final h in l.holds) h.hid, for (final e in l.enquiries) if (e.phone == myPhone) e.hid, ?l.myHostel};
     if (want.any((h) => !ownerPhones.containsKey(h))) Future.microtask(() => loadOwnerPhones(want));
+    // F24 item 14: don't ask "Did you join?" again about an answered hold.
+    if (endedHold != null) Future.microtask(loadJoinAnswers);
   });
 
   /// F24: fetches owners' numbers the server lets this user see.
@@ -101,7 +109,14 @@ extension SyncActions on AppState {
     if (ask.isEmpty || !data.remote) return;
     try {
       final got = await data.ownerContacts(ask);
-      if (got.isNotEmpty) update(() => ownerPhones.addAll(got));
+      if (got.isNotEmpty) {
+        update(() {
+          for (final e in got.entries) {
+            if (e.value.phone.isNotEmpty) ownerPhones[e.key] = e.value.phone;
+            if (e.value.wa.isNotEmpty) ownerWhatsApps[e.key] = e.value.wa;
+          }
+        });
+      }
     } catch (e) {
       debugPrint('owner phone: $e');
     }
@@ -126,7 +141,14 @@ extension SyncActions on AppState {
   Future<void> refreshLive() async {
     try {
       final l = await data.live(me: account?.uid);
-      if (l != null) applyLive(l);
+      if (l != null) {
+        applyLive(l);
+        // F24 #16, #25: the tenant's level and the resident's electricity.
+        unawaited(loadLevel());
+        unawaited(loadMyMeter(force: true));
+        // F24 #17: the hostels this user only manages.
+        if (l.myHostels.isNotEmpty) await loadManagerOf();
+      }
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
       debugPrint('live: $e');
@@ -144,6 +166,11 @@ extension SyncActions on AppState {
       _liveWait?.cancel();
       _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
     });
+    // F24 #16, #25: now that this is live, the level and the electricity.
+    // F24 #18: and whether this account agreed to the Fair Play rules.
+    unawaited(loadFairAccepted());
+    unawaited(loadLevel());
+    unawaited(loadMyMeter(force: true));
   }
 
   /// C: a tenant's enquiry on the server; the HZ code comes back from it.
@@ -156,7 +183,12 @@ extension SyncActions on AppState {
         await refreshLive();
       } catch (e) {
         debugPrint('enquiry: $e');
-        return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
+        // F24 4a: one open enquiry per bed on the server; use the one already there.
+        if (!'$e'.contains('enquiries_one_open') && !'$e'.contains('23505')) return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
+        await refreshLive();
+        ref = enquiries.where((x) => x.hid == hid && x.bed == bed).firstOrNull?.ref;
+        if (ref == null) return toastMsg('You already asked the owner about this bed.');
+        toastMsg('You already asked about this bed, so it’s the same booking code: $ref.');
       }
     }
     // The enquiry is recorded, so the server now gives this owner's number.
@@ -164,7 +196,7 @@ extension SyncActions on AppState {
     update(() {
       sheet = 'wa';
       waTo = hostelById(hid).owner;
-      waPhone = ownerPhones[hid] ?? '';
+      waPhone = ownerWa(hid);
       waMsg = body;
       waRef = ref;
       waHid = hid;
@@ -277,6 +309,8 @@ extension SyncActions on AppState {
       if (me.isNotEmpty) enquiries = enquiries.where((e) => e.phone != me).toList();
       account = null;
       myName = '';
+      searchedAreas.clear();
+      notif.addAll({'hold': true, 'rent': true, 'beds': false});
       role = 'tenant';
       screen = 'welcome';
       hist = [];

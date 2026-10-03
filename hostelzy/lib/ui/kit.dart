@@ -673,6 +673,7 @@ const _svgIcons = <String, String>{
   'lock': '<path d="M5 11h14v10H5z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   'flag': '<path d="M5 21V4h12l-2 4 2 4H5"/>',
   'swap': '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  'bolt': '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
 };
 
 /// Lucide-style stroke icon, 1em square, `currentColor`.

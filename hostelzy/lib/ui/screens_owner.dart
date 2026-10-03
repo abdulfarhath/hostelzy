@@ -12,7 +12,9 @@ import 'layout.dart' show ConfirmLayoutsCard;
 import 'layout_fixes.dart' show FixPhotoThumb;
 import 'payments.dart';
 import 'plan.dart';
+import '../reminders.dart' show clock;
 import 'onboarding.dart';
+import 'stay_tools.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
   var t = 0, booked = 0, held = 0, soon = 0, free = 0;
@@ -44,7 +46,7 @@ String occCounts(AppState s) {
 List<HoldRequest> allRequests(AppState s) => [
   for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting'))
     s.onServer
-        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id)
+        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecsOf(h), start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id, trusted: h.trusted)
         : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
   if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
 ];
@@ -125,6 +127,7 @@ class OwnerTodayScreen extends StatelessWidget {
           ),
           const FreeBedsCard(),
           const ConfirmLayoutsCard(),
+          const RatesConfirmCard(),
           const SizedBox(height: 20),
         ],
       ),
@@ -211,6 +214,32 @@ class NeedsYouNow extends StatelessWidget {
               : [('Compare', 'arrow', () => s.openFix(f))],
           badge: null,
           extra: f.photo != null ? FixPhotoThumb(f, size: 96) : null,
+        ),
+      // F24: notices and moves from residents, waiting for an answer.
+      for (final m in s.openMoves)
+        (
+          key: 'move-${m.id}',
+          icon: m.kind == 'vacate' ? 'logout' : 'swap',
+          title: m.kind == 'vacate' ? '${m.name} gave notice' : '${m.name} asks to move to bed ${m.toBed}',
+          sub: [if (m.bed.isNotEmpty) 'Bed ${m.bed}', if (m.kind == 'vacate' && m.lastDay != null) 'Last day ${dayMon(m.lastDay!)}', if (m.reason.isNotEmpty) m.reason].join(' · '),
+          right: m.at > 0 ? ago(s.now - m.at) : 'Today',
+          urgent: false,
+          btns: [('Accept', 'check', () => s.answerMove(m, true)), ('Say no', 'x', () => s.answerMove(m, false))],
+          badge: null,
+          extra: null,
+        ),
+      // F24: refunds for residents who moved out (due 7 days after leaving).
+      for (final r in s.refundsToDo)
+        (
+          key: 'refund-${r.stayKey}',
+          icon: 'wallet',
+          title: r.status == 'not_received' ? '${r.name} hasn’t got the refund' : r.status == 'sent' ? 'Refund sent to ${r.name}' : 'Refund ${fmt(r.amt)} to ${r.name}',
+          sub: r.status == 'sent' ? 'UPI ref ${utrSpaced(r.utr)} · waiting for them to confirm' : 'Moved out ${dayMon(r.leftOn)} · due ${dayMon(r.due)}',
+          right: r.status == 'sent' ? '' : (r.due.isBefore(appToday) ? 'Late' : 'Due ${dayMon(r.due)}'),
+          urgent: r.status != 'sent' && (r.status == 'not_received' || r.due.isBefore(appToday)),
+          btns: r.status == 'sent' ? <(String, String, VoidCallback)>[] : [('Mark refunded', 'check', () => s.openRefund(r))],
+          badge: null,
+          extra: null,
         ),
       // F23: a shared thing (or a room's geyser) marked not working.
       for (final a in s.brokenThings)
@@ -315,7 +344,7 @@ class _FairPlayCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: c != null
                     ? [T('Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title}. Your reply is with the founder.' : '${c.title}. 47 h left to explain or fix it.', s: 13, lh: 1.4)]
-                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(strikeLadder[(n - 1).clamp(0, 2)].$2, s: 13)],
+                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(s.strikeLine(s.ownHid), s: 13)],
               ),
             ),
             Ic('chev', size: 18, color: p.ad),
@@ -679,6 +708,8 @@ class OwnerRentScreen extends StatelessWidget {
               ],
             ),
           ),
+          // F24 #25 (board `oMeter`): electricity by meter, when it's extra.
+          if (hostelById(s.ownHid).terms.electricityExtra) const MeterEntry(),
           Seg(
             opts: [for (final st in const ['All', 'Due', 'Overdue', 'Paid']) (st, '${word(st)} ${n(st)}')],
             cur: s.rentF,
@@ -918,6 +949,7 @@ class _MenuEditor extends StatelessWidget {
               decoration: box(w: 2, c: p.tx),
               child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600), T('Counts only. Hostelzy never shows who said what.', s: 12, c: p.mu)]),
             ),
+          const _MealTimes(),
           if (s.menuOf(s.ownHid) == null && !s.menuDirty)
             T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuEmpty'), s: 13, c: p.mu, lh: 1.4),
           Row(
@@ -943,7 +975,7 @@ class _MenuEditor extends StatelessWidget {
             VGap(
               gap: 6,
               children: [
-                T('${m[1]} · ${m[2]}', w: 800, s: 13),
+                T('${m[1]} · ${mealSpan(s.timesDraft[m[0]] ?? usualMealTimes[m[0]]!)}', w: 800, s: 13),
                 Field(
                   key: ValueKey('menu-$d-${m[0]}'),
                   value: week[d].of(m[0]),
@@ -982,6 +1014,7 @@ class _HouseRules extends StatelessWidget {
         gap: 12,
         children: [
           for (var i = 0; i < s.rules.length; i++)
+            if (s.rules[i].k != laundryKey)
             VGap(
               gap: 6,
               children: [
@@ -996,6 +1029,8 @@ class _HouseRules extends StatelessWidget {
                 ),
               ],
             ),
+          // F24 #26 (board `oLaundry`).
+          const LaundryRow(),
           T('Tenants see these under House rules › on your hostel page.', s: 13, c: p.mu),
         ],
       ),
@@ -1028,15 +1063,19 @@ class _ManageList extends StatelessWidget {
       ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
       ('msg', 'Enquiries', newE == 0 ? '${myE.length} from Hostelzy · all replied' : '$newE new · ${myE.length} from Hostelzy', newE, () => section('enquiries')),
       ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
-      ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
-      ('wallet', 'Rates and UPI', '$types room type${types == 1 ? '' : 's'}${upi.isEmpty ? ' · no UPI ID yet' : ' · $upi'}', 0, () => section('rates')),
+      // F24 item 17 (F14): deals, rates and the plan are the owner's.
+      if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
+      if (!s.managerHere) ('wallet', 'Rates and UPI', '$types room type${types == 1 ? '' : 's'}${upi.isEmpty ? ' · no UPI ID yet' : ' · $upi'}', 0, () => section('rates')),
       ('utensils', 'Food menu', 'Breakfast, lunch and dinner, by day', 0, () => section('menu')),
       ('doc', 'House rules', s.rules.isEmpty ? 'None yet' : '${s.rules.first.k} ${s.rules.first.v}', 0, () => section('rules')),
       ('camera', 'Photos', photos == null ? 'Your hostel’s photos' : '$photos photo${photos == 1 ? '' : 's'}', 0, s.openPhotos),
-      ('grid', 'Room layouts', '$live live${fixes > 0 ? ' · $fixes fix${fixes == 1 ? '' : 'es'} to check' : ''}', fixes, () => s.go('oLayouts')),
+      ('grid', 'Room layouts', '$live live${fixes > 0 ? ' · $fixes fix${fixes == 1 ? '' : 'es'} to check' : ''}', fixes, () {
+        s.go('oLayouts');
+        s.loadShapeRequests(s.ownHid);
+      }),
       ('chart', 'Reviews and ranking', '${h.reviews == 0 ? 'No reviews yet' : jsNum(h.rating)} · #${s.rankOf(h.id)} near ${s.lm}', 0, () => s.go('oRank')),
       ('user', 'Team', 'Managers who help you run it', 0, () => s.go('oTeam')),
-      ('shield', 'Your plan', s.trialLeft > 0 ? 'Trial · ${s.trialLeft} days left' : switch (inv.status) { 'paid' => 'Paid', 'checking' => 'Checking your payment', 'missing' => 'Payment not found', _ => inv.late > 0 ? '${inv.late} days late' : 'Due' }, inv.late > 0 ? 1 : 0, () => s.go('oPlan')),
+      if (!s.managerHere) ('shield', 'Your plan', s.trialLeft > 0 ? 'Trial · ${s.trialLeft} days left' : switch (inv.status) { 'paid' => 'Paid', 'checking' => 'Checking your payment', 'missing' => 'Payment not found', _ => inv.late > 0 ? '${inv.late} days late' : 'Due' }, inv.late > 0 ? 1 : 0, () => s.go('oPlan')),
     ];
     return Scroll(
       key: ValueKey('oMoreList${s.scrollEpoch}'),
@@ -1187,6 +1226,8 @@ class _Residents extends StatelessWidget {
                             T(r.name, w: 800, s: 15),
                             const SizedBox(height: 1),
                             T('Bed ${r.bed} · ${r.since}${r.confirmed && r.ref != null ? ' · ${r.ref}' : ''}', s: 12, c: p.mu),
+                            // F24 item 13: the perks locked when they booked.
+                            if (r.perks.isNotEmpty) T('Hostelzy deal · price fixed · ${r.perks.join(' · ')}', s: 12, c: p.gn, lh: 1.35),
                           ],
                         ),
                       ),
@@ -1536,9 +1577,65 @@ class RateCard extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: T('AC rooms need an AC unit in the layout. The Hostelzy team adds it within 48 hours.', s: 13, c: p.mu, lh: 1.4),
+          child: T('An AC room needs an AC unit in its layout. If a room’s layout has none, add it there and publish first, then make the room AC.', s: 13, c: p.mu, lh: 1.4),
         ),
       ],
+    );
+  }
+}
+
+/// F24 Wave 4c: Food menu › Meal times. Residents' meal reminders ring at
+/// these; until they're set the app uses the usual times and says so.
+class _MealTimes extends StatelessWidget {
+  const _MealTimes();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final t = s.timesDraft;
+    Widget step(String key, VoidCallback on, String label) => Tap(
+      key: ValueKey(key),
+      onTap: on,
+      child: Container(width: 40, height: 40, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: T(label, w: 800, s: 18)),
+    );
+    Widget clockStep(String k, bool end, int m) => Row(
+      children: [
+        step('mt-$k-${end ? 'e' : 's'}-', () => s.nudgeMealTime(k, end: end, by: -15), '−'),
+        Expanded(child: Center(child: T(clock(m), w: 800, s: 14, nowrap: true))),
+        step('mt-$k-${end ? 'e' : 's'}+', () => s.nudgeMealTime(k, end: end, by: 15), '+'),
+      ],
+    );
+    return Container(
+      key: const ValueKey('mealTimes'),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(
+        gap: 10,
+        children: [
+          const Kicker('Meal times'),
+          if (t.isEmpty) ...[
+            T('Not set. Residents’ meal reminders use the usual times: breakfast 7:30, lunch 12:30, dinner 8:00.', s: 13, c: p.mu, lh: 1.4),
+            OutlineCta('Set meal times', key: const ValueKey('mealTimesSet'), icon: 'clock', height: 46, fs: 14, onTap: s.startMealTimes),
+          ] else ...[
+            for (final m in meals)
+              VGap(
+                gap: 6,
+                children: [
+                  T(m[1], w: 800, s: 13),
+                  Row(
+                    children: [
+                      Expanded(child: clockStep(m[0], false, (t[m[0]] ?? usualMealTimes[m[0]]!).$1)),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: T('to', s: 13, c: p.mu)),
+                      Expanded(child: clockStep(m[0], true, (t[m[0]] ?? usualMealTimes[m[0]]!).$2)),
+                    ],
+                  ),
+                ],
+              ),
+            T('Residents’ meal reminders ring at the start time.', s: 12, c: p.mu),
+            Tap(key: const ValueKey('mealTimesClear'), onTap: s.clearMealTimes, child: T('Use the usual times', s: 13, w: 700, c: p.ad, underline: true)),
+          ],
+        ],
+      ),
     );
   }
 }

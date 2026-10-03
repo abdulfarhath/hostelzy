@@ -17,6 +17,12 @@ mixin _LinksData {
   String inviteDraft = '';
   bool joining = false;
   String? inviteCode;
+
+  /// F14: the in-app QR scanner (the phone's camera; none in tests), and
+  /// whether the camera explainer was shown on this phone.
+  QrScanner scanner = const NoScanner();
+  bool camAsked = false;
+  String? _scanBad;
 }
 
 extension LinksActions on AppState {
@@ -98,7 +104,12 @@ extension LinksActions on AppState {
           inviteDraft = '';
         });
         await refreshLive();
-        toastMsg('You’re a manager at $h now. Pick “I run a hostel” to start.');
+        // Board `mgrJoin`: back to the role picker, where "I run a PG" opens it.
+        update(() {
+          screen = 'role';
+          hist = [];
+        });
+        toastMsg('You’re a manager at $h now. Pick “I run a PG” to start.');
       } on UnsupportedError {
         update(() => joining = false);
         toastMsg('Invites work in the real Hostelzy app. This is sample data.');
@@ -130,6 +141,42 @@ extension LinksActions on AppState {
           ? 'Add your name and 10-digit phone in Settings first.'
           : 'Couldn’t send it. Check your internet and try again.');
     }
+  }
+
+  /// F14 "Scan the QR" (Join your PG): the camera explainer the first time,
+  /// then the scanner. Without an in-app camera it says how to use the phone's.
+  void openScan() {
+    if (!scanner.available) return toastMsg('Open your phone camera and point it at the poster. It opens the invite link.');
+    if (!camAsked) return update(() => sheet = 'scanCam');
+    _scanBad = null;
+    go('scan');
+  }
+
+  /// The explainer's "Allow camera": Android asks next, when the camera opens.
+  void allowCamera() {
+    update(() {
+      camAsked = true;
+      sheet = null;
+    });
+    _scanBad = null;
+    go('scan');
+  }
+
+  /// A QR the camera read: the poster's j/ link fills in the code and joins.
+  void scannedQr(String raw) {
+    if (screen != 'scan') return;
+    final c = inviteCodeFromQr(raw);
+    if (c == null) {
+      if (_scanBad != raw) toastMsg('That QR isn’t a Hostelzy invite. Scan the poster at your PG.');
+      _scanBad = raw;
+      return;
+    }
+    update(() {
+      inviteDraft = c;
+      pendingInvite = null;
+    });
+    back();
+    joinInvite();
   }
 
   /// Deep link app/j/?c=…: keeps the invite code for the resident sign-up.

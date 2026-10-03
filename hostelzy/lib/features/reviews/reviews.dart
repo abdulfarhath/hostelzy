@@ -9,6 +9,10 @@ mixin _ReviewsData {
   /// Fair Play strikes per hostel (F07); each lowers the rank.
   final Map<String, int> strikes = {};
 
+  /// F24 #18: the server's Fair Play standing (when strike 2's hidden deals
+  /// come back, why the last strike came). Empty on sample data.
+  final Map<String, Standing> standing = {};
+
   /// Resident review forms (30-day and exit) and the owner's reply screen.
   int rvStars = 0, exStars = 0;
   Map<String, int> rvCats = {};
@@ -81,6 +85,10 @@ mixin _ReviewsData {
   String resQ = '';
   List<Signup> signups = List.of(seedSignups);
   String rName = '', rPhone = '', rJoin = 'Today', rFee = '', rAdv = '';
+
+  /// F24 #18: "Lived here before Hostelzy" on Add resident (only before the
+  /// hostel goes live; after that the Hostelzy team marks it).
+  bool rBefore = false;
   String? rBed;
   int rPickBack = 3;
   String rentF = 'All';
@@ -100,6 +108,9 @@ mixin _ReviewsData {
   /// The owner's hostel (one per owner until F14).
   String ownHid = 'anjani';
 
+  /// F24: real counts per live hostel (reply speed, complaints, listing).
+  Map<String, HostelSignals> signals = {};
+
   /// Bumped whenever a screen's scroll position should reset.
   int scrollEpoch = 0;
 }
@@ -109,10 +120,20 @@ extension ReviewsActions on AppState {
   /// Ranking factors (0–1) for a hostel.
   Map<String, double> factors(String hid) {
     final h = hostelById(hid);
-    final f = seedFactors[hid] ?? const {'fresh': .5, 'complaints': .5, 'listing': .5};
+    final sg = signals[hid];
+    // F24: live hostels rank on real counts; the samples keep their made-up ones.
+    final f = sg == null
+        ? seedFactors[hid] ?? const {'fresh': .5, 'complaints': .5, 'listing': .5}
+        : {
+            'fresh': (1 - (confirmed[hid] ?? 7) / 14).clamp(0, 1).toDouble(),
+            'complaints': sg.residents == 0 ? .5 : (1 - sg.complaints30 / sg.residents).clamp(0, 1).toDouble(),
+            'listing': ((sg.photos >= 8 ? .5 : sg.photos / 16) + (sg.rooms == 0 ? 0 : .5 * sg.layouts / sg.rooms)).clamp(0, 1).toDouble(),
+          };
+    final reply = replyMins(hid);
     return {
       'reviews': (h.rating / 5 - (h.reviews < 20 ? .1 : 0)).clamp(0, 1).toDouble(),
-      'reply': (1 - h.reply / 120).clamp(0, 1).toDouble(),
+      // An owner with no replies yet is in the middle, not at the top.
+      'reply': reply == 0 ? .5 : (1 - reply / 120).clamp(0, 1).toDouble(),
       'fresh': f['fresh']!,
       'complaints': f['complaints']!,
       'listing': f['listing']!,
@@ -145,7 +166,7 @@ extension ReviewsActions on AppState {
       toastMsg('Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
       return false;
     }
-    final ok = await _write(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
+    final ok = await _reviewWrite(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
     if (ok) await refreshListings();
     return ok;
   }
@@ -158,10 +179,44 @@ extension ReviewsActions on AppState {
     } catch (e) {
       debugPrint('listings: $e');
     }
+    // F24: the real counts; missing before their SQL runs.
+    try {
+      final sg = await data.signals();
+      if (sg.isNotEmpty) update(() => signals = sg);
+    } catch (e) {
+      debugPrint('signals: $e');
+    }
+    // F24 items 20, 21: featured spots and paused deals; missing before their SQL runs.
+    try {
+      final fl = await data.flags();
+      if (fl.isNotEmpty) update(() => flags = fl);
+    } catch (e) {
+      debugPrint('flags: $e');
+    }
+  }
+
+  /// Minutes the owner usually takes to reply: the server's median once
+  /// there are 3 replies; the sample hostels' made-up value in the demo; 0
+  /// (unknown) otherwise.
+  int replyMins(String hid) {
+    final sg = signals[hid];
+    if (sg != null) return sg.replyN >= 3 ? math.max(1, sg.replyMin) : 0;
+    return isSeedHostel(hid) ? hostelById(hid).reply : 0;
   }
 
   void postReview() {
     if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    // F24 4a: one review per stay; posting again changes it.
+    final mine = myReview('30-day');
+    if (mine != null) {
+      _editReview(mine, stars: rvStars, body: rvText.trim(), cats: Map.of(rvCats), layout: rvLayout, clear: () {
+        rvStars = 0;
+        rvCats = {};
+        rvLayout = null;
+        rvText = '';
+      });
+      return;
+    }
     if (onServer) {
       _postReviewLive(kind: 'stay', stars: rvStars, body: rvText.trim(), cats: Map.of(rvCats), layout: rvLayout).then((ok) {
         if (!ok) return;
@@ -177,9 +232,9 @@ extension ReviewsActions on AppState {
       return;
     }
     update(() {
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true), ...reviews];
-      // F12: a resident who says the layout is wrong flags it for the team.
-      if (rvLayout == 'No') layoutOf('anjani', 204)?.disputes++;
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: rvStars, text: rvText.trim(), stay: 'Staying since Mar 2026', cats: Map.of(rvCats), layout: rvLayout, fresh: true, author: 'me'), ...reviews];
+      // F12, F13 S4: a resident who says the layout is wrong flags their room.
+      if (rvLayout == 'No') _flagMyRoom('anjani', 1);
       rvStars = 0;
       rvCats = {};
       rvLayout = null;
@@ -194,6 +249,16 @@ extension ReviewsActions on AppState {
     final adv = exAdv;
     if (adv == null) return toastMsg('Tell us if you got your advance back.');
     if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    final mine = myReview('exit');
+    if (mine != null) {
+      _editReview(mine, stars: exStars, body: exText.trim(), advance: adv, again: exAgain, clear: () {
+        exAdv = null;
+        exStars = 0;
+        exAgain = null;
+        exText = '';
+      });
+      return;
+    }
     if (onServer) {
       _postReviewLive(kind: 'exit', stars: exStars, body: exText.trim(), advance: adv, again: exAgain).then((ok) {
         if (!ok) return;
@@ -211,7 +276,7 @@ extension ReviewsActions on AppState {
     final st = stats['anjani']!;
     update(() {
       stats['anjani'] = ReviewStats(st.cats, st.advFull + (adv == 'all' ? 1 : 0), st.advLeft + 1, st.layoutPct);
-      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: exText.trim(), stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true), ...reviews];
+      reviews = [Review(id: 'r${reviews.length + 1}', hid: 'anjani', name: meShort, stars: exStars, text: exText.trim(), stay: 'Leaving $vDate', kind: 'exit', advance: adv, again: exAgain, fresh: true, author: 'me'), ...reviews];
       exAdv = null;
       exStars = 0;
       exAgain = null;
@@ -222,10 +287,12 @@ extension ReviewsActions on AppState {
   }
 
   void postReply(Review r) {
+    if (r.reply != null) return toastMsg('You already replied to this review. Each review gets one reply.');
     if (replyText.trim().isEmpty) return toastMsg('Write a reply first.');
     if (onServer) {
       final text = replyText.trim();
-      _write(() => data.replyReview(r.id, text)).then((ok) async {
+      // F24 4a: the server allows one reply per review.
+      _reviewWrite(() => data.replyReview(r.id, text)).then((ok) async {
         if (!ok) return;
         await refreshListings();
         update(() {
@@ -246,10 +313,25 @@ extension ReviewsActions on AppState {
     toastMsg('Reply posted under ${r.name.split(' ')[0]}’s review.');
   }
 
-  /// Strike 2+ hides the hostel's deals (F07).
-  /// Deals are hidden at 2 Fair Play strikes (F07) and paused while the
-  /// owner's plan is 15+ days late (F10).
-  Deals dealsOf(String hid) => (strikes[hid] ?? 0) >= 2 || dealsPaused(hid) ? const Deals() : deals[hid] ?? const Deals();
+  /// Deals are hidden by Fair Play strike 2 for 30 days (F07) and paused
+  /// while the owner's plan is 15+ days late (F10).
+  Deals dealsOf(String hid) => dealsHidden(hid) || dealsPaused(hid) ? const Deals() : deals[hid] ?? const Deals();
+
+  /// F07 / F24 #18: strike 2 hides deals for 30 days, then they come back;
+  /// strike 3 removes the hostel. Without the server's dates (sample data, or
+  /// before its SQL runs) strike 2 keeps them hidden.
+  bool dealsHidden(String hid) {
+    final n = strikes[hid] ?? 0;
+    if (n < 2) return false;
+    if (n >= 3) return true;
+    final st = standing[hid];
+    if (st == null) return true;
+    final u = st.until;
+    return u != null && DateTime.now().isBefore(u);
+  }
+
+  /// When strike 2's hidden deals come back (null when not known).
+  DateTime? dealsBackOn(String hid) => (strikes[hid] ?? 0) == 2 ? standing[hid]?.until : null;
 
   /// Walk-in vs Hostelzy quote for a room type ([ac], [share]) at [hid].
   DealQuote quote(String hid, bool ac, int share) {
@@ -299,9 +381,8 @@ extension ReviewsActions on AppState {
   }
 
   /// S3: Manage → Rules. On Supabase they are saved for the hostel's page.
-  void saveRules() {
+  void saveRules({String msg = 'Rules saved. Residents and new tenants see them now.'}) {
     final hid = ownHid, list = List.of(rules);
-    const msg = 'Rules saved. Residents and new tenants see them now.';
     if (onServer) {
       _write(() => data.saveRules(hid, list)).then((ok) {
         if (!ok) return;

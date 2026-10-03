@@ -20,7 +20,7 @@ class ResidentHomeScreen extends StatelessWidget {
     final owner = s.stayOwner;
     final terms = h.terms;
     final tm = s.menu[todayIdx];
-    final rentAmt = s.myRentPay?.amt ?? st?.rent ?? 0;
+    final rentAmt = s.myRentPay?.amt ?? (st == null ? 0 : st.rent + s.myElectricity);
     // Meals: done once they're over, the next one, then later.
     final nowMin = DateTime.now().hour * 60 + DateTime.now().minute;
     final mealEnds = [9 * 60 + 30, 14 * 60, 22 * 60];
@@ -102,10 +102,10 @@ class ResidentHomeScreen extends StatelessWidget {
             ),
             ),
           ),
-          // F08: the 30-day review (one per stay).
-          if (!s.reviews.any((r) => r.name == s.meShort && r.kind == '30-day'))
+          // F08: the 30-day review (one per stay), once 30 days in (F24 4a).
+          if (s.myReview('30-day') == null && s.reviewOpensOn == null)
             Tap(
-              onTap: () => s.go('rReview'),
+              onTap: s.openReview,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
@@ -156,7 +156,7 @@ class ResidentHomeScreen extends StatelessWidget {
                             width: 76,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 2),
-                              child: T(meals[i][2], s: 12, c: p.mu),
+                              child: T(s.mealTimeText(h.id, meals[i][0]), s: 12, c: p.mu),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -214,7 +214,10 @@ class RentPayScreen extends StatelessWidget {
     final owner = s.stayOwner;
     final terms = h.terms;
     // F21: the month's real rent; on the server nothing exists until the resident starts paying.
-    final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent, note: s.rentNote);
+    // F24 #25: this month's electricity (board `rentMeter`) is added to the rent.
+    final meter = s.myMeter;
+    final elec = s.myElectricity;
+    final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent + elec, note: s.rentNote);
     final started = rent.id.isNotEmpty;
     final sample = !s.onServer;
     final history = sample ? [('September', '₹8,040 · confirmed 3 Sep'), ('August', '₹7,980 · confirmed 4 Aug'), ('July', '₹8,110 · confirmed 2 Jul')] : const <(String, String)>[];
@@ -290,7 +293,11 @@ class RentPayScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (sample) ...[row('Rent', '₹7,600'), row('Electricity · meter', '₹420')] else row('Rent', fmt(rent.amt)),
+                      row('Rent', fmt(sample ? rent.amt - elec : st.rent)),
+                      if (meter != null)
+                        KV('Electricity · ${meter.units} units ÷ ${meter.people} · ${perUnit(meter.rate)}/unit', fmt(elec), key: const ValueKey('rentMeter'), keyWidth: 150)
+                      else if (terms.electricityExtra)
+                        row('Electricity', 'Not added yet'),
                       row('Pay to', upi.isEmpty ? '$owner hasn’t added a UPI ID yet' : upi),
                     ],
                   ),
@@ -437,7 +444,7 @@ class _WeekTableState extends State<WeekTable> {
                                       children: [
                                         T(m[1], w: 800, s: 14),
                                         const SizedBox(height: 1),
-                                        T(m[2], s: 11, c: p.mu),
+                                        T(s.mealTimeText(s.foodHid, m[0]), s: 11, c: p.mu),
                                       ],
                                     ),
                                   ),
@@ -593,7 +600,7 @@ class FoodScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Rich([sp(context, m[1], w: 800, s: 18), sp(context, '  ${m[2]}', s: 13, c: p.mu)]),
+                              Rich([sp(context, m[1], w: 800, s: 18), sp(context, '  ${s.mealTimeText(s.foodHid, m[0])}', s: 13, c: p.mu)]),
                               const SizedBox(height: 2),
                               T(dm.of(m[0]), s: 15, lh: 1.4),
                             ],
@@ -764,7 +771,8 @@ class StayScreen extends StatelessWidget {
     final rows = <(String, String, String, VoidCallback)>[
       ('swap', 'Move to another bed', free == 0 ? 'No free beds right now' : '$free free bed${free == 1 ? '' : 's'} here', () => move('swap')),
       ('logout', 'Give notice', '${terms.noticeDays} days · earliest last day ${leaveDates(terms).first}', () => move('vacate')),
-      ('star', 'Review your stay', '30-day review', () => s.go('rReview')),
+      // F24 4a: opens after 30 days; the resident's own review comes back to change.
+      ('star', 'Review your stay', s.myReview('30-day') != null ? 'Change your 30-day review' : s.reviewOpensOn != null ? 'Opens ${dayMon(s.reviewOpensOn!)} · after 30 days' : '30-day review', s.openReview),
       ('pencil', 'Fix a room layout', 'Any room in ${h.name}', () => s.openFixRoom(s.myRoomLabel.isEmpty ? (s.rooms[h.id]?.first.n ?? 101) : int.tryParse(s.myRoomLabel) ?? 101)),
     ];
     return Column(
@@ -884,7 +892,11 @@ class MoveScreen extends StatelessWidget {
     final from = bed.isEmpty ? '' : ' from bed $bed';
     Widget body;
     Widget? bar;
-    if (vacate && !s.notice) {
+    // F24: the notice on the server (open, accepted or declined).
+    final n = s.myNotice;
+    final given = s.notice || (n != null && n.status != 'declined');
+    final lastDay = n?.lastDay != null ? dayMon(n!.lastDay!) : s.vDate;
+    if (vacate && !given) {
       body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: VGap(
@@ -930,14 +942,7 @@ class MoveScreen extends StatelessWidget {
         height: 54,
         px: 16,
         fs: 15,
-        onTap: () {
-          s.update(() => s.notice = true);
-          if (s.onServer) {
-            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.');
-          } else {
-            s.toastMsg('Notice saved. Tell $owner on WhatsApp too.');
-          }
-        },
+        onTap: s.giveNotice,
       );
     } else if (vacate) {
       body = Column(
@@ -949,12 +954,11 @@ class MoveScreen extends StatelessWidget {
             child: VGap(
               gap: 8,
               children: [
-                Kicker('Notice given', c: p.ad),
-                T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
+                Kicker(n?.status == 'accepted' ? 'Notice accepted' : 'Notice given', c: p.ad),
+                T('Your last day is $lastDay.', w: 800, s: 28, lh: 1.05),
                 T(
-                  s.onServer
-                      ? 'Sent to $owner on WhatsApp. They mark your bed "free soon" on Hostelzy.'
-                      : 'Saved on Hostelzy. Tell $owner on WhatsApp too. Your bed goes back on Hostelzy as "free soon".',
+                  key: const ValueKey('noticeStatus'),
+                  n?.status == 'accepted' ? 'Accepted by $owner. Your bed shows "free soon" on Hostelzy.' : 'Sent to $owner. They accept it in Hostelzy, then your bed shows "free soon".',
                   s: 14,
                   c: p.mu,
                 ),
@@ -962,7 +966,7 @@ class MoveScreen extends StatelessWidget {
                   'Tell $owner on WhatsApp',
                   icon: 'msg',
                   height: 48,
-                  onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.'),
+                  onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I gave notice on Hostelzy: my last day is $lastDay.'),
                 ),
               ],
             ),
@@ -972,9 +976,9 @@ class MoveScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TimelineStep(t: 'Notice given', d: 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
-                TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
-                TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
+                TimelineStep(t: 'Notice given', d: n != null && n.at > 0 ? dayMon(DateTime.fromMillisecondsSinceEpoch(n.at)) : 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
+                TimelineStep(t: '$owner accepts it', d: n?.status == 'accepted' ? 'Done' : 'In Hostelzy', bg: n?.status == 'accepted' ? p.tx : transparent, bd: n?.status == 'accepted' ? p.tx : p.tk),
+                TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving. Hostelzy asks you when it arrives.', bg: transparent, bd: p.tk),
               ],
             ),
           ),
@@ -983,7 +987,8 @@ class MoveScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Tap(
-                onTap: () => s.update(() => s.notice = false),
+                key: const ValueKey('withdrawNotice'),
+                onTap: () => n != null && n.status == 'open' ? s.withdrawMove(n) : s.update(() => s.notice = false),
                 child: T('Withdraw notice', w: 600, s: 14, c: p.ad),
               ),
             ),
@@ -991,7 +996,7 @@ class MoveScreen extends StatelessWidget {
         ],
       );
       // F08: exit review with the advance check.
-      bar = OutlineCta('Review your stay', icon: 'star', height: 52, fs: 14, onTap: () => s.go('rExit'));
+      bar = OutlineCta(s.myReview('exit') != null ? 'Change your exit review' : 'Review your stay', icon: 'star', height: 52, fs: 14, onTap: s.openExitReview);
     } else {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1071,12 +1076,7 @@ class MoveScreen extends StatelessWidget {
         opacity: s.swapBed != null && !s.swapSent ? 1 : .4,
         onTap: () {
           if (s.swapBed == null || s.swapSent) return;
-          s.update(() => s.swapSent = true);
-          if (s.onServer) {
-            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. Can I move to bed ${s.swapBed}?');
-          } else {
-            s.toastMsg('Request saved. Ask $owner on WhatsApp too.');
-          }
+          s.askMove();
         },
       );
     }

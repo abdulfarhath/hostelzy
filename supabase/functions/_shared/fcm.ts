@@ -3,7 +3,17 @@
 // Node tests (supabase/functions/tests).
 
 export type ServiceAccount = { project_id: string; client_email: string; private_key: string };
-export type OutboxRow = { id: number; user_id: string; title: string; body: string; data: Record<string, unknown> };
+export type OutboxRow = { id: number; user_id: string; title: string; body: string; data: Record<string, unknown>; kind?: string | null };
+
+/** F24: each user's Settings switches (profiles.notify), e.g. { hold: true, rent: false, beds: true }. */
+export type Prefs = Record<string, Record<string, unknown>>;
+
+/** F24: does [user] want a push of [kind]? Other kinds always go; "beds" only when switched on. */
+export const wantsPush = (prefs: Prefs, user: string, kind?: string | null) => {
+  if (!kind || !['hold', 'rent', 'beds'].includes(kind)) return true;
+  const v = prefs[user]?.[kind];
+  return typeof v === 'boolean' ? v : kind !== 'beds';
+};
 export type Fetch = typeof fetch;
 
 const b64url = (b: Uint8Array | string) =>
@@ -44,11 +54,16 @@ export async function accessToken(sa: ServiceAccount, f: Fetch, nowSecs: number,
   return (await r.json()).access_token;
 }
 
-/** FCM v1 body: a visible notification plus string data for the app to route. */
+/** Brand: the Android small icon (res/drawable/ic_stat_hostelzy.xml) and its tint (Pal light `ac`). */
+export const PUSH_ICON = 'ic_stat_hostelzy';
+export const PUSH_COLOR = '#EC3013';
+
+/** FCM v1 body: a visible notification plus string data for the app to route.
+ *  The icon and colour are set here too, so they never depend on the manifest. */
 export function fcmMessage(token: string, row: OutboxRow) {
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(row.data ?? {})) data[k] = String(v);
-  return { message: { token, notification: { title: row.title, body: row.body }, data, android: { priority: 'high' } } };
+  return { message: { token, notification: { title: row.title, body: row.body }, data, android: { priority: 'high', notification: { icon: PUSH_ICON, color: PUSH_COLOR } } } };
 }
 
 /** Phones that no longer exist: FCM says the token is gone. */
@@ -65,13 +80,24 @@ export type Db = {
   /** Notes why a row couldn't be sent yet; it stays pending and is retried. */
   markError(id: number, error: string): Promise<void>;
   dropToken(token: string): Promise<void>;
+  /** F24: the users' notification switches; a user missing here has the defaults. */
+  prefs?(userIds: string[]): Promise<Prefs>;
 };
 
 /** Sends up to [limit] pending rows. A row is "sent" once every phone of its
  *  user was tried; with no phones it is closed with error "no phones". */
 export async function sendOutbox(db: Db, sa: ServiceAccount, f: Fetch, nowSecs: number, limit = 100) {
-  const rows = await db.pending(limit);
-  if (rows.length === 0) return { rows: 0, sent: 0, failed: 0, dropped: 0, errored: 0 };
+  const all = await db.pending(limit);
+  if (all.length === 0) return { rows: 0, sent: 0, failed: 0, dropped: 0, errored: 0 };
+  // F24: a switch turned off after the push was queued still counts.
+  let prefs: Prefs = {};
+  if (db.prefs) prefs = await db.prefs([...new Set(all.map((r) => r.user_id))]).catch(() => ({}));
+  const rows: OutboxRow[] = [];
+  for (const r of all) {
+    if (wantsPush(prefs, r.user_id, r.kind ?? (r.data?.kind as string | undefined))) rows.push(r);
+    else await db.markSent(r.id, 'switched off');
+  }
+  if (rows.length === 0) return { rows: all.length, sent: 0, failed: 0, dropped: 0, errored: 0 };
   let toks: { token: string; user_id: string }[], auth: string;
   try {
     toks = await db.tokens([...new Set(rows.map((r) => r.user_id))]);
@@ -106,7 +132,7 @@ export async function sendOutbox(db: Db, sa: ServiceAccount, f: Fetch, nowSecs: 
       await db.markError(row.id, errorText(e)).catch(() => {});
     }
   }
-  return { rows: rows.length, sent, failed, dropped, errored };
+  return { rows: all.length, sent, failed, dropped, errored };
 }
 
 /** The database side over Supabase's REST API with the service role key. */
@@ -118,13 +144,18 @@ export function restDb(url: string, serviceKey: string, f: Fetch): Db {
     return r.status === 204 ? null : r.json();
   };
   return {
-    pending: (limit) => call(`push_outbox?select=id,user_id,title,body,data&sent_at=is.null&order=id&limit=${limit}`),
+    // `*`: works before and after push_outbox.kind exists (FOUNDER-TODO 4zz3).
+    pending: (limit) => call(`push_outbox?select=*&sent_at=is.null&order=id&limit=${limit}`),
     tokens: (ids) => call(`push_tokens?select=token,user_id&user_id=in.(${ids.map((i) => `"${i.replace(/"/g, '')}"`).join(',')})`),
     markSent: async (id, error) => {
       await call(`push_outbox?id=eq.${id}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify({ sent_at: new Date().toISOString(), error }) });
     },
     markError: async (id, error) => {
       await call(`push_outbox?id=eq.${id}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify({ error }) });
+    },
+    prefs: async (ids) => {
+      const rows: { id: string; notify?: Record<string, unknown> }[] = await call(`profiles?select=id,notify&id=in.(${ids.map((i) => `"${i.replace(/"/g, '')}"`).join(',')})`);
+      return Object.fromEntries(rows.map((r) => [r.id, r.notify ?? {}]));
     },
     dropToken: async (token) => {
       await call(`push_tokens?token=eq.${encodeURIComponent(token)}`, { method: 'DELETE', headers: { prefer: 'return=minimal' } });

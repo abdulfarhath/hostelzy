@@ -2,6 +2,8 @@
 // phone (local scheduled notifications), so they work offline and cost no
 // server push. Android only; tests, web and desktop use [NoReminders].
 
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,7 +59,7 @@ class Ring {
 }
 
 /// Notification ids: water 1000+, mine 2000+, meals 3000+, rent 4000+,
-/// snoozed 5000+.
+/// laundry 4100, snoozed 5000+.
 const snoozeId = 5000;
 
 /// `4:30 pm`, `9 pm` when [short] and on the hour.
@@ -133,7 +135,7 @@ class NoReminders implements Reminders {
   void onOpen(void Function(String kind) f) {}
 }
 
-const _channel = AndroidNotificationDetails('reminders', 'Reminders', channelDescription: 'Water, your own reminders and hostel reminders, set in Me → Reminders.', importance: Importance.high, priority: Priority.high, icon: 'ic_stat_hostelzy');
+const _channel = AndroidNotificationDetails('reminders', 'Reminders', channelDescription: 'Water, your own reminders and hostel reminders, set in Me → Reminders.', importance: Importance.high, priority: Priority.high, icon: 'ic_stat_hostelzy', color: Color(0xFFEC3013));
 
 NotificationDetails _details(String kind) => NotificationDetails(
   android: AndroidNotificationDetails(
@@ -143,6 +145,7 @@ NotificationDetails _details(String kind) => NotificationDetails(
     importance: _channel.importance,
     priority: _channel.priority,
     icon: _channel.icon,
+    color: _channel.color,
     actions: switch (kind) {
       'water' || 'mine' => const [AndroidNotificationAction('done', 'Done'), AndroidNotificationAction('snooze', 'Snooze 10 min')],
       'meal' => const [AndroidNotificationAction('open', 'Open menu', showsUserInterface: true)],
