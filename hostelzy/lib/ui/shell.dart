@@ -439,6 +439,7 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
+    'scan' => const ScanScreen(),
     'rRefund' => const ResidentRefundScreen(),
     'oMeter' => const OwnerMeterScreen(),
     'reminders' => const RemindersScreen(),
@@ -592,6 +593,7 @@ class _Sheet extends StatelessWidget {
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
+      'scanCam' => 'Use your camera?',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
         'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
@@ -633,6 +635,7 @@ class _Sheet extends StatelessWidget {
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
+      'scanCam' => 'Join your PG',
       'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom} · ${s.lReqShape == 'Custom' ? 'Custom shape' : s.lReqShape}',
@@ -672,6 +675,7 @@ class _Sheet extends StatelessWidget {
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
       'signIn' => const SignInSheet(),
       'loc' => const LocationSheet(),
+      'scanCam' => const CameraSheet(),
       'hold' => const _HoldSheet(),
       'wa' => const _WaSheet(),
       'add' => const _AddSheet(),
