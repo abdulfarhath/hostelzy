@@ -299,7 +299,11 @@ class PlanBanner extends StatelessWidget {
     if (inv.status == 'paid' || inv.status == 'upcoming' || inv.late < remindAfterDays) return const SizedBox();
     final amt = fmt(s.invoiceAmt);
     final checking = inv.status == 'checking';
-    final (icon, title, body) = inv.pausesDeals
+    // The server doesn't pause deals for tenants yet (F24 item 21), so the real
+    // build never says tenants see walk-in prices; only the demo does.
+    final (icon, title, body) = inv.pausesDeals && s.onServer
+        ? ('warn', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UPI reference. Usually within a day.' : 'Pay $amt to keep your deals on. Your listing, holds and residents keep working.')
+        : inv.pausesDeals
         ? ('warn', 'Deals paused: plan ${inv.late} days late', checking ? 'We’re checking your UPI reference. Deals switch back on once it matches our bank record.' : 'Tenants see walk-in prices only. Your listing, holds and residents keep working. Pay $amt to switch deals back on.')
         : ('clock', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UPI reference. Usually within a day.' : '$amt for ${_monthNames[inv.due.month - 1]}. Pay by ${dayMon(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.');
     return Padding(

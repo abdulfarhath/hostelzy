@@ -1,11 +1,15 @@
 # Hostelzy architecture (target) · Ideas chat, 2026-10-02
 
-## Today
-One Flutter app (~17k lines). Everything runs through one big `AppState` (`state.dart`, ~2k lines)
-with string screens (`screen`, `hist`) inside a single `MaterialApp(home:)`. Data is seeded in
-`data.dart` and lives only in memory. Supabase, Firebase Auth/FCM/Crashlytics are wired in but the
-release APK runs `DATA=sample`. Problems: no back stack, nothing persists, sample identity
-everywhere, one class owns every feature.
+## Today (updated 2026-10-03)
+One Flutter app. `AppState` (`state.dart`) is a shell over per-feature state in `lib/features/*`,
+with go_router deep links and the Android back stack. The release APK (`hostelzy.apk`) runs on
+Supabase (`SupabaseRepo`): Google sign-in through Firebase, live rows with Realtime, RLS on every
+table, photos in Storage, FCM push, Crashlytics, and an offline copy of the hostels list. Sample data
+(`SampleRepo`, `DATA=sample`) is only for the demo APK (`hostelzy-demo.apk`) and the flow tests.
+
+## Before (2026-10-02, for history)
+Everything ran through one big `AppState` with string screens inside a single `MaterialApp(home:)`;
+data was seeded in `data.dart`, lived only in memory, and the release APK ran `DATA=sample`.
 
 ## Target
 ```

@@ -355,14 +355,14 @@ class RoomMode extends StatelessWidget {
         gap: 14,
         children: [
           const LayoutEmpty(icon: 'lock', head: 'Sign in to see room layouts', body: 'Room layouts are only for people signed in to Hostelzy.'),
-          T('It takes one OTP. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
+          T('It takes one tap with Google. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
     } else if (l == null) {
       body = VGap(
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The Hostelzy team is drawing this room. You can still pick a bed from Plan or List, and see the photos.'),
+          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from Plan or List, and see the photos.'),
           OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('Alerts come once the app is online. Check back here for now.')),
           T('Layouts are drawn by Hostelzy after a visit, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
@@ -481,7 +481,7 @@ class RoomMode extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('AC under repair. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           body,
         ],
@@ -490,7 +490,7 @@ class RoomMode extends StatelessWidget {
   }
 }
 
-/// The Room tab's bottom bar: Compare beds + Hold bed (or Verify my phone).
+/// The Room tab's bottom bar: Compare beds + Hold bed (or Sign in).
 class RoomBar extends StatelessWidget {
   const RoomBar({super.key, required this.room});
   final Room room;
@@ -499,7 +499,7 @@ class RoomBar extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     if (!s.signedIn) {
-      return Cta('Verify my phone', height: 54, px: 16, fs: 15, onTap: () => s.go('phone'));
+      return Cta('Sign in', height: 54, px: 16, fs: 15, onTap: () => s.startSignIn());
     }
     final focus = roomFocus(s, room);
     final b = room.beds.where((x) => x.letter == focus).firstOrNull;
@@ -703,7 +703,7 @@ class OwnerLayoutScreen extends StatelessWidget {
     final (stText, stBg, stFg) = l == null
         ? ('No layout yet', p.ab, p.ad)
         : l.request != null
-        ? ('Help requested · Hostelzy replies within 48 h', p.ab, p.ad)
+        ? ('Help requested · WhatsApp us the photos', p.ab, p.ad)
         : l.pending
         ? ('Hostelzy drew a new version · check and publish', p.ab, p.ad)
         : !l.live
@@ -817,7 +817,7 @@ class LayoutRequestSheet extends StatelessWidget {
               Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(value: s.lReqWid, numeric: true, placeholder: '15', onChanged: (v) => s.update(() => s.lReqWid = v.replaceAll(RegExp(r'\D'), '')))])),
             ],
           ),
-          T('Free. The Hostelzy team draws it within 48 hours once the app is online; until then, WhatsApp us the photos. Tenants keep seeing the current layout.', s: 12, c: p.mu, lh: 1.45),
+          T('Free. You can also change it yourself in the layout editor and publish. Tenants keep seeing the current layout until then.', s: 12, c: p.mu, lh: 1.45),
           Cta('Send request', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
         ],
       ),
@@ -1003,7 +1003,7 @@ class AdminLayoutScreen extends StatelessWidget {
                         child: VGap(
                           gap: 4,
                           children: [
-                            T('Redraw within 48 hours', w: 800, s: 14, c: p.ad),
+                            T('The owner asked for help', w: 800, s: 14, c: p.ad),
                             T('${h.owner} · ${req.at}', s: 12, c: p.mu),
                             if (req.text.isNotEmpty) T('“${req.text}”', s: 14, w: 600, lh: 1.4),
                             T([for (final a in req.added) const {'photo': 'Room photo', 'sketch': 'Paper sketch', 'voice': 'Voice note 0:18', 'more': 'More photos'}[a], if (req.size.isNotEmpty) req.size].join(' · '), s: 12, c: p.mu),
@@ -1114,9 +1114,9 @@ class CreateLayoutScreen extends StatelessWidget {
                     child: VGap(
                       gap: 6,
                       children: [
-                        const T('Rather not draw it?', w: 800, s: 14),
-                        T('Send a photo and a sketch; the Hostelzy team draws it within 48 hours, free.', s: 13, c: p.mu, lh: 1.4),
-                        Tap(onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the layout of room ${room.label} at ${h.name}. I’ll send a photo and a sketch.'), child: T('Ask Hostelzy to help', w: 800, s: 14, c: p.ad)),
+                        const T('Room not a rectangle?', w: 800, s: 14),
+                        T('Send a photo and a sketch of its shape; the Hostelzy team draws the shape within 48 hours, free. You place the beds and items.', s: 13, c: p.mu, lh: 1.4),
+                        Tap(onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the shape of room ${room.label} at ${h.name}. I’ll send a photo and a sketch.'), child: T('Ask Hostelzy to draw the shape', w: 800, s: 14, c: p.ad)),
                       ],
                     ),
                   ),

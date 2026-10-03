@@ -564,7 +564,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       rates[h.id] = l.rates[h.id]!;
       ownerUpi[h.id] = l.upi[h.id]!;
       stats[h.id] = statsOf(l.reviews[h.id] ?? const []);
-      confirmed[h.id] = 0;
+      // Not known until the owner confirms on the server (later wave): never "today".
+      confirmed.remove(h.id);
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;
