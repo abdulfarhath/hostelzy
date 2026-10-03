@@ -56,6 +56,28 @@ export const CASE_TABS = [
   ['closed', 'Closed'],
 ];
 
+/** F07 / DECISIONS: what strike n means. The server writes the same words. */
+export const strikeWords = (n) => (n <= 1 ? 'warning' : n === 2 ? 'deals hidden for 30 days' : 'removed from Hostelzy');
+
+/** The team's strike button: the next strike and what it does. */
+export const strikeButton = (n) => (n >= 3 ? 'Removed already' : `Strike ${n + 1} · ${strikeWords(n + 1)}`);
+
+/** A hostel's strikes now, from fair_standing(): strike 2 hides deals for 30 days, then they come back. */
+export function standingLine(st, now = Date.now()) {
+  if (!st || !st.n) return 'No strikes';
+  if (st.removed) return `${st.n} strikes · removed from Hostelzy`;
+  if (st.n === 2 && st.hidden_until) {
+    return new Date(st.hidden_until).getTime() > now ? `2 strikes · deals hidden until ${dayMon(st.hidden_until)}` : `2 strikes · deals back since ${dayMon(st.hidden_until)}`;
+  }
+  return `${st.n} ${st.n === 1 ? 'strike' : 'strikes'} · ${strikeWords(st.n)}${st.last_reason === 'fixes' ? ' (3 fixes in 6 months)' : ''}`;
+}
+
+/** A tenant report, for the team: what happened, their note, when. */
+export const reportLine = (r) => [r.why, r.note ? `“${r.note}”` : null, dayMon(r.created_at)].filter(Boolean).join(' · ');
+
+/** Where the team puts a tenant's photo for a case (the `case-photos` bucket). */
+export const casePhotoPath = (hostelId, uid, now = Date.now()) => `${hostelId}/${uid}/tenant-${now}.jpg`;
+
 /** F24 item 14: tenants' "Did you join?" answers for one hostel, in words. */
 export function joinSummary(rows) {
   if (!rows.length) return 'No answers yet';
