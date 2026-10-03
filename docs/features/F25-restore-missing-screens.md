@@ -205,7 +205,7 @@ Rules for Build:
 | F21 Before → after · Before · Explore (`z-f21b-e-before.dc.html`) | S8 (before, ranked list) |  | older version of the same screen |
 | F21 Before → after · After · Explore (`z-f21b-e-after.dc.html`) | S8 |  |  |
 | F21 Before → after · Before · Hostel page (`z-f21b-d-before.dc.html`) | S13 (before) |  | older version of the same screen |
-| F21 Before → after · Before · Hold sheet (`z-f21b-h-before.dc.html`) | H4 (before: 2-hour Member hold) |  | older version of the same screen |
+| F21 Before → after · Before · Hold sheet (`z-f21b-h-before.dc.html`) | H4 · Member variant (board `r-holdSheetMember`: "Hold free · 2 hours", `holds_sheets.dart:67`) |  | current rule (DECISIONS: 2 h for Members) |
 | F21 Before → after · After · Hostel page (`z-f21b-d-after.dc.html`) | S13 |  |  |
 | F21 Before → after · After · Hold or book (`z-f21b-h-after.dc.html`) | H4 |  |  |
 | F21 Before → after · After · UPI reference, plain words (`z-f21b-u-after.dc.html`) | H12 |  |  |
@@ -253,6 +253,12 @@ Rules for Build:
 | Old main canvas: boards retired from the main area · f19-Console (`z-old-f19-Console.dc.html`) | C7 |  |  |
 | Old main canvas: boards retired from the main area · f19-ConsoleDark (`z-old-f19-ConsoleDark.dc.html`) | C7 dark |  |  |
 | Old main canvas: boards retired from the main area · room (`z-old-room.dc.html`) | S17 (before F23) |  | older version of the same screen |
+
+**Member hold (hub check, v32):** the 2-hour Member hold is a current rule, not old pricing. The app covers it: the hold
+sheet says "Hold free · 2 hours" for Members (H4), the sign-in sheet says "free 2-hour hold", and Rewards and Perks list
+"2-hour holds". New variant board `r-holdSheetMember`. **For Build:** the line under the hold button still says
+"If <owner> doesn't keep it within the hour…" for Members. It should say "within 2 hours" (`holds_sheets.dart`, the
+`T(book ? … : …)` under `holdGo`). Only the ₹299 paid hold was dropped (DECISIONS).
 
 ### Map boards = real app screenshots (v31)
 The founder says the app's map looks better than the old design, so the map boards now show Build's real
