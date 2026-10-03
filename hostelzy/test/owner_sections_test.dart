@@ -124,9 +124,9 @@ void main() {
     s.update(() {
       s.invoices.addAll([
         Invoice(ref: 'HZ-INV-0901', hid: 'anjani', beds: 24, amt: 499, due: DateTime(2026, 7, 31), status: 'paid', utr: '401900000001', checked: '1 Aug'),
-        Invoice(ref: 'HZ-INV-0950', hid: 'anjani', beds: 24, amt: 399, due: DateTime(2026, 9, 1), status: 'checking', utr: '401900000002'),
-        Invoice(ref: 'HZ-INV-0920', hid: 'anjani', beds: 24, amt: 499, due: DateTime(2026, 8, 1), status: 'missing', utr: '401900000003'),
-        Invoice(ref: 'HZ-INV-0899', hid: 'anjani', beds: 24, amt: 499, due: DateTime(2026, 7, 1), status: 'due', late: 20),
+        Invoice(ref: 'HZ-INV-0950', hid: 'anjani', beds: 24, amt: 399, due: DateTime(2026, 9), status: 'checking', utr: '401900000002'),
+        Invoice(ref: 'HZ-INV-0920', hid: 'anjani', beds: 24, amt: 499, due: DateTime(2026, 8), status: 'missing', utr: '401900000003'),
+        Invoice(ref: 'HZ-INV-0899', hid: 'anjani', beds: 24, amt: 499, due: DateTime(2026, 7), status: 'due', late: 20),
       ]);
     });
     await tester.pump();
@@ -155,7 +155,7 @@ void main() {
       t.dispose();
 
       final s = AppState(start: 'oPlan', role: 'owner', theme: theme, plan: 'paid');
-      s.invoices.add(Invoice(ref: 'HZ-INV-0950', hid: 'anjani', beds: 24, amt: 1499, due: DateTime(2026, 9, 1), status: 'checking'));
+      s.invoices.add(Invoice(ref: 'HZ-INV-0950', hid: 'anjani', beds: 24, amt: 1499, due: DateTime(2026, 9), status: 'checking'));
       await _pump(tester, s, scale: 2, width: 360);
       await _see(tester, find.byKey(const ValueKey('pastInvoice-HZ-INV-0950')));
       await _see(tester, find.byKey(const ValueKey('planTier-2')));
