@@ -1,0 +1,335 @@
+# SCREENS: every screen, sheet and state in the release app
+
+- **Date:** 2026-10-03 · **Counted on `main` at `fdbbef8`** (Build, by reading the code, not the canvas).
+- **Why:** CLAUDE.md "Design ↔ app consistency". The Design chat matches the "Hostelzy · Main design"
+  canvas 1:1 against this list. When a PR adds or removes a screen, update this file in the same PR.
+
+## Totals
+
+| Group | Count |
+|---|---|
+| App screens (routes + their separate pages/views) | **86** |
+| App sheets (bottom sheets) | **43** |
+| App full-screen states | **31** |
+| **Release app total** | **160** |
+| Team console (app/console): views 9 + states 4 | **13** |
+| Web pages (app/, index.html): pages 7 + states 2 | **9** |
+| **Overall total** | **182** |
+
+Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 30 · Team mode 13 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+
+## Counting rules
+
+1. **Release app** = `flutter build --release --dart-define=DATA=supabase` (the Play/APK build). Things only in
+   debug (`kDebugMode`), only in the sample "demo" APK (`DATA=sample`), or behind a flag that is off
+   (`phoneOtpLogin = false`) are listed under "Not counted" and are not in the totals.
+2. **Screen** = each `s.screen` key the shell maps to a widget (`lib/ui/shell.dart:386-458`, 70 keys), minus
+   `otp` (flag off). Keys that draw the very same screen count once (`oPlan` = `oInvoice` = `oPayStatus`,
+   `plan.dart:78`). A key whose body is switched wholesale into a **separate page** with its own title
+   (Manage pages, wizard steps, Give notice / Move bed, Join / List your PG, picker Room / List view, Food week,
+   Layouts › Shared things) counts once per page. Filter tabs inside one list (All / Due / Paid…) do not.
+3. **Sheet** = each `s.sheet` key with a body in `_Sheet` (`shell.dart:674-718`, 43 keys). Every one has a
+   real opener (file:line below). No `showDialog` / `showModalBottomSheet` / `Navigator.push` exists in `lib/`.
+4. **Full-screen state** = a state that replaces the screen's whole main content (everything under its
+   header/tabs, or the map's only card) with a different message or layout: empty, offline, loading, error,
+   locked, "not set up", "owner only", "not on Hostelzy yet". **Not counted:** one-line empty text inside a
+   list that still shows other content, inline error banners (`InlineError`), toasts, and status variants
+   that keep the same layout and only change words/colours (listed at the end for Design).
+5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
+   detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
+
+## 1. App screens (86)
+
+### Start and sign-in (7)
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 1 | `welcome` | Welcome (red, "See the bed before you see the building") | `screens_start.dart:10` | App start (not signed in); Log out (`settings.dart:297`) |
+| 2 | `login` | Sign in (Google); title changes with why (hold / list PG / join PG) | `screens_start.dart:119` | Welcome › Sign in; any sign-in gate (`features/session/guest.dart:74`) |
+| 3 | `phone` | About you (name + WhatsApp number, "not verified") | `screens_start.dart:166` | After Google sign-in (`features/session/login.dart:53`); `state.dart:565` |
+| 4 | `role` | What brings you here? (need a bed / live in a PG / run a PG) | `screens_start.dart:308` | After About you (`login.dart:82`); Me › Switch role |
+| 5 | `roleGate` (resident) | Join your PG (invite code, Scan the QR, MGR- code) | `screens_start.dart:369` (`else` branch, `:428`) | Role › I live in a PG, without a stay (`features/map/map.dart:101`) |
+| 6 | `roleGate` (owner) | List your PG (Request a visit, owner link, "Manager at a PG?") | `screens_start.dart:369` (`if (owner)`, `:386`) | Role › I run a PG, without a live hostel |
+| 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
+
+### Tenant (15)
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 8 | `explore` | Find a bed (tab) | `screens_tenant.dart:97` | Tenant tab 1; role pick; guest browse (`guest.dart:65`) |
+| 9 | `map` | Map (tab) | `map.dart:23` | Tenant tab 2 (also the side pane on tablets ≥1000 px) |
+| 10 | `saved` | Saved (tab) | `screens_tenant.dart:1599` | Tenant tab 3; Me › Saved |
+| 11 | `holds` | Holds (tab) | `screens_tenant.dart:461` | Tenant tab 4; Me › Holds; enquiry link for tenants (`links.dart:44`) |
+| 12 | `where` | Where? (area / landmark / hostel search) | `guest.dart:11` | Explore search bar; location refused (`guest.dart:143`) |
+| 13 | `detail` | Hostel page | `screens_tenant.dart:661` | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
+| 14 | `gallery` | Photos (full-screen gallery) | `photos.dart:291` | Hostel page › photo (`photos.dart:210`) |
+| 15 | `reviews` | Reviews of a hostel | `reviews.dart:173` | Hostel page › reviews (`screens_tenant.dart:799`) |
+| 16 | `picker` (plan) | Pick a bed · room plan / floor view | `screens_tenant.dart:1053` (`_PlanMode` `:1199`) | Hostel page › See beds (`residents.dart:245`) |
+| 17 | `picker` (room) | Room 101 · room layout, layers, bed facts | `layout.dart:354` (`RoomMode`) | Picker › tap a room (`state.dart:openRoom`) |
+| 18 | `picker` (list) | Pick a bed · cheapest first | `screens_tenant.dart:1340` (`_ListMode`) | Picker › See cheapest beds |
+| 19 | `compare` | Compare two beds | `layout.dart:644` | Room view › Compare with another bed (`room_layouts.dart:122`) |
+| 20 | `hold` | Your hold (timer / pay to book / booked / ended) | `screens_tenant.dart:1425` | After a hold (`residents.dart:312,426`); Holds row (`screens_tenant.dart:491`) |
+| 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
+| 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
+
+### Resident (13)
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 23 | `rHome` | Home (tab) | `screens_resident.dart:11` | Resident tab 1; after joining |
+| 24 | `food` (day) | Food (tab) · today's meals | `screens_resident.dart:498` | Resident tab 2 |
+| 25 | `food` (week) | Food · whole week table | `screens_resident.dart:340` (`WeekTable`) | Food › Whole week (`screens_resident.dart:536`) |
+| 26 | `rPay` | Rent (tab) | `screens_resident.dart:191` | Resident tab 3; Home › Pay rent |
+| 27 | `help` | Help · complaints (tab) | `screens_resident.dart:651` | Resident tab 4; Home › Raise complaint |
+| 28 | `rStay` | My stay | `screens_resident.dart:751` | Me › My stay (`screens_tenant.dart:586`) |
+| 29 | `move` (vacate) | Give notice | `screens_resident.dart:871` | My stay › Give notice (`screens_resident.dart:767`) |
+| 30 | `move` (swap) | Move to another bed | `screens_resident.dart:871` (`else`, `:1000`) | My stay › Move to another bed |
+| 31 | `rRoom` | Rooms · room layout (resident) | `layout_fixes.dart:22` | My stay › Fix a room layout (`features/layouts/layout_fixes.dart:101`) |
+| 32 | `rFix` | Fix this room (layout fix editor) | `layout_fixes.dart:157` | Rooms › Fix (`features/layouts/layout_fixes.dart:131`) |
+| 33 | `rReview` | 30-day review | `reviews.dart:252` | Home › review card (`review_rules.dart:54`) |
+| 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
+| 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
+
+### Owner (30)
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 36 | `oToday` | Today (tab) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
+| 37 | `oBeds` | Beds · bed map (tab) | `screens_owner.dart:510` | Owner tab 2 |
+| 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
+| 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
+| 40 | `oMore` · residents | Manage › Residents | `screens_owner.dart:1129` | Manage › Residents |
+| 41 | `oMore` · enquiries | Manage › Enquiries | `screens_owner.dart:361` | Manage › Enquiries; enquiry link (`links.dart:42`) |
+| 42 | `oMore` · complaints | Manage › Complaints | `screens_owner.dart:849` | Manage › Complaints |
+| 43 | `oMore` · deals | Manage › Deals | `deals.dart:13` | Manage › Deals (`state.openDeals`, `state.dart:241`) |
+| 44 | `oMore` · rates | Manage › Rates and UPI | `screens_owner.dart:1434` (`RateCard`) | Manage › Rates and UPI (`residents.dart:120`) |
+| 45 | `oMore` · menu | Manage › Food menu (+ meal times) | `screens_owner.dart:926` | Manage › Food menu (`food.dart:126`) |
+| 46 | `oMore` · rules | Manage › House rules (+ laundry day) | `screens_owner.dart:1005` | Manage › House rules |
+| 47 | `oInvite` | Invite residents (code, QR, share, poster) | `screens_owner.dart:1289` | Manage › Residents › QR (`screens_owner.dart:1157`) |
+| 48 | `oTeam` | Team (owner's managers) | `onboarding.dart:1120` | Manage › Team (`screens_owner.dart:1077`) |
+| 49 | `oPhotos` | Photos (owner) | `photos.dart:25` | Manage › Photos (`photos.dart:89`); wizard step 4 (`onboarding.dart:366`) |
+| 50 | `oCrop` | Crop photo | `photos.dart:185` | Photos › after picking (`features/photos/photos.dart:104`) |
+| 51 | `oRooms` | Rooms (add / change rooms) | `rooms.dart:11` | Beds › Rooms (`screens_owner.dart:1518`) |
+| 52 | `oMeter` | Electricity (meter readings) | `stay_tools.dart:13` | Rent › Electricity (`features/meter/meter.dart:74`) |
+| 53 | `oLayouts` (rooms) | Room layouts | `team.dart:113` | Manage › Room layouts (`screens_owner.dart:1073`) |
+| 54 | `oLayouts` (things) | Layouts › Shared things (by floor) | `amenities.dart:333` (`OwnerSharedThings`) | Room layouts › Shared things tab (`team.dart:158`) |
+| 55 | `oLayout` | Room N · layout (owner view) | `layout.dart:777` | Room layouts › a room (`owner_layouts.dart:133`) |
+| 56 | `oCreate` | Create a layout · pick the shape | `layout.dart:1269` | Room layouts › Create (`owner_layouts.dart:34`) |
+| 57 | `aLayout` | Layout editor (owner and team) | `layout.dart:989` | Room › Edit layout (`layout.dart:924`); Team home (`team.dart:54`) |
+| 58 | `oPublished` | Layout published | `layout.dart:1372` | Editor › Publish (`owner_layouts.dart:99,115`) |
+| 59 | `oFix` | A resident's layout fix (approve / reject) | `layout_fixes.dart:644` | Today › fix card (`features/layouts/layout_fixes.dart:263`) |
+| 60 | `oFixDone` | Fix published | `layout_fixes.dart:750` | Fix › Approve (`features/layouts/layout_fixes.dart:301`) |
+| 61 | `oRank` | Reviews and ranking | `reviews.dart:479` → `:395` | Manage › Reviews and ranking (`screens_owner.dart:1076`) |
+| 62 | `oRules` | Fair Play rules | `fairplay.dart:90` | First owner role pick (`map.dart:pickRole`); Settings › Fair Play rules |
+| 63 | `oCase` | Fair Play check (case + reply) | `fairplay.dart:336` | Today › case card (`screens_owner.dart:332`); push |
+| 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
+| 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
+
+### Hostelzy team mode (13) — release, only for Google accounts with the `team` claim
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 66 | `aHome` | Hostelzy team (tools list) | `team.dart:40` | Settings › Hostelzy team (`team_mode.dart:17,33`) |
+| 67 | `aAdd` step 1 | Add hostel · Basics | `onboarding.dart:142` | Team › Add hostel (`state.dart:239`); tracker (`team_mode.dart:71`) |
+| 68 | `aAdd` step 2 | Add hostel · Rooms, floor by floor | `onboarding.dart:218` | Wizard › Next |
+| 69 | `aAdd` step 3 | Add hostel · Rate card | `onboarding.dart:406` | Wizard › Next |
+| 70 | `aAdd` step 4 | Add hostel · Photos | `onboarding.dart:502` | Wizard › Next |
+| 71 | `aAdd` step 5 | Add hostel · Current residents | `onboarding.dart:636` | Wizard › Next |
+| 72 | `aAdd` step 6 | Add hostel · Owner account | `onboarding.dart:739` | Wizard › Next |
+| 73 | `aAdd` step 7 | Add hostel · Ready to go live? | `onboarding.dart:789` | Wizard › Next |
+| 74 | `aPin` | Map pin | `map.dart:287` | Wizard step 1 › Map pin (`onboarding.dart:202`; `features/onboarding/onboarding.dart:251`) |
+| 75 | `aTrack` | Onboarding tracker | `onboarding.dart:1253` | Team › Onboarding tracker (`team.dart:49`); after go live |
+| 76 | `aPay` | Payments check | `plan.dart:348` | Team › Payments check (`team.dart:52`) |
+| 77 | `aCases` | Fair Play cases (list, case opens in place) | `fairplay.dart:558` | Team › Fair Play cases (`team.dart:53`) |
+| 78 | `aTeam` | Team members | `rooms.dart:113` | Team › Team members (`team.dart:56`) |
+
+### Shared, every role (8)
+
+| # | id | Name | Built at | How it's reached |
+|---|---|---|---|---|
+| 79 | `me` | Me (tab for tenant and resident; owner via Today avatar) | `screens_tenant.dart:571` | Tab 5; owner Today (`screens_owner.dart:89`) |
+| 80 | `settings` | Settings | `settings.dart:73` | Me › Settings |
+| 81 | `reminders` | Reminders | `reminders.dart:92` | Me › Reminders; reminder notification (`features/reminders/reminders.dart:77,234`) |
+| 82 | `perm` | Turn on notifications? (explainer) | `settings.dart:309` | First role pick with push not yet allowed (`login.dart:186`) |
+| 83 | `delAcc` | Delete account | `settings.dart:143` | Settings › Delete account |
+| 84 | `delConfirm` | Delete · confirm with Google | `settings.dart:227` | Delete account › Continue (`state.dart:656`) |
+| 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
+| 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
+
+## 2. App sheets (43)
+
+All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
+
+### Tenant (10)
+
+| # | id | Title | Body class | Opened at |
+|---|---|---|---|---|
+| 1 | `search` | Filters (sort, for, budget…) | `shell.dart:793` | Explore › Filters (`screens_tenant.dart:144`) |
+| 2 | `loc` | Use your location? | `map.dart:249` | Map › Near me (`map.dart:128`; `guest.dart:180`) |
+| 3 | `signIn` | Sign in to hold / book / message | `guest.dart:105` | Guest taps Hold, Book or WhatsApp (`guest.dart:86`) |
+| 4 | `hold` | Bed N (free hold or book with advance) | `shell.dart:877` | Picker › Continue (`screens_tenant.dart:1148`; `layout.dart:613`); hold again (`:1453`) |
+| 5 | `holdNotify` | Bed N is held for you (allow notifications) | `guest.dart:129` | After the first hold (`guest.dart:203`) |
+| 6 | `wa` | Ask the owner (WhatsApp enquiry) | `shell.dart:962` | Hostel page / hold › WhatsApp (`map.dart:158`; `sync.dart:197`; `state.dart:396`) |
+| 7 | `payAdv` | Pay the advance | `payments.dart:59` | Book a bed (`residents.dart:313,427`) |
+| 8 | `report` | Tell us what happened (private) | `fairplay.dart:288` | Holds › "The owner asked me to skip the app" (`screens_tenant.dart:544`) |
+| 9 | `perks` | What Trusted tenants get / You're a Trusted tenant | `stay_tools.dart:209` | Rewards / first-look bed (`features/rewards/rewards.dart:74`) |
+| 10 | `foodWeek` | Food menu · whole week (hostel page) | `screens_tenant.dart:1766` | Hostel page › Full week (`features/food/food.dart:121`) |
+
+### Resident (6)
+
+| # | id | Title | Body class | Opened at |
+|---|---|---|---|---|
+| 11 | `scanCam` | Use your camera? | `screens_start.dart:499` | Join your PG › Scan the QR, first time (`links.dart:150`) |
+| 12 | `payUtr` | Enter the UPI reference (rent, also the tenant's advance) | `payments.dart:105` | After paying by UPI (`features/payments/payments.dart:35`; `state.dart:556`) |
+| 13 | `fixLock` | Fix this room? (only residents of this hostel) | `layout_fixes.dart:308` | Rooms › Fix (`features/layouts/layout_fixes.dart:116,187,367`) |
+| 14 | `fixLimit` | Can't send yet | `layout_fixes.dart:342` | Fix limit reached (`features/layouts/layout_fixes.dart:119,391`) |
+| 15 | `fixSend` | Send your fix | `layout_fixes.dart:386` | Fix editor › Send (`features/layouts/layout_fixes.dart:193`) |
+| 16 | `quickFix` | Quick fix · item (fan, AC…) | `layout_fixes.dart:557` | Rooms › tap an item (`features/layouts/layout_fixes.dart:374`) |
+
+### Owner (19)
+
+| # | id | Title | Body class | Opened at |
+|---|---|---|---|---|
+| 17 | `add` | Add tenant (centre tab action) | `shell.dart:1200` | Owner tab bar "+" (`shell.dart:473`); bed sheet (`:1372`) |
+| 18 | `bed` | Bed N (owner bed sheet) | `shell.dart:1322` | Beds › a bed (`screens_owner.dart:520`) |
+| 19 | `enq` | Enquiry from Hostelzy (HZ code) | `shell.dart:1011` | Today / enquiry link (`links.dart:42`; `state.dart:516`) |
+| 20 | `addR` | Add a resident | `shell.dart:1075` | Residents › Add (`state.dart:505`) |
+| 21 | `trusted` | X is a Trusted tenant | `rewards.dart:249` | Today › hold request (`screens_owner.dart:161`) |
+| 22 | `utr` | I've paid ₹N (plan invoice UTR) | `plan.dart:243` | Your plan › I've paid (`state.dart:170`) |
+| 23 | `layoutReq` | Ask Hostelzy to draw it | `layout.dart:941` | Create a layout › Custom / Ask (`room_layouts.dart:210`) |
+| 24 | `switch` | Switch hostel | `onboarding.dart:1046` | Today / Manage header (`screens_owner.dart:85,1085`) |
+| 25 | `addRoom` | Add a room | `rooms.dart:89` | Rooms › Add (`features/onboarding/rooms_live.dart:33`) |
+| 26 | `manager` | Add a manager | `onboarding.dart:1195` | Team › Add (`onboarding.dart:1187`) |
+| 27 | `photo` | This photo (cover, label, delete) | `photos.dart:384` | Photos › a photo (`photos.dart:64`) |
+| 28 | `cPhoto` | Photo (a complaint's photo) | inline `shell.dart:678` | Complaints › photo (`state.dart:469`) |
+| 29 | `fixReject` | Reject this fix? | `layout_fixes.dart:723` | Fix › Reject (`layout_fixes.dart:711`) |
+| 30 | `fixMute` | Mute this resident? | `layout_fixes.dart:619` | Fix › Mute (`layout_fixes.dart:693`) |
+| 31 | `rank` | How the ranking works | `reviews.dart:486` | Reviews and ranking › rank tile (`reviews.dart:444`) |
+| 32 | `revReport` | Report this review | `reviews.dart:509` | Reviews › Report (`review_rules.dart:132`) |
+| 33 | `refund` | Refund X's advance | `refunds.dart:36` | Today › refund card (`features/moves/moves.dart:171`) |
+| 34 | `laundry` | Laundry day | `stay_tools.dart:166` | House rules › Laundry day (`features/laundry/laundry.dart:40`) |
+| 35 | `waNum` | Your WhatsApp number | `settings.dart:418` | Settings › WhatsApp, owners (`features/session/on_phone.dart:65`) |
+
+### Team (1)
+
+| # | id | Title | Body class | Opened at |
+|---|---|---|---|---|
+| 36 | `team` | Hostelzy team (check the team account) | `team.dart:13` | Settings › Hostelzy team, not yet unlocked (`team_mode.dart:18`) |
+
+### Shared (7)
+
+| # | id | Title | Body class | Opened at |
+|---|---|---|---|---|
+| 37 | `lang` | Language | `guest.dart:156` | Settings › Language (`settings.dart:118`), once Telugu/Hindi are checked |
+| 38 | `name` | Change your name | `settings.dart:395` | Settings › Name (`on_phone.dart:33`) |
+| 39 | `water` | Drink water | `reminders.dart:326` | Reminders › Water (`features/reminders/reminders.dart:257`) |
+| 40 | `addRem` | Add a reminder / Edit reminder | `reminders.dart:437` | Reminders › Add (`features/reminders/reminders.dart:286`) |
+| 41 | `waterOffer` | Want water reminders? | `reminders.dart:506` | 3rd app open (`features/reminders/reminders.dart:357`) |
+| 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
+| 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
+
+## 3. App full-screen states (31)
+
+| # | Screen | State | Condition | Built at |
+|---|---|---|---|---|
+| **Tenant (17)** |||||
+| 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
+| 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
+| 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
+| 4 | `explore` | No hostels in this area yet · Try area | nothing live, or area picked has none | `screens_tenant.dart:177` |
+| 5 | `explore` | Nothing matches yet · Clear filters | filters exclude every hostel | `screens_tenant.dart:196` |
+| 6 | `map` | No hostels here yet (card) | no hostel under the filters/area | `map.dart:163` |
+| 7 | `holds` | No holds yet · Find a bed | `holds.isEmpty` | `screens_tenant.dart:548` |
+| 8 | `saved` | Nothing saved yet · Find a bed | nothing saved | `screens_tenant.dart:1617` |
+| 9 | `hold` | This hold isn't on this phone any more | hold id not found | `screens_tenant.dart:1432` |
+| 10 | `picker` (plan) | Floor plan shows after you hold a bed | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
+| 11 | `picker` (room) | Sign in to see room layouts | guest | `layout.dart:367` |
+| 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one | `layout.dart:375` |
+| 13 | `picker` (room) | Floor plan shows after you hold a bed (daily cap) | server `capped` | `layout.dart:379` |
+| 14 | `picker` (room) | Couldn't load this room · Try again | server fetch failed | `layout.dart:390` |
+| 15 | `picker` (room) | Layout coming soon · Tell me when it's ready | no published layout | `layout.dart:398` |
+| 16 | `scan` | The camera is off for Hostelzy | camera permission denied | `screens_start.dart:540` |
+| 17 | `scan` | The camera didn't start | scanner error | `screens_start.dart:540` |
+| **Resident (6)** |||||
+| 18 | `rPay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:198` |
+| 19 | `food` | Owner hasn't put the menu on Hostelzy yet | no menu | `screens_resident.dart:542` |
+| 20 | `rStay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:799` |
+| 21 | `move` (vacate) | Notice given / Notice accepted | notice sent (not declined) | `screens_resident.dart:947` |
+| 22 | `rRoom` | No layout yet | room has no layout | `layout_fixes.dart:99` |
+| 23 | `rRefund` | No refund waiting | no open refund | `refunds.dart:83` |
+| **Owner (6)** |||||
+| 24 | `oRules` | Fair Play rules · before you go live (short + I agree) | `!fairAccepted && !fpFull` | `fairplay.dart:109` |
+| 25 | `oCase` | Fair Play · No open cases | no case | `fairplay.dart:343` |
+| 26 | `oLayout` | No layout yet (draw it / ask Hostelzy) | no layout, no request | `layout.dart:844` |
+| 27 | `oLayout` | Hostelzy is drawing it | open shape request | `layout.dart:843` |
+| 28 | `oLayout` | Hostelzy drew a new version · check and publish | request sent back | `layout.dart:845` |
+| 29 | `oPlan`, `oCase`, `oStrike`, Manage › Deals / Rates | Owner only (manager) | `ownerOnlyWhat` ≠ null | `plan.dart:457`, `shell.dart:354` |
+| **Shared (2)** |||||
+| 30 | `delAcc` | Can't delete yet (open hold / unpaid plan) | `deleteBlock != null` | `settings.dart:154` |
+| 31 | `gate` | Update Hostelzy to continue | `appBuild < minBuild` | `settings.dart:370` |
+
+## 4. Team console, app/console (13)
+
+Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
+
+| # | id | View | Built at |
+|---|---|---|---|
+| 1 | `#onboarding` | Onboarding (stage columns, add lead, advance) | `console.js:109` |
+| 2 | `#payments` | Payments (invoices, mark paid / not received) | `console.js:151` |
+| 3 | `#cases` | Fair Play (case tabs, list + case detail, signals, strikes, tenant reports, case photo) | `console.js:180` |
+| 4 | `#layout` | Layout help (requests table + request detail) | `console.js:311` |
+| 5 | `#layout` › editor | Layout help · draw the walls (shape, W × L, Send to owner) | `console.js:316` (`editor`) |
+| 6 | `#rewards` | Stay Rewards ledger (Reverse) | `console.js:395` |
+| 7 | `#fixes` | Layout fixes (list + fix detail, approve / reject) | `console.js:420` |
+| 8 | `#reviews` | Reported reviews (Hide / Keep) | `console.js:478` |
+| 9 | `#hostels` | Hostels (Go live / Pause) | `console.js:507` |
+| 10 | state | Sign in (Continue with Google; "isn't a Hostelzy team account" message) | `console.js:53` |
+| 11 | state | Not set up yet (no Firebase config) | `console.js:37` |
+| 12 | state | Couldn't start | `console.js:41` |
+| 13 | state | Couldn't load (page error) | `console.js:96` |
+
+Not counted: "Loading…" (`console.js:87`) and "Not found." for an unknown `#hash` (`console.js:94`).
+
+## 5. Web pages (9)
+
+| # | Path | Page | States |
+|---|---|---|---|
+| 1 | `index.html` (site root) | Old web prototype (green, Bricolage; not the app's design). Views inside: home, hostel, stay, parent, contact, owner, HQ (`index.html:426-564`) | views not counted |
+| 2 | `app/index.html` | Hostelzy · Get the app | — |
+| 3 | `app/r/` | A Hostelzy enquiry (HZ code, Open in Hostelzy) | +1: "This link has no HZ code" (`app/r/index.html:20`) |
+| 4 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
+| 5 | `app/privacy/` | Privacy policy | — |
+| 6 | `app/terms/` | Terms of use | — |
+| 7 | `app/delete-account/` | Delete your Hostelzy account | — |
+
+Pages 7 + states 2 = 9.
+
+## 6. Not counted (listed so nobody draws or builds them by mistake)
+
+| Item | Why not counted | Where |
+|---|---|---|
+| `otp` Enter the 6-digit code | `phoneOtpLogin = false` (SMS needs Firebase billing) | `screens_start.dart:243`, `app_config.dart` |
+| About you as "Your mobile number · Step 1 of 2" | same flag | `screens_start.dart:182` |
+| DEMO banner "Sample data. Nothing you do here is real." | only the `DATA=sample` demo APK | `shell.dart:341` |
+| Prototype frame, jump list, phone frame | `kDebugMode` only | `shell.dart:111-280` |
+| All-screens overview page (`?page=overview`), start-state URL params, `?plan=` demo states | `kDebugMode` only | `ui/overview.dart`, `main.dart:52` |
+| Tablet / desktop layout (left rail, app column, map or brand pane) | layout of the same screens, not a screen | `shell.dart:79` (`_Wide`), `:482` (`_Rail`) |
+| Toast (with Undo), tab bar | chrome on every screen | `shell.dart:364`, `:528` |
+| `moveIn` / sheet bodies with missing data → empty `SizedBox` | defensive fallback, nothing drawn | e.g. `rewards.dart:159` |
+
+## 7. Status variants (same layout, not counted; for Design to check)
+
+- `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released (`screens_tenant.dart:1463-1517`).
+- `oPlan`: Free trial · Due · N days late · Checking · Paid · Not received (`plan.dart:23`).
+- `rPay`: Due · Waiting · Not received · Paid (`screens_resident.dart:236-248`).
+- `oStrike`: Strike 1 · 2 (deals hidden / deals back) · 3 removed (`fairplay.dart:479`).
+- `login`: Sign in · to hold a bed · to list your PG · to join your PG (`screens_start.dart:125`).
+- `me`, `settings`: rows differ by role. `detail`: owner block before / after a hold.
+
+## Finding while counting (for Build)
+
+`explore` cached state (#3 in §3): the `if / else if` chain at `screens_tenant.dart:157-196` shows **only the
+"Offline · hostels as of…" banner** when `listState == 'cached'`; the cached hostel cards (already applied in
+`main.dart` `_goLive`) are in the final `else` and never render. Design's board `w1-exploreCached` shows the last
+list kept. **Fixed in the same PR (2026-10-03):** the saved cards now show under the banner (`test/platform_test.dart`).
