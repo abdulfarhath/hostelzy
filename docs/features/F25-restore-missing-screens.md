@@ -41,6 +41,11 @@ Checked every main board in pairs: same data and same action for the same role. 
 Net if Build takes the three confident merges: **App 181 → 178** (H17+H20 → one sheet; S76, S77 removed). The canvas follows the app:
 I'll retire those boards once SCREENS.md drops them.
 
+**v34 · after #107, #109, #110, #111:** NEW-1 → **[S87] Building view** (Ground floor row only when it exists; hostel page has
+"See the whole building ›"). Variants: S37 Rooms · Building, S45 By day · Week, S65 All plans + Past invoices, S36 "83% full"
++ bar + "33 of 40 beds have a resident. Holds don't count." Retired to the archive: S76 aPay, S77 aCases, H17 Add tenant
+(merged into H20). `aHome` now says "Payments and Fair Play cases are in the team console". **App 179 · Canvas 179.**
+
 ## Problem
 Earlier designs lived in many separate artifacts on the old account. Some screens the founder remembers
 (the whole-building view, a floor map with the shared things on it) never made it into the app.
