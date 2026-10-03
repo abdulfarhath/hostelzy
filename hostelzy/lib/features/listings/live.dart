@@ -193,6 +193,8 @@ Review reviewFromRow(Map<String, dynamic> r) {
     reply: r['reply'] as String?,
     replyWhen: r['replied_at'] == null ? null : 'replied ${dayMon(DateTime.parse(r['replied_at'] as String).toLocal())}',
     fresh: r['reply'] == null,
+    author: r['author_id'] as String?,
+    edited: r['edited_at'] != null,
   );
 }
 

@@ -827,6 +827,17 @@ class OwnerLayoutScreen extends StatelessWidget {
                     color: stBg,
                     child: Row(children: [Expanded(child: T(stText, s: 13, w: 800, c: stFg)), if (l != null && drawn == null) T('v${l.version} · drawn ${l.drawn}', s: 13, w: 600, c: stFg)]),
                   ),
+                  // F13 S4, F24 4a: residents answered "Is the room layout right? No".
+                  if (l != null && l.disputes > 0)
+                    Container(
+                      key: const ValueKey('layoutDisputed'),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: box(bg: p.ab, w: 2, c: p.ad),
+                      child: VGap(gap: 2, children: [
+                        T('Residents say this layout is wrong', w: 800, s: 14, c: p.ad),
+                        T('${l.disputes} ${l.disputes == 1 ? 'resident' : 'residents'} answered “No” in the 30-day review. Check the room, fix the layout and publish it again.', s: 13, lh: 1.4),
+                      ]),
+                    ),
                   if (shown == null)
                     q != null
                         ? LayoutEmpty(icon: 'pencil', head: 'Hostelzy is drawing it', body: 'You asked on ${at(q.at)}${q.w > 0 && q.h > 0 ? ' · ${q.shape} · ${q.w.round()} × ${q.h.round()} ft' : ''}. Done within 48 hours; you get a notification.')
@@ -1141,7 +1152,7 @@ class AdminLayoutScreen extends StatelessWidget {
                       ),
                   ]),
                   if (l.disputes > 0)
-                    section('Residents', [T('${l.disputes} ${l.disputes == 1 ? 'resident says' : 'residents say'} this layout isn’t accurate (30-day review). Check it on the next visit.', s: 13, c: p.ad, lh: 1.4)]),
+                    section('Residents', [T('Residents say this layout is wrong: ${l.disputes} answered “No” in the 30-day review. Check it on the next visit.', s: 13, c: p.ad, lh: 1.4)]),
                   section('Checks before sending', [
                     for (final (ok, t) in checks) Row(children: [Ic(ok ? 'check' : 'warn', size: 16, color: ok ? p.gn : p.ad), const SizedBox(width: 8), Expanded(child: T(t, s: 13))]),
                   ]),

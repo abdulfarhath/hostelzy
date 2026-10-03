@@ -604,6 +604,7 @@ class _Sheet extends StatelessWidget {
       'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
+      'revReport' => 'Report this review',
       'report' => 'Tell us what happened',
       'trusted' => '${allRequests(s).where((r) => r.id == s.trustedReq && r.name != 'Hostelzy tenant').firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
@@ -654,6 +655,7 @@ class _Sheet extends StatelessWidget {
         return h == null ? null : 'Held · ${cd(s.holdSecsOf(h) - (s.now - h.start) / 1000)} left';
       }(),
       'addRem' => 'My reminders',
+      'revReport' => '${s.reviews.where((r) => r.id == s.revReportFor).firstOrNull?.name ?? 'A resident'}’s review',
       'waterOffer' => 'New in Hostelzy · stay on track',
       'trusted' => 'Hold request · bed ${allRequests(s).where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
@@ -681,6 +683,7 @@ class _Sheet extends StatelessWidget {
       'enq' => const _EnquirySheet(),
       'addR' => const _AddResidentSheet(),
       'rank' => const RankSheet(),
+      'revReport' => const ReviewReportSheet(),
       'report' => const ReportSheet(),
       'trusted' => const TrustedSheet(),
       'utr' => const UtrSheet(),
