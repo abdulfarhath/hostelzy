@@ -308,7 +308,7 @@ Pages 6 + states 2 = 8.
 
 | Item | Why not counted | Where |
 |---|---|---|
-| `index.html` (site root, W1) | Old web prototype page, kept by founder decision (DECISIONS "Web address for now": farhath.me/hostelzy/ stays the old prototype). Not part of the app. Self-contained: loads nothing from the repo | `index.html` |
+| `index.html` (site root) | Old web prototype page, kept by founder decision (DECISIONS "Web address for now": farhath.me/hostelzy/ stays the old prototype). Not part of the app. Self-contained: loads nothing from the repo | `index.html` |
 | `otp` Enter the 6-digit code | `phoneOtpLogin = false` (SMS needs Firebase billing) | `screens_start.dart:243`, `app_config.dart` |
 | About you as "Your mobile number · Step 1 of 2" | same flag | `screens_start.dart:182` |
 | DEMO banner "Sample data. Nothing you do here is real." | only the `DATA=sample` demo APK | `shell.dart:341` |
