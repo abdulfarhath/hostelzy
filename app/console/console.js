@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus } from './logic.js';
 
 const app = document.getElementById('app');
 
@@ -16,6 +16,12 @@ function el(tag, attrs = {}, ...kids) {
     else n.setAttribute(k, v === true ? '' : v);
   }
   for (const k of kids.flat()) if (k != null && k !== false) n.append(k instanceof Node ? k : String(k));
+  return n;
+}
+/** The same for SVG (the Layout help drawing). */
+function svg(tag, attrs = {}) {
+  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
   return n;
 }
 const mount = (...n) => app.replaceChildren(...n);
@@ -199,13 +205,95 @@ const VIEWS = {
           el('button', { class: 'btn full', onclick: () => act('ask') }, 'Ask for more', '…'),
           el('button', { class: 'btn full primary', onclick: () => act('strike') }, 'Strike · warning', '⚑'))),
       el('section', {},
-        el('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;padding-right:16px' }, el('h2', {}, 'Layout help queue'), el('span', { class: 'mu', style: 'font-size:13px' }, 'Owners who asked us to draw')),
-        el('div', { class: 'list' }, el('p', { class: 'empty' }, 'Owners ask for layout help on WhatsApp for now; requests show here once the app sends them.')),
-        el('p', { class: 'note' }, 'Owners publish their own layouts. We draw only when asked; the owner then publishes it.')))];
+        el('h2', {}, 'Layout help'),
+        el('p', { class: 'note' }, 'Owners draw and publish their own layouts. When one asks us to draw a room, it shows in Layout help, due within 48 hours.'),
+        el('div', { style: 'padding:0 16px' }, el('a', { class: 'btn', href: '#layout' }, 'Open Layout help ›'))))];
   },
 
+  // F24 board cLayoutHelp: owners who asked Hostelzy to draw a room. Oldest
+  // due first; done within 48 hours. The team draws the room's walls here
+  // (a preset shape at W × L, or typed corner points for a custom room) and
+  // sends it to the owner, whose app places the beds inside and publishes.
   async layout(db, again) {
-    return VIEWS.cases(db, again);
+    const reqs = await db.from('shape_requests').select('*, hostels(name, owner_name)').in('status', ['requested', 'drawing', 'sent']).order('due_at').then(ok);
+    const open = reqs.filter((r) => r.status !== 'sent').length;
+    let sel = reqs[0];
+    const detail = el('section', { class: 'add' });
+    const editor = async (q) => {
+      // "Open in layout editor": the walls, drawn on a 1-ft grid.
+      if (q.status === 'requested') {
+        ok(await db.rpc('start_shape_request', { p_id: q.id }));
+        q.status = 'drawing';
+        drawRows();
+      }
+      const d = { shape: q.drawing?.shape ?? q.shape, w: q.drawing?.w ?? (q.w || 14), h: q.drawing?.h ?? (q.h || 12), pts: (q.drawing?.outline ?? []).map((p) => p.join(',')).join(' ') };
+      const preview = el('div', { class: 'shapeprev' });
+      const walls = () => (d.shape === 'Custom' ? parsePoints(d.pts, d.w, d.h) : shapeOutline(d.shape, d.w, d.h));
+      const draw = () => {
+        const k = Math.min(300 / d.w, 220 / d.h);
+        const o = walls() ?? (d.shape === 'Custom' ? null : [[0, 0], [d.w, 0], [d.w, d.h], [0, d.h]]);
+        const s = svg('svg', { width: d.w * k + 4, height: d.h * k + 4, viewBox: `-2 -2 ${d.w * k + 4} ${d.h * k + 4}`, role: 'img', 'aria-label': `${d.shape}, ${d.w} by ${d.h} feet` });
+        for (let x = 1; x < d.w; x++) s.append(svg('line', { x1: x * k, y1: 0, x2: x * k, y2: d.h * k, stroke: 'var(--hl)' }));
+        for (let y = 1; y < d.h; y++) s.append(svg('line', { x1: 0, y1: y * k, x2: d.w * k, y2: y * k, stroke: 'var(--hl)' }));
+        if (o) s.append(svg('polygon', { points: o.map(([x, y]) => `${x * k},${y * k}`).join(' '), fill: 'none', stroke: 'var(--tx)', 'stroke-width': 2 }));
+        preview.replaceChildren(s, o ? '' : el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, 'Type the corners clockwise from the top-left, in feet: 0,0 14,0 14,8 10,12 0,12'));
+      };
+      const num = (k) => el('input', { inputmode: 'numeric', value: String(d[k]), oninput: (e) => { d[k] = Math.max(6, Math.min(60, Number(e.target.value) || 0)); draw(); } });
+      const seg = el('div', { class: 'seg', style: 'grid-auto-flow:row;grid-template-columns:repeat(4,1fr)' }, SHAPES.map((sh) => el('button', { class: d.shape === sh ? 'on' : '', onclick: (e) => { d.shape = sh; [...seg.children].forEach((b) => b.classList.toggle('on', b === e.target)); pts.style.display = sh === 'Custom' ? '' : 'none'; draw(); } }, sh)));
+      const pts = el('input', { value: d.pts, placeholder: '0,0 14,0 14,8 10,12 0,12', style: d.shape === 'Custom' ? '' : 'display:none', oninput: (e) => { d.pts = e.target.value; draw(); } });
+      const send = async () => {
+        const o = walls();
+        if (d.shape === 'Custom' && !o) return toast('Type at least 3 corners inside the room.');
+        ok(await db.rpc('send_shape_drawing', { p_id: q.id, p_drawing: { w: d.w, h: d.h, shape: d.shape, ...(o ? { outline: o } : {}) } }));
+        toast(`Sent to ${q.hostels?.owner_name || 'the owner'}. They check it and publish.`);
+        again();
+      };
+      draw();
+      detail.replaceChildren(
+        el('h2', {}, `${q.hostels?.name ?? ''} · Room ${q.room}`),
+        el('label', {}, 'Shape'), seg,
+        el('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, el('label', {}, 'Width (ft)', num('w')), el('label', {}, 'Length (ft)', num('h'))),
+        pts, preview,
+        el('button', { class: 'btn primary cta', onclick: send }, 'Send to owner', '✓'),
+        el('button', { class: 'btn full', onclick: () => drawDetail() }, 'Back to the request'),
+        el('p', { class: 'note' }, 'The owner’s app places the beds, fans and windows inside these walls; they check it and publish.'),
+      );
+    };
+    const drawDetail = async () => {
+      if (!sel) return detail.replaceChildren(el('p', { class: 'empty' }, 'No owner has asked for help. Owners draw their own layouts; requests show here.'));
+      const q = sel;
+      const photos = await Promise.all((q.photos ?? []).map(async (p) => (await db.storage.from('fix-photos').createSignedUrl(p, 3600)).data?.signedUrl));
+      const when = (iso) => `${dayMon(iso)}, ${new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+      detail.replaceChildren(
+        el('h2', {}, `${q.hostels?.name ?? ''} · Room ${q.room}`),
+        el('p', { class: 'mu', style: 'margin:0' }, `Asked ${when(q.created_at)} · due ${when(q.due_at)} · ${hoursLeft(q.due_at)}`),
+        el('p', { style: 'margin:0' }, el('b', {}, 'Shape: '), `${q.shape}${q.w && q.h ? ` · ${q.w} × ${q.h} ft` : ''}`),
+        el('p', { style: 'margin:0' }, el('b', {}, 'From: '), `${q.asked_name || q.hostels?.owner_name || 'The owner'}`),
+        q.note ? el('p', { style: 'margin:0' }, `“${q.note}”`) : null,
+        photos.filter(Boolean).map((u, i) => el('img', { src: u, alt: `Photo ${i + 1} from the owner`, style: 'max-width:100%;border:1px solid var(--hl)' })),
+        q.status === 'sent'
+          ? el('p', { class: 'mu', style: 'margin:0' }, `Sent ${dayMon(q.sent_at)}. Waiting for the owner to publish.`)
+          : null,
+        el('button', { class: 'btn primary cta', onclick: () => editor(q) }, q.status === 'sent' ? 'Change the drawing' : 'Open in layout editor', '✎'),
+        el('p', { class: 'note' }, 'The owner checks it and publishes. Free, always within 48 hours.'),
+      );
+    };
+    const rows = el('div', {});
+    const drawRows = () => rows.replaceChildren(...(reqs.length ? reqs.map((q) => {
+      const [t, kind] = helpStatus(q);
+      return el('button', { class: 'tr' + (q === sel ? ' hi' : ''), style: 'width:100%;text-align:left', onclick: () => { sel = q; drawRows(); drawDetail(); } },
+        el('div', {}, q.hostels?.name ?? ''), el('div', {}, String(q.room)), el('div', {}, q.shape),
+        el('div', {}, [q.note ? `“${q.note}”` : '—', q.photos?.length ? ` · ${q.photos.length} ${q.photos.length === 1 ? 'photo' : 'photos'}` : ''].join('')),
+        el('div', {}, q.status === 'sent' ? `Sent ${dayMon(q.sent_at)}` : hoursLeft(q.due_at)), el('div', {}, el('span', { class: 'tag ' + kind }, t)));
+    }) : [el('p', { class: 'empty' }, 'No requests open.')]));
+    drawRows();
+    drawDetail();
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Layout help'), el('span', { class: 'mu', style: 'font-size:13px' }, `Owner requests · oldest due first · ${open} open`)),
+      el('div', { class: 'board' },
+        el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Room', 'Shape', 'What they asked', 'Due', 'Status'].map((h) => el('div', {}, h))), rows),
+        detail),
+    ];
   },
 
   // S6: the Stay Rewards ledger (append-only). The team can reverse an entry;

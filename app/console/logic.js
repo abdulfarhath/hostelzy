@@ -101,3 +101,44 @@ export function quickLine(f) {
   const what = { broken: 'Broken', missing: 'Missing', not_here: 'Not in this room', wrong_place: 'Wrong place' }[f.issue] ?? 'Quick fix';
   return `${what}: ${f.item ?? 'an item'}`;
 }
+
+// F24 item 11: room shapes (same presets as the app's shapeOutline in data.dart).
+export const SHAPES = ['Rectangle', 'L shape', 'T shape', 'U shape', 'Angled corner', 'Narrow end', 'Alcove', 'Custom'];
+
+/** A preset shape's walls in a w × h ft room, [[x, y], …]; null for a rectangle or Custom. */
+export function shapeOutline(shape, w, h) {
+  const r = (v) => Math.round(v * 2) / 2;
+  const m = Math.min(w, h) * 0.35;
+  switch (shape) {
+    case 'L shape': return [[0, 0], [r(w * 0.55), 0], [r(w * 0.55), r(h * 0.45)], [w, r(h * 0.45)], [w, h], [0, h]];
+    case 'T shape': return [[0, 0], [w, 0], [w, r(h * 0.45)], [r(w * 0.8), r(h * 0.45)], [r(w * 0.8), h], [r(w * 0.2), h], [r(w * 0.2), r(h * 0.45)], [0, r(h * 0.45)]];
+    case 'U shape': return [[0, 0], [r(w * 0.3), 0], [r(w * 0.3), r(h * 0.4)], [r(w * 0.7), r(h * 0.4)], [r(w * 0.7), 0], [w, 0], [w, h], [0, h]];
+    case 'Angled corner': return [[0, 0], [r(w - m), 0], [w, r(m)], [w, h], [0, h]];
+    case 'Narrow end': return [[0, 0], [w, 0], [r(w * 0.78), h], [r(w * 0.22), h]];
+    case 'Alcove': return [[0, 0], [w, 0], [w, h], [r(w * 0.62), h], [r(w * 0.62), r(h - 2.5)], [r(w * 0.38), r(h - 2.5)], [r(w * 0.38), h], [0, h]];
+    default: return null;
+  }
+}
+
+/** "0,0 14,0 14,8 10,12 0,12" (typed by the team) → [[x, y], …] inside w × h, or null when it isn't one. */
+export function parsePoints(text, w, h) {
+  const pts = String(text ?? '').trim().split(/\s+/).filter(Boolean).map((p) => p.split(',').map(Number));
+  if (pts.length < 3 || pts.length > 40) return null;
+  if (pts.some((p) => p.length !== 2 || p.some((v) => !Number.isFinite(v)) || p[0] < 0 || p[0] > w || p[1] < 0 || p[1] > h)) return null;
+  return pts;
+}
+
+/** Hours left until [dueIso]: "22 h left", "Due now", or "Late 5 h". */
+export function hoursLeft(dueIso, now = Date.now()) {
+  const h = Math.ceil((new Date(dueIso).getTime() - now) / 3600000);
+  if (h > 0) return `${h} h left`;
+  return h === 0 ? 'Due now' : `Late ${-h} h`;
+}
+
+/** Layout help status: [label, tag kind]. */
+export function helpStatus(req, now = Date.now()) {
+  if (req.status === 'sent') return ['With owner', 'neutral'];
+  if (req.status === 'published') return ['Published', 'neutral'];
+  if (new Date(req.due_at).getTime() < now) return ['Late', 'red'];
+  return req.status === 'drawing' ? ['Drawing', 'solid'] : ['New', 'red'];
+}

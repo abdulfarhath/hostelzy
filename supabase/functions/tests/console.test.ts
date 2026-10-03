@@ -44,3 +44,22 @@ test('layout fixes: days waited, owner silent after 7, what changed', async () =
   assert.equal(quickLine({ issue: 'broken', item: 'AC unit' }), 'Broken: AC unit');
   assert.equal(quickLine({ issue: 'not_here', item: 'Fan' }), 'Not in this room: Fan');
 });
+
+test('layout help: shapes, typed walls, hours left, status', async () => {
+  // @ts-ignore plain JS module
+  const { shapeOutline, parsePoints, hoursLeft, helpStatus, SHAPES } = await import('../../../app/console/logic.js');
+  assert.equal(SHAPES.length, 8);
+  assert.deepEqual(shapeOutline('L shape', 14, 12), [[0, 0], [7.5, 0], [7.5, 5.5], [14, 5.5], [14, 12], [0, 12]]);
+  assert.equal(shapeOutline('Rectangle', 14, 12), null);
+  assert.equal(shapeOutline('Custom', 14, 12), null);
+  assert.deepEqual(parsePoints('0,0 14,0  14,8 10,12 0,12', 14, 12), [[0, 0], [14, 0], [14, 8], [10, 12], [0, 12]]);
+  assert.equal(parsePoints('0,0 20,0 0,12', 14, 12), null);
+  assert.equal(parsePoints('0,0 1,1', 14, 12), null);
+  const now = Date.parse('2026-10-03T12:00:00Z');
+  assert.equal(hoursLeft('2026-10-04T10:00:00Z', now), '22 h left');
+  assert.equal(hoursLeft('2026-10-03T07:00:00Z', now), 'Late 5 h');
+  assert.deepEqual(helpStatus({ status: 'requested', due_at: '2026-10-04T10:00:00Z' }, now), ['New', 'red']);
+  assert.deepEqual(helpStatus({ status: 'drawing', due_at: '2026-10-04T10:00:00Z' }, now), ['Drawing', 'solid']);
+  assert.deepEqual(helpStatus({ status: 'drawing', due_at: '2026-10-03T10:00:00Z' }, now), ['Late', 'red']);
+  assert.deepEqual(helpStatus({ status: 'sent', due_at: '2026-10-03T10:00:00Z' }, now), ['With owner', 'neutral']);
+});

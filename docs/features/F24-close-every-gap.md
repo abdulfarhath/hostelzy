@@ -252,6 +252,39 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Docs:** BOARD F13/F14/F18/F20/F24 rows; ARCHITECTURE "Today". There was no "170 frames" line left to fix.
 - **Screens:** added the sheet `name` (Settings › Name; Design to add a board). Changed: hostel page (deal headline), Holds, owner Today plan banner, Room tab signed out, layout request sheet, Create layout, rate card. None removed.
 - **Tests:** `test/wave0_test.dart`. Updated: `flows_test` (Google name is a hint; Room tab Sign in; help-requested label).
+**Wave B items 10 and 11: Fan/AC layer toggle, room shapes, "Ask Hostelzy to draw it".** Branch `feature/f24-shapes`.
+- **Layer toggle (10, DECISIONS F12, board `roomLayersOn`).**
+  - The tenant Room tab and the resident's room view (`rRoom`) show fans and the AC as icons with labels only.
+  - Under the plan: "Show: **Fan reach** · **AC airflow**" chips (AC only when the room has a unit). Both start off; tapping one draws the dashed fan circles or the airflow stripes.
+  - Editors (owner, team, a resident's fix) still draw both, to place things.
+- **Room shapes (11, board `oShape`).**
+  - Create a layout: shape tiles Rectangle / L / T / U / Angled corner / Narrow end / Alcove / Custom, Width × Length, and "Start drawing · L shape".
+  - The layout keeps its shape and walls (`outline`, feet). Tenants, residents and owners see the real walls: outside them is plain surface, with no grid.
+  - Beds, fans, washroom and pillars stay wholly inside the walls; windows, doors and the AC may sit on any wall. A nudge or drag that would leave the walls doesn't move ("That's outside the walls."). New things go to the nearest free spot inside. Resizing grows the shape and keeps everything inside.
+  - The editor's checks (owner, team, a resident's fix) add "Everything inside the L shape walls" or "Bed 204-B is outside the walls".
+  - Mirror, flip, copy to same rooms, undo, history and residents' fixes carry the shape. The size line says "14 × 12 ft · L shape".
+- **"Ask Hostelzy to draw it" (boards `oShapeReq`, `oShapeBack`).** No more WhatsApp.
+  - Custom, "Ask Hostelzy to draw it" on Create, and Ask Hostelzy on a room open one sheet. It has what's different, the shape, up to 3 photos or a sketch (private, in the `fix-photos` bucket), and W × L.
+  - The room then shows "Asked Hostelzy · 22 h left · done within 48 h". With no layout yet, it says "Hostelzy is drawing it".
+  - When the team sends the drawing: "Hostelzy drew a new version · check and publish". The drawn room shows with "v1 · drawn by Hostelzy, <date>" and "You asked on … Drawn in N hours.", then **Publish v1** and "Ask Hostelzy to change it".
+  - If the team sent only the walls, the app places the room's beds and things inside them first. Publishing closes the request. Tenants keep the live layout until then.
+  - Room layouts list: "Help requested", or "Drawn · publish it".
+- **Team.**
+  - The in-app team editor's "Send to owner" answers an open request with the full drawing. The request shows in the editor with its due hours.
+  - **Console Layout help** (board `cLayoutHelp`): owner requests, oldest due first, with hostel, room, shape, what they asked, photo count, hours left (or "Sent 3 Oct") and status (New / Drawing / Late / With owner).
+  - The console's detail has the photos (signed links), Shape, From, and the owner's words. **Open in layout editor** marks the request Drawing and opens a wall editor: a preset shape at W × L, or typed corners for Custom, with an SVG preview on a 1-ft grid. **Send to owner** sends the walls; the owner's app places the beds and the owner publishes.
+  - The Fair Play page's placeholder now links to Layout help. The in-app team mode had no layout-help placeholder, so nothing was replaced there.
+- **Copy.** "The Hostelzy team is drawing this room" and "Layouts are drawn by Hostelzy after a visit" are gone from the Room tab. Owners draw; the 48 h is only for requests.
+- **Server** (`20261003010000_f24_shapes.sql`, FOUNDER-TODO **4zk**; tests: `supabase/tests/shapes_test.sql`):
+  - `layouts.shape` / `layouts.outline`; old rows stay rectangles. `put_layout`, undo (history) and `approve_layout` keep the shape.
+  - `check_layout` checks the outline (3–40 corners inside W × L, a known shape) and that every bed is inside it.
+  - `shape_requests`: owners and managers read their hostel's requests; the team reads and updates all. Writes go through `request_shape` (staff; a note or photo; ≤ 3 own photos; replaces an open request for the room; due in 48 h), `start_shape_request` and `send_shape_drawing` (team; checks the walls, and a full layout with beds gets the editor's checks; pushes "Hostelzy drew room N" to the hostel's staff), and `cancel_shape_request`.
+  - `publish_layout` marks the room's sent request published. Staff may upload request photos under their own folder in `fix-photos`.
+- **Screens.** No screens added or removed. Changed: `oCreate` (= `oShape`), sheet `layoutReq` (= `oShapeReq`), `oLayout` (+ `oShapeBack` state), picker Room tab (= `f23-Room` / `roomLayersOn`), `rRoom` (layer chips), `aLayout` (shape and request), console Layout help (`cLayoutHelp`).
+- **Tests.**
+  - `test/shapes_test.dart`: shapes maths and saving; layer chips off by default; an L-shaped room where a bed can't leave the walls, published and seen by a tenant; Custom → request with a photo on a fake server → the team's walls → Publish v1 with the beds inside; a missing table leaves the list as it was.
+  - `flows_test` F12: Ask Hostelzy → team sends → Publish v3.
+  - Console helpers: `supabase/functions/tests/console.test.ts`.
 
 **Wave 2a items 7, 8, 22, 29: phone-only → server.** Branch `feature/f24-wave2a`.
 - **Item 7, Working / Not working** (`20261003030000_f24_item_working.sql`, FOUNDER-TODO **4zz1**):
