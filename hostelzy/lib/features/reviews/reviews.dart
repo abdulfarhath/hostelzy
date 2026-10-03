@@ -171,22 +171,25 @@ extension ReviewsActions on AppState {
 
   /// S4: hostels (and their reviews) again from the server.
   Future<void> refreshListings() async {
+    // Perf: the three reads are independent, so they are asked for together
+    // and applied in the same order as before.
+    final lf = _settle(data.listings), sf = _settle(data.signals), ff = _settle(data.flags);
     try {
-      final l = await data.listings();
+      final l = await lf;
       if (l != null) applyListings(l);
     } catch (e) {
       debugPrint('listings: $e');
     }
     // F24: the real counts; missing before their SQL runs.
     try {
-      final sg = await data.signals();
+      final sg = await sf;
       if (sg.isNotEmpty) update(() => signals = sg);
     } catch (e) {
       debugPrint('signals: $e');
     }
     // F24 items 20, 21: featured spots and paused deals; missing before their SQL runs.
     try {
-      final fl = await data.flags();
+      final fl = await ff;
       if (fl.isNotEmpty) update(() => flags = fl);
     } catch (e) {
       debugPrint('flags: $e');

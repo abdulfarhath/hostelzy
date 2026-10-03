@@ -56,13 +56,15 @@ extension FoodActions on AppState {
   /// opens, so an owner's change shows straight away).
   Future<void> loadMenu(String hid) async {
     if (!data.remote) return;
+    // Perf: the menu and its meal times are fetched together.
+    final times = loadMealTimes(hid);
     try {
       final m = await data.menu(hid);
       update(() => m == null ? menus.remove(hid) : menus[hid] = m);
     } catch (e) {
       debugPrint('menu: $e');
     }
-    await loadMealTimes(hid);
+    await times;
   }
 
   /// F24 Wave 4c: the menu's meal times (none until FOUNDER-TODO 4zp1 runs).

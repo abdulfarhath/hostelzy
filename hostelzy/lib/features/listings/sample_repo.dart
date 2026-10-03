@@ -44,6 +44,8 @@ class SampleRepo implements HostelRepo {
   @override
   Future<List<HostelPhoto>> photos(String hid) async => const [];
   @override
+  Future<Map<String, List<HostelPhoto>>> photosOfMany(List<String> hids) async => {for (final h in hids) h: await photos(h)};
+  @override
   Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) => throw UnsupportedError('sample data');
   @override
   Future<void> removePhoto(HostelPhoto p) async {}

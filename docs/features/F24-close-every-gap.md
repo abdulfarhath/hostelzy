@@ -764,3 +764,11 @@ owner Today "Are your rates still right?" card; and the "App state, no board" li
 - **Server SQL:** `supabase/migrations/20261003100000_f24_rates_confirm.sql` → FOUNDER-TODO **4zd1**. Until it runs, tenants see no date and owners get no card or push; the sort needs no SQL.
 - **Screens:** none added or removed. Changed: Filters sheet (Best deals sort), tenant hostel page (rates confirmed line under the price table), owner Today (new **Are your rates still right?** card, Design to add it to `oTodayCards`).
 - **Tests:** `test/wave4d_test.dart` (6), `supabase/tests/rates_confirm_test.sql`.
+
+**Performance pass (no behaviour or UI change).** Branch `perf/app-efficiency`.
+- **Fewer round trips.** Explore's hostel cards asked for their photos one query per card; photos asked for in the same frame now come in one `hostel_id in (...)` query (`HostelRepo.photosOfMany`). Reordering photos and saving room rates send their per-row updates together (`Future.wait`) instead of one after another. The listings load runs its four reads (hostels, strike standing, layout checks, layout checkers) side by side; `refreshListings` asks for listings, signals and flags together; app start asks for settings and hostels together; a hostel's menu and meal times come together. Every fallback for SQL that hasn't run yet is unchanged. No new SQL.
+- **Realtime.** One refetch at a time: a refetch asked for while one runs waits for a single shared follow-up. A burst of changes is one refetch 400 ms after the last change, and a burst that never pauses still refetches every 2 s.
+- **Signed photo links** (complaint, fix and case photos) are kept for 50 of their 60 minutes, so a rebuild doesn't ask for a new link and download the photo again.
+- **Rebuilds.** The 1-second clock on Holds, Hold, Today and the code screen now rebuilds only the countdowns (`Ticking`: the hold timers, Today's "Needs you now", "Resend in"), not the whole app; with a sheet open, or when the day changes, everything rebuilds as before. Live rows index payments by hold and stay once instead of scanning all payments per hold and per resident.
+- **Screens:** none added, removed or changed.
+- **Tests:** `test/perf_test.dart` (5).

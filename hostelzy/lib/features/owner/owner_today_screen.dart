@@ -128,8 +128,13 @@ class OwnerTodayScreen extends StatelessWidget {
 /// enquiries and layout fixes, each with its own buttons.
 class NeedsYouNow extends StatelessWidget {
   const NeedsYouNow({super.key});
+
+  /// Perf: the hold countdowns (and their order) change every second, so this
+  /// card ticks on its own; the rest of Today doesn't rebuild with it.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Ticking(_build);
+
+  Widget _build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final h = hostelById(s.ownHid);

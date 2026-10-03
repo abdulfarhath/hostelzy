@@ -16,6 +16,26 @@ String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day
 class SupabaseRepo implements HostelRepo {
   SupabaseRepo(this.db);
   final SupabaseClient db;
+
+  /// Perf: signed links to private photos, kept for most of their hour, so a
+  /// screen that rebuilds asks the server once and the image cache keeps
+  /// working (a new link each time would download the photo again).
+  final _signed = <String, ({Future<String?> url, DateTime until})>{};
+
+  Future<String?> _signedUrl(String bucket, String path) {
+    final k = '$bucket/$path';
+    final now = DateTime.now();
+    final hit = _signed[k];
+    if (hit != null && now.isBefore(hit.until)) return hit.url;
+    final Future<String?> f = db.storage.from(bucket).createSignedUrl(path, 3600);
+    _signed[k] = (url: f, until: now.add(const Duration(minutes: 50)));
+    // A failed link is asked for again next time.
+    unawaited(f.then((_) {}, onError: (Object _) {
+      if (identical(_signed[k]?.url, f)) _signed.remove(k);
+    }));
+    return f;
+  }
+
   @override
   bool get remote => true;
 
@@ -44,6 +64,17 @@ class SupabaseRepo implements HostelRepo {
   Future<List<HostelPhoto>> photos(String hid) async =>
       sortPhotos([for (final r in await db.from('hostel_photos').select().eq('hostel_id', hid)) photoFromRow(supabaseUrl, r)]);
 
+  /// Perf: Explore shows many hostel cards at once; their photos come in one
+  /// query (`hostel_id in (...)`) instead of one query per card.
+  @override
+  Future<Map<String, List<HostelPhoto>>> photosOfMany(List<String> hids) async {
+    final by = <String, List<HostelPhoto>>{for (final h in hids) h: []};
+    for (final r in await db.from('hostel_photos').select().inFilter('hostel_id', hids)) {
+      by[r['hostel_id'] as String]?.add(photoFromRow(supabaseUrl, r));
+    }
+    return {for (final e in by.entries) e.key: sortPhotos(e.value)};
+  }
+
   @override
   Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover}) async {
     final path = '$hid/${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${jpg.length.toRadixString(36)}.jpg';
@@ -64,9 +95,11 @@ class SupabaseRepo implements HostelRepo {
     if (ordered.isEmpty) return;
     // One cover at a time: clear it first, then set order and the new cover.
     await db.from('hostel_photos').update({'cover': false}).inFilter('id', [for (final p in ordered) p.id]);
-    for (final (i, p) in ordered.indexed) {
-      await db.from('hostel_photos').update({'ord': i, 'cover': p.id == coverId}).eq('id', p.id);
-    }
+    // Perf: each row's order at once (one round trip, not one per photo).
+    // Every update touches a different row and only one sets the cover.
+    await Future.wait([
+      for (final (i, p) in ordered.indexed) db.from('hostel_photos').update({'ord': i, 'cover': p.id == coverId}).eq('id', p.id),
+    ]);
   }
 
   @override
@@ -132,7 +165,7 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<String?> complaintPhotoUrl(String path) async => db.storage.from('complaint-photos').createSignedUrl(path, 3600);
+  Future<String?> complaintPhotoUrl(String path) => _signedUrl('complaint-photos', path);
 
   @override
   Future<void> updateComplaint(String key, {required String status, required String note}) =>
@@ -173,9 +206,10 @@ class SupabaseRepo implements HostelRepo {
     await db.from('rate_cards').upsert([
       for (final e in rates.entries) {'hostel_id': hid, 'ac': e.key.startsWith('ac'), 'share': int.parse(e.key.replaceFirst(RegExp('^(ac|non)'), '')), 'rent': e.value},
     ], onConflict: 'hostel_id,ac,share');
-    for (final e in rooms.entries) {
-      await db.from('rooms').update({'ac': e.value.ac, 'rent': e.value.rent}).eq('hostel_id', hid).eq('number', e.key);
-    }
+    // Perf: every room's update at once (one round trip, not one per room).
+    await Future.wait([
+      for (final e in rooms.entries) db.from('rooms').update({'ac': e.value.ac, 'rent': e.value.rent}).eq('hostel_id', hid).eq('number', e.key),
+    ]);
   }
 
   @override
@@ -282,7 +316,7 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<String?> fixPhotoUrl(String path) async => db.storage.from('fix-photos').createSignedUrl(path, 3600);
+  Future<String?> fixPhotoUrl(String path) => _signedUrl('fix-photos', path);
 
   @override
   Future<void> withdrawLayoutFix(String id) => db.rpc('withdraw_layout_fix', params: {'p_id': id});
@@ -368,42 +402,54 @@ class SupabaseRepo implements HostelRepo {
   Future<Listings?> listings() async {
     // RLS returns only live hostels to the public.
     const base = '*, rooms(*, beds(*)), rate_cards(*), layouts(*), deals(*), reviews(*)';
-    List<Map<String, dynamic>> rows;
-    try {
-      rows = await db.from('hostels').select('$base, amenities(*)');
-    } on PostgrestException catch (e) {
-      // F23: until the amenities migration has run (FOUNDER-TODO 4u), load
-      // the hostels without them instead of failing.
-      debugPrint('listings without amenities: ${e.message}');
-      rows = await db.from('hostels').select(base);
+    Future<List<Map<String, dynamic>>> hostelRows() async {
+      try {
+        return await db.from('hostels').select('$base, amenities(*)');
+      } on PostgrestException catch (e) {
+        // F23: until the amenities migration has run (FOUNDER-TODO 4u), load
+        // the hostels without them instead of failing.
+        debugPrint('listings without amenities: ${e.message}');
+        return await db.from('hostels').select(base);
+      }
     }
+
     // S5: strike counts are public (they hide deals and listings). F24 #18:
     // fair_standing adds when strike 2's 30 days of hidden deals end; before
     // its SQL runs (FOUNDER-TODO 4zf1) the plain counts are used.
-    List st;
-    var standing = <String, Standing>{};
-    try {
-      st = await db.rpc('fair_standing') as List;
-      standing = standingFromRows(st.cast<Map>());
-    } on PostgrestException catch (e) {
-      if (!_missingFn(e)) rethrow;
-      st = await db.rpc('strike_counts') as List;
+    Future<(List, Map<String, Standing>)> standingRows() async {
+      try {
+        final st = await db.rpc('fair_standing') as List;
+        return (st, standingFromRows(st.cast<Map>()));
+      } on PostgrestException catch (e) {
+        if (!_missingFn(e)) rethrow;
+        return (await db.rpc('strike_counts') as List, <String, Standing>{});
+      }
     }
+
+    Future<List<Object?>> checkRows() async => await db.rpc('layout_checks') as List<Object?>;
+
+    // F24 #15: how many different residents checked the hostel's layouts.
+    Future<Map<String, int>> checkerRows() async {
+      try {
+        return {for (final r in (await db.rpc('hostel_layout_checks') as List).cast<Map>()) r['hostel_id'] as String: r['n'] as int};
+      } on PostgrestException catch (e) {
+        if (!_missingFn(e)) rethrow;
+        return {};
+      }
+    }
+
+    // Perf: the four reads don't depend on each other, so they go together
+    // (one round trip of waiting instead of four in a row).
+    final got = await Future.wait<Object>([hostelRows(), standingRows(), checkRows(), checkerRows()]);
+    final rows = got[0] as List<Map<String, dynamic>>;
+    final (st, standing) = got[1] as (List, Map<String, Standing>);
     // F19: "Checked by N residents · date" per room.
-    final ck = await db.rpc('layout_checks') as List;
+    final ck = got[2] as List<Object?>;
     final checks = <String, Map<int, (int, String)>>{};
     for (final r in ck.cast<Map>()) {
       (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
     }
-    // F24 #15: how many different residents checked the hostel's layouts.
-    final checkers = <String, int>{};
-    try {
-      for (final r in (await db.rpc('hostel_layout_checks') as List).cast<Map>()) {
-        checkers[r['hostel_id'] as String] = r['n'] as int;
-      }
-    } on PostgrestException catch (e) {
-      if (!_missingFn(e)) rethrow;
-    }
+    final checkers = got[3] as Map<String, int>;
     // F24 item 30: kept on the phone for the next time there's no network.
     unawaited(saveListingRows(rows));
     return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, checkers: checkers, standing: standing);
@@ -531,7 +577,7 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<String?> casePhotoUrl(String path) async => db.storage.from('case-photos').createSignedUrl(path, 3600);
+  Future<String?> casePhotoUrl(String path) => _signedUrl('case-photos', path);
   @override
   Future<void> addCasePhoto(String caseKey, String path) => db.rpc('case_photo', params: {'p_case': caseKey, 'p_path': path});
   @override

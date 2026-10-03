@@ -64,6 +64,20 @@ part 'features/team/team_mode.dart';
 /// F21 W4: how long an Undo stays.
 const undoSecs = Duration(seconds: 5);
 
+/// Perf: starts [f] now, so independent reads run side by side. Its error
+/// (thrown at once or later) waits for whoever awaits the result, and is
+/// never reported as unhandled meanwhile.
+Future<T> _settle<T>(Future<T> Function() f) {
+  Future<T> out;
+  try {
+    out = f();
+  } catch (e, st) {
+    out = Future<T>.error(e, st);
+  }
+  out.ignore();
+  return out;
+}
+
 class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
@@ -110,8 +124,17 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       if (_expireHolds(DateTime.now().millisecondsSinceEpoch)) return;
       if (_expireWalkIns(DateTime.now().millisecondsSinceEpoch)) return;
       if (const ['hold', 'holds', 'oToday', 'otp'].contains(screen)) {
-        now = DateTime.now().millisecondsSinceEpoch;
-        notifyListeners();
+        final t = DateTime.now();
+        now = t.millisecondsSinceEpoch;
+        // Perf: only the countdowns (built in [Ticking]) rebuild each second,
+        // not the whole app. With a sheet open, or when the day changes,
+        // everything rebuilds as before.
+        if (sheet != null || t.day != _tickDay) {
+          _tickDay = t.day;
+          notifyListeners();
+        } else {
+          clock.value = now;
+        }
       }
     });
   }
@@ -120,6 +143,10 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
+
+  /// Perf: the 1-second tick for [Ticking] widgets, and the day it last saw.
+  final ValueNotifier<int> clock = ValueNotifier(0);
+  int _tickDay = DateTime.now().day;
 
   late String screen, role, theme, mode, moveTab, moreTab, foodView, mView;
   String? sheet;
@@ -186,6 +213,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   @override
   void dispose() {
     _ticker?.cancel();
+    clock.dispose();
     _toastTimer?.cancel();
     _tokenSub?.cancel();
     _edLockTimer?.cancel();
@@ -395,4 +423,14 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
   static AppState of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
+}
+
+/// Perf: a part of a screen that changes every second (hold countdowns,
+/// "Resend in"). It rebuilds on the clock's tick and on every app change;
+/// the rest of the screen only on app changes.
+class Ticking extends StatelessWidget {
+  const Ticking(this.builder, {super.key});
+  final WidgetBuilder builder;
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(valueListenable: AppScope.of(context).clock, builder: (context, _, _) => builder(context));
 }

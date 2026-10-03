@@ -297,41 +297,54 @@ Complaint complaintFromRow(Map<String, dynamic> r, {String? me}) => Complaint(
   at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
 );
 
-LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>> mutes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], List<Map<String, dynamic>> moves = const [], int? now}) => (
-  holds: [
-    for (final r in holds)
-      holdFromRow(r, paid: [for (final p in payments) if (p['hold_id'] == r['id'] && p['kind'] == 'advance' && p['status'] != 'cancelled') p['amount'] as int].firstOrNull ?? 0),
-  ],
-  enquiries: [for (final r in enquiries) enquiryFromRow(r)],
-  payments: [for (final r in payments) paymentFromRow(r)],
-  complaints: [for (final r in complaints) complaintFromRow(r, me: me)],
-  expired: {for (final r in holds) if (r['status'] == 'expired') r['id'] as String},
-  // The hostel this user lives in (a confirmed, current stay), for complaints.
-  myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
-  // F21: the user's own confirmed stay (bed, rent, joined), for the resident screens.
-  myStay: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) residentFromRow(r, payments)].firstOrNull,
-  // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
-  // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
-  // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.
-  // S8: the hostels this user runs (owner or manager), and the owners' manager invites.
-  myHostels: [for (final r in staff) if (r['user_id'] == me) r['hostel_id'] as String],
-  rewards: profile == null ? null : rewardsFrom(profile.firstOrNull, ledger, me: me),
-  managers: [for (final r in managers) (hid: r['hostel_id'] as String, name: r['name'] as String, phone: r['phone'] as String? ?? '', joined: r['used_by'] != null)],
-  fixes: [for (final r in fixes) fixFromRow(r, me: me)],
-  // F19 extras: residents whose suggestions are off (staff see their hostel's; a resident sees their own).
-  mutes: [for (final r in mutes) (hid: r['hostel_id'] as String, uid: r['user_id'] as String, name: r['name'] as String? ?? '')],
-  cases: [for (final r in cases) caseFromRow(r)]..sort((a, b) => (b.openedAt ?? 0).compareTo(a.openedAt ?? 0)),
-  invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
-  trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},
-  residents: [for (final r in stays) if (r['left_on'] == null && r['user_id'] != me && r['name'] != null) residentFromRow(r, payments)],
-  // F24: notices and moves (staff: their hostels'; a resident: their own), newest first.
-  moves: [for (final r in moves) moveFromRow(r)],
-  // F24: refunds still open for residents who moved out (staff see their hostels').
-  refunds: [for (final r in stays) if (r['left_on'] != null && r['user_id'] != me && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)],
-  myRefund: [for (final r in stays) if (r['user_id'] == me && r['left_on'] != null && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)].firstOrNull,
-  signups: [
-    for (final r in signups)
-      if (r['status'] == 'pending' && r['user_id'] != me)
-        Signup(r['id'] as String, r['name'] as String, r['phone'] as String, r['bed'] as String? ?? '', ago((now ?? DateTime.now().millisecondsSinceEpoch) - _ms(r['created_at']))),
-  ],
-);
+LiveRows liveFromRows({required List<Map<String, dynamic>> holds, required List<Map<String, dynamic>> enquiries, required List<Map<String, dynamic>> payments, required List<Map<String, dynamic>> complaints, String? me, List<Map<String, dynamic>> stays = const [], List<Map<String, dynamic>> signups = const [], List<Map<String, dynamic>> invoices = const [], List<Map<String, dynamic>> plans = const [], List<Map<String, dynamic>> cases = const [], List<Map<String, dynamic>> staff = const [], List<Map<String, dynamic>> managers = const [], List<Map<String, dynamic>> fixes = const [], List<Map<String, dynamic>> mutes = const [], List<Map<String, dynamic>>? profile, List<Map<String, dynamic>> ledger = const [], List<Map<String, dynamic>> moves = const [], int? now}) {
+  // Perf: payments looked up by hold and by stay once, instead of scanning
+  // every payment for every hold and every resident (an owner's refetch
+  // grew with holds × payments). Same first match, same order.
+  final paidBy = <Object?, int>{};
+  final rentBy = <Object?, List<Map<String, dynamic>>>{};
+  for (final p in payments) {
+    if (p['status'] == 'cancelled') continue;
+    if (p['kind'] == 'advance') paidBy.putIfAbsent(p['hold_id'], () => p['amount'] as int);
+    if (p['kind'] == 'rent') (rentBy[p['stay_id']] ??= []).add(p);
+  }
+  List<Map<String, dynamic>> rentOf(Map<String, dynamic> r) => rentBy[r['id']] ?? const [];
+  return (
+    holds: [
+      for (final r in holds)
+        holdFromRow(r, paid: paidBy[r['id']] ?? 0),
+    ],
+    enquiries: [for (final r in enquiries) enquiryFromRow(r)],
+    payments: [for (final r in payments) paymentFromRow(r)],
+    complaints: [for (final r in complaints) complaintFromRow(r, me: me)],
+    expired: {for (final r in holds) if (r['status'] == 'expired') r['id'] as String},
+    // The hostel this user lives in (a confirmed, current stay), for complaints.
+    myHostel: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) r['hostel_id'] as String].firstOrNull,
+    // F21: the user's own confirmed stay (bed, rent, joined), for the resident screens.
+    myStay: [for (final r in stays) if (r['user_id'] == me && r['confirmed'] == true && r['left_on'] == null) residentFromRow(r, rentOf(r))].firstOrNull,
+    // C: invite sign-ups waiting for this owner (RLS: staff see their hostel's).
+    // S2: the hostels' current residents (RLS: staff see their hostels'), not this user's own stay.
+    // S7: owner-plan invoices (RLS: the owner's hostels; the team sees all), newest due first.
+    // S8: the hostels this user runs (owner or manager), and the owners' manager invites.
+    myHostels: [for (final r in staff) if (r['user_id'] == me) r['hostel_id'] as String],
+    rewards: profile == null ? null : rewardsFrom(profile.firstOrNull, ledger, me: me),
+    managers: [for (final r in managers) (hid: r['hostel_id'] as String, name: r['name'] as String, phone: r['phone'] as String? ?? '', joined: r['used_by'] != null)],
+    fixes: [for (final r in fixes) fixFromRow(r, me: me)],
+    // F19 extras: residents whose suggestions are off (staff see their hostel's; a resident sees their own).
+    mutes: [for (final r in mutes) (hid: r['hostel_id'] as String, uid: r['user_id'] as String, name: r['name'] as String? ?? '')],
+    cases: [for (final r in cases) caseFromRow(r)]..sort((a, b) => (b.openedAt ?? 0).compareTo(a.openedAt ?? 0)),
+    invoices: [for (final r in invoices) invoiceFromRow(r)]..sort((a, b) => b.due.compareTo(a.due)),
+    trialEnds: {for (final p in plans) if (p['trial_ends'] != null) p['hostel_id'] as String: DateTime.parse(p['trial_ends'] as String)},
+    residents: [for (final r in stays) if (r['left_on'] == null && r['user_id'] != me && r['name'] != null) residentFromRow(r, rentOf(r))],
+    // F24: notices and moves (staff: their hostels'; a resident: their own), newest first.
+    moves: [for (final r in moves) moveFromRow(r)],
+    // F24: refunds still open for residents who moved out (staff see their hostels').
+    refunds: [for (final r in stays) if (r['left_on'] != null && r['user_id'] != me && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)],
+    myRefund: [for (final r in stays) if (r['user_id'] == me && r['left_on'] != null && r['refund_status'] != null && r['refund_status'] != 'received') refundFromRow(r)].firstOrNull,
+    signups: [
+      for (final r in signups)
+        if (r['status'] == 'pending' && r['user_id'] != me)
+          Signup(r['id'] as String, r['name'] as String, r['phone'] as String, r['bed'] as String? ?? '', ago((now ?? DateTime.now().millisecondsSinceEpoch) - _ms(r['created_at']))),
+    ],
+  );
+}
