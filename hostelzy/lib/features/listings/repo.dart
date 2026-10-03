@@ -231,6 +231,15 @@ abstract class HostelRepo {
   /// photos, rooms, layouts) for the hostel page and the ranking.
   Future<Map<String, HostelSignals>> signals();
 
+  /// F24 items 20 and 21: per live hostel, its bed count, whether it has the
+  /// featured spot (80+ beds plan) and whether its deals are paused (plan 15+
+  /// days late). Empty before that SQL runs.
+  Future<Map<String, HostelFlags>> flags();
+
+  /// F24 item 17: the hostels where this user is a manager, not the owner
+  /// (plan, deals, rates and Fair Play are the owner's).
+  Future<Set<String>> managedHostels(String uid);
+
   /// F24 item 9: the owner's "Yes, all free" (every bed of the hostel; the
   /// server stores its own time) and "All still correct" for the layouts.
   Future<void> confirmBeds(String hid);
@@ -285,6 +294,9 @@ const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
 
 /// F24: real counts behind "Usually replies in ~N min" and the ranking.
 typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
+
+/// F24: the featured spot and paused deals, from `hostel_flags()`.
+typedef HostelFlags = ({int beds, bool featured, bool dealsPaused});
 
 String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
@@ -486,6 +498,10 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmRefund(String stayKey, bool got) async {}
   @override
   Future<Map<String, HostelSignals>> signals() async => {};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {};
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {};
   @override
   Future<void> confirmBeds(String hid) async {}
   @override
@@ -969,6 +985,15 @@ class SupabaseRepo implements HostelRepo {
   Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
   @override
   Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {
+    for (final r in (await db.rpc('hostel_flags') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (beds: r['beds'] as int? ?? 0, featured: r['featured'] == true, dealsPaused: r['deals_paused'] == true),
+  };
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {
+    for (final r in await db.from('hostel_staff').select('hostel_id').eq('user_id', uid).eq('role', 'manager')) r['hostel_id'] as String,
+  };
   @override
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {
     final at = await db.rpc('set_item_working', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_working': working});
