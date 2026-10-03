@@ -5,8 +5,8 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../../ui/layout.dart' show ConfirmLayoutsCard;
-import '../../ui/onboarding.dart';
 import '../layouts/layout_fixes_screens.dart' show FixPhotoThumb;
+import '../onboarding/onboarding_cards.dart';
 import '../plan/plan_screens.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {

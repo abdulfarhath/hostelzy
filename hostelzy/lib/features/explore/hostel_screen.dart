@@ -4,9 +4,9 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/onboarding.dart';
 import '../amenities/amenities_screens.dart';
 import '../fair_play/fair_play_screens.dart';
+import '../onboarding/onboarding_cards.dart';
 import '../photos/photos_screens.dart';
 
 // ------------------------------------------------------------ detail

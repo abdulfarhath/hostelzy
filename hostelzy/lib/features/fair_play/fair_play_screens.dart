@@ -4,7 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/onboarding.dart' show TeamHead, StatusTag;
+import '../team/team_tracker_screens.dart' show TeamHead, StatusTag;
 
 // F07 Fair Play: the owner's rules (board 1), the owner's number after a hold
 // (2), "Did you join?" (3), the tenant's report (4), the owner's case (5),
