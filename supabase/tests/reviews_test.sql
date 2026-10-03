@@ -4,7 +4,7 @@ set client_min_messages = warning;
 \o /dev/null
 reset role;
 select set_config('request.jwt.claims', '', false);
-insert into public.stays (hostel_id, user_id, name, confirmed) values ('e0000000-0000-0000-0000-000000000001', 'fb-reviewer', 'Teja N', true);
+insert into public.stays (hostel_id, user_id, name, confirmed, joined_on) values ('e0000000-0000-0000-0000-000000000001', 'fb-reviewer', 'Teja N', true, current_date - 40);
 
 -- a confirmed resident reviews (layout "Mostly" is fine); someone who never stayed can't
 select test.act('authenticated', 'fb-reviewer');
