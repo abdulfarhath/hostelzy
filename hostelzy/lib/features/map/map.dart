@@ -163,6 +163,7 @@ extension MapAreaActions on AppState {
     waHid = hid;
   }
 
-  /// Full message the tenant sends: their text plus the ref line.
-  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nBooking code $waRef';
+  /// Full message the tenant sends: their text, the ref line, and (F05) the
+  /// enquiry's link last, so the owner can tap it to open it in Hostelzy.
+  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nBooking code $waRef\n${enquiryLink(waRef!)}';
 }

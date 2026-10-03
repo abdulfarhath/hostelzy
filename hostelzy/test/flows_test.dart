@@ -228,7 +228,8 @@ void main() {
     // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
     expect(find.text('Ask Srinivas'), findsOneWidget);
     expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code $ref'));
+    // F24 4a: the message ends with the enquiry's link the owner can open.
+    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
     expect(find.text(s.waFull), findsOneWidget);
     await tap(tester, find.text('Open WhatsApp'));
     expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));

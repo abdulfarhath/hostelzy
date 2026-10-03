@@ -740,16 +740,28 @@ const reviewCats = ['Food', 'Cleanliness', 'Safety', 'Water and power', 'Owner']
 
 /// A review from a resident with a confirmed stay (one per stay).
 class Review {
-  Review({required this.id, required this.hid, required this.name, required this.stars, required this.text, required this.stay, this.kind = '30-day', this.cats = const {}, this.layout, this.advance, this.again, this.reply, this.replyWhen, this.fresh = false});
-  final String id, hid, name, text, stay, kind;
-  final int stars;
-  final Map<String, int> cats;
+  Review({required this.id, required this.hid, required this.name, required this.stars, required this.text, required this.stay, this.kind = '30-day', this.cats = const {}, this.layout, this.advance, this.again, this.reply, this.replyWhen, this.fresh = false, this.author, this.edited = false, this.reported = false});
+  final String id, hid, name, stay, kind;
+
+  /// F24 4a: the author can edit their review, so these change.
+  String text;
+  int stars;
+  Map<String, int> cats;
+
+  /// Who wrote it (the account id on the server, 'me' on sample data).
+  final String? author;
+
+  /// Changed by its author after posting.
+  bool edited;
+
+  /// Reported for abuse from this phone (the team decides).
+  bool reported;
 
   /// "Is the room layout accurate?" Yes | Mostly | No (F12).
-  final String? layout;
+  String? layout;
 
   /// Exit review: did the advance come back? all | part | not.
-  final String? advance, again;
+  String? advance, again;
   String? reply, replyWhen;
 
   /// Not yet seen by the owner.

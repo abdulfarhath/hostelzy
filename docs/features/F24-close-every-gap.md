@@ -373,3 +373,25 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - "Pay to" is the former resident's number (UPI); Hostelzy doesn't keep tenants' UPI IDs.
 - **Screens:** added `oMeter` (screen), `laundry` and `perks` (sheets). Changed: `oRefund` from a screen to a sheet; `rRefund`, `oRent` (Electricity row), `rPay` (meter line), Manage › House rules (Laundry day row), Reminders (Laundry day row), `oCase` (photo), `rewards` (Trusted row), the Trusted badge sheet, role gates (manager join). Removed: none.
 - **Tests:** `test/wave1_test.dart`, `supabase/tests/wave1_test.sql`. Updated: `moves_test` (refund boards), `resident_test` (meter line), `flows_test` (manager toast).
+
+**Wave 4a: enquiries and reviews gaps (audit §3).** Branch `feature/f24-wave4a`.
+- **F05 enquiry link.** The WhatsApp message now ends with the booking code line and then the enquiry's https link (`enquiryLink`, e.g. `https://farhath.me/hostelzy/app/r/?c=HZ-4822`), the same link Android App Links open in the app. The owner taps it and lands on Today with that enquiry open.
+- **F05 one open enquiry per bed (server).** The app now calls `send_enquiry(...)`. It returns the tenant's open enquiry for that hostel + bed, or one the owner answered in the last 60 days. Only when there is none does it record a new one. A unique index (`enquiries_one_open`) also stops a second open enquiry inserted directly. If the server refuses a duplicate, the app reuses the existing code and says "You already asked about this bed, so it's the same booking code: HZ-…". Old duplicates are kept: the newest stays open and the older ones point at it (`dup_of`).
+- **F08 reviews (server).**
+  - Each review is tied to the author's confirmed stay (`stay_id`, `room`). There is one 30-day review and one exit review per stay (unique index). Older duplicates are hidden, not deleted.
+  - The 30-day review opens 30 days after `joined_on`. The owner and their staff can't review their own hostel.
+  - The author can change their stars, words and answers (`edited_at`, shown as "· edited"), and nothing else.
+  - Staff reply once ("you already replied to this review"). Hidden reviews leave the hostel page and the rating, but the author still sees theirs.
+  - `report_review(review, why)`: anyone signed in, once each, never on their own review. `decide_review_report(review, hide)` is for the team only.
+- **F08 app.**
+  - Resident › My stay › "Review your stay" shows "Opens 21 Oct · after 30 days" until it opens, and tapping it says so. The Home card appears only once the review is open.
+  - Once posted, the row reads "Change your 30-day review". The form comes back filled in and its button reads **Save changes**. The exit review works the same way ("Change your exit review").
+  - Owner › Reviews: each card has **Report abuse** (sheet `revReport`: four reasons, **Send to Hostelzy**). Once sent it reads "Reported to Hostelzy". The server's refusals are shown in plain words.
+- **Console › Reported reviews** (new nav item): open reports grouped by review, showing hostel, review, stars, reasons and since when, with **Hide** / **Keep**.
+- **F13 S4 layout flag.**
+  - On the server, a 30-day review answering "Is the room layout right? No" adds one to `layouts.disputes` for the author's room. Changing the answer, or the team hiding the review, takes it back. Publishing the room again resets it (unchanged).
+  - The app reads `disputes`. Owner › Layouts shows "Residents say this layout is wrong" in red on that room. The room page has a red box with the count ("answered "No" in the 30-day review. Check the room, fix the layout and publish it again.").
+  - Sample data flags the resident's own room instead of a fixed 204.
+- **Server SQL:** `supabase/migrations/20261003060000_f24_enquiries_reviews.sql` → FOUNDER-TODO **4zr1**. Until it runs, enquiries insert as before (the app falls back when `send_enquiry` is missing), reviews work as before, and reports say they couldn't send.
+- **Screens:** added the `revReport` sheet (Report this review) and the console view "Reported reviews". Changed: `rReview` / `rExit` (Save changes, one-per-stay line), `rStay` (review row), `rHome` (card only once open), `oRank` / Reviews (Report abuse), `oLayouts` and `oLayout` (layout-wrong flag), the WhatsApp sheet (link line). Removed: none.
+- **Tests:** `test/wave4a_test.dart` (8), `supabase/tests/wave4a_test.sql`. Updated: `rls_test.sql` (the resident has 40 days; authors may edit, not reply), `reviews_test.sql` (40 days), `flows_test` / `tenant_test` (the message ends with the link).
