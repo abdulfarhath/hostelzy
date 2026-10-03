@@ -113,6 +113,38 @@ SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · T
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
 
 ## Build
+### Status after 3 Oct 2026 (Build): every item built
+| # | Done in | Notes |
+|---|---|---|
+| 1 | #78, #90 | Owner's number after a hold; owner WhatsApp; "Message resident" uses the real number |
+| 2, 3 | #79, #90 | Real map pin, console Go live through `go_live()`, wizard rules/amenities saved |
+| 4 | #77, #90 | Meal times from the menu |
+| 5, 6 | #81 | |
+| 7, 8, 22, 29 | #83 | |
+| 9, 13, 14 | #86 | |
+| 10, 11 | #84 | |
+| 12, 23, 28 | #82 | 6-month headline counts monthly savings, not the (refunded) lower advance |
+| 15 | #93 | "Layouts checked by N residents" on the hostel page |
+| 16, 25, 26, 18 (case photo) | #85 | Trusted "lower-advance deals" left out: no such deal exists |
+| 17, 19, 20, 21 | #87 | Founding-hostel featured spot waits for the founder (Q6) |
+| 18 | #91, #93 | #93: strike 2 hides deals on the server too |
+| 24 | #77 | |
+| 27 | #89 | |
+| 30, 31 | #80 | Founder: 6a–6c |
+| Audit §3 | #88 (F05/F08/F13 S4), #89 (F12, F14 QR, brand), #92 (F03) | Skipped: partner pay (founder amount), "Founder to confirm" items |
+
+**Founder:** run the SQL steps in `docs/FOUNDER-TODO.md` in the listed order (4y, 4z, then 4zk → 4zc).
+**Design:** boards to add for screens Build added: Settings `name` sheet, `waNum` sheet, Owner only screen,
+`revReport` sheet, console Reported reviews, `aPin`, `scan` + `scanCam`, `oMeter`, `laundry` + `perks` sheets,
+owner Today "Are your rates still right?" card; and the "App state, no board" list in the audit §2.
+
+**Cleanup (#93).** Branch `feature/f24-cleanup`.
+- `20261003110000_f24_strike_deals.sql` (FOUNDER-TODO **4zc**): the deals read policy also leaves out hostels
+  whose deals strike 2 hides (`deals_hidden`), so tenants can't read them on the server; owner, managers and team still can.
+  New `hostel_layout_checks()`: distinct residents with an approved layout fix in 6 months, per hostel.
+- App: hostel page shows "Layouts checked by N residents" (item 15) under the availability line; nothing when none.
+- FOUNDER-TODO: all F24 SQL steps listed in the order to run them (file-name order).
+- Tests: `supabase/tests/strikedeals_test.sql`, `hostelzy/test/checked_test.dart`.
 **Wave A item 4: food menu, plus item 24 and dead code.** Branch `feature/food-menu-live`.
 - **Menu on the server (`menus`).**
   - The owner opens Manage › Food menu. It loads that hostel's week and starts empty: the sample week only appears in demo builds.

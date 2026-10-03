@@ -615,6 +615,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
         standing.remove(h.id);
       }
       if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
+      if (l.checkers[h.id] != null) hostelCheckers[h.id] = l.checkers[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
       // F24: "Visited by Hostelzy" is the team's go-live date on the server.
       if (h.visitedOn.isNotEmpty) visited[h.id] = h.visitedOn;

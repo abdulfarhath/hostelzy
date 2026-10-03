@@ -24,6 +24,9 @@ mixin _LayoutFixesData {
   /// Public "Checked by N residents · date": hostel → room → (N, date).
   final Map<String, Map<int, (int, String)>> layoutChecks = {};
 
+  /// F24 #15: hostel → how many different residents checked its layouts (server).
+  final Map<String, int> hostelCheckers = {};
+
   /// F19 extras. Try mode: a visitor plays with the editor, nothing is saved.
   bool fixTry = false;
 
@@ -488,6 +491,12 @@ extension LayoutFixesActions on AppState {
     } catch (_) {
       return null;
     }
+  }
+
+  /// F24 #15: "Layouts checked by 6 residents" on the hostel page, or null.
+  String? hostelCheckedLabel(String hid) {
+    final n = hostelCheckers[hid] ?? 0;
+    return n == 0 ? null : 'Layouts checked by ${n == 1 ? 'a resident' : '$n residents'}';
   }
 
   /// "Checked by 3 residents · 2 Oct" for tenants, or null.

@@ -17,7 +17,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, int> checkers, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -967,9 +967,18 @@ class SupabaseRepo implements HostelRepo {
     for (final r in ck.cast<Map>()) {
       (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
     }
+    // F24 #15: how many different residents checked the hostel's layouts.
+    final checkers = <String, int>{};
+    try {
+      for (final r in (await db.rpc('hostel_layout_checks') as List).cast<Map>()) {
+        checkers[r['hostel_id'] as String] = r['n'] as int;
+      }
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+    }
     // F24 item 30: kept on the phone for the next time there's no network.
     unawaited(saveListingRows(rows));
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, standing: standing);
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, checkers: checkers, standing: standing);
   }
 
   @override
@@ -1176,7 +1185,7 @@ Lead leadFromRow(Map<String, dynamic> r) {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, Standing> standing = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, int> checkers = const {}, Map<String, Standing> standing = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -1287,7 +1296,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final ams = <String, List<Amenity>>{
     for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
   };
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams, standing: standing);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, checkers: checkers, amenities: ams, standing: standing);
 }
 
 /// The newest (or [oldest]) of some timestamps; null when there are none.

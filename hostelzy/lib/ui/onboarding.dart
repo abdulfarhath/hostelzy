@@ -932,6 +932,12 @@ class VisitedBlock extends StatelessWidget {
                   lh: 1.4,
                 ),
         ),
+        // F24 #15 (Design v22 r-detail): residents' approved layout fixes, from the server.
+        if (s.hostelCheckedLabel(h.id) case final ck?)
+          Row(
+            key: const ValueKey('hostelChecked'),
+            children: [Ic('check', size: 16, color: p.tx), const SizedBox(width: 8), Expanded(child: T(ck, s: 13, w: 700))],
+          ),
       ],
     );
   }
