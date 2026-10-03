@@ -34,3 +34,4 @@ $P -d $DB -f tests/moves_test.sql
 $P -d $DB -f tests/values_test.sql
 $P -d $DB -f tests/shapes_test.sql
 $P -d $DB -f tests/wave2a_test.sql
+$P -d $DB -f tests/wave3a_test.sql
