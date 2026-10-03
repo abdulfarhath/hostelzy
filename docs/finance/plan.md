@@ -1,6 +1,6 @@
 # Hostelzy money & growth plan (v2: ₹40k budget)
 
-Owned by the **Hostelzy · Finance & Growth** chat. Written 2026-10-02.
+Owned by the **Hostelzy · Finance & Growth** chat. Written 2026-10-02, updated 2026-10-03 (founder questions, bills tracker, 6-month P&L).
 Reads with: `docs/DECISIONS.md` (prices, rewards), `docs/marketing/README.md` (what to post, where).
 This file does **not** change any amount in DECISIONS. Items marked **PROPOSED** wait for the founder's yes.
 
@@ -8,15 +8,25 @@ Rates used: $1 ≈ ₹95 (Sept 2026). Foreign tools add 18% GST + ~3.5% card fee
 
 ---
 
-## 0. Open questions for the founder (answer in the Finance chat)
+## 0. Questions for the founder
 
-| # | Question | Working default (founder said "keep going", 2026-10-02) |
-|---|---|---|
-| Q1 | ~~Is the ₹30k after personal costs?~~ **Answered (founder, 2026-10-02):** "around ₹42,000 a month… put it as **₹40k per month**", covering deploying the app, AI tokens, everything. | Budget below = **₹40,000/month, all-in for Hostelzy**. Personal costs are outside it. *(My reading of a voice message, please confirm.)* |
-| Q1b | What is your monthly AI tokens / Claude bill? | ₹10,000 placeholder |
-| Q2 | Rewards cap **₹5,000/month** (see §6)? | PROPOSED, not live until you say yes. |
-| Q3 | Founding-20 offer: "3 months free, then ₹299 for life" vs DECISIONS (30-day trial, ₹499/₹999/₹1,499)? | DECISIONS wins (Marketing README now matches). See §4. |
-| Q4 | Marketing's guarantee "No enquiry in 30 days → you never pay"? It's open-ended. Safer: "No enquiry during your 30-day trial → your next month is free too" (costs at most one month, ~₹750 per hostel). | Not promised to anyone until you say yes. |
+Answer in the hub chat with the question number and "yes" / "no" / a number. Until you answer, the
+**recommended** answer is what we plan with, but nothing is promised to owners, tenants or partners.
+Numbers use Plan A average ₹750 per paying hostel (§4).
+
+| # | Question | Recommended answer | Reasoning in numbers |
+|---|---|---|---|
+| Q1 | Budget is **₹40,000/month all-in** (tech, AI tokens, marketing, rewards), personal costs separate? | **Yes** (my reading of your voice note) | §8: real spend is ₹18k–33k/month, so ₹7k–22k/month goes to the reserve. |
+| Q1b | Your monthly Claude / AI tokens bill in ₹? | ₹10,000 placeholder | It is the biggest line: 30–50% of all spend in §8. |
+| Q2 | Monthly cap on **Hostelzy-funded rewards** (referral ₹100+₹100, ₹100 next-stay credits)? | **Yes, ₹5,000/month**, waitlist when full, raise only when paid revenue ≥ 4× cap | Expected spend: 14–59 paying hostels × ~₹80 = **₹1,100–4,700/month** (§8), so ₹5,000 is not hit in normal months. One fraud ring (e.g. 50 fake referrals × ₹200 = ₹10,000) would be stopped at ₹5,000. ₹5,000 = revenue of 7 paying hostels. |
+| Q3 | Founding 20 at normal Plan A price (30-day trial → ₹499/₹999/₹1,499)? | **Yes**, normal price | "₹299 for life + 3 free months" = ₹6,000/month forever and ₹0 till Month 4; at Plan A the same 14 paying hostels bring ₹10,500/month. |
+| Q5 | Partner pay **₹20 per tenant hold** (already in the hiring post)? | **Keep ₹20**, max 100 holds per partner, all partners' hold pay **≤ ₹4,000/month**; review in Month 3 | Holds earn Hostelzy nothing directly (tenants pay ₹0, owners pay flat). If 20% of holds become move-ins, ₹20/hold = **₹100 per move-in**, the same as one referral reward. Cutting a promise already posted costs trust. If hold → move-in is under 10% at Month 3 (₹200+ per move-in), new partners get ₹50 per **confirmed move-in** instead. |
+| Q6 | **Founding-hostel badge** (forever) + **3-month featured spot** for the first 20 hostels? | **Yes**, badge kept only if they pay after the trial; featured spot max 3 founding hostels per area, rotating, paying 80+ bed hostels always above them | **₹0 cash.** Risk: the featured spot is a perk of the ₹1,499 plan; only ~2 of 20 hostels are 80+ beds (10%), so at most ~₹1,000/month of upgrade value is given away for 3 months. Build effort: a badge + a sort rule. |
+| Q7 | Guarantee "**No enquiry in 30 days → you never pay**"? | **No** to "never pay". **Yes** to: "No app enquiry in your **first paid month** → your next month is free (once)" | Tenant launch is Month 2, so most founding hostels get **zero** enquiries in their Month-1 trial: a trial-based guarantee would cost ~20 × ₹750 = **₹15,000** plus every later month ("never"). The bounded version costs at most ₹750 once per hostel; expect 10–20% to claim it = **₹1,500–3,000 once** for 20 hostels. |
+| Q8 | Reward for **approved room-layout fixes** (F19)? | **No money for now (₹0).** Badge "Checked by N residents" only, as today. Revisit at 50 paying hostels | ~20 hostels × 40 residents × 5% fixing ≈ 40 fixes/month. Even ₹10 each = ₹400/month inside the rewards cap, but money invites tiny spam fixes and owner–resident collusion to farm credits. If you want one: **₹10 Stay Rewards credit per approved fix, max ₹50 per resident per month**, counted in the ₹5,000 cap. |
+| Q9 | Staging (test) database: free Supabase project, not a second paid one? | **Yes, free** | A second project on Pro adds ~$10 compute ≈ ₹1,150/month; a free project costs ₹0 (it pauses after a week idle, fine for testing). |
+
+Q4 is replaced by Q7.
 
 ---
 
@@ -44,7 +54,7 @@ Rates used: $1 ≈ ₹95 (Sept 2026). Foreign tools add 18% GST + ~3.5% card fee
 |---|---|---|---|
 | Supabase (database, Mumbai) | Free | ₹0 | Now, while only owners use it |
 | Supabase | **Pro $25/mo** (includes $10 compute = 1 Micro server) | **~₹2,900/mo** | From tenant launch (Month 2). Free plan has no backups and pauses idle projects. |
-| Firebase (Google login, push, crash reports) | Spark (free) | ₹0 | Now. Blaze not needed (and your card failed on it). |
+| Firebase (Google login, push, crash reports) | Spark (free) | ₹0 | Now. Blaze only for SMS OTP later (§7; your card failed on it once). |
 | Google Play Console | One time $25 | **~₹2,400 once** | Month 1. Needs an international card. New personal accounts must run a **closed test with 12 testers for 14 days** before going public, so start in week 1. |
 | Domain | farhath.me (already yours) | ₹0 | Now |
 | `.in` domain (e.g. hostelzy.in) | Optional | ~₹600–900/yr ≈ ₹75/mo | Only after the app name is final (Brand chat) |
@@ -251,12 +261,118 @@ specs it.)
 
 ---
 
+## 7. Bills tracker: every account the app needs
+
+Updated 2026-10-03. Same list in `hostelzy-money.xlsx` → **Bills** tab. ₹ includes 18% GST + card fee on dollar bills.
+
+| Account | Plan | Cost | Due | Status | What it unblocks |
+|---|---|---|---|---|---|
+| Google Play Console | One time $25 | **~₹2,400** (₹2,900 if your bank adds GST + forex fee) | **Week of 6 Oct** | Not paid (needs an international card) | Uploading to Play; the 12-tester / 14-day closed test must finish before going public, so every week late = launch a week late |
+| Supabase (live database, Mumbai) | Free → **Pro $25/mo** | ₹0 now → **~₹2,900/mo** | Pro by **1 Nov** (tenant launch) | Free, running | Daily backups, no pausing, more storage for photos. Free plan pauses after a week idle and has no backups: not safe with real owners' data |
+| Supabase staging (test) project | Free | ₹0 | When Build needs it | Not made | Testing SQL before you run it on the live database (fewer broken runs) |
+| Firebase Spark | Free | ₹0 | – | Running | Google sign-in, push, crash reports |
+| Firebase **Blaze** (pay as you go) | Pay per SMS | ~₹1–2 per OTP SMS; **₹500–2,000/mo** at 1,000–5,000 sign-ups. Set a ₹1,000 budget alert | When a card works (aim: Nov) | Card failed once | **SMS OTP**: phones turn from "Not verified" to verified, stronger Via Hostelzy matching (FOUNDER-TODO 11) |
+| Map: **Google Maps SDK for Android** | Pay as you go | **₹0** (map display free; place search/geocoding free up to 10,000 calls/mo). ₹500 budget alert | Before Play launch | Not set up (needs a card in Google Cloud) | Google-style map at launch; OpenStreetMap tiles are for testing only (FOUNDER-TODO 10) |
+| Map fallback: **MapTiler** | Free → Flex ~$25/mo | ₹0 testing; **~₹2,900/mo** if needed for launch (Free is non-commercial) | Only if Google's card step fails | – | Same as above without a Google card. Google is ~₹2,900/mo cheaper |
+| Domain **hostelzy.in** | Yearly | **~₹800 first year**, ~₹900–1,000 renewal | When the name is final (Brand chat says name stays Hostelzy) — aim **Oct** | Not bought | Own address for privacy/terms/delete-account pages and `r/HZ-…` links; one-line switch from farhath.me (FOUNDER-TODO 7) |
+| farhath.me | Already yours | ₹0 | Your renewal date | Running | Web pages now (farhath.me/hostelzy/app/) |
+| GitHub | Free → **Pro $4/mo** when the repo goes private | ₹0 → **~₹460/mo** | When you make the repo private (before first real users) | Public, free | Private repos lose free GitHub Pages (the farhath.me/hostelzy/app pages) and get 2,000 build minutes/month; Pro keeps Pages and gives 3,000 minutes |
+| WhatsApp Business app | Free | ₹0 | – | – | Owner and partner chats (not the paid API) |
+| Claude / AI tokens | Your plan | ₹10,000/mo placeholder (Q1b) | Monthly | Running | Building the app |
+| Bank account (Hostelzy only) | Savings | ₹0 (keep min. balance) | This week | Not opened | Clean books; UPI `9059790014@axl` lands here |
+
+**Monthly fixed bills from November:** Supabase ₹2,900 + GitHub Pro ₹460 + SMS ₹500–2,000 + AI ₹10,000 ≈ **₹14,000–15,500**.
+**One-time in October:** Play ₹2,400–2,900 + domain ₹800 ≈ **₹3,700**.
+
+---
+
+## 8. Six-month P&L at 20 / 50 / 100 hostels (Plan A)
+
+**Assumptions** (change any and the tabs in the xlsx recompute):
+- Plan A from DECISIONS: ₹499 / ₹999 / ₹1,499, mix 60/30/10 → **₹750 per paying hostel**. 30-day free trial.
+- A hostel pays from the month after it goes live; **70% convert** and stay. "Hostels live" is the scenario's ramp to 20 / 50 / 100 by March.
+- Commission ₹200 per new paying owner + partner hold pay (₹1,000 / ₹2,000 / ₹4,000 a month from Nov).
+- Print ₹150 per new hostel. Travel ₹3,000 in onboarding months, ₹1,000 after. Ads ₹1,000–2,000 from Nov.
+- Rewards ₹80 per paying hostel from Dec, under the ₹5,000 cap (Q2). Next-stay credits counted here, not as lost revenue.
+- Tech from §7: Oct ₹4,260 (Play + domain + GitHub); then ₹3,360 + SMS (₹500 / ₹1,000 / ₹2,000).
+- AI tokens ₹10,000 every month (placeholder, Q1b).
+
+### Summary
+
+| Scenario (hostels by March) | Paying in March | March revenue | March costs | Break-even month | Break-even without AI tokens | Most cash needed (lowest cumulative) | Within ₹40k budget every month? |
+|---|---|---|---|---|---|---|---|
+| **20** | 14 | ₹10,500 | ₹17,980 | **Not in 6 months** (needs ~30 paying) | Dec (Month 3) | ₹63,590 by March, still falling ₹7,480/mo | Yes (max ₹21,810) |
+| **50** | 35 | ₹26,250 | ₹22,160 | **Feb 2027 (Month 5)** | Jan (Month 4) | ₹51,110 (Jan) | Yes (max ₹26,500) |
+| **100** | 59 | ₹44,250 | ₹33,330 | **Feb 2027 (Month 5)** | Jan (Month 4) | ₹57,140 (Jan) | Yes (max ₹33,330) |
+
+What it means:
+- Your ₹40k/month covers every scenario with room to spare; the money actually spent is **₹18k–33k a month**.
+- **20 hostels is not a business yet**: it pays the tech bills but not the AI tokens. Aim for 50.
+- 50 and 100 both break even in February; 100 makes ~₹11k/month profit by March and covers the full ₹40k budget at ~54 paying hostels (§4).
+- If conversion is **50% instead of 70%**, every break-even moves about 2 months later.
+
+### P&L: 20 hostels
+| | Oct | Nov | Dec | Jan | Feb | Mar |
+|---|---|---|---|---|---|---|
+| Hostels live | 15 | 20 | 20 | 20 | 20 | 20 |
+| Paying hostels | 0 | 11 | 14 | 14 | 14 | 14 |
+| **Revenue** | ₹0 | ₹8,250 | ₹10,500 | ₹10,500 | ₹10,500 | ₹10,500 |
+| Tech | ₹4,260 | ₹3,860 | ₹3,860 | ₹3,860 | ₹3,860 | ₹3,860 |
+| AI tokens | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 |
+| Commission | ₹0 | ₹3,200 | ₹1,600 | ₹1,000 | ₹1,000 | ₹1,000 |
+| Print | ₹2,250 | ₹750 | ₹0 | ₹0 | ₹0 | ₹0 |
+| Travel | ₹3,000 | ₹3,000 | ₹1,000 | ₹1,000 | ₹1,000 | ₹1,000 |
+| Ads | ₹0 | ₹1,000 | ₹1,000 | ₹1,000 | ₹1,000 | ₹1,000 |
+| Rewards | ₹0 | ₹0 | ₹1,120 | ₹1,120 | ₹1,120 | ₹1,120 |
+| **Costs** | ₹19,510 | ₹21,810 | ₹18,580 | ₹17,980 | ₹17,980 | ₹17,980 |
+| **Profit / loss** | −₹19,510 | −₹13,560 | −₹8,080 | −₹7,480 | −₹7,480 | −₹7,480 |
+| P/L without AI tokens | −₹9,510 | −₹3,560 | ₹1,920 | ₹2,520 | ₹2,520 | ₹2,520 |
+| Cumulative P/L | −₹19,510 | −₹33,070 | −₹41,150 | −₹48,630 | −₹56,110 | −₹63,590 |
+
+### P&L: 50 hostels
+| | Oct | Nov | Dec | Jan | Feb | Mar |
+|---|---|---|---|---|---|---|
+| Hostels live | 20 | 30 | 40 | 50 | 50 | 50 |
+| Paying hostels | 0 | 14 | 21 | 28 | 35 | 35 |
+| **Revenue** | ₹0 | ₹10,500 | ₹15,750 | ₹21,000 | ₹26,250 | ₹26,250 |
+| Tech | ₹4,260 | ₹4,360 | ₹4,360 | ₹4,360 | ₹4,360 | ₹4,360 |
+| AI tokens | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 |
+| Commission | ₹0 | ₹4,800 | ₹3,400 | ₹3,400 | ₹3,400 | ₹2,000 |
+| Print | ₹3,000 | ₹1,500 | ₹1,500 | ₹1,500 | ₹0 | ₹0 |
+| Travel | ₹3,000 | ₹3,000 | ₹3,000 | ₹3,000 | ₹1,000 | ₹1,000 |
+| Ads | ₹0 | ₹2,000 | ₹2,000 | ₹2,000 | ₹2,000 | ₹2,000 |
+| Rewards | ₹0 | ₹0 | ₹1,680 | ₹2,240 | ₹2,800 | ₹2,800 |
+| **Costs** | ₹20,260 | ₹25,660 | ₹25,940 | ₹26,500 | ₹23,560 | ₹22,160 |
+| **Profit / loss** | −₹20,260 | −₹15,160 | −₹10,190 | −₹5,500 | ₹2,690 | ₹4,090 |
+| P/L without AI tokens | −₹10,260 | −₹5,160 | −₹190 | ₹4,500 | ₹12,690 | ₹14,090 |
+| Cumulative P/L | −₹20,260 | −₹35,420 | −₹45,610 | −₹51,110 | −₹48,420 | −₹44,330 |
+
+### P&L: 100 hostels
+| | Oct | Nov | Dec | Jan | Feb | Mar |
+|---|---|---|---|---|---|---|
+| Hostels live | 20 | 35 | 50 | 70 | 85 | 100 |
+| Paying hostels | 0 | 14 | 25 | 35 | 49 | 59 |
+| **Revenue** | ₹0 | ₹10,500 | ₹18,750 | ₹26,250 | ₹36,750 | ₹44,250 |
+| Tech | ₹4,260 | ₹5,360 | ₹5,360 | ₹5,360 | ₹5,360 | ₹5,360 |
+| AI tokens | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 | ₹10,000 |
+| Commission | ₹0 | ₹6,800 | ₹6,200 | ₹6,000 | ₹6,800 | ₹6,000 |
+| Print | ₹3,000 | ₹2,250 | ₹2,250 | ₹3,000 | ₹2,250 | ₹2,250 |
+| Travel | ₹3,000 | ₹3,000 | ₹3,000 | ₹3,000 | ₹3,000 | ₹3,000 |
+| Ads | ₹0 | ₹2,000 | ₹2,000 | ₹2,000 | ₹2,000 | ₹2,000 |
+| Rewards | ₹0 | ₹0 | ₹2,000 | ₹2,800 | ₹3,920 | ₹4,720 |
+| **Costs** | ₹20,260 | ₹29,410 | ₹30,810 | ₹32,160 | ₹33,330 | ₹33,330 |
+| **Profit / loss** | −₹20,260 | −₹18,910 | −₹12,060 | −₹5,910 | ₹3,420 | ₹10,920 |
+| P/L without AI tokens | −₹10,260 | −₹8,910 | −₹2,060 | ₹4,090 | ₹13,420 | ₹20,920 |
+| Cumulative P/L | −₹20,260 | −₹39,170 | −₹51,230 | −₹57,140 | −₹53,720 | −₹42,800 |
+
+---
+
 ## Files in docs/finance
 
 | File | What |
 |---|---|
 | `plan.md` | This plan |
 | `founder-morning-checklist.md` | What the founder must decide / pay, in order |
-| `hostelzy-money.xlsx` | Bills tracker (upload to Google Sheets) |
+| `hostelzy-money.xlsx` | Money sheet: Bills, P&L, Budget, Money in/out, Rewards, Partners (upload to Google Sheets) |
 | `hiring-post.md` | Ready-to-paste hiring posts + partner agreement |
 | `owner-pitch-numbers.md` | Plan cost per day, payback maths for owners |
