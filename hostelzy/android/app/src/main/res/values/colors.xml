@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand (docs/brand/app-assets.md): the pushes' small icon tint, Pal light `ac`. -->
+    <color name="hz_notification">#EC3013</color>
+    <!-- Splash ground = the app's ground (Pal.light.bg); dark in values-night. -->
+    <color name="splash_bg">#F3F2F2</color>
+</resources>

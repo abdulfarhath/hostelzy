@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark splash ground = Pal.dark.bg (lib/ui/kit.dart). -->
+    <color name="splash_bg">#161514</color>
+</resources>

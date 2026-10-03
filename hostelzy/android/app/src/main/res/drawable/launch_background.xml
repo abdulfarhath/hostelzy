@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- Splash (docs/brand/app-assets.md): the room (B3-a2) on the app's ground.
+     Light and dark come from the -night colour and drawable folders. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
-
-    <!-- Hostelzy room mark (logo B3-a2) on white. -->
+    <item android:drawable="@color/splash_bg" />
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher_foreground" />
+            android:src="@drawable/splash_icon" />
     </item>
 </layer-list>

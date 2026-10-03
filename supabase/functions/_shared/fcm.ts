@@ -54,11 +54,16 @@ export async function accessToken(sa: ServiceAccount, f: Fetch, nowSecs: number,
   return (await r.json()).access_token;
 }
 
-/** FCM v1 body: a visible notification plus string data for the app to route. */
+/** Brand: the Android small icon (res/drawable/ic_stat_hostelzy.xml) and its tint (Pal light `ac`). */
+export const PUSH_ICON = 'ic_stat_hostelzy';
+export const PUSH_COLOR = '#EC3013';
+
+/** FCM v1 body: a visible notification plus string data for the app to route.
+ *  The icon and colour are set here too, so they never depend on the manifest. */
 export function fcmMessage(token: string, row: OutboxRow) {
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(row.data ?? {})) data[k] = String(v);
-  return { message: { token, notification: { title: row.title, body: row.body }, data, android: { priority: 'high' } } };
+  return { message: { token, notification: { title: row.title, body: row.body }, data, android: { priority: 'high', notification: { icon: PUSH_ICON, color: PUSH_COLOR } } } };
 }
 
 /** Phones that no longer exist: FCM says the token is gone. */
