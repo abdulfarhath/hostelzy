@@ -2,8 +2,8 @@
 // sample hostels (offline, tests); `SupabaseRepo` reads live hostels from the
 // database. Row Level Security decides what each user may read or write.
 
-import 'dart:typed_data';
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app_config.dart';
 import '../../data.dart';
 import '../photos/photo.dart';
+import 'cache.dart';
 import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
@@ -676,6 +677,8 @@ class SupabaseRepo implements HostelRepo {
     for (final r in ck.cast<Map>()) {
       (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
     }
+    // F24 item 30: kept on the phone for the next time there's no network.
+    unawaited(saveListingRows(rows));
     return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks);
   }
 

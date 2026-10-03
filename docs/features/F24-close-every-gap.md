@@ -212,3 +212,15 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **House rules.** A real hostel's page never shows rules its owner didn't add, only the ones from its terms. The owner's editor leaves Gate closes and Visitors empty to fill in.
 - **Availability** ("N free · confirmed X days ago" from the server's bed confirmations) is with items 9/19 (owner tools).
 - **Tests:** `test/values_test.dart`.
+
+**Wave C items 30 and 31: platform.** Branch `feature/f24-platform`.
+- **Offline list (30).**
+  - Every time the hostels load, the server's rows are kept on the phone (`features/listings/cache.dart`).
+  - If the server can't be reached at start, Explore shows that list with "Offline. Hostels as of <day>, <time>. Tap to try again", instead of an empty list.
+  - It is never sample data. Drafts that already stay on the phone (layout fixes, menus typed before saving) are unchanged.
+- **https App Links (30).** `farhath.me/hostelzy/app/r` and `/j` open the real app; the router already handled those paths. Verified opening needs `assetlinks.json` on farhath.me (FOUNDER-TODO **6c**).
+- **Play build and staging (31).**
+  - New workflow `android-aab.yml` (Actions › Play Store build, run by hand) makes the AAB, signed with the upload key from secrets. The Gradle `hostelzyUpload` config is used only when that key is present.
+  - The `staging` choice builds against a second Supabase project (`HZ_ENV=staging`, its own URL and key); Settings then shows "STAGING".
+  - Founder steps: **6a** upload key, **6b** staging project. No keys are in the repo.
+- **Tests:** `test/platform_test.dart`.

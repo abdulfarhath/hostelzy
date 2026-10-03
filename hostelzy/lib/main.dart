@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
+import 'features/listings/cache.dart';
 import 'features/listings/repo.dart';
 import 'push.dart';
 import 'reminders.dart';
@@ -109,10 +110,21 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
       // Push fix: every start, the server gets this phone's token if allowed.
       await state.syncPushToken();
     } catch (e) {
-      // Never show sample hostels as if they were live: an honest empty list.
+      // Never show sample hostels as if they were live: the last list from the
+      // server if this phone has one (marked offline, F24), else an honest
+      // empty list.
       if (state.listState == 'loading') {
-        state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
-        state.update(() => state.listState = 'offline');
+        final c = await loadListingRows();
+        if (c != null) {
+          state.applyListings(listingsFromRows(c.rows));
+          state.update(() {
+            state.listState = 'cached';
+            state.cachedAt = c.at;
+          });
+        } else {
+          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}));
+          state.update(() => state.listState = 'offline');
+        }
       }
       debugPrint('Supabase: $e');
     }

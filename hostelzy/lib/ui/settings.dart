@@ -127,7 +127,7 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 18),
                 Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), child: _Row('Log out', onTap: s.logOut)),
                 _Row('Delete account', red: true, onTap: () => s.go('delAcc')),
-                Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild) · Made in Hyderabad', s: 12, c: p.mu)),
+                Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild)${isStaging ? ' · STAGING' : ''} · Made in Hyderabad', s: 12, c: p.mu)),
               ],
             ),
           ),
