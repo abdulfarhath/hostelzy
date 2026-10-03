@@ -57,6 +57,7 @@ extension LoginActions on AppState {
       startLive();
       syncPushToken();
       restoreRemFromServer();
+      loadNotifyFromServer();
       return;
     }
     // Never hide why: the real code is shown and sent to Crashlytics.
@@ -105,6 +106,7 @@ extension LoginActions on AppState {
           osPushAllowed = true;
           notif.updateAll((k, v) => k == 'beds' ? v : true);
         });
+        saveNotify();
         if (account == null) return toastMsg('Notifications allowed. Sign in with Google to get them.');
         if (!data.remote) return toastMsg('Notifications allowed. This demo has no server, so nothing is sent.');
         if (await syncPushToken(force: true)) toastMsg('Notifications are on for this phone.');
@@ -189,11 +191,63 @@ extension LoginActions on AppState {
   bool notifOn(String k) => notif[k]! && osPushAllowed != false;
 
   void toggleNotif(String k) {
-    if (notifOn(k)) return update(() => notif[k] = false);
-    if (osPushAllowed == true) return update(() => notif[k] = true);
+    if (notifOn(k) || osPushAllowed == true) {
+      update(() => notif[k] = !notifOn(k));
+      saveNotify();
+      return;
+    }
     // Off at Android level: ask right away.
     enablePush().then((_) {
-      if (osPushAllowed == true) update(() => notif[k] = true);
+      if (osPushAllowed != true) return;
+      update(() => notif[k] = true);
+      saveNotify();
     });
+  }
+
+  /// F24 item 22: the switches are kept on the profile, so the server skips
+  /// pushes of a kind switched off.
+  Future<void> saveNotify() async {
+    final a = account;
+    if (!data.remote || a == null) return;
+    try {
+      await data.saveNotify(a.uid, Map.of(notif));
+    } catch (e) {
+      debugPrint('notify: $e');
+    }
+  }
+
+  /// F24 item 22: signed in: the profile's switches come back to this phone,
+  /// and the areas searched here and there are merged.
+  Future<void> loadNotifyFromServer() async {
+    final a = account;
+    if (!data.remote || a == null) return;
+    try {
+      final r = await data.loadNotify(a.uid);
+      if (r == null) return;
+      final areas = [...searchedAreas, ...r.areas.where((x) => !searchedAreas.contains(x))].take(5).toList();
+      update(() {
+        for (final e in r.notify.entries) {
+          if (notif.containsKey(e.key)) notif[e.key] = e.value;
+        }
+        searchedAreas
+          ..clear()
+          ..addAll(areas);
+      });
+      if (!listEquals(areas, r.areas)) await data.saveSearchedAreas(a.uid, areas);
+    } catch (e) {
+      debugPrint('notify load: $e');
+    }
+  }
+
+  /// F24 item 22: an area picked in Where? or on the map, for "New free beds".
+  void noteSearchedArea(String area) {
+    final next = [area, ...searchedAreas.where((x) => x != area)].take(5).toList();
+    if (listEquals(next, searchedAreas)) return;
+    searchedAreas
+      ..clear()
+      ..addAll(next);
+    final a = account;
+    if (!data.remote || a == null) return;
+    data.saveSearchedAreas(a.uid, next).catchError((Object e) => debugPrint('areas: $e'));
   }
 }

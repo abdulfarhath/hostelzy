@@ -208,7 +208,34 @@ abstract class HostelRepo {
   /// F24 item 6: counts per live hostel (reply speed, complaints, residents,
   /// photos, rooms, layouts) for the hostel page and the ranking.
   Future<Map<String, HostelSignals>> signals();
+
+  /// F24 item 7: a fan, the AC or a window Working / Not working, saved for
+  /// tenants; not working raises a complaint. The complaint's date (null when working).
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working);
+
+  /// F24 item 8: the owner keeps a bed for a walk-in (1 hour); when it ends.
+  Future<DateTime> holdWalkIn(String bedKey);
+  Future<void> releaseWalkIn(String bedKey);
+
+  /// F24 item 22: the Settings switches and the areas the tenant searched,
+  /// kept on the profile (null before that SQL runs).
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid);
+  Future<void> saveNotify(String uid, Map<String, bool> notify);
+  Future<void> saveSearchedAreas(String uid, List<String> areas);
+
+  /// F24 item 29: team mode from the server (team accounts only).
+  Future<void> teamHello();
+  Future<List<TeamMember>> teamMembers();
+  Future<void> inviteTeamMember(String name, String phone, String role);
+  Future<List<Lead>> teamTracker();
+  Future<void> setLeadStage(String hid, int stage);
 }
+
+/// F24 item 29: one person on the Hostelzy team.
+typedef TeamMember = ({String name, String phone, String role, bool joined});
+
+/// The tracker's first four stages as `hostel_leads.stage` has them.
+const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
 
 /// F24: real counts behind "Usually replies in ~N min" and the ranking.
 typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
@@ -381,6 +408,28 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmRefund(String stayKey, bool got) async {}
   @override
   Future<Map<String, HostelSignals>> signals() async => {};
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async => working ? null : DateTime.now();
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.now().add(const Duration(hours: 1));
+  @override
+  Future<void> releaseWalkIn(String bedKey) async {}
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async => null;
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) async {}
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) async {}
+  @override
+  Future<void> teamHello() async {}
+  @override
+  Future<List<TeamMember>> teamMembers() async => const [];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) async {}
+  @override
+  Future<List<Lead>> teamTracker() async => const [];
+  @override
+  Future<void> setLeadStage(String hid, int stage) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -767,6 +816,57 @@ class SupabaseRepo implements HostelRepo {
     for (final r in (await db.rpc('hostel_signals') as List).cast<Map<String, dynamic>>())
       r['hostel_id'] as String: (replyMin: r['reply_minutes'] as int? ?? 0, replyN: r['reply_n'] as int? ?? 0, complaints30: r['complaints_30d'] as int? ?? 0, residents: r['residents'] as int? ?? 0, photos: r['photos'] as int? ?? 0, rooms: r['rooms'] as int? ?? 0, layouts: r['layouts'] as int? ?? 0),
   };
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {
+    final at = await db.rpc('set_item_working', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_working': working});
+    return at == null ? null : DateTime.parse(at as String).toLocal();
+  }
+
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.parse(await db.rpc('hold_walk_in', params: {'p_bed': bedKey}) as String).toLocal();
+  @override
+  Future<void> releaseWalkIn(String bedKey) => db.rpc('release_walk_in', params: {'p_bed': bedKey});
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async {
+    final r = await db.from('profiles').select('notify, searched_areas').eq('id', uid).maybeSingle();
+    if (r == null) return null;
+    return (
+      notify: {for (final e in ((r['notify'] as Map?) ?? const {}).entries) if (e.value is bool) e.key as String: e.value as bool},
+      areas: [for (final a in (r['searched_areas'] as List? ?? const [])) a as String],
+    );
+  }
+
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) => db.from('profiles').update({'notify': notify}).eq('id', uid);
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) => db.from('profiles').update({'searched_areas': areas}).eq('id', uid);
+  @override
+  Future<void> teamHello() => db.rpc('team_hello');
+  @override
+  Future<List<TeamMember>> teamMembers() async => [
+    for (final r in await db.from('team_members').select().order('created_at'))
+      (name: r['name'] as String? ?? '', phone: r['phone'] as String? ?? '', role: r['role'] as String? ?? 'Everything', joined: r['joined_at'] != null),
+  ];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) => db.from('team_members').insert({'name': name, 'phone': phone, 'role': role});
+  @override
+  Future<List<Lead>> teamTracker() async => [for (final r in (await db.rpc('team_tracker') as List).cast<Map<String, dynamic>>()) leadFromRow(r)];
+  @override
+  Future<void> setLeadStage(String hid, int stage) => db.from('hostel_leads').upsert({'hostel_id': hid, 'stage': leadStages[stage], 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+}
+
+/// F24 item 29: a `team_tracker()` row → the tracker's [Lead]. With no next
+/// step noted, the stage says what comes next.
+Lead leadFromRow(Map<String, dynamic> r) {
+  final stage = (r['stage'] as num?)?.toInt() ?? 0;
+  final trial = r['trial_ends'] == null ? null : DateTime.parse(r['trial_ends'] as String);
+  final note = (r['next_step'] as String? ?? '').trim();
+  final next = stage == 5 && trial != null
+      ? 'Trial ends ${dayMon(trial)}'
+      : note.isNotEmpty
+      ? note
+      : const ['Visit the hostel', 'Sign up the owner', 'Add rooms, rates and photos', 'Go live', 'Start the trial', 'Trial running', 'Paying'][stage.clamp(0, 6)];
+  return Lead(r['name'] as String? ?? '', r['area'] as String? ?? '', next, stage, hid: r['hostel_id'] as String?);
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
@@ -806,9 +906,9 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
                   state: b['state'] as String? ?? 'free',
                   soon: b['free_from'] == null ? '' : dayMon(DateTime.parse(b['free_from'] as String)),
                   key: b['id'] as String?,
-                ),
+                )..walkInUntil = b['walk_in_until'] == null ? 0 : DateTime.parse(b['walk_in_until'] as String).millisecondsSinceEpoch,
             ],
-          );
+          )..acSince = r['ac_repair_since'] == null ? '' : dayMon(DateTime.parse(r['ac_repair_since'] as String));
         }(),
     ]..sort((a, b) => a.n.compareTo(b.n));
     final rate = <String, int>{for (final c in (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>()) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};

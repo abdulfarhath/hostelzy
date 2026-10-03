@@ -85,6 +85,7 @@ extension SyncActions on AppState {
         rules = hostelRules[ownHid] != null ? List.of(hostelRules[ownHid]!) : blankRules(hostelById(ownHid).terms);
       }
     }
+    syncWalkIns();
     managers
       ..clear()
       ..addAll([for (final m in l.managers) if (m.hid == ownHid) (name: m.name, phone: m.phone, joined: m.joined)]);
@@ -281,6 +282,8 @@ extension SyncActions on AppState {
       if (me.isNotEmpty) enquiries = enquiries.where((e) => e.phone != me).toList();
       account = null;
       myName = '';
+      searchedAreas.clear();
+      notif.addAll({'hold': true, 'rent': true, 'beds': false});
       role = 'tenant';
       screen = 'welcome';
       hist = [];

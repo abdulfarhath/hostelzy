@@ -47,6 +47,9 @@ extension OnPhoneActions on AppState {
     'fairAccepted': fairAccepted,
     'pushAsked': pushAsked,
     'opens': opens,
+    // F24 item 22: the Settings switches and searched areas (also on the profile).
+    'notif': notif,
+    'areas': searchedAreas,
     // F20: reminders ring from this phone.
     'rem': remJson(),
     // F18 (F5): the owner's house rules stay on the phone; a menu only until it is saved.

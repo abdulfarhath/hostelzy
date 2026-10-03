@@ -481,7 +481,7 @@ class RoomMode extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('AC under repair.${room.acSince.isEmpty ? '' : ' Complaint raised ${room.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           body,
         ],
