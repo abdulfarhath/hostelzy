@@ -156,8 +156,10 @@ class ExploreScreen extends StatelessWidget {
                 // F21 W4: grey cards while loading; "You're offline" instead of "No hostels".
                 if (s.listState == 'loading') ...const [SkeletonCard(), SkeletonCard()]
                 else if (s.listState == 'offline') const OfflineBlock()
-                else if (s.listState == 'cached' && s.cachedAt != null) ...[
-                  // F24: the last list from the server, kept on this phone.
+                else ...[
+                  // F24: the last list from the server, kept on this phone: the banner,
+                  // then the saved cards under it (Design w1-exploreCached).
+                  if (s.listState == 'cached' && s.cachedAt != null)
                   Tap(
                     key: const ValueKey('cachedBanner'),
                     onTap: () => s.reconnect?.call(),
@@ -168,8 +170,6 @@ class ExploreScreen extends StatelessWidget {
                       child: Row(children: [Ic('wifi', size: 18, color: p.tx), const SizedBox(width: 10), Expanded(child: T('Offline. Hostels as of ${dayMon(s.cachedAt!)}, ${clockTime(s.cachedAt!.millisecondsSinceEpoch).replaceFirst('Today, ', '')}. Tap to try again.', s: 13, w: 600, lh: 1.35))]),
                     ),
                   ),
-                ]
-                else ...[
                 // F21 W2: the rank shows once, on the first card.
                 // F10: featured hostels come first, so "#1" goes to the best rank among the results.
                 for (final h in results) HostelCard(h, first: h.id == top),

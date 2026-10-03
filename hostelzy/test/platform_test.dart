@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hostelzy/features/listings/cache.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
+import 'package:hostelzy/ui/screens_tenant.dart' show HostelCard;
 import 'package:hostelzy/ui/shell.dart';
 
 // F24 items 30 and 31: the last hostels list kept for offline, and the
@@ -49,6 +50,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: AppScope(state: s, child: const HostelzyShell(bare: true))));
     await tester.pump();
     expect(find.text('Offline. Hostels as of 2 Oct, 9:05 pm. Tap to try again.'), findsOneWidget);
+    // The saved hostels stay under the banner (Design w1-exploreCached).
+    expect(find.byType(HostelCard), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('cachedBanner')));
     expect(tries, 1);
     s.dispose();

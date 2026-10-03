@@ -177,6 +177,16 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 `revReport` sheet, console Reported reviews, `aPin`, `scan` + `scanCam`, `oMeter`, `laundry` + `perks` sheets,
 owner Today "Are your rates still right?" card; and the "App state, no board" list in the audit §2.
 
+**Canvas v25 fixes.** Branch `feature/v25-fixes`.
+- Hostel page: when deals are paused (plan 15+ days late) or hidden (strike 2), a plain line "Hostelzy deals are
+  paused for this hostel. Walk-in prices shown." instead of the deals vanishing (board `w1-dealsPaused`).
+- oMeter footer example worded exactly like the resident rent line ("Electricity · 70 units ÷ 4 · ₹8/unit  ₹140";
+  "Electricity  Not added yet").
+- Explore offline with a saved list: the saved hostel cards now show under the "Offline · hostels as of…" banner
+  (board `w1-exploreCached`; before, only the banner showed).
+- `docs/SCREENS.md`: every screen, sheet and full-screen state in the release app, counted one by one.
+- Tests: `test/v25_test.dart`, `test/platform_test.dart`.
+
 **Cleanup (#93).** Branch `feature/f24-cleanup`.
 - `20261003110000_f24_strike_deals.sql` (FOUNDER-TODO **4zc**): the deals read policy also leaves out hostels
   whose deals strike 2 hides (`deals_hidden`), so tenants can't read them on the server; owner, managers and team still can.

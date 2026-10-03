@@ -236,7 +236,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | **Tenant (17)** |||||
 | 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
 | 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
-| 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (see Finding below) |
+| 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
 | 4 | `explore` | No hostels in this area yet · Try area | nothing live, or area picked has none | `screens_tenant.dart:177` |
 | 5 | `explore` | Nothing matches yet · Clear filters | filters exclude every hostel | `screens_tenant.dart:196` |
 | 6 | `map` | No hostels here yet (card) | no hostel under the filters/area | `map.dart:163` |
@@ -332,4 +332,4 @@ Pages 7 + states 2 = 9.
 `explore` cached state (#3 in §3): the `if / else if` chain at `screens_tenant.dart:157-196` shows **only the
 "Offline · hostels as of…" banner** when `listState == 'cached'`; the cached hostel cards (already applied in
 `main.dart` `_goLive`) are in the final `else` and never render. Design's board `w1-exploreCached` shows the last
-list kept. Fix: render the cards after the banner in the cached branch.
+list kept. **Fixed in the same PR (2026-10-03):** the saved cards now show under the banner (`test/platform_test.dart`).
