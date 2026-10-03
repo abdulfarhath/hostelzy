@@ -158,7 +158,7 @@ the rest are 23 dark copies, the cover and the logo).
   `f12-Request` (old layout request; now `f24-oShapeReq`).
 - *Not counted, kept:* `Main` (cover), `brand-logo`, `splash` (Android launch), `f14-Poster` (print), `f17-Desktop` (tablet
   layout, SCREENS §6), `f19-Push`, `f20-Notify`, `f20-NotifyDark` (system notifications).
-- *v28 (after #95):* site root now redirects to `app/`; **retired `w3-wRoot`**. Web items renumbered to SCREENS (W1 `wHome` · W2 `wR` · W3 `w3-wRNoCode` · W4 `wJ` · W5 `w3-wJNoCode` · W6 `wPriv` · W7 `wTerms` · W8 `wDel`). **App 181 · Canvas 181**, 252 boards.
+- *v28 (after #95):* site root now redirects to `app/`; **retired `w3-wRoot`**. Web items renumbered to SCREENS (W1 `wHome` · W2 `wR` · W3 `w3-wRNoCode` · W4 `wJ` · W5 `w3-wJNoCode` · W6 `wPriv` · W7 `wTerms` · W8 `wDel`). **App 181 · Canvas 181**, 252 boards. *Correction (hub, 2026-10-03):* the site root stays the old prototype (DECISIONS “Web address for now”); `w3-wRoot` is back, tagged “[not counted] old prototype page, kept by founder decision”. **253 boards.**
 
 <details><summary>Item → board map (181)</summary>
 
