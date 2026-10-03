@@ -20,7 +20,7 @@ class ResidentHomeScreen extends StatelessWidget {
     final owner = s.stayOwner;
     final terms = h.terms;
     final tm = s.menu[todayIdx];
-    final rentAmt = s.myRentPay?.amt ?? st?.rent ?? 0;
+    final rentAmt = s.myRentPay?.amt ?? (st == null ? 0 : st.rent + s.myElectricity);
     // Meals: done once they're over, the next one, then later.
     final nowMin = DateTime.now().hour * 60 + DateTime.now().minute;
     final mealEnds = [9 * 60 + 30, 14 * 60, 22 * 60];
@@ -214,7 +214,10 @@ class RentPayScreen extends StatelessWidget {
     final owner = s.stayOwner;
     final terms = h.terms;
     // F21: the month's real rent; on the server nothing exists until the resident starts paying.
-    final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent, note: s.rentNote);
+    // F24 #25: this month's electricity (board `rentMeter`) is added to the rent.
+    final meter = s.myMeter;
+    final elec = s.myElectricity;
+    final rent = s.myRentPay ?? Payment(id: '', kind: 'rent', hid: st.hid, who: s.meShort, what: 'Rent', bed: st.bed, amt: st.rent + elec, note: s.rentNote);
     final started = rent.id.isNotEmpty;
     final sample = !s.onServer;
     final history = sample ? [('September', '₹8,040 · confirmed 3 Sep'), ('August', '₹7,980 · confirmed 4 Aug'), ('July', '₹8,110 · confirmed 2 Jul')] : const <(String, String)>[];
@@ -290,7 +293,11 @@ class RentPayScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (sample) ...[row('Rent', '₹7,600'), row('Electricity · meter', '₹420')] else row('Rent', fmt(rent.amt)),
+                      row('Rent', fmt(sample ? rent.amt - elec : st.rent)),
+                      if (meter != null)
+                        KV('Electricity · ${meter.units} units ÷ ${meter.people} · ${perUnit(meter.rate)}/unit', fmt(elec), key: const ValueKey('rentMeter'), keyWidth: 150)
+                      else if (terms.electricityExtra)
+                        row('Electricity', 'Not added yet'),
                       row('Pay to', upi.isEmpty ? '$owner hasn’t added a UPI ID yet' : upi),
                     ],
                   ),

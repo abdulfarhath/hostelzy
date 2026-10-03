@@ -29,9 +29,10 @@ extension SyncActions on AppState {
   /// replace the lists. Never mixed with samples: on Supabase the lists start
   /// empty (AppState.samples is false).
   void applyLive(LiveRows l) => update(() {
-    // S1: the locked deal is shown from what this phone saw when booking.
+    // F24 item 13: the server's locked deal; before its SQL runs, what this
+    // phone saw when booking.
     final perks = {for (final h in holds) if (h.perks.isNotEmpty) h.id: h.perks};
-    holds = [for (final h in l.holds) perks[h.id] == null ? h : h.withPerks(perks[h.id]!)];
+    holds = [for (final h in l.holds) h.perks.isNotEmpty || perks[h.id] == null ? h : h.withPerks(perks[h.id]!)];
     enquiries = l.enquiries;
     payments = l.payments;
     complaints = l.complaints;
@@ -98,6 +99,8 @@ extension SyncActions on AppState {
     // F24: owners' numbers for the hostels this user holds at, asked or lives in.
     final want = {for (final h in l.holds) h.hid, for (final e in l.enquiries) if (e.phone == myPhone) e.hid, ?l.myHostel};
     if (want.any((h) => !ownerPhones.containsKey(h))) Future.microtask(() => loadOwnerPhones(want));
+    // F24 item 14: don't ask "Did you join?" again about an answered hold.
+    if (endedHold != null) Future.microtask(loadJoinAnswers);
   });
 
   /// F24: fetches owners' numbers the server lets this user see.
@@ -131,8 +134,14 @@ extension SyncActions on AppState {
   Future<void> refreshLive() async {
     try {
       final l = await data.live(me: account?.uid);
-      if (l != null) applyLive(l);
-      if (l != null && l.myHostels.isNotEmpty) await loadManagerOf();
+      if (l != null) {
+        applyLive(l);
+        // F24 #16, #25: the tenant's level and the resident's electricity.
+        unawaited(loadLevel());
+        unawaited(loadMyMeter(force: true));
+        // F24 #17: the hostels this user only manages.
+        if (l.myHostels.isNotEmpty) await loadManagerOf();
+      }
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
       debugPrint('live: $e');
@@ -150,6 +159,9 @@ extension SyncActions on AppState {
       _liveWait?.cancel();
       _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
     });
+    // F24 #16, #25: now that this is live, the level and the electricity.
+    unawaited(loadLevel());
+    unawaited(loadMyMeter(force: true));
   }
 
   /// C: a tenant's enquiry on the server; the HZ code comes back from it.

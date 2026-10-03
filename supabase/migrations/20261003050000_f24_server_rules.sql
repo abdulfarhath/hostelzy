@@ -30,7 +30,7 @@
 --             owner; 15 days late → "deals paused" → the owner; rent due today
 --             (the hostel's terms: the joining date, or the 1st) → each
 --             resident on the app ("rent", their Rent switch).
--- Runs after 20261003033000_f24_team.sql. Safe to run again.
+-- Runs after 20261003042000_f24_did_you_join.sql (and 20261003020000_f24_wave1.sql, case photos). Safe to run again.
 
 -- ================================================================ 17. owner-only areas
 
@@ -61,7 +61,18 @@ create policy "read own rewards" on public.reward_ledger for select
   using (user_id = public.uid() or public.is_team()
     or (hostel_id is not null and (public.is_owner(hostel_id) or (kind <> 'owner_credit' and public.is_staff(hostel_id)))));
 
--- fix_case() is security definer; this keeps a manager out of it too.
+-- Fair Play case photos (20261003020000_f24_wave1.sql): the owner's too.
+drop policy if exists "hz upload case photos" on storage.objects;
+create policy "hz upload case photos" on storage.objects for insert
+  with check (bucket_id = 'case-photos' and split_part(name, '/', 2) = public.uid()
+    and (public.is_owner(public.complaint_photo_hostel(name)) or public.is_team()));
+drop policy if exists "hz read case photos" on storage.objects;
+create policy "hz read case photos" on storage.objects for select
+  using (bucket_id = 'case-photos' and (split_part(name, '/', 2) = public.uid() or public.is_team()
+    or (public.is_owner(public.complaint_photo_hostel(name))
+        and exists (select 1 from public.fair_cases c where c.hostel_id = public.complaint_photo_hostel(name) and (c.tenant_photo = name or c.owner_photo = name)))));
+
+-- fix_case() and case_photo() are security definer; this keeps a manager out of them too.
 create or replace function public.owner_only_case() returns trigger
 language plpgsql security definer set search_path = ''
 as $$

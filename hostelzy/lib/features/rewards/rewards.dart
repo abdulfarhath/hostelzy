@@ -18,6 +18,10 @@ mixin _RewardsData {
   final List<({String hid, String what, int amt})> ownerCredits = [];
   int friendsJoined = 1;
 
+  /// F24 #16: the level the server worked out (`my_level()`); null until it
+  /// answers (or before its SQL has run).
+  String? serverLevel;
+
   /// Hold request whose Trusted tenant badge is open.
   String? trustedReq;
 
@@ -33,14 +37,48 @@ extension RewardsActions on AppState {
 
   /// none | member | trusted. Trusted tenant is earned, not given: 6 months in
   /// Hostelzy hostels, rent always on time, no complaints from the owner (F09).
-  String get level => !member
+  /// F24 #16: on the server the level comes from the server only.
+  String get level => onServer && serverLevel != null
+      ? serverLevel!
+      : !member
       ? 'none'
-      : monthsOnTime >= trustedMonths && lateRentMonths == 0 && ownerComplaints == 0
+      : monthsOnTime >= trustedMonths && lateRentMonths == 0 && ownerComplaints == 0 && !onServer
       ? 'trusted'
       : 'member';
 
+  /// F24 #16: asks the server for this tenant's level (months, late rent).
+  Future<void> loadLevel() async {
+    if (!onServer) return;
+    try {
+      final l = await data.myLevel();
+      if (l == null) return;
+      update(() {
+        serverLevel = l.level;
+        monthsOnTime = l.months;
+        lateRentMonths = l.late;
+      });
+    } catch (e) {
+      debugPrint('level: $e');
+    }
+  }
+
+  /// "Trusted tenants get the first hour on this bed. It opens to you at 4:05 pm."
+  String? firstLookBlock(Bed b) {
+    final f = b.freedAt;
+    if (f == null || level == 'trusted') return null;
+    final opens = f.add(const Duration(hours: 1));
+    if (!DateTime.now().isBefore(opens)) return null;
+    return 'Trusted tenants get the first hour on this bed. It opens to you at ${clock(opens.hour * 60 + opens.minute)}.';
+  }
+
+  void openPerks() => update(() => sheet = 'perks');
+
   bool get isMember => level != 'none';
   int get holdSecs => isMember ? memberHoldSecs : freeHoldSecs;
+
+  /// F24 #16: a hold's length. On the server it is the hold's own end (the
+  /// server gives Members 2 hours), never this phone's guess.
+  int holdSecsOf(Hold h) => h.ends != null && h.ends! > h.start ? ((h.ends! - h.start) / 1000).round() : holdSecs;
   String get referralCode => serverRefCode ?? (onServer ? '…' : 'RAHUL-$referralReward');
 
   /// S6: makes or fetches this user's code on the server, once.

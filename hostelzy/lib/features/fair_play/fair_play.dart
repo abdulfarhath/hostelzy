@@ -5,6 +5,9 @@ mixin _FairPlayData {
 
   List<FairCase> cases = seedCases();
 
+  /// F24 #18: the photo the owner adds to their reply (sent with it).
+  Uint8List? fpPhoto;
+
   /// The owner accepted the Fair Play rules (by code) when signing up.
   bool fairAccepted = false;
   String fpReply = '';
@@ -20,6 +23,10 @@ mixin _FairPlayData {
 
   /// Tenant's answer to "Did you join?" and the report form.
   String? joinAnswer, reportWhy;
+
+  /// F24 item 14: ended holds this tenant already answered on the server.
+  final Set<String> joinAnswered = {};
+  bool _joinLoaded = false;
   String reportNote = '';
 
   /// Founder admin: queue tab and the open case.
@@ -83,21 +90,51 @@ extension FairPlayActions on AppState {
   void replyCase(FairCase c) {
     if (fpReply.trim().isEmpty) return toastMsg('Write what happened, or fix the resident.');
     final key = c.key;
+    final photo = fpPhoto;
+    final saved = photo == null ? 'Reply saved. The Hostelzy team reads it before deciding.' : 'Reply and photo saved. The Hostelzy team reads them before deciding.';
     if (onServer && key != null) {
       final text = fpReply.trim();
-      _write(() => data.replyCase(key, text, reopen: c.status == 'waiting')).then((ok) {
+      final uid = account?.uid;
+      _write(() async {
+        // F24 #18: the photo goes up first (private), then onto the case.
+        if (photo != null && uid != null) await data.addCasePhoto(key, await data.uploadCasePhoto(c.hid, uid, photo));
+        await data.replyCase(key, text, reopen: c.status == 'waiting');
+      }).then((ok) {
         if (!ok) return;
-        update(() => fpReply = '');
-        toastMsg('Reply saved. The Hostelzy team reads it before deciding.');
+        update(() {
+          fpReply = '';
+          fpPhoto = null;
+        });
+        toastMsg(saved);
       });
       return;
     }
     update(() {
       c.ownerReply = fpReply.trim();
+      if (photo != null) c.ownerPhoto = 'local';
       c.status = 'decide';
       fpReply = '';
+      fpPhoto = null;
     });
-    toastMsg('Reply saved. The Hostelzy team reads it before deciding.');
+    toastMsg(saved);
+  }
+
+  /// F24 #18: "Add a photo to your reply" (compressed like complaint photos).
+  Future<void> pickCasePhoto() async {
+    final raw = await picker.pick();
+    if (raw == null) return;
+    final jpg = prepPhoto(raw, 'free');
+    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    update(() => fpPhoto = jpg);
+  }
+
+  /// Opens a case photo (a short-lived private link on the server).
+  Future<void> openCasePhoto(String? path) async {
+    if (path == null) return;
+    if (path == 'sample' || path == 'local') return toastMsg('Photos open from the server in the real app. This is sample data.');
+    final url = await data.casePhotoUrl(path);
+    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    openLink(Uri.parse(url), 'the photo');
   }
 
   /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals
@@ -132,7 +169,24 @@ extension FairPlayActions on AppState {
     toastMsg(how == 'close' ? '${c.id} closed. No strike.' : how == 'more' ? 'Asked the owner for more. 48 hours again.' : '${c.id}: ${c.result}.');
   }
 
+  /// "Did you join?": yes | not_yet | deciding (F07, F24 item 14). On the
+  /// server it is a Fair Play signal only the Hostelzy team reads.
   void answerJoined(String a) {
+    final h = endedHold;
+    if (onServer && h != null) {
+      data.answerJoined(h.id, a).then((_) {
+        update(() {
+          joinAnswered.add(h.id);
+          joinAnswer = a;
+          sheet = null;
+        });
+        toastMsg(a == 'yes' ? 'Thanks. Only the Hostelzy team sees your answer. Your ₹100 Member reward unlocks once the owner confirms your stay.' : 'Thanks. Only the Hostelzy team sees your answer.');
+      }, onError: (Object e) {
+        debugPrint('did you join: $e');
+        toastMsg('Couldn’t save your answer. Check your internet and try again.');
+      });
+      return;
+    }
     update(() {
       joinAnswer = a;
       sheet = null;
@@ -144,6 +198,28 @@ extension FairPlayActions on AppState {
         : onServer
         ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
         : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');
+  }
+
+  /// Should Holds ask "Did you join?" (a real ended hold not answered yet;
+  /// the demo build may ask about a sample one).
+  bool get askJoined {
+    if (joinAnswer != null) return false;
+    final h = endedHold;
+    if (h == null) return AppState.samples;
+    return !joinAnswered.contains(h.id);
+  }
+
+  /// F24 item 14: which ended holds were answered already (once per session).
+  Future<void> loadJoinAnswers() async {
+    if (_joinLoaded || !data.remote) return;
+    _joinLoaded = true;
+    try {
+      final got = await data.joinAnswers();
+      if (got.isNotEmpty) update(() => joinAnswered.addAll(got));
+    } catch (e) {
+      // Before its SQL runs (FOUNDER-TODO 4zy3) there's nothing to load.
+      debugPrint('join answers: $e');
+    }
   }
 
   void sendReport() {
