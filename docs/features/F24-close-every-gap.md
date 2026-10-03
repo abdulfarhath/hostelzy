@@ -147,6 +147,208 @@ the rest are 23 dark copies, the cover and the logo).
   “Electricity · 70 units ÷ 4 · ₹8/unit”.
 - *Merged (v26):* removed `f19-Console`, `f19-ConsoleDark` (same page as `f24-cLayoutFixes`) and `room` (same screen as `f23-Room`). **236 boards, 212 unique.**
 
+**v27 · 2026-10-03: matched 1:1 to `docs/SCREENS.md` (PR #94).** **App 182 · Canvas 182** (+42 variants, +21 dark,
++8 not counted). 253 boards.
+- *New (21), items that had no board:* `w3-oRules` (S62 full rules) · `w3-holdGone` (T9) · `w3-roomSignIn`, `w3-roomLoading`,
+  `w3-roomCapped`, `w3-roomError` (T11–T14) · `w3-scanOff`, `w3-scanError` (T16–T17) · `w3-foodNoMenu` (T19) ·
+  `w3-stayNotYet` (T20) · `w3-noticeGiven` (T21) · `w3-rRoomNoLayout` (T22) · `w3-noRefund` (T23) · `w3-noCases` (T25) ·
+  `w3-oLayoutNone`, `w3-oLayoutDrawing` (T26–T27) · console `w3-cLayoutEditor` (C5), `w3-cLoadError` (C13) ·
+  web `w3-wRNoCode`, `w3-wJNoCode` (W4, W6), `w3-wRoot` (W1, the old prototype at the site root).
+- *Retired (4), matched no item:* `demo` (demo APK only), `back` (a toast), `oCreate` (old Create a layout; now `f24-oShape`),
+  `f12-Request` (old layout request; now `f24-oShapeReq`).
+- *Not counted, kept:* `Main` (cover), `brand-logo`, `splash` (Android launch), `f14-Poster` (print), `f17-Desktop` (tablet
+  layout, SCREENS §6), `f19-Push`, `f20-Notify`, `f20-NotifyDark` (system notifications).
+- *For Build:* the site root `index.html` is the old green prototype (W1). Retire it or redirect to `app/` (then retire `w3-wRoot`).
+
+<details><summary>Item → board map (182)</summary>
+
+| Item | Board | Variants |
+|---|---|---|
+| S1 | `r-welcome` |  |
+| S2 | `login` |  |
+| S3 | `about` | `w1-aboutEmpty` |
+| S4 | `role` |  |
+| S5 | `gateRes` | `f24-mgrJoin` |
+| S6 | `gateOwn` |  |
+| S7 | `w2-qrScan` |  |
+| S8 | `r-explore` | `r-exploreGuest`, `w1-featured`, `f20-HomeTenant` |
+| S9 | `map` | `mapMe` |
+| S10 | `saved` |  |
+| S11 | `holds` | `w1-holdsEnded`, `w1-didJoin`, `r-error` |
+| S12 | `add-whereFull` |  |
+| S13 | `r-detail` | `f14-Visited`, `f23-Main`, `new-foodPeek`, `f24-detailOwner`, `w1-dealsPaused` |
+| S14 | `gallery` |  |
+| S15 | `reviews` |  |
+| S16 | `picker` |  |
+| S17 | `f23-Room` | `f24-roomLayersOn`, `w1-acRepair`, `f19-Checked` |
+| S18 | `w2-pickerList` |  |
+| S19 | `f12-Compare` |  |
+| S20 | `hold` |  |
+| S21 | `f09-MoveIn` |  |
+| S22 | `rewards` |  |
+| S23 | `r-home` | `f20-Home` |
+| S24 | `food` |  |
+| S25 | `w2-foodWeek` |  |
+| S26 | `rent` | `f24-rentMeter` |
+| S27 | `r-help` |  |
+| S28 | `stay` |  |
+| S29 | `notice` |  |
+| S30 | `swap` |  |
+| S31 | `f19-Main` | `f19-After` |
+| S32 | `f19-Edit` | `f19-EditCheck`, `f19-Try` |
+| S33 | `review` |  |
+| S34 | `exitReview` |  |
+| S35 | `f24-rRefund` |  |
+| S36 | `r-today` | `f24-oTodayCards`, `w1-oTodayMoves`, `w2-oTodayRates`, `f19-Today`, `f23-Today` |
+| S37 | `beds` |  |
+| S38 | `oRent` |  |
+| S39 | `r-manage` |  |
+| S40 | `residents` |  |
+| S41 | `f24-oEnquiries` |  |
+| S42 | `complaints` |  |
+| S43 | `deals` |  |
+| S44 | `rates` |  |
+| S45 | `menu` |  |
+| S46 | `rules` |  |
+| S47 | `invite` |  |
+| S48 | `team` |  |
+| S49 | `oPhotos` |  |
+| S50 | `oCrop` |  |
+| S51 | `oRooms` |  |
+| S52 | `f24-oMeter` |  |
+| S53 | `oLayouts` |  |
+| S54 | `f23-Owner` |  |
+| S55 | `oLayout` | `w2-layoutWrong` |
+| S56 | `f24-oShape` |  |
+| S57 | `oEditor` | `f12-Admin` |
+| S58 | `oPublished` |  |
+| S59 | `f19-Compare` |  |
+| S60 | `f19-Approved` |  |
+| S61 | `oReviews` |  |
+| S62 | `w3-oRules` |  |
+| S63 | `case` | `f24-oCasePhoto` |
+| S64 | `f07-Strike` |  |
+| S65 | `plan` |  |
+| S66 | `aHome` |  |
+| S67 | `aAdd1` |  |
+| S68 | `aAdd2` |  |
+| S69 | `f14-Rates` |  |
+| S70 | `f14-Photos` |  |
+| S71 | `f14-Residents` |  |
+| S72 | `f24-aAddOwner` |  |
+| S73 | `aAdd6` |  |
+| S74 | `w2-aPin` |  |
+| S75 | `aTrack` |  |
+| S76 | `aPay` |  |
+| S77 | `aCases` |  |
+| S78 | `aTeam` |  |
+| S79 | `me` | `add-meOwner`, `w1-meRefund`, `f20-Me` |
+| S80 | `settings` | `w1-notifSwitches` |
+| S81 | `f20-Main` |  |
+| S82 | `permN` |  |
+| S83 | `delAcc` |  |
+| S84 | `delConfirm` |  |
+| S85 | `delDone` |  |
+| S86 | `gateMt` |  |
+| H1 | `r-filters` | `f23-Filters` |
+| H2 | `loc` |  |
+| H3 | `r-signin` |  |
+| H4 | `r-holdSheet` |  |
+| H5 | `r-notify` |  |
+| H6 | `wa` |  |
+| H7 | `payAdv` |  |
+| H8 | `f07-Report` |  |
+| H9 | `f24-trustedPerks` |  |
+| H10 | `new-foodWeek` |  |
+| H11 | `w2-qrCamera` |  |
+| H12 | `r-utr` |  |
+| H13 | `f19-Lock` |  |
+| H14 | `f19-Limit` |  |
+| H15 | `f19-Send` |  |
+| H16 | `f19-QuickFix` |  |
+| H17 | `addTenant` |  |
+| H18 | `bedSheet` | `w1-bedSheetLeaving`, `w1-oPriceFixed`, `w1-walkInHold`, `w1-walkInHeld` |
+| H19 | `enquiry` |  |
+| H20 | `add-addR` |  |
+| H21 | `f09-Owner` |  |
+| H22 | `add-utr` |  |
+| H23 | `f24-oShapeReq` |  |
+| H24 | `f14-Switcher` |  |
+| H25 | `add-addRoom` |  |
+| H26 | `add-addMgr` |  |
+| H27 | `photoSheet` |  |
+| H28 | `add-cPhoto` |  |
+| H29 | `f19-Reject` |  |
+| H30 | `f19-Mute` |  |
+| H31 | `add-rank` |  |
+| H32 | `w2-reportAbuse` |  |
+| H33 | `f24-oRefund` |  |
+| H34 | `f24-oLaundry` |  |
+| H35 | `w2-waSheet` |  |
+| H36 | `teamSheet` |  |
+| H37 | `add-lang` |  |
+| H38 | `w1-editName` |  |
+| H39 | `f20-Water` |  |
+| H40 | `f20-Add` |  |
+| H41 | `f20-Offer` |  |
+| H42 | `f23-Floor` |  |
+| H43 | `f23-Add` |  |
+| T1 | `r-skeleton` |  |
+| T2 | `r-offline` |  |
+| T3 | `w1-exploreCached` |  |
+| T4 | `exploreEmpty` |  |
+| T5 | `w2-exploreNoMatch` |  |
+| T6 | `w1-mapEmpty` |  |
+| T7 | `holdsEmpty` |  |
+| T8 | `savedEmpty` |  |
+| T9 | `w3-holdGone` |  |
+| T10 | `w2-floorLocked` |  |
+| T11 | `w3-roomSignIn` |  |
+| T12 | `w3-roomLoading` |  |
+| T13 | `w3-roomCapped` |  |
+| T14 | `w3-roomError` |  |
+| T15 | `f12-Soon` | `w1-notifyReady` |
+| T16 | `w3-scanOff` |  |
+| T17 | `w3-scanError` |  |
+| T18 | `w1-rNotYet` |  |
+| T19 | `w3-foodNoMenu` |  |
+| T20 | `w3-stayNotYet` |  |
+| T21 | `w3-noticeGiven` |  |
+| T22 | `w3-rRoomNoLayout` |  |
+| T23 | `w3-noRefund` |  |
+| T24 | `r-agree` |  |
+| T25 | `w3-noCases` |  |
+| T26 | `w3-oLayoutNone` |  |
+| T27 | `w3-oLayoutDrawing` |  |
+| T28 | `f24-oShapeBack` |  |
+| T29 | `w2-ownerOnly` |  |
+| T30 | `delBlocked` |  |
+| T31 | `gateUp` |  |
+| C1 | `cOnb` |  |
+| C2 | `cPay` |  |
+| C3 | `cCases` | `w1-cStrikes` |
+| C4 | `f24-cLayoutHelp` |  |
+| C5 | `w3-cLayoutEditor` |  |
+| C6 | `f24-cRewards` |  |
+| C7 | `f24-cLayoutFixes` |  |
+| C8 | `w2-cReported` |  |
+| C9 | `cHostels` |  |
+| C10 | `cSignin` | `cNotTeam` |
+| C11 | `w1-cNotSetup` |  |
+| C12 | `w1-cError` |  |
+| C13 | `w3-cLoadError` |  |
+| W1 | `w3-wRoot` |  |
+| W2 | `wHome` |  |
+| W3 | `wR` |  |
+| W4 | `w3-wRNoCode` |  |
+| W5 | `wJ` |  |
+| W6 | `w3-wJNoCode` |  |
+| W7 | `wPriv` |  |
+| W8 | `wTerms` |  |
+| W9 | `wDel` |  |
+
+</details>
+
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
