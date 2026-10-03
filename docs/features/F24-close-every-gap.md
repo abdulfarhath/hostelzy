@@ -311,3 +311,37 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - The team home kicker says "sample data" only in the demo.
 - **Screens:** none added or removed. Changed: tenant room / bed picker AC line (real date), team mode `aTrack` (no button on Live rows on the server), `aTeam` footnote, `aHome` kicker.
 - **Tests:** `test/wave2a_test.dart`, `supabase/tests/wave2a_test.sql`, `supabase/functions/tests/fcm.test.ts`. Updated: `flows_test` (team kicker).
+
+**Wave 1: boards with no app screen (#25, #26, #18 part, #16, manager join, refunds).** Branch `feature/f24-wave1-screens`.
+- **Server** (`20261003020000_f24_wave1.sql`, FOUNDER-TODO **4zu**; tests: `supabase/tests/wave1_test.sql`):
+  - `meter_readings` (one reading per room per month) and `save_meter(hostel, month, ₹ per unit, rows)`, staff or team only. Units since last month ÷ residents in the room × ₹ per unit, rounded up. A reading below last month's is refused. Residents read only their own room's rows. A new or changed amount pushes "Electricity for October: ₹140" to the room's residents. The ₹ per unit is the owner's own number, not a Hostelzy amount.
+  - `tenant_level(user)` (internal) and `my_level()`: none, member or trusted. Trusted = Member + 6 months in confirmed stays + no rent paid more than 3 days after its due day. Owner complaints about tenants aren't recorded anywhere yet, so they don't count.
+  - `holds.trusted` is set when a hold is placed; owners see "Trusted tenant" on it.
+  - `beds.freed_at` is stamped when a bed turns free again from free soon or booked (someone moved out, a booking ended). A released or expired hold doesn't count. For the first hour only Trusted tenants can hold it ("Trusted tenants get the first hour on this bed. It opens to you at 4:05 pm"). That is the "first look"; it is enforced by the hold rules, not a separate notification.
+  - `fair_cases.tenant_photo` and `owner_photo`, the private bucket `case-photos` (path `<hostel>/<uid>/<n>.jpg`), and `case_photo(case, path)` for the owner while the case is open. Owners can read only the photos on their own hostel's cases. The tenant's photo is attached by the Hostelzy team; the console screen for that is Wave 3 (#18, tenant reports in the console).
+- **#25 Electricity by meter (boards `oMeter`, `rentMeter`).**
+  - Owner: Rent › **Electricity** (shown when the hostel's electricity is extra). The page has ₹ per unit, then Room / Last month / Now / Units · each. An empty "Now" field has a red border and says "Type it". A first reading says "First reading · Units from next month". The button reads **Add to <Month> rent · N of M rooms**.
+  - Resident: Rent shows "Electricity · 70 units ÷ 4 · ₹8/unit · ₹140" and the total includes it. Paying starts the month's payment with it. With nothing added yet it says "Electricity · Not added yet". The sample-only "Electricity · meter ₹420" line is gone; the demo keeps a consistent sample (210 units ÷ 4).
+  - Before 4zu runs, the owner's page says "Electricity by meter starts after Hostelzy's next server update" and residents see "Not added yet".
+- **#26 Laundry day (board `oLaundry`).**
+  - Manage › House rules has a **Laundry day** row that opens the sheet: day chips, a "Machine free" seg (7 am – 12 pm / All day / Evening), and **Save laundry day**.
+  - It is saved with the house rules as "Laundry day: Saturday · Evening" (no new SQL), so tenants also see it under House rules on the hostel page.
+  - Resident: Me › Reminders › "From <hostel>" now has a working **Laundry day** row ("Saturday, Evening · reminder 8 pm Friday") with a switch, off by default. On, it rings every week at 8 pm the evening before, or at the end of the awake hours if those end earlier. With no day set, the row stays greyed.
+- **#18 (part) Case photo (board `oCasePhoto`).** The owner's Fair Play check shows **Photo from <tenant>** ("Shown only to you and the Hostelzy team", tap to open a short-lived private link) when the case has one. **Add a photo to your reply** picks a photo, which goes up with **Send my reply**.
+- **#16 Trusted perks (board `trustedPerks`).**
+  - Stay Rewards has a row "Trusted tenant · what you get" that opens the sheet ("You're a Trusted tenant" when you are).
+  - The sheet lists first look at new free beds (hold them 1 hour before everyone else), 2-hour holds, and "Trusted tenant" on hold requests.
+  - **Left out:** "Lower-advance deals". No deal for Trusted tenants exists, so the sheet doesn't promise one, and the Stay Rewards step no longer says it.
+  - On the server the level comes only from `my_level()`; local counters never make anyone Trusted.
+  - Hold countdowns use the hold's own end from the server (`holds.expires_at`: 2 hours for Members). The owner's request card shows the tenant's real time left, not the owner's own level.
+  - The owner's Trusted sheet now works for server holds ("Confirm hold" confirms on the server). Its "No complaints from owners" tick is gone, because Hostelzy doesn't check that.
+- **Manager join (board `mgrJoin`).**
+  - The existing `join_as_manager` RPC (S8) is used. "Join your PG" shows "Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days." once the code starts with MGR, and hides the poster/No code help then.
+  - "I run a PG" (owner gate) has "Manager at a PG? Join it with the MGR- code…", which opens that screen with `MGR-` filled in.
+  - After joining, the app goes back to the role picker with "You're a manager at <PG> now. Pick "I run a PG" to start."
+- **Refunds (boards `oRefund`, `rRefund`)** now match the boards.
+  - `oRefund` is a sheet, not a full screen, opened from Today's refund card. The kicker reads "Left 1 Nov · Bed 204-B" and the title "Refund Rahul's advance". The rows are Advance / Kept on leaving / Refund / Pay to, then "UPI reference (UTR), 12 digits", **Mark ₹X refunded**, and "Due by <date>, 7 days after they left".
+  - `rRefund` has the card "<owner> marked it refunded · <date>" with the amount and "To +91 … · UPI ref. …". The rows are Advance / Kept on leaving / Due by, then "Did ₹X reach your bank?" with **Yes, I got ₹X** / **Not received**. The date comes from `refund_sent_at`.
+  - "Pay to" is the former resident's number (UPI); Hostelzy doesn't keep tenants' UPI IDs.
+- **Screens:** added `oMeter` (screen), `laundry` and `perks` (sheets). Changed: `oRefund` from a screen to a sheet; `rRefund`, `oRent` (Electricity row), `rPay` (meter line), Manage › House rules (Laundry day row), Reminders (Laundry day row), `oCase` (photo), `rewards` (Trusted row), the Trusted badge sheet, role gates (manager join). Removed: none.
+- **Tests:** `test/wave1_test.dart`, `supabase/tests/wave1_test.sql`. Updated: `moves_test` (refund boards), `resident_test` (meter line), `flows_test` (manager toast).

@@ -57,7 +57,7 @@ class Ring {
 }
 
 /// Notification ids: water 1000+, mine 2000+, meals 3000+, rent 4000+,
-/// snoozed 5000+.
+/// laundry 4100, snoozed 5000+.
 const snoozeId = 5000;
 
 /// `4:30 pm`, `9 pm` when [short] and on the hour.

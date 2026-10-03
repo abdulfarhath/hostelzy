@@ -91,10 +91,13 @@ class MoveReq {
 
 /// F24: a former resident's advance refund. [status]: due | sent | received | not_received.
 class Refund {
-  const Refund({required this.stayKey, required this.hid, required this.name, required this.phone, required this.bed, required this.advance, required this.amt, required this.status, required this.leftOn, this.utr = ''});
+  const Refund({required this.stayKey, required this.hid, required this.name, required this.phone, required this.bed, required this.advance, required this.amt, required this.status, required this.leftOn, this.utr = '', this.sentOn});
   final String stayKey, hid, name, phone, bed, status, utr;
   final int advance, amt;
   final DateTime leftOn;
+
+  /// When the owner marked it refunded (board `rRefund`).
+  final DateTime? sentOn;
   DateTime get due => leftOn.add(const Duration(days: 7));
 }
 
@@ -174,6 +177,10 @@ class Bed {
   String state;
   String soon;
   bool mine = false;
+
+  /// F24 #16: when it turned free again (someone left). For an hour only
+  /// Trusted tenants can hold it (the server checks).
+  DateTime? freedAt;
 
   /// F24 item 8: held for a walk-in until then (ms since epoch); 0 when not.
   int walkInUntil = 0;
@@ -560,9 +567,15 @@ const memberReward = 100, referralReward = 100;
 const trustedMonths = 6;
 
 class Hold {
-  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const []});
+  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const [], this.trusted = false, this.ends});
   final String id, hid, bed, opt;
   final int room, start;
+
+  /// F24 #16: placed by a Trusted tenant (set by the server; owners see it).
+  final bool trusted;
+
+  /// When a free hold ends on the server (ms): 1 hour, or 2 for Members.
+  final int? ends;
 
   /// F04 booking: HZ code, advance paid to the owner, and the locked deal.
   final String? ref;
@@ -571,8 +584,8 @@ class Hold {
 
   /// waiting | confirmed | held | booked | released
   final String status;
-  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks);
-  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p);
+  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks, trusted: trusted, ends: ends);
+  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p, trusted: trusted, ends: ends);
 }
 
 /// Countdown text, `cd()` in the prototype.
@@ -784,7 +797,7 @@ class CaseEvent {
 
 /// A Fair Play case: new → waiting (48 h for the owner) → decide → closed.
 class FairCase {
-  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2, this.openedAt, this.key});
+  FairCase({required this.id, required this.hid, required this.title, required this.signal, required this.status, this.events = const [], this.resident, this.ownerReply, this.tenantNote, this.result, this.hoursLeft = 47.2, this.openedAt, this.key, this.tenantPhoto, this.ownerPhoto});
   final String id, hid, title, signal;
 
   /// S5: the case's id on the server (null on sample data).
@@ -796,6 +809,10 @@ class FairCase {
   final String? resident;
   String? ownerReply, tenantNote, result;
   final double hoursLeft;
+
+  /// F24 #18: the tenant's photo proof (attached by the Hostelzy team) and the
+  /// owner's photo with their reply: private storage paths ('sample' in demos).
+  String? tenantPhoto, ownerPhoto;
 
   /// F18 (F4): when the case opened (ms). The owner's 48 hours run from here;
   /// sample cases without it keep their sample time.
@@ -819,6 +836,7 @@ List<FairCase> seedCases() => [
       CaseEvent('1 Oct', 'Teja answered “Yes, I joined”', 'In the Hostelzy app', flag: true),
     ],
     tenantNote: 'I found it on Hostelzy, the owner said I could skip the hold.',
+    tenantPhoto: 'sample',
   ),
   FairCase(id: 'FP-0141', hid: 'greenview', title: 'Bed 101-B taken after a cancelled hold', signal: 'Hold cancelled, same bed taken in 7 days', status: 'waiting'),
   FairCase(id: 'FP-0140', hid: 'lakshmi', title: 'Tenant report', signal: 'Tenant report: asked to pay without the app', status: 'waiting'),

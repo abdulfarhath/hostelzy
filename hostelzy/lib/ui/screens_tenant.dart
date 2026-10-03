@@ -434,7 +434,7 @@ class HostelCard extends StatelessWidget {
 ({Hostel hh, Room r, double left}) holdInfo(AppState s, Hold h) {
   final hh = hostelById(h.hid);
   final r = s.findBed(h.hid, h.bed).r!;
-  final secs = s.holdSecs;
+  final secs = s.holdSecsOf(h);
   return (hh: hh, r: r, left: secs - (s.now - h.start) / 1000);
 }
 

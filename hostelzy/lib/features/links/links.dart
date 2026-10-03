@@ -98,7 +98,12 @@ extension LinksActions on AppState {
           inviteDraft = '';
         });
         await refreshLive();
-        toastMsg('You’re a manager at $h now. Pick “I run a hostel” to start.');
+        // Board `mgrJoin`: back to the role picker, where "I run a PG" opens it.
+        update(() {
+          screen = 'role';
+          hist = [];
+        });
+        toastMsg('You’re a manager at $h now. Pick “I run a PG” to start.');
       } on UnsupportedError {
         update(() => joining = false);
         toastMsg('Invites work in the real Hostelzy app. This is sample data.');

@@ -42,6 +42,7 @@ extension RemindersActions on AppState {
     'mine': [for (final r in myRems) r.toJson()],
     'meals': remMeals,
     'rent': remRent,
+    'laundry': remLaundry,
     'offered': remOffered,
   };
 
@@ -51,6 +52,7 @@ extension RemindersActions on AppState {
     myRems = [for (final r in (m['mine'] as List? ?? const []).cast<Map<String, dynamic>>()) MyReminder.fromJson(r)];
     remMeals = m['meals'] as bool? ?? true;
     remRent = m['rent'] as bool? ?? true;
+    remLaundry = m['laundry'] as bool? ?? false;
     remOffered = m['offered'] as bool? ?? false;
   }
 
@@ -137,6 +139,9 @@ extension RemindersActions on AppState {
           out.add(Ring(id: 4000 + i, kind: 'rent', title: before == 0 ? 'Rent due today' : 'Rent due in $before days', body: body, at: DateTime(d.year, d.month, d.day, at ~/ 60, at % 60)));
         }
       }
+      // F24 #26: the evening before the owner's laundry day.
+      final l = laundryRing;
+      if (l != null) out.add(l);
     }
     return out;
   }
