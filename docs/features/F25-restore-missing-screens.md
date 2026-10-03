@@ -44,7 +44,7 @@ I'll retire those boards once SCREENS.md drops them.
 **v34 · after #107, #109, #110, #111:** NEW-1 → **[S87] Building view** (Ground floor row only when it exists; hostel page has
 "See the whole building ›"). Variants: S37 Rooms · Building, S45 By day · Week, S65 All plans + Past invoices, S36 "83% full"
 + bar + "33 of 40 beds have a resident. Holds don't count." Retired to the archive: S76 aPay, S77 aCases, H17 Add tenant
-(merged into H20). `aHome` now says "Payments and Fair Play cases are in the team console". **App 179 · Canvas 179.**
+(merged into H20). **v35:** S87 and the S37 Building variant now match `building_view.dart` (#109) exactly: "Cross-section · tap any free bed" (owner: "· tap a bed") + "N free", roof, F3/F2/F1/G labels with the free count, base slab, owner legend without "Your pick", and the note "Shared things sit on top of each floor. Tap a floor to see if they’re working." `aHome` now says "Payments and Fair Play cases are in the team console". **App 179 · Canvas 179.**
 
 ## Problem
 Earlier designs lived in many separate artifacts on the old account. Some screens the founder remembers
