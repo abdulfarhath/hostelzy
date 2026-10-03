@@ -49,4 +49,24 @@ void main() {
     expect(find.textContaining('“Electricity  Not added yet”'), findsOneWidget);
     s.dispose();
   });
+
+  testWidgets('the free hold line follows the real hold length (1 hour, Members 2 hours)', (tester) async {
+    final s = AppState(start: 'picker', role: 'tenant');
+    await _pump(tester, s);
+    final free = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((x) => x.state == 'free' && !x.mine);
+    s.update(() {
+      s.member = false;
+      s.floor = int.parse(free.id.substring(0, 1));
+      s.bed = free.id;
+      s.sheet = 'hold';
+      s.holdOpt = 'hold';
+    });
+    await tester.pump();
+    expect(find.textContaining('within the hour', findRichText: true), findsOneWidget);
+    s.update(() => s.member = true);
+    await tester.pump();
+    expect(find.textContaining('within 2 hours', findRichText: true), findsOneWidget);
+    expect(find.textContaining('within the hour', findRichText: true), findsNothing);
+    s.dispose();
+  });
 }
