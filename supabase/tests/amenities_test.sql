@@ -143,7 +143,7 @@ select test.act('authenticated', 'fb-am-draft');
 select test.rows($$select count(*) from public.amenities where hostel_id = 'a2300000-0000-0000-0000-000000000002'$$, 1);
 reset role;
 select test.eq((select string_agg(column_name, ',' order by ordinal_position) from information_schema.columns where table_schema = 'public' and table_name = 'amenities'),
-  'id,hostel_id,floor,kind,name,qty,working,place,rooms,by_role,created_at,updated_at,pos_x,pos_y');
+  'id,hostel_id,floor,kind,name,qty,working,place,rooms,by_role,created_at,updated_at');
 
 -- the change log: the hostel's staff and the team only; never tenants or residents
 select test.act('authenticated', 'fb-am-tenant');

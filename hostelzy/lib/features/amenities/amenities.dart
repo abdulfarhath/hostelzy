@@ -24,31 +24,26 @@ mixin _AmenityData {
   /// Resident changes today, per hostel (sample data; the server counts its own).
   final Map<String, int> amEditsToday = {};
 
-  /// F25 "Place on the floor": the thing being placed and the spot tapped.
-  String? amPlaceId;
-  (int, int)? amPlaceSpot;
-
-  /// F25 owner Beds: `plan` (Floor plan) or `all` (All floors).
-  String obView = 'plan';
+  /// F25 owner Beds: `rooms` (room cards) or `building` (the Building view).
+  String obView = 'rooms';
 }
 
 /// Sample things for the demo hostels.
 List<Amenity> seedAmenities() {
   final day = DateTime(2026, 10).millisecondsSinceEpoch, before = DateTime(2026, 9, 28).millisecondsSinceEpoch;
   var n = 0;
-  // F25: some things have a spot on the floor map, others are not placed yet.
-  Amenity a(String hid, int floor, String kind, {bool working = true, String place = 'floor', List<int> rooms = const [], bool res = false, int? at, (int, int)? spot}) =>
-      Amenity(id: 'am${n++}', hid: hid, floor: floor, kind: kind, working: working, place: place, rooms: rooms, byResident: res, at: at ?? before, posX: spot?.$1, posY: spot?.$2);
+  Amenity a(String hid, int floor, String kind, {bool working = true, String place = 'floor', List<int> rooms = const [], bool res = false, int? at}) =>
+      Amenity(id: 'am${n++}', hid: hid, floor: floor, kind: kind, working: working, place: place, rooms: rooms, byResident: res, at: at ?? before);
   return [
     a('anjani', 0, 'lift'),
     a('anjani', 0, 'shoes'),
-    a('anjani', 1, 'fridge', spot: (6, 80)),
+    a('anjani', 1, 'fridge'),
     a('anjani', 1, 'ro'),
     a('anjani', 1, 'washer'),
-    a('anjani', 2, 'fridge', spot: (4, 85)),
-    a('anjani', 2, 'ro', spot: (32, 85)),
+    a('anjani', 2, 'fridge'),
+    a('anjani', 2, 'ro'),
     a('anjani', 2, 'geyser', place: 'washroom', rooms: [201, 203]),
-    a('anjani', 2, 'washer', working: false, res: true, at: day, spot: (78, 30)),
+    a('anjani', 2, 'washer', working: false, res: true, at: day),
     a('anjani', 3, 'ro'),
     a('anjani', 3, 'iron'),
     a('saisri', 1, 'fridge'),
@@ -113,7 +108,7 @@ extension AmenityActions on AppState {
     if (hid != null) amHid = hid;
     if (floor != null) amFloor = floor;
     amDraft = edit != null
-        ? edit.copy()
+        ? Amenity(id: edit.id, key: edit.key, hid: edit.hid, floor: edit.floor, kind: edit.kind, name: edit.name, qty: edit.qty, working: edit.working, place: edit.place, rooms: List.of(edit.rooms), byResident: edit.byResident, at: edit.at)
         : Amenity(id: 'new', hid: amHid, floor: amFloor, kind: '');
     sheet = 'amAdd';
   });
@@ -180,8 +175,7 @@ extension AmenityActions on AppState {
         return toastMsg(_serverWords(e) ?? 'Couldn’t save it. Check your internet and try again.');
       }
     }
-    // F25: a thing moved into rooms loses its spot on the floor map (the server does the same).
-    final saved = Amenity(id: key ?? (d.id == 'new' ? 'am${now}_${amenities.length}' : d.id), key: key, hid: d.hid, floor: d.floor, kind: d.kind, name: d.name, qty: d.qty, working: d.working, place: d.place, rooms: d.rooms, byResident: res, at: now, posX: d.inRooms ? null : d.posX, posY: d.inRooms ? null : d.posY);
+    final saved = Amenity(id: key ?? (d.id == 'new' ? 'am${now}_${amenities.length}' : d.id), key: key, hid: d.hid, floor: d.floor, kind: d.kind, name: d.name, qty: d.qty, working: d.working, place: d.place, rooms: d.rooms, byResident: res, at: now);
     final label = amenitySaveLabel(d).replaceFirst('Save · ', '');
     update(() {
       amenities = [...amenities.where((a) => a.id != d.id), saved];
@@ -214,59 +208,9 @@ extension AmenityActions on AppState {
   /// "Something broke" / "Working again", in one tap.
   Future<void> setAmenityWorking(Amenity a, bool working) async {
     if (!canEditAmenities(a.hid)) return;
-    update(() => amDraft = a.copy(working: working));
+    update(() => amDraft = Amenity(id: a.id, key: a.key, hid: a.hid, floor: a.floor, kind: a.kind, name: a.name, qty: a.qty, working: working, place: a.place, rooms: List.of(a.rooms)));
     await saveAmenityDraft();
     update(() => amBreak = false);
-  }
-
-  /// F25: shared things on [floor] with a spot on the map, and without one.
-  List<Amenity> placedOn(String hid, int floor) => amenitiesOn(hid, floor).where((a) => a.placed).toList();
-  List<Amenity> unplacedOn(String hid, int floor) => amenitiesOn(hid, floor).where((a) => !a.inRooms && !a.placed).toList();
-
-  /// F25 "Place on the floor" (owner Layouts › Shared things): pick [a],
-  /// tap a spot on the corridor, then save.
-  void openPlaceThing(Amenity a) => update(() {
-    amHid = a.hid;
-    amFloor = a.floor;
-    amPlaceId = a.id;
-    amPlaceSpot = a.placed ? (a.posX!, a.posY!) : null;
-    sheet = 'amPlace';
-  });
-
-  Amenity? get placingThing => amenities.where((a) => a.id == amPlaceId).firstOrNull;
-
-  /// Save the spot (or, with [clear], take it off the map). Owner, manager or
-  /// the team only. Before the server's SQL runs nothing is saved and the
-  /// thing stays under "Not placed yet".
-  Future<void> savePlace({bool clear = false}) async {
-    final a = placingThing;
-    if (a == null) return;
-    if (!amenityStaff(a.hid)) return toastMsg('Only the owner or a manager can place things on the floor.');
-    final spot = clear ? null : amPlaceSpot;
-    if (!clear && spot == null) return toastMsg('Tap the spot on the floor where it is.');
-    if (onServer) {
-      if (a.key == null) return toastMsg('Couldn’t save the spot. Check your internet and try again.');
-      try {
-        final ok = await data.placeAmenity(a.key!, spot?.$1, spot?.$2);
-        if (!ok) {
-          update(() => sheet = null);
-          return toastMsg('Spots can’t be saved yet: Hostelzy is still updating the server. ${a.label} stays under Not placed yet.');
-        }
-      } catch (e) {
-        debugPrint('place amenity: $e');
-        return toastMsg(_serverWords(e) ?? 'Couldn’t save the spot. Check your internet and try again.');
-      }
-    }
-    update(() {
-      a
-        ..posX = spot?.$1
-        ..posY = spot?.$2;
-      amenities = [...amenities];
-      amPlaceId = null;
-      amPlaceSpot = null;
-      sheet = null;
-    });
-    toastMsg(clear ? '${a.label} is off the map. It shows under Not placed yet.' : 'Saved: ${a.label} on the ${floorName(a.floor).toLowerCase()} map.');
   }
 
   /// Broken things in the owner's hostel, for "Needs you now".

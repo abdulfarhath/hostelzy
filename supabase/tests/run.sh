@@ -46,4 +46,3 @@ $P -d $DB -f tests/wave4b_test.sql
 $P -d $DB -f tests/strikedeals_test.sql
 $P -d $DB -f tests/rates_confirm_test.sql
 $P -d $DB -f tests/indexes_test.sql
-$P -d $DB -f tests/amenityspots_test.sql

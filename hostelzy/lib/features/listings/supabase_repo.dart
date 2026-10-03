@@ -385,18 +385,6 @@ class SupabaseRepo implements HostelRepo {
   Future<void> removeAmenity(String key) => db.rpc('remove_amenity', params: {'p_id': key});
 
   @override
-  Future<bool> placeAmenity(String key, int? x, int? y) async {
-    try {
-      await db.rpc('place_amenity', params: {'p_id': key, 'p_x': x, 'p_y': y});
-      return true;
-    } on PostgrestException catch (e) {
-      // F25: before FOUNDER-TODO 4zk2 runs the function isn't there.
-      if (_missingFn(e)) return false;
-      rethrow;
-    }
-  }
-
-  @override
   Stream<String> changes() {
     // The listener cancelling removes the channel.
     // ignore: close_sinks

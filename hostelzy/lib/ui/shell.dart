@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../features/amenities/amenities_screens.dart';
-import '../features/amenities/floor_map.dart';
 import '../features/explore/explore_screen.dart';
 import '../features/explore/explore_sheets.dart';
 import '../features/explore/hostel_screen.dart';
@@ -606,7 +605,6 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
-      'amPlace' => 'Place ${s.placingThing?.label.toLowerCase() ?? 'it'} on the floor',
       'foodWeek' => 'Food menu',
       'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
@@ -686,7 +684,6 @@ class _Sheet extends StatelessWidget {
       'amFloor' => hostelById(s.amHid).name,
       'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
-      'amPlace' => '${s.floorName(s.amFloor)} · floor map',
       'refund' => refundSheetKicker(s.refundOpen),
       'laundry' => 'House rules',
       'perks' => 'Stay Rewards',
@@ -733,7 +730,6 @@ class _Sheet extends StatelessWidget {
       'amFloor' => const AmenityFloorSheet(),
       'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
-      'amPlace' => const PlaceThingSheet(),
       'refund' => const RefundSheet(),
       'laundry' => const LaundrySheet(),
       'perks' => const PerksSheet(),

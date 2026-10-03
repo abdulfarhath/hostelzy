@@ -304,48 +304,31 @@ capture machine can't reach OpenStreetMap). On a phone the tiles are there. Not 
   residents see an empty slot, so the line doesn't claim they see "Not set".
 - **Screens:** +1 → **S87** `oMore` · menu (week). App screens 86 → 87, release 160 → 161, overall 181 → 182.
   Canvas: rename `[NEW-4] w4-oMenuWeek` → `[S87]`.
+- **Later (hub decision, same day):** the Week table is a toggle on S45, not its own screen. Its SCREENS row is folded into
+  S45 and **S87 now belongs to the Building view** (below); `w4-oMenuWeek` is a variant of `[S45]`.
 - **Tests:** `hostelzy/test/menu_week_test.dart` (seg switch, draft shown, "Not set", today highlighted, tap a day → Edit
   by day on it, Save still works, empty week, 360 px × 1×/2× text × light/dark).
 
-### NEW-1, NEW-2, NEW-3 · Building view, floor map, owner floor plan (S88, S89, S90, H44) · Built 2026-10-03
-- **Picker tabs Plan · Room · Building** (`PickerTabs` in `lib/features/holds/picker_screen.dart`; the old "Floor view"
-  button in the Room tab is gone, the tab keeps its `floorView` key). The cheapest-beds list stays a link under Plan.
-- **NEW-1 Building (S88)** `lib/features/holds/building_view.dart`, the founder's pick: the original cross-section from
-  commit 417c385 rebuilt with the kit (roof, F3/F2/F1 rows with a 40 px label column, rooms with bed boxes, base slab).
-  New: the floor's shared things as chips on top of each row (red "· not working"), free count under the label.
-  Floors come from the real rooms; **G shows only when the data has floor 0** (rooms, or shared things there) and then only
-  those things + "Ground floor" (the old "Reception · dining hall · bike parking" words were invented and are gone).
-  Tap a free bed → it's picked → the existing Continue bar; a taken bed toasts. Tap a floor label → Plan on that floor.
-  Reached from the picker tab and the hostel page's new "See the whole building ›" (`openBuilding`). Owners see it in
-  **Layouts › Building (S90)**, a bed there opens the bed sheet (H18).
-- **NEW-2 Plan = floor map (S16 changed)** `lib/features/amenities/floor_map.dart` (`FloorMap`): roof bar, the floor's
-  rooms split either side of the corridor (first half above, the rest below: a sketch, there is no room-position data),
-  uneven floors fine (rows of 3, 2 at large text). Shared things are drawn at their saved spot in the corridor; broken ones
-  red. Things without a spot are listed under **Not placed yet** (never guessed). In-room things are lines
-  ("Geyser in the room washroom of 201, 203"). Tap a thing → floor sheet (H42). Existing keys kept (`floor-N`, `bed-ID`,
-  `roomCard-N`); the room number (`roomName-N`) opens the Room tab.
-- **Stairs and WC (interpretation):** drawn like the old plan and the boards, but only from real data: the hatched
-  **Stairs** block when the hostel has more than one floor; the **WC** box only when rooms on that floor have a "Shared"
-  bath (and a line names those rooms). Where they sit along the corridor is a sketch. No "Windows · street" / "Courtyard"
-  labels (no data). Never gates, CCTV or exits.
-- **NEW-3 owner Beds (S89 Floor plan, S37 All floors)**: seg *Floor plan · All floors* (Floor plan first, as on the
-  board). Same corridor map; each bed shows the resident's initials, Free, Hold or the free-from date; rent under each
-  room; "New layout" still there for rooms Hostelzy redrew. Broken things: red on the map plus a line
-  "Washing machine, floor 2: not working. Marked by a resident · date" with **Mark Fixed** (`setAmenityWorking`).
-  All floors = the previous room cards, every floor stacked. Tap a bed → bed sheet (H18).
-- **Women's PGs**: Plan and Building both show "Floor plan shows after you hold a bed" until a hold (`floorLocked`).
-- **Place on the floor (H44 `amPlace`)**: Layouts › Shared things shows "On the floor map" / "Not placed yet" per floor
-  thing and a pin button → the floor map; tap the corridor, **Save the spot**, or **Take it off the map**.
-- **Server:** `supabase/migrations/20261003140000_f25_amenity_spots.sql`: `amenities.pos_x / pos_y` (0–100, both or
-  neither, floor things only), `place_amenity(id, x, y)` for the hostel's owner/manager or the team (logged), a trigger
-  that clears the spot when a thing changes floor or moves into rooms. Test `supabase/tests/amenityspots_test.sql`.
-  **FOUNDER-TODO 4zk2.** Until it runs: "Spots can't be saved yet…", nothing saved, things stay under Not placed yet.
-  Demo data: Anjani floors 1–2 have some spots; floor 1's RO/washer and floor 3 are not placed.
-- **Screens:** +S88, +S89, +S90, +H44; S16, S37, S54, T10 changed. App screens 87 → 90, sheets 43 → 44,
-  release 161 → 165, overall 182 → 186. Canvas: `[NEW-1]` → `[S88]` (+ an `[S90]` owner variant), `[NEW-2]` → `[S16]`
-  (retire the old `plan` board), `[NEW-3]` → `[S89]`, new `[H44]` board, `[S37]` = All floors.
-- **Tests:** `hostelzy/test/f25_test.dart` (Building from the hostel page, G from data, pick + Continue, floor label →
-  Plan; floor map placed / red / Not placed yet / thing → H42 / stairs + WC from data; women's PG locked on both tabs;
-  owner initials / Free / date, bed → H18, Mark Fixed, All floors, Layouts › Building; placing a thing + taking it off;
-  server without the SQL saves nothing; 360 px × 2× text × light/dark). Updated keys in `flows_test`, `tenant_test`.
-
+### NEW-1 · Building view (S87), NEW-2 merged in · Built 2026-10-03
+Follows the hub decision above: one new screen, no separate floor map, no owner corridor plan, no thing positions.
+- **Picker tabs Plan · Room · Building** (`PickerTabs` in `lib/features/holds/picker_screen.dart`). The Room tab's old
+  "Floor view" button is gone (the Plan tab keeps its `floorView` key). Plan and the cheapest-beds link are unchanged.
+- **Building view** `lib/features/holds/building_view.dart` (`BuildingView`), the founder's pick: the 417c385 cross-section
+  rebuilt with the kit: roof, F3/F2/F1 rows with a 40 px label column (free count under it), rooms with bed boxes
+  (free / on hold / taken / your pick), base slab, legend. **Shared-thing chips on top of each floor row** (F23 data, floor
+  things only; red "· not working"). Floors come from the real rooms; **G shows only when the data has floor 0** (rooms, or
+  shared things there) with only those things and "Ground floor" (the old "Reception · dining hall · bike parking" was
+  invented and is gone). Tap a free bed → picked → the existing Continue bar (a taken bed toasts). **Tap a floor (its
+  label or its chips) → the existing floor sheet `amFloor` (H42).**
+- **Reached from** the picker tab and the hostel page's new "See the whole building ›" (`openBuilding`).
+- **Women's PGs:** the Building tab shows "Floor plan shows after you hold a bed" until a hold (same `floorLocked` as Plan).
+- **Owner › Beds:** seg **Rooms · Building** (`s.obView`, Rooms first). Building is the same component (`tenant: false`);
+  a bed opens the existing bed sheet (H18).
+- **No SQL, no FOUNDER-TODO step.** (An earlier version of this branch had thing positions and a migration; removed.)
+- **Screens:** +1 → **S87** `picker` (building), taking the id freed by the Week table, which is now noted as a toggle on
+  S45 (Food menu) instead of its own row. S37 notes the Rooms · Building toggle, T10 also covers the Building tab.
+  Totals: app screens 87 (86 before F25 + 1), release **161** (160 + 1), overall **182** (181 + 1).
+  Canvas: `[NEW-1]` → `[S87]`; `[NEW-2]` and `[NEW-3]` retire (merged); `w4-oMenuWeek` becomes a variant of `[S45]`.
+- **Tests:** `hostelzy/test/f25_test.dart` (hostel page → Building, floors top-down, G from data, chips + red, pick a free
+  bed → Continue, taken bed toast, floor → amFloor, tabs; women's PG locked then open after a hold; owner Beds › Building,
+  bed → bed sheet, back to Rooms; 360 px × 2× text × light/dark). `flows_test` picker-tabs test updated.

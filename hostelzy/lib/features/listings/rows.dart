@@ -196,9 +196,6 @@ Amenity amenityFromRow(Map<String, dynamic> r) => Amenity(
   rooms: [for (final x in (r['rooms'] as List? ?? const [])) x as int],
   byResident: r['by_role'] == 'resident',
   at: DateTime.parse(r['updated_at'] as String? ?? r['created_at'] as String).millisecondsSinceEpoch,
-  // F25: absent until FOUNDER-TODO 4zk2 has run; then null = not placed yet.
-  posX: (r['pos_x'] as num?)?.toInt(),
-  posY: (r['pos_y'] as num?)?.toInt(),
 );
 
 /// `menus` rows → the week, Monday first; null when there are none.

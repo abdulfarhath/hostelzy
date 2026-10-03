@@ -4,27 +4,49 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../amenities/floor_map.dart';
+import '../amenities/amenities_screens.dart';
 
 // F25 (board w4-building; the founder's pick: the original cross-section from
-// commit 417c385). A roof, then every floor top-down: the floor's label in a
+// commit 417c385; the hub merged the floor map into it, one screen). A roof, then every floor top-down: the floor's label in a
 // 40-px left column, its shared things as chips on top of the row, then its
 // rooms with their beds (free / on hold / taken / your pick), then the base
 // slab. Floors come from the hostel's real rooms; a ground floor shows only
 // when the data has one (rooms, or shared things on floor 0), with only what
 // the data says. Nothing invented (no "reception", gates, CCTV or exits).
 
+/// A shared thing as a small chip: red when not working.
+class ThingTag extends StatelessWidget {
+  const ThingTag(this.a, {super.key});
+  final Amenity a;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    final (bg, fg, bd) = a.working ? (p.bg, p.tx, p.tx) : (p.ab, p.ad, p.ac);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+      decoration: box(bg: bg, w: 1, c: bd),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Ic(amenityIcon(a.kind), size: 14, color: fg),
+          const SizedBox(width: 4),
+          Flexible(child: T(a.working ? a.label : '${a.label} · not working', s: 11, w: 800, ls: .04, upper: true, c: fg, ell: true)),
+        ],
+      ),
+    );
+  }
+}
+
 const buildingLegend = [('Free', 'free'), ('On hold', 'held'), ('Taken', 'booked'), ('Your pick', 'sel')];
 
-/// [onBed]: a tap on a bed (tenant: pick it; owner: the bed sheet).
-/// [onFloor]: a tap on a floor's label (open it on the floor map).
+/// [onBed]: a tap on a bed (tenant: pick it; owner: the bed sheet). A tap on
+/// a floor's label or its shared things opens the floor sheet (H42).
 /// [selected]: the picked bed's id. [dim]: rooms that don't fit the filter.
 class BuildingView extends StatelessWidget {
-  const BuildingView({super.key, required this.hid, required this.rooms, required this.onBed, this.onFloor, this.selected, this.dim, this.tenant = true});
+  const BuildingView({super.key, required this.hid, required this.rooms, required this.onBed, this.selected, this.dim, this.tenant = true});
   final String hid;
   final List<Room> rooms;
   final void Function(Bed b) onBed;
-  final void Function(int f)? onFloor;
   final String? selected;
   final bool Function(Room r)? dim;
   final bool tenant;
@@ -93,19 +115,21 @@ class BuildingView extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (onFloor != null && rs.isNotEmpty) Tap(key: ValueKey('bFloor-$f'), onTap: () => onFloor!(f), child: Semantics(label: 'Open ${s.floorName(f).toLowerCase()} on the floor map, ${freeOn(f)} free', child: label)) else label,
+              Tap(key: ValueKey('bFloor-$f'), onTap: () => s.openFloorSheet(hid, f), child: Semantics(label: '${s.floorName(f)}${rs.isEmpty ? '' : ', ${freeOn(f)} free'}: shared things', child: label)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // F25: the floor's shared things on top of its row.
                     if (things.isNotEmpty)
-                      Container(
+                      Tap(
                         key: ValueKey('bThings-$f'),
+                        onTap: () => s.openFloorSheet(hid, f),
+                        child: Container(
                         padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
                         decoration: rs.isEmpty ? null : BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                         child: Wrap(spacing: 4, runSpacing: 4, children: [for (final a in things) ThingTag(a)]),
-                      ),
+                      )),
                     if (rs.isEmpty)
                       Padding(padding: const EdgeInsets.all(8), child: T(f == 0 ? 'Ground floor' : s.floorName(f), s: 12, c: p.mu))
                     else
@@ -160,7 +184,7 @@ class BuildingView extends StatelessWidget {
         const SizedBox(height: 14),
         Legend(items: tenant ? buildingLegend : buildingLegend.take(3).toList()),
         const SizedBox(height: 8),
-        T(onFloor != null ? 'Shared things sit on top of each floor. Tap a floor’s label to see where they are on the floor map.' : 'Shared things sit on top of each floor.', s: 12, c: p.mu, lh: 1.45),
+        T('Shared things sit on top of each floor. Tap a floor to see if they’re working.', s: 12, c: p.mu, lh: 1.45),
       ],
     );
   }

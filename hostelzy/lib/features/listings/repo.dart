@@ -218,11 +218,6 @@ abstract class HostelRepo {
   Future<String> saveAmenity(Amenity a);
   Future<void> removeAmenity(String key);
 
-  /// F25: put a shared thing on the floor map (0–100 each way), or take it
-  /// off (null, null). Owner, manager or the team. False when the server
-  /// doesn't have it yet (FOUNDER-TODO 4zk2 not run): nothing was saved.
-  Future<bool> placeAmenity(String key, int? x, int? y);
-
   /// A hostel's food menu, Monday first (null when it has none); anyone can
   /// read a live hostel's. Staff save the whole week at once.
   Future<List<DayMenu>?> menu(String hid);
