@@ -138,6 +138,11 @@ abstract class HostelRepo {
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
   Future<void> replyReview(String id, String reply);
 
+  /// F24 4a: the author changes their own review; anyone reports one for
+  /// abuse (the Hostelzy team decides).
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again});
+  Future<void> reportReview(String id, String why);
+
   /// S5: Fair Play. A tenant's private report; the owner's reply (sending a
   /// case the team returned back to them); the owner's 48-hour fix; the
   /// team's decision (`close` | `more` | `strike`, with the result text).
@@ -173,6 +178,21 @@ abstract class HostelRepo {
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''});
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
+
+  /// F24 Wave 4b (F12): one room's published layout for the Room tab. A
+  /// women's PG lists its layouts only to people with a hold there; others
+  /// get room by room (a few a day; then it throws "hold a bed to see more").
+  Future<RoomLayout?> roomLayout(String hid, int room);
+
+  /// F12 one editor at a time: take (or refresh) the room's 10-minute edit
+  /// lock; [mine] false names whoever holds it. Let it go when leaving.
+  Future<({String name, bool mine})> lockLayout(String hid, int room);
+  Future<void> unlockLayout(String hid, int room);
+
+  /// F24 item 27: "Tell me when it's ready" on a room with no layout, and
+  /// the rooms (`hid|room`) this tenant still waits for.
+  Future<void> waitForLayout(String hid, int room);
+  Future<Set<String>> layoutWaits();
 
   /// F24 item 11: "Ask Hostelzy to draw it" (staff) and the hostel's
   /// requests, with the team's drawing once sent. Photos go up with
@@ -388,6 +408,10 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> replyReview(String id, String reply) async {}
   @override
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {}
+  @override
+  Future<void> reportReview(String id, String why) async {}
+  @override
   Future<List<MeterRow>> meters(String hid, DateTime month) async => const [];
   @override
   Future<int> saveMeter(String hid, DateTime month, double rate, List<({int room, int reading})> rows) => throw UnsupportedError('sample data');
@@ -447,6 +471,16 @@ class SampleRepo implements HostelRepo {
   Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
+  @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async => null;
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async => (name: '', mine: true);
+  @override
+  Future<void> unlockLayout(String hid, int room) async {}
+  @override
+  Future<void> waitForLayout(String hid, int room) => throw UnsupportedError('sample data');
+  @override
+  Future<Set<String>> layoutWaits() async => {};
 
   @override
   Future<String> saveAmenity(Amenity a) async => a.key ?? a.id;
@@ -616,6 +650,14 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
+    // F24 4a: the server reuses the tenant's open enquiry for this bed, or
+    // records a new one and sets its HZ code.
+    try {
+      return await db.rpc('send_enquiry', params: {'p_hostel': hid, 'p_name': name, 'p_phone': phone, 'p_bed': bed, 'p_source': source, 'p_msg': msg}) as String;
+    } on PostgrestException catch (e) {
+      // Until FOUNDER-TODO 4zr1 runs there is no send_enquiry: insert as before.
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+    }
     // The server sets the HZ code (B5); 'new' is replaced.
     final row = await db.from('enquiries').insert({'hostel_id': hid, 'ref': 'new', 'name': name, 'phone': phone, 'bed': bed, 'source': source, 'msg': msg}).select('ref').single();
     return row['ref'] as String;
@@ -714,6 +756,13 @@ class SupabaseRepo implements HostelRepo {
   Future<void> replyReview(String id, String reply) => db.from('reviews').update({'reply': reply}).eq('id', id);
 
   @override
+  Future<void> editReview(String id, {required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) =>
+      db.from('reviews').update({'stars': stars, 'body': body, 'cats': cats, 'layout': layout, 'advance': advance, 'again': again}).eq('id', id);
+
+  @override
+  Future<void> reportReview(String id, String why) => db.rpc('report_review', params: {'p_review': id, 'p_why': why});
+
+  @override
   Future<void> sendReport(String hid, String why, String note) => db.from('fair_reports').insert({'hostel_id': hid, 'why': why, 'note': note});
 
   @override
@@ -778,6 +827,31 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async {
+    final rows = (await db.rpc('room_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    return rows.isEmpty ? null : layoutFromRow(hid, rows.first);
+  }
+
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async {
+    final rows = (await db.rpc('lock_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    final r = rows.first;
+    return (name: r['name'] as String? ?? '', mine: r['mine'] as bool? ?? false);
+  }
+
+  @override
+  Future<void> unlockLayout(String hid, int room) => db.rpc('unlock_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<void> waitForLayout(String hid, int room) => db.rpc('wait_for_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<Set<String>> layoutWaits() async {
+    final rows = (await db.from('layout_waits').select('hostel_id, room').isFilter('told_at', null) as List).cast<Map<String, dynamic>>();
+    return {for (final r in rows) '${r['hostel_id']}|${r['room']}'};
+  }
 
   @override
   Future<List<ShapeRequest>> shapeRequests(String hid) async {
@@ -1056,7 +1130,8 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final reviews = <String, List<Review>>{};
   for (final h in rows) {
     // S4: verified residents' reviews, newest first; the rating comes from them.
-    final revRows = (h['reviews'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
+    // F24 4a: reviews the team hid (abuse, duplicates) never count.
+    final revRows = (h['reviews'] as List? ?? const []).cast<Map<String, dynamic>>().where((r) => r['hidden'] != true).toList()..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
     final revs = reviews[h['id'] as String] = [for (final r in revRows) reviewFromRow(r)];
     final id = h['id'] as String;
     final rs = <Room>[
@@ -1178,7 +1253,9 @@ RoomLayout layoutFromRow(String hid, Map<String, dynamic> r) {
     ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String})
     // F24: rows from before shapes have none: a rectangle.
     ..shape = r['shape'] as String? ?? 'Rectangle'
-    ..outline = outlineFromJson(r['outline']);
+    ..outline = outlineFromJson(r['outline'])
+    // F24 4a: residents' "layout is wrong" answers since it was last published.
+    ..disputes = r['disputes'] as int? ?? 0;
 }
 
 /// F24: a `shape_requests` row → [ShapeRequest].

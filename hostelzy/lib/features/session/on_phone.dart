@@ -114,6 +114,7 @@ extension OnPhoneActions on AppState {
     ],
     'fairAccepted': fairAccepted,
     'pushAsked': pushAsked,
+    'camAsked': camAsked,
     'opens': opens,
     // F24 item 22: the Settings switches and searched areas (also on the profile).
     'notif': notif,

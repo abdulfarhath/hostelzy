@@ -87,7 +87,7 @@ void main() {
     await _pump(tester, s);
     expect(find.text('Join your PG'), findsOneWidget);
     expect(find.byKey(const ValueKey('inviteCode')), findsOneWidget);
-    expect(find.text('Scan the poster QR'), findsOneWidget);
+    expect(find.text('Scan the QR'), findsOneWidget);
     expect(find.text('Ask your owner to add you with +91 90000 00001.'), findsOneWidget);
     await _tap(tester, find.text('Send my number on WhatsApp'));
     expect(Uri.decodeComponent(s.lastLink.toString()), contains('+91 90000 00001'));

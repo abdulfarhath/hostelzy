@@ -21,6 +21,7 @@ import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
 import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
+import 'features/links/scan.dart';
 
 part 'features/fair_play/fair_play.dart';
 part 'features/rewards/rewards.dart';
@@ -34,6 +35,7 @@ part 'features/layouts/layout_editor.dart';
 part 'features/layouts/layout_fixes.dart';
 part 'features/onboarding/onboarding.dart';
 part 'features/reviews/reviews.dart';
+part 'features/reviews/review_rules.dart';
 part 'features/session/on_phone.dart';
 part 'features/map/map.dart';
 part 'features/residents/residents.dart';
@@ -62,7 +64,7 @@ part 'features/laundry/laundry.dart';
 /// F21 W4: how long an Undo stays.
 const undoSecs = Duration(seconds: 5);
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -114,7 +116,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'aCases', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'aPay', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter', 'scan'];
   static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -187,7 +189,13 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   // team mode
 
-  void openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
+  void openLayout(int n, {bool editor = false, bool owner = false}) {
+    _openLayout(n, editor: editor, owner: owner);
+    // F12: one editor at a time (on the server).
+    if (editor) unawaited(takeLayoutLock());
+  }
+
+  void _openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
     // F18: a room without a layout gets a starting one to edit (no crash);
     // tenants don't see it until it is published.
     final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
@@ -249,6 +257,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     _ticker?.cancel();
     _toastTimer?.cancel();
     _tokenSub?.cancel();
+    _edLockTimer?.cancel();
     stopLive();
     super.dispose();
   }
@@ -279,6 +288,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     lang = m['lang'] as String? ?? 'en';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
     pushAsked = m['pushAsked'] as bool? ?? false;
+    camAsked = m['camAsked'] as bool? ?? false;
     for (final e in ((m['notif'] as Map?) ?? const {}).entries) {
       if (notif.containsKey(e.key) && e.value is bool) notif[e.key as String] = e.value as bool;
     }
@@ -339,6 +349,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void back() => update(() {
+    // F12: leaving the layout editor lets the room's edit lock go.
+    if (screen == 'aLayout') unawaited(releaseLayoutLock());
     final h = List.of(hist);
     final prev = h.isNotEmpty ? h.removeLast() : homeOf[role]!;
     screen = prev;

@@ -122,7 +122,7 @@ void main() {
     expect(s.sheet, 'wa');
     expect(find.text('Ask Srinivas'), findsOneWidget);
     expect(find.text(s.waFull), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code ${s.waRef}'));
+    expect(s.waFull, endsWith('Booking code ${s.waRef}\nhttps://farhath.me/hostelzy/app/r/?c=${s.waRef}'));
     expect(find.text('The booking code keeps your Hostelzy price.'), findsOneWidget);
     s.update(() => s.sheet = null);
 

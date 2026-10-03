@@ -441,8 +441,8 @@ class RoleGateScreen extends StatelessWidget {
         ),
         if (mgr) T('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.', key: const ValueKey('mgrHint'), s: 13, c: p.mu, lh: 1.45),
         if (!mgr) ...[
-        // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
-        OutlineCta('Scan the poster QR', icon: 'qr', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.')),
+        // F14: the in-app scanner reads the poster's QR (the j/ invite link).
+        OutlineCta('Scan the QR', key: const ValueKey('scanQr'), icon: 'qr', onTap: s.openScan),
         Container(
           margin: const EdgeInsets.only(top: 8),
           padding: const EdgeInsets.all(12),
@@ -490,6 +490,103 @@ class _Agree extends StatelessWidget {
         T(' and ', s: 13, c: p.mu),
         Tap(onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser'), child: T('Privacy policy', s: 13, w: 800, c: p.tx)),
         T('.', s: 13, c: p.mu),
+      ],
+    );
+  }
+}
+
+/// F14: the camera explainer before Android's own prompt (first scan only).
+class CameraSheet extends StatelessWidget {
+  const CameraSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 12,
+        children: [
+          T('Only to read the QR on your PG’s Hostelzy poster. Nothing is recorded or saved, and nobody sees your camera.', s: 15, c: p.mu, lh: 1.5),
+          Tap(
+            key: const ValueKey('allowCamera'),
+            onTap: s.allowCamera,
+            child: Container(
+              height: 54,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              color: p.ac,
+              child: Row(
+                children: [
+                  Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [T('Allow camera', w: 800, s: 15, c: p.ai), T('Your phone asks next', w: 600, s: 11, c: p.ai.withValues(alpha: .8))])),
+                  Ic('arrow', size: 18, color: p.ai),
+                ],
+              ),
+            ),
+          ),
+          OutlineCta('Type the code instead', icon: 'pencil', onTap: () => s.update(() => s.sheet = null)),
+        ],
+      ),
+    );
+  }
+}
+
+/// F14: scan the invite QR on the PG's poster; the code fills in and joins.
+class ScanScreen extends StatelessWidget {
+  const ScanScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    Widget error(bool denied) => Container(
+      key: const ValueKey('scanError'),
+      color: p.sf,
+      padding: const EdgeInsets.all(20),
+      alignment: Alignment.center,
+      child: VGap(
+        gap: 8,
+        children: [
+          Ic('lock', size: 24, color: p.tx),
+          T(denied ? 'The camera is off for Hostelzy' : 'The camera didn’t start', w: 800, s: 17, align: TextAlign.center),
+          T(denied ? 'Allow it in your phone’s Settings → Apps → Hostelzy → Permissions, or type the code.' : 'Type the code from the poster instead.', s: 13, c: p.mu, lh: 1.45, align: TextAlign.center),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Join your PG', title: 'Scan the QR', size: 30, gap: 2))],
+          ),
+        ),
+        Expanded(
+          child: Scroll(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: VGap(
+                gap: 12,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: box(w: 2, c: p.tx),
+                      clipBehavior: Clip.hardEdge,
+                      child: s.scanner.view(s.scannedQr, error),
+                    ),
+                  ),
+                  T('Point it at the QR on the Hostelzy poster at your PG. The code fills in by itself and your owner gets the request.', s: 14, c: p.mu, lh: 1.5),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: OutlineCta('Type the code instead', key: const ValueKey('scanType'), icon: 'pencil', onTap: s.back),
+        ),
       ],
     );
   }

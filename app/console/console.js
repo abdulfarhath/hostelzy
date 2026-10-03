@@ -74,6 +74,7 @@ const NAV = [
   ['layout', 'Layout help'],
   ['rewards', 'Rewards'],
   ['fixes', 'Layout fixes'],
+  ['reviews', 'Reported reviews'],
   ['hostels', 'Hostels'],
 ];
 
@@ -384,6 +385,37 @@ const VIEWS = {
         el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Room', 'From', 'Note', 'Waiting', 'Status'].map((h) => el('div', {}, h))),
           fixes.length ? fixes.map(row) : el('p', { class: 'empty' }, 'No layout fixes waiting.')),
         detail),
+    ];
+  },
+
+  // F08 board 6, F24 Wave 4a: reviews reported for abuse. Reviews are never
+  // deleted; the team hides one that breaks the rules, or keeps it.
+  async reviews(db, again) {
+    const reps = await db.from('review_reports').select('*, reviews(id, stars, body, author_name, kind, hidden, created_at, hostels(name))').eq('status', 'open').order('created_at').then(ok);
+    const byReview = new Map();
+    for (const r of reps) {
+      if (!r.reviews) continue;
+      const g = byReview.get(r.review_id) ?? { review: r.reviews, why: [], first: r.created_at };
+      g.why.push(r.why);
+      byReview.set(r.review_id, g);
+    }
+    const decide = async (g, hide) => {
+      if (!confirm(hide ? `Hide ${g.review.author_name}’s review? It leaves the hostel page and the rating.` : `Keep ${g.review.author_name}’s review? The reports close.`)) return;
+      ok(await db.rpc('decide_review_report', { p_review: g.review.id, p_hide: hide }));
+      toast(hide ? 'Hidden. The author still sees it, marked hidden.' : 'Kept. The reports are closed.');
+      again();
+    };
+    const groups = [...byReview.values()];
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Reported reviews'), el('span', { class: 'mu', style: 'font-size:13px' }, 'Hide a review only if it breaks the rules (abuse, personal details, not a resident). A low rating is not a reason.')),
+      el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Review', 'Stars', 'Reported for', 'Since', 'Action'].map((h) => el('div', {}, h))),
+        groups.length ? groups.map((g) => el('div', { class: 'tr' },
+          el('div', {}, g.review.hostels?.name ?? ''),
+          el('div', {}, `${g.review.author_name} · ${g.review.kind === 'exit' ? 'exit' : '30-day'}: ${g.review.body ? '“' + g.review.body + '”' : '(no words)'}`),
+          el('div', {}, '★ ' + g.review.stars),
+          el('div', {}, [...new Set(g.why)].join(', ') + (g.why.length > 1 ? ` (${g.why.length} reports)` : '')),
+          el('div', {}, dayMon(g.first)),
+          el('div', {}, el('button', { class: 'btn sm primary', onclick: () => decide(g, true) }, 'Hide'), el('button', { class: 'btn sm', onclick: () => decide(g, false) }, 'Keep')))) : el('p', { class: 'empty' }, 'No reported reviews.')),
     ];
   },
 
