@@ -35,7 +35,8 @@ mixin _OnboardingData {
 
 extension OnboardingActions on AppState {
 
-  bool stale(String hid) => (confirmed[hid] ?? staleAfterDays) >= staleAfterDays;
+  /// Unknown (no confirmation yet) is not called stale: we just don't say.
+  bool stale(String hid) => (confirmed[hid] ?? 0) >= staleAfterDays;
   bool needsConfirm(String hid) => (confirmed[hid] ?? 0) >= confirmEveryDays;
 
   void confirmBeds(String hid) {
@@ -327,7 +328,6 @@ extension OnboardingActions on AppState {
       stats[id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
       emptyFloors[id] = [for (final f in d.floors) if (f.noBeds) f.name];
       visited[id] = '${dayMon(appToday)} ${appToday.year}';
-      confirmed[id] = 0;
       ownerHostels.add(id);
       leads.add(Lead(d.name, d.area, 'Trial ends ${dayMon(appToday.add(const Duration(days: 30)))}', 5, hid: id));
       screen = 'aTrack';

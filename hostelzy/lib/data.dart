@@ -812,7 +812,7 @@ List<FairCase> seedCases() => [
     status: 'waiting',
     resident: 'Teja Naidu',
     events: const [
-      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · phone 90000 00013 verified by OTP'),
+      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · signed in with Google · phone 90000 00013'),
       CaseEvent('11 Sep', 'Held bed 102-B', 'Free 1-hour hold'),
       CaseEvent('11 Sep', 'Hold cancelled by tenant', '18 minutes later'),
       CaseEvent('18 Sep', 'Added by you as Direct', 'Bed 102-B · same phone number', flag: true),
