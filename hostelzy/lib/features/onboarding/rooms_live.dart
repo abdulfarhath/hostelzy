@@ -60,7 +60,7 @@ extension RoomsLiveActions on AppState {
       rs.sort((a, b) => a.floor != b.floor ? a.floor - b.floor : a.n - b.n);
       sheet = null;
     });
-    _saveRoomsLive(hid, before, 'Room $label added with $nrShare free beds. Hostelzy draws its layout on the next visit.');
+    _saveRoomsLive(hid, before, 'Room $label added with $nrShare free beds. Draw its layout when you’re ready.');
   }
 
   /// F24 item 3: on the server the hostel's rooms are saved as a list; if the

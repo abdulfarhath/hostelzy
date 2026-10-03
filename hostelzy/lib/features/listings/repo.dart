@@ -40,6 +40,9 @@ abstract class HostelRepo {
   /// F20: the user's reminder settings, backed up on their profile so a new
   /// phone gets them back. Null on sample data or when nothing is saved.
   Future<void> saveReminders(String uid, Map<String, dynamic> settings);
+
+  /// F24 item 23: the user's own name on their profile.
+  Future<void> saveName(String uid, String name);
   Future<Map<String, dynamic>?> loadReminders(String uid);
 
   /// This phone's push token (FCM).
@@ -229,6 +232,9 @@ class SampleRepo implements HostelRepo {
   Future<void> startRent({required String hid, required String stayKey, required int amount, required String note}) => throw UnsupportedError('sample data');
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) async {}
+
+  @override
+  Future<void> saveName(String uid, String name) async {}
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async => null;
   @override
@@ -695,6 +701,10 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> saveReminders(String uid, Map<String, dynamic> settings) => db.from('profiles').update({'reminders': settings}).eq('id', uid);
+
+  // "edit own profile" lets a user update their own row; guard_profile leaves the name alone.
+  @override
+  Future<void> saveName(String uid, String name) => db.from('profiles').update({'name': name}).eq('id', uid);
 
   @override
   Future<Map<String, dynamic>?> loadReminders(String uid) async {

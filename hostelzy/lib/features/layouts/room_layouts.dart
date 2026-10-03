@@ -92,6 +92,6 @@ extension RoomLayoutsActions on AppState {
       l.request = (text: lReqText.trim(), added: Set.of(lReqAdded), size: lReqLen.isNotEmpty && lReqWid.isNotEmpty ? '$lReqLen × $lReqWid ft' : '', at: '${dayMon(appToday)}, 7:10 pm');
       sheet = null;
     });
-    toastMsg('Request saved. It reaches the Hostelzy team once the app is online (F13).');
+    toastMsg('Request saved. WhatsApp us the photos and the Hostelzy team helps.');
   }
 }

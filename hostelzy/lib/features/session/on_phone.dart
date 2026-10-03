@@ -7,8 +7,11 @@ mixin _OnPhoneData {
   Store store = const NoStore();
   String _saved = '';
 
-  /// The user's own name: typed by them (prefilled from Google, editable).
+  /// The user's own name: typed by them (the Google name is only a hint).
   String myName = '';
+
+  /// F24 item 23: Settings › Name, what's typed in the sheet (starts empty).
+  String nameDraft = '';
 
   /// F21 W4: the toast's Undo, while it shows.
   VoidCallback? toastUndo;
@@ -19,6 +22,37 @@ extension OnPhoneActions on AppState {
   /// Display names from the user's own name; never a sample person.
   String get meName => myName.trim();
   String get meFirst => meName.isEmpty ? '' : meName.split(RegExp(r'\s+')).first;
+
+  /// F24 item 23: Settings › Name opens the sheet with an empty field.
+  void editName() => update(() {
+    nameDraft = '';
+    sheet = 'name';
+  });
+
+  /// Saves the new name on this phone and, when signed in, on the server.
+  Future<void> saveName() async {
+    final n = nameDraft.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (n.length < 2) {
+      toastMsg('Enter your name.');
+      return;
+    }
+    final a = account;
+    if (a != null && onServer) {
+      try {
+        await data.saveName(a.uid, n);
+      } catch (e) {
+        debugPrint('Name: $e');
+        toastMsg('Couldn’t save your name. Check your internet and try again.');
+        return;
+      }
+    }
+    update(() {
+      myName = n;
+      nameDraft = '';
+      sheet = null;
+    });
+    toastMsg('Name saved.');
+  }
 
   /// "Asha K." for reviews and payment lines.
   String get meShort {

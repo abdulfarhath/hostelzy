@@ -48,8 +48,7 @@ extension LoginActions on AppState {
     if (a != null) {
       update(() {
         account = a;
-        // F18: the Google name is only a starting point; the user can change it.
-        if (myName.trim().isEmpty) myName = a.name;
+        // F24 item 23: the name field is never pre-filled; the Google name is only its hint.
         hist = [...hist, screen];
         screen = 'phone';
         sheet = null;
@@ -88,7 +87,7 @@ extension LoginActions on AppState {
     final a = account;
     if (a == null) return;
     try {
-      await data.saveProfile(name: a.name, email: a.email, phone: phone, role: role);
+      await data.saveProfile(name: meName.isEmpty ? a.name : meName, email: a.email, phone: phone, role: role);
     } catch (e) {
       debugPrint('Profile: $e');
     }
