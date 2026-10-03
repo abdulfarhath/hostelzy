@@ -91,7 +91,7 @@ class OwnerMeterScreen extends StatelessWidget {
                 if (rooms.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Add your rooms first (Beds › Edit rooms).', s: 14, c: p.mu)),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: T('Residents see “Electricity · 70 units · ₹140” on their $month rent. Missing rooms show “Electricity · not added yet”.', s: 13, c: p.mu, lh: 1.45),
+                  child: T('Residents see “Electricity · 70 units ÷ 4 · ₹8/unit  ₹140” on their $month rent (the room’s units split by the residents in it). Rooms not added show “Electricity  Not added yet”.', s: 13, c: p.mu, lh: 1.45),
                 ),
               ],
             ),

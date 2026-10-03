@@ -833,6 +833,23 @@ class DetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                // Design v25 w1-dealsPaused: the owner's deals are paused (plan 15+ days late)
+                // or hidden (strike 2). Say so instead of letting them vanish.
+                if (s.dealsPaused(h.id) || s.dealsHidden(h.id))
+                  Container(
+                    key: const ValueKey('dealsPaused'),
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: box(bg: p.sf, w: 2, c: p.tx),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Ic('shield', size: 18, color: p.tx),
+                        const SizedBox(width: 10),
+                        Expanded(child: T('Hostelzy deals are paused for this hostel. Walk-in prices shown.', s: 14, w: 700, lh: 1.35)),
+                      ],
+                    ),
+                  ),
                 // F21 W2: one table. The Hostelzy price sits in it, walk-in struck through.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
