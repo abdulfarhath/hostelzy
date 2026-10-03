@@ -896,6 +896,9 @@ const planTiers = <({int upTo, String label, int price, String note})>[
   (upTo: 1 << 30, label: '80+ beds', price: 1499, note: 'Plus a featured spot in your area'),
 ];
 int planTierOf(int beds) => planTiers.indexWhere((t) => beds <= t.upTo);
+
+/// F10: more than this many beds is the 80+ plan, with a featured spot in its area.
+const featuredBeds = 80;
 const planIncluded = 'Verified enquiries with booking codes · holds · residents app for rent and complaints · deals · Hostelzy score.';
 
 /// Reminder after 5 days late; deals paused after 15.

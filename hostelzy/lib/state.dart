@@ -18,7 +18,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
+import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
 
