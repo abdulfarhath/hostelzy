@@ -1,0 +1,209 @@
+<title>Hostelzy Brand Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono&display=swap">
+<style>
+/* Layout: one column like the app, ruled sections (2px ink rules, square corners), app tokens from Pal. */
+:root {
+  --bg: #F3F2F2; --sf: #EAE9E9; --tx: #201E1D; --mu: #605D5D; --ac: #EC3013; --ab: #FFE0D9;
+  --rule: #201E1D; --hl: rgba(32,30,29,.16); --gn: #1F7A3D; --gb: #DCEFE0;
+  --m-wall: #201E1D; --m-bed: #605D5D; --m-you: #EC3013;
+  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161514; --sf: #24221F; --tx: #F0EEEE; --mu: #BAB6B6; --ac: #FF563C; --ab: #4D170E;
+  --rule: #F0EEEE; --hl: rgba(240,238,238,.14); --gn: #5FCF86; --gb: #133A22;
+  --m-wall: #F0EEEE; --m-bed: #9A9696; --m-you: #FF563C; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #161514; --sf: #24221F; --tx: #F0EEEE; --mu: #BAB6B6; --ac: #FF563C; --ab: #4D170E;
+  --rule: #F0EEEE; --hl: rgba(240,238,238,.14); --gn: #5FCF86; --gb: #133A22;
+  --m-wall: #F0EEEE; --m-bed: #9A9696; --m-you: #FF563C; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--tx); font: 400 16px/1.5 var(--display); padding-inline: 16px }
+main { max-width: 920px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 48px }
+h1, h2, h3 { font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 0; text-wrap: balance }
+h2 { font-size: 30px }
+h3 { font-size: 18px }
+p { margin: 0; max-width: 65ch }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mu) }
+section { border-top: 2px solid var(--rule); padding-top: 20px; display: grid; gap: 20px }
+.head { display: grid; gap: 4px }
+.mu { color: var(--mu) }
+.code { font-family: var(--mono); font-size: 13px }
+svg { display: block; width: 100%; height: auto }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) }
+.grid > * { min-width: 0 }
+
+/* Hero */
+.hero { display: grid; gap: 20px }
+.hero .lock { max-width: 420px }
+.hero .tag { font-size: clamp(32px, 6vw, 52px); font-weight: 800; letter-spacing: -.02em; line-height: 1.02 }
+.hero .tag span { color: var(--ac) }
+
+/* Logo anatomy */
+.anat { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: 28px; align-items: start }
+@media (max-width: 640px) { .anat { grid-template-columns: 1fr } }
+.anat .big { border: 2px solid var(--rule); padding: 24px; background: var(--bg) }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px }
+.parts li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: baseline }
+.sw { width: 14px; height: 14px; display: inline-block; translate: 0 2px }
+.box { border: 2px solid var(--rule); padding: 16px; display: grid; gap: 12px; align-content: start }
+.box .art { display: grid; place-items: center; min-height: 120px }
+.fixed-light { background: #F3F2F2 }
+.fixed-dark { background: #161514 }
+.sizes { display: flex; flex-wrap: wrap; gap: 20px; align-items: end }
+.sizes figure { margin: 0; display: grid; gap: 6px; justify-items: center }
+.sizes figcaption { font-size: 12px; color: var(--mu); font-variant-numeric: tabular-nums }
+
+/* Colours */
+.colors { display: grid; gap: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid var(--rule); overflow: hidden }
+@media (max-width: 560px) { .colors { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.chip { padding: 14px; display: grid; gap: 4px; border-right: 2px solid var(--rule); border-bottom: 2px solid var(--rule); margin: 0 -2px -2px 0; min-width: 0 }
+.chip .fill { height: 64px; border: 1px solid var(--hl) }
+.chip b { font-weight: 800 }
+.chip small { color: var(--mu); font-size: 12px }
+.rule-line { background: var(--ab); padding: 12px 14px; border-left: 4px solid var(--ac) }
+
+/* Type */
+.spec { display: grid; gap: 14px }
+.row { display: grid; grid-template-columns: 170px 1fr; gap: 16px; align-items: baseline; border-bottom: 1px solid var(--hl); padding-bottom: 12px }
+@media (max-width: 560px) { .row { grid-template-columns: 1fr; gap: 4px } }
+.row > * { min-width: 0 }
+
+/* Voice */
+.pairs { display: grid; gap: 0; border: 2px solid var(--rule) }
+.pair { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid var(--rule) }
+.pair:last-child { border-bottom: 0 }
+.pair > div { padding: 12px 14px; min-width: 0 }
+.pair > div + div { border-left: 2px solid var(--rule) }
+.pair .lab { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: 2px }
+.yes .lab { color: var(--gn) }
+.no .lab { color: var(--mu) }
+.no { color: var(--mu); text-decoration: line-through; text-decoration-color: var(--hl) }
+@media (max-width: 560px) { .pair { grid-template-columns: 1fr } .pair > div + div { border-left: 0; border-top: 2px solid var(--rule) } }
+
+/* Don'ts */
+.donts { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)) }
+@media (max-width: 560px) { .donts { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.dont { margin: 0; display: grid; gap: 8px }
+.dont .tile { background: #F3F2F2; border: 2px solid var(--rule); padding: 22px; aspect-ratio: 1; max-width: 100%; display: grid; place-items: center; position: relative }
+.dont .tile > div { width: 70% }
+.dont .tile::after { content: ''; position: absolute; inset: 8px auto auto 8px; width: 18px; height: 18px;
+  background: linear-gradient(45deg, transparent 43%, #EC3013 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, #EC3013 43% 57%, transparent 57%) }
+.dont figcaption { font-size: 14px }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70ch }
+.files { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 14px }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--hl); vertical-align: top }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); font-weight: 600; border-bottom: 2px solid var(--rule) }
+</style>
+
+<main>
+  <header class="hero">
+    <div class="lock" role="img" aria-label="hostelzy logo">{{LOCK}}</div>
+    <div class="tag">See the room.<br><span>Pick your bed.</span></div>
+    <p class="mu">The Hostelzy brand on one page: logo, colours, type, how we talk, and what not to do. Everything here comes from the app itself (<span class="code">hostelzy/lib/ui/kit.dart</span>, the <span class="code">Pal</span> tokens). Owned by the Brand chat · 3 Oct 2026.</p>
+  </header>
+
+  <section id="logo">
+    <div class="head"><span class="eyebrow">1 · Logo</span><h2>The room, from above</h2></div>
+    <div class="anat">
+      <div class="big" role="img" aria-label="The room mark">{{MARK_FULL}}</div>
+      <div style="display:grid;gap:16px;min-width:0">
+        <p>A real PG room seen from the ceiling, drawn the way the app’s Room tab draws it. The story: <b>see the real room, pick your bed.</b> It is logo B3-a2, picked by the founder on 2 Oct 2026.</p>
+        <ul class="parts">
+          <li><span class="sw" style="background:var(--m-wall)"></span><span><b>Walls, window, door gap, AC with air, fan</b>: ink.</span></li>
+          <li><span class="sw" style="background:var(--m-bed)"></span><span><b>Other beds</b> (a bunk and one bed): grey.</span></li>
+          <li><span class="sw" style="background:var(--m-you)"></span><span><b>Your bed</b>: red. The only red in the logo.</span></li>
+          <li><span class="sw" style="border:2px solid var(--m-wall)"></span><span><b>Floor</b>: always see-through. The room sits on whatever ground is behind it.</span></li>
+        </ul>
+        <p class="mu">Wordmark: <b>hostelzy</b>, lowercase, Archivo ExtraBold, −0.02em, as in the app header. In the lockup the room is 1.18× the height of the “h”, with a gap of 0.3×.</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box"><div class="art fixed-light" style="padding:20px">{{ON_LIGHT}}</div><h3>On light</h3><p class="mu">Ground <span class="code">#F3F2F2</span> or white. Ink walls.</p></div>
+      <div class="box"><div class="art fixed-dark" style="padding:20px">{{ON_DARK}}</div><h3>On dark</h3><p class="mu">Ground <span class="code">#161514</span>. Light walls, brighter red.</p></div>
+      <div class="box"><div class="art" style="padding:12px"><div style="width:120px;border:1px solid var(--hl)">{{ICON}}</div></div><h3>App and Play icon</h3><p class="mu">White ground, never a red tile. Play rounds the corners for us.</p></div>
+    </div>
+
+    <div class="box">
+      <h3>Two levels of detail</h3>
+      <p class="mu">At 64 px and smaller, use the simple room: the AC becomes a bar, the fan a dot, no pillows or air dots. The status bar uses its own one-colour drawing: beds as outlines, your bed filled.</p>
+      <div class="sizes">
+        <figure><div style="width:128px">{{MARK_FULL}}</div><figcaption>Full · 128 px</figcaption></figure>
+        <figure><div style="width:96px">{{MARK_FULL}}</div><figcaption>Full · 96 px</figcaption></figure>
+        <figure><div style="width:64px">{{MARK_SMALL}}</div><figcaption>Simple · 64 px</figcaption></figure>
+        <figure><div style="width:32px">{{MARK_SMALL}}</div><figcaption>Simple · 32 px</figcaption></figure>
+        <figure><div style="width:48px;background:#24221F;padding:6px">{{STAT}}</div><figcaption>Notification · 24 dp</figcaption></figure>
+      </div>
+      <p class="mu">Clear space: keep empty space of at least one wall-to-bed gap (about 12% of the room’s width) on every side. Smallest sizes: room 16 px, lockup 24 px tall.</p>
+    </div>
+  </section>
+
+  <section id="colour">
+    <div class="head"><span class="eyebrow">2 · Colour</span><h2>Ink, ground and one red</h2></div>
+    <div class="colors">
+      <div class="chip"><div class="fill" style="background:#EC3013"></div><b>Red</b><span class="code">#EC3013</span><small>Dark mode #FF563C. Actions and your bed only.</small></div>
+      <div class="chip"><div class="fill" style="background:#201E1D"></div><b>Ink</b><span class="code">#201E1D</span><small>Text, walls, 2px rules. Dark mode #F0EEEE.</small></div>
+      <div class="chip"><div class="fill" style="background:#605D5D"></div><b>Grey</b><span class="code">#605D5D</span><small>Second lines, other beds. Dark #BAB6B6 (beds #9A9696).</small></div>
+      <div class="chip"><div class="fill" style="background:#F3F2F2"></div><b>Ground light</b><span class="code">#F3F2F2</span><small>App background, splash. Surface #EAE9E9.</small></div>
+      <div class="chip"><div class="fill" style="background:#161514"></div><b>Ground dark</b><span class="code">#161514</span><small>Dark background, dark splash. Surface #24221F.</small></div>
+      <div class="chip"><div class="fill" style="background:#1F7A3D"></div><b>Savings green</b><span class="code">#1F7A3D / #DCEFE0</span><small>Only for savings and Hostelzy deals.</small></div>
+    </div>
+    <p class="rule-line"><b>Red means “this is yours” or “tap here”.</b> One red thing per view where you can: the button, or your bed. Never red for decoration, headings or backgrounds.</p>
+  </section>
+
+  <section id="type">
+    <div class="head"><span class="eyebrow">3 · Type</span><h2>Archivo, everywhere</h2></div>
+    <div class="spec">
+      <div class="row"><span class="mu">Headline · ExtraBold 800, −0.02em</span><span style="font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:1.05">Pick a bed</span></div>
+      <div class="row"><span class="mu">Title · SemiBold 600</span><span style="font-weight:600;font-size:20px">Anjani Residency · Room 204</span></div>
+      <div class="row"><span class="mu">Body · Regular 400 / Medium 500</span><span>Hold any free bed for 1 hour while you go and see it. It costs nothing.</span></div>
+      <div class="row"><span class="mu">Label · 600, caps, +0.08em</span><span class="eyebrow" style="color:var(--tx)">Rent per month</span></div>
+      <div class="row"><span class="mu">Codes · JetBrains Mono</span><span class="code" style="font-size:16px">HZ-5002 · RAHUL-100</span></div>
+    </div>
+    <p class="mu">Money is always ₹ with Indian grouping: ₹7,600 · ₹1,42,840. Numbers that line up use tabular figures. Telugu text: Noto Sans Telugu (Archivo has no Telugu letters).</p>
+  </section>
+
+  <section id="voice">
+    <div class="head"><span class="eyebrow">4 · Tone of voice</span><h2>Like a friend who has stayed in PGs</h2></div>
+    <ul class="plain">
+      <li><b>Plain words.</b> Short sentences. Words people in Ameerpet use: PG, sharing, advance, bed, owner.</li>
+      <li><b>Honest.</b> Say only what really happened. “Paid”, “Sent” or “Verified” only when it is true.</li>
+      <li><b>Say why.</b> When we ask for something, give the reason in the same line.</li>
+      <li><b>Warm, not cute.</b> No slang, no emoji in the app, no exclamation marks except “Bed mila!”.</li>
+    </ul>
+    <div class="pairs">
+      <div class="pair"><div class="yes"><span class="lab">Say</span>Hold this bed for 1 hour. It’s free.</div><div class="no"><span class="lab">Not</span>Reserve your premium accommodation instantly!</div></div>
+      <div class="pair"><div class="yes"><span class="lab">Say</span>Owner’s number shows after you hold a bed.</div><div class="no"><span class="lab">Not</span>Contact details are restricted.</div></div>
+      <div class="pair"><div class="yes"><span class="lab">Say</span>Reviews from people who stayed here.</div><div class="no"><span class="lab">Not</span>100% verified genuine reviews.</div></div>
+      <div class="pair"><div class="yes"><span class="lab">Say</span>Waiting for the owner to confirm your ₹3,000.</div><div class="no"><span class="lab">Not</span>Payment successful!</div></div>
+    </div>
+  </section>
+
+  <section id="dont">
+    <div class="head"><span class="eyebrow">5 · Do and don’t</span><h2>Keep the room as it is</h2></div>
+    <ul class="plain">
+      <li><b>Do</b> use the files from <span class="code">docs/brand/assets/</span> as they are. Square corners, 2px rules, flat colour.</li>
+      <li><b>Do</b> put the room on the app ground (light or dark) or white, with clear space around it.</li>
+      <li><b>Do</b> keep the wordmark as live text in the app; use the outlined lockup elsewhere.</li>
+    </ul>
+    <div class="donts">{{DONTS}}</div>
+    <ul class="plain">
+      <li>Don’t stretch, outline, add a gradient, put text inside the room or draw a new room.</li>
+      <li>Don’t write the name as “HostelZy”, “Hostel-zy” or in capitals in running text. In sentences: Hostelzy. In the logo: hostelzy.</li>
+    </ul>
+  </section>
+
+  <section id="files">
+    <div class="head"><span class="eyebrow">6 · Files</span><h2>Where things are</h2></div>
+    <div class="files"><table>
+      <tr><th>What</th><th>Where (repo)</th></tr>
+      <tr><td>Logo, lockups, app and web icons</td><td class="code">docs/brand/assets/ · docs/brand/logo.md</td></tr>
+      <tr><td>Notification icon, splash</td><td class="code">docs/brand/assets/notification/, splash/ · docs/brand/app-assets.md</td></tr>
+      <tr><td>Play Store feature graphic, screenshots, text</td><td class="code">docs/brand/assets/play-store/ · docs/brand/play-store.md</td></tr>
+      <tr><td>App colour and type tokens</td><td class="code">hostelzy/lib/ui/kit.dart (Pal, T)</td></tr>
+    </table></div>
+  </section>
+</main>

@@ -44,3 +44,21 @@ Round 1 concepts: `logo.md` and https://claude.ai/artifact/MQMKQkVhsePEJ755s1Vrq
 
 ## Final logo (founder, 2026-10-02)
 **B3-a2 "Room with AC"**. Spec, files and Build steps: `logo.md` (top). Assets: `assets/`.
+
+## Brand pack (Brand chat, 2026-10-03)
+- **Brand guide** (one page: logo, colours, type, tone of voice, do/don't):
+  https://claude.ai/artifact/29kRWoLpWYYvW9AGuC2jSi · source `guide/brand-guide.html`
+  (rebuild: `python3 docs/brand/tools/make_guide.py`).
+- **Play Store listing pack**: `play-store.md` + `assets/play-store/` (feature graphic 1024×500,
+  8 screenshots 1080×1920 from the real app screens, short + full description; Telugu left for a
+  native speaker). ⚠️ Screenshots use sample data: retake with real hostels before the listing goes public.
+- **For Build**: `app-assets.md`: new notification icon `ic_stat_hostelzy` (for FCM pushes too) and
+  the Android 12+ splash on `#F3F2F2` / `#161514`. Files in `assets/notification/` and `assets/splash/`.
+- Scripts: `tools/` (`make_app_assets.py`, `make_play_store.py`, `capture_screens_test.dart`, `make_guide.py`).
+
+### Note for the hub (not Brand's file to change)
+- `docs/DECISIONS.md` ("Name, logo, accounts", 2026-10-02) still says **"Logo: concept C 'H made of
+  beds'"**. It was replaced by **B3-a2** (same file, "Logo final"). Ideas chat: please strike the
+  concept C bullet or mark it "replaced by B3-a2".
+- `docs/DECISIONS.md` (Women's PGs line) says "logged-in (OTP) users"; login is Google today. Ideas
+  chat may want to reword it. The Play Store copy avoids "OTP" and "verified".
