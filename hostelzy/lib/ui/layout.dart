@@ -313,7 +313,7 @@ class LayoutMap extends StatelessWidget {
         }
         return Semantics(
           label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet${l.outline == null ? '' : ', ${l.shape}'}',
-          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: [...kids, ...labels, ...handles])),
+          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(children: [...kids, ...labels, ...handles])),
         );
       },
     );
@@ -582,7 +582,7 @@ class RoomBar extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     if (!s.signedIn) {
-      return Cta('Sign in', height: 54, px: 16, fs: 15, onTap: () => s.startSignIn());
+      return Cta('Sign in', height: 54, px: 16, fs: 15, onTap: s.startSignIn);
     }
     final focus = roomFocus(s, room);
     final b = room.beds.where((x) => x.letter == focus).firstOrNull;
@@ -603,7 +603,6 @@ class RoomBar extends StatelessWidget {
           'Continue',
           key: const ValueKey('roomContinue'),
           height: 50,
-          px: 18,
           fs: 15,
           expand: false,
           opacity: can ? 1 : .4,
@@ -976,7 +975,7 @@ class LayoutRequestSheet extends StatelessWidget {
             ],
           ),
           T('Free. The Hostelzy team draws it within 48 hours. Tenants keep seeing the current layout.', s: 12, c: p.mu, lh: 1.45),
-          Cta('Send request', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
+          Cta('Send request', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
         ],
       ),
     );
@@ -1384,7 +1383,7 @@ class LayoutPublishedScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Room ${room.label}', title: 'Live for tenants', size: 30))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Room ${room.label}', title: 'Live for tenants'))]),
         ),
         Expanded(
           child: Scroll(

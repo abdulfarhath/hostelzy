@@ -77,7 +77,7 @@ class ResidentRefundScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: r == null ? 'Your stay' : '${hostelById(r.hid).name} · left ${dayMon(r.leftOn)}', title: 'Your refund', size: 30, gap: 2))],
+        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: r == null ? 'Your stay' : '${hostelById(r.hid).name} · left ${dayMon(r.leftOn)}', title: 'Your refund', gap: 2))],
       ),
     );
     if (r == null) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [head, Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('No refund waiting.', s: 14, c: p.mu))]);
@@ -124,9 +124,9 @@ class ResidentRefundScreen extends StatelessWidget {
             children: [
               if (sent) ...[
                 Cta('Yes, I got ${fmt(r.amt)}', key: const ValueKey('refundYes'), icon: 'check', height: 54, px: 16, fs: 15, onTap: () => s.confirmRefund(true)),
-                OutlineCta('Not received', key: const ValueKey('refundNo'), icon: 'x', height: 52, fs: 15, onTap: () => s.confirmRefund(false)),
+                OutlineCta('Not received', key: const ValueKey('refundNo'), icon: 'x', onTap: () => s.confirmRefund(false)),
               ] else
-                OutlineCta('Message $owner', icon: 'msg', height: 52, fs: 15, onTap: () => s.whatsapp(s.ownerPhoneFor(r.hid), 'Hi $owner, about my ${fmt(r.amt)} advance refund for bed ${r.bed}.')),
+                OutlineCta('Message $owner', icon: 'msg', onTap: () => s.whatsapp(s.ownerPhoneFor(r.hid), 'Hi $owner, about my ${fmt(r.amt)} advance refund for bed ${r.bed}.')),
             ],
           ),
         ),

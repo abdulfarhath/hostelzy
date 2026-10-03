@@ -27,7 +27,7 @@ mixin _AmenityData {
 
 /// Sample things for the demo hostels.
 List<Amenity> seedAmenities() {
-  final day = DateTime(2026, 10, 1).millisecondsSinceEpoch, before = DateTime(2026, 9, 28).millisecondsSinceEpoch;
+  final day = DateTime(2026, 10).millisecondsSinceEpoch, before = DateTime(2026, 9, 28).millisecondsSinceEpoch;
   var n = 0;
   Amenity a(String hid, int floor, String kind, {bool working = true, String place = 'floor', List<int> rooms = const [], bool res = false, int? at}) =>
       Amenity(id: 'am${n++}', hid: hid, floor: floor, kind: kind, working: working, place: place, rooms: rooms, byResident: res, at: at ?? before);
@@ -106,7 +106,7 @@ extension AmenityActions on AppState {
     if (floor != null) amFloor = floor;
     amDraft = edit != null
         ? Amenity(id: edit.id, key: edit.key, hid: edit.hid, floor: edit.floor, kind: edit.kind, name: edit.name, qty: edit.qty, working: edit.working, place: edit.place, rooms: List.of(edit.rooms), byResident: edit.byResident, at: edit.at)
-        : Amenity(id: 'new', hid: amHid, floor: amFloor, kind: '', qty: 1);
+        : Amenity(id: 'new', hid: amHid, floor: amFloor, kind: '');
     sheet = 'amAdd';
   });
 

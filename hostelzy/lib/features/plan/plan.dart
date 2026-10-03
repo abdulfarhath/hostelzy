@@ -88,10 +88,6 @@ extension PlanActions on AppState {
     }
   }
 
-  void openInvoice() {
-    go(const ['checking', 'paid'].contains(invoice.status) ? 'oPayStatus' : 'oInvoice');
-  }
-
   void sendUtr() {
     if (utrDraft.length != 12) return toastMsg('The UPI reference has 12 digits.');
     final key = invoice.key;

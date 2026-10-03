@@ -194,7 +194,6 @@ class ReviewsScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +449,7 @@ class OwnerReviewsScreen extends StatelessWidget {
                   key: const ValueKey('rankTips'),
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   child: tips.isEmpty
-                      ? T('Your rank is strong on everything that counts. Keep replying and keeping beds up to date.', s: 14, lh: 1.4)
+                      ? const T('Your rank is strong on everything that counts. Keep replying and keeping beds up to date.', s: 14, lh: 1.4)
                       : Rich([sp(context, 'To rank higher: ', w: 800), sp(context, '${tips.join(', ')}.')], s: 14, lh: 1.4),
                 ),
                 Container(
@@ -493,7 +492,7 @@ class RankSheet extends StatelessWidget {
       child: VGap(
         gap: 10,
         children: [
-          T('Hostels are ranked by what residents and Hostelzy can check, never by who pays.', s: 14, lh: 1.45),
+          const T('Hostels are ranked by what residents and Hostelzy can check, never by who pays.', s: 14, lh: 1.45),
           for (final k in rankWeights.keys) Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(rankLabel[k]!, s: 14), T('${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)]),
           T('Reviews count only from residents with a confirmed stay. Fair Play strikes lower the rank.', s: 12, c: p.mu, lh: 1.4),
           // F24 item 20 (DECISIONS F10): the 80+ bed plan's featured spot, said plainly.

@@ -47,6 +47,7 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 /// The server, whose live rows fail until [ok].
 class _Flaky extends SampleRepo {
   bool ok = false;
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   bool get remote => true;

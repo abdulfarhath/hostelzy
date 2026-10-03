@@ -190,7 +190,7 @@ void main() {
     s.update(() => s.rvStars = 4);
     server.failWith = 'reviews open after 30 days of your stay, on 21 Oct';
     s.postReview();
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect(s.toast, 'Reviews open after 30 days of your stay.');
     s.stopLive();
     s.dispose();
@@ -213,7 +213,7 @@ void main() {
       s.rvLayout = 'No';
     });
     await _tap(tester, find.text('Save changes'));
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     await tester.pump();
     expect(server.calls, contains('edit r1 4 Beds are not where the map says No'));
     expect(server.calls.where((c) => c.startsWith('post')), isEmpty);
@@ -224,7 +224,7 @@ void main() {
     await tester.runAsync(() => s.refreshListings());
     s.update(() => s.rvStars = 5);
     s.postReview();
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect(s.toast, 'You already reviewed this stay. Open your review to change it.');
     s.stopLive();
     s.dispose();

@@ -926,6 +926,8 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Stream<String> changes() {
+    // The listener cancelling removes the channel.
+    // ignore: close_sinks
     final out = StreamController<String>();
     var ch = db.channel('hz-live');
     for (final t in liveTables) {

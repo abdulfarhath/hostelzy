@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../data.dart';
 import '../app_config.dart';
+import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
@@ -326,7 +326,7 @@ class RoleScreen extends StatelessWidget {
             child: Row(
               children: [
                 if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)],
-                Expanded(child: PageHead(kicker: s.meFirst.isEmpty ? 'Welcome' : 'Welcome, ${s.meFirst}', title: 'What brings you here?', size: 30, gap: 2)),
+                Expanded(child: PageHead(kicker: s.meFirst.isEmpty ? 'Welcome' : 'Welcome, ${s.meFirst}', title: 'What brings you here?', gap: 2)),
               ],
             ),
           ),
@@ -378,7 +378,7 @@ class RoleGateScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: owner ? 'I run a PG' : 'I live in a PG', title: owner ? 'List your PG' : 'Join your PG', size: 30, gap: 2))],
+        children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: owner ? 'I run a PG' : 'I live in a PG', title: owner ? 'List your PG' : 'Join your PG', gap: 2))],
       ),
     );
     final List<Widget> body;
@@ -402,7 +402,7 @@ class RoleGateScreen extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: box(w: 2, c: p.tx),
           child: VGap(gap: 8, children: [
-            T('Your owner link from Hostelzy', w: 800, s: 15),
+            const T('Your owner link from Hostelzy', w: 800, s: 15),
             T('Sign in once with it and your PG opens here, set up the way we did it on the visit.', s: 13, c: p.mu, lh: 1.4),
             Cta(s.joining ? 'Linking…' : 'Run my PG on Hostelzy', key: const ValueKey('ownerJoinGo'), height: 50, px: 14, fs: 15, onTap: s.joinInvite),
           ]),
@@ -558,7 +558,7 @@ class ScanScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Join your PG', title: 'Scan the QR', size: 30, gap: 2))],
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Join your PG', title: 'Scan the QR', gap: 2))],
           ),
         ),
         Expanded(

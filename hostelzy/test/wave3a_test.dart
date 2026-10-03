@@ -44,6 +44,7 @@ class _Server extends SampleRepo {
   final bool manager;
   Map<String, HostelFlags> serverFlags = {};
   Object? ratesError;
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   bool get remote => true;

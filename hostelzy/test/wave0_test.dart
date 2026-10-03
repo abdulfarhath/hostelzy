@@ -36,6 +36,7 @@ Future<void> _pump(WidgetTester tester, AppState state) async {
 class _Server extends SampleRepo {
   final names = <String>[];
   bool fail = false;
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   bool get remote => true;
@@ -107,7 +108,7 @@ void main() {
   });
 
   testWidgets('deal headline = 6-month saving with its parts, from the real deals', (tester) async {
-    const t = Terms(advance: 5000, maintenance: 1000);
+    const t = Terms(advance: 5000);
     expect(dealHeadline(DealQuote(t, 8000, const {})), isNull);
     expect(dealHeadline(DealQuote(t, 8000, const {'advance', 'monthly'})), ('Save ₹1,200 in 6 months', '₹1,000 off the advance + ₹200 off every month'));
     expect(dealHeadline(DealQuote(t, 8000, const {'advance'})), ('₹1,000 less upfront', '₹1,000 off the advance'));

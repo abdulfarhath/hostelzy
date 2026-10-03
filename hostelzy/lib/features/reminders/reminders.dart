@@ -30,9 +30,6 @@ mixin _RemindersData {
 /// Quick add: name and a sensible time.
 const quickRems = [('Medicine', 'Take medicine', 21 * 60), ('Lunch', 'Lunch', 13 * 60), ('Walk', 'Go for a walk', 18 * 60 + 30), ('Sleep on time', 'Sleep on time', 22 * 60), ('Call home', 'Call home', 19 * 60)];
 
-/// Water: how often (minutes).
-const waterEvery = [20, 30, 45, 60, 90, 120];
-
 /// A user can keep this many of their own reminders.
 const maxMyRems = 20;
 
@@ -168,7 +165,7 @@ extension RemindersActions on AppState {
 
   Future<void> _reschedule() async {
     await rem.apply(rings);
-    _backupRem();
+    unawaited(_backupRem());
   }
 
   /// Signed in on the server: the settings are backed up on the profile.

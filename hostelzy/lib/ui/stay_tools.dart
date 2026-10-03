@@ -28,7 +28,7 @@ class OwnerMeterScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Rent · $month', title: 'Electricity', size: 30, gap: 2))],
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Rent · $month', title: 'Electricity', gap: 2))],
           ),
         ),
         Expanded(
@@ -81,7 +81,7 @@ class OwnerMeterScreen extends StatelessWidget {
                           label: 'Meter now, room ${r.label}',
                           child: Container(
                             decoration: box(w: 2, c: now.isEmpty ? p.ad : p.tx),
-                            child: Field(key: ValueKey('meter-${r.n}'), value: s.meterNow[r.n] ?? '', numeric: true, border: false, height: 36, fs: 15, w: 800, pad: const EdgeInsets.symmetric(horizontal: 8), onChanged: (v) => s.update(() => s.meterNow = {...s.meterNow, r.n: v})),
+                            child: Field(key: ValueKey('meter-${r.n}'), value: s.meterNow[r.n] ?? '', numeric: true, border: false, height: 36, w: 800, pad: const EdgeInsets.symmetric(horizontal: 8), onChanged: (v) => s.update(() => s.meterNow = {...s.meterNow, r.n: v})),
                           ),
                         ),
                         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [T(top, w: 800, s: 14, align: TextAlign.right), if (sub.isNotEmpty) T(sub, s: 12, c: p.mu, align: TextAlign.right)]),
@@ -195,7 +195,7 @@ class LaundrySheet extends StatelessWidget {
             ],
           ),
           const T('Machine free', w: 800, s: 13),
-          Seg(opts: [for (final x in laundrySlots) (x, x)], cur: s.laundrySlotDraft, onPick: (v) => s.update(() => s.laundrySlotDraft = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), fs: 13, center: true),
+          Seg(opts: [for (final x in laundrySlots) (x, x)], cur: s.laundrySlotDraft, onPick: (v) => s.update(() => s.laundrySlotDraft = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), center: true),
           T('Residents who turn on the Laundry reminder get it at 8 pm the evening before.', s: 13, c: p.mu, lh: 1.45),
           Cta('Save laundry day', key: const ValueKey('laundrySave'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveLaundry),
         ],

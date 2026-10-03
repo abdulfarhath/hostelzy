@@ -123,7 +123,7 @@ extension OnPhoneActions on AppState {
     'rem': remJson(),
     // F18 (F5): the owner's house rules stay on the phone; a menu only until it is saved.
     'rules': [for (final r in rules) [r.k, r.v]],
-    if ((menuDirty ? menuDraft : phoneMenu) case final m?) 'menu': [for (final d in m) [d.b, d.l, d.n]],
+    if (menuDirty ? menuDraft : phoneMenu case final m?) 'menu': [for (final d in m) [d.b, d.l, d.n]],
     // F19: layout fix drafts stay on this phone until they are sent.
     'fixDrafts': {
       for (final e in fixDrafts.entries) e.key: layoutJson(e.value),

@@ -46,7 +46,7 @@ class ResidentHomeScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: PageHead(kicker: st == null ? 'Your stay' : s.stayLine, title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}', size: 30)),
+                Expanded(child: PageHead(kicker: st == null ? 'Your stay' : s.stayLine, title: s.meFirst.isEmpty ? 'Hello' : 'Hello, ${s.meFirst}')),
                 const SizedBox(width: 12),
                 Tap(onTap: () => s.tab('me'), child: Container(width: 44, height: 44, color: p.ac, alignment: Alignment.center, child: s.meName.isEmpty ? Ic('user', size: 20, color: p.ai) : T(initials(s.meName), w: 800, s: 15, c: p.ai))),
               ],
@@ -719,7 +719,6 @@ class HelpScreen extends StatelessWidget {
                       return Container(
                         color: fresh ? p.sf : null,
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: null,
                         child: VGap(
                           gap: 4,
                           children: [
@@ -996,7 +995,7 @@ class MoveScreen extends StatelessWidget {
         ],
       );
       // F08: exit review with the advance check.
-      bar = OutlineCta(s.myReview('exit') != null ? 'Change your exit review' : 'Review your stay', icon: 'star', height: 52, fs: 14, onTap: s.openExitReview);
+      bar = OutlineCta(s.myReview('exit') != null ? 'Change your exit review' : 'Review your stay', icon: 'star', fs: 14, onTap: s.openExitReview);
     } else {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -38,9 +38,6 @@ mixin _RoomLayoutsData {
   /// ready" for, and whether the server's list was loaded this session.
   final Set<String> layoutWaitSet = {};
   bool layoutWaitsLoaded = false;
-
-  /// Admin editor: the selected AC unit's properties.
-  final Map<String, String> acProps = {'Wall': 'Right', 'Blows': 'Left', 'Reach': '8 ft', 'Status': 'Working'};
 }
 
 extension RoomLayoutsActions on AppState {

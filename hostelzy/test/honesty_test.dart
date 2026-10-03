@@ -35,6 +35,7 @@ Future<void> _pump(WidgetTester tester, AppState state) async {
 class _Server extends SampleRepo {
   final calls = <String>[];
   final payments = <Map<String, dynamic>>[];
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   bool get remote => true;

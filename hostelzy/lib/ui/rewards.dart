@@ -166,7 +166,6 @@ class MoveInScreen extends StatelessWidget {
     Widget line(String k, String v, {Color? bg, Color? fg, bool bold = false}) => Container(
       color: bg,
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: null,
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(k, s: 14, w: bold ? 800 : 400, c: fg ?? p.mu), T(v, s: 14, w: 800, c: fg)]),
     );
     return Column(

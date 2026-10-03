@@ -2,18 +2,18 @@ import 'package:flutter/foundation.dart' show mergeSort;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../data.dart';
 import '../app_config.dart' show inviteLink, shortLink;
+import '../data.dart';
+import '../reminders.dart' show clock;
 import '../state.dart';
 import 'common.dart';
 import 'deals.dart';
 import 'kit.dart';
 import 'layout.dart' show ConfirmLayoutsCard;
 import 'layout_fixes.dart' show FixPhotoThumb;
+import 'onboarding.dart';
 import 'payments.dart';
 import 'plan.dart';
-import '../reminders.dart' show clock;
-import 'onboarding.dart';
 import 'stay_tools.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
@@ -50,10 +50,6 @@ List<HoldRequest> allRequests(AppState s) => [
         : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
   if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
 ];
-
-/// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
-/// only as a section (false, the approved default).
-const enquiriesTile = false;
 
 class OwnerTodayScreen extends StatelessWidget {
   const OwnerTodayScreen({super.key});
@@ -213,7 +209,7 @@ class NeedsYouNow extends StatelessWidget {
               ? [('Got it', 'check', () => s.ackQuickFix(f, true)), ('Not right', 'x', () => s.ackQuickFix(f, false))]
               : [('Compare', 'arrow', () => s.openFix(f))],
           badge: null,
-          extra: f.photo != null ? FixPhotoThumb(f, size: 96) : null,
+          extra: f.photo != null ? FixPhotoThumb(f) : null,
         ),
       // F24: notices and moves from residents, waiting for an answer.
       for (final m in s.openMoves)
@@ -284,7 +280,7 @@ class NeedsYouNow extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 T(it.title, w: 800, s: 15),
-                                if (it.badge != null) Padding(padding: const EdgeInsets.symmetric(vertical: 3), child: Align(alignment: Alignment.centerLeft, child: it.badge!)),
+                                if (it.badge != null) Padding(padding: const EdgeInsets.symmetric(vertical: 3), child: Align(alignment: Alignment.centerLeft, child: it.badge)),
                                 T(it.sub, s: 12, c: p.mu, lh: 1.35),
                               ],
                             ),
@@ -715,7 +711,6 @@ class OwnerRentScreen extends StatelessWidget {
             cur: s.rentF,
             onPick: (v) => s.update(() => s.rentF = v),
             pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-            fs: 13,
             center: true,
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
           ),
@@ -801,7 +796,7 @@ class OwnerManageScreen extends StatelessWidget {
               children: [
                 BackBtn(key: const ValueKey('manageBack'), onTap: () => s.update(() => s.moreTab = 'home')),
                 const SizedBox(width: 12),
-                Expanded(child: PageHead(kicker: '${hostelById(s.ownHid).name} · Manage', title: titles[s.moreTab] ?? 'Manage', size: 30, gap: 2)),
+                Expanded(child: PageHead(kicker: '${hostelById(s.ownHid).name} · Manage', title: titles[s.moreTab] ?? 'Manage', gap: 2)),
               ],
             ),
           ),
@@ -1336,7 +1331,7 @@ class OwnerInviteScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(code, w: 800, s: 32, ls: .04, mono: false)),
+                                    FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: T(code, w: 800, s: 32, ls: .04)),
                                     const SizedBox(height: 4),
                                     T('Residents scan or type this code, sign in, and you approve them.', s: 14, c: p.mu, lh: 1.4),
                                     const SizedBox(height: 4),
@@ -1450,7 +1445,7 @@ class RateCard extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-          child: Css(s: 13, c: p.mu, child: Row(children: const [Expanded(child: T('Room type')), SizedBox(width: 10), SizedBox(width: priceW, child: T('Walk-in')), SizedBox(width: 10), SizedBox(width: hzW, child: T('Hostelzy'))])),
+          child: Css(s: 13, c: p.mu, child: const Row(children: [Expanded(child: T('Room type')), SizedBox(width: 10), SizedBox(width: priceW, child: T('Walk-in')), SizedBox(width: 10), SizedBox(width: hzW, child: T('Hostelzy'))])),
         ),
         Container(
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
@@ -1473,7 +1468,6 @@ class RateCard extends StatelessWidget {
                             child: Field(
                               value: fmt(v),
                               height: 44,
-                              fs: 15,
                               w: 800,
                               pad: const EdgeInsets.symmetric(horizontal: 8),
                               numeric: true,
@@ -1516,8 +1510,8 @@ class RateCard extends StatelessWidget {
         Tap(
           key: const ValueKey('roomsFloors'),
           onTap: () => s.go('oRooms'),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Align(alignment: Alignment.centerLeft, child: T('Rooms and floors ›', s: 14, w: 800)),
           ),
         ),
@@ -1525,7 +1519,6 @@ class RateCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(child: Kicker('AC rooms · Floor ${s.rcFloor}')),
               for (final f in floors)

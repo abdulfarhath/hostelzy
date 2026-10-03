@@ -77,7 +77,7 @@ class FirebasePush implements Push {
   @override
   Future<void> deleteToken() => _m.deleteToken();
   @override
-  void report(Object error, {String? reason}) => FirebaseCrashlytics.instance.recordError(error, StackTrace.current, reason: reason, fatal: false);
+  void report(Object error, {String? reason}) => FirebaseCrashlytics.instance.recordError(error, StackTrace.current, reason: reason);
 
   @override
   Stream<(String, String)> get foreground => FirebaseMessaging.onMessage.where((m) => m.notification != null).map((m) => (m.notification!.title ?? 'Hostelzy', m.notification!.body ?? ''));

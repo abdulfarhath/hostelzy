@@ -185,7 +185,6 @@ class BedLook {
   final Color bg, border, fg;
   final String tag;
   final bool hatch, dashed;
-  bool get transparentBg => bg == transparent;
 }
 
 BedLook bedState(Pal p, String k) => switch (k) {
@@ -219,7 +218,7 @@ class BedBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = PalScope.of(context);
-    Widget inner = Css(c: look.fg, child: child ?? const SizedBox.shrink());
+    final Widget inner = Css(c: look.fg, child: child ?? const SizedBox.shrink());
     Widget w;
     if (look.dashed) {
       w = Dashed(color: look.border, width: borderWidth, bg: look.bg, padding: padding, child: inner);

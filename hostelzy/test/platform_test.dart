@@ -3,13 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:hostelzy/features/listings/cache.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/screens_tenant.dart' show HostelCard;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // F24 items 30 and 31: the last hostels list kept for offline, and the
 // staging label.
