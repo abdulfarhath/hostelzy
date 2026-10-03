@@ -1071,13 +1071,9 @@ class AdminLayoutScreen extends StatelessWidget {
                   if (selItem != null && const ['fan', 'ac', 'window'].contains(selItem.kind))
                     section('Status', [Seg(opts: const [('ok', 'Working'), ('bad', 'Not working')], cur: selItem.working ? 'ok' : 'bad', onPick: (v) => s.setWorking(l, selItem, v == 'ok'), center: true)]),
                   section('Room size · ${l.w.round()} × ${l.h.round()} ft${l.outline == null ? '' : ' · ${l.shape}'}', [
-                    Row(
-                      children: [
-                        Expanded(child: Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1', key: const ValueKey('w-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1', key: const ValueKey('w+'))])),
-                        const SizedBox(width: 16),
-                        Expanded(child: Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1', key: const ValueKey('h-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1', key: const ValueKey('h+'))])),
-                      ],
-                    ),
+                    // One row each, so the buttons fit a 390-wide phone.
+                    Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1', key: const ValueKey('w-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1', key: const ValueKey('w+'))]),
+                    Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1', key: const ValueKey('h-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1', key: const ValueKey('h+'))]),
                     Wrap(spacing: 6, runSpacing: 6, children: [
                       ChipBtn(sel != null && sel.startsWith('bed:') && (l.bunks.containsKey(sel.substring(4)) || l.upperOn(sel.substring(4)) != null) ? 'Unstack bunk' : 'Stack as bunk', on: false, onTap: () => s.edBunk(l, room)),
                       ChipBtn('Copy to same rooms', on: false, onTap: () => s.copyToSameRooms(l, room)),
