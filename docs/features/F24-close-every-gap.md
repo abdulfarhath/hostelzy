@@ -145,7 +145,7 @@ the rest are 23 dark copies, the cover and the logo).
 - *For Build (board, app differs):* `w1-dealsPaused`: tenants see no “deals paused” text today, deals just vanish
   (F24 #21 says tenants can read it). `f24-oMeter` footer example should match the resident line
   “Electricity · 70 units ÷ 4 · ₹8/unit”.
-- *Duplicates to merge next pass:* `f19-Console` = `f24-cLayoutFixes`; `room` ≈ `f23-Room`.
+- *Merged (v26):* removed `f19-Console`, `f19-ConsoleDark` (same page as `f24-cLayoutFixes`) and `room` (same screen as `f23-Room`). **236 boards, 212 unique.**
 
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
