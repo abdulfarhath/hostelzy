@@ -493,6 +493,29 @@ const seedMenu = [
   DayMenu('Aloo paratha, curd', 'Chicken biryani or veg biryani', 'Khichdi, pickle'),
 ];
 
+// F24 Wave 4c: meal times on the menu.
+/// The usual meal times (when the owner hasn't set them): start, end.
+const usualMealTimes = {'b': (7 * 60 + 30, 9 * 60 + 30), 'l': (12 * 60 + 30, 14 * 60), 'n': (20 * 60, 22 * 60)};
+
+/// "7:30 – 9:30" like [meals].
+String mealSpan((int, int) t) {
+  String hm(int m) => '${m ~/ 60 % 12 == 0 ? 12 : m ~/ 60 % 12}:${(m % 60).toString().padLeft(2, '0')}';
+  return '${hm(t.$1)} – ${hm(t.$2)}';
+}
+
+/// `menus` time columns: "07:30-09:30" ↔ (450, 570); '' is not set.
+(int, int)? parseMealTime(String? v) {
+  final m = RegExp(r'^(\d{2}):(\d{2})-(\d{2}):(\d{2})$').firstMatch(v ?? '');
+  if (m == null) return null;
+  return (int.parse(m[1]!) * 60 + int.parse(m[2]!), int.parse(m[3]!) * 60 + int.parse(m[4]!));
+}
+
+String mealTimeValue((int, int)? t) {
+  if (t == null) return '';
+  String hm(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+  return '${hm(t.$1)}-${hm(t.$2)}';
+}
+
 const meals = [
   ['b', 'Breakfast', '7:30 – 9:30'],
   ['l', 'Lunch', '12:30 – 2:00'],
@@ -820,6 +843,13 @@ const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh
 // ------------------------------------------------------------ F07 Fair Play
 
 /// Owners' phone numbers: tenants see them only after a hold (DECISIONS).
+/// F24 Wave 4c: an owner's WhatsApp when it isn't their phone number.
+final ownerWhatsApps = <String, String>{};
+
+/// The number WhatsApp links use for a hostel's owner: their WhatsApp, else
+/// their phone ('' when neither is known).
+String ownerWa(String hid) => (ownerWhatsApps[hid] ?? '').isNotEmpty ? ownerWhatsApps[hid]! : ownerPhones[hid] ?? '';
+
 final ownerPhones = <String, String>{'anjani': '9000000101', 'saisri': '9000000102', 'nest42': '9000000103', 'greenview': '9000000104', 'orchid': '9000000105', 'lakshmi': '9000000106'};
 
 /// "98••• •••••"
@@ -1522,6 +1552,7 @@ bool isSeedHostel(String id) => _seedIds.contains(id);
 void resetSampleData() {
   hostels.removeWhere((h) => !_seedIds.contains(h.id));
   ownerPhones.removeWhere((k, _) => !_seedIds.contains(k));
+  ownerWhatsApps.clear();
   liveListings = false;
   livePos.clear();
 }
@@ -1638,6 +1669,16 @@ class HostelDraft {
   final Set<String> sketches = {};
   final List<({String name, String phone, String bed})> residents = [];
   String ownerName = 'Srinivas', ownerPhone = '';
+
+  /// F24 Wave 4c: the owner's WhatsApp when it isn't their phone ('' = same);
+  /// the map pin dropped at the gate (null until then); house rules typed on
+  /// the visit.
+  String ownerWa = '';
+  (double, double)? pin;
+  String visitors = 'Common area only, till 8 pm';
+
+  /// The number the owner chats on.
+  String get ownerChat => ownerWa.length == 10 ? ownerWa : ownerPhone;
   bool ownerVerified = false, fairPlay = false, bedsChecked = false;
 
   /// F24: the draft's id on the server once saved; the owner's one-time code
@@ -1653,6 +1694,8 @@ class HostelDraft {
   HostelDraft.blank() {
     name = '';
     area = '';
+    gate = '';
+    visitors = '';
     amenities = {};
     floors
       ..clear()

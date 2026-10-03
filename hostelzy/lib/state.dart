@@ -282,6 +282,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     final a = m['account'] as Map<String, dynamic>?;
     myName = m['name'] as String? ?? '';
     phone = m['phone'] as String? ?? '';
+    myWa = m['wa'] as String? ?? '';
     role = m['role'] as String? ?? 'tenant';
     theme = m['theme'] as String? ?? 'light';
     lang = m['lang'] as String? ?? 'en';

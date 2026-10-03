@@ -374,6 +374,28 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Screens:** added `oMeter` (screen), `laundry` and `perks` (sheets). Changed: `oRefund` from a screen to a sheet; `rRefund`, `oRent` (Electricity row), `rPay` (meter line), Manage › House rules (Laundry day row), Reminders (Laundry day row), `oCase` (photo), `rewards` (Trusted row), the Trusted badge sheet, role gates (manager join). Removed: none.
 - **Tests:** `test/wave1_test.dart`, `supabase/tests/wave1_test.sql`. Updated: `moves_test` (refund boards), `resident_test` (meter line), `flows_test` (manager toast).
 
+**Wave 4c: the rest of Wave A items 1, 2 and 4.** Branch `feature/f24-wave4c`.
+- **Server** (`20261003090000_f24_wave4c.sql`, FOUNDER-TODO **4zp1**; tests: `supabase/tests/wave4c_test.sql`):
+  - `profiles.whatsapp` (10 digits or empty) and `hostel_leads.owner_whatsapp`. `owner_contacts` now returns `(hostel_id, phone, whatsapp)` to the same people as before: the owner's own WhatsApp, else the team's note, else empty.
+  - `save_hostel` also saves `rules` (house rules) and `amenities` (new `hostels.amenities`) when sent, and the owner's WhatsApp. It refuses a pin outside Hyderabad.
+  - `go_live` also needs the pin: "drop the map pin at the gate".
+  - `menus.breakfast_time / lunch_time / dinner_time` ("07:30-09:30" or empty) and `save_meal_times(hostel, {b, l, n})` for staff or the team: the same times on all 7 days, and each meal must end after it starts.
+- **#1 Owner phone.**
+  - The owner's bed sheet **Message <resident>** opens WhatsApp on the resident's own number (from `stays`), for a taken bed and for one marked leaving.
+  - Settings › You has a **WhatsApp** row for owners ("Same as phone" or the number). It opens the sheet "Your WhatsApp number": **Save WhatsApp number**, and **Use my phone number** to clear it. The number is kept on the profile and on the phone.
+  - Wizard step 6 has "Owner's phone" and "WhatsApp, if different". The sign-in link goes to the WhatsApp number.
+  - Every WhatsApp link to an owner (Message owner, Remind, Talk to, notice, refunds, layout fixes, enquiries, plan reminders) uses `ownerWa(hostel)`: the WhatsApp number, else the phone. **Call** keeps the phone.
+- **#2 Onboard a real hostel.**
+  - Basics: the pin row opens the new screen **Map pin** (`aPin`). The pin stays in the middle and the map moves under it. **Use my location** asks for an exact GPS fix at the gate.
+  - **Save pin** works only after the team moved the map or used their location, so a hostel is never saved on its area's centre. The draft sends only that pin, and the go-live row reads "Map pin dropped at the gate" with its coordinates.
+  - Basics also has **Visitors**. The gate time and visitors go up as the hostel's house rules, the rest from the rate card's terms. Every amenity picked is saved (all in `tags`, plus `amenities`), not just three. A real draft starts with no gate time or visitors.
+  - Console › Hostels › **Go live** calls `go_live()`, so it gets the checklist and the 30-day trial. The server's reason shows as "Not live yet: add 8 photos first." Pause is unchanged.
+- **#4 Meal times.**
+  - Owner Food menu has a **Meal times** box. When none are set it reads "Not set. Residents' meal reminders use the usual times…", with **Set meal times**. Once set, each meal has start and end steppers (15 minutes) and a **Use the usual times** link. They save with **Save menu**. Before 4zp1 runs, the menu saves and the toast says the times save after the server update.
+  - Residents' meal reminders ring at the menu's start times, and "served till" uses its end times. A meal with no time keeps the usual one. Reminders › Meal times reads "From the food menu · …", or "Usual times, the menu has none yet · …". The times shown in Food, on Home and in the tenant's food peek and week sheet follow the menu too.
+- **#3 leftover:** none. No "Hostelzy draws its layout" toast is left (Wave 0 removed it; `wave0_test` checks it).
+- **Screens:** added `aPin` (screen) and `waNum` (sheet). Changed: `aAdd` step 1 (Visitors field, pin row opens `aPin`), `aAdd` step 6 (WhatsApp, if different), `aAdd` step 7 (pin row), `settings` (owner WhatsApp row), owner Food menu (Meal times box), owner bed sheet (Message resident with the number), Reminders (meal line), console Hostels (Go live). Removed: none.
+- **Tests:** `test/wave4c_test.dart`, `supabase/tests/wave4c_test.sql`, console `goLiveWords` test. Updated: `onboard_test.sql` (sends a pin), `team_app_test`, `flows_test` and `onboard_test` (the pin screen), `owner_phone_test` (contacts with WhatsApp).
 **Wave 4b: F12 women's PG floor + one editor at a time, F14 scan the invite QR, #27 "Tell me when it's ready", brand push icon + dark splash.** Branch `feature/f24-wave4b`.
 - **Server** (`20261003070000_f24_wave4b.sql`, FOUNDER-TODO **4zs1**; tests: `supabase/tests/wave4b_test.sql`):
   - `sees_floor(h)`: the hostel's staff, the team, its residents, and a tenant with a hold there (asked, held or booked). The "read published layouts" policy now also needs it for a **Women** PG, so nobody else can list all its rooms (DECISIONS F12: whole-floor plans only after a hold).

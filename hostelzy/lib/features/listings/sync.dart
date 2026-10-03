@@ -109,7 +109,14 @@ extension SyncActions on AppState {
     if (ask.isEmpty || !data.remote) return;
     try {
       final got = await data.ownerContacts(ask);
-      if (got.isNotEmpty) update(() => ownerPhones.addAll(got));
+      if (got.isNotEmpty) {
+        update(() {
+          for (final e in got.entries) {
+            if (e.value.phone.isNotEmpty) ownerPhones[e.key] = e.value.phone;
+            if (e.value.wa.isNotEmpty) ownerWhatsApps[e.key] = e.value.wa;
+          }
+        });
+      }
     } catch (e) {
       debugPrint('owner phone: $e');
     }
@@ -187,7 +194,7 @@ extension SyncActions on AppState {
     update(() {
       sheet = 'wa';
       waTo = hostelById(hid).owner;
-      waPhone = ownerPhones[hid] ?? '';
+      waPhone = ownerWa(hid);
       waMsg = body;
       waRef = ref;
       waHid = hid;

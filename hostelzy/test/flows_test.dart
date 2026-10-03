@@ -1037,7 +1037,9 @@ void main() {
     await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
     expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
-    await tap(tester, find.text('Map pin · check it at the gate'));
+    await tap(tester, find.text('Map pin · drop it at the gate'));
+    s.pinPanned((17.4622, 78.3568));
+    await tap(tester, find.byKey(const ValueKey('pinSave')));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
 
@@ -3707,7 +3709,7 @@ class _FakeLocator implements Locator {
   final LocateFail? fail;
   int asked = 0;
   @override
-  Future<((double, double)?, LocateFail?)> locate() async {
+  Future<((double, double)?, LocateFail?)> locate({bool exact = false}) async {
     asked++;
     return (pos, fail);
   }
