@@ -122,8 +122,10 @@ class OwnerLayoutsScreen extends StatelessWidget {
 
     ({String label, Color bg, Color fg}) state(int n) {
       final l = s.layoutOf(h.id, n);
+      // F24: an "Ask Hostelzy to draw it" request, or its drawing back.
+      final q = s.shapeReqFor(h.id, n);
+      if (q != null) return q.status == 'sent' ? (label: 'Drawn · publish it', bg: p.tx, fg: p.bg) : (label: 'Help requested', bg: p.ab, fg: p.ad);
       if (l == null) return (label: 'No layout', bg: p.ab, fg: p.ad);
-      if (l.request != null) return (label: 'Help requested', bg: p.ab, fg: p.ad);
       if (l.disputes > 0) return (label: 'Resident: not accurate', bg: p.ab, fg: p.ad);
       if (kind(n) == 'draft') return (label: 'Draft', bg: transparent, fg: p.tx);
       return (label: 'Live', bg: p.tx, fg: p.bg);

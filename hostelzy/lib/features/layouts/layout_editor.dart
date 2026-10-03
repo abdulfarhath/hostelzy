@@ -34,25 +34,27 @@ extension LayoutEditorActions on AppState {
   }
 
   /// Move the selected thing so its top-left is [to] (feet), on the 1-ft
-  /// grid and inside the room.
-  void _place(RoomLayout l, Offset to) {
+  /// grid and inside the room. F24: never outside the room's shape (false).
+  bool _place(RoomLayout l, Offset to) {
     final r = _selRect(l);
-    if (r == null) return;
+    if (r == null) return false;
     final x = to.dx.roundToDouble().clamp(0, l.w - r.width).toDouble();
     final y = to.dy.roundToDouble().clamp(0, l.h - r.height).toDouble();
     final id = edSel!;
-    if (id.startsWith('bed:')) {
+    final item = id.startsWith('bed:') ? null : l.items.firstWhere((i) => i.id == id);
+    if (!l.fits(Rect.fromLTWH(x, y, r.width, r.height), onWall: item != null && const ['window', 'door', 'ac'].contains(item.kind))) return false;
+    if (item == null) {
       // A bunk bed moves as one: both beds share the spot.
       final b = l.bunks[id.substring(4)] ?? id.substring(4);
       l.beds[b] = Offset(x, y);
       final up = l.upperOn(b);
       if (up != null) l.beds[up] = Offset(x, y);
     } else {
-      final i = l.items.firstWhere((i) => i.id == id);
-      i
+      item
         ..x = x
         ..y = y;
     }
+    return true;
   }
 
   /// Drag from the editor map: [d] in feet since the last update.
@@ -75,16 +77,22 @@ extension LayoutEditorActions on AppState {
     final r = _selRect(l);
     if (r == null) return toastMsg('Tap a bed or an item first.');
     _remember(l);
-    update(() => _place(l, r.topLeft + Offset(dx, dy)));
+    var ok = true;
+    update(() => ok = _place(l, r.topLeft + Offset(dx, dy)));
+    if (!ok) toastMsg('That’s outside the walls.');
   }
 
   void edAdd(RoomLayout l, Room room, String kind) {
     if (kind == 'bed') {
       final missing = room.beds.map((b) => b.letter).where((x) => !l.beds.containsKey(x)).firstOrNull;
       if (missing == null) return toastMsg('All ${room.share} beds are placed. A new bed changes the sharing: the owner confirms the price first.');
+      final at = Offset(((l.w - bedW) / 2).roundToDouble(), ((l.h - bedH) / 2).roundToDouble());
+      // F24: a shaped room puts it at the nearest free spot inside the walls.
+      final spot = l.fits(at & const Size(bedW, bedH)) ? at : l.nearestFit(at, const Size(bedW, bedH), avoid: [for (final k in l.beds.keys) l.bedRect(k)]);
+      if (spot == null) return toastMsg('No room left for another bed inside the walls.');
       _remember(l);
       update(() {
-        l.beds[missing] = Offset(((l.w - bedW) / 2).roundToDouble(), ((l.h - bedH) / 2).roundToDouble());
+        l.beds[missing] = spot;
         edSel = 'bed:$missing';
       });
       return;
@@ -102,9 +110,12 @@ extension LayoutEditorActions on AppState {
       'pillar' => (1.5, 1.5, ((l.w - 1.5) / 2).roundToDouble(), ((l.h - 1.5) / 2).roundToDouble()),
       _ => (1.0, 1.0, (l.w / 2).roundToDouble(), (l.h / 2).roundToDouble()),
     };
+    final wall = const ['window', 'door', 'ac'].contains(kind);
+    final spot = l.fits(Rect.fromLTWH(x, y, w, h), onWall: wall) ? Offset(x, y) : l.nearestFit(Offset(x, y), Size(w, h), onWall: wall);
+    if (spot == null) return toastMsg('It doesn’t fit inside the walls.');
     _remember(l);
     update(() {
-      l.items.add(LItem(id, kind, x, y, w, h, facing: kind == 'window' ? 'street' : null));
+      l.items.add(LItem(id, kind, spot.dx, spot.dy, w, h, facing: kind == 'window' ? 'street' : null));
       edSel = id;
     });
   }
@@ -164,6 +175,8 @@ extension LayoutEditorActions on AppState {
           ..x = i.x.clamp(0, math.max(0, l.w - i.w)).toDouble()
           ..y = i.y.clamp(0, math.max(0, l.h - i.h)).toDouble();
       }
+      // F24: a shaped room keeps it inside the walls.
+      if (l.outline != null) l.fitInside();
     });
   }
 
@@ -188,6 +201,12 @@ extension LayoutEditorActions on AppState {
       for (final k in l.beds.keys.toList()) {
         final b = l.beds[k]!;
         l.beds[k] = Offset(b.dx.clamp(0, w - bedW).toDouble(), b.dy.clamp(0, h - bedH).toDouble());
+      }
+      // F24: the shape grows with the room; things stay inside its walls.
+      final o = l.outline;
+      if (o != null) {
+        l.outline = shapeOutline(l.shape, w, h) ?? [for (final p in o) Offset((p.dx * w / oldW * 2).roundToDouble() / 2, (p.dy * h / oldH * 2).roundToDouble() / 2)];
+        l.fitInside();
       }
     });
   }
@@ -265,14 +284,37 @@ extension LayoutEditorActions on AppState {
     update(() => l.mirror(vertical: vertical));
   }
 
-  /// Admin: send the new version to the owner for approval.
+  /// Admin: send the new version to the owner for approval. F24: when the
+  /// owner asked Hostelzy to draw this room, the drawing answers that request
+  /// (the owner publishes it from Room layouts; tenants keep the live one).
   void sendLayoutToOwner(RoomLayout l) {
+    final req = shapeReqFor(l.hid, l.room);
+    if (req != null && req.status != 'sent') {
+      final drawing = layoutJson(l.snap());
+      if (onServer) {
+        _write(() => data.sendShapeDrawing(req.id, drawing)).then((ok) {
+          if (ok) loadShapeRequests(l.hid);
+        });
+      }
+      update(() {
+        req
+          ..status = 'sent'
+          ..drawing = drawing
+          ..sentAt = DateTime.now().millisecondsSinceEpoch;
+        final live = l.published;
+        if (live != null) {
+          l
+            ..restore(live)
+            ..published = null;
+        }
+      });
+      return toastMsg('Sent to ${hostelById(l.hid).owner}. They check it and publish.');
+    }
     update(() {
       l
         ..version += l.pending ? 0 : 1
         ..pending = true
-        ..drawn = dayMon(appToday)
-        ..request = null;
+        ..drawn = dayMon(appToday);
     });
     toastMsg('v${l.version} is waiting for ${hostelById(l.hid).owner}’s approval.');
   }
