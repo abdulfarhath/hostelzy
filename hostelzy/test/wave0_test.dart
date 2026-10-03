@@ -138,7 +138,17 @@ void main() {
   });
 
   testWidgets('real build: the AC repair note has no invented date', (tester) async {
-    for (final f in ['lib/ui/screens_tenant.dart', 'lib/ui/layout.dart']) {
+    for (final f in [
+      // Was lib/ui/screens_tenant.dart and lib/ui/layout.dart.
+      'lib/features/explore/explore_screen.dart',
+      'lib/features/explore/hostel_screen.dart',
+      'lib/features/holds/holds_screens.dart',
+      'lib/features/holds/picker_screen.dart',
+      'lib/features/session/me_screen.dart',
+      'lib/features/layouts/layout_map.dart',
+      'lib/features/layouts/owner_layout_screens.dart',
+      'lib/features/layouts/admin_layout_screen.dart',
+    ]) {
       expect(File(f).readAsStringSync().contains('Complaint raised 30 Sep'), isFalse, reason: f);
     }
   });
