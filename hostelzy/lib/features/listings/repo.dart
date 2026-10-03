@@ -17,7 +17,7 @@ import 'live.dart';
 
 /// Live hostels with their rooms, beds and rate cards.
 /// Published room layouts come too, for signed-in users (RLS: women's PGs rule).
-typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
+typedef Listings = ({List<Hostel> hostels, Map<String, List<Room>> rooms, Map<String, Map<String, int>> rates, Map<String, (double, double)> pos, Map<String, ({String id, String name})> upi, Map<String, Map<int, RoomLayout>> layouts, Map<String, Deals> deals, Map<String, List<Rule>> rules, Map<String, List<Review>> reviews, Map<String, int> strikes, Map<String, Map<int, (int, String)>> checks, Map<String, int> checkers, Map<String, List<Amenity>> amenities, Map<String, Standing> standing});
 
 /// Remote switches (F15): the oldest supported build and maintenance mode.
 typedef RemoteSettings = ({int minBuild, String maintenanceUntil});
@@ -273,6 +273,10 @@ abstract class HostelRepo {
   /// server stores its own time) and "All still correct" for the layouts.
   Future<void> confirmBeds(String hid);
   Future<void> confirmLayouts(String hid);
+
+  /// F24 Wave 4d (F03): the owner's "Rates still right" (every rate card of
+  /// the hostel; the server stores its own time). Owner only.
+  Future<void> confirmRates(String hid);
 
   /// F24 item 14: the tenant's "Did you join?" for an ended hold (yes |
   /// not_yet | deciding), and the holds they already answered. Only the
@@ -553,6 +557,8 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmBeds(String hid) async {}
   @override
   Future<void> confirmLayouts(String hid) async {}
+  @override
+  Future<void> confirmRates(String hid) async {}
   @override
   Future<void> answerJoined(String holdId, String answer) async {}
   @override
@@ -961,9 +967,18 @@ class SupabaseRepo implements HostelRepo {
     for (final r in ck.cast<Map>()) {
       (checks[r['hostel_id'] as String] ??= {})[r['room'] as int] = (r['n'] as int, dayMon(DateTime.parse(r['last_at'] as String).toLocal()));
     }
+    // F24 #15: how many different residents checked the hostel's layouts.
+    final checkers = <String, int>{};
+    try {
+      for (final r in (await db.rpc('hostel_layout_checks') as List).cast<Map>()) {
+        checkers[r['hostel_id'] as String] = r['n'] as int;
+      }
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+    }
     // F24 item 30: kept on the phone for the next time there's no network.
     unawaited(saveListingRows(rows));
-    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, standing: standing);
+    return listingsFromRows(rows, strikes: {for (final r in st.cast<Map>()) r['hostel_id'] as String: r['n'] as int}, checks: checks, checkers: checkers, standing: standing);
   }
 
   @override
@@ -1102,6 +1117,8 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<void> confirmLayouts(String hid) => db.rpc('confirm_layouts', params: {'p_hostel': hid});
   @override
+  Future<void> confirmRates(String hid) => db.rpc('confirm_rates', params: {'p_hostel': hid});
+  @override
   Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
   @override
   Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
@@ -1168,7 +1185,7 @@ Lead leadFromRow(Map<String, dynamic> r) {
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
-Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, Standing> standing = const {}}) {
+Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> strikes = const {}, Map<String, Map<int, (int, String)>> checks = const {}, Map<String, int> checkers = const {}, Map<String, Standing> standing = const {}}) {
   final hs = <Hostel>[], rooms = <String, List<Room>>{}, rates = <String, Map<String, int>>{}, pos = <String, (double, double)>{};
   final upi = <String, ({String id, String name})>{};
   final lays = <String, Map<int, RoomLayout>>{};
@@ -1212,7 +1229,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           )..acSince = r['ac_repair_since'] == null ? '' : dayMon(DateTime.parse(r['ac_repair_since'] as String));
         }(),
     ]..sort((a, b) => a.n.compareTo(b.n));
-    final rate = <String, int>{for (final c in (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>()) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    final cards = (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>();
+    final rate = <String, int>{for (final c in cards) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    // F24 Wave 4d: the oldest card's confirmation (a card never confirmed: none).
+    final ratesTracked = cards.isNotEmpty && cards.every((c) => c.containsKey('confirmed_at'));
+    final ratesAt = ratesTracked && cards.every((c) => c['confirmed_at'] != null) ? _latest([for (final c in cards) c['confirmed_at']], oldest: true) : null;
     final prices = [...rate.values, ...rs.map((r) => r.rent)];
     final t = (h['terms'] as Map?)?.cast<String, dynamic>() ?? const {};
     final area = h['area'] as String;
@@ -1248,6 +1269,8 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
         // F24 item 9: the owner's confirmations, from the server.
         bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
         layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),
+        ratesCheckedAt: ratesAt,
+        ratesTracked: ratesTracked,
         visitedOn: h['visited_on'] == null ? '' : () {
           final v = DateTime.parse(h['visited_on'] as String);
           return '${dayMon(v)} ${v.year}';
@@ -1273,7 +1296,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
   final ams = <String, List<Amenity>>{
     for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
   };
-  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams, standing: standing);
+  return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, checkers: checkers, amenities: ams, standing: standing);
 }
 
 /// The newest (or [oldest]) of some timestamps; null when there are none.

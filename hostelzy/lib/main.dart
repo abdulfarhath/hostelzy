@@ -126,7 +126,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
             state.cachedAt = c.at;
           });
         } else {
-          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, amenities: const {}, standing: const {}));
+          state.applyListings((hostels: const [], rooms: const {}, rates: const {}, pos: const {}, upi: const {}, layouts: const {}, deals: const {}, rules: const {}, reviews: const {}, strikes: const {}, checks: const {}, checkers: const {}, amenities: const {}, standing: const {}));
           state.update(() => state.listState = 'offline');
         }
       }

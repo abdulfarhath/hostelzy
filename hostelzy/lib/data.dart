@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = '', this.bedsCheckedAt, this.layoutsCheckedAt});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = '', this.bedsCheckedAt, this.layoutsCheckedAt, this.ratesCheckedAt, this.ratesTracked = false});
   final String id, name, gender, area, owner;
 
   /// F24: false for a draft the team is still onboarding (never in Explore);
@@ -17,6 +17,12 @@ class Hostel {
   /// the server) and the oldest published layout's last "All still correct";
   /// null when unknown (sample data, never confirmed).
   final DateTime? bedsCheckedAt, layoutsCheckedAt;
+
+  /// F24 Wave 4d (F03): the oldest rate card's "confirmed by the owner" time
+  /// on the server; null when unknown. [ratesTracked]: the server keeps it
+  /// (SQL 4zd1 ran), so a null means the owner never confirmed.
+  final DateTime? ratesCheckedAt;
+  final bool ratesTracked;
   final int from, reviews, reply;
   final double rating;
   final bool food, ac, instant;
@@ -1584,6 +1590,13 @@ const confirmEveryDays = 3, staleAfterDays = 7;
 /// every 3 months).
 const seedLayoutConfirmed = {'anjani': 92, 'saisri': 20, 'nest42': 40, 'orchid': 10};
 const layoutConfirmEvery = 90;
+
+/// F03: rates are confirmed by the owner monthly. Owner Today asks from 30
+/// days; after 31 days tenants see "Not confirmed in over a month".
+const ratesConfirmEvery = 30, ratesStaleAfterDays = 31;
+
+/// Days since each sample owner last confirmed their rates (demo only).
+const seedRatesConfirmed = {'anjani': 12, 'saisri': 4, 'nest42': 20, 'greenview': 40, 'orchid': 9, 'lakshmi': 2};
 
 const seedConfirmed = {'anjani': 3, 'saisri': 1, 'nest42': 0, 'greenview': 9, 'orchid': 2, 'lakshmi': 5};
 

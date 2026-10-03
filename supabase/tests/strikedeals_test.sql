@@ -31,6 +31,16 @@ update public.strikes set created_at = created_at - interval '31 days' where hos
 select test.act('authenticated', 'fb-sd-tenant');
 select test.rows($$select count(*) from public.deals where hostel_id = 'a9900000-0000-0000-0000-000000000001'$$, 1);
 
+-- F24 #15: distinct residents per hostel (one resident checking two rooms counts once).
+reset role;
+insert into public.layout_fixes (hostel_id, room, author_id, layout, status, decided_at) values
+  ('a9900000-0000-0000-0000-000000000001', 101, 'fb-sd-res1', '{}', 'approved', now()),
+  ('a9900000-0000-0000-0000-000000000001', 102, 'fb-sd-res1', '{}', 'approved', now()),
+  ('a9900000-0000-0000-0000-000000000001', 102, 'fb-sd-res2', '{}', 'approved', now()),
+  ('a9900000-0000-0000-0000-000000000001', 103, 'fb-sd-res3', '{}', 'rejected', now());
+select test.act('anon', null);
+select test.eq((select n::text from public.hostel_layout_checks() where hostel_id = 'a9900000-0000-0000-0000-000000000001'), '2');
+
 reset role;
 \o
 select 'ALL STRIKE DEALS TESTS PASSED';

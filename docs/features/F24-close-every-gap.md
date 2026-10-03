@@ -113,6 +113,38 @@ SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · T
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
 
 ## Build
+### Status after 3 Oct 2026 (Build): every item built
+| # | Done in | Notes |
+|---|---|---|
+| 1 | #78, #90 | Owner's number after a hold; owner WhatsApp; "Message resident" uses the real number |
+| 2, 3 | #79, #90 | Real map pin, console Go live through `go_live()`, wizard rules/amenities saved |
+| 4 | #77, #90 | Meal times from the menu |
+| 5, 6 | #81 | |
+| 7, 8, 22, 29 | #83 | |
+| 9, 13, 14 | #86 | |
+| 10, 11 | #84 | |
+| 12, 23, 28 | #82 | 6-month headline counts monthly savings, not the (refunded) lower advance |
+| 15 | #93 | "Layouts checked by N residents" on the hostel page |
+| 16, 25, 26, 18 (case photo) | #85 | Trusted "lower-advance deals" left out: no such deal exists |
+| 17, 19, 20, 21 | #87 | Founding-hostel featured spot waits for the founder (Q6) |
+| 18 | #91, #93 | #93: strike 2 hides deals on the server too |
+| 24 | #77 | |
+| 27 | #89 | |
+| 30, 31 | #80 | Founder: 6a–6c |
+| Audit §3 | #88 (F05/F08/F13 S4), #89 (F12, F14 QR, brand), #92 (F03) | Skipped: partner pay (founder amount), "Founder to confirm" items |
+
+**Founder:** run the SQL steps in `docs/FOUNDER-TODO.md` in the listed order (4y, 4z, then 4zk → 4zc).
+**Design:** boards to add for screens Build added: Settings `name` sheet, `waNum` sheet, Owner only screen,
+`revReport` sheet, console Reported reviews, `aPin`, `scan` + `scanCam`, `oMeter`, `laundry` + `perks` sheets,
+owner Today "Are your rates still right?" card; and the "App state, no board" list in the audit §2.
+
+**Cleanup (#93).** Branch `feature/f24-cleanup`.
+- `20261003110000_f24_strike_deals.sql` (FOUNDER-TODO **4zc**): the deals read policy also leaves out hostels
+  whose deals strike 2 hides (`deals_hidden`), so tenants can't read them on the server; owner, managers and team still can.
+  New `hostel_layout_checks()`: distinct residents with an approved layout fix in 6 months, per hostel.
+- App: hostel page shows "Layouts checked by N residents" (item 15) under the availability line; nothing when none.
+- FOUNDER-TODO: all F24 SQL steps listed in the order to run them (file-name order).
+- Tests: `supabase/tests/strikedeals_test.sql`, `hostelzy/test/checked_test.dart`.
 **Wave A item 4: food menu, plus item 24 and dead code.** Branch `feature/food-menu-live`.
 - **Menu on the server (`menus`).**
   - The owner opens Manage › Food menu. It loads that hostel's week and starts empty: the sample week only appears in demo builds.
@@ -470,3 +502,15 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **SQL:** `20261003080000_f24_fair_play.sql` (FOUNDER-TODO **4zf1**). Test: `supabase/tests/fairhard_test.sql`.
 - **Screens:** none added or removed. Changed: sheet `addR` (Add resident: "Lived here before Hostelzy" tick before go-live), `oToday` Fair Play card (deals hidden until / back since), `oStrike` (server dates, deals back, 3-fixes wording), `aCases` (decision words, real "Live since"), console Fair Play `cCases` (case detail, six signals, Tenant reports with Open a case / No case · close, attach tenant's photo, strike button wording).
 - **Tests:** `test/wave3b_test.dart`; console `strikeWords` / `standingLine` / `reportLine` in `supabase/functions/tests/console.test.ts`.
+
+**Wave 4d: F03 gaps (audit §3).** Branch `feature/f24-wave4d`.
+- **"Best deals" sort (F03).** Filters › Sort by now has **Recommended / Nearest / Best deals / Lowest price**, so the owner Deals screen's "find you in Best deals" is true. Best deals orders hostels by the 6-month saving (`DealQuote.save6`, the same number as the Explore ribbon and the hostel page headline, for the AC / Non-AC filter in use), then nearest. A hostel with no deal, deals hidden by 2 strikes (F07) or paused by a 15+ days late plan (Wave 3a `deals_paused`) counts as 0 and sorts last. Featured hostels (Wave 3a) lead only Recommended, never Best deals.
+- **Rates "Confirmed by the owner · date" (F03 rule, DECISIONS F21 one price table).**
+  - Server: `rate_cards.confirmed_at`, stamped with the server's time when a card is added or its rent changes. The owner's **Rates still right** (`confirm_rates(hostel)`) stamps all of them; it is owner (or team) only, like rates since Wave 3a. Saving the same price keeps the old date, and the phone can't set or clear it. Cards from before the SQL stay unconfirmed (null): no date is invented.
+  - Tenant hostel page: under the price table, "**Confirmed by the owner** · 19 Sep" (the oldest card's date), or "**Not confirmed in over a month** · ask the owner before you visit." after 31 days. Nothing when unknown (never confirmed, or before the SQL runs).
+  - Owner Today: **Are your rates still right?** (like the free-beds card): "Last confirmed 25 Aug" (or "Not confirmed yet"), the rate chips ("2 sharing non-AC · ₹8,000"), **Rates still right** and **Change** (opens Manage › Rates). It shows from 30 days, or at once when the server says the rates were never confirmed; never to a manager. Offline it says it couldn't save and stays.
+  - Push: `nudge_rates()` daily at 10:15 India time (pg_cron `hz-rates-nudge`): "Are your rates still right?" to the hostel's owner only when the oldest rate wasn't confirmed for 30 days (or never), at most one every 30 days (`rate_nudges`). `data.kind` = `rates` (not a Settings switch, so always sent), `screen` = `oToday`.
+  - Demo: sample confirm dates per hostel (`seedRatesConfirmed`; Greenview is 40 days old to show the warning).
+- **Server SQL:** `supabase/migrations/20261003100000_f24_rates_confirm.sql` → FOUNDER-TODO **4zd1**. Until it runs, tenants see no date and owners get no card or push; the sort needs no SQL.
+- **Screens:** none added or removed. Changed: Filters sheet (Best deals sort), tenant hostel page (rates confirmed line under the price table), owner Today (new **Are your rates still right?** card, Design to add it to `oTodayCards`).
+- **Tests:** `test/wave4d_test.dart` (6), `supabase/tests/rates_confirm_test.sql`.

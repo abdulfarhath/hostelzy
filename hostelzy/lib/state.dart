@@ -595,6 +595,17 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       } else {
         layoutConfirmed.remove(h.id);
       }
+      // F24 Wave 4d (F03): the rates' last "confirmed by the owner".
+      if (h.ratesCheckedAt != null) {
+        ratesConfirmedAt[h.id] = h.ratesCheckedAt!;
+      } else {
+        ratesConfirmedAt.remove(h.id);
+      }
+      if (h.ratesTracked && h.ratesCheckedAt == null) {
+        ratesNeverConfirmed.add(h.id);
+      } else {
+        ratesNeverConfirmed.remove(h.id);
+      }
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;
@@ -604,6 +615,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
         standing.remove(h.id);
       }
       if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
+      if (l.checkers[h.id] != null) hostelCheckers[h.id] = l.checkers[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
       // F24: "Visited by Hostelzy" is the team's go-live date on the server.
       if (h.visitedOn.isNotEmpty) visited[h.id] = h.visitedOn;

@@ -127,6 +127,7 @@ class OwnerTodayScreen extends StatelessWidget {
           ),
           const FreeBedsCard(),
           const ConfirmLayoutsCard(),
+          const RatesConfirmCard(),
           const SizedBox(height: 20),
         ],
       ),
