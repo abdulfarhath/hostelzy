@@ -226,7 +226,7 @@ class OwnerContact extends StatelessWidget {
               children: [
                 Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(initials(h.owner.isEmpty ? h.name : h.owner), w: 800)),
                 const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T('Usually replies in ~${h.reply} min', s: 12, c: p.mu)])),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T(s.replyMins(h.id) == 0 ? 'Replies through Hostelzy' : 'Usually replies in ~${replyWords(s.replyMins(h.id))}', s: 12, c: p.mu)])),
               ],
             ),
           ),

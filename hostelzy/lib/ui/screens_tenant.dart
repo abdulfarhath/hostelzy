@@ -544,6 +544,8 @@ class MeScreen extends StatelessWidget {
     final nSaved = s.saved.values.where((v) => v).length;
     final rows = <(String, String, VoidCallback)>[
       // F22 Area 2: the resident's stay is one row; its actions live in My stay.
+      // F24: an advance refund still open after moving out.
+      if (s.myRefund case final r?) ('Your refund', '${fmt(r.amt)} · ${r.status == 'sent' ? 'did it arrive?' : r.status == 'not_received' ? 'not received' : 'due ${dayMon(r.due)}'}', s.openMyRefund),
       if (s.role == 'resident') ('My stay', s.myStay == null ? 'Not on Hostelzy yet' : [if (s.myStay!.bed.isNotEmpty) 'Bed ${s.myStay!.bed}', s.stayHostel.name].join(' · '), () => s.go('rStay')),
       if (!isOwner) ('Saved', nSaved == 0 ? 'Nothing yet' : '$nSaved hostel${nSaved == 1 ? '' : 's'}', () => s.go('saved')),
       if (!isOwner) ('Holds', live.isEmpty ? 'None right now' : [if (held > 0) '$held held', if (booked > 0) '$booked booked'].join(' · '), () => s.tab('holds')),
@@ -648,7 +650,7 @@ class DetailScreen extends StatelessWidget {
     final rules = ownRules != null
         ? [
             for (final r in ownRules)
-              if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
+              if (r.v.trim().isNotEmpty && !moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
         : h.id == 'anjani'
@@ -657,6 +659,9 @@ class DetailScreen extends StatelessWidget {
               if (!moneyRules(h).any((m) => m[0] == r.k)) [r.k, r.v],
             ...moneyRules(h),
           ]
+        // F24: a real hostel's page never shows rules its owner didn't add.
+        : !isSeedHostel(h.id)
+        ? moneyRules(h)
         : [
       ['Gate closes', h.gender == 'Women' ? '9:30 pm' : '10:30 pm'],
       ['Visitors', 'Common area, till 8 pm'],

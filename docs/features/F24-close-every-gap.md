@@ -179,3 +179,36 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Drafts never show to tenants.** `Hostel.live` is checked in Explore and in the Where? list. "Visited by Hostelzy" comes from the server.
 - **Owners' room changes** (add room, remove room or floor) save the whole list. If the server says someone is in a room, the change is undone and the toast says which room.
 - **Tests:** `test/onboard_test.dart`. Updated: team_app, flows.
+
+**Wave A item 5: notice, moves, move-out and refunds.** Branch `feature/f24-moveout`.
+- **Server** (`20261002233000_f24_moves.sql`, FOUNDER-TODO **4y**; tests: `supabase/tests/moves_test.sql`):
+  - `give_notice`, `ask_move` (a free bed in the same hostel) and `withdraw_move`, for residents.
+  - `answer_move`: accepting a notice sets "free from <last day>" on the bed. Accepting a move moves the stay to the new bed, with that room's rent.
+  - `mark_leaving` and `moved_out`: the stay ends, the bed is free, and the refund (advance minus what's kept) is due in 7 days.
+  - `send_refund`, which needs the 12-digit UPI ref, and `confirm_refund` ("not received" tells the owner).
+  - Each step pushes to the other side. Stays gain `leaving_on` and the refund columns.
+- **Resident.**
+  - Give notice and Ask to move are saved on the server.
+  - The notice page shows Sent or **Accepted**, and Withdraw works.
+  - The false "Room check with the warden, 10 am" step is gone.
+- **Owner Today.**
+  - "<name> gave notice" and "<name> asks to move to bed X", with Accept and Say no.
+  - "Refund ₹X to <name>" (red when late or not received) opens **oRefund**.
+- **Bed sheet.** "Mark as leaving" is saved. A leaving bed has "<name> moved out".
+- **oRefund** (board): Advance / Kept / Refund / Pay to / Due, the UTR field, "Mark ₹X refunded".
+- **rRefund** (board): "<owner> marked it refunded · UPI ref", then "Yes, I got ₹X" or "Not received". A former resident reaches it from Me › Your refund, or from the push.
+- **Tests:** `test/moves_test.dart`; `home_today_test` counts the new Today items.
+
+**Wave A item 6: real values instead of fake ones.** Branch `feature/f24-moveout`.
+- **Server** (`20261002233500_f24_values.sql`, FOUNDER-TODO **4z**; tests: `supabase/tests/values_test.sql`):
+  - `enquiries.contacted_at` and `holds.decided_at` are stamped by a trigger.
+  - `hostel_signals()` gives per live hostel, as counts only: the median reply minutes over 60 days (with n), complaints in 30 days, current residents, photos, rooms and published layouts.
+- **Reply time.** "Usually replies in ~N min" (or "~N h") shows only after 3 real replies. Before that it says "Replies through Hostelzy". The sample hostels keep their demo values.
+- **Ranking.** Live hostels use real counts:
+  - complaints per resident;
+  - listing = photos plus layouts per room;
+  - freshness of the bed confirmation;
+  - an owner with no replies yet ranks in the middle, not at the top.
+- **House rules.** A real hostel's page never shows rules its owner didn't add, only the ones from its terms. The owner's editor leaves Gate closes and Visitors empty to fill in.
+- **Availability** ("N free · confirmed X days ago" from the server's bed confirmations) is with items 9/19 (owner tools).
+- **Tests:** `test/values_test.dart`.

@@ -62,6 +62,10 @@ extension SyncActions on AppState {
     }
     fixes = l.fixes;
     fixMutes = l.mutes;
+    // F24: notices, moves and refunds.
+    moves = l.moves;
+    refunds = l.refunds;
+    myRefund = l.myRefund;
     // S8: the owner switcher lists the hostels this user runs on the server
     // (those whose rooms are loaded; missing ones are fetched once more).
     final known = [for (final h in l.myHostels) if (rooms.containsKey(h)) h];
@@ -78,7 +82,7 @@ extension SyncActions on AppState {
         ..addAll(known);
       if (ownerHostels.isNotEmpty && !ownerHostels.contains(ownHid)) {
         ownHid = ownerHostels.first;
-        if (hostelRules[ownHid] != null) rules = List.of(hostelRules[ownHid]!);
+        rules = hostelRules[ownHid] != null ? List.of(hostelRules[ownHid]!) : blankRules(hostelById(ownHid).terms);
       }
     }
     managers

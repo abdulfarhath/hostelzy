@@ -884,7 +884,11 @@ class MoveScreen extends StatelessWidget {
     final from = bed.isEmpty ? '' : ' from bed $bed';
     Widget body;
     Widget? bar;
-    if (vacate && !s.notice) {
+    // F24: the notice on the server (open, accepted or declined).
+    final n = s.myNotice;
+    final given = s.notice || (n != null && n.status != 'declined');
+    final lastDay = n?.lastDay != null ? dayMon(n!.lastDay!) : s.vDate;
+    if (vacate && !given) {
       body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: VGap(
@@ -930,14 +934,7 @@ class MoveScreen extends StatelessWidget {
         height: 54,
         px: 16,
         fs: 15,
-        onTap: () {
-          s.update(() => s.notice = true);
-          if (s.onServer) {
-            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.');
-          } else {
-            s.toastMsg('Notice saved. Tell $owner on WhatsApp too.');
-          }
-        },
+        onTap: s.giveNotice,
       );
     } else if (vacate) {
       body = Column(
@@ -949,12 +946,11 @@ class MoveScreen extends StatelessWidget {
             child: VGap(
               gap: 8,
               children: [
-                Kicker('Notice given', c: p.ad),
-                T('Your last day is ${s.vDate}.', w: 800, s: 28, lh: 1.05),
+                Kicker(n?.status == 'accepted' ? 'Notice accepted' : 'Notice given', c: p.ad),
+                T('Your last day is $lastDay.', w: 800, s: 28, lh: 1.05),
                 T(
-                  s.onServer
-                      ? 'Sent to $owner on WhatsApp. They mark your bed "free soon" on Hostelzy.'
-                      : 'Saved on Hostelzy. Tell $owner on WhatsApp too. Your bed goes back on Hostelzy as "free soon".',
+                  key: const ValueKey('noticeStatus'),
+                  n?.status == 'accepted' ? 'Accepted by $owner. Your bed shows "free soon" on Hostelzy.' : 'Sent to $owner. They accept it in Hostelzy, then your bed shows "free soon".',
                   s: 14,
                   c: p.mu,
                 ),
@@ -962,7 +958,7 @@ class MoveScreen extends StatelessWidget {
                   'Tell $owner on WhatsApp',
                   icon: 'msg',
                   height: 48,
-                  onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I am giving notice: my last day is ${s.vDate}.'),
+                  onTap: () => s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. I gave notice on Hostelzy: my last day is $lastDay.'),
                 ),
               ],
             ),
@@ -972,9 +968,9 @@ class MoveScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TimelineStep(t: 'Notice given', d: 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
-                TimelineStep(t: 'Room check with the warden', d: 'On ${s.vDate}, 10 am', bg: transparent, bd: p.tk),
-                TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving', bg: transparent, bd: p.tk),
+                TimelineStep(t: 'Notice given', d: n != null && n.at > 0 ? dayMon(DateTime.fromMillisecondsSinceEpoch(n.at)) : 'Today, ${dayMon(appToday)}', bg: p.tx, bd: p.tx),
+                TimelineStep(t: '$owner accepts it', d: n?.status == 'accepted' ? 'Done' : 'In Hostelzy', bg: n?.status == 'accepted' ? p.tx : transparent, bd: n?.status == 'accepted' ? p.tx : p.tk),
+                TimelineStep(t: '${fmt(terms.refund)} back to your UPI', d: 'Advance minus ${fmt(terms.maintenance)} maintenance, within 7 days of leaving. Hostelzy asks you when it arrives.', bg: transparent, bd: p.tk),
               ],
             ),
           ),
@@ -983,7 +979,8 @@ class MoveScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Tap(
-                onTap: () => s.update(() => s.notice = false),
+                key: const ValueKey('withdrawNotice'),
+                onTap: () => n != null && n.status == 'open' ? s.withdrawMove(n) : s.update(() => s.notice = false),
                 child: T('Withdraw notice', w: 600, s: 14, c: p.ad),
               ),
             ),
@@ -1071,12 +1068,7 @@ class MoveScreen extends StatelessWidget {
         opacity: s.swapBed != null && !s.swapSent ? 1 : .4,
         onTap: () {
           if (s.swapBed == null || s.swapSent) return;
-          s.update(() => s.swapSent = true);
-          if (s.onServer) {
-            s.whatsapp(s.stayOwnerPhone, 'Hi $owner, this is $who$from. Can I move to bed ${s.swapBed}?');
-          } else {
-            s.toastMsg('Request saved. Ask $owner on WhatsApp too.');
-          }
+          s.askMove();
         },
       );
     }

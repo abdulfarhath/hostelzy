@@ -212,6 +212,32 @@ class NeedsYouNow extends StatelessWidget {
           badge: null,
           extra: f.photo != null ? FixPhotoThumb(f, size: 96) : null,
         ),
+      // F24: notices and moves from residents, waiting for an answer.
+      for (final m in s.openMoves)
+        (
+          key: 'move-${m.id}',
+          icon: m.kind == 'vacate' ? 'logout' : 'swap',
+          title: m.kind == 'vacate' ? '${m.name} gave notice' : '${m.name} asks to move to bed ${m.toBed}',
+          sub: [if (m.bed.isNotEmpty) 'Bed ${m.bed}', if (m.kind == 'vacate' && m.lastDay != null) 'Last day ${dayMon(m.lastDay!)}', if (m.reason.isNotEmpty) m.reason].join(' · '),
+          right: m.at > 0 ? ago(s.now - m.at) : 'Today',
+          urgent: false,
+          btns: [('Accept', 'check', () => s.answerMove(m, true)), ('Say no', 'x', () => s.answerMove(m, false))],
+          badge: null,
+          extra: null,
+        ),
+      // F24: refunds for residents who moved out (due 7 days after leaving).
+      for (final r in s.refundsToDo)
+        (
+          key: 'refund-${r.stayKey}',
+          icon: 'wallet',
+          title: r.status == 'not_received' ? '${r.name} hasn’t got the refund' : r.status == 'sent' ? 'Refund sent to ${r.name}' : 'Refund ${fmt(r.amt)} to ${r.name}',
+          sub: r.status == 'sent' ? 'UPI ref ${utrSpaced(r.utr)} · waiting for them to confirm' : 'Moved out ${dayMon(r.leftOn)} · due ${dayMon(r.due)}',
+          right: r.status == 'sent' ? '' : (r.due.isBefore(appToday) ? 'Late' : 'Due ${dayMon(r.due)}'),
+          urgent: r.status != 'sent' && (r.status == 'not_received' || r.due.isBefore(appToday)),
+          btns: r.status == 'sent' ? <(String, String, VoidCallback)>[] : [('Mark refunded', 'check', () => s.openRefund(r))],
+          badge: null,
+          extra: null,
+        ),
       // F23: a shared thing (or a room's geyser) marked not working.
       for (final a in s.brokenThings)
         (
