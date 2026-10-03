@@ -280,6 +280,12 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     lang = m['lang'] as String? ?? 'en';
     fairAccepted = m['fairAccepted'] as bool? ?? false;
     pushAsked = m['pushAsked'] as bool? ?? false;
+    for (final e in ((m['notif'] as Map?) ?? const {}).entries) {
+      if (notif.containsKey(e.key) && e.value is bool) notif[e.key as String] = e.value as bool;
+    }
+    searchedAreas
+      ..clear()
+      ..addAll([for (final a in (m['areas'] as List? ?? const [])) if (a is String) a].take(5));
     restoreRem(m['rem'] as Map<String, dynamic>?);
     final ru = m['rules'] as List?;
     if (ru != null && ru.isNotEmpty) rules = [for (final r in ru.cast<List>()) Rule(r[0] as String, r[1] as String)];
@@ -344,6 +350,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   // F18 map
 
   void pickArea(String? a) => update(() {
+    if (a != null) noteSearchedArea(a);
     mapArea = a;
     areaCenter = null;
     mapMoved = false;
@@ -585,6 +592,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     } else if (!isSeedHostel(ownHid) && ids.contains(ownHid)) {
       rules = blankRules(hostelById(ownHid).terms);
     }
+    // F24 item 8: the server's walk-in holds on the owner's beds.
+    syncWalkIns();
   });
 
   /// Remote switches: too-old builds must update; maintenance mode.

@@ -1251,10 +1251,10 @@ class TrackerScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (l.stage < onboardStages.length - 1) ...[
+                          if (l.stage < onboardStages.length - 1 && !(s.data.remote && l.stage >= 4 && l.hid != null && !isSeedHostel(l.hid!))) ...[
                             const SizedBox(width: 10),
                             Tap(
-                              onTap: () => l.stage == 3 && l.hid == null ? s.openAddHostel() : s.update(() => l.stage++),
+                              onTap: () => s.advanceLead(l),
                               child: Container(
                                 constraints: const BoxConstraints(minHeight: 40),
                                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),

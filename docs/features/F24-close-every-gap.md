@@ -252,3 +252,29 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Docs:** BOARD F13/F14/F18/F20/F24 rows; ARCHITECTURE "Today". There was no "170 frames" line left to fix.
 - **Screens:** added the sheet `name` (Settings › Name; Design to add a board). Changed: hostel page (deal headline), Holds, owner Today plan banner, Room tab signed out, layout request sheet, Create layout, rate card. None removed.
 - **Tests:** `test/wave0_test.dart`. Updated: `flows_test` (Google name is a hint; Room tab Sign in; help-requested label).
+
+**Wave 2a items 7, 8, 22, 29: phone-only → server.** Branch `feature/f24-wave2a`.
+- **Item 7, Working / Not working** (`20261003030000_f24_item_working.sql`, FOUNDER-TODO **4zz1**):
+  - `set_item_working(hostel, room, item, working)`, staff or team only, changes the fan, AC or window in both copies of the room's layout. Tenants see "Fan · not working" / "AC under repair" straight away.
+  - The AC also sets `rooms.ac_repair` and `rooms.ac_repair_since`. The room line now reads "AC under repair. Complaint raised <that day>. The owner is fixing it." Without a date it leaves the date out.
+  - Not working raises one complaint for the hostel. `complaints.item` names the thing, and there is never a second open one. Working again closes it as Fixed ("Working again").
+  - F23 things (geyser, fridge, RO…) do the same through a trigger on `amenities`, whoever marks them.
+  - Nobody gets a push about their own mark. A resident's mark already tells the owner, so there's no second "New complaint" push.
+  - App: the mark shows at once and the server's complaint date fills in. A room without a published layout says "Publish this room's layout first, then mark it". Offline, the mark is undone. On sample data, working again now resolves the sample complaint too.
+- **Item 8, Hold for a walk-in** (`20261003031000_f24_walk_in.sql`, **4zz2**):
+  - `hold_walk_in(bed)` / `release_walk_in(bed)`, staff or team only. The bed is `held` for every tenant for 1 hour (DECISIONS F04), with `beds.walk_in_until`. Tenants can't hold it meanwhile.
+  - `expire_walk_ins()` (pg_cron every minute) puts it back to free, or to free soon.
+  - App: the bed sheet's button saves to the server. A walk-in placed on another phone shows with its countdown, and Release ends it on the server. "isn't free any more" is said plainly.
+- **Item 22, notification switches** (`20261003032000_f24_notify_switches.sql`, **4zz3**):
+  - `profiles.notify` holds the Settings switches. `profiles.searched_areas` holds the last 5 areas picked in Where? or on the map.
+  - Every queued push gets a `kind` (hold, rent, beds or none). A kind the user switched off is closed as "switched off" and never sent, and nobody is pushed about their own action.
+  - `send-push` checks the switches again before sending. Before the SQL runs it sends as before (tests in `functions/tests/fcm.test.ts`).
+  - **New free beds:** when a bed in a live hostel turns free, tenants with the switch on who searched that area get "A bed is free in <area>". That's at most one a day each (`beds_alert_at`), never to the hostel's staff or residents.
+  - App: the switches and areas are saved on the profile, loaded at start and at sign-in, and kept on the phone too.
+- **Item 29, team from the server** (`20261003033000_f24_team.sql`, **4zz4**):
+  - `team_members`: team-only RLS. `team_hello()` makes the opening account Active, or matches a pending invite by number.
+  - `team_tracker()`: every hostel with its stage. Lead…Data complete comes from `hostel_leads`, then Live, Trial or Paying from the hostel and its plan.
+  - App: the real build has no sample leads and no "Founder 9000000100". Team tools load both lists. On the server the tracker button saves the stage, and "Live" goes through `go_live`'s checks. Trial and Paying follow the plan, so there's no button. "Send invite" saves a pending member.
+  - The team home kicker says "sample data" only in the demo.
+- **Screens:** none added or removed. Changed: tenant room / bed picker AC line (real date), team mode `aTrack` (no button on Live rows on the server), `aTeam` footnote, `aHome` kicker.
+- **Tests:** `test/wave2a_test.dart`, `supabase/tests/wave2a_test.sql`, `supabase/functions/tests/fcm.test.ts`. Updated: `flows_test` (team kicker).

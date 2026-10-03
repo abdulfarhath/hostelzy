@@ -1437,7 +1437,7 @@ void main() {
     await tap(tester, find.text('Open team tools'));
     await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
-    expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
+    expect(find.text('TEAM TOOLS · SAMPLE DATA'), findsOneWidget);
     for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
       expect(find.text(t), findsOneWidget);
     }

@@ -45,11 +45,17 @@ class TeamHomeScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final tools = <(String, String, String, VoidCallback)>[
       ('plus', 'Add hostel', 'On a visit: basics, rooms floor by floor, rates, photos, residents, go live', s.openAddHostel),
-      ('chart', 'Onboarding tracker', 'Lead → Visited → Signed up → Live → Trial → Paying', () => s.go('aTrack')),
+      ('chart', 'Onboarding tracker', 'Lead → Visited → Signed up → Live → Trial → Paying', () {
+        s.go('aTrack');
+        s.loadTeam();
+      }),
       ('wallet', 'Payments check', 'Owners’ plan invoices and UTRs to match in the bank', () => s.go('aPay')),
       ('flag', 'Fair Play cases', 'Signals, owner replies, strikes', () => s.go('aCases')),
       ('room', 'Layout editor', 'Draw and move beds, fans, AC, windows; send to the owner', () => s.openLayout(s.lRoom, editor: true)),
-      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () => s.go('aTeam')),
+      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () {
+        s.go('aTeam');
+        s.loadTeam();
+      }),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +64,7 @@ class TeamHomeScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), const Expanded(child: PageHead(kicker: 'Team tools · sample data until the backend is connected', title: 'Hostelzy team', size: 28))],
+            children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: AppState.samples && !s.onServer ? 'Team tools · sample data' : 'Team tools', title: 'Hostelzy team', size: 28))],
           ),
         ),
         Expanded(

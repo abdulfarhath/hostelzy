@@ -174,6 +174,9 @@ class Bed {
   String state;
   String soon;
   bool mine = false;
+
+  /// F24 item 8: held for a walk-in until then (ms since epoch); 0 when not.
+  int walkInUntil = 0;
 }
 
 class Room {
@@ -193,6 +196,9 @@ class Room {
 
   /// AC not working: the room stays AC; tenants see "AC under repair".
   bool acRepair;
+
+  /// F24 item 7: the day the AC was marked not working ("3 Oct"), when known.
+  String acSince = '';
   String get type => ac ? 'AC' : 'Non-AC';
 }
 
