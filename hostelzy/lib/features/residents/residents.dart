@@ -10,15 +10,20 @@ extension ResidentsActions on AppState {
         if (b.state == 'booked' && !residents.any((x) => x.bed == b.id)) b.id,
   ];
 
-  /// Join time in ms for the add-resident sheet's "Joined on" choice.
-  int get rJoinAt {
-    final days = switch (rJoin) {
-      'Today' => 0,
-      'Yesterday' => 1,
-      _ => rPickBack,
-    };
-    return now - days * 86400000;
-  }
+  /// F25: days from today on the one "Add a resident" date field
+  /// (negative = joined in the past, positive = moves in later).
+  int get rDays => switch (rJoin) {
+    'Today' => 0,
+    'Yesterday' => -1,
+    'Tomorrow' => 1,
+    _ => -rPickBack,
+  };
+
+  /// F25: a future date is a booking ("Moves in"); today or past is "Joined on".
+  bool get rFuture => rDays > 0;
+
+  /// Join (or move-in) time in ms for the add-resident sheet's date.
+  int get rJoinAt => now + rDays * 86400000;
 
   /// Joined via Hostelzy: this phone enquired about, held or booked a bed at
   /// the owner's hostel on Hostelzy within [matchWindowDays] before joining.
@@ -55,22 +60,39 @@ extension ResidentsActions on AppState {
     return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : before ? 'before' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
   }
 
-  /// "Add resident": the resident is listed as Not confirmed until they
-  /// confirm with the WhatsApp code.
+  /// F25 "Add a resident" (the "+" tab and Residents › Add): the resident is
+  /// listed as Not confirmed until they confirm with the invite code. A date
+  /// in the future is a booking (moves in later).
   void addResident() {
     final name = rName.trim();
-    if (name.isEmpty || rPhone.length != 10 || rBed == null) return toastMsg('Add a name, a 10-digit number and a bed.');
+    if (name.length < 2) return toastMsg('Add the resident’s name.');
+    if (rPhone.length != 10) return toastMsg('Add their 10-digit WhatsApp number.');
+    if (!AppState.validPhone(rPhone)) return toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
+    final f = rBed == null ? null : findBed(ownHid, rBed);
+    if (f?.b == null) return toastMsg('Pick a bed.');
+    if (f!.b!.state == 'booked' && residents.any((x) => x.bed == rBed)) return toastMsg('Bed $rBed is already taken.');
+    final future = rFuture;
+    final fee = int.tryParse(rFee) ?? 0, adv = int.tryParse(rAdv) ?? 0;
+    final before = !future && rBefore && canMarkBefore;
     if (onServer) {
-      addStayLive(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, DateTime.fromMillisecondsSinceEpoch(rJoinAt), before: rBefore && canMarkBefore);
+      addStayLive(name, rPhone, rBed!, fee, adv, DateTime.fromMillisecondsSinceEpoch(rJoinAt), booking: future, before: before);
       return;
     }
-    final res = _newResident(name, rPhone, rBed!, int.tryParse(rFee) ?? 0, int.tryParse(rAdv) ?? 0, rJoinAt, confirmed: false, before: rBefore && canMarkBefore);
+    final res = _newResident(name, rPhone, rBed!, fee, adv, rJoinAt, confirmed: false, before: before);
+    if (future) {
+      res.status = 'Due';
+      res.note = 'Moves in ${dayMon(appToday.add(Duration(days: rDays)))}';
+    }
     update(() {
       residents = [res, ...residents];
       sheet = null;
       resF = 'All';
     });
-    toastMsg(res.lateDays > 0 ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.' : 'Added. ${name.split(' ')[0]} confirms by joining with your invite code.');
+    toastMsg(res.lateDays > 0
+        ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
+        : future
+        ? 'Booked bed ${res.bed}. Send them a welcome on WhatsApp.'
+        : 'Added. ${name.split(' ')[0]} confirms by joining with your invite code.');
   }
 
   /// Invite QR sign-ups signed in with Google; approving counts them.
@@ -496,13 +518,15 @@ extension ResidentsActions on AppState {
   // F21 W3: on the server, the resident's own bed (complaints and layout fixes said none).
   String get myBedLabel => onServer ? (myStay?.bed ?? '') : '204';
 
-  void openAddResident() => update(() {
+  /// F25: the one "Add a resident" sheet, from the "+" tab, Residents › Add
+  /// or a free bed's "Add tenant to this bed" ([bed] picked for them).
+  void openAddResident({String? bed}) => update(() {
     final free = unassignedBeds;
     rName = '';
     rPhone = '';
     rJoin = 'Today';
     rBefore = false;
-    rBed = free.isNotEmpty ? free.first : null;
+    rBed = bed ?? (free.isNotEmpty ? free.first : null);
     final r = rBed != null ? findBed(ownHid, rBed).r : null;
     rFee = r != null ? '${r.rent}' : '';
     rAdv = '${hostelById(ownHid).terms.advance}';

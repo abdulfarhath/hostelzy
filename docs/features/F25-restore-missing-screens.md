@@ -373,3 +373,36 @@ No new screens (SCREENS count unchanged). No SQL.
   moves it; hidden with no beds; all three tiers from `planTiers`, Yours follows the bed count across 0/1/2; past invoices
   empty state, other hostels' invoices hidden, newest first, Paid / Checking / Not paid; 360 px × 2× text × light/dark).
   `owner_manage_test.dart` now expects "Past invoices" instead of "Before".
+
+### Redundancy merges (Design review, 3 confident pairs) + one notification ask · Built 2026-10-03
+App screens **−3** (SCREENS: app screens 85, sheets 42, release 158, overall 179). Ids are retired, not reused or renumbered:
+**S76, S77, H17**. No SQL.
+- **One "Add a resident" sheet (H20 `addR`; H17 `add` merged in and removed).** The owner's centre "+" tab, Manage ›
+  Residents › Add and a free bed's "Add tenant to this bed" all open it (`openAddResident({bed})` in
+  `lib/features/residents/residents.dart`; sheet `AddResidentSheet` in `residents_sheets.dart`; `AddSheet` and its
+  `add*` state are gone). Fields: name, WhatsApp number (+91), bed (unassigned taken beds flagged first, then free and
+  free-soon beds), **one date** (Yesterday · Today · Tomorrow · Pick date = a week back or a week ahead), monthly fee,
+  advance, the rent/due-at-move-in line, and "Lived here before Hostelzy" (only before go-live and only for today or a
+  past date; the server still checks). The date's label is **"Moves in"** when it is in the future and **"Joined on"**
+  when it is today or past; a future date is a booking (button "Book the bed", toast "Booked bed N. Send them a welcome
+  on WhatsApp.", `addStayLive(..., booking: true)`), today or past is a stay ("Added. X confirms by joining with your
+  invite code."). Checks (union of both old sheets): a name of 2+ letters, a valid 10-digit mobile (6–9 first), a bed,
+  and not a bed that already has a resident. Server path unchanged: `addStayLive`. Demo path: the resident is added
+  Not confirmed (a future date shows "Moves in <date>", Due).
+- **S76 `aPay` removed** (team payments in the app). The console's Payments (C2) does this job. Removed the screen,
+  the Team home row, its state (`payTab`, `markPaid`, `notReceived`, `sendReminder`) and the repo's `checkInvoice`.
+- **S77 `aCases` removed** (team Fair Play queue in the app). The console's Fair Play (C3) does this job. Removed the
+  screen, the Team home row, its state (`adminTab`, `adminCase`, `decideCase`) and the repo's `decideCase`. The owner's
+  own Fair Play screens (S62 `oRules`, S63 `oCase`, S64 `oStrike`) stay.
+- **Team home (S66):** a plain line under the tools: "Payments and Fair Play cases are in the team console:
+  farhath.me/hostelzy/app/console".
+- **No double ask for tenants:** `offerPush()` (S82 `perm`) now returns for the tenant role too, not only at role pick;
+  a tenant's only ask is H5 `holdNotify` after the first hold. Residents and owners keep S82 at role pick (and then never
+  see H5, `pushAsked`).
+- **Tests:** `flows_test.dart` "F25: one Add a resident sheet …" (+ tab and Residents › Add open the same sheet;
+  Tomorrow / a week ahead → "Moves in", Yesterday / 5 days back → "Joined on"; checks; a future date books the bed;
+  the same bed can't be added twice), "F25: Add a resident saves through addStayLive …" (server: future = booking toast and
+  a joinedOn tomorrow, past = stay toast and 5 days back), "F25: a tenant never sees both notification asks …".
+  `team_app_test.dart` "F25: plan payments and Fair Play cases are not in the app …". Tests that drove `aPay`/`aCases` now
+  set the team's result directly (strike count, invoice paid) and keep their owner-side assertions; `owner_test.dart`
+  bed sheet → the merged sheet.

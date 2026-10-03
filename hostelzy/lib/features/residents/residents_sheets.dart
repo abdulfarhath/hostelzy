@@ -5,8 +5,10 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 
-/// F06 board 5: the owner adds a resident; the number is matched live
-/// against Hostelzy enquiries, holds and bookings.
+/// F06 board 5 + F25: the one "Add a resident" sheet (the owner's "+" tab,
+/// Residents › Add and a free bed's "Add tenant to this bed"). The number is
+/// matched live against Hostelzy enquiries, holds and bookings. One date:
+/// in the future it's "Moves in" (a booking), today or past "Joined on".
 class AddResidentSheet extends StatelessWidget {
   const AddResidentSheet({super.key});
   @override
@@ -17,14 +19,18 @@ class AddResidentSheet extends StatelessWidget {
     final free = <String>[
       for (final r in s.rooms[s.ownHid] ?? const <Room>[])
         for (final b in r.beds)
-          if (b.state == 'free' && !b.mine) b.id,
+          if ((b.state == 'free' || b.state == 'soon') && !b.mine) b.id,
     ];
+    // A bed picked from the bed sheet is always shown, even past the first 12.
+    final shown = [...free.take(12), if (s.rBed != null && !missing.contains(s.rBed) && !free.take(12).contains(s.rBed)) s.rBed!];
     final m = s.matchFor(s.rPhone, s.rJoinAt);
     final who = s.rName.trim().isEmpty ? 'They' : s.rName.trim().split(' ')[0];
     Widget label(String t) => T(t, w: 800, s: 13);
-    Widget field(String l, String v, ValueChanged<String> on, {String? ph, bool numeric = false}) => VGap(
+    final terms = hostelById(s.ownHid).terms;
+    final fee = int.tryParse(s.rFee) ?? 0, adv = int.tryParse(s.rAdv) ?? 0;
+    Widget field(String l, String v, ValueChanged<String> on, {String? ph, bool numeric = false, Key? key}) => VGap(
       gap: 6,
-      children: [label(l), Field(value: v, onChanged: on, placeholder: ph, numeric: numeric)],
+      children: [label(l), Field(key: key, value: v, onChanged: on, placeholder: ph, numeric: numeric)],
     );
     String digits(String v, int n) {
       final d = v.replaceAll(RegExp(r'\D'), '');
@@ -43,14 +49,27 @@ class AddResidentSheet extends StatelessWidget {
       );
     }
 
-    final past = [for (var i = 2; i <= 7; i++) i];
+    // "Pick date": a week back or a week ahead (rPickBack < 0 = ahead).
+    final days = [for (var i = 7; i >= 2; i--) i, for (var i = 2; i <= 7; i++) -i];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
         gap: 12,
         children: [
-          field('Name', s.rName, (v) => s.update(() => s.rName = v), ph: 'Full name'),
-          field('WhatsApp number', s.rPhone, (v) => s.update(() => s.rPhone = digits(v, 10)), ph: '10 digits', numeric: true),
+          field('Name', s.rName, (v) => s.update(() => s.rName = v), ph: 'Full name', key: const ValueKey('addName')),
+          VGap(
+            gap: 6,
+            children: [
+              label('WhatsApp number'),
+              Row(
+                children: [
+                  Container(height: 46, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('+91', w: 800, s: 15)),
+                  const SizedBox(width: 6),
+                  Expanded(child: Field(key: const ValueKey('addPhone'), value: s.rPhone, onChanged: (v) => s.update(() => s.rPhone = digits(v, 10)), placeholder: '10 digits', numeric: true)),
+                ],
+              ),
+            ],
+          ),
           if (s.rPhone.length == 10)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -78,20 +97,26 @@ class AddResidentSheet extends StatelessWidget {
             gap: 6,
             children: [
               label('Bed'),
-              wrap(6, [for (final id in missing) bedChip(id, true), for (final id in free.take(8)) bedChip(id, false)]),
+              wrap(6, [for (final id in missing) bedChip(id, true), for (final id in shown) bedChip(id, false)]),
             ],
           ),
           VGap(
             gap: 6,
             children: [
-              label('Joined on'),
-              Seg(opts: same(['Today', 'Yesterday', 'Pick date']), cur: s.rJoin, onPick: (v) => s.update(() => s.rJoin = v), pad: const EdgeInsets.all(10)),
-              if (s.rJoin == 'Pick date') wrap(6, [for (final d in past) ChipBtn(dayMon(appToday.subtract(Duration(days: d))), on: s.rPickBack == d, onTap: () => s.update(() => s.rPickBack = d), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
+              Row(
+                children: [
+                  KeyedSubtree(key: const ValueKey('addDateLabel'), child: label(s.rFuture ? 'Moves in' : 'Joined on')),
+                  const Spacer(),
+                  T(dayMon(appToday.add(Duration(days: s.rDays))), s: 13, c: p.mu),
+                ],
+              ),
+              Seg(opts: same(['Yesterday', 'Today', 'Tomorrow', 'Pick date']), cur: s.rJoin, onPick: (v) => s.update(() => s.rJoin = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), byLabel: true),
+              if (s.rJoin == 'Pick date') wrap(6, [for (final d in days) ChipBtn(dayMon(appToday.subtract(Duration(days: d))), key: ValueKey('addDay$d'), on: s.rPickBack == d, onTap: () => s.update(() => s.rPickBack = d), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
             ],
           ),
           // F24 #18: before go-live, residents already living here are
           // "Joined before Hostelzy" (never counted as joining off the app).
-          if (s.canMarkBefore)
+          if (s.canMarkBefore && !s.rFuture)
             Tap(
               key: const ValueKey('rBefore'),
               onTap: () => s.update(() => s.rBefore = !s.rBefore),
@@ -124,8 +149,15 @@ class AddResidentSheet extends StatelessWidget {
               Expanded(child: field('Advance paid', s.rAdv.isEmpty ? '' : fmt(int.parse(s.rAdv)), (v) => s.update(() => s.rAdv = digits(v, 6)), ph: '₹', numeric: true)),
             ],
           ),
+          if (fee > 0) T('Rent ${fmt(fee)} a month · due at move-in ${fmt(adv + fee)} (advance ${fmt(adv)}, ${fmt(terms.maintenance)} kept on exit)', s: 13, c: p.mu, lh: 1.45),
+          if (s.rPhone.length < 10)
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: p.sf,
+              child: const T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
+            ),
           T(s.onServer ? '$who confirms by joining with your invite code. They count as a resident once they confirm.' : '$who confirms the details in the app. They count as a resident once they confirm.', s: 12, c: p.mu, lh: 1.4),
-          Cta('Add resident', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
+          Cta(s.rFuture ? 'Book the bed' : 'Add resident', key: const ValueKey('addGo'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
         ],
       ),
     );

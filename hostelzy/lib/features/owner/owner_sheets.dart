@@ -69,128 +69,6 @@ class EnquirySheet extends StatelessWidget {
   }
 }
 
-class AddSheet extends StatelessWidget {
-  const AddSheet({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final a = s.rooms[s.ownHid] ?? const <Room>[];
-    final freeA = <Bed>[];
-    for (final r in a) {
-      for (final b in r.beds) {
-        if (b.state == 'free' || b.state == 'soon') freeA.add(b);
-      }
-    }
-    final sel = s.addBed != null ? s.findBed(s.ownHid, s.addBed) : null;
-    final terms = hostelById(s.ownHid).terms;
-    Widget label(String t) => T(t, w: 800, s: 13);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: VGap(
-        gap: 14,
-        children: [
-          VGap(
-            gap: 6,
-            children: [
-              label('Name'),
-              Field(key: const ValueKey('addName'), value: s.addName, onChanged: (v) => s.update(() => s.addName = v), placeholder: 'Full name'),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              label('Phone'),
-              Row(
-                children: [
-                  Container(height: 46, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('+91', w: 800, s: 15)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Field(
-                      key: const ValueKey('addPhone'),
-                      value: s.addPhone,
-                      onChanged: (v) => s.update(() {
-                        final d = v.replaceAll(RegExp(r'\D'), '');
-                        s.addPhone = d.length > 10 ? d.substring(0, 10) : d;
-                      }),
-                      placeholder: 'WhatsApp number, 10 digits',
-                      numeric: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              label('Bed'),
-              wrap(6, [for (final b in freeA.take(12)) ChipBtn(b.id, on: b.id == s.addBed, onTap: () => s.update(() => s.addBed = b.id), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 10))]),
-            ],
-          ),
-          VGap(
-            gap: 6,
-            children: [
-              label('Moves in'),
-              Seg(opts: same(['Today', 'Tomorrow', dayMon(appToday.add(const Duration(days: 4)))]), cur: s.addDate, onPick: (v) => s.update(() => s.addDate = v), pad: const EdgeInsets.all(10)),
-            ],
-          ),
-          T(sel?.r != null ? 'Rent ${fmt(sel!.r!.rent)} a month · due at move-in ${fmt(terms.advance + sel.r!.rent)} (advance ${fmt(terms.advance)}, ${fmt(terms.maintenance)} kept on exit)' : 'Pick a bed to see the rent.', s: 13, c: p.mu, lh: 1.45),
-          // F22: the board asks "How did they find you?" and a booking code; the
-          // server already links a tenant who came from the app by phone number.
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: p.sf,
-            child: const T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
-          ),
-          Cta(
-            'Add tenant',
-            key: const ValueKey('addGo'),
-            icon: 'check',
-            height: 54,
-            px: 16,
-            fs: 15,
-            onTap: () {
-              // F18 (F10): a real name, a real mobile number and a free bed.
-              if (s.addName.trim().length < 2) return s.toastMsg('Add the tenant’s name.');
-              if (s.addPhone.isNotEmpty && !AppState.validPhone(s.addPhone)) return s.toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
-              if (sel == null || sel.b == null) return s.toastMsg('Pick a bed.');
-              if (sel.b!.state == 'booked') return s.toastMsg('Bed ${sel.b!.id} is already taken.');
-              final name = s.addName.trim();
-              if (s.onServer) {
-                // S2: the booking is a stay on the server (moving in on the chosen day).
-                final days = switch (s.addDate) { 'Today' => 0, 'Tomorrow' => 1, _ => 4 };
-                s.addStayLive(name, s.addPhone, sel.b!.id, sel.r!.rent, terms.advance, appToday.add(Duration(days: days)), booking: true).then((ok) {
-                  if (!ok) return;
-                  s.update(() {
-                    s.addName = '';
-                    s.addPhone = '';
-                    s.addBed = null;
-                    s.addDate = 'Today';
-                  });
-                });
-                return;
-              }
-              sel.b!.state = 'booked';
-              s.update(() {
-                s.sheet = null;
-                final m = s.matchFor(s.addPhone, s.now);
-                // F06: a new booking waits for the tenant's WhatsApp code like any added resident.
-                s.residents = [...s.residents, Resident(name: name, bed: sel.b!.id, amt: sel.r!.rent, status: 'Due', note: 'Moves in ${s.addDate}', phone: s.addPhone, via: m != null ? 'hz' : 'direct', since: 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: false)];
-                s.addName = '';
-                s.addPhone = '';
-                s.addBed = null;
-                s.addDate = 'Today';
-              });
-              s.toastMsg('Booked bed ${sel.b!.id}. Send them a welcome on WhatsApp.');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class BedSheet extends StatelessWidget {
   const BedSheet({super.key});
   @override
@@ -240,10 +118,7 @@ class BedSheet extends StatelessWidget {
     } else {
       actions.add((
         'Add tenant to this bed',
-        () => s.update(() {
-          s.sheet = 'add';
-          s.addBed = b.id;
-        }),
+        () => s.openAddResident(bed: b.id),
         true,
         'plus',
       ));

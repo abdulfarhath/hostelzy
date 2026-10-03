@@ -4,7 +4,6 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../team/team_tracker_screens.dart' show TeamHead, StatusTag;
 
 // F07 Fair Play: the owner's rules (board 1), the owner's number after a hold
 // (2), "Did you join?" (3), the tenant's report (4), the owner's case (5),
@@ -54,32 +53,6 @@ class StrikeLadder extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Timeline extends StatelessWidget {
-  const _Timeline(this.events);
-  final List<CaseEvent> events;
-  @override
-  Widget build(BuildContext context) {
-    final p = PalScope.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final e in events)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(width: 62, child: T(e.date, s: 12, c: p.mu)),
-                Container(width: 10, height: 10, margin: const EdgeInsets.only(top: 4, right: 12), color: e.flag ? p.ad : p.tx),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(e.title, w: 800, s: 14), T(e.sub, s: 12, c: p.mu)])),
-              ],
-            ),
-          ),
-      ],
     );
   }
 }
@@ -548,153 +521,6 @@ class StrikeScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// F07 board 7: the founder's case queue. F22 Area 4 (aCases): one list by
-/// stage; a case waiting for a decision is decided inline. Tap a case for
-/// its signals, the owner's reply and the owner's history.
-class AdminCasesScreen extends StatelessWidget {
-  const AdminCasesScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    int count(String t) => s.cases.where((c) => c.status == t).length;
-    final list = s.cases.where((c) => c.status == s.adminTab).toList();
-    final open = s.cases.where((c) => c.id == s.adminCase).firstOrNull;
-    String tag(String st) => switch (st) {
-      'new' => 'New',
-      'waiting' => 'Waiting',
-      'decide' => 'Decide',
-      _ => 'Closed',
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const TeamHead(kicker: 'Hostelzy team', title: 'Fair Play cases'),
-        Seg(
-          opts: [('new', 'New ${count('new')}'), ('waiting', 'Waiting ${count('waiting')}'), ('decide', 'Decide ${count('decide')}'), ('closed', 'Closed')],
-          cur: s.adminTab,
-          onPick: (v) => s.update(() {
-            s.adminTab = v;
-            s.adminCase = null;
-          }),
-          pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-          center: true,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Scroll(
-              key: ValueKey('aCases${s.scrollEpoch}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final c in list) ...[
-                    Container(
-                      key: ValueKey('aCase-${c.id}'),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(color: c.id == s.adminCase ? p.sf : null, border: Border(bottom: bs(1, p.hl))),
-                      child: VGap(
-                        gap: 8,
-                        children: [
-                          Tap(
-                            onTap: () => s.update(() => s.adminCase = s.adminCase == c.id ? null : c.id),
-                            child: VGap(
-                              gap: 4,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: T('${c.id} · ${hostelById(c.hid).name}', w: 800, s: 16, lh: 1.25)),
-                                    const SizedBox(width: 8),
-                                    StatusTag(tag(c.status), hot: c.status == 'decide'),
-                                  ],
-                                ),
-                                T(c.result ?? c.signal, s: 13, c: p.mu, lh: 1.4),
-                              ],
-                            ),
-                          ),
-                          if (c.status == 'decide') _Decide(c),
-                        ],
-                      ),
-                    ),
-                    if (open == c) _AdminCase(c),
-                  ],
-                  if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('No cases here.', s: 14, c: p.mu)),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: T('Decide after the 48-hour window or the owner’s reply. A proven fake “Direct” for an app tenant is one strike. The tenant’s answer and our records count more than screenshots. Strikes: 1 warning · 2 deals hidden for 30 days · 3 removed. 3 fixes in 6 months = 1 warning. No fines.', s: 13, c: p.mu, lh: 1.5),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// No issue / Ask more / Strike n, side by side.
-class _Decide extends StatelessWidget {
-  const _Decide(this.c);
-  final FairCase c;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final n = (s.strikes[c.hid] ?? 0) + 1;
-    Widget b(String t, String icon, String how, {bool hot = false}) => Expanded(
-      child: Cta(t, icon: icon, height: 42, px: 10, fs: 13, iconSize: 16, gap: 6, bg: hot ? null : transparent, fg: hot ? null : p.tx, border: hot ? null : p.tx, onTap: () => s.decideCase(c, how)),
-    );
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        b('No issue', 'check', 'close'),
-        const SizedBox(width: 6),
-        b('Ask more', 'msg', 'more'),
-        const SizedBox(width: 6),
-        b('Strike $n', 'flag', 'strike', hot: true),
-      ],
-    );
-  }
-}
-
-class _AdminCase extends StatelessWidget {
-  const _AdminCase(this.c);
-  final FairCase c;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final h = hostelById(c.hid);
-    final residents = c.hid == 'anjani' ? s.residents : const <Resident>[];
-    return Container(
-      decoration: BoxDecoration(color: p.sf, border: Border(bottom: bs(2, p.tx))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 0), child: T('${h.name}: ${c.title}', w: 800, s: 18, lh: 1.15)),
-          if (c.events.isNotEmpty) ...[const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 4), child: Kicker('Signals')), _Timeline(c.events)],
-          const Padding(padding: EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Owner’s reply')),
-          Container(margin: const EdgeInsets.symmetric(horizontal: 16), padding: const EdgeInsets.all(12), color: p.bg, child: T(c.ownerReply != null ? '“${c.ownerReply}”' : 'No reply yet. 48 hours from the notice.', s: 14, lh: 1.5)),
-          if (c.tenantNote != null) ...[
-            const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Tenant')),
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: T('“${c.tenantNote}”', s: 14, w: 800, lh: 1.5)),
-          ],
-          const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 6), child: Kicker('Owner history')),
-          for (final (k, v) in [('Strikes', '${s.strikes[c.hid] ?? 0} of 3${(s.strikes[c.hid] ?? 0) > 0 ? ' · ${s.strikeLine(c.hid).toLowerCase()}' : ''}'), if (s.visited[c.hid] != null) ('Live since', s.visited[c.hid]!), if (residents.isNotEmpty) ('Residents', '${residents.length} · ${residents.where((r) => r.via == 'hz').length} via Hostelzy')])
-            KV(k, v, keyWidth: 110),
-          // A decide case has its buttons on the row; new and waiting ones decide here.
-          if (c.status == 'new' || c.status == 'waiting') Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0), child: _Decide(c)),
-          const SizedBox(height: 16),
-        ],
-      ),
     );
   }
 }

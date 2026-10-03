@@ -134,9 +134,8 @@ abstract class HostelRepo {
   Future<void> saveUpi(String hid, String id, String name);
 
   /// S7: the owner's UTR for a plan invoice (→ checking); the team then marks
-  /// it paid or not received (`paid` | `missing`).
+  /// it paid or not received in the team console (F25: not in the app).
   Future<void> sendInvoiceUtr(String key, String utr);
-  Future<void> checkInvoice(String key, String status);
 
   /// S4: a resident's review of the hostel they stay at (the server checks
   /// the confirmed stay), and the owner's reply.
@@ -149,12 +148,11 @@ abstract class HostelRepo {
   Future<void> reportReview(String id, String why);
 
   /// S5: Fair Play. A tenant's private report; the owner's reply (sending a
-  /// case the team returned back to them); the owner's 48-hour fix; the
-  /// team's decision (`close` | `more` | `strike`, with the result text).
+  /// case the team returned back to them); the owner's 48-hour fix. The
+  /// team decides cases in the team console (F25: not in the app).
   Future<void> sendReport(String hid, String why, String note);
   Future<void> replyCase(String key, String reply, {bool reopen = false});
   Future<void> fixCase(String key);
-  Future<void> decideCase(String key, String hid, String how, String? decision);
 
   /// F24 #18: the owner's "I agree" to the Fair Play rules, kept on the
   /// server once per account; and whether this account has agreed (null

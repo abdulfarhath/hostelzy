@@ -90,8 +90,6 @@ class SampleRepo implements HostelRepo {
   @override
   Future<void> sendInvoiceUtr(String key, String utr) async {}
   @override
-  Future<void> checkInvoice(String key, String status) async {}
-  @override
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {}
   @override
   Future<void> replyReview(String id, String reply) async {}
@@ -117,8 +115,6 @@ class SampleRepo implements HostelRepo {
   Future<void> replyCase(String key, String reply, {bool reopen = false}) async {}
   @override
   Future<void> fixCase(String key) async {}
-  @override
-  Future<void> decideCase(String key, String hid, String how, String? decision) async {}
   @override
   Future<void> acceptFairPlay() async {}
   @override

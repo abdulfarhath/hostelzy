@@ -435,13 +435,11 @@ class _AppBody extends StatelessWidget {
     'oRules' => const OwnerRulesScreen(),
     'oCase' => const OwnerCaseScreen(),
     'oStrike' => const StrikeScreen(),
-    'aCases' => const AdminCasesScreen(),
     'rewards' => const RewardsScreen(),
     'moveIn' => const MoveInScreen(),
     'oPlan' => const PlanScreen(),
     'oInvoice' => const InvoiceScreen(),
     'oPayStatus' => const PayStatusScreen(),
-    'aPay' => const AdminPaymentsScreen(),
     'compare' => const CompareScreen(),
     'oLayout' => const OwnerLayoutScreen(),
     'aLayout' => const AdminLayoutScreen(),
@@ -487,13 +485,8 @@ void _openTab(AppState s, String k) {
   // F21 W3: Manage opens on its list.
   if (k == 'oMore') s.moreTab = 'home';
   if (k != '*') return s.tab(k);
-  s.update(() {
-    s.sheet = 'add';
-    s.addName = '';
-    s.addPhone = '';
-    s.addBed = null;
-    s.addDate = 'Today';
-  });
+  // F25: the "+" tab opens the one "Add a resident" sheet.
+  s.openAddResident();
 }
 
 /// F17 board 11: tablets and desktop get the tabs as a left rail.
@@ -620,7 +613,6 @@ class _Sheet extends StatelessWidget {
         _ => 'Sign in to hold this bed',
       },
       'wa' => 'Ask ${s.waTo ?? 'the owner'}',
-      'add' => 'Add tenant',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'revReport' => 'Report this review',
@@ -699,7 +691,6 @@ class _Sheet extends StatelessWidget {
       'scanCam' => const CameraSheet(),
       'hold' => const HoldSheet(),
       'wa' => const WaSheet(),
-      'add' => const AddSheet(),
       'bed' => const BedSheet(),
       'enq' => const EnquirySheet(),
       'addR' => const AddResidentSheet(),

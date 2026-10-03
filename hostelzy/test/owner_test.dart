@@ -69,13 +69,16 @@ void main() {
     final free = rooms.where((r) => r.floor == 2).expand((r) => r.beds).firstWhere((b) => b.state == 'free');
     await _tap(tester, find.byKey(ValueKey('obed-${free.id}')));
     await _tap(tester, find.text('Add tenant to this bed'));
-    expect((s.sheet, s.addBed), ('add', free.id));
+    // F25: the one "Add a resident" sheet, with this bed picked.
+    expect((s.sheet, s.rBed), ('addR', free.id));
+    expect(find.text('Add a resident'), findsOneWidget);
     expect(find.text('+91'), findsOneWidget);
     expect(find.text('Came from the Hostelzy app? Use the phone number they booked with, so it counts.'), findsOneWidget);
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addName')), matching: find.byType(EditableText)), 'Kiran Kumar');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addPhone')), matching: find.byType(EditableText)), '9876500021');
     await tester.pump();
     await _tap(tester, find.byKey(const ValueKey('addGo')));
-    expect(s.residents.last.name, 'Kiran Kumar');
+    expect(s.residents.first.name, 'Kiran Kumar');
     expect(s.findBed('anjani', free.id).b!.state, 'booked');
     s.dispose();
   });

@@ -143,73 +143,21 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F22 Area 4: payments: match, then Mark paid or Not received', (tester) async {
-    final s = AppState(start: 'aPay', role: 'owner');
+  testWidgets('F25: plan payments and Fair Play cases are not in the app; team home points to the console', (tester) async {
+    final s = AppState(start: 'aHome', role: 'owner');
     await _pump(tester, s);
-    expect(find.text('Owner payments'), findsOneWidget);
-    expect(find.text('Match each UPI reference in the bank app. Never trust screenshots.'), findsOneWidget);
-    expect(find.text('To check 2'), findsOneWidget);
-    expect(find.text('Late 1'), findsOneWidget);
-    expect(find.text('Greenview Men\'s PG · ₹499'), findsOneWidget);
-    expect(find.textContaining('HZ-INV-1019 · UPI ref 4021 7710 0532 · sent 1 Oct'), findsOneWidget);
-    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('aPay-HZ-INV-1019')), matching: find.text('Mark paid')));
-    expect(s.invoices.firstWhere((i) => i.ref == 'HZ-INV-1019').status, 'paid');
-    await tester.pump(const Duration(seconds: 3));
-    await _tap(tester, find.text('Not received'));
-    expect(s.invoices.firstWhere((i) => i.ref == 'HZ-INV-1016').status, 'missing');
-    expect(find.text('To check 0'), findsOneWidget);
-
-    // Late: overdue and not received, each with a reminder.
-    await _tap(tester, find.text('Late 2'));
-    expect(find.byKey(const ValueKey('aPay-HZ-INV-0998')), findsOneWidget);
-    expect(find.byKey(const ValueKey('aPay-HZ-INV-1016')), findsOneWidget);
-    expect(find.textContaining('deals paused'), findsOneWidget);
-    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('aPay-HZ-INV-0998')), matching: find.text('Send reminder')));
-    expect(s.lastLink.toString(), contains('wa.me'));
-
-    // Paid, then Upcoming (trial).
-    await _tap(tester, find.text('Paid'));
-    expect(find.byKey(const ValueKey('aPay-HZ-INV-1019')), findsOneWidget);
-    expect(find.textContaining('Paid so far:'), findsOneWidget);
-    await _tap(tester, find.text('Upcoming'));
-    expect(find.byKey(ValueKey('aPay-${s.invoice.ref}')), findsOneWidget);
+    expect(find.text('Payments check'), findsNothing);
+    expect(find.text('Fair Play cases'), findsNothing);
+    expect(find.byKey(const ValueKey('aHomeConsole')), findsOneWidget);
+    expect(find.text('Payments and Fair Play cases are in the team console: farhath.me/hostelzy/app/console'), findsOneWidget);
+    expect(AppState.screens.contains('aPay') || AppState.screens.contains('aCases'), isFalse);
     s.dispose();
   });
 
-  testWidgets('F22 Area 4: Fair Play cases: decide inline, open a case for its detail', (tester) async {
-    final s = AppState(start: 'aCases', role: 'owner');
-    s.cases.firstWhere((c) => c.id == 'FP-0142').status = 'decide';
-    await _pump(tester, s);
-    expect(find.text('Fair Play cases'), findsOneWidget);
-    await _tap(tester, find.text('Decide 1'));
-    final row = find.byKey(const ValueKey('aCase-FP-0142'));
-    for (final t in ['No issue', 'Ask more', 'Strike 1']) {
-      expect(find.descendant(of: row, matching: find.text(t)), findsOneWidget);
-    }
-    expect(find.textContaining('Decide after the 48-hour window or the owner’s reply.'), findsOneWidget);
-    await _tap(tester, find.descendant(of: row, matching: find.text('Ask more')));
-    expect(s.cases.firstWhere((c) => c.id == 'FP-0142').status, 'waiting');
-    expect(find.text('Decide 0'), findsOneWidget);
-
-    // A new case: tap it for the detail; decide there.
-    await _tap(tester, find.text('New 3'));
-    await _tap(tester, find.textContaining('FP-0139'));
-    expect(find.text('OWNER HISTORY'), findsOneWidget);
-    await _tap(tester, find.text('No issue'));
-    expect(s.cases.firstWhere((c) => c.id == 'FP-0139').status, 'closed');
-    await _tap(tester, find.text('Closed'));
-    expect(find.text('Closed · no issue'), findsOneWidget);
-    s.dispose();
-  });
-
-  for (final c in const [('aTrack', 0, 'light'), ('aAdd', 1, 'light'), ('aAdd', 2, 'light'), ('aAdd', 6, 'light'), ('aAdd', 7, 'light'), ('aAdd', 7, 'dark'), ('aPay', 0, 'light'), ('aCases', 0, 'dark')]) {
+  for (final c in const [('aTrack', 0, 'light'), ('aAdd', 1, 'light'), ('aAdd', 2, 'light'), ('aAdd', 6, 'light'), ('aAdd', 7, 'light'), ('aAdd', 7, 'dark'), ('aHome', 0, 'dark')]) {
     testWidgets('F22 Area 4: ${c.$1}${c.$2 > 0 ? ' step ${c.$2}' : ''} (${c.$3}) fits at 2× text', (tester) async {
       final s = AppState(start: c.$1, role: 'owner', theme: c.$3);
       if (c.$2 > 0) s.addStep = c.$2;
-      if (c.$1 == 'aCases') {
-        s.cases.first.status = 'decide';
-        s.adminTab = 'decide';
-      }
       await _pump(tester, s, scale: 2);
       expect(tester.takeException(), isNull);
       s.dispose();

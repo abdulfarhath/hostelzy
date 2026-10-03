@@ -225,9 +225,6 @@ class SupabaseRepo implements HostelRepo {
   Future<void> sendInvoiceUtr(String key, String utr) => db.from('invoices').update({'utr': utr, 'status': 'checking'}).eq('id', key);
 
   @override
-  Future<void> checkInvoice(String key, String status) => db.from('invoices').update({'status': status, if (status == 'paid') 'late': 0}).eq('id', key);
-
-  @override
   Future<void> postReview({required String hid, required String name, required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) =>
       db.from('reviews').insert({'hostel_id': hid, 'author_name': name, 'kind': kind, 'stars': stars, 'body': body, 'cats': cats, 'layout': layout, 'advance': advance, 'again': again});
 
@@ -249,22 +246,6 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> fixCase(String key) => db.rpc('fix_case', params: {'p_case': key});
-
-  @override
-  Future<void> decideCase(String key, String hid, String how, String? decision) async {
-    if (how == 'strike') {
-      try {
-        // F24 #18: the server adds the strike and writes what it means.
-        await db.rpc('give_strike', params: {'p_case': key});
-        return;
-      } on PostgrestException catch (e) {
-        // Before its SQL runs (FOUNDER-TODO 4zf1) the function isn't there.
-        if (!_missingFn(e)) rethrow;
-      }
-      await db.from('strikes').insert({'hostel_id': hid, 'case_id': key});
-    }
-    await db.from('fair_cases').update({'status': how == 'more' ? 'waiting' : 'closed', 'decision': decision}).eq('id', key);
-  }
 
   @override
   Future<void> acceptFairPlay() => db.rpc('accept_fair_play');

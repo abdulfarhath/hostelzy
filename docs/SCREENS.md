@@ -8,28 +8,32 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **87** |
-| App sheets (bottom sheets) | **43** |
+| App screens (routes + their separate pages/views) | **85** |
+| App sheets (bottom sheets) | **42** |
 | App full-screen states | **31** |
-| **Release app total** | **161** |
+| **Release app total** | **158** |
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **182** |
+| **Overall total** | **179** |
 
-Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 13 · Shared 8.
-Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+**F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
+S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
+renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**.
+
+Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
 
 1. **Release app** = `flutter build --release --dart-define=DATA=supabase` (the Play/APK build). Things only in
    debug (`kDebugMode`), only in the sample "demo" APK (`DATA=sample`), or behind a flag that is off
    (`phoneOtpLogin = false`) are listed under "Not counted" and are not in the totals.
-2. **Screen** = each `s.screen` key the shell maps to a widget (`lib/ui/shell.dart:386-458`, 70 keys), minus
+2. **Screen** = each `s.screen` key the shell maps to a widget (`lib/ui/shell.dart:386-458`, 68 keys), minus
    `otp` (flag off). Keys that draw the very same screen count once (`oPlan` = `oInvoice` = `oPayStatus`,
    `plan.dart:78`). A key whose body is switched wholesale into a **separate page** with its own title
    (Manage pages, wizard steps, Give notice / Move bed, Join / List your PG, picker Room / List view, Food week,
    Layouts › Shared things) counts once per page. Filter tabs inside one list (All / Due / Paid…) do not.
-3. **Sheet** = each `s.sheet` key with a body in `_Sheet` (`shell.dart:674-718`, 43 keys). Every one has a
+3. **Sheet** = each `s.sheet` key with a body in `_Sheet` (`shell.dart:674-718`, 42 keys). Every one has a
    real opener (file:line below). No `showDialog` / `showModalBottomSheet` / `Navigator.push` exists in `lib/`.
 4. **Full-screen state** = a state that replaces the screen's whole main content (everything under its
    header/tabs, or the map's only card) with a different message or layout: empty, offline, loading, error,
@@ -39,7 +43,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (87)
+## 1. App screens (85)
 
 ### Start and sign-in (7)
 
@@ -127,11 +131,11 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
 | 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) · Past invoices + All plans sections (F25 A7, A8) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
 
-### Hostelzy team mode (13) — release, only for Google accounts with the `team` claim
+### Hostelzy team mode (11) — release, only for Google accounts with the `team` claim
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 66 | `aHome` | Hostelzy team (tools list) | `team.dart:40` | Settings › Hostelzy team (`team_mode.dart:17,33`) |
+| 66 | `aHome` | Hostelzy team (tools list; a line says Payments and Fair Play cases are in the team console, F25) | `team.dart:40` | Settings › Hostelzy team (`team_mode.dart:17,33`) |
 | 67 | `aAdd` step 1 | Add hostel · Basics | `onboarding.dart:142` | Team › Add hostel (`state.dart:239`); tracker (`team_mode.dart:71`) |
 | 68 | `aAdd` step 2 | Add hostel · Rooms, floor by floor | `onboarding.dart:218` | Wizard › Next |
 | 69 | `aAdd` step 3 | Add hostel · Rate card | `onboarding.dart:406` | Wizard › Next |
@@ -141,8 +145,6 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 73 | `aAdd` step 7 | Add hostel · Ready to go live? | `onboarding.dart:789` | Wizard › Next |
 | 74 | `aPin` | Map pin | `map.dart:287` | Wizard step 1 › Map pin (`onboarding.dart:202`; `features/onboarding/onboarding.dart:251`) |
 | 75 | `aTrack` | Onboarding tracker | `onboarding.dart:1253` | Team › Onboarding tracker (`team.dart:49`); after go live |
-| 76 | `aPay` | Payments check | `plan.dart:348` | Team › Payments check (`team.dart:52`) |
-| 77 | `aCases` | Fair Play cases (list, case opens in place) | `fairplay.dart:558` | Team › Fair Play cases (`team.dart:53`) |
 | 78 | `aTeam` | Team members | `rooms.dart:113` | Team › Team members (`team.dart:56`) |
 
 ### Shared, every role (8)
@@ -152,13 +154,13 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 79 | `me` | Me (tab for tenant and resident; owner via Today avatar) | `screens_tenant.dart:571` | Tab 5; owner Today (`screens_owner.dart:89`) |
 | 80 | `settings` | Settings | `settings.dart:73` | Me › Settings |
 | 81 | `reminders` | Reminders | `reminders.dart:92` | Me › Reminders; reminder notification (`features/reminders/reminders.dart:77,234`) |
-| 82 | `perm` | Turn on notifications? (explainer) | `settings.dart:309` | First role pick with push not yet allowed (`login.dart:186`) |
+| 82 | `perm` | Turn on notifications? (explainer) | `settings.dart:309` | First role pick as **resident or owner** with push not yet allowed (`login.dart` `offerPush`). Never for tenants (F25: a tenant's only ask is H5) |
 | 83 | `delAcc` | Delete account | `settings.dart:143` | Settings › Delete account |
 | 84 | `delConfirm` | Delete · confirm with Google | `settings.dart:227` | Delete account › Continue (`state.dart:656`) |
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (43)
+## 2. App sheets (42)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
@@ -170,7 +172,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 2 | `loc` | Use your location? | `map.dart:249` | Map › Near me (`map.dart:128`; `guest.dart:180`) |
 | 3 | `signIn` | Sign in to hold / book / message | `guest.dart:105` | Guest taps Hold, Book or WhatsApp (`guest.dart:86`) |
 | 4 | `hold` | Bed N (free hold or book with advance) | `shell.dart:877` | Picker › Continue (`screens_tenant.dart:1148`; `layout.dart:613`); hold again (`:1453`) |
-| 5 | `holdNotify` | Bed N is held for you (allow notifications) | `guest.dart:129` | After the first hold (`guest.dart:203`) |
+| 5 | `holdNotify` | Bed N is held for you (allow notifications; the tenant's only notification ask, never together with S82, F25) | `guest.dart:129` | After the first hold (`guest.dart:203`) |
 | 6 | `wa` | Ask the owner (WhatsApp enquiry) | `shell.dart:962` | Hostel page / hold › WhatsApp (`map.dart:158`; `sync.dart:197`; `state.dart:396`) |
 | 7 | `payAdv` | Pay the advance | `payments.dart:59` | Book a bed (`residents.dart:313,427`) |
 | 8 | `report` | Tell us what happened (private) | `fairplay.dart:288` | Holds › "The owner asked me to skip the app" (`screens_tenant.dart:544`) |
@@ -188,14 +190,13 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 15 | `fixSend` | Send your fix | `layout_fixes.dart:386` | Fix editor › Send (`features/layouts/layout_fixes.dart:193`) |
 | 16 | `quickFix` | Quick fix · item (fan, AC…) | `layout_fixes.dart:557` | Rooms › tap an item (`features/layouts/layout_fixes.dart:374`) |
 
-### Owner (19)
+### Owner (18)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
-| 17 | `add` | Add tenant (centre tab action) | `shell.dart:1200` | Owner tab bar "+" (`shell.dart:473`); bed sheet (`:1372`) |
 | 18 | `bed` | Bed N (owner bed sheet) | `shell.dart:1322` | Beds › a bed (`screens_owner.dart:520`) |
 | 19 | `enq` | Enquiry from Hostelzy (HZ code) | `shell.dart:1011` | Today / enquiry link (`links.dart:42`; `state.dart:516`) |
-| 20 | `addR` | Add a resident | `shell.dart:1075` | Residents › Add (`state.dart:505`) |
+| 20 | `addR` | Add a resident (the one sheet; F25: H17 `add` merged in). Name, WhatsApp number, bed, ONE date (label "Moves in" when in the future = a booking, "Joined on" when today or past), monthly fee, advance, "Lived here before Hostelzy" (before go-live, past dates only) | `features/residents/residents_sheets.dart` (`AddResidentSheet`) | Owner tab bar "+" (`shell.dart` `_openTab`); Residents › Add; bed sheet › Add tenant to this bed (all `residents.dart` `openAddResident`) |
 | 21 | `trusted` | X is a Trusted tenant | `rewards.dart:249` | Today › hold request (`screens_owner.dart:161`) |
 | 22 | `utr` | I've paid ₹N (plan invoice UTR) | `plan.dart:243` | Your plan › I've paid (`state.dart:170`) |
 | 23 | `layoutReq` | Ask Hostelzy to draw it | `layout.dart:941` | Create a layout › Custom / Ask (`room_layouts.dart:210`) |

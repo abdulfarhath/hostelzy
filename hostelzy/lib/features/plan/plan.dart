@@ -10,9 +10,6 @@ mixin _PlanData {
   /// UTR being typed on "I've paid".
   String utrDraft = '';
 
-  /// Founder payments filter: check | late | paid | soon (trial or not due).
-  String payTab = 'check';
-
   /// F24 items 20, 21: the server's featured spots and paused deals per live hostel.
   Map<String, HostelFlags> flags = {};
 
@@ -120,39 +117,6 @@ extension PlanActions on AppState {
     });
     toastMsg('UPI reference saved. Hostelzy checks it against the bank record.');
   }
-
-  /// Founder admin: the UTR is in the bank record.
-  void markPaid(Invoice i) {
-    final key = i.key;
-    if (onServer && key != null) {
-      _write(() => data.checkInvoice(key, 'paid')).then((ok) {
-        if (ok) toastMsg('${i.ref} marked paid.');
-      });
-      return;
-    }
-    update(() {
-      i
-        ..status = 'paid'
-        ..late = 0
-        ..checked = dayMon(appToday);
-    });
-    toastMsg('${i.ref} marked paid.');
-  }
-
-  /// Founder admin: no payment with that UTR reached the bank.
-  void notReceived(Invoice i) {
-    final key = i.key;
-    if (onServer && key != null) {
-      _write(() => data.checkInvoice(key, 'missing')).then((ok) {
-        if (ok) toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
-      });
-      return;
-    }
-    update(() => i.status = 'missing');
-    toastMsg('Marked not received. ${hostelById(i.hid).owner} sees it on their plan screen.');
-  }
-
-  void sendReminder(Invoice i) => whatsapp(ownerWa(i.hid), 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
 
   /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.
   void openUtr() => update(() {
