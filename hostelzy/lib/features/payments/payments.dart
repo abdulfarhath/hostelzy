@@ -89,4 +89,10 @@ extension PaymentsActions on AppState {
     update(() => hid = h.hid);
     openPicker();
   }
+
+  void openPayUtr(Payment p) => update(() {
+    payId = p.id;
+    payUtr = p.utr ?? '';
+    sheet = 'payUtr';
+  });
 }

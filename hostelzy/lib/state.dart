@@ -163,81 +163,13 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   late Invoice invoice = Invoice(ref: 'HZ-INV-1024', hid: ownHid, beds: planBeds, amt: planTiers[planTierOf(planBeds)].price, due: trialEnd.add(const Duration(days: 1)));
   late List<Invoice> invoices = [invoice, ...seedInvoices()];
 
-  /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.
-  void openUtr() => update(() {
-    utrDraft = invoice.status == 'missing' ? invoice.utr ?? '' : '';
-    sheet = 'utr';
-  });
-
   // F12 room layouts
 
   /// Layouts drawn by the Hostelzy team, by hostel and room number.
   late final Map<String, Map<int, RoomLayout>> layouts = seedLayouts(rooms);
 
-  /// Tapping a room in Plan opens it in Room.
-  void openRoom(int n) => update(() {
-    room = n;
-    bed = null;
-    mode = 'room';
-  });
-
   /// A bed a tenant can hold: free, or freeing up soon.
   static bool _open(Bed b) => (b.state == 'free' || b.state == 'soon') && !b.mine;
-
-  void openLayoutRequest() => openShapeRequest();
-
-  // team mode
-
-  void openLayout(int n, {bool editor = false, bool owner = false}) {
-    _openLayout(n, editor: editor, owner: owner);
-    // F12: one editor at a time (on the server).
-    if (editor) unawaited(takeLayoutLock());
-  }
-
-  void _openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
-    // F18: a room without a layout gets a starting one to edit (no crash);
-    // tenants don't see it until it is published.
-    final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
-    if (editor && r != null && layoutOf(ownHid, n) == null) {
-      (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)
-        ..published = null
-        ..live = false;
-    }
-    edOwner = editor && owner;
-    lRoom = n;
-    edSel = null;
-    hist = [...hist, screen];
-    screen = editor ? 'aLayout' : 'oLayout';
-    sheet = null;
-    // F24: the owner's "Ask Hostelzy" requests and the team's drawings.
-    loadShapeRequests(ownHid);
-  });
-
-  // layout editor
-
-  void edSelect(String id) => update(() => edSel = id);
-
-  // F14 onboarding
-
-  void switchHostel(String hid) => update(() {
-    ownHid = hid;
-    rules = hostelRules[hid] != null ? List.of(hostelRules[hid]!) : isSeedHostel(hid) ? rules : blankRules(hostelById(hid).terms);
-    // Drafts belong to the hostel they were opened on.
-    rateDraft = null;
-    acDraft = null;
-    dealDraft = null;
-    sheet = null;
-    screen = 'oToday';
-    hist = [];
-  });
-
-  void openAddHostel() => update(() {
-    draft = AppState.samples ? HostelDraft() : HostelDraft.blank();
-    addStep = 1;
-    hist = [...hist, screen];
-    screen = 'aAdd';
-    sheet = null;
-  });
 
   // F08 reviews
 
@@ -357,24 +289,6 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     sheet = null;
   });
 
-  // F18 map
-
-  void pickArea(String? a) => update(() {
-    if (a != null) noteSearchedArea(a);
-    mapArea = a;
-    areaCenter = null;
-    mapMoved = false;
-    mapFocus++;
-    sheet = null;
-  });
-
-  void searchThisArea() => update(() {
-    if (mapNow == null) return;
-    areaCenter = mapNow;
-    mapArea = null;
-    mapMoved = false;
-  });
-
   /// F18: sample owner / resident data only in debug builds, tests and the
   /// demo APK (DATA=sample). The real APK (DATA=supabase) starts with none.
   static bool samples = kDebugMode || dataSource == 'sample';
@@ -419,96 +333,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     if (onServer) markContactedLive(ref);
   }
 
-  /// Resident: raise a complaint (C: saved on the server when live).
-  Future<void> raiseComplaint() async {
-    if (cText.trim().isEmpty) return toastMsg('Tell us what is wrong first.');
-    final text = cText.trim();
-    final photo = cPhoto;
-    if (onServer) {
-      final h = myHostel;
-      if (h == null) return toastMsg('Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
-      final uid = account?.uid;
-      final ok = await _write(() async {
-        // F21 W3: the photo goes up first, then the complaint points at it.
-        final path = photo != null && uid != null ? await data.uploadComplaintPhoto(h, uid, photo) : null;
-        await data.raiseComplaint(hid: h, bed: myBedLabel, cat: cCat, body: text, photo: path);
-      });
-      if (!ok) return;
-      update(() {
-        cText = '';
-        cPhoto = null;
-      });
-      await refreshLive();
-      return;
-    }
-    final id = DateTime.now().millisecondsSinceEpoch;
-    update(() {
-      complaints = [...complaints, Complaint(id: id, by: '$meShort · 204', cat: cCat, text: text, status: 'Open', date: dayMon(appToday), note: 'Saved on this phone · tell $stayOwner on WhatsApp too', mine: true, at: id)];
-      if (photo != null) complaintPhotosLocal[id] = photo;
-      cText = '';
-      cPhoto = null;
-    });
-  }
-
-  /// Help: one photo for the complaint (compressed like hostel photos).
-  Future<void> pickComplaintPhoto() async {
-    final raw = await picker.pick();
-    if (raw == null) return;
-    final jpg = prepPhoto(raw, 'free');
-    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
-    update(() => cPhoto = jpg);
-  }
-
-  /// Owner: open a complaint's photo (a short-lived private link on the server).
-  Future<void> openComplaintPhoto(Complaint c) async {
-    final local = complaintPhotosLocal[c.id];
-    if (local != null) {
-      return update(() {
-        cPhotoView = c.id;
-        sheet = 'cPhoto';
-      });
-    }
-    final path = c.photo;
-    if (path == null) return;
-    final url = await data.complaintPhotoUrl(path);
-    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
-    unawaited(openLink(Uri.parse(url), 'the photo'));
-  }
-
-  /// Owner: Open → In progress → Resolved (C: saved on the server when live).
-  Future<void> advanceComplaint(Complaint c) async {
-    const nxs = {'Open': 'In progress', 'In progress': 'Resolved'};
-    final next = nxs[c.status];
-    if (next == null) return;
-    final note = next == 'Resolved' ? 'Fixed by the owner' : 'Owner is on it';
-    update(() => complaints = complaints.map((x) => x.id == c.id ? x.copyWith(status: next, note: note) : x).toList());
-    if (onServer && c.key != null) await _write(() => data.updateComplaint(c.key!, status: next, note: note));
-  }
-
-  /// The resident's bed as shown on complaints (live: not known yet → '').
-  // F21 W3: on the server, the resident's own bed (complaints and layout fixes said none).
-  String get myBedLabel => onServer ? (myStay?.bed ?? '') : '204';
-
   // F06
-
-  void openAddResident() => update(() {
-    final free = unassignedBeds;
-    rName = '';
-    rPhone = '';
-    rJoin = 'Today';
-    rBefore = false;
-    rBed = free.isNotEmpty ? free.first : null;
-    final r = rBed != null ? findBed(ownHid, rBed).r : null;
-    rFee = r != null ? '${r.rent}' : '';
-    rAdv = '${hostelById(ownHid).terms.advance}';
-    sheet = 'addR';
-  });
-
-  void pickResidentBed(String id) => update(() {
-    rBed = id;
-    final r = findBed(ownHid, id).r;
-    if (r != null) rFee = '${r.rent}';
-  });
 
   void openEnquiry(String ref) => update(() {
     enqRef = ref;
@@ -540,110 +365,16 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     rateDraft![rateKey(ac, share)] = other + (ac ? 1200 : -1200);
   });
 
-  void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
-
   // F18 holds
 
   /// A tenant holds at most this many beds at a time (D12).
   static const maxHolds = 2;
 
-  // F17 payments
-
-  void openPayUtr(Payment p) => update(() {
-    payId = p.id;
-    payUtr = p.utr ?? '';
-    sheet = 'payUtr';
-  });
-
   // F13 login
-
-  /// Honest fallback until Google sign-in is set up: nothing leaves the phone.
-  void continueOnPhone() => update(() {
-    account = null;
-    hist = [...hist, screen];
-    screen = 'phone';
-    sheet = null;
-  });
 
   /// After the phone number (typed, not verified): pick a role.
   /// Indian mobile numbers: 10 digits starting 6–9.
   static bool validPhone(String p) => RegExp(r'^[6-9]\d{9}$').hasMatch(p);
-
-  // F13 backend
-
-  /// Live hostels from the database replace the sample ones for tenants.
-  void applyListings(Listings l) => update(() {
-    liveListings = true;
-    livePos.addAll(l.pos);
-    for (final h in l.hostels) {
-      hostels.removeWhere((x) => x.id == h.id);
-      hostels.add(h);
-      rooms[h.id] = l.rooms[h.id]!;
-      rates[h.id] = l.rates[h.id]!;
-      ownerUpi[h.id] = l.upi[h.id]!;
-      stats[h.id] = statsOf(l.reviews[h.id] ?? const []);
-      // F24 item 9: the owner's last confirmations on the server; unknown
-      // (never "today") until there is one.
-      if (h.bedsCheckedAt != null) {
-        confirmed[h.id] = daysSince(h.bedsCheckedAt!);
-      } else {
-        confirmed.remove(h.id);
-      }
-      if (h.layoutsCheckedAt != null) {
-        layoutConfirmed[h.id] = daysSince(h.layoutsCheckedAt!);
-      } else {
-        layoutConfirmed.remove(h.id);
-      }
-      // F24 Wave 4d (F03): the rates' last "confirmed by the owner".
-      if (h.ratesCheckedAt != null) {
-        ratesConfirmedAt[h.id] = h.ratesCheckedAt!;
-      } else {
-        ratesConfirmedAt.remove(h.id);
-      }
-      if (h.ratesTracked && h.ratesCheckedAt == null) {
-        ratesNeverConfirmed.add(h.id);
-      } else {
-        ratesNeverConfirmed.remove(h.id);
-      }
-      layouts[h.id] = l.layouts[h.id] ?? {};
-      deals[h.id] = l.deals[h.id] ?? const Deals();
-      strikes[h.id] = l.strikes[h.id] ?? 0;
-      if (l.standing[h.id] != null) {
-        standing[h.id] = l.standing[h.id]!;
-      } else {
-        standing.remove(h.id);
-      }
-      if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
-      if (l.checkers[h.id] != null) hostelCheckers[h.id] = l.checkers[h.id]!;
-      if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
-      // F24: "Visited by Hostelzy" is the team's go-live date on the server.
-      if (h.visitedOn.isNotEmpty) visited[h.id] = h.visitedOn;
-    }
-    // S4: the live hostels' reviews replace any earlier copy of them.
-    final ids = {for (final h in l.hostels) h.id};
-    reviews = [...reviews.where((r) => !ids.contains(r.hid)), for (final h in l.hostels) ...?l.reviews[h.id]];
-    // F23: their floor and room things too.
-    amenities = [...amenities.where((a) => !ids.contains(a.hid)), for (final h in l.hostels) ...?l.amenities[h.id]];
-    // S3: the owner edits their own hostel's rules.
-    if (hostelRules[ownHid] != null) {
-      rules = List.of(hostelRules[ownHid]!);
-    } else if (!isSeedHostel(ownHid) && ids.contains(ownHid)) {
-      rules = blankRules(hostelById(ownHid).terms);
-    }
-    // F24 item 8: the server's walk-in holds on the owner's beds.
-    syncWalkIns();
-  });
-
-  /// Remote switches: too-old builds must update; maintenance mode.
-  void applySettings(RemoteSettings r) => update(() {
-    maintUntil = r.maintenanceUntil;
-    if (appBuild < r.minBuild || r.maintenanceUntil.isNotEmpty) {
-      gateKind = appBuild < r.minBuild ? 'update' : 'maintenance';
-      screen = 'gate';
-      hist = [];
-      sheet = null;
-    }
-  });
 
   void openPerm() => update(() {
     hist = [...hist, screen];

@@ -394,4 +394,6 @@ extension LayoutEditorActions on AppState {
     });
     toastMsg('v${l.version} is waiting for ${hostelById(l.hid).owner}’s approval.');
   }
+
+  void edSelect(String id) => update(() => edSel = id);
 }

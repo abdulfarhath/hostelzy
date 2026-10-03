@@ -294,4 +294,38 @@ extension RoomLayoutsActions on AppState {
     });
     publishLayout(layoutOf(q.hid, q.room)!);
   }
+
+  /// Tapping a room in Plan opens it in Room.
+  void openRoom(int n) => update(() {
+    room = n;
+    bed = null;
+    mode = 'room';
+  });
+
+  void openLayoutRequest() => openShapeRequest();
+
+  void openLayout(int n, {bool editor = false, bool owner = false}) {
+    _openLayout(n, editor: editor, owner: owner);
+    // F12: one editor at a time (on the server).
+    if (editor) unawaited(takeLayoutLock());
+  }
+
+  void _openLayout(int n, {bool editor = false, bool owner = false}) => update(() {
+    // F18: a room without a layout gets a starting one to edit (no crash);
+    // tenants don't see it until it is published.
+    final r = rooms[ownHid]!.where((x) => x.n == n).firstOrNull;
+    if (editor && r != null && layoutOf(ownHid, n) == null) {
+      (layouts[ownHid] ??= {})[n] = mkLayout(ownHid, r, street: true)
+        ..published = null
+        ..live = false;
+    }
+    edOwner = editor && owner;
+    lRoom = n;
+    edSel = null;
+    hist = [...hist, screen];
+    screen = editor ? 'aLayout' : 'oLayout';
+    sheet = null;
+    // F24: the owner's "Ask Hostelzy" requests and the team's drawings.
+    loadShapeRequests(ownHid);
+  });
 }

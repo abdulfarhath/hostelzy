@@ -498,4 +498,24 @@ extension OnboardingActions on AppState {
       toastMsg(_onboardWords(e));
     }
   }
+
+  void switchHostel(String hid) => update(() {
+    ownHid = hid;
+    rules = hostelRules[hid] != null ? List.of(hostelRules[hid]!) : isSeedHostel(hid) ? rules : blankRules(hostelById(hid).terms);
+    // Drafts belong to the hostel they were opened on.
+    rateDraft = null;
+    acDraft = null;
+    dealDraft = null;
+    sheet = null;
+    screen = 'oToday';
+    hist = [];
+  });
+
+  void openAddHostel() => update(() {
+    draft = AppState.samples ? HostelDraft() : HostelDraft.blank();
+    addStep = 1;
+    hist = [...hist, screen];
+    screen = 'aAdd';
+    sheet = null;
+  });
 }

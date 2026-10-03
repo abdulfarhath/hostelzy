@@ -226,4 +226,12 @@ extension OnPhoneActions on AppState {
       toastMsg('Saved on this phone.');
     }
   }
+
+  /// Honest fallback until Google sign-in is set up: nothing leaves the phone.
+  void continueOnPhone() => update(() {
+    account = null;
+    hist = [...hist, screen];
+    screen = 'phone';
+    sheet = null;
+  });
 }
