@@ -4,13 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hostelzy/data.dart';
+import 'package:hostelzy/features/explore/hostel_screen.dart' show dealHeadline;
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
-import 'package:hostelzy/ui/screens_tenant.dart' show dealHeadline;
 import 'package:hostelzy/ui/shell.dart';
 
 // F24 Wave 0: no fake or false lines in the real build, owners draw their own
@@ -139,7 +138,17 @@ void main() {
   });
 
   testWidgets('real build: the AC repair note has no invented date', (tester) async {
-    for (final f in ['lib/ui/screens_tenant.dart', 'lib/ui/layout.dart']) {
+    for (final f in [
+      // Was lib/ui/screens_tenant.dart and lib/ui/layout.dart.
+      'lib/features/explore/explore_screen.dart',
+      'lib/features/explore/hostel_screen.dart',
+      'lib/features/holds/holds_screens.dart',
+      'lib/features/holds/picker_screen.dart',
+      'lib/features/session/me_screen.dart',
+      'lib/features/layouts/layout_map.dart',
+      'lib/features/layouts/owner_layout_screens.dart',
+      'lib/features/layouts/admin_layout_screen.dart',
+    ]) {
       expect(File(f).readAsStringSync().contains('Complaint raised 30 Sep'), isFalse, reason: f);
     }
   });

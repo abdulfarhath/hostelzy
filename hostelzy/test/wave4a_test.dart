@@ -3,13 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hostelzy/app_config.dart' show enquiryLink;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/shell.dart';
 
 // F24 Wave 4a (audit §3): the enquiry's WhatsApp message ends with its link;

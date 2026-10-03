@@ -418,4 +418,93 @@ extension ResidentsActions on AppState {
       unawaited(askPushAfterHold());
     }
   }
+
+  /// Resident: raise a complaint (C: saved on the server when live).
+  Future<void> raiseComplaint() async {
+    if (cText.trim().isEmpty) return toastMsg('Tell us what is wrong first.');
+    final text = cText.trim();
+    final photo = cPhoto;
+    if (onServer) {
+      final h = myHostel;
+      if (h == null) return toastMsg('Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
+      final uid = account?.uid;
+      final ok = await _write(() async {
+        // F21 W3: the photo goes up first, then the complaint points at it.
+        final path = photo != null && uid != null ? await data.uploadComplaintPhoto(h, uid, photo) : null;
+        await data.raiseComplaint(hid: h, bed: myBedLabel, cat: cCat, body: text, photo: path);
+      });
+      if (!ok) return;
+      update(() {
+        cText = '';
+        cPhoto = null;
+      });
+      await refreshLive();
+      return;
+    }
+    final id = DateTime.now().millisecondsSinceEpoch;
+    update(() {
+      complaints = [...complaints, Complaint(id: id, by: '$meShort · 204', cat: cCat, text: text, status: 'Open', date: dayMon(appToday), note: 'Saved on this phone · tell $stayOwner on WhatsApp too', mine: true, at: id)];
+      if (photo != null) complaintPhotosLocal[id] = photo;
+      cText = '';
+      cPhoto = null;
+    });
+  }
+
+  /// Help: one photo for the complaint (compressed like hostel photos).
+  Future<void> pickComplaintPhoto() async {
+    final raw = await picker.pick();
+    if (raw == null) return;
+    final jpg = prepPhoto(raw, 'free');
+    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    update(() => cPhoto = jpg);
+  }
+
+  /// Owner: open a complaint's photo (a short-lived private link on the server).
+  Future<void> openComplaintPhoto(Complaint c) async {
+    final local = complaintPhotosLocal[c.id];
+    if (local != null) {
+      return update(() {
+        cPhotoView = c.id;
+        sheet = 'cPhoto';
+      });
+    }
+    final path = c.photo;
+    if (path == null) return;
+    final url = await data.complaintPhotoUrl(path);
+    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    unawaited(openLink(Uri.parse(url), 'the photo'));
+  }
+
+  /// Owner: Open → In progress → Resolved (C: saved on the server when live).
+  Future<void> advanceComplaint(Complaint c) async {
+    const nxs = {'Open': 'In progress', 'In progress': 'Resolved'};
+    final next = nxs[c.status];
+    if (next == null) return;
+    final note = next == 'Resolved' ? 'Fixed by the owner' : 'Owner is on it';
+    update(() => complaints = complaints.map((x) => x.id == c.id ? x.copyWith(status: next, note: note) : x).toList());
+    if (onServer && c.key != null) await _write(() => data.updateComplaint(c.key!, status: next, note: note));
+  }
+
+  /// The resident's bed as shown on complaints (live: not known yet → '').
+  // F21 W3: on the server, the resident's own bed (complaints and layout fixes said none).
+  String get myBedLabel => onServer ? (myStay?.bed ?? '') : '204';
+
+  void openAddResident() => update(() {
+    final free = unassignedBeds;
+    rName = '';
+    rPhone = '';
+    rJoin = 'Today';
+    rBefore = false;
+    rBed = free.isNotEmpty ? free.first : null;
+    final r = rBed != null ? findBed(ownHid, rBed).r : null;
+    rFee = r != null ? '${r.rent}' : '';
+    rAdv = '${hostelById(ownHid).terms.advance}';
+    sheet = 'addR';
+  });
+
+  void pickResidentBed(String id) => update(() {
+    rBed = id;
+    final r = findBed(ownHid, id).r;
+    if (r != null) rFee = '${r.rent}';
+  });
 }

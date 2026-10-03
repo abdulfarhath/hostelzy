@@ -1,0 +1,345 @@
+import 'package:flutter/material.dart';
+
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../layouts/layout_fixes_screens.dart' show FixPhotoThumb;
+import '../layouts/owner_layout_screens.dart' show ConfirmLayoutsCard;
+import '../onboarding/onboarding_cards.dart';
+import '../plan/plan_screens.dart';
+
+({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
+  var t = 0, booked = 0, held = 0, soon = 0, free = 0;
+  for (final r in s.rooms[s.ownHid]!) {
+    for (final b in r.beds) {
+      t++;
+      switch (b.state) {
+        case 'booked':
+          booked++;
+        case 'held':
+          held++;
+        case 'soon':
+          soon++;
+        case 'free':
+          free++;
+      }
+    }
+  }
+  return (t: t, booked: booked, held: held, soon: soon, free: free);
+}
+
+String occCounts(AppState s) {
+  final c = countBeds(s);
+  return '${c.free} free · ${c.held} on hold · ${c.soon} soon · ${c.booked} taken';
+}
+
+/// Hold requests: the tenant's own free holds on Anjani plus seeded ones.
+/// S2: on Supabase the holds are tenants' (their name isn't shared; the HZ code is).
+List<HoldRequest> allRequests(AppState s) => [
+  for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting'))
+    s.onServer
+        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecsOf(h), start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id, trusted: h.trusted)
+        : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
+  if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
+];
+
+class OwnerTodayScreen extends StatelessWidget {
+  const OwnerTodayScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final c = countBeds(s);
+    final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
+    final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
+    final kpis = <(String, String, String)>[
+      ('${c.booked} / ${c.t}', 'beds taken', 'oBeds'),
+      ('${c.free}', 'free beds', 'oBeds'),
+      (fmt(expected - collected), 'rent pending', 'oRent'),
+    ];
+    return Scroll(
+      key: ValueKey('oToday${s.scrollEpoch}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // F14: tap the hostel name to switch hostels.
+                Expanded(
+                  child: Tap(onTap: () => s.update(() => s.sheet = 'switch'), child: PageHead(kicker: '${hostelById(s.ownHid).name} · ${dayName(appToday)}', title: 'Today', size: 32)),
+                ),
+                const SizedBox(width: 12),
+                Tap(
+                  onTap: () => s.go('me'),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    color: p.ac,
+                    alignment: Alignment.center,
+                    child: T(initials(s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner), w: 800, s: 15, c: p.ai),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const PlanBanner(),
+          const _FairPlayCard(),
+          // F21 W3: one list of what needs the owner, soonest first.
+          const NeedsYouNow(),
+          const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('This month')),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: box(w: 2, c: p.tx),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (i, k) in kpis.indexed)
+                    Expanded(
+                      child: Tap(
+                        onTap: () => s.tab(k.$3),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(border: i > 0 ? Border(left: bs(1, p.hl)) : null),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(k.$1, w: 800, s: 20, ell: true), T(k.$2, s: 12, c: p.mu)]),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const FreeBedsCard(),
+          const ConfirmLayoutsCard(),
+          const RatesConfirmCard(),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+/// F21 W3 owner Today: holds with their countdown, payments to confirm, new
+/// enquiries and layout fixes, each with its own buttons.
+class NeedsYouNow extends StatelessWidget {
+  const NeedsYouNow({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    final items = <({String key, String icon, String title, String sub, String right, bool urgent, List<(String, String, VoidCallback)> btns, Widget? badge, Widget? extra})>[
+      for (final r in [...allRequests(s)]..sort((a, b) => (a.secs - (s.now - a.start) / 1000).compareTo(b.secs - (s.now - b.start) / 1000)))
+        (
+          key: 'hold-${r.id}',
+          icon: 'clock',
+          title: 'Hold on bed ${r.bed}',
+          sub: '${r.name} · ${r.type}${r.secs > freeHoldSecs ? ' · 2 h' : ''}${r.note.isEmpty ? '' : ' · “${r.note}”'}',
+          right: cd(r.secs - (s.now - r.start) / 1000),
+          urgent: true,
+          btns: [('Confirm hold', 'check', () => s.confirmHoldReq(r)), ('Decline', 'x', () => s.declineHoldReq(r))],
+          badge: r.trusted
+              ? Tap(
+                  onTap: () => s.update(() {
+                    s.trustedReq = r.id;
+                    s.sheet = 'trusted';
+                  }),
+                  child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
+                )
+              : null,
+          extra: null,
+        ),
+      for (final x in s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting'))
+        (
+          key: 'pay-${x.id}',
+          icon: 'wallet',
+          title: 'Received ${fmt(x.amt)}?',
+          sub: '${x.who} · ${x.what}${x.kind == 'rent' ? ' · bed ${x.bed}' : ''} · UPI ref. ${utrSpaced(x.utr ?? '')}',
+          right: x.at > 0 ? ago(s.now - x.at) : 'Today',
+          urgent: false,
+          btns: [('Yes, received', 'check', () => s.confirmPayment(x, true)), ('Not received', 'x', () => s.confirmPayment(x, false))],
+          badge: null,
+          extra: null,
+        ),
+      for (final e in s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted))
+        (
+          key: 'enq-${e.ref}',
+          icon: 'msg',
+          title: 'New enquiry · ${e.name}',
+          sub: '${e.bed != null ? 'Bed ${e.bed}' : 'Any bed'} · ${e.ref}${e.msg.isEmpty ? '' : ' · “${e.msg}”'}',
+          right: ago(s.now - e.at),
+          urgent: false,
+          btns: [
+            (
+              'WhatsApp',
+              'msg',
+              () {
+                s.markContacted(e.ref);
+                s.openWA(e.name, 'Hi ${e.name.split(' ')[0]}, this is ${h.owner} from ${h.name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
+              },
+            ),
+          ],
+          badge: null,
+          extra: null,
+        ),
+      for (final f in s.fixesWaiting)
+        // F19 extras: a repair, a quick fix, or a layout fix to compare.
+        (
+          key: 'fix-${f.id}',
+          icon: f.broken ? 'wrench' : 'grid',
+          title: f.broken ? 'Broken: ${f.item}, Room ${f.room}' : f.quick ? 'Quick fix: ${f.quickLine}, Room ${f.room}' : 'Layout fix for Room ${f.room}',
+          sub: [f.broken ? 'From a resident’s quick fix' : 'From ${f.author}', if (f.note.isNotEmpty) '“${f.note}”', if (f.photo != null) '1 photo'].join(' · '),
+          right: ago(DateTime.now().millisecondsSinceEpoch - f.at),
+          urgent: false,
+          btns: f.broken
+              ? [('Start work', 'wrench', () => s.setRepair(f, 'working')), ('Not broken', 'x', () => s.setRepair(f, 'not_broken'))]
+              : f.quick
+              ? [('Got it', 'check', () => s.ackQuickFix(f, true)), ('Not right', 'x', () => s.ackQuickFix(f, false))]
+              : [('Compare', 'arrow', () => s.openFix(f))],
+          badge: null,
+          extra: f.photo != null ? FixPhotoThumb(f) : null,
+        ),
+      // F24: notices and moves from residents, waiting for an answer.
+      for (final m in s.openMoves)
+        (
+          key: 'move-${m.id}',
+          icon: m.kind == 'vacate' ? 'logout' : 'swap',
+          title: m.kind == 'vacate' ? '${m.name} gave notice' : '${m.name} asks to move to bed ${m.toBed}',
+          sub: [if (m.bed.isNotEmpty) 'Bed ${m.bed}', if (m.kind == 'vacate' && m.lastDay != null) 'Last day ${dayMon(m.lastDay!)}', if (m.reason.isNotEmpty) m.reason].join(' · '),
+          right: m.at > 0 ? ago(s.now - m.at) : 'Today',
+          urgent: false,
+          btns: [('Accept', 'check', () => s.answerMove(m, true)), ('Say no', 'x', () => s.answerMove(m, false))],
+          badge: null,
+          extra: null,
+        ),
+      // F24: refunds for residents who moved out (due 7 days after leaving).
+      for (final r in s.refundsToDo)
+        (
+          key: 'refund-${r.stayKey}',
+          icon: 'wallet',
+          title: r.status == 'not_received' ? '${r.name} hasn’t got the refund' : r.status == 'sent' ? 'Refund sent to ${r.name}' : 'Refund ${fmt(r.amt)} to ${r.name}',
+          sub: r.status == 'sent' ? 'UPI ref ${utrSpaced(r.utr)} · waiting for them to confirm' : 'Moved out ${dayMon(r.leftOn)} · due ${dayMon(r.due)}',
+          right: r.status == 'sent' ? '' : (r.due.isBefore(appToday) ? 'Late' : 'Due ${dayMon(r.due)}'),
+          urgent: r.status != 'sent' && (r.status == 'not_received' || r.due.isBefore(appToday)),
+          btns: r.status == 'sent' ? <(String, String, VoidCallback)>[] : [('Mark refunded', 'check', () => s.openRefund(r))],
+          badge: null,
+          extra: null,
+        ),
+      // F23: a shared thing (or a room's geyser) marked not working.
+      for (final a in s.brokenThings)
+        (
+          key: 'broken-${a.id}',
+          icon: 'wrench',
+          title: 'Broken: ${a.label}, ${s.floorName(a.floor).toLowerCase()}',
+          sub: [if (a.inRooms) s.amenityWhere(a), a.byResident ? 'Marked by a resident' : 'Marked by you'].join(' · '),
+          right: a.at > 0 ? ago(s.now - a.at) : 'Today',
+          urgent: false,
+          btns: [('Fixed', 'check', () => s.setAmenityWorking(a, true))],
+          badge: null,
+          extra: null,
+        ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Flexible(child: Kicker('Needs you now · ${items.length}')), if (items.length > 1) Flexible(child: T('Soonest first', s: 12, w: 800, c: p.mu, align: TextAlign.right))]),
+        ),
+        Container(
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final it in items)
+                Container(
+                  key: ValueKey(it.key),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: VGap(
+                    gap: 8,
+                    children: [
+                      Row(
+                        children: [
+                          Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: Ic(it.icon, size: 18)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                T(it.title, w: 800, s: 15),
+                                if (it.badge != null) Padding(padding: const EdgeInsets.symmetric(vertical: 3), child: Align(alignment: Alignment.centerLeft, child: it.badge)),
+                                T(it.sub, s: 12, c: p.mu, lh: 1.35),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          T(it.right, w: 800, s: 14, tab: true, c: it.urgent ? p.ad : p.mu),
+                        ],
+                      ),
+                      ?it.extra,
+                      Row(
+                        children: [
+                          for (final (i, b) in it.btns.indexed) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(child: Cta(b.$1, icon: b.$2, height: 40, px: 14, fs: 13, bg: i == 0 ? p.ac : transparent, fg: i == 0 ? p.ai : p.tx, border: i == 0 ? p.ac : p.tx, onTap: b.$3)),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              if (items.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  child: T('Nothing waiting. New holds, payments and enquiries show up here and as notifications.', s: 14, c: p.mu, lh: 1.4),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// F07: an open Fair Play case or a strike, at the top of owner Today.
+class _FairPlayCard extends StatelessWidget {
+  const _FairPlayCard();
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final c = s.ownerCase;
+    final n = s.strikes[s.ownHid] ?? 0;
+    if (c == null && n == 0) return const SizedBox();
+    return Tap(
+      onTap: () => s.go(c != null ? 'oCase' : 'oStrike'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: const EdgeInsets.all(12),
+        decoration: box(bg: p.ab, w: 2, c: p.ad),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Ic(c != null ? 'clock' : 'flag', size: 20, color: p.ad),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: c != null
+                    ? [T('Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title}. Your reply is with the founder.' : '${c.title}. 47 h left to explain or fix it.', s: 13, lh: 1.4)]
+                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(s.strikeLine(s.ownHid), s: 13)],
+              ),
+            ),
+            Ic('chev', size: 18, color: p.ad),
+          ],
+        ),
+      ),
+    );
+  }
+}

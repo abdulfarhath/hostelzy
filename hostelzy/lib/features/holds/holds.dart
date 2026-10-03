@@ -185,4 +185,6 @@ extension HoldsActions on AppState {
 
   /// "Find a PG on Hostelzy with my code …" (F09).
   String get referralText => 'I found my PG on Hostelzy: see the exact bed before you visit. Use my code $referralCode when you join a hostel through Hostelzy and we both get ${fmt(referralReward)} after your first month.'; 
+
+  void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
 }

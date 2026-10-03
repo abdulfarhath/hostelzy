@@ -150,4 +150,10 @@ extension PlanActions on AppState {
   }
 
   void sendReminder(Invoice i) => whatsapp(ownerWa(i.hid), 'Hi ${hostelById(i.hid).owner}, a reminder from Hostelzy: invoice ${i.ref} (${fmt(i.amt)}) is ${i.late} days late. Pay by UPI from the app → Manage → Your plan.');
+
+  /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.
+  void openUtr() => update(() {
+    utrDraft = invoice.status == 'missing' ? invoice.utr ?? '' : '';
+    sheet = 'utr';
+  });
 }

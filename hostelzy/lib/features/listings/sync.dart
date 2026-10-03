@@ -322,4 +322,78 @@ extension SyncActions on AppState {
     store.clear();
     _saved = jsonEncode(snapshot());
   }
+
+  /// Live hostels from the database replace the sample ones for tenants.
+  void applyListings(Listings l) => update(() {
+    liveListings = true;
+    livePos.addAll(l.pos);
+    for (final h in l.hostels) {
+      hostels.removeWhere((x) => x.id == h.id);
+      hostels.add(h);
+      rooms[h.id] = l.rooms[h.id]!;
+      rates[h.id] = l.rates[h.id]!;
+      ownerUpi[h.id] = l.upi[h.id]!;
+      stats[h.id] = statsOf(l.reviews[h.id] ?? const []);
+      // F24 item 9: the owner's last confirmations on the server; unknown
+      // (never "today") until there is one.
+      if (h.bedsCheckedAt != null) {
+        confirmed[h.id] = daysSince(h.bedsCheckedAt!);
+      } else {
+        confirmed.remove(h.id);
+      }
+      if (h.layoutsCheckedAt != null) {
+        layoutConfirmed[h.id] = daysSince(h.layoutsCheckedAt!);
+      } else {
+        layoutConfirmed.remove(h.id);
+      }
+      // F24 Wave 4d (F03): the rates' last "confirmed by the owner".
+      if (h.ratesCheckedAt != null) {
+        ratesConfirmedAt[h.id] = h.ratesCheckedAt!;
+      } else {
+        ratesConfirmedAt.remove(h.id);
+      }
+      if (h.ratesTracked && h.ratesCheckedAt == null) {
+        ratesNeverConfirmed.add(h.id);
+      } else {
+        ratesNeverConfirmed.remove(h.id);
+      }
+      layouts[h.id] = l.layouts[h.id] ?? {};
+      deals[h.id] = l.deals[h.id] ?? const Deals();
+      strikes[h.id] = l.strikes[h.id] ?? 0;
+      if (l.standing[h.id] != null) {
+        standing[h.id] = l.standing[h.id]!;
+      } else {
+        standing.remove(h.id);
+      }
+      if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
+      if (l.checkers[h.id] != null) hostelCheckers[h.id] = l.checkers[h.id]!;
+      if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
+      // F24: "Visited by Hostelzy" is the team's go-live date on the server.
+      if (h.visitedOn.isNotEmpty) visited[h.id] = h.visitedOn;
+    }
+    // S4: the live hostels' reviews replace any earlier copy of them.
+    final ids = {for (final h in l.hostels) h.id};
+    reviews = [...reviews.where((r) => !ids.contains(r.hid)), for (final h in l.hostels) ...?l.reviews[h.id]];
+    // F23: their floor and room things too.
+    amenities = [...amenities.where((a) => !ids.contains(a.hid)), for (final h in l.hostels) ...?l.amenities[h.id]];
+    // S3: the owner edits their own hostel's rules.
+    if (hostelRules[ownHid] != null) {
+      rules = List.of(hostelRules[ownHid]!);
+    } else if (!isSeedHostel(ownHid) && ids.contains(ownHid)) {
+      rules = blankRules(hostelById(ownHid).terms);
+    }
+    // F24 item 8: the server's walk-in holds on the owner's beds.
+    syncWalkIns();
+  });
+
+  /// Remote switches: too-old builds must update; maintenance mode.
+  void applySettings(RemoteSettings r) => update(() {
+    maintUntil = r.maintenanceUntil;
+    if (appBuild < r.minBuild || r.maintenanceUntil.isNotEmpty) {
+      gateKind = appBuild < r.minBuild ? 'update' : 'maintenance';
+      screen = 'gate';
+      hist = [];
+      sheet = null;
+    }
+  });
 }
