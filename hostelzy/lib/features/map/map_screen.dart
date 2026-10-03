@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../data.dart';
-import '../map_config.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
-import 'photos.dart';
-import 'screens_tenant.dart' show WhereBar, cardCost, filtered;
+import '../../data.dart';
+import '../../map_config.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../../ui/screens_tenant.dart' show WhereBar, cardCost, filtered;
+import '../photos/photos_screens.dart';
 
 // F17 board 9 + F18 "Map v2" + F22 Area 1: a real map (OpenStreetMap tiles,
 // attribution shown) with price pins for the hostels that match the filters,

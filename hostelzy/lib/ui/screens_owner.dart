@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../app_config.dart' show inviteLink, shortLink;
 import '../data.dart';
+import '../features/plan/plan_screens.dart';
 import '../reminders.dart' show clock;
 import '../state.dart';
 import 'common.dart';
@@ -13,7 +14,6 @@ import 'layout.dart' show ConfirmLayoutsCard;
 import 'layout_fixes.dart' show FixPhotoThumb;
 import 'onboarding.dart';
 import 'payments.dart';
-import 'plan.dart';
 import 'stay_tools.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {

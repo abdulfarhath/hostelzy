@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart' hide Tab;
 
-import '../data.dart';
-import '../features/photos/photo.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import 'photo.dart';
 
 /// A photo from the server, striped while it loads or when it can't.
 class PhotoImg extends StatelessWidget {

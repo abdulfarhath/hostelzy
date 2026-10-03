@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hostelzy/data.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/common.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/screens_tenant.dart';
 import 'package:hostelzy/ui/shell.dart';
 

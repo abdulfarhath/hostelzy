@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/reminders.dart';
 import 'package:hostelzy/state.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/shell.dart';
 
 // F20 Reminders: flow tests (the scheduler is a [NoReminders] that keeps

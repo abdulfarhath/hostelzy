@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../data.dart';
+import '../features/amenities/amenities_screens.dart';
 import '../state.dart';
-import 'amenities.dart';
 import 'common.dart';
 import 'kit.dart';
 

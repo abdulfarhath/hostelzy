@@ -7,10 +7,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/features/photos/pick.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/layout.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/shell.dart';
 import 'package:image/image.dart' as img;
 

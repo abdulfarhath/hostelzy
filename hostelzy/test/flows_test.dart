@@ -9,6 +9,7 @@ import 'package:hostelzy/app_config.dart' show dataSource, supabaseUrl, supabase
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/features/photos/photo.dart';
 import 'package:hostelzy/features/photos/pick.dart';
 import 'package:hostelzy/locate.dart';
@@ -19,7 +20,6 @@ import 'package:hostelzy/state.dart';
 import 'package:hostelzy/store.dart';
 import 'package:hostelzy/ui/common.dart';
 import 'package:hostelzy/ui/kit.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/screens_owner.dart' show allRequests;
 import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
 import 'package:hostelzy/ui/shell.dart';

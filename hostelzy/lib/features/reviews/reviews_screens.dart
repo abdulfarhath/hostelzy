@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F08 verified reviews and the Hostelzy rank: resident review forms (boards 1–2),
 // the tenant's Reviews screen (3), the owner's ranking (5) and replies (6).

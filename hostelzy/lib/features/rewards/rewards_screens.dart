@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
-import 'screens_owner.dart' show allRequests;
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../../ui/screens_owner.dart' show allRequests;
 
 // F09 Stay Rewards: Me → Stay Rewards (board 1), the Trusted tenant badge for
 // owners (2), the Member hold length (3, in the hold sheet) and the ₹100

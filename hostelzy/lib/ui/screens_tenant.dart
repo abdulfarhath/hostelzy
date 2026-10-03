@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 
 import '../app_config.dart';
 import '../data.dart';
+import '../features/amenities/amenities_screens.dart';
+import '../features/fair_play/fair_play_screens.dart';
+import '../features/photos/photos_screens.dart';
+import '../features/reminders/reminders_screens.dart';
 import '../state.dart';
-import 'amenities.dart';
 import 'common.dart';
-import 'fairplay.dart';
 import 'kit.dart';
 import 'layout.dart';
 import 'onboarding.dart';
-import 'photos.dart';
-import 'reminders.dart';
 
 // ------------------------------------------------------------ derived values
 

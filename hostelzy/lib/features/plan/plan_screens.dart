@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../app_config.dart';
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
-import 'onboarding.dart' show TeamHead, StatusTag;
+import '../../app_config.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../../ui/onboarding.dart' show TeamHead, StatusTag;
 
 // F10 owner plan and UPI payment check. F22 Area 3: Your plan, the invoice
 // (with its UPI QR) and the payment status are one screen; "I've paid" with

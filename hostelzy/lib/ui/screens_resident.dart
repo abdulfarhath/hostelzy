@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../data.dart';
+import '../features/reminders/reminders_screens.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
-import 'reminders.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
   const ResidentHomeScreen({super.key});

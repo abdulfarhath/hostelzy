@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'amenities.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../amenities/amenities_screens.dart';
 
 // Hostelzy team mode (Settings → Hostelzy team) and the owner's list of room
 // layouts (Manage → Layouts).
