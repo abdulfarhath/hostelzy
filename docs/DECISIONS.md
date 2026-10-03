@@ -241,5 +241,14 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   add them; no exact position needed. The room layout is the primary view for all roles; floor view is
   secondary. **F23 needs the founder's approval of the design before building** (only exception). **Approved by the founder 2026-10-02** ("yes for all"), including geyser in room washroom.
 
+**Bring back the building and floor screens; one canvas for all designs** — founder, 2026-10-03
+- Bring back the **Building view** (the whole building, Floor 1, Floor 2… with every room) and the
+  **floor map with shared things** (washing machine, geyser, fridge, RO… on the floor), both dropped in
+  the F22/F23 redesigns. Tenants see them from the hostel page and the bed picker, owners in Layouts.
+  The women's-PG rule stays (full floor only after a hold). Spec: F25.
+- Every earlier design (from the old account's artifacts) goes into the one main canvas, in an
+  "Archive: earlier designs" area that is not counted in App N = Canvas N.
+- **Map:** the app's map is the reference. The design copies real app screenshots, not the other way round.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
