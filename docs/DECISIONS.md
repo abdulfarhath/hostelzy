@@ -250,5 +250,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   "Archive: earlier designs" area that is not counted in App N = Canvas N.
 - **Map:** the app's map is the reference. The design copies real app screenshots, not the other way round.
 
+**What comes back from old versions** — hub, on the founder's delegation, 2026-10-03
+- Only the Building view comes back as a screen (with shared things on each floor). The owner floor plan, the menu week
+  table, occupancy, plan tiers and invoice history come back as parts of existing screens. No room board. Details: F25.
+- Rule from the founder: no redundant screens; every screen has its own purpose; keep it simple.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

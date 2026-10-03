@@ -2,6 +2,27 @@
 
 **Stage:** Design approved · 2026-10-03 (Design chat; founder task through the hub). Build: build the four NEW boards.
 
+## Hub decision (founder delegated, 2026-10-03): what comes back, kept simple
+Rule: every screen has its own job, with no two screens doing the same thing. Old views come back **inside existing screens**
+where they fit, not as extra screens.
+
+| Item | Decision | Where it lives |
+|---|---|---|
+| A1 Building view (G, F1, F2, F3 + rooms + beds) + shared things | **Bring back, as ONE screen.** NEW-1 and NEW-2 are merged: shared-thing chips sit on top of each floor row (red when not working); tap a floor → the existing floor sheet | Bed picker tab *Plan · Room · **Building*** (tenant); the hostel page links to it |
+| NEW-2 separate floor map | **Merged into NEW-1** (no second screen) | — |
+| A2 owner corridor floor plan, A3 owner "All floors" | **Not separate screens.** The owner's Beds gets the **same Building view** (one shared component) as a toggle *Rooms · **Building***; tap a bed → the existing bed sheet | Owner › Beds |
+| A4 owner menu week table | **Bring back as a toggle** *By day · Week* on the existing menu screen (not a new screen) | Owner › Manage › Food menu |
+| A6 owner occupancy | **Fold into the existing "This month" card:** add "78% full" and the occupancy bar. No 4 tiles ("Needs you now" already covers holds and complaints) | Owner › Today |
+| A7 all plan tiers | **Small section on the existing plan screen**: the 3 tiers, yours marked | Owner › Your plan |
+| A8 invoice history | **"Past invoices" list on the existing plan screen** | Owner › Your plan |
+| A5 room board | **No.** It was sample data; a real one needs moderation. Kept as an idea | — |
+| A9 confirm stay, A10 ₹299 hold | **Stay removed** (DECISIONS) | — |
+| Prototype ideas (compare, SOS, parent view, P&L…) | **Not now.** Listed as ideas in BOARD "Ideas" | — |
+
+Net effect: **+1 screen** (Building view, NEW-1). Everything else is a section or toggle in a screen that already exists.
+Design also checks the main canvas for screens that do the same job and proposes merges in this file (with ids). Build merges
+them only when one clearly duplicates another.
+
 ## Problem
 Earlier designs lived in many separate artifacts on the old account. Some screens the founder remembers
 (the whole-building view, a floor map with the shared things on it) never made it into the app.

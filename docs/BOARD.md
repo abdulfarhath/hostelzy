@@ -44,6 +44,10 @@ Standing approval: chats approve and merge themselves (CLAUDE.md). Update this t
 Money questions Q1–Q9 with recommendations: `docs/finance/plan.md` §0. Marketing M1–M3: `docs/marketing/README.md`.
 Kept out by Build until confirmed: Building view, owner corridor floor plan, menu week table (dropped in the F22 redesign).
 
+## Ideas (not planned yet)
+From the first prototype: compare hostels, "make an offer", safety tab, SOS / emergency, move-in handover, parent view of a stay,
+owner staff / mess headcount / expenses and P&L, chains of hostels, bed-level pricing, a room notice board.
+
 ## Links
 - **F21 Simpler UI (Design approved by the founder, 2026-10-02):** before → after demo https://claude.ai/artifact/DNTXZPEsMZTRSisLqvpAhG · full set https://claude.ai/artifact/4vYvJvF7cBs8CphXFzjBY7
 - **F20 Reminders (Me → Reminders, water settings, add reminder, notifications with Done/Snooze, Today card, first-time offer; Design approved · 2026-10-02):** https://claude.ai/artifact/U9TnnagapmbzjJt9tM6K7K
