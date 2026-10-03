@@ -65,14 +65,39 @@ extension RoomLayoutsActions on AppState {
       'ac' => 'AC unit',
       _ => 'Window',
     };
-    update(() {
-      i.working = ok;
+    void mark(bool v, String since) {
+      i.working = v;
       // Working / not working shows to tenants right away, also on the live copy.
       for (final x in l.published?.items ?? const <LItem>[]) {
-        if (x.id == i.id) x.working = ok;
+        if (x.id == i.id) x.working = v;
       }
-      if (i.kind == 'ac') r.acRepair = !ok;
-      if (!ok) {
+      if (i.kind == 'ac') {
+        r.acRepair = !v;
+        r.acSince = v ? '' : since;
+      }
+    }
+
+    // F24 item 7: on the server it is saved for tenants, and the server
+    // raises (or closes) the hostel's complaint with its real date.
+    if (onServer && !isSeedHostel(l.hid)) {
+      update(() => mark(ok, r.acSince));
+      data.setItemWorking(l.hid, l.room, i.id, ok).then((at) async {
+        if (at != null && i.kind == 'ac') update(() => r.acSince = dayMon(at));
+        toastMsg(ok ? '$name working again. Its complaint is closed.' : '$name marked not working. A complaint is raised.');
+        await refreshLive();
+      }, onError: (Object e) {
+        debugPrint('working: $e');
+        update(() => mark(!ok, ''));
+        toastMsg('$e'.contains('publish this room') ? 'Publish this room’s layout first, then mark it.' : 'Couldn’t save it. Check your internet and try again.');
+      });
+      return;
+    }
+    update(() {
+      mark(ok, dayMon(appToday));
+      final what = '$name in room ${l.room} marked not working.';
+      if (ok) {
+        complaints = [for (final c in complaints) c.text == what && c.status != 'Resolved' ? c.copyWith(status: 'Resolved', note: 'Working again') : c];
+      } else if (!complaints.any((c) => c.text == what && c.status != 'Resolved')) {
         final id = complaints.fold<int>(0, (a, c) => c.id > a ? c.id : a) + 1;
         complaints = [Complaint(id: id, by: 'Layout · ${l.room}', cat: i.kind == 'ac' ? 'AC' : i.kind == 'fan' ? 'Fan' : 'Window', text: '$name in room ${l.room} marked not working.', status: 'Open', date: dayMon(appToday), note: ''), ...complaints];
       }

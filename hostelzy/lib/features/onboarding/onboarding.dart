@@ -24,7 +24,8 @@ mixin _OnboardingData {
   bool resPasteMode = false;
 
   /// Onboarding tracker.
-  final List<Lead> leads = seedLeads();
+  /// F24 item 29: from the server in the real app; sample leads only in the demo.
+  final List<Lead> leads = AppState.samples ? seedLeads() : [];
   int trackCl = -1;
 
   /// Tracker tab (F22 Area 4): 0 Lead, 1 Visited, 2 Signed up (and data
@@ -350,6 +351,7 @@ extension OnboardingActions on AppState {
         hist = [];
       });
       toastMsg('${d.name.trim()} is live. The 30-day trial starts today.');
+      await loadTeam();
     } catch (e) {
       debugPrint('go live: $e');
       toastMsg(_onboardWords(e));
