@@ -104,7 +104,7 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 // F22 Area 1: You · Notifications · App, then Log out and Delete account.
                 group('You', [
-                  _Row('Name', value: name, onTap: () => s.toastMsg('Editing your name comes with your account online (F13).')),
+                  _Row('Name', value: name, onTap: s.editName),
                   _Row('Phone', value: phone, onTap: () => s.toastMsg('To change your number, log out and sign in with the new one.')),
                 ]),
                 group('Notifications', [
@@ -382,6 +382,30 @@ class GateScreen extends StatelessWidget {
             Cta('Update on Google Play', height: 54, px: 16, fs: 15, onTap: () => s.openLink(Uri.parse('https://play.google.com/store/apps/details?id=app.hostelzy.hostelzy'), 'Google Play'))
           else
             OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, is the app back?')),
+        ],
+      ),
+    );
+  }
+}
+
+/// F24 item 23: Settings › Name. The field starts empty; the current name is
+/// only its hint.
+class NameSheet extends StatelessWidget {
+  const NameSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final now = s.meName;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: VGap(
+        gap: 10,
+        children: [
+          const T('Your name', w: 800, s: 13),
+          Field(key: const ValueKey('nameEdit'), value: s.nameDraft, placeholder: now.isEmpty ? 'Full name' : now, onChanged: (v) => s.update(() => s.nameDraft = v)),
+          T('Owners see this name on your holds, enquiries and stay.', s: 12, c: p.mu, lh: 1.4),
+          Cta('Save name', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveName),
         ],
       ),
     );

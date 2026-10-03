@@ -157,6 +157,7 @@ extension GuestActions on AppState {
 
   /// Where? → an area (the map follows it too).
   void pickWhereArea(String a) => update(() {
+    noteSearchedArea(a);
     mapArea = a;
     areaCenter = null;
     mapMoved = false;

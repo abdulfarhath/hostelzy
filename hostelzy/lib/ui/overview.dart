@@ -18,7 +18,7 @@ class OverviewPage extends StatelessWidget {
       [
         ('Welcome', {'start': 'welcome'}),
         ('Phone', {'start': 'phone'}),
-        ('OTP', {'start': 'otp'}),
+        ('Sign in', {'start': 'login'}),
         ('Pick a role', {'start': 'role'}),
       ],
     ),
@@ -201,7 +201,7 @@ class OverviewPage extends StatelessWidget {
                   children: [
                     fact('System:', 'Modernist. Archivo, one red, no rounded corners, 2px rules. The grid does the organising.'),
                     const SizedBox(height: 10),
-                    fact('Roles:', 'picked once after OTP: tenant, resident, owner. Each gets four tabs and a red action in the middle: Search, Pay rent, Add booking.'),
+                    fact('Roles:', 'picked once after signing in with Google: tenant, resident, owner. Each gets four tabs and a red action in the middle: Search, Pay rent, Add booking.'),
                     const SizedBox(height: 10),
                     fact('Beds:', 'the same five states everywhere. Free (outline), free soon (dashed), on hold (hatched), taken (grey), selected (red).'),
                     const SizedBox(height: 10),

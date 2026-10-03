@@ -181,6 +181,9 @@ class Bed {
   /// F24 #16: when it turned free again (someone left). For an hour only
   /// Trusted tenants can hold it (the server checks).
   DateTime? freedAt;
+
+  /// F24 item 8: held for a walk-in until then (ms since epoch); 0 when not.
+  int walkInUntil = 0;
 }
 
 class Room {
@@ -200,6 +203,9 @@ class Room {
 
   /// AC not working: the room stays AC; tenants see "AC under repair".
   bool acRepair;
+
+  /// F24 item 7: the day the AC was marked not working ("3 Oct"), when known.
+  String acSince = '';
   String get type => ac ? 'AC' : 'Non-AC';
 }
 
@@ -823,7 +829,7 @@ List<FairCase> seedCases() => [
     status: 'waiting',
     resident: 'Teja Naidu',
     events: const [
-      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · phone 90000 00013 verified by OTP'),
+      CaseEvent('10 Sep', 'Enquired on Hostelzy', 'HZ-4766 · signed in with Google · phone 90000 00013'),
       CaseEvent('11 Sep', 'Held bed 102-B', 'Free 1-hour hold'),
       CaseEvent('11 Sep', 'Hold cancelled by tenant', '18 minutes later'),
       CaseEvent('18 Sep', 'Added by you as Direct', 'Bed 102-B · same phone number', flag: true),

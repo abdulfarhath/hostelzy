@@ -173,7 +173,7 @@ extension FairPlayActions on AppState {
       if (a == 'yes' && !onServer) becomeMember('Anjani Residency');
     });
     toastMsg(a != 'yes'
-        ? 'Thanks. Only Hostelzy sees your answer.'
+        ? 'Thanks.'
         : onServer
         ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
         : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');

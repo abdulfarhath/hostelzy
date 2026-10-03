@@ -908,10 +908,11 @@ class VisitedBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           color: stale ? p.ab : p.sf,
           child: stale
-              ? Rich([sp(context, 'Availability not confirmed', w: 800, c: p.ad), sp(context, ' · owner hasn’t confirmed for ${days ?? staleAfterDays} days. Ask before you visit.')], s: 13, lh: 1.4)
+              ? Rich([sp(context, 'Availability not confirmed', w: 800, c: p.ad), sp(context, ' · owner hasn’t confirmed for $days days. Ask before you visit.')], s: 13, lh: 1.4)
               : Rich(
                   [
                     sp(context, '$free free ${free == 1 ? 'bed' : 'beds'}', w: 800),
+                    if (days != null)
                     sp(
                       context,
                       ' · confirmed by the owner ${days == 0
@@ -1178,7 +1179,7 @@ class ManagerSheet extends StatelessWidget {
             ],
           ),
           Cta('Send invite', icon: 'msg', height: 54, px: 16, fs: 15, onTap: s.addManager),
-          T('${s.mgrName.trim().isEmpty ? 'They' : s.mgrName.trim()} join${s.mgrName.trim().isEmpty ? '' : 's'} by signing in with this number (OTP).', s: 12, c: p.mu),
+          T('${s.mgrName.trim().isEmpty ? 'They' : s.mgrName.trim()} join${s.mgrName.trim().isEmpty ? '' : 's'} by signing in with Google and the code we send on WhatsApp.', s: 12, c: p.mu),
         ],
       ),
     );
@@ -1250,10 +1251,10 @@ class TrackerScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (l.stage < onboardStages.length - 1) ...[
+                          if (l.stage < onboardStages.length - 1 && !(s.data.remote && l.stage >= 4 && l.hid != null && !isSeedHostel(l.hid!))) ...[
                             const SizedBox(width: 10),
                             Tap(
-                              onTap: () => l.stage == 3 && l.hid == null ? s.openAddHostel() : s.update(() => l.stage++),
+                              onTap: () => s.advanceLead(l),
                               child: Container(
                                 constraints: const BoxConstraints(minHeight: 40),
                                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),

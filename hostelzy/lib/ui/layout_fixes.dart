@@ -96,7 +96,7 @@ class ResidentRoomScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (room == null || l == null)
-                  const Padding(padding: EdgeInsets.all(16), child: LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'The owner or the Hostelzy team draws this room first. Then you can fix it.'))
+                  const Padding(padding: EdgeInsets.all(16), child: LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'The owner draws this room first. Then you can fix it.'))
                 else ...[
                   // F19 extras: tap an item for a quick fix.
                   Padding(

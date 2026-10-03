@@ -959,12 +959,12 @@ void main() {
     expect(s.floorLocked('saisri'), isFalse);
     s.dispose();
 
-    // Signed out: layouts need a verified phone.
+    // Signed out: layouts need sign-in.
     final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
     await pumpApp(tester, o);
     expect(find.text('Sign in to see room layouts'), findsOneWidget);
-    await tap(tester, find.text('Verify my phone'));
-    expect(o.screen, 'phone');
+    await tap(tester, find.text('Sign in'));
+    expect(o.screen, 'login');
     o.dispose();
 
     // Owner: Beds → room 204 → mark a fan not working → approve.
@@ -993,7 +993,7 @@ void main() {
     await tap(tester, find.text('Send request'));
     expect(l.request?.text, 'Bed C is against the washroom wall.');
     expect(l.request?.added, isEmpty); // no fake photos: they go on WhatsApp
-    expect(find.text('Help requested · Hostelzy replies within 48 h'), findsOneWidget);
+    expect(find.text('Help requested · WhatsApp us the photos'), findsOneWidget);
 
     // Hostelzy admin: sees the request, mirrors, sends v3 for approval.
     w.update(() => w.screen = 'aLayout');
@@ -1437,7 +1437,7 @@ void main() {
     await tap(tester, find.text('Open team tools'));
     await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
-    expect(find.text('TEAM TOOLS · SAMPLE DATA UNTIL THE BACKEND IS CONNECTED'), findsOneWidget);
+    expect(find.text('TEAM TOOLS · SAMPLE DATA'), findsOneWidget);
     for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
       expect(find.text(t), findsOneWidget);
     }
@@ -1940,14 +1940,16 @@ void main() {
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
     expect(find.text('asha@gmail.com'.toUpperCase()), findsOneWidget);
     expect(find.textContaining('“not verified”'), findsOneWidget);
-    // The Google name is prefilled but editable.
-    expect(s.myName, 'Asha K');
+    // F24 item 23: never pre-filled; the Google name is only the hint.
+    expect(s.myName, '');
+    expect(find.text('Asha K'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('myName')), matching: find.byType(TextField)), 'Asha Kumari');
     await tester.enterText(find.byType(TextField).last, '9000000007');
     await tester.pump();
     await tap(tester, find.text('Continue'));
     await tap(tester, find.text('I run a PG'));
     await tester.pump();
-    expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
+    expect(data.profile, (name: 'Asha Kumari', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
     final fp = _FakePush(true);
     s.push = fp;

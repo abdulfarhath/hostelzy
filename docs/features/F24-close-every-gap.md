@@ -224,3 +224,57 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - The `staging` choice builds against a second Supabase project (`HZ_ENV=staging`, its own URL and key); Settings then shows "STAGING".
   - Founder steps: **6a** upload key, **6b** staging project. No keys are in the repo.
 - **Tests:** `test/platform_test.dart`.
+
+**Wave 0: no fake or false lines; owners draw; deal headline; edit your name.** Branch `feature/f24-wave0`.
+- **Fake lines out (gap audit §4).**
+  - "Usually replies in ~0 min" can't show: #81 already says "Replies through Hostelzy" until 3 real replies.
+  - "Confirmed by the owner today": a live hostel's bed confirmation is now *unknown* until the server has one. The hostel page shows just "N free beds", and an unknown hostel is never called stale. Real confirmations come with items 9/19.
+  - "Complaint raised 30 Sep" is gone. The line reads "AC under repair. The owner is fixing it."
+  - "Did you join?" answers toast just "Thanks." The real build shows the card only for a real ended hold, never the Anjani / 102-B sample. On the server the line says the ₹100 Member reward unlocks once the owner confirms the stay.
+  - Owner plan 15+ days late, real build: "Your Hostelzy plan is N days late · Pay ₹X to keep your deals on" (the server doesn't pause deals yet, item 21). The demo keeps "Deals paused".
+  - **Settings › Name (item 23)** opens the `name` sheet. The field starts empty with the current name as the hint, and **Save name** writes `profiles.name`. The existing "edit own profile" RLS allows it and `guard_profile` leaves the name alone, so no SQL is needed. Offline, the name stays as it was. Sign-up never pre-fills the name: the Google name is only the hint, and the profile saves the typed name.
+- **Owners draw (DECISIONS 2026-10-02).** No more "the Hostelzy team draws it / adds the AC unit within 48 hours / Hostelzy draws its layout":
+  - AC rooms: "Add it in the room's layout and publish".
+  - New room: "Draw its layout when you're ready".
+  - Layout coming soon: "The owner hasn't published this room's layout yet".
+  - The 48 h promise stays only for a room *shape*: "Room not a rectangle? … the Hostelzy team draws the shape within 48 hours" (oShapeReq).
+  - A help request reads "Help requested · WhatsApp us the photos", because it isn't sent to the team yet (item 11).
+- **Deal headline (item 12, Design v22 `r-detail`).** A green box above the price table, from the hostel's best quote (the same one as the Explore ribbon):
+  - **"Save ₹X in 6 months"** with its parts, e.g. "₹1,000 off the advance + ₹200 off every month".
+  - With no 6-month saving it shows "₹X less upfront" or "₹X more back when you leave". Hostels with no deals show nothing.
+- **No OTP wording (item 28):**
+  - Poster: "Sign in with Google, one tap"; "never asks for your password or UPI PIN".
+  - Room tab: "It takes one tap with Google", and the button is **Sign in**.
+  - Add a manager: "signing in with Google and the code we send on WhatsApp".
+  - Add resident toast: "confirms by joining with your invite code".
+  - The all-screens overview and the jump panel list Sign in instead of OTP. So does the sample case event.
+  - The SMS `otp` screen stays behind `phoneOtpLogin` (off) for when SMS sign-in exists.
+- **Docs:** BOARD F13/F14/F18/F20/F24 rows; ARCHITECTURE "Today". There was no "170 frames" line left to fix.
+- **Screens:** added the sheet `name` (Settings › Name; Design to add a board). Changed: hostel page (deal headline), Holds, owner Today plan banner, Room tab signed out, layout request sheet, Create layout, rate card. None removed.
+- **Tests:** `test/wave0_test.dart`. Updated: `flows_test` (Google name is a hint; Room tab Sign in; help-requested label).
+
+**Wave 2a items 7, 8, 22, 29: phone-only → server.** Branch `feature/f24-wave2a`.
+- **Item 7, Working / Not working** (`20261003030000_f24_item_working.sql`, FOUNDER-TODO **4zz1**):
+  - `set_item_working(hostel, room, item, working)`, staff or team only, changes the fan, AC or window in both copies of the room's layout. Tenants see "Fan · not working" / "AC under repair" straight away.
+  - The AC also sets `rooms.ac_repair` and `rooms.ac_repair_since`. The room line now reads "AC under repair. Complaint raised <that day>. The owner is fixing it." Without a date it leaves the date out.
+  - Not working raises one complaint for the hostel. `complaints.item` names the thing, and there is never a second open one. Working again closes it as Fixed ("Working again").
+  - F23 things (geyser, fridge, RO…) do the same through a trigger on `amenities`, whoever marks them.
+  - Nobody gets a push about their own mark. A resident's mark already tells the owner, so there's no second "New complaint" push.
+  - App: the mark shows at once and the server's complaint date fills in. A room without a published layout says "Publish this room's layout first, then mark it". Offline, the mark is undone. On sample data, working again now resolves the sample complaint too.
+- **Item 8, Hold for a walk-in** (`20261003031000_f24_walk_in.sql`, **4zz2**):
+  - `hold_walk_in(bed)` / `release_walk_in(bed)`, staff or team only. The bed is `held` for every tenant for 1 hour (DECISIONS F04), with `beds.walk_in_until`. Tenants can't hold it meanwhile.
+  - `expire_walk_ins()` (pg_cron every minute) puts it back to free, or to free soon.
+  - App: the bed sheet's button saves to the server. A walk-in placed on another phone shows with its countdown, and Release ends it on the server. "isn't free any more" is said plainly.
+- **Item 22, notification switches** (`20261003032000_f24_notify_switches.sql`, **4zz3**):
+  - `profiles.notify` holds the Settings switches. `profiles.searched_areas` holds the last 5 areas picked in Where? or on the map.
+  - Every queued push gets a `kind` (hold, rent, beds or none). A kind the user switched off is closed as "switched off" and never sent, and nobody is pushed about their own action.
+  - `send-push` checks the switches again before sending. Before the SQL runs it sends as before (tests in `functions/tests/fcm.test.ts`).
+  - **New free beds:** when a bed in a live hostel turns free, tenants with the switch on who searched that area get "A bed is free in <area>". That's at most one a day each (`beds_alert_at`), never to the hostel's staff or residents.
+  - App: the switches and areas are saved on the profile, loaded at start and at sign-in, and kept on the phone too.
+- **Item 29, team from the server** (`20261003033000_f24_team.sql`, **4zz4**):
+  - `team_members`: team-only RLS. `team_hello()` makes the opening account Active, or matches a pending invite by number.
+  - `team_tracker()`: every hostel with its stage. Lead…Data complete comes from `hostel_leads`, then Live, Trial or Paying from the hostel and its plan.
+  - App: the real build has no sample leads and no "Founder 9000000100". Team tools load both lists. On the server the tracker button saves the stage, and "Live" goes through `go_live`'s checks. Trial and Paying follow the plan, so there's no button. "Send invite" saves a pending member.
+  - The team home kicker says "sample data" only in the demo.
+- **Screens:** none added or removed. Changed: tenant room / bed picker AC line (real date), team mode `aTrack` (no button on Live rows on the server), `aTeam` footnote, `aHome` kicker.
+- **Tests:** `test/wave2a_test.dart`, `supabase/tests/wave2a_test.sql`, `supabase/functions/tests/fcm.test.ts`. Updated: `flows_test` (team kicker).

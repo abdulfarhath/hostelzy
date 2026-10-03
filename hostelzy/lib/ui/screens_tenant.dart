@@ -499,7 +499,8 @@ class HoldsScreen extends StatelessWidget {
                 ),
               );
             }(),
-          if (s.joinAnswer == null && (s.endedHold != null || kDebugMode))
+          // Only about a real ended hold; the demo build may show a sample one.
+          if (s.joinAnswer == null && (s.endedHold != null || AppState.samples))
             Container(
               key: const ValueKey('joinedAsk'),
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -509,7 +510,7 @@ class HoldsScreen extends StatelessWidget {
                 gap: 8,
                 children: [
                   T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
-                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair, and a yes unlocks your ₹100 Member reward.', s: 13, c: p.mu, lh: 1.4),
+                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair.${s.onServer ? ' If you joined, your ₹100 Member reward unlocks once the owner confirms your stay.' : ' A yes unlocks your ₹100 Member reward.'}', s: 13, c: p.mu, lh: 1.4),
                   Row(
                     children: [
                       Expanded(child: Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes'))),
@@ -793,6 +794,22 @@ class DetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // F24 item 12 (DECISIONS F03, Design v22 r-detail): the deal's headline is the
+                // 6-month saving, its parts under it, from this hostel's real deals only.
+                if (dealHeadline(s.bestQuote(h.id)) case (final head, final parts))
+                  Container(
+                    key: const ValueKey('dealHeadline'),
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: box(bg: p.gb, w: 2, c: p.gn),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        T(head, w: 800, s: 20, c: p.gn, lh: 1.15),
+                        if (parts.isNotEmpty) ...[const SizedBox(height: 2), T(parts, s: 13, w: 600, c: p.gn, lh: 1.35)],
+                      ],
+                    ),
+                  ),
                 // F21 W2: one table. The Hostelzy price sits in it, walk-in struck through.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -968,6 +985,28 @@ class DetailScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// F24 item 12: "Save ₹1,700 in 6 months" over "₹1,000 off the advance + ₹200
+/// off every month", from the hostel's best quote; null when it has no deal.
+(String, String)? dealHeadline(DealQuote? q) {
+  if (q == null || !q.any) return null;
+  final parts = [
+    if (q.hzAdv < q.adv) '${fmt(q.adv - q.hzAdv)} off the advance',
+    if (q.join > 0) 'no ${fmt(q.join)} joining fee',
+    if (q.firstOffNow > 0) '${fmt(q.firstOffNow)} off the first month',
+    if (q.hzFee < q.fee) '${fmt(q.fee - q.hzFee)} off every month',
+    if (q.moreBack > 0) '${fmt(q.moreBack)} more back when you leave',
+    if (q.laundry) 'free laundry',
+  ];
+  final head = q.save6 > 0
+      ? 'Save ${fmt(q.save6)} in 6 months'
+      : q.upfront > 0
+      ? '${fmt(q.upfront)} less upfront'
+      : q.moreBack > 0
+      ? '${fmt(q.moreBack)} more back when you leave'
+      : 'Hostelzy deal';
+  return (head, parts.join(' + '));
 }
 
 /// "Hostelzy price: ₹200 off every month · ₹500 exit" (F21 W2 table footer).
@@ -1243,7 +1282,7 @@ class _PlanMode extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('Room ${r.label}: AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('Room ${r.label}: AC under repair.${r.acSince.isEmpty ? '' : ' Complaint raised ${r.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           const SizedBox(height: 12),
           Wrap(

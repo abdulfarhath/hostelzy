@@ -24,7 +24,8 @@ mixin _OnboardingData {
   bool resPasteMode = false;
 
   /// Onboarding tracker.
-  final List<Lead> leads = seedLeads();
+  /// F24 item 29: from the server in the real app; sample leads only in the demo.
+  final List<Lead> leads = AppState.samples ? seedLeads() : [];
   int trackCl = -1;
 
   /// Tracker tab (F22 Area 4): 0 Lead, 1 Visited, 2 Signed up (and data
@@ -34,7 +35,8 @@ mixin _OnboardingData {
 
 extension OnboardingActions on AppState {
 
-  bool stale(String hid) => (confirmed[hid] ?? staleAfterDays) >= staleAfterDays;
+  /// Unknown (no confirmation yet) is not called stale: we just don't say.
+  bool stale(String hid) => (confirmed[hid] ?? 0) >= staleAfterDays;
   bool needsConfirm(String hid) => (confirmed[hid] ?? 0) >= confirmEveryDays;
 
   void confirmBeds(String hid) {
@@ -326,7 +328,6 @@ extension OnboardingActions on AppState {
       stats[id] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
       emptyFloors[id] = [for (final f in d.floors) if (f.noBeds) f.name];
       visited[id] = '${dayMon(appToday)} ${appToday.year}';
-      confirmed[id] = 0;
       ownerHostels.add(id);
       leads.add(Lead(d.name, d.area, 'Trial ends ${dayMon(appToday.add(const Duration(days: 30)))}', 5, hid: id));
       screen = 'aTrack';
@@ -350,6 +351,7 @@ extension OnboardingActions on AppState {
         hist = [];
       });
       toastMsg('${d.name.trim()} is live. The 30-day trial starts today.');
+      await loadTeam();
     } catch (e) {
       debugPrint('go live: $e');
       toastMsg(_onboardWords(e));

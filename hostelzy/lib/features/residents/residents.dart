@@ -76,7 +76,7 @@ extension ResidentsActions on AppState {
       sheet = null;
       resF = 'All';
     });
-    toastMsg(res.lateDays > 0 ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.' : 'Added as Waiting OTP. ${name.split(' ')[0]} confirms with the code once the app is online.');
+    toastMsg(res.lateDays > 0 ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.' : 'Added. ${name.split(' ')[0]} confirms by joining with your invite code.');
   }
 
   /// Invite QR sign-ups signed in with Google; approving counts them.
@@ -144,7 +144,7 @@ extension ResidentsActions on AppState {
       if (v == null || v < 1000) return toastMsg('Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more).');
     }
     final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
-    final msg = newAc > 0 ? 'Saved. The Hostelzy team adds the AC unit to the layout within 48 hours.' : 'Rate card saved. Tenants see the new prices now.';
+    final msg = newAc > 0 ? 'Saved. Add the AC unit to the room’s layout so tenants see it.' : 'Rate card saved. Tenants see the new prices now.';
     if (onServer) {
       // S3: saved on the server first; the phone follows only if it worked.
       final draft = Map.of(rateDraft!), ac = Map.of(acDraft!), hid = ownHid;

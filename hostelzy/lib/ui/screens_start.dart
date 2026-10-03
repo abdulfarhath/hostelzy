@@ -189,8 +189,9 @@ class PhoneScreen extends StatelessWidget {
             if (!phoneOtpLogin) ...[
               const T('Your name', w: 800, s: 13),
               const SizedBox(height: 6),
-              Field(key: const ValueKey('myName'), value: s.myName, placeholder: 'Full name', onChanged: (v) => s.update(() => s.myName = v)),
-              if (s.account != null) ...[const SizedBox(height: 4), T('From your Google account. Change it if you like.', s: 12, c: p.mu)],
+              // F24 item 23: never pre-filled; the Google name is only the hint.
+              Field(key: const ValueKey('myName'), value: s.myName, placeholder: (s.account?.name ?? '').trim().isEmpty ? 'Full name' : s.account!.name, onChanged: (v) => s.update(() => s.myName = v)),
+              if (s.account != null) ...[const SizedBox(height: 4), T('Type the name owners should see.', s: 12, c: p.mu)],
               const SizedBox(height: 16),
               Row(children: [const Expanded(child: T('Mobile number', w: 800, s: 13)), Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('NOT VERIFIED', w: 800, s: 11, c: p.mu, ls: .05))]),
               const SizedBox(height: 6),

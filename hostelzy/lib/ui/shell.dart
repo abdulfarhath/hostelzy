@@ -143,7 +143,7 @@ class _JumpPanel extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     const groups = [
-      ('Start', [('welcome', 'Welcome', 'tenant'), ('phone', 'Phone number', 'tenant'), ('otp', 'OTP', 'tenant'), ('role', 'Pick a role', 'tenant')]),
+      ('Start', [('welcome', 'Welcome', 'tenant'), ('phone', 'Phone number', 'tenant'), ('login', 'Sign in', 'tenant'), ('role', 'Pick a role', 'tenant')]),
       ('Tenant', [('explore', 'Explore', 'tenant'), ('map', 'Map', 'tenant'), ('detail', 'Hostel detail', 'tenant'), ('picker', 'Bed picker', 'tenant'), ('hold', 'Hold status', 'tenant'), ('holds', 'Holds', 'tenant')]),
       ('Resident', [('rHome', 'Home', 'resident'), ('rPay', 'Pay rent', 'resident'), ('food', 'Food', 'resident'), ('help', 'Complaints', 'resident'), ('move', 'Vacate / swap', 'resident')]),
       ('Owner', [('oToday', 'Today', 'owner'), ('oBeds', 'Bed map', 'owner'), ('oRent', 'Rent', 'owner'), ('oMore', 'Manage', 'owner')]),
@@ -609,6 +609,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => 'Pay the advance',
       'payUtr' => 'Enter the UPI reference',
       'manager' => 'Add a manager',
+      'name' => 'Change your name',
       'photo' => 'This photo',
       'fixLock' => 'Fix this room?',
       'fixLimit' => 'Can’t send yet',
@@ -634,9 +635,10 @@ class _Sheet extends StatelessWidget {
       'payAdv' => 'Book bed ${s.pay?.bed ?? ''} · deal ${s.pay?.note ?? ''}',
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
+      'name' => 'Settings',
       'quickFix' => 'Quick fix · Room ${s.fixRoom}',
       'fixMute' => 'Layout fixes',
-      'report' => '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private',
+      'report' => s.endedHold != null || AppState.samples ? '${hostelById(s.endedHold?.hid ?? 'anjani').name} · private' : 'Private',
       'water' => 'Reminders',
       'hold' => hostelById(s.hid).name,
       'signIn' => s.afterSignIn == 'enquiry' ? hostelById(s.hid).name : sb?.b != null ? 'Bed ${sb!.b!.id} · ${s.afterSignIn == 'book' ? 'pay the advance to book' : 'free ${s.isMember ? '2-hour' : '1-hour'} hold'}' : null,
@@ -681,6 +683,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => const PayAdvSheet(),
       'payUtr' => const PayUtrSheet(),
       'manager' => const ManagerSheet(),
+      'name' => const NameSheet(),
       'photo' => const PhotoSheet(),
       'fixLock' => const FixLockSheet(),
       'fixLimit' => const FixLimitSheet(),
