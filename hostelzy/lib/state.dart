@@ -18,7 +18,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
+import 'features/listings/repo.dart' show HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
 
@@ -484,6 +484,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     rName = '';
     rPhone = '';
     rJoin = 'Today';
+    rBefore = false;
     rBed = free.isNotEmpty ? free.first : null;
     final r = rBed != null ? findBed(ownHid, rBed).r : null;
     rFee = r != null ? '${r.rent}' : '';
@@ -584,6 +585,11 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;
+      if (l.standing[h.id] != null) {
+        standing[h.id] = l.standing[h.id]!;
+      } else {
+        standing.remove(h.id);
+      }
       if (l.checks[h.id] != null) layoutChecks[h.id] = l.checks[h.id]!;
       if (l.rules[h.id] != null) hostelRules[h.id] = l.rules[h.id]!;
       // F24: "Visited by Hostelzy" is the team's go-live date on the server.
