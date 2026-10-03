@@ -312,6 +312,22 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
 - **Screens:** none added or removed. Changed: tenant room / bed picker AC line (real date), team mode `aTrack` (no button on Live rows on the server), `aTeam` footnote, `aHome` kicker.
 - **Tests:** `test/wave2a_test.dart`, `supabase/tests/wave2a_test.sql`, `supabase/functions/tests/fcm.test.ts`. Updated: `flows_test` (team kicker).
 
+
+**Wave 2b: items 9, 13 and 14 on the server.** Branch `feature/f24-wave2b`.
+- **Item 9, "Still N free beds?" (board `oTodayCards`).**
+  - "Yes, all free" writes `beds.confirmed_at` for every bed of the hostel; a guard trigger stores the server's time whatever the phone sends, and it can't be cleared. Tenants read the newest one.
+  - The hostel page says "N free beds · confirmed by the owner X days ago" from it; after 7 days (DECISIONS F14 / `staleAfterDays`) "Availability not confirmed". A hostel never confirmed shows just "N free beds", never "today".
+  - Owner Today asks every 3 days; a real hostel never confirmed asks right away ("Not confirmed yet").
+  - "Do your room layouts still match?" every 3 months: **All still correct** calls `confirm_layouts`, which stamps every published layout. The card's days come from the oldest published layout.
+  - Push: `nudge_confirmations()` runs daily at 10:00 India time (pg_cron). Owners and managers of a live hostel get "Still N free beds?" when the beds weren't confirmed for 3 days (at most one every 3 days), and "Do your room layouts still match?" after 90 days (at most one every 30 days). They go through `push_outbox` like the other server pushes.
+- **Item 13, "Your price is fixed".** A booking (advance hold) gets `holds.deal` from the server: the room type's rent, the hostel's advance, maintenance and notice, and the deals on at that moment. No deals with 2+ strikes, an overdue or paused plan, or when the deal covers the other room type. When the owner adds the resident, `stays.deal` is copied from their booked hold (same phone or account, 60 days). The app can't write either column.
+  - Tenant: the booking page's "Your price is fixed" and "Rent" use the locked rent; "Hostelzy deal" lists the perks while paying and once booked.
+  - Owner: the resident list shows "Hostelzy deal · price fixed · …"; the bed sheet has a **Hostelzy deal** row ("Price fixed · ₹7,800 monthly · …") for the resident or the booking on that bed.
+- **Item 14, "Did you join?"**: the Holds card is **Yes, I joined / Not yet / Still deciding** (F07 spec), with "Only the Hostelzy team sees your answer, never the owner." The answer goes to `answer_joined` (own released or expired hold only) into `join_answers`, which only the team and the tenant who wrote it can read. The toast "Thanks. Only the Hostelzy team sees your answer." shows only after the server saved it; offline it says it couldn't save and the card stays. An answered hold isn't asked again. Console › Fair Play shows "Did you join? · <hostel>: Joined N · Not yet N · Still deciding N" (90 days) for the selected case's hostel.
+- **SQL:** `20261003040000_f24_confirm_beds.sql` (FOUNDER-TODO **4zy1**), `20261003041000_f24_locked_deal.sql` (**4zy2**), `20261003042000_f24_did_you_join.sql` (**4zy3**). Tests: `supabase/tests/confirm_test.sql`, `lockeddeal_test.sql`, `joined_test.sql`; console `joinSummary` in `console.test.ts`.
+- **Before the SQL runs:** "Yes, all free" already saves (staff may update their beds); "All still correct" and "Did you join?" say they couldn't save; locked perks show only on the booking phone, as before.
+- **Screens:** none added or removed. Changed: Holds "Did you join?" card (3 answers + team-only line), owner Today free-beds card ("Not confirmed yet"), bed sheet (Hostelzy deal row), Residents list (deal line), booking page (locked rent), console Fair Play (answers line).
+- **Tests:** `test/wave2b_test.dart`.
 **Wave 1: boards with no app screen (#25, #26, #18 part, #16, manager join, refunds).** Branch `feature/f24-wave1-screens`.
 - **Server** (`20261003020000_f24_wave1.sql`, FOUNDER-TODO **4zu**; tests: `supabase/tests/wave1_test.sql`):
   - `meter_readings` (one reading per room per month) and `save_meter(hostel, month, ₹ per unit, rows)`, staff or team only. Units since last month ÷ residents in the room × ₹ per unit, rounded up. A reading below last month's is refused. Residents read only their own room's rows. A new or changed amount pushes "Electricity for October: ₹140" to the room's residents. The ₹ per unit is the owner's own number, not a Hostelzy amount.

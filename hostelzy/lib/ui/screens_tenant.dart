@@ -500,7 +500,7 @@ class HoldsScreen extends StatelessWidget {
               );
             }(),
           // Only about a real ended hold; the demo build may show a sample one.
-          if (s.joinAnswer == null && (s.endedHold != null || AppState.samples))
+          if (s.askJoined)
             Container(
               key: const ValueKey('joinedAsk'),
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -511,13 +511,16 @@ class HoldsScreen extends StatelessWidget {
                 children: [
                   T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
                   T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair.${s.onServer ? ' If you joined, your ₹100 Member reward unlocks once the owner confirms your stay.' : ' A yes unlocks your ₹100 Member reward.'}', s: 13, c: p.mu, lh: 1.4),
+                  // F07 / F24 item 14: Yes / Not yet / Still deciding.
+                  Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes')),
                   Row(
                     children: [
-                      Expanded(child: Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes'))),
+                      Expanded(child: OutlineCta('Not yet', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('not_yet'))),
                       const SizedBox(width: 8),
-                      Expanded(child: OutlineCta('No', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('no'))),
+                      Expanded(child: OutlineCta('Still deciding', icon: 'clock', height: 46, fs: 14, onTap: () => s.answerJoined('deciding'))),
                     ],
                   ),
+                  if (s.onServer) T('Only the Hostelzy team sees your answer, never the owner.', s: 12, c: p.mu, lh: 1.4),
                   Tap(onTap: () => s.update(() => s.sheet = 'report'), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: T('The owner asked me to skip the app ›', s: 13, w: 800, c: p.ad))),
                 ],
               ),
@@ -1451,7 +1454,7 @@ class HoldScreen extends StatelessWidget {
         label: 'Pay to book',
         big: amt,
         line: 'Pay $owner by UPI, then enter the UPI reference. The bed is kept for you meanwhile; it says Booked once $owner sees the money.',
-        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(q.hzFee)} a month')],
+        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: pay == null ? null : ('Pay $amt by UPI', 'arrow', () => s.payByUpi(pay)),
         alt: pay == null ? null : ('I’ve paid · enter UPI reference', 'chev', () => s.openPayUtr(pay)),
         green: false,
@@ -1460,7 +1463,7 @@ class HoldScreen extends StatelessWidget {
         label: 'Booked',
         big: 'Yours.',
         line: pay?.done != null ? '$owner confirmed $amt on ${pay!.done}. Show ${code ?? 'your booking code'} when you move in.' : 'Advance paid to $owner. Show ${code ?? 'your booking code'} when you move in.',
-        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
+        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: ('Moving in · see what to pay', 'arrow', () => s.go('moveIn')),
         alt: ('Directions', 'pin', () => s.directions(i.hh)),
         green: true,
