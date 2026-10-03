@@ -5,6 +5,9 @@ mixin _FairPlayData {
 
   List<FairCase> cases = seedCases();
 
+  /// F24 #18: the photo the owner adds to their reply (sent with it).
+  Uint8List? fpPhoto;
+
   /// The owner accepted the Fair Play rules (by code) when signing up.
   bool fairAccepted = false;
   String fpReply = '';
@@ -87,21 +90,51 @@ extension FairPlayActions on AppState {
   void replyCase(FairCase c) {
     if (fpReply.trim().isEmpty) return toastMsg('Write what happened, or fix the resident.');
     final key = c.key;
+    final photo = fpPhoto;
+    final saved = photo == null ? 'Reply saved. The Hostelzy team reads it before deciding.' : 'Reply and photo saved. The Hostelzy team reads them before deciding.';
     if (onServer && key != null) {
       final text = fpReply.trim();
-      _write(() => data.replyCase(key, text, reopen: c.status == 'waiting')).then((ok) {
+      final uid = account?.uid;
+      _write(() async {
+        // F24 #18: the photo goes up first (private), then onto the case.
+        if (photo != null && uid != null) await data.addCasePhoto(key, await data.uploadCasePhoto(c.hid, uid, photo));
+        await data.replyCase(key, text, reopen: c.status == 'waiting');
+      }).then((ok) {
         if (!ok) return;
-        update(() => fpReply = '');
-        toastMsg('Reply saved. The Hostelzy team reads it before deciding.');
+        update(() {
+          fpReply = '';
+          fpPhoto = null;
+        });
+        toastMsg(saved);
       });
       return;
     }
     update(() {
       c.ownerReply = fpReply.trim();
+      if (photo != null) c.ownerPhoto = 'local';
       c.status = 'decide';
       fpReply = '';
+      fpPhoto = null;
     });
-    toastMsg('Reply saved. The Hostelzy team reads it before deciding.');
+    toastMsg(saved);
+  }
+
+  /// F24 #18: "Add a photo to your reply" (compressed like complaint photos).
+  Future<void> pickCasePhoto() async {
+    final raw = await picker.pick();
+    if (raw == null) return;
+    final jpg = prepPhoto(raw, 'free');
+    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    update(() => fpPhoto = jpg);
+  }
+
+  /// Opens a case photo (a short-lived private link on the server).
+  Future<void> openCasePhoto(String? path) async {
+    if (path == null) return;
+    if (path == 'sample' || path == 'local') return toastMsg('Photos open from the server in the real app. This is sample data.');
+    final url = await data.casePhotoUrl(path);
+    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    openLink(Uri.parse(url), 'the photo');
   }
 
   /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals

@@ -4,6 +4,7 @@ import '../data.dart';
 import '../state.dart';
 import 'common.dart';
 import 'kit.dart';
+import 'screens_owner.dart' show allRequests;
 
 // F09 Stay Rewards: Me → Stay Rewards (board 1), the Trusted tenant badge for
 // owners (2), the Member hold length (3, in the hold sheet) and the ₹100
@@ -38,7 +39,7 @@ class RewardsScreen extends StatelessWidget {
         trusted,
         'Pay rent on time for $trustedMonths months',
         trusted
-            ? 'Trusted tenant badge · lower-advance deals'
+            ? 'Trusted tenant badge · first look at new beds'
             : [
                 '${s.isMember ? s.monthsOnTime : 0} of $trustedMonths · Trusted tenant badge next',
                 // What keeps you from Trusted, said plainly.
@@ -106,6 +107,16 @@ class RewardsScreen extends StatelessWidget {
                           ),
                         ),
                     ],
+                  ),
+                ),
+                // F24 #16 (board `trustedPerks`): what Trusted tenants get.
+                Tap(
+                  key: const ValueKey('perksOpen'),
+                  onTap: s.openPerks,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(children: [Expanded(child: T(trusted ? 'You’re a Trusted tenant · what you get' : 'Trusted tenant · what you get', w: 800, s: 15)), const Ic('chev', size: 18)]),
                   ),
                 ),
                 Padding(
@@ -241,7 +252,9 @@ class TrustedSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final first = s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name.split(' ').first ?? 'They';
+    // F24 #16: a server hold request too (its badge comes from the server).
+    final req = allRequests(s).where((r) => r.id == s.trustedReq).firstOrNull;
+    final first = req == null || req.name == 'Hostelzy tenant' ? 'They' : req.name.split(' ').first;
     Widget check(String t) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [Container(width: 18, height: 18, alignment: Alignment.center, color: p.tx, child: Ic('check', size: 12, color: p.bg)), const SizedBox(width: 8), T(t, s: 13)]),
@@ -253,18 +266,21 @@ class TrustedSheet extends StatelessWidget {
         children: [
           check('6 months in Hostelzy hostels'),
           check('Rent paid on time every month'),
-          check('No complaints from owners'),
           check('Signed in to Hostelzy'),
           Padding(padding: const EdgeInsets.only(top: 10), child: T('Hostelzy checks this from real stays. We don’t share which hostels $first stayed at before.', s: 13, c: p.mu, lh: 1.45)),
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Cta('Confirm hold', icon: 'check', height: 54, px: 16, fs: 15, onTap: () {
               final id = s.trustedReq;
+              if (req?.hold != null) {
+                s.update(() => s.sheet = null);
+                return s.confirmHoldReq(req!);
+              }
               s.update(() {
                 s.reqs = s.reqs.where((x) => x.id != id).toList();
                 s.sheet = null;
               });
-              s.toastMsg('Hold confirmed. Let $first know on WhatsApp.');
+              s.toastMsg('Hold confirmed. Let ${first == 'They' ? 'them' : first} know on WhatsApp.');
             }),
           ),
         ],

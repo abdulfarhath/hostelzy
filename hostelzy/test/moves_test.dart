@@ -56,7 +56,7 @@ class _Server extends SampleRepo {
   @override
   Future<LiveRows?> live({String? me}) async => liveFromRows(holds: [], enquiries: [], complaints: [], me: me, payments: [], stays: [
     if (refund.isNotEmpty)
-      {'id': 'stay-old', 'hostel_id': 'saisri', 'user_id': me, 'name': 'Kiran Rao', 'phone': '9876500001', 'rent': 9000, 'advance': 5000, 'confirmed': true, 'left_on': '2026-09-28', 'joined_on': '2026-03-05', 'refund_amount': 4000, 'refund_status': refund, 'refund_utr': '402188341297', 'beds': {'letter': 'A', 'rooms': {'number': 101, 'label': null}}},
+      {'id': 'stay-old', 'hostel_id': 'saisri', 'user_id': me, 'name': 'Kiran Rao', 'phone': '9876500001', 'rent': 9000, 'advance': 5000, 'confirmed': true, 'left_on': '2026-09-28', 'joined_on': '2026-03-05', 'refund_amount': 4000, 'refund_status': refund, 'refund_utr': '402188341297', 'refund_sent_at': '2026-10-01T09:00:00Z', 'beds': {'letter': 'A', 'rooms': {'number': 101, 'label': null}}},
   ]);
   @override
   Future<void> confirmRefund(String stayKey, bool got) async {
@@ -125,13 +125,16 @@ void main() {
     expect(refund.amt, r.advance - hostelById('anjani').terms.maintenance);
     await tester.pump(const Duration(seconds: 4));
 
-    // Today: "Refund ₹… to …" → the refund page.
+    // Today: "Refund ₹… to …" → the refund sheet (board `oRefund`).
     await _tap(tester, find.descendant(of: find.byKey(ValueKey('refund-${refund.stayKey}')), matching: find.text('Mark refunded')));
-    expect(s.screen, 'oRefund');
-    expect(find.text('Refund the advance'), findsOneWidget);
-    for (final t in ['Advance', 'Kept', 'Refund', 'Pay to', 'Due']) {
+    expect(s.sheet, 'refund');
+    expect(find.text('Refund $first’s advance'), findsOneWidget);
+    expect(find.text('Left ${dayMon(appToday)} · Bed ${r.bed}'.toUpperCase()), findsOneWidget);
+    for (final t in ['Advance', 'Kept on leaving', 'Refund', 'Pay to', 'UPI reference (UTR), 12 digits']) {
       expect(find.text(t), findsOneWidget, reason: t);
     }
+    expect(find.text('Mark ${fmt(refund.amt)} refunded'), findsOneWidget);
+    expect(find.textContaining('Due by ${dayMon(appToday.add(const Duration(days: 7)))}, 7 days after they left.'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('refundGo')));
     expect(s.toast, 'The UPI reference is 12 digits.');
     await tester.pump(const Duration(seconds: 4));
@@ -139,7 +142,7 @@ void main() {
     await tester.pump();
     await _tap(tester, find.byKey(const ValueKey('refundGo')));
     expect(s.refunds.firstWhere((x) => x.stayKey == refund.stayKey).status, 'sent');
-    expect(s.screen, 'oToday');
+    expect((s.screen, s.sheet), ('oToday', null));
     s.dispose();
   });
 
@@ -154,8 +157,13 @@ void main() {
     expect(find.text('₹4,000 · did it arrive?'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('me-Your refund')));
     expect(s.screen, 'rRefund');
-    expect(find.text('Did you get ₹4,000?'), findsOneWidget);
-    expect(find.text('UPI ref 4021 8834 1297. Check your bank app.'), findsOneWidget);
+    // Board `rRefund`.
+    expect(find.text('Your refund'), findsOneWidget);
+    expect(find.text('Padmavathi marked it refunded · 1 Oct'.toUpperCase()), findsOneWidget);
+    expect(find.text('To +91 98765 00001 · UPI ref. 4021 8834 1297'), findsOneWidget);
+    for (final t in ['Advance', 'Kept on leaving', 'Due by', 'Did ₹4,000 reach your bank?', 'Yes, I got ₹4,000', 'Not received']) {
+      expect(find.text(t), findsOneWidget, reason: t);
+    }
     await _tap(tester, find.byKey(const ValueKey('refundNo')));
     await _settle(tester);
     expect(server.calls.last, 'refund stay-old false');

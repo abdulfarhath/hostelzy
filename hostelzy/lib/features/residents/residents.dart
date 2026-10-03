@@ -248,6 +248,9 @@ extension ResidentsActions on AppState {
     final opt = how ?? holdOpt;
     if (!needSignIn(opt == 'book' ? 'book' : 'hold', () => placeHold(opt))) return;
     if (activeHolds >= AppState.maxHolds) return toastMsg('You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.');
+    // F24 #16: a bed that just turned free is for Trusted tenants for an hour.
+    final first = onServer ? firstLookBlock(b) : null;
+    if (first != null) return toastMsg(first);
     final r = findBed(hid, bed).r!;
     final h0 = hostelById(hid);
     final q = quote(hid, r.ac, r.share);
@@ -357,6 +360,8 @@ extension ResidentsActions on AppState {
           ? 'Someone just took this bed. Pick another one.'
           : m.contains('2 beds at a time')
           ? 'You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.'
+          : m.contains('Trusted tenants get the first hour')
+          ? '${m.substring(m.indexOf('Trusted tenants')).split(RegExp(r'[,}\n]')).first.trim()}.'
           : 'Couldn’t place the hold. Check your internet and try again.');
     }
     await refreshLive();

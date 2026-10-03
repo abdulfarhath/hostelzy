@@ -2978,7 +2978,8 @@ void main() {
     s.update(() => s.inviteDraft = 'mgr-abcd2345');
     await s.joinInvite();
     expect(fake.calls.last, 'joinmgr MGR-ABCD2345');
-    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a hostel” to start.');
+    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a PG” to start.');
+    expect(s.screen, 'role');
     s.stopLive();
     s.dispose();
   });

@@ -37,3 +37,4 @@ $P -d $DB -f tests/wave2a_test.sql
 $P -d $DB -f tests/confirm_test.sql
 $P -d $DB -f tests/lockeddeal_test.sql
 $P -d $DB -f tests/joined_test.sql
+$P -d $DB -f tests/wave1_test.sql

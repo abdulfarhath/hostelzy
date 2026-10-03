@@ -28,6 +28,7 @@ import 'screens_owner.dart';
 import 'screens_resident.dart';
 import 'screens_start.dart';
 import 'screens_tenant.dart';
+import 'stay_tools.dart';
 
 /// Body text: Archivo 16px, line-height 1.4 (`[data-hz]`).
 TextStyle rootTextStyle(Pal p) => TextStyle(fontFamily: 'Archivo', fontSize: 16, height: 1.4, letterSpacing: 0, color: p.tx, fontWeight: FontWeight.w400, leadingDistribution: TextLeadingDistribution.even, decoration: TextDecoration.none);
@@ -434,8 +435,8 @@ class _AppBody extends StatelessWidget {
     'delConfirm' => const DeleteConfirmScreen(),
     'delDone' => const DeleteDoneScreen(),
     'perm' => const PermissionScreen(),
-    'oRefund' => const OwnerRefundScreen(),
     'rRefund' => const ResidentRefundScreen(),
+    'oMeter' => const OwnerMeterScreen(),
     'reminders' => const RemindersScreen(),
     'gate' => const GateScreen(),
     'aHome' => const TeamHomeScreen(),
@@ -598,7 +599,7 @@ class _Sheet extends StatelessWidget {
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'report' => 'Tell us what happened',
-      'trusted' => '${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
+      'trusted' => '${allRequests(s).where((r) => r.id == s.trustedReq && r.name != 'Hostelzy tenant').firstOrNull?.name ?? 'This tenant'} is a Trusted tenant',
       'bed' => 'Bed ${s.obed ?? ''}',
       'utr' => 'I’ve paid ${fmt(s.invoiceAmt)}',
       'layoutReq' => 'Ask Hostelzy to draw it',
@@ -619,6 +620,9 @@ class _Sheet extends StatelessWidget {
       'water' => 'Drink water',
       'addRem' => s.remEdit == null ? 'Add a reminder' : 'Edit reminder',
       'waterOffer' => 'Want water reminders?',
+      'refund' => refundSheetTitle(s.refundOpen),
+      'laundry' => 'Laundry day',
+      'perks' => s.level == 'trusted' ? 'You’re a Trusted tenant' : 'What Trusted tenants get',
       _ => '',
     };
     final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
@@ -640,16 +644,19 @@ class _Sheet extends StatelessWidget {
       'signIn' => s.afterSignIn == 'enquiry' ? hostelById(s.hid).name : sb?.b != null ? 'Bed ${sb!.b!.id} · ${s.afterSignIn == 'book' ? 'pay the advance to book' : 'free ${s.isMember ? '2-hour' : '1-hour'} hold'}' : null,
       'holdNotify' => () {
         final h = s.holds.where((h) => h.id == s.holdId).firstOrNull;
-        return h == null ? null : 'Held · ${cd(s.holdSecs - (s.now - h.start) / 1000)} left';
+        return h == null ? null : 'Held · ${cd(s.holdSecsOf(h) - (s.now - h.start) / 1000)} left';
       }(),
       'addRem' => 'My reminders',
       'waterOffer' => 'New in Hostelzy · stay on track',
-      'trusted' => 'Hold request · bed ${s.reqs.where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
+      'trusted' => 'Hold request · bed ${allRequests(s).where((r) => r.id == s.trustedReq).firstOrNull?.bed ?? ''}',
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
       'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
+      'refund' => refundSheetKicker(s.refundOpen),
+      'laundry' => 'House rules',
+      'perks' => 'Stay Rewards',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -690,6 +697,9 @@ class _Sheet extends StatelessWidget {
       'amFloor' => const AmenityFloorSheet(),
       'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
+      'refund' => const RefundSheet(),
+      'laundry' => const LaundrySheet(),
+      'perks' => const PerksSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {

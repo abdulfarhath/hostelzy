@@ -295,7 +295,20 @@ class RemindersScreen extends StatelessWidget {
                       child: SquareSwitch(on: s.remRent),
                     ),
                   ),
-                  row(icon: 'clock', title: 'Laundry day', sub: 'When ${h.owner.isEmpty ? 'your owner' : h.owner} sets one', opacity: .45),
+                  // F24 #26: the owner's laundry day, 8 pm the evening before.
+                  if (s.laundryOf(h.id) case final l?)
+                    row(
+                      icon: 'clock',
+                      title: 'Laundry day',
+                      sub: '${weekdayNames[l.day - 1]}, ${l.slot == 'All day' ? 'all day' : l.slot} · reminder 8 pm ${weekdayNames[(l.day + 5) % 7]}',
+                      trail: Tap(
+                        key: const ValueKey('remLaundry'),
+                        onTap: s.toggleLaundryRem,
+                        child: SquareSwitch(on: s.remLaundry),
+                      ),
+                    )
+                  else
+                    row(icon: 'clock', title: 'Laundry day', sub: 'When ${h.owner.isEmpty ? 'your owner' : h.owner} sets one', opacity: .45),
                 ],
                 Padding(
                   padding: const EdgeInsets.all(16),
