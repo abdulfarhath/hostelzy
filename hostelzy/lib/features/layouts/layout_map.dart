@@ -480,7 +480,7 @@ class RoomMode extends StatelessWidget {
         ],
       );
     }
-    // F23: layout first. The rooms on this floor as chips, the floor view one tap away.
+    // F23: layout first. The rooms on this floor as chips; F25: Plan · Room · Building tabs above.
     final onFloor = rooms.where((r) => r.floor == room.floor && AppState.fits(r, s.pR)).toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
@@ -510,17 +510,6 @@ class RoomMode extends StatelessWidget {
                         ),
                       ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Tap(
-                key: const ValueKey('floorView'),
-                onTap: () => s.update(() => s.mode = 'plan'),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('bed', size: 16, color: p.tx), const SizedBox(width: 6), const T('Floor view', w: 800, s: 13)]),
                 ),
               ),
             ],

@@ -23,6 +23,9 @@ mixin _AmenityData {
 
   /// Resident changes today, per hostel (sample data; the server counts its own).
   final Map<String, int> amEditsToday = {};
+
+  /// F25 owner Beds: `rooms` (room cards) or `building` (the Building view).
+  String obView = 'rooms';
 }
 
 /// Sample things for the demo hostels.

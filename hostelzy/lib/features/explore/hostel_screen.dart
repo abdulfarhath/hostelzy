@@ -304,6 +304,19 @@ class DetailScreen extends StatelessWidget {
                   ),
                 // F23: the shared things on each floor (and the geyser in rooms).
                 OnEachFloor(hid: h.id),
+                // F25: the whole building (the bed picker's Building tab).
+                if ((s.rooms[h.id] ?? const []).isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Tap(
+                        key: const ValueKey('seeBuilding'),
+                        onTap: s.openBuilding,
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('building', size: 16, color: p.tx), const SizedBox(width: 6), const Flexible(child: T('See the whole building ›', s: 14, w: 800, underline: true))]),
+                      ),
+                    ),
+                  ),
                 // Today's food, then the whole week, when the owner has put a menu.
                 FoodPeek(hid: h.id),
                 const SizedBox(height: 12),
