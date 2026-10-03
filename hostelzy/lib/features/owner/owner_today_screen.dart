@@ -29,6 +29,17 @@ import '../plan/plan_screens.dart';
   return (t: t, booked: booked, held: held, soon: soon, free: free);
 }
 
+/// F25 A6: how full the hostel is. A bed counts as full when a resident is in
+/// it: `booked` (taken) or `soon` (taken, the resident leaves soon). Holds are
+/// not full (the tenant hasn't moved in), nor are free beds. Null when the
+/// hostel has no beds yet.
+({int full, int total, int pct})? occupancy(AppState s) {
+  final c = countBeds(s);
+  if (c.t == 0) return null;
+  final full = c.booked + c.soon;
+  return (full: full, total: c.t, pct: (full * 100 / c.t).round());
+}
+
 String occCounts(AppState s) {
   final c = countBeds(s);
   return '${c.free} free · ${c.held} on hold · ${c.soon} soon · ${c.booked} taken';
@@ -51,6 +62,7 @@ class OwnerTodayScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final c = countBeds(s);
+    final occ = occupancy(s);
     final collected = s.residents.where((r) => r.status == 'Paid').fold<int>(0, (a, r) => a + r.amt);
     final expected = s.residents.fold<int>(0, (a, r) => a + r.amt);
     final kpis = <(String, String, String)>[
@@ -95,29 +107,72 @@ class OwnerTodayScreen extends StatelessWidget {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: box(w: 2, c: p.tx),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final (i, k) in kpis.indexed)
-                    Expanded(
-                      child: Tap(
-                        onTap: () => s.tab(k.$3),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(border: i > 0 ? Border(left: bs(1, p.hl)) : null),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(k.$1, w: 800, s: 20, ell: true), T(k.$2, s: 12, c: p.mu)]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final (i, k) in kpis.indexed)
+                        Expanded(
+                          child: Tap(
+                            onTap: () => s.tab(k.$3),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(border: i > 0 ? Border(left: bs(1, p.hl)) : null),
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(k.$1, w: 800, s: 20, ell: true), T(k.$2, s: 12, c: p.mu)]),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+                // F25 A6: how full the hostel is; hidden until it has beds.
+                if (occ != null) _Occupancy(occ),
+              ],
             ),
           ),
           const FreeBedsCard(),
           const ConfirmLayoutsCard(),
           const RatesConfirmCard(),
           const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+/// F25 A6: "78% full" and the occupancy bar, inside the This month card.
+class _Occupancy extends StatelessWidget {
+  const _Occupancy(this.o);
+  final ({int full, int total, int pct}) o;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Container(
+      key: const ValueKey('occupancy'),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+      decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          T('${o.pct}% full', key: const ValueKey('occFull'), w: 800, s: 20),
+          const SizedBox(height: 8),
+          Container(
+            key: const ValueKey('occBar'),
+            height: 10,
+            decoration: box(bg: p.sf, w: 1, c: p.tx),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (o.full > 0) Expanded(flex: o.full, child: Container(key: const ValueKey('occBarFill'), color: p.tx)),
+                if (o.total > o.full) Expanded(flex: o.total - o.full, child: const SizedBox()),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          T('${o.full} of ${o.total} beds have a resident. Holds don’t count.', s: 12, c: p.mu, lh: 1.35),
         ],
       ),
     );

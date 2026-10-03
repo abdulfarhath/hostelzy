@@ -350,3 +350,26 @@ Follows the hub decision above: one new screen, no separate floor map, no owner 
 - **Tests:** `hostelzy/test/f25_test.dart` (hostel page → Building, floors top-down, G from data, chips + red, pick a free
   bed → Continue, taken bed toast, floor → amFloor, tabs; women's PG locked then open after a hold; owner Beds › Building,
   bed → bed sheet, back to Rooms; 360 px × 2× text × light/dark). `flows_test` picker-tabs test updated.
+
+### A6, A7, A8 · Owner occupancy, all plans, past invoices (sections in S36 and S65) · Built 2026-10-03
+No new screens (SCREENS count unchanged). No SQL.
+- **A6 · Owner Today (S36 `oToday`), "This month" card:** under the three tiles, **"N% full"**, an occupancy bar and
+  "X of Y beds have a resident. Holds don't count." (`occupancy()` + `_Occupancy` in
+  `lib/features/owner/owner_today_screen.dart`). **What counts as full:** beds with a resident, i.e. state `booked`
+  (taken) or `soon` (taken, the resident leaves soon) ÷ all beds of the selected hostel. Holds (`held`) and free beds are
+  not full. Rounded to a whole percent. Hidden when the hostel has no beds yet. No new tiles. Bar: `p.tx` fill on `p.sf`.
+- **A7 · Your plan (S65 `oPlan`), "All plans":** the three tiers straight from `planTiers` in
+  `lib/data/plan.dart` (the same constants that price the invoice, DECISIONS F10: up to 30 beds / 31 to 80 / 80+, with the
+  80+ note "Plus a featured spot in your area"). No new numbers in the screen. The owner's tier is marked **Yours** from
+  `planTierOf(planBeds)` (real bed count) and shaded.
+- **A8 · Your plan (S65), "Past invoices"** (replaces the old "Before" heading): this hostel's earlier invoices, newest
+  first (`pastInvoices` in `lib/features/plan/plan.dart`: every loaded invoice for `ownHid` except the current one). The
+  invoices were already loaded from the server for the plan screen (`invoices` table, RLS: the owner's own hostels), so no
+  new repo method. Each row: month (from the due date), reference · amount, and **Paid** (team matched the UTR) /
+  **Checking** (UTR being matched) / **Not paid** (due, late or UTR not found). Empty: **"No past invoices yet."** The
+  free-trial line stays at the end of the list once the first invoice is out. Demo build: Anjani has no past invoices, so the
+  empty state shows (no invented history).
+- **Tests:** `hostelzy/test/owner_sections_test.dart` (occupancy % and bar width, holds don't count, a hold turned booked
+  moves it; hidden with no beds; all three tiers from `planTiers`, Yours follows the bed count across 0/1/2; past invoices
+  empty state, other hostels' invoices hidden, newest first, Paid / Checking / Not paid; 360 px × 2× text × light/dark).
+  `owner_manage_test.dart` now expects "Past invoices" instead of "Before".

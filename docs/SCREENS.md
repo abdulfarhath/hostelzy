@@ -96,7 +96,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 36 | `oToday` | Today (tab) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
+| 36 | `oToday` | Today (tab) · This month card with "N% full" + bar (F25 A6) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
 | 37 | `oBeds` | Beds · bed map (tab); toggle Rooms · Building (Building = the S87 component, a bed → H18) | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
 | 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
 | 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
@@ -125,7 +125,7 @@ Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 
 | 62 | `oRules` | Fair Play rules | `fairplay.dart:90` | First owner role pick (`map.dart:pickRole`); Settings › Fair Play rules |
 | 63 | `oCase` | Fair Play check (case + reply) | `fairplay.dart:336` | Today › case card (`screens_owner.dart:332`); push |
 | 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
-| 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
+| 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) · Past invoices + All plans sections (F25 A7, A8) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
 
 ### Hostelzy team mode (13) — release, only for Google accounts with the `team` claim
 
