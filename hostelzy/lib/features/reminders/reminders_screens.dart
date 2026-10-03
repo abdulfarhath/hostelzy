@@ -5,7 +5,7 @@ import '../../reminders.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/settings.dart' show SquareSwitch;
+import '../session/settings_screens.dart' show SquareSwitch;
 
 // F20 Reminders (design "Hostelzy · F20 Reminders"): Me → Reminders (Main),
 // the water sheet (Water), add a reminder (Add), the first-time offer (Offer)

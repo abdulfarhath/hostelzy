@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F24 item 5: the advance refund after a resident moves out. The owner marks
 // it refunded with the UPI reference (board `oRefund`, a sheet); the former

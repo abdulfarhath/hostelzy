@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../app_config.dart';
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../app_config.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F15 Play Store: Settings (board 1), delete account (2–4), permission
 // explainers (5) and the update / maintenance screen (7). The consent line on

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F03 Hostelzy deals: the owner's deal picker (board 4). F21 W2: the tenant's
 // side is folded into the hostel page's price table (screens_tenant.dart).

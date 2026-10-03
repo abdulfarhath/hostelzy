@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F17 payments: pay the owner by UPI → enter the UTR → the owner confirms →
 // only then Booked / Paid. Boards 1–6 of the Make It Real canvas.

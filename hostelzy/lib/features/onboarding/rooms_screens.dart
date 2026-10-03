@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F14 after go-live: Manage → Rooms (add or remove a room or a whole floor,
 // never one with a resident or a hold) and the Hostelzy team's members.

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F24 Wave 1 (Main design v22): electricity by meter (`oMeter`), laundry day
 // (`oLaundry`) and what a Trusted tenant gets (`trustedPerks`).

@@ -4,17 +4,17 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../app_config.dart' show inviteLink, shortLink;
 import '../data.dart';
+import '../features/layouts/layout_fixes_screens.dart' show FixPhotoThumb;
+import '../features/meter/stay_tools_screens.dart';
+import '../features/owner/owner_deals.dart';
+import '../features/payments/payments_sheets.dart';
 import '../features/plan/plan_screens.dart';
 import '../reminders.dart' show clock;
 import '../state.dart';
 import 'common.dart';
-import 'deals.dart';
 import 'kit.dart';
 import 'layout.dart' show ConfirmLayoutsCard;
-import 'layout_fixes.dart' show FixPhotoThumb;
 import 'onboarding.dart';
-import 'payments.dart';
-import 'stay_tools.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
   var t = 0, booked = 0, held = 0, soon = 0, free = 0;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
 
 // F21 W2: one "Where?" field, sign-in at the first hold, notifications after it.
 

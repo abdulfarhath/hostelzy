@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../data.dart';
-import '../state.dart';
-import 'common.dart';
-import 'kit.dart';
-import 'layout.dart';
+import '../../data.dart';
+import '../../state.dart';
+import '../../ui/common.dart';
+import '../../ui/kit.dart';
+import '../../ui/layout.dart';
 
 // F19 residents fix room layouts: the resident's room (board 1) and editor
 // (2, 3), the send, lock and limit sheets (4, 0, 3c), the result (5), the
