@@ -30,7 +30,7 @@ mixin _OnboardingData {
   /// Add hostel wizard (Hostelzy admin mode on the visit).
   HostelDraft draft = HostelDraft();
   int addStep = 1;
-  String resName = '', resPhone = '', resBed = '', resPaste = '', draftOtp = '';
+  String resName = '', resPhone = '', resBed = '', resPaste = '';
   bool resPasteMode = false;
 
   /// Onboarding tracker.

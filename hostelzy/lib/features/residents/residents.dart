@@ -20,12 +20,6 @@ extension ResidentsActions on AppState {
     return now - days * 86400000;
   }
 
-  String get rJoinLabel => dayName(appToday.subtract(Duration(days: switch (rJoin) {
-    'Today' => 0,
-    'Yesterday' => 1,
-    _ => rPickBack,
-  })));
-
   /// Joined via Hostelzy: this phone enquired about, held or booked a bed at
   /// the owner's hostel on Hostelzy within [matchWindowDays] before joining.
   /// (On Supabase the server decides; this is the preview.)
@@ -106,14 +100,6 @@ extension ResidentsActions on AppState {
     }
     update(() => signups = signups.where((x) => x.id != g.id).toList());
     toastMsg('Removed.');
-  }
-
-  /// F16: cheapest rent and free beds for one room type at a hostel, or
-  /// null when the hostel has no rooms of that type.
-  ({int from, int free})? typeSummary(String hid, bool ac) {
-    final rs = rooms[hid]!.where((r) => r.ac == ac).toList();
-    if (rs.isEmpty) return null;
-    return (from: rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b), free: rs.fold(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length));
   }
 
   /// Owner opens "Rooms and rent" with a draft copy of the rate card.

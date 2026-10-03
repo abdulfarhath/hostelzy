@@ -140,12 +140,6 @@ String jsNum(num n) => n == n.roundToDouble() ? n.round().toString() : n.toStrin
 Hostel hostelById(String id) => hostels.firstWhere((h) => h.id == id, orElse: () => Hostel(id: id, name: 'Hostel no longer listed', gender: 'Co-living', area: 'Hyderabad', from: 0, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: const {}, x: 50, y: 50, tags: const []));
 
 const landmarks = ['Hitec City', 'Gachibowli', 'Ameerpet', 'JNTU'];
-const landmarkXY = <String, List<double>>{
-  'Hitec City': [50, 36],
-  'Gachibowli': [16, 72],
-  'Ameerpet': [86, 76],
-  'JNTU': [78, 8],
-};
 
 /// `'₹' + Math.round(n).toLocaleString('en-IN')`
 String fmt(num n) {
@@ -578,19 +572,6 @@ List<List<String>> moneyRules(Hostel h) => [
 
 const homeOf = {'tenant': 'explore', 'resident': 'rHome', 'owner': 'oToday'};
 
-class HoldOption {
-  const HoldOption(this.title, this.sub, this.amt, this.note, this.cta);
-  final String title, sub, amt, note, cta;
-}
-
-/// F04: two ways to take a bed. The ₹299 paid hold and the ₹2,000 token are
-/// gone (DECISIONS 2026-10-02): book by paying the advance straight to the
-/// owner, or hold free for an hour.
-const holdOptions = <String, HoldOption>{
-  'free': HoldOption('Free hold', 'Held for 1 hour. The owner confirms before it is yours.', '₹0', 'If the owner does not confirm within the hour, the bed is released. You pay nothing.', 'Hold free'),
-  'book': HoldOption('Booked with advance', 'Advance paid to the owner. The bed is yours.', '', 'Paid by UPI straight to the owner. Hostelzy never holds your money.', 'Pay advance'),
-};
-
 /// Free hold length; Members (F09) get 2 hours.
 const freeHoldSecs = 3600, memberHoldSecs = 7200;
 
@@ -653,15 +634,6 @@ const dealMenu = ['exit', 'monthly', 'first', 'advance', 'laundry', 'noadmin'];
 /// Max active deals per owner (DECISIONS 2026-10-02).
 const maxDeals = 3;
 
-const dealTitle = {
-  'exit': 'Lower exit maintenance',
-  'monthly': 'Monthly fee discount',
-  'first': 'First month off',
-  'advance': 'Lower advance',
-  'laundry': 'Free extra',
-  'noadmin': 'No joining fee',
-};
-
 /// Short perk labels for chips and the locked-deal card.
 String dealPerk(String id) => switch (id) {
   'exit' => '${fmt(exitHz)} exit',
@@ -684,9 +656,6 @@ class Deals {
     'non' => 'non-AC rooms only',
     _ => 'all rooms',
   };
-
-  /// One-line summary: "₹200 off every month".
-  String get summary => on.contains('monthly') ? '${fmt(monthlyOff)} off every month' : on.isEmpty ? '' : dealPerk(dealMenu.firstWhere(on.contains));
 }
 
 final seedDeals = <String, Deals>{
@@ -841,8 +810,6 @@ const seedFactors = <String, Map<String, double>>{
 
 /// Owner tips per factor.
 const rankTips = {'fresh': 'Confirm free beds when we ask, every 3 days', 'complaints': 'Fix complaints within 3 days', 'listing': 'Add layouts for every room type'};
-
-String rankWord(double v) => v >= .85 ? 'Strong' : v >= .7 ? 'Good' : 'Can improve';
 
 const rankReason = {'reviews': 'great reviews', 'reply': 'quick replies', 'fresh': 'beds kept up to date', 'complaints': 'complaints resolved fast', 'listing': 'full listing'};
 

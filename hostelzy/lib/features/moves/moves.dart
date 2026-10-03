@@ -25,7 +25,6 @@ extension MoveActions on AppState {
 
   /// The resident's latest notice / move request.
   MoveReq? get myNotice => _mine('vacate');
-  MoveReq? get myMove => _mine('swap');
 
   /// Owner: open requests at their hostel.
   List<MoveReq> get openMoves => [for (final m in moves) if (m.status == 'open' && m.hid == ownHid) m];

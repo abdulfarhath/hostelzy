@@ -155,7 +155,6 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   /// Explore sort: rec (Recommended, F08) | near | price | deals (F03).
   String sortBy = 'rec';
-  bool get bestDeals => sortBy == 'deals';
 
   // F07 Fair Play
   static final seedCaseCount = seedCases().length;

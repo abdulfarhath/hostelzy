@@ -51,10 +51,6 @@ List<HoldRequest> allRequests(AppState s) => [
   if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
 ];
 
-/// F05 open question: Enquiries as a KPI tile (true: replaces Complaints) or
-/// only as a section (false, the approved default).
-const enquiriesTile = false;
-
 class OwnerTodayScreen extends StatelessWidget {
   const OwnerTodayScreen({super.key});
   @override

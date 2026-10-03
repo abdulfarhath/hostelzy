@@ -185,7 +185,6 @@ class BedLook {
   final Color bg, border, fg;
   final String tag;
   final bool hatch, dashed;
-  bool get transparentBg => bg == transparent;
 }
 
 BedLook bedState(Pal p, String k) => switch (k) {

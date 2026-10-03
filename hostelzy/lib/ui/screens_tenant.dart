@@ -70,13 +70,6 @@ String? topRanked(AppState s, List<Hostel> results) {
   return top;
 }
 
-String searchSummary(AppState s) {
-  final budget = {'Any': 'Any budget', '6k': 'Under ₹6,000', '8k': 'Under ₹8,000', '10k': 'Under ₹10,000'}[s.fB]!;
-  return [s.lm, s.fG == 'Any' ? 'Anyone' : s.fG, s.fS == 'Any' ? null : '${s.fS} sharing', s.fR == 'Any' ? null : '${s.fR} rooms', budget, s.fFood ? 'Food' : null].whereType<String>().join(' · ');
-}
-
-String featOf(Hostel h) => [h.food ? 'Food' : 'No food', h.ac ? (h.onlyAc ? 'AC rooms' : 'AC and non-AC') : null].whereType<String>().join(' · ');
-
 /// F16: small AC / Non-AC tag (AC: ink border, Non-AC: muted).
 class RoomTypeTag extends StatelessWidget {
   const RoomTypeTag(this.ac, {super.key});
