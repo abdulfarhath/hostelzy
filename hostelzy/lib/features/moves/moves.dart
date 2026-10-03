@@ -164,12 +164,11 @@ extension MoveActions on AppState {
     toastMsg(amt > 0 ? '${r.name.split(' ').first} moved out. Refund ${fmt(amt)} by ${dayMon(appToday.add(const Duration(days: 7)))}.' : '${r.name.split(' ').first} moved out.');
   }
 
-  /// Owner: the refund page (board `oRefund`).
+  /// Owner: the refund sheet (board `oRefund`).
   void openRefund(Refund r) => update(() {
     refundFor = r.stayKey;
     refundUtr = '';
-    hist = [...hist, screen];
-    screen = 'oRefund';
+    sheet = 'refund';
   });
 
   /// An owner's number, when the server gave it (F24 item 1).
@@ -191,9 +190,9 @@ extension MoveActions on AppState {
     if (onServer) {
       if (!await _moveWrite(() => data.sendRefund(r.stayKey, u))) return;
     } else {
-      update(() => refunds = [for (final x in refunds) x.stayKey == r.stayKey ? Refund(stayKey: x.stayKey, hid: x.hid, name: x.name, phone: x.phone, bed: x.bed, advance: x.advance, amt: x.amt, status: 'sent', utr: u, leftOn: x.leftOn) : x]);
+      update(() => refunds = [for (final x in refunds) x.stayKey == r.stayKey ? Refund(stayKey: x.stayKey, hid: x.hid, name: x.name, phone: x.phone, bed: x.bed, advance: x.advance, amt: x.amt, status: 'sent', utr: u, leftOn: x.leftOn, sentOn: appToday) : x]);
     }
-    back();
+    update(() => sheet = null);
     toastMsg('Marked ${fmt(r.amt)} refunded. ${r.name.split(' ').first} is asked to confirm.');
   }
 
@@ -204,7 +203,7 @@ extension MoveActions on AppState {
     if (onServer) {
       if (!await _moveWrite(() => data.confirmRefund(r.stayKey, got))) return;
     }
-    update(() => myRefund = got ? null : Refund(stayKey: r.stayKey, hid: r.hid, name: r.name, phone: r.phone, bed: r.bed, advance: r.advance, amt: r.amt, status: 'not_received', utr: r.utr, leftOn: r.leftOn));
+    update(() => myRefund = got ? null : Refund(stayKey: r.stayKey, hid: r.hid, name: r.name, phone: r.phone, bed: r.bed, advance: r.advance, amt: r.amt, status: 'not_received', utr: r.utr, leftOn: r.leftOn, sentOn: r.sentOn));
     toastMsg(got ? 'Thanks. Glad it’s sorted.' : '${hostelById(r.hid).owner} is told. Talk to them on WhatsApp too.');
     if (got) back();
   }

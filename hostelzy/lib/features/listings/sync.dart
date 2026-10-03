@@ -130,7 +130,12 @@ extension SyncActions on AppState {
   Future<void> refreshLive() async {
     try {
       final l = await data.live(me: account?.uid);
-      if (l != null) applyLive(l);
+      if (l != null) {
+        applyLive(l);
+        // F24 #16, #25: the tenant's level and the resident's electricity.
+        unawaited(loadLevel());
+        unawaited(loadMyMeter(force: true));
+      }
       if (liveFailed) update(() => liveFailed = false);
     } catch (e) {
       debugPrint('live: $e');
@@ -148,6 +153,9 @@ extension SyncActions on AppState {
       _liveWait?.cancel();
       _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
     });
+    // F24 #16, #25: now that this is live, the level and the electricity.
+    unawaited(loadLevel());
+    unawaited(loadMyMeter(force: true));
   }
 
   /// C: a tenant's enquiry on the server; the HZ code comes back from it.

@@ -46,7 +46,7 @@ void main() {
     expect(find.text('ANJANI RESIDENCY · BED 204-B'), findsOneWidget);
     expect(find.byKey(const ValueKey('rentCard')), findsOneWidget);
     expect(find.text('₹8,020'), findsOneWidget);
-    for (final r in ['Rent', 'Electricity · meter', 'Pay to', 'September', 'August']) {
+    for (final r in ['Rent', 'Electricity · 210 units ÷ 4 · ₹8/unit', 'Pay to', 'September', 'August']) {
       expect(find.text(r), findsWidgets, reason: r);
     }
     expect(find.text('PAID BEFORE'), findsOneWidget);

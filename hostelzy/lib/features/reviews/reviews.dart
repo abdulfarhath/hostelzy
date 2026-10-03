@@ -328,9 +328,8 @@ extension ReviewsActions on AppState {
   }
 
   /// S3: Manage → Rules. On Supabase they are saved for the hostel's page.
-  void saveRules() {
+  void saveRules({String msg = 'Rules saved. Residents and new tenants see them now.'}) {
     final hid = ownHid, list = List.of(rules);
-    const msg = 'Rules saved. Residents and new tenants see them now.';
     if (onServer) {
       _write(() => data.saveRules(hid, list)).then((ok) {
         if (!ok) return;

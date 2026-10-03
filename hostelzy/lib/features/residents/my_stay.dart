@@ -48,6 +48,9 @@ extension MyStayActions on AppState {
     }).firstOrNull;
   }
 
+  /// F24 #25: the resident's electricity share this month (0 until added).
+  int get myElectricity => myMeter?.each ?? 0;
+
   /// "Rent Oct · 204-B"
   String get rentNote => 'Rent ${dayMon(appToday).split(' ').last}${myStay?.bed.isNotEmpty == true ? ' · ${myStay!.bed}' : ''}';
 
@@ -58,7 +61,8 @@ extension MyStayActions on AppState {
     final st = myStay;
     if (st == null || st.key == null) return toastMsg('Your stay isn’t on Hostelzy yet. Ask $stayOwner to add you.');
     if (st.rent <= 0) return toastMsg('$stayOwner hasn’t set your rent on Hostelzy yet. Ask them on WhatsApp.');
-    final ok = await _write(() => data.startRent(hid: st.hid, stayKey: st.key!, amount: st.rent, note: rentNote));
+    // F24 #25: this month's electricity share goes on the same payment.
+    final ok = await _write(() => data.startRent(hid: st.hid, stayKey: st.key!, amount: st.rent + myElectricity, note: rentNote));
     if (!ok) return;
     final p = myRentPay;
     if (p != null) payByUpi(p);

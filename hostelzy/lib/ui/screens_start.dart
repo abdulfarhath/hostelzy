@@ -407,12 +407,27 @@ class RoleGateScreen extends StatelessWidget {
           ]),
         ));
       }
+      // F24 (board `mgrJoin`): a manager joins with the owner's MGR- code.
+      body.add(Tap(
+        key: const ValueKey('mgrJoinOpen'),
+        onTap: () => s.update(() {
+          s.roleGate = 'resident';
+          s.inviteDraft = 'MGR-';
+        }),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          color: p.sf,
+          child: Row(children: [Expanded(child: VGap(gap: 2, children: [const T('Manager at a PG?', w: 800, s: 14), T('Join it with the MGR- code your owner sent you.', s: 13, c: p.mu, lh: 1.4)])), const Ic('chev', size: 18)]),
+        ),
+      ));
       foot = [
         Cta('Request a visit', onTap: s.requestVisit, height: 54, px: 16, fs: 15),
         OutlineCta('WhatsApp Hostelzy', icon: 'msg', onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I run a PG and want to list it.')),
       ];
     } else {
       final num = s.phone.length == 10 ? '+91 ${phoneSpaced(s.phone)}' : null;
+      final code = s.inviteDraft.isEmpty ? s.pendingInvite ?? '' : s.inviteDraft;
+      final mgr = code.toUpperCase().startsWith('MGR');
       body = [
         T('Your owner gives you a code, or scan the Hostelzy poster at your PG.', s: 15, c: p.mu, lh: 1.5),
         // C: type the code (filled in when the invite link opened the app).
@@ -423,6 +438,8 @@ class RoleGateScreen extends StatelessWidget {
             Cta(s.joining ? 'Sending…' : 'Join', key: const ValueKey('joinGo'), height: 54, px: 16, fs: 15, expand: false, onTap: s.joinInvite),
           ],
         ),
+        if (mgr) T('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.', key: const ValueKey('mgrHint'), s: 13, c: p.mu, lh: 1.45),
+        if (!mgr) ...[
         // Honest: the in-app scanner comes later; the phone camera opens the poster's link.
         OutlineCta('Scan the poster QR', icon: 'qr', onTap: () => s.toastMsg('Open your phone camera and point it at the poster. It opens the invite link.')),
         Container(
@@ -438,6 +455,7 @@ class RoleGateScreen extends StatelessWidget {
             ],
           ),
         ),
+        ],
       ];
       foot = [Tap(onTap: () => s.pickRole('tenant'), child: T('Not in a PG yet? Find a bed ›', w: 800, s: 15, c: p.tx))];
     }

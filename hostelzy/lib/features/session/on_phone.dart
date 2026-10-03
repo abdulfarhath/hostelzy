@@ -98,6 +98,11 @@ extension OnPhoneActions on AppState {
     if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
     if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
     if (sheet == 'trusted' && trustedReq == null) trustedReq = 'k1';
+    // F24 #25: the demo Electricity page starts from last month's sample readings.
+    if (screen == 'oMeter' && meterRows[ownHid] == null && AppState.samples) {
+      meterRows[ownHid] = sampleMeters(rooms[ownHid] ?? const []);
+      meterRate = '8';
+    }
     if (screen == 'oMore' && moreTab == 'menu' && menuDraft == null) _fillMenuDraft();
     if (sheet == 'addR' && rBed == null) {
       rBed = unassignedBeds.firstOrNull;

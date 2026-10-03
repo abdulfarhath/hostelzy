@@ -13,6 +13,7 @@ import 'layout_fixes.dart' show FixPhotoThumb;
 import 'payments.dart';
 import 'plan.dart';
 import 'onboarding.dart';
+import 'stay_tools.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
   var t = 0, booked = 0, held = 0, soon = 0, free = 0;
@@ -44,7 +45,7 @@ String occCounts(AppState s) {
 List<HoldRequest> allRequests(AppState s) => [
   for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting'))
     s.onServer
-        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id)
+        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecsOf(h), start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id, trusted: h.trusted)
         : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
   if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
 ];
@@ -705,6 +706,8 @@ class OwnerRentScreen extends StatelessWidget {
               ],
             ),
           ),
+          // F24 #25 (board `oMeter`): electricity by meter, when it's extra.
+          if (hostelById(s.ownHid).terms.electricityExtra) const MeterEntry(),
           Seg(
             opts: [for (final st in const ['All', 'Due', 'Overdue', 'Paid']) (st, '${word(st)} ${n(st)}')],
             cur: s.rentF,
@@ -1008,6 +1011,7 @@ class _HouseRules extends StatelessWidget {
         gap: 12,
         children: [
           for (var i = 0; i < s.rules.length; i++)
+            if (s.rules[i].k != laundryKey)
             VGap(
               gap: 6,
               children: [
@@ -1022,6 +1026,8 @@ class _HouseRules extends StatelessWidget {
                 ),
               ],
             ),
+          // F24 #26 (board `oLaundry`).
+          const LaundryRow(),
           T('Tenants see these under House rules › on your hostel page.', s: 13, c: p.mu),
         ],
       ),

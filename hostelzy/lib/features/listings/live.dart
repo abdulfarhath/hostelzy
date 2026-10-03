@@ -51,6 +51,8 @@ Hold holdFromRow(Map<String, dynamic> r, {int paid = 0}) {
     status: status == 'expired' ? 'released' : (status == 'waiting' && r['opt'] == 'advance' ? 'paying' : status),
     ref: r['ref'] as String?,
     paid: paid,
+    trusted: r['trusted'] == true,
+    ends: r['expires_at'] == null ? null : _ms(r['expires_at']),
   );
 }
 
@@ -133,7 +135,26 @@ Refund refundFromRow(Map<String, dynamic> r) => Refund(
   status: r['refund_status'] as String,
   utr: r['refund_utr'] as String? ?? '',
   leftOn: _day(r['left_on'])!,
+  sentOn: r['refund_sent_at'] == null ? null : DateTime.parse(r['refund_sent_at'] as String).toLocal(),
 );
+
+/// F24 #25: one room's meter reading for a month (₹ per unit is the owner's).
+typedef MeterRow = ({int room, DateTime month, int reading, double rate, int? units, int? people, int? each});
+
+MeterRow meterFromRow(Map<String, dynamic> r) => (
+  room: (r['rooms'] as Map<String, dynamic>?)?['number'] as int? ?? r['room'] as int? ?? 0,
+  month: DateTime.parse(r['month'] as String),
+  reading: r['reading'] as int,
+  rate: (r['rate'] as num).toDouble(),
+  units: r['units'] as int?,
+  people: r['people'] as int?,
+  each: r['each_amt'] as int?,
+);
+
+/// F24 #16: the tenant's level from the server (`my_level()`).
+typedef Level = ({String level, int months, int late});
+
+Level levelFrom(Map<String, dynamic> m) => (level: m['level'] as String? ?? 'none', months: (m['months'] as num?)?.toInt() ?? 0, late: (m['late'] as num?)?.toInt() ?? 0);
 
 /// S7: an owner-plan invoice from the server.
 Invoice invoiceFromRow(Map<String, dynamic> r) => Invoice(
@@ -200,6 +221,8 @@ FairCase caseFromRow(Map<String, dynamic> r) {
     result: r['decision'] as String?,
     openedAt: _ms(r['created_at']),
     key: r['id'] as String,
+    tenantPhoto: r['tenant_photo'] as String?,
+    ownerPhoto: r['owner_photo'] as String?,
   );
 }
 

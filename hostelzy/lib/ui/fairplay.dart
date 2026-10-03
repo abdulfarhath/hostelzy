@@ -393,12 +393,47 @@ class OwnerCaseScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                // F24 #18 (board `oCasePhoto`): the tenant's photo proof.
+                if (c.tenantPhoto != null) ...[
+                  Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 6), child: Kicker('Photo from $first', c: p.mu)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Semantics(
+                          label: 'Open the photo from $first',
+                          button: true,
+                          child: Tap(
+                            key: const ValueKey('casePhoto'),
+                            onTap: () => s.openCasePhoto(c.tenantPhoto),
+                            child: Container(
+                              width: 96,
+                              height: 72,
+                              padding: const EdgeInsets.all(6),
+                              alignment: Alignment.bottomLeft,
+                              decoration: box(bg: p.sf, w: 1, c: p.hl),
+                              child: Row(children: [Ic('camera', size: 14, color: p.mu), const SizedBox(width: 4), Flexible(child: T('Open', s: 11, w: 800, c: p.mu, ell: true))]),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(child: T('Shown only to you and the Hostelzy team.', s: 13, c: p.mu, lh: 1.45)),
+                      ],
+                    ),
+                  ),
+                ],
                 if (open)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                    child: Semantics(
-                      label: 'Your reply',
-                      child: Field(key: const ValueKey('caseReply'), value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'Your side, in a line or two', maxLines: 2, height: null, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+                    child: VGap(
+                      gap: 8,
+                      children: [
+                        Semantics(
+                          label: 'Your reply',
+                          child: Field(key: const ValueKey('caseReply'), value: s.fpReply, onChanged: (v) => s.update(() => s.fpReply = v), placeholder: 'Your side, in a line or two', maxLines: 2, height: null, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
+                        ),
+                        OutlineCta(s.fpPhoto != null ? 'Photo added · change it' : c.ownerPhoto != null ? 'Photo sent · add another' : 'Add a photo to your reply', key: const ValueKey('casePhotoAdd'), icon: 'camera', height: 44, fs: 14, onTap: s.pickCasePhoto),
+                      ],
                     ),
                   )
                 else if (c.ownerReply != null) ...[
