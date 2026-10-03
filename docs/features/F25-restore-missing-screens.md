@@ -23,12 +23,30 @@ Net effect: **+1 screen** (Building view, NEW-1). Everything else is a section o
 Design also checks the main canvas for screens that do the same job and proposes merges in this file (with ids). Build merges
 them only when one clearly duplicates another.
 
+## Redundancy review (Design, 2026-10-03, canvas v33)
+Checked every main board in pairs: same data and same action for the same role. Only clear duplicates are proposed for merging.
+
+| Pair | Same job? | Proposal |
+|---|---|---|
+| **H17 `add` (Add tenant, centre tab) + H20 `addR` (Add a resident)** | Yes. Both put a person on a bed for the owner. Both save through `addStayLive` (`owner_sheets.dart:163`, `residents.dart:64`). Only the date differs: "Moves in" (future) vs "Joined on" (past) | **Merge into one sheet, "Add a resident"**. Keep the one date field, allowing past or future. Keep fee, advance and "Lived here before Hostelzy". The centre "+" tab and Residents › Add both open it. *Confident → told Build.* |
+| **S76 `aPay` (team mode Payments check) + C2 console Payments** | Yes. The same team role matches the same owner UTRs with the same Mark paid / Not received | **Keep the console only.** It's desk work against the bank app. Remove aPay from the app's team tools. *Confident → told Build.* |
+| **S77 `aCases` (team mode Fair Play cases) + C3 console Fair Play** | Yes. The same team role decides the same cases with the same strike buttons. The console has more (signals, photos, tenant reports) | **Keep the console only.** Remove aCases from the app. *Confident → told Build.* |
+| S75 `aTrack` (team mode tracker) + C1 console Onboarding | Mostly. The same leads and stages; the app opens it after go-live on a visit | **Keep for now.** The team uses it on the phone during visits. Revisit once the console works well on phones. |
+| S82 `perm` (Turn on notifications?) + H5 `holdNotify` (allow after the first hold) | The same ask, at different moments | **Keep both screens**, but a tenant should never see both. Tenants get only H5 after the first hold; S82 only for residents and owners at role pick. (Build: check `login.dart:186`.) |
+| H12 `payUtr` (tenant/resident UPI ref) + H22 `utr` (owner plan UPI ref) | Same pattern, different payer and payee | **Keep.** Different role and money. Build can share one widget. |
+| S2 `login` + H3 `signIn` sheet | Same Google button, different moment (start vs mid-action as a guest) | **Keep.** The sheet keeps the guest's place (hold, enquiry). |
+| S25 resident Food › Week + H10 tenant Food menu week sheet | Same data, different role (resident tab vs tenant peek) | **Keep.** |
+| S21 `moveIn` + S20 `hold` (Booked) | Overlap on "Pay at move-in", but moveIn has its own action ("I've moved in · open My stay") and the reward line | **Keep.** |
+
+Net if Build takes the three confident merges: **App 181 → 178** (H17+H20 → one sheet; S76, S77 removed). The canvas follows the app:
+I'll retire those boards once SCREENS.md drops them.
+
 ## Problem
 Earlier designs lived in many separate artifacts on the old account. Some screens the founder remembers
 (the whole-building view, a floor map with the shared things on it) never made it into the app.
 
 ## Design
-Canvas: https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx (v30). At the bottom there's an **"Archive: earlier designs · not counted"**
+Canvas: https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx (v33). At the bottom there's an **"Archive: earlier designs · not counted"**
 area, with one row per source and every board titled `[archive · not counted] SRC · board → SCREENS id`. App N = Canvas N
 counts only the main area.
 
