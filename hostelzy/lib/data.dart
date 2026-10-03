@@ -60,7 +60,7 @@ class Terms {
 /// "Today": the real date in India in the Play Store build (F17); the sample
 /// data's day (1 Oct 2026) in debug builds and tests, so the samples line up.
 /// F18: a getter, so the date moves on while the app stays open overnight.
-DateTime get appToday => const bool.fromEnvironment('dart.vm.product') ? _todayIst() : DateTime(2026, 10, 1);
+DateTime get appToday => const bool.fromEnvironment('dart.vm.product') ? _todayIst() : DateTime(2026, 10);
 
 DateTime _todayIst() {
   final n = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
@@ -124,12 +124,12 @@ String dueLeft(Terms t, int joinDay) {
 /// The sample hostels plus any the Hostelzy team put live with Add hostel
 /// (F14). In memory only until the backend (F13): [resetSampleData] trims it.
 final hostels = <Hostel>[
-  Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 38, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
-  Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 52, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
-  Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 14, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
-  Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 22, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
-  Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 31, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
-  Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 47, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
+  const Hostel(id: 'anjani', name: 'Anjani Residency', gender: 'Men', area: 'Madhapur', from: 7600, rating: 4.4, reviews: 38, food: true, ac: true, instant: false, owner: 'Srinivas', reply: 12, mins: {'Hitec City': 6, 'Gachibowli': 14, 'Ameerpet': 24, 'JNTU': 20}, x: 40, y: 42, tags: ['3 meals a day', 'AC rooms', 'Power backup', 'Washing machine']),
+  const Hostel(id: 'saisri', name: 'Sai Sri Ladies Hostel', gender: 'Women', area: 'Kondapur', from: 8200, rating: 4.7, reviews: 52, food: true, ac: false, instant: true, owner: 'Padmavathi', reply: 5, mins: {'Hitec City': 8, 'Gachibowli': 10, 'Ameerpet': 28, 'JNTU': 18}, x: 55, y: 28, tags: ['Biometric entry', 'Warden on site', '3 meals a day', 'CCTV in corridors'], terms: Terms(maintenance: 1500)),
+  const Hostel(id: 'nest42', name: 'Nest 42 Co-living', gender: 'Co-living', area: 'Gachibowli', from: 10800, rating: 4.2, reviews: 14, food: false, ac: true, instant: true, owner: 'Kavya', reply: 3, mins: {'Hitec City': 14, 'Gachibowli': 5, 'Ameerpet': 32, 'JNTU': 26}, x: 24, y: 62, tags: ['AC rooms', 'Gym', 'Daily housekeeping', 'Workspace'], terms: Terms(maintenance: 1500), onlyAc: true),
+  const Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 22, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
+  const Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 31, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
+  const Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 47, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
 ];
 
 /// Number as JavaScript prints it (`4.0` → `4`).
@@ -985,7 +985,7 @@ class Invoice {
 
 /// Other owners' invoices on the founder's payments screen.
 List<Invoice> seedInvoices() => [
-  Invoice(ref: 'HZ-INV-1019', hid: 'greenview', beds: 24, amt: 499, due: DateTime(2026, 10, 1), status: 'checking', utr: '402177100532', sent: '1 Oct, 9:02 am'),
+  Invoice(ref: 'HZ-INV-1019', hid: 'greenview', beds: 24, amt: 499, due: DateTime(2026, 10), status: 'checking', utr: '402177100532', sent: '1 Oct, 9:02 am'),
   Invoice(ref: 'HZ-INV-1016', hid: 'lakshmi', beds: 96, amt: 1499, due: DateTime(2026, 9, 30), status: 'checking', utr: '402099214418', sent: '30 Sep, 8:40 pm'),
   Invoice(ref: 'HZ-INV-0998', hid: 'orchid', beds: 28, amt: 499, due: DateTime(2026, 9, 16), status: 'due', late: 15),
   Invoice(ref: 'HZ-INV-0990', hid: 'saisri', beds: 40, amt: 999, due: DateTime(2026, 9, 20), status: 'paid', utr: '401922107781', sent: '20 Sep', checked: '21 Sep'),
@@ -1244,7 +1244,7 @@ class RoomLayout {
   RoomLayout get forTenants {
     final p = published;
     if (p == null) return this;
-    return RoomLayout(hid: hid, room: room, w: p.w, h: p.h, beds: Map.of(p.beds), items: [for (final i in p.items) i.copy()], version: version - 1, live: true, drawn: drawn, verified: verified)
+    return RoomLayout(hid: hid, room: room, w: p.w, h: p.h, beds: Map.of(p.beds), items: [for (final i in p.items) i.copy()], version: version - 1, drawn: drawn, verified: verified)
       ..bunks.addAll(p.bunks)
       ..shape = p.shape
       ..outline = p.outline;

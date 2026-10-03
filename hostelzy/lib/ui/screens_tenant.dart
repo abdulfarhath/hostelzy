@@ -8,9 +8,9 @@ import 'amenities.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'kit.dart';
-import 'photos.dart';
 import 'layout.dart';
 import 'onboarding.dart';
+import 'photos.dart';
 import 'reminders.dart';
 
 // ------------------------------------------------------------ derived values
@@ -122,7 +122,7 @@ class ExploreScreen extends StatelessWidget {
             Container(
               color: p.sf,
               padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
-              child: Row(children: [Expanded(child: T('Browsing as a guest', s: 13, w: 600, c: p.mu)), Tap(onTap: () => s.startSignIn(), child: const T('Sign in', s: 13, w: 800, underline: true))]),
+              child: Row(children: [Expanded(child: T('Browsing as a guest', s: 13, w: 600, c: p.mu)), Tap(onTap: s.startSignIn, child: const T('Sign in', s: 13, w: 800, underline: true))]),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -846,7 +846,7 @@ class DetailScreen extends StatelessWidget {
                       children: [
                         Ic('shield', size: 18, color: p.tx),
                         const SizedBox(width: 10),
-                        Expanded(child: T('Hostelzy deals are paused for this hostel. Walk-in prices shown.', s: 14, w: 700, lh: 1.35)),
+                        const Expanded(child: T('Hostelzy deals are paused for this hostel. Walk-in prices shown.', s: 14, w: 700, lh: 1.35)),
                       ],
                     ),
                   ),
@@ -1024,7 +1024,6 @@ class DetailScreen extends StatelessWidget {
                   s.openPicker();
                 },
                 height: 50,
-                px: 18,
                 fs: 15,
                 expand: false,
               ),
@@ -1162,7 +1161,7 @@ class PickerScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Cta('Continue', key: const ValueKey('pickContinue'), icon: 'arrow', onTap: () => s.bed == null ? s.toastMsg('Pick a free bed first.') : s.update(() => s.sheet = 'hold'), height: 50, px: 18, fs: 15, expand: false, opacity: hasSel ? 1 : .4),
+              Cta('Continue', key: const ValueKey('pickContinue'), onTap: () => s.bed == null ? s.toastMsg('Pick a free bed first.') : s.update(() => s.sheet = 'hold'), height: 50, fs: 15, expand: false, opacity: hasSel ? 1 : .4),
             ],
           ),
         ),
@@ -1344,7 +1343,7 @@ class _PlanMode extends StatelessWidget {
               Tap(
                 key: const ValueKey('cheapest'),
                 onTap: () => s.update(() => s.mode = 'list'),
-                child: T('See cheapest beds ›', s: 13, w: 800, underline: true),
+                child: const T('See cheapest beds ›', s: 13, w: 800, underline: true),
               ),
             ],
           ),
@@ -1397,7 +1396,7 @@ class _ListMode extends StatelessWidget {
                         step: 5,
                         width: 60,
                         height: 60,
-                        border: Border.all(width: 1, color: p.hl),
+                        border: Border.all(color: p.hl),
                         child: Container(
                           alignment: Alignment.bottomLeft,
                           padding: const EdgeInsets.all(4),

@@ -292,7 +292,7 @@ extension SyncActions on AppState {
       hist = [];
       sheet = null;
     });
-    store.clear();
+    unawaited(store.clear());
   }
 
   /// F18: logging out forgets everything this phone kept about the user.

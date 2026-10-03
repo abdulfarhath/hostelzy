@@ -352,7 +352,7 @@ extension OnboardingActions on AppState {
     if (addStep == 3 && !await saveDraftLive()) return;
     if (addStep == 5 && !await saveDraftResidents()) return;
     update(() => addStep++);
-    if (addStep == 4 && draft.serverId != null) loadPhotos(draft.serverId!, again: true);
+    if (addStep == 4 && draft.serverId != null) unawaited(loadPhotos(draft.serverId!, again: true));
   }
 
   /// Photos for the draft: the owners' Photos screen, for this hostel.

@@ -205,7 +205,7 @@ class AmenityFloorSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
               children: [
-                Expanded(child: Cta('Add a thing', key: const ValueKey('amAddBtn'), icon: 'plus', height: 48, px: 14, fs: 14, onTap: () => s.openAddAmenity())),
+                Expanded(child: Cta('Add a thing', key: const ValueKey('amAddBtn'), icon: 'plus', height: 48, px: 14, fs: 14, onTap: s.openAddAmenity)),
                 const SizedBox(width: 8),
                 Expanded(child: OutlineCta(s.amBreak ? 'Done' : 'Something broke', key: const ValueKey('amBreakBtn'), icon: s.amBreak ? 'check' : 'wrench', height: 48, px: 14, fs: 14, onTap: () => s.update(() => s.amBreak = !s.amBreak))),
               ],
@@ -280,7 +280,7 @@ class AmenityAddSheet extends StatelessWidget {
           ],
           const SizedBox(height: 14),
           label('2 · Where?'),
-          Seg(opts: const [('floor', 'On the floor'), ('washroom', 'In room washroom'), ('room', 'In the room')], cur: d.place, onPick: s.setAmenityPlace, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), fs: 13, center: true, dividers: true),
+          Seg(opts: const [('floor', 'On the floor'), ('washroom', 'In room washroom'), ('room', 'In the room')], cur: d.place, onPick: s.setAmenityPlace, pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), center: true, dividers: true),
           if (d.inRooms) ...[
             const SizedBox(height: 8),
             Wrap(

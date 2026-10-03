@@ -163,7 +163,7 @@ void main() {
     final late = _Server()
       ..hostels = [_hostel('real1')]
       ..accepted = false;
-    await _owner(tester, late, accepted: true);
+    await _owner(tester, late);
     expect(late.calls, contains('accept'));
     await _done(tester);
   });

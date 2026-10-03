@@ -87,7 +87,7 @@ extension FairPlayActions on AppState {
         }
       });
     } else if (!got && fairAccepted) {
-      data.acceptFairPlay().catchError((Object e) => debugPrint('accept fair play: $e'));
+      unawaited(data.acceptFairPlay().catchError((Object e) => debugPrint('accept fair play: $e')));
     }
   }
 
@@ -175,7 +175,7 @@ extension FairPlayActions on AppState {
     if (path == 'sample' || path == 'local') return toastMsg('Photos open from the server in the real app. This is sample data.');
     final url = await data.casePhotoUrl(path);
     if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
-    openLink(Uri.parse(url), 'the photo');
+    unawaited(openLink(Uri.parse(url), 'the photo'));
   }
 
   /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals

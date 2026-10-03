@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image/image.dart' as img;
-
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
@@ -14,6 +12,7 @@ import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/layout.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:image/image.dart' as img;
 
 // F24 items 10 and 11: the Fan / AC layer chips (off by default, F12), room
 // shapes in "Create a layout", and "Ask Hostelzy to draw it" tracked in the
@@ -111,7 +110,7 @@ void main() {
     // The cut-out corner is outside the walls; the rest of the room inside.
     expect(l.fits(Rect.fromLTWH(l.w - 3, 1, bedW, bedH)), isFalse);
     expect(l.fits(const Rect.fromLTWH(1, 1, bedW, bedH)), isTrue);
-    expect(l.fits(Rect.fromLTWH(1, 0, 4, .3), onWall: true), isTrue);
+    expect(l.fits(const Rect.fromLTWH(1, 0, 4, .3), onWall: true), isTrue);
     l.fitInside();
     expect(l.outside, isEmpty);
     expect(wallsCheck(l, room.label), (true, 'Everything inside the L shape walls'));

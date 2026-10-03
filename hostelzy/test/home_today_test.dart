@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image/image.dart' as img;
-
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
@@ -14,6 +12,7 @@ import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/map.dart' show mapTiles;
 import 'package:hostelzy/ui/screens_owner.dart' show allRequests;
 import 'package:hostelzy/ui/shell.dart';
+import 'package:image/image.dart' as img;
 
 // F21 Wave 3: resident Home has one job (rent and food) with three actions,
 // Help sends to the owner with a photo and shows the status inline, owner
@@ -51,6 +50,7 @@ class _Picker implements PhotoPicker {
 class _Server extends SampleRepo {
   final calls = <String>[];
   final complaints = <Map<String, dynamic>>[];
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   bool get remote => true;

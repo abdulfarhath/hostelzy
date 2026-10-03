@@ -183,16 +183,16 @@ class OwnerRulesScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: numbered(i + 1, Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(fairRules[i].$1, w: 800, s: 15), const SizedBox(height: 2), T(fairRules[i].$2, s: 12, c: p.mu, lh: 1.4)])),
                   ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Kicker('If a rule is broken'), T('No fines', s: 12, w: 800)]),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 14, 16, 6),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Kicker('If a rule is broken'), T('No fines', s: 12, w: 800)]),
                 ),
                 const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: StrikeLadder()),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: T('You always get 48 hours to explain. Fix a mistake in that time and there is no strike. 3 fixes in 6 months = 1 warning.', s: 12, c: p.mu, lh: 1.4),
                 ),
-                if (s.fairAccepted) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('Accepted when you joined Hostelzy.', s: 13, w: 800)),
+                if (s.fairAccepted) const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('Accepted when you joined Hostelzy.', s: 13, w: 800)),
               ],
             ),
           ),

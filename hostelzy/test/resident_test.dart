@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(find.text('Fix the UPI reference'), findsOneWidget);
 
-    s.confirmPayment(rent, true);
+    unawaited(s.confirmPayment(rent, true));
     await tester.pump(const Duration(seconds: 4));
     expect(find.textContaining('RENT · PAID'), findsOneWidget);
     final card = tester.widget<Container>(find.byKey(const ValueKey('rentCard')));

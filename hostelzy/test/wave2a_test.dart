@@ -243,20 +243,20 @@ void main() {
     });
     await tester.pump();
     await _tap(tester, find.text('Hold for a walk-in'));
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     await tester.pump();
     expect(server.calls.last, 'walkin bed-a');
     expect(bed.state, 'held');
     expect(s.walkIns['$_hid|${bed.id}'], greaterThan(DateTime.now().millisecondsSinceEpoch + 3500 * 1000));
     s.ownerReleaseBed(_hid, bed);
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect((server.calls.last, bed.state), ('release bed-a', 'free'));
     // someone else took it first: undone and said so
     server
       ..fail = true
       ..failWith = 'that bed isn\'t free any more';
     s.holdWalkIn(_hid, bed);
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect((bed.state, s.walkIns.containsKey('$_hid|${bed.id}'), s.toast), ('free', false, 'Bed ${bed.id} isn’t free any more.'));
     s.stopLive();
     await tester.pump(const Duration(seconds: 3));
@@ -289,11 +289,11 @@ void main() {
     expect(s.searchedAreas, ['Madhapur']);
     await _pump(tester, s);
     await _tap(tester, find.text('Rent reminders'));
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect(server.calls.last, 'notify false false true');
     // Where? → an area: kept for New free beds (newest first, at most 5)
     s.pickWhereArea('Ameerpet');
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     expect(server.calls.last, 'areas Ameerpet,Madhapur');
     expect(s.searchedAreas, ['Ameerpet', 'Madhapur']);
     for (final a in ['Kondapur', 'SR Nagar', 'Hitec City', 'Gachibowli']) {
@@ -338,12 +338,12 @@ void main() {
     expect(s.teamMembers, isEmpty);
     s.data = server;
     s.update(() => s.account = (uid: 'fb-hq', name: 'Farhath', email: 'f@gmail.com'));
-    await tester.runAsync(() => s.loadTeam());
+    await tester.runAsync(s.loadTeam);
     await _pump(tester, s);
     expect(find.text('Sri Sai PG'), findsOneWidget);
     expect(find.text('Anjani Residency'), findsNothing);
     await _tap(tester, find.text('Visited'));
-    await tester.runAsync(() => _settle());
+    await tester.runAsync(_settle);
     await tester.pump();
     expect(server.calls.last, 'stage h-lead visited');
     expect(s.leads.firstWhere((l) => l.hid == 'h-lead').stage, 1);
@@ -362,7 +362,7 @@ void main() {
       s.tmPhone = '98480 22338';
       s.tmRole = 'Visits';
     });
-    await tester.runAsync(() => s.addTeamMember());
+    await tester.runAsync(s.addTeamMember);
     await tester.pump();
     expect(server.calls.last, 'invite Sana 9848022338 Visits');
     expect(find.text('Sana'), findsOneWidget);

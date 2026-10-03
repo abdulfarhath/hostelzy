@@ -121,7 +121,6 @@ class AddHostelScreen extends StatelessWidget {
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           child: Cta(
             cta,
-            icon: 'arrow',
             height: 54,
             px: 16,
             fs: 15,
@@ -260,7 +259,7 @@ class _RoomsState extends State<_Rooms> {
         children: [
           Row(
             children: [
-              Expanded(child: T('Room number', s: 13, w: 800)),
+              const Expanded(child: T('Room number', s: 13, w: 800)),
               Tap(
                 onTap: () => s.update(() {
                   f.rooms.remove(r);
@@ -271,8 +270,8 @@ class _RoomsState extends State<_Rooms> {
             ],
           ),
           Field(key: ValueKey(r), value: r.label, onChanged: (v) => s.update(() => r.label = v.trim().toUpperCase())),
-          Seg(opts: [for (var n = 1; n <= 4; n++) ('$n', '$n sharing')], cur: '${r.share}', onPick: (v) => s.update(() => r.share = int.parse(v)), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 2), fs: 13, center: true),
-          Seg(opts: const [('non', 'Non-AC'), ('ac', 'AC')], cur: r.ac ? 'ac' : 'non', onPick: (v) => s.update(() => r.ac = v == 'ac'), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 4), fs: 13, center: true),
+          Seg(opts: [for (var n = 1; n <= 4; n++) ('$n', '$n sharing')], cur: '${r.share}', onPick: (v) => s.update(() => r.share = int.parse(v)), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 2), center: true),
+          Seg(opts: const [('non', 'Non-AC'), ('ac', 'AC')], cur: r.ac ? 'ac' : 'non', onPick: (v) => s.update(() => r.ac = v == 'ac'), pad: const EdgeInsets.symmetric(vertical: 8, horizontal: 4), center: true),
         ],
       ),
     );

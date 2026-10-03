@@ -296,7 +296,7 @@ class FixEditorScreen extends StatelessWidget {
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: s.fixTry
-              ? OutlineCta('Send · residents only', icon: 'lock', height: 54, fs: 15, onTap: s.openSendFix)
+              ? OutlineCta('Send · residents only', icon: 'lock', height: 54, onTap: s.openSendFix)
               : Cta('Send to owner', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.openSendFix),
         ),
       ],
@@ -462,7 +462,7 @@ class OwnerFixCards extends StatelessWidget {
                 Row(children: [Expanded(child: T('Quick fix: ${f.quickLine}, Room ${f.room}', w: 800, s: 15)), Tag('New', bg: p.ab, fg: p.ad)]),
                 T(from(f), s: 12, c: p.mu),
                 if (f.note.isNotEmpty) T('“${f.note}”', s: 14, w: 600, lh: 1.4),
-                if (f.photo != null) FixPhotoThumb(f, size: 96),
+                if (f.photo != null) FixPhotoThumb(f),
                 two(
                   Cta('Got it', icon: 'check', height: 44, px: 12, fs: 14, onTap: () => s.ackQuickFix(f, true)),
                   OutlineCta('Not right', icon: 'x', height: 44, px: 12, fs: 14, onTap: () => s.ackQuickFix(f, false)),
@@ -481,7 +481,7 @@ class OwnerFixCards extends StatelessWidget {
           cardBox([
             Row(children: [Expanded(child: T('Broken: ${f.item}, Room ${f.room}', w: 800, s: 15)), Tag('Repair', bg: p.ab, fg: p.ad)]),
             T(['From a resident’s quick fix', if (f.note.isNotEmpty) '“${f.note}”', if (f.photo != null) '1 photo'].join(' · '), s: 12, c: p.mu),
-            if (f.photo != null) FixPhotoThumb(f, size: 96),
+            if (f.photo != null) FixPhotoThumb(f),
             two(
               Cta('Start work', icon: 'wrench', height: 44, px: 12, fs: 14, onTap: () => s.setRepair(f, 'working')),
               OutlineCta('Not broken', icon: 'x', height: 44, px: 12, fs: 14, onTap: () => s.setRepair(f, 'not_broken')),

@@ -4,18 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
+import 'features/links/scan.dart' show CameraScanner;
 import 'features/listings/cache.dart';
 import 'features/listings/repo.dart';
+import 'features/photos/pick.dart' show GalleryPicker;
+import 'l10n.dart';
+import 'locate.dart';
 import 'push.dart';
 import 'reminders.dart';
 import 'router.dart';
 import 'sign_in.dart';
-import 'store.dart';
-import 'locate.dart';
-import 'features/photos/pick.dart' show GalleryPicker;
-import 'features/links/scan.dart' show CameraScanner;
-import 'l10n.dart';
 import 'state.dart';
+import 'store.dart';
 import 'ui/overview.dart';
 import 'ui/shell.dart';
 

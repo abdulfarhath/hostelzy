@@ -1,31 +1,30 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'dart:convert';
-
 import 'package:hostelzy/app_config.dart' show dataSource, supabaseUrl, supabaseAnonKey, hostelzyUpiId, supportWhatsApp, webBase, privacyUrl, deleteAccountUrl, enquiryLink, inviteLink;
-import 'package:hostelzy/features/listings/repo.dart';
+import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
-import 'package:hostelzy/push.dart';
-import 'package:hostelzy/sign_in.dart';
-import 'package:hostelzy/store.dart';
-import 'package:hostelzy/locate.dart';
+import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/features/photos/photo.dart';
 import 'package:hostelzy/features/photos/pick.dart';
-import 'package:image/image.dart' as img;
-import 'package:hostelzy/data.dart';
-import 'package:hostelzy/state.dart';
-import 'package:hostelzy/ui/common.dart';
-import 'package:hostelzy/ui/map.dart' show mapTiles;
-import 'package:hostelzy/ui/kit.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
-import 'package:hostelzy/ui/screens_owner.dart' show allRequests;
-import 'package:hostelzy/ui/shell.dart';
+import 'package:hostelzy/locate.dart';
+import 'package:hostelzy/push.dart';
 import 'package:hostelzy/router.dart';
+import 'package:hostelzy/sign_in.dart';
+import 'package:hostelzy/state.dart';
+import 'package:hostelzy/store.dart';
+import 'package:hostelzy/ui/common.dart';
+import 'package:hostelzy/ui/kit.dart';
+import 'package:hostelzy/ui/map.dart' show mapTiles;
+import 'package:hostelzy/ui/screens_owner.dart' show allRequests;
+import 'package:hostelzy/ui/screens_tenant.dart' show filtered;
+import 'package:hostelzy/ui/shell.dart';
+import 'package:image/image.dart' as img;
+import 'package:qr_flutter/qr_flutter.dart';
 
 Future<void> _loadFonts(WidgetTester tester) => tester.runAsync(() async {
   for (final (family, files) in [
@@ -292,7 +291,7 @@ void main() {
     await tap(tester, find.text('House rules'));
     expect(find.text('₹3,000 + first month at move-in'), findsOneWidget);
     expect(find.text('₹1,000 kept from the advance'), findsOneWidget);
-    expect(find.textContaining("2 months"), findsNothing);
+    expect(find.textContaining('2 months'), findsNothing);
     s.jump('hold', 'tenant');
     await tester.pump();
     expect(find.textContaining('advance ₹3,000 + first month'), findsOneWidget);
@@ -801,7 +800,7 @@ void main() {
     await tap(tester, find.byKey(const ValueKey('opt-book')));
     await tap(tester, find.byKey(const ValueKey('holdGo')));
     final hold = s.holds.single;
-    s.confirmPayment(s.payOfHold(hold.id)!, true); // the owner saw the money
+    unawaited(s.confirmPayment(s.payOfHold(hold.id)!, true)); // the owner saw the money
     s.update(() => s.sheet = null);
     await tester.pump(const Duration(seconds: 3));
 
@@ -1232,8 +1231,8 @@ void main() {
     expect(s.lastLink!.scheme, 'upi');
     expect(s.lastLink!.queryParameters, {'pa': 'sample.owner@upi', 'pn': 'Srinivas', 'am': '3000', 'tn': h.ref, 'cu': 'INR'});
     s.update(() => s.payUtr = '402188341297');
-    s.sendPayUtr();
-    s.confirmPayment(pay, false);
+    unawaited(s.sendPayUtr());
+    unawaited(s.confirmPayment(pay, false));
     await tester.pump(const Duration(seconds: 3));
     expect(find.text('NOT RECEIVED'), findsOneWidget);
     expect(h.status, 'paying');
@@ -2144,7 +2143,7 @@ void main() {
     // Crash guards.
     final c = AppState(start: 'explore', role: 'tenant');
     expect(hostelById('gone').name, 'Hostel no longer listed');
-    hostels.add(Hostel(id: 'tagless', name: 'Tagless PG', gender: 'Men', area: 'Ameerpet', from: 5000, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: const {}, x: 50, y: 50, tags: const ['Wi-Fi']));
+    hostels.add(const Hostel(id: 'tagless', name: 'Tagless PG', gender: 'Men', area: 'Ameerpet', from: 5000, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: {}, x: 50, y: 50, tags: ['Wi-Fi']));
     c.rooms['tagless'] = mkRooms(hostels.last, 6);
     c.rates['tagless'] = seedRates(hostels.last);
     c.stats['tagless'] = const ReviewStats([0, 0, 0, 0, 0], 0, 0, 0);
@@ -2675,7 +2674,7 @@ void main() {
       {'id': 's2', 'hostel_id': 'h1', 'user_id': null, 'name': 'Ravi', 'phone': '9876500002', 'via': 'direct', 'rent': 7000, 'advance': 0, 'joined_on': '2026-10-02', 'confirmed': false, 'left_on': null, 'beds': null},
       {'id': 's3', 'hostel_id': 'h9', 'user_id': 'fb-owner', 'name': 'Me', 'confirmed': true, 'joined_on': '2026-01-01', 'left_on': null},
     ]);
-    expect(l.residents.map((r) => '${r.key} ${r.name} ${r.bed} ${r.status} ${r.tag} ${r.since}'), ['s1 Kiran Rao 101-C Waiting hz Joined 1 Oct'.replaceFirst('1 Oct', dayMon(DateTime(2026, 9, 1))), 's2 Ravi  Due wait Added ${dayMon(DateTime(2026, 10, 2))}']);
+    expect(l.residents.map((r) => '${r.key} ${r.name} ${r.bed} ${r.status} ${r.tag} ${r.since}'), ['s1 Kiran Rao 101-C Waiting hz Joined 1 Oct'.replaceFirst('1 Oct', dayMon(DateTime(2026, 9))), 's2 Ravi  Due wait Added ${dayMon(DateTime(2026, 10, 2))}']);
     expect(l.myHostel, 'h9');
 
     final s = AppState(start: 'oToday', role: 'owner');
@@ -3408,6 +3407,7 @@ class _FakePush implements Push {
   /// Android's permission right now.
   bool granted;
   int asked = 0, deleted = 0;
+  // ignore: close_sinks
   final refresh = StreamController<String>.broadcast();
   @override
   Future<PushAsk> ask() async {
@@ -3525,6 +3525,7 @@ class _FakeLive extends SampleRepo {
   LiveRows rows;
   int fetches = 0;
   String? askedAs;
+  // ignore: close_sinks
   final ctrl = StreamController<String>.broadcast();
   @override
   Future<LiveRows?> live({String? me}) async {

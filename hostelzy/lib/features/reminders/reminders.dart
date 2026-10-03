@@ -168,7 +168,7 @@ extension RemindersActions on AppState {
 
   Future<void> _reschedule() async {
     await rem.apply(rings);
-    _backupRem();
+    unawaited(_backupRem());
   }
 
   /// Signed in on the server: the settings are backed up on the profile.

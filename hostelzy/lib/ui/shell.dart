@@ -3,32 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../l10n.dart';
 import '../state.dart';
 import 'amenities.dart';
-import 'refunds.dart';
 import 'common.dart';
 import 'fairplay.dart';
 import 'guest.dart';
-import '../l10n.dart';
 import 'kit.dart';
-import 'photos.dart';
 import 'layout.dart';
 import 'layout_fixes.dart';
 import 'map.dart';
 import 'onboarding.dart';
 import 'payments.dart';
-import 'reminders.dart';
-import 'settings.dart';
-import 'team.dart';
-import 'rooms.dart';
+import 'photos.dart';
 import 'plan.dart';
+import 'refunds.dart';
+import 'reminders.dart';
 import 'reviews.dart';
 import 'rewards.dart';
+import 'rooms.dart';
 import 'screens_owner.dart';
 import 'screens_resident.dart';
 import 'screens_start.dart';
 import 'screens_tenant.dart';
+import 'settings.dart';
 import 'stay_tools.dart';
+import 'team.dart';
 
 /// Body text: Archivo 16px, line-height 1.4 (`[data-hz]`).
 TextStyle rootTextStyle(Pal p) => TextStyle(fontFamily: 'Archivo', fontSize: 16, height: 1.4, letterSpacing: 0, color: p.tx, fontWeight: FontWeight.w400, leadingDistribution: TextLeadingDistribution.even, decoration: TextDecoration.none);
@@ -951,7 +951,7 @@ class _HoldSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               child: Rich([sp(context, 'Hostelzy deal: ', w: 800), sp(context, perks.join(' · ')), sp(context, ' · booking code ${s.peekRef}', w: 800)], s: 13, c: p.gn, lh: 1.45),
             ),
-          Cta(book ? 'Pay ${fmt(q.hzAdv)} to book' : 'Hold bed ${b.id} free', key: const ValueKey('holdGo'), height: 56, px: 16, fs: 15, onTap: () => s.placeHold(s.holdOpt)),
+          Cta(book ? 'Pay ${fmt(q.hzAdv)} to book' : 'Hold bed ${b.id} free', key: const ValueKey('holdGo'), px: 16, fs: 15, onTap: () => s.placeHold(s.holdOpt)),
           T(book ? 'You pay by UPI straight to ${h.owner}. Hostelzy never holds your money.' : 'If ${h.owner} doesn’t keep it within the hour, the bed is free again. You pay nothing.', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
@@ -1043,7 +1043,7 @@ class _EnquirySheet extends StatelessWidget {
             children: [
               Expanded(child: Cta('WhatsApp', icon: 'msg', height: 50, px: 14, fs: 15, onTap: () => contact('wa'))),
               const SizedBox(width: 8),
-              Expanded(child: OutlineCta('Call', icon: 'phone', height: 50, px: 14, fs: 15, onTap: () => contact('call'))),
+              Expanded(child: OutlineCta('Call', icon: 'phone', height: 50, px: 14, onTap: () => contact('call'))),
             ],
           ),
         ),
@@ -1269,7 +1269,7 @@ class _AddSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             color: p.sf,
-            child: T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
+            child: const T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
           ),
           Cta(
             'Add tenant',

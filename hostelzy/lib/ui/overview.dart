@@ -140,7 +140,7 @@ class OverviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // No line-height on this page's body: CSS `normal`.
-    final base = const TextStyle(fontFamily: 'Archivo', fontSize: 16, color: _ink, leadingDistribution: TextLeadingDistribution.even, decoration: TextDecoration.none);
+    const base = TextStyle(fontFamily: 'Archivo', fontSize: 16, color: _ink, leadingDistribution: TextLeadingDistribution.even, decoration: TextDecoration.none);
     final items = <Widget>[_header(), for (final s in sections) _section(s)];
     return ColoredBox(
       color: const Color(0xFFDCDAD9),

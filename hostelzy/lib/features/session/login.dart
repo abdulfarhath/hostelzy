@@ -53,10 +53,10 @@ extension LoginActions on AppState {
         screen = 'phone';
         sheet = null;
       });
-      startLive();
-      syncPushToken();
-      restoreRemFromServer();
-      loadNotifyFromServer();
+      unawaited(startLive());
+      unawaited(syncPushToken());
+      unawaited(restoreRemFromServer());
+      unawaited(loadNotifyFromServer());
       return;
     }
     // Never hide why: the real code is shown and sent to Crashlytics.
@@ -105,7 +105,7 @@ extension LoginActions on AppState {
           osPushAllowed = true;
           notif.updateAll((k, v) => k == 'beds' ? v : true);
         });
-        saveNotify();
+        unawaited(saveNotify());
         if (account == null) return toastMsg('Notifications allowed. Sign in with Google to get them.');
         if (!data.remote) return toastMsg('Notifications allowed. This demo has no server, so nothing is sent.');
         if (await syncPushToken(force: true)) toastMsg('Notifications are on for this phone.');

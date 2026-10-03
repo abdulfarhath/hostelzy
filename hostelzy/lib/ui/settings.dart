@@ -329,7 +329,7 @@ class PermissionScreen extends StatelessWidget {
           children: [
             Align(alignment: Alignment.centerLeft, child: Container(width: 64, height: 64, color: p.sf, alignment: Alignment.center, child: Ic(icon, size: 30, color: p.tx))),
             const SizedBox(height: 14),
-            T(title, w: 800, s: 32, lh: 1.02, ls: -.025),
+            const T(title, w: 800, s: 32, lh: 1.02, ls: -.025),
             const SizedBox(height: 14),
             T(sub, s: 15, c: p.mu, lh: 1.5),
             const SizedBox(height: 20),

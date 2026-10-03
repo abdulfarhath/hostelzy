@@ -429,7 +429,7 @@ extension ResidentsActions on AppState {
     });
     if (res.payId == null) {
       toastMsg('Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification.');
-      askPushAfterHold();
+      unawaited(askPushAfterHold());
     }
   }
 }

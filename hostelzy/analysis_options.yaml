@@ -1,12 +1,6 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# Analyzer and lint settings for the Hostelzy app. `flutter analyze` must stay clean.
+# Lint list: https://dart.dev/lints
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
@@ -15,21 +9,42 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+  language:
+    strict-casts: true
+  errors:
+    # On by default; pinned here so they never get silenced.
+    unused_import: warning
+    unused_element: warning
+    unused_field: warning
+    unused_local_variable: warning
+    dead_code: warning
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
-
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # Const and final
+    - prefer_const_constructors
+    - prefer_const_constructors_in_immutables
+    - prefer_const_declarations
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_fields
+    - prefer_final_locals
+    # Noise
+    - unnecessary_const
+    - unnecessary_new
+    - unnecessary_this
+    - unnecessary_lambdas
+    - unnecessary_null_checks
+    - unnecessary_parenthesis
+    - unnecessary_string_interpolations
+    - avoid_redundant_argument_values
+    - avoid_unnecessary_containers
+    # Style
+    - prefer_single_quotes
+    - directives_ordering
+    - sort_child_properties_last
+    - use_super_parameters
+    # Safety
+    - avoid_print
+    - cancel_subscriptions
+    - close_sinks
+    - unawaited_futures

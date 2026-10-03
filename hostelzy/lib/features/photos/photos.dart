@@ -189,7 +189,7 @@ extension PhotosActions on AppState {
       await data.removePhoto(p);
     } catch (e) {
       toastMsg('Couldn’t remove it. Check your internet.');
-      loadPhotos(hid, again: true);
+      unawaited(loadPhotos(hid, again: true));
     }
   }
 

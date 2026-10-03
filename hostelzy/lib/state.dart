@@ -10,50 +10,50 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
 import 'data.dart';
+import 'features/links/scan.dart';
+import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
+import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
+import 'features/photos/photo.dart';
+import 'features/photos/pick.dart';
 import 'l10n.dart';
+import 'locate.dart';
 import 'poster.dart';
 import 'push.dart';
 import 'reminders.dart';
 import 'sign_in.dart';
 import 'store.dart';
-import 'locate.dart';
-import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
-import 'features/photos/photo.dart';
-import 'features/photos/pick.dart';
-import 'features/links/scan.dart';
 
+part 'features/amenities/amenities.dart';
 part 'features/fair_play/fair_play.dart';
-part 'features/rewards/rewards.dart';
-part 'features/plan/plan.dart';
-part 'features/layouts/room_layouts.dart';
-part 'features/team/team_mode.dart';
-part 'features/layouts/owner_layouts.dart';
-part 'features/onboarding/rooms_live.dart';
-part 'features/team/team_members.dart';
+part 'features/food/food.dart';
+part 'features/holds/holds.dart';
+part 'features/laundry/laundry.dart';
 part 'features/layouts/layout_editor.dart';
 part 'features/layouts/layout_fixes.dart';
-part 'features/onboarding/onboarding.dart';
-part 'features/reviews/reviews.dart';
-part 'features/reviews/review_rules.dart';
-part 'features/session/on_phone.dart';
-part 'features/map/map.dart';
-part 'features/residents/residents.dart';
-part 'features/holds/holds.dart';
-part 'features/payments/payments.dart';
-part 'features/session/play_store.dart';
-part 'features/session/login.dart';
-part 'features/listings/sync.dart';
+part 'features/layouts/owner_layouts.dart';
+part 'features/layouts/room_layouts.dart';
 part 'features/links/links.dart';
+part 'features/listings/sync.dart';
+part 'features/map/map.dart';
+part 'features/meter/meter.dart';
+part 'features/moves/moves.dart';
+part 'features/onboarding/onboarding.dart';
+part 'features/onboarding/rooms_live.dart';
+part 'features/payments/payments.dart';
 part 'features/photos/photos.dart';
+part 'features/plan/plan.dart';
 part 'features/reminders/reminders.dart';
 part 'features/residents/my_stay.dart';
+part 'features/residents/residents.dart';
+part 'features/reviews/review_rules.dart';
+part 'features/reviews/reviews.dart';
+part 'features/rewards/rewards.dart';
 part 'features/session/guest.dart';
-part 'features/amenities/amenities.dart';
-part 'features/food/food.dart';
-part 'features/moves/moves.dart';
-part 'features/meter/meter.dart';
-part 'features/laundry/laundry.dart';
+part 'features/session/login.dart';
+part 'features/session/on_phone.dart';
+part 'features/session/play_store.dart';
+part 'features/team/team_members.dart';
+part 'features/team/team_mode.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -473,7 +473,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     if (path == null) return;
     final url = await data.complaintPhotoUrl(path);
     if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
-    openLink(Uri.parse(url), 'the photo');
+    unawaited(openLink(Uri.parse(url), 'the photo'));
   }
 
   /// Owner: Open → In progress → Resolved (C: saved on the server when live).

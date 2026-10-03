@@ -24,7 +24,7 @@ class TeamSheet extends StatelessWidget {
         children: [
           T('For the Hostelzy team only. Owners and tenants don’t need this.', s: 13, c: p.mu, lh: 1.45),
           if (a == null)
-            T('Sign in with your Hostelzy team Google account, then come back here.', s: 14, w: 600, lh: 1.45)
+            const T('Sign in with your Hostelzy team Google account, then come back here.', s: 14, w: 600, lh: 1.45)
           else ...[
             T('Signed in as ${a.email}', s: 14, w: 600),
             Cta(s.teamChecking ? 'Checking…' : 'Open team tools', icon: 'lock', height: 54, px: 16, fs: 15, onTap: s.checkTeam),
@@ -165,7 +165,6 @@ class OwnerLayoutsScreen extends StatelessWidget {
             if (!floorsOf(rs).contains(s.amFloor) && !s.amenityFloors(h.id).contains(s.amFloor)) s.amFloor = floorsOf(rs).first;
           }),
           pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          fs: 13,
           center: true,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         ),

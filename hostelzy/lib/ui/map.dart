@@ -90,7 +90,6 @@ class MapScreen extends StatelessWidget {
                     Marker(
                       point: _ll(posOf(ho)),
                       width: 72,
-                      height: 30,
                       alignment: Alignment.topCenter,
                       child: () {
                         final sel = ho.id == mh?.id;
@@ -119,7 +118,7 @@ class MapScreen extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: KeyedSubtree(key: const ValueKey('mapArea'), child: WhereBar(onTap: s.openWhere, height: 50)),
+                child: KeyedSubtree(key: const ValueKey('mapArea'), child: WhereBar(onTap: s.openWhere)),
               ),
               const SizedBox(width: 8),
               // Explainer first; Android asks only after "Allow location".
