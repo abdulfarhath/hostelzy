@@ -158,9 +158,9 @@ the rest are 23 dark copies, the cover and the logo).
   `f12-Request` (old layout request; now `f24-oShapeReq`).
 - *Not counted, kept:* `Main` (cover), `brand-logo`, `splash` (Android launch), `f14-Poster` (print), `f17-Desktop` (tablet
   layout, SCREENS §6), `f19-Push`, `f20-Notify`, `f20-NotifyDark` (system notifications).
-- *For Build:* the site root `index.html` is the old green prototype (W1). Retire it or redirect to `app/` (then retire `w3-wRoot`).
+- *v28 (after #95):* site root now redirects to `app/`; **retired `w3-wRoot`**. Web items renumbered to SCREENS (W1 `wHome` · W2 `wR` · W3 `w3-wRNoCode` · W4 `wJ` · W5 `w3-wJNoCode` · W6 `wPriv` · W7 `wTerms` · W8 `wDel`). **App 181 · Canvas 181**, 252 boards.
 
-<details><summary>Item → board map (182)</summary>
+<details><summary>Item → board map (181)</summary>
 
 | Item | Board | Variants |
 |---|---|---|
@@ -337,15 +337,14 @@ the rest are 23 dark copies, the cover and the logo).
 | C11 | `w1-cNotSetup` |  |
 | C12 | `w1-cError` |  |
 | C13 | `w3-cLoadError` |  |
-| W1 | `w3-wRoot` |  |
-| W2 | `wHome` |  |
-| W3 | `wR` |  |
-| W4 | `w3-wRNoCode` |  |
-| W5 | `wJ` |  |
-| W6 | `w3-wJNoCode` |  |
-| W7 | `wPriv` |  |
-| W8 | `wTerms` |  |
-| W9 | `wDel` |  |
+| W1 | `wHome` |  |
+| W2 | `wR` |  |
+| W3 | `w3-wRNoCode` |  |
+| W4 | `wJ` |  |
+| W5 | `w3-wJNoCode` |  |
+| W6 | `wPriv` |  |
+| W7 | `wTerms` |  |
+| W8 | `wDel` |  |
 
 </details>
 
