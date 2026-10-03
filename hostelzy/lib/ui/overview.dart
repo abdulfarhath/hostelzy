@@ -116,6 +116,8 @@ class OverviewPage extends StatelessWidget {
         ('Delete: confirm with Google', {'start': 'delConfirm', 'role': 'tenant'}),
         ('Delete: done', {'start': 'delDone', 'role': 'tenant'}),
         ('Notifications explainer', {'start': 'perm', 'role': 'tenant'}),
+        ('Join your PG: camera explainer', {'start': 'roleGate', 'role': 'tenant', 'sheet': 'scanCam'}),
+        ('Join your PG: scan the QR', {'start': 'scan', 'role': 'tenant'}),
         ('Update needed', {'start': 'gate', 'role': 'tenant'}),
       ],
     ),

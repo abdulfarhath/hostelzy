@@ -169,6 +169,21 @@ abstract class HostelRepo {
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
 
+  /// F24 Wave 4b (F12): one room's published layout for the Room tab. A
+  /// women's PG lists its layouts only to people with a hold there; others
+  /// get room by room (a few a day; then it throws "hold a bed to see more").
+  Future<RoomLayout?> roomLayout(String hid, int room);
+
+  /// F12 one editor at a time: take (or refresh) the room's 10-minute edit
+  /// lock; [mine] false names whoever holds it. Let it go when leaving.
+  Future<({String name, bool mine})> lockLayout(String hid, int room);
+  Future<void> unlockLayout(String hid, int room);
+
+  /// F24 item 27: "Tell me when it's ready" on a room with no layout, and
+  /// the rooms (`hid|room`) this tenant still waits for.
+  Future<void> waitForLayout(String hid, int room);
+  Future<Set<String>> layoutWaits();
+
   /// F24 item 11: "Ask Hostelzy to draw it" (staff) and the hostel's
   /// requests, with the team's drawing once sent. Photos go up with
   /// [uploadFixPhoto]. Publishing the room closes its sent request. The team
@@ -410,6 +425,16 @@ class SampleRepo implements HostelRepo {
   Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
+  @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async => null;
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async => (name: '', mine: true);
+  @override
+  Future<void> unlockLayout(String hid, int room) async {}
+  @override
+  Future<void> waitForLayout(String hid, int room) => throw UnsupportedError('sample data');
+  @override
+  Future<Set<String>> layoutWaits() async => {};
 
   @override
   Future<String> saveAmenity(Amenity a) async => a.key ?? a.id;
@@ -725,6 +750,31 @@ class SupabaseRepo implements HostelRepo {
 
   @override
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<RoomLayout?> roomLayout(String hid, int room) async {
+    final rows = (await db.rpc('room_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    return rows.isEmpty ? null : layoutFromRow(hid, rows.first);
+  }
+
+  @override
+  Future<({String name, bool mine})> lockLayout(String hid, int room) async {
+    final rows = (await db.rpc('lock_layout', params: {'p_hostel': hid, 'p_room': room}) as List).cast<Map<String, dynamic>>();
+    final r = rows.first;
+    return (name: r['name'] as String? ?? '', mine: r['mine'] as bool? ?? false);
+  }
+
+  @override
+  Future<void> unlockLayout(String hid, int room) => db.rpc('unlock_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<void> waitForLayout(String hid, int room) => db.rpc('wait_for_layout', params: {'p_hostel': hid, 'p_room': room});
+
+  @override
+  Future<Set<String>> layoutWaits() async {
+    final rows = (await db.from('layout_waits').select('hostel_id, room').isFilter('told_at', null) as List).cast<Map<String, dynamic>>();
+    return {for (final r in rows) '${r['hostel_id']}|${r['room']}'};
+  }
 
   @override
   Future<List<ShapeRequest>> shapeRequests(String hid) async {
