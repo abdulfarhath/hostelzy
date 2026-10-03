@@ -49,8 +49,6 @@ class TeamHomeScreen extends StatelessWidget {
         s.go('aTrack');
         s.loadTeam();
       }),
-      ('wallet', 'Payments check', 'Owners’ plan invoices and UTRs to match in the bank', () => s.go('aPay')),
-      ('flag', 'Fair Play cases', 'Signals, owner replies, strikes', () => s.go('aCases')),
       ('room', 'Layout editor', 'Draw and move beds, fans, AC, windows; send to the owner', () => s.openLayout(s.lRoom, editor: true)),
       ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () {
         s.go('aTeam');
@@ -91,6 +89,12 @@ class TeamHomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // F25: plan payments and Fair Play cases are desk work, in the team console only.
+                  Padding(
+                    key: const ValueKey('aHomeConsole'),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                    child: T('Payments and Fair Play cases are in the team console: farhath.me/hostelzy/app/console', s: 13, c: p.mu, lh: 1.4),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: OutlineCta('Lock team tools on this phone', icon: 'lock', onTap: () => s.update(() {

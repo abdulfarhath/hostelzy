@@ -93,8 +93,6 @@ mixin _ReviewsData {
   String rentF = 'All';
   int mDay = 3;
   List<Rule> rules = seedRules(hostels[0].terms);
-  String addName = '', addPhone = '', addDate = 'Today';
-  String? addBed;
   String? obed;
   final Map<String, bool> saved = {};
   String? waTo, waMsg;

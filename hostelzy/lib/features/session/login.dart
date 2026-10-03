@@ -173,8 +173,10 @@ extension LoginActions on AppState {
 
   /// First time after a Google sign-in lands on a home screen: explain, then
   /// ask (once; "Not now" is remembered). Already allowed: just save the token.
+  /// F25: never for tenants. A tenant gets only H5 `holdNotify` after their
+  /// first hold, so they never see both asks.
   Future<void> offerPush() async {
-    if (account == null) return;
+    if (account == null || role == 'tenant') return;
     final ok = await push.allowed();
     update(() => osPushAllowed = ok);
     if (ok == true) {

@@ -319,10 +319,7 @@ void main() {
     await pumpApp(tester, o);
     expect(find.text('₹3,000 · ₹1,000 kept on exit'), findsOneWidget);
     expect(find.text('Mark as leaving 31 Oct'), findsOneWidget);
-    o.update(() {
-      o.sheet = 'add';
-      o.addBed = '102-A';
-    });
+    o.openAddResident(bed: '102-A');
     await tester.pump();
     final rent = o.findBed('anjani', '102-A').r!.rent;
     expect(find.textContaining('due at move-in ${fmt(3000 + rent)} (advance ₹3,000, ₹1,000 kept on exit)'), findsOneWidget);
@@ -755,15 +752,10 @@ void main() {
     expect(s.cases.first.signal, 'Tenant report: offered a lower price to skip the app');
     expect(s.cases.first.status, 'new');
 
-    // Founder: strikes. Strike 2 hides deals, strike 3 removes the hostel.
-    s.jump('aCases', 'owner');
-    await tester.pump();
-    await tap(tester, find.text('New 4'));
-    await tap(tester, find.textContaining('FP-0143'));
-    await tap(tester, find.text('Strike 1'));
-    expect(s.strikes['anjani'], 1);
+    // Founder: strikes (decided in the team console, F25). Strike 1 is a
+    // warning, strike 2 hides deals, strike 3 removes the hostel.
+    s.update(() => s.strikes['anjani'] = 1);
     expect(s.dealsOf('anjani').on, isNotEmpty);
-    s.decideCase(s.cases.firstWhere((c) => c.id == 'FP-0139'), 'strike');
     s.strikes['anjani'] = 2;
     expect(s.dealsOf('anjani').on, isEmpty);
     s.strikes['anjani'] = 3;
@@ -871,19 +863,15 @@ void main() {
     expect(find.text('CHECKING YOUR PAYMENT'), findsOneWidget);
     s.dispose();
 
-    // Founder: match the UTR in the bank, mark paid or not received.
-    final a = AppState(start: 'aPay', role: 'owner');
+    // Founder: the team matches the UTR in the console (F25). Orchid is 15
+    // days late: its deals are paused, the listing stays, until it's paid.
+    final a = AppState(start: 'oToday', role: 'owner');
     await pumpApp(tester, a);
-    expect(find.text('To check 2'), findsOneWidget);
-    await tap(tester, find.text('Mark paid').first);
-    expect(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-1019').status, 'paid');
-    await tester.pump(const Duration(seconds: 3));
-    await tap(tester, find.text('Not received'));
-    expect(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-1016').status, 'missing');
-    // Orchid is 15 days late: its deals are paused, the listing stays.
     expect(a.dealsOf('orchid').on, isEmpty);
     expect(a.dealsPaused('orchid'), isTrue);
-    a.markPaid(a.invoices.firstWhere((i) => i.ref == 'HZ-INV-0998'));
+    a.update(() => a.invoices.firstWhere((i) => i.ref == 'HZ-INV-0998')
+      ..status = 'paid'
+      ..late = 0);
     expect(a.dealsOf('orchid').on, {'monthly'});
     a.dispose();
 
@@ -899,7 +887,9 @@ void main() {
     expect(l15.dealsOf('anjani').on, isEmpty);
     await tap(tester, find.text('Pay ₹999 by UPI'));
     expect(l15.screen, 'oInvoice');
-    l15.markPaid(l15.invoice);
+    l15.update(() => l15.invoice
+      ..status = 'paid'
+      ..late = 0);
     expect(l15.dealsOf('anjani').on, isNotEmpty);
     l15.dispose();
 
@@ -1460,8 +1450,12 @@ void main() {
     await tester.pump();
     expect((o.teamUnlocked, o.screen), (true, 'aHome'));
     expect(find.text('TEAM TOOLS · SAMPLE DATA'), findsOneWidget);
-    for (final t in ['Add hostel', 'Onboarding tracker', 'Payments check', 'Fair Play cases']) {
+    for (final t in ['Add hostel', 'Onboarding tracker', 'Layout editor', 'Team members']) {
       expect(find.text(t), findsOneWidget);
+    }
+    // F25: payments and Fair Play cases are in the team console only.
+    for (final t in ['Payments check', 'Fair Play cases']) {
+      expect(find.text(t), findsNothing);
     }
 
     // Layout editor: room 204 (Anjani, 4 sharing). Move fan 1 next to bed A.
@@ -2808,11 +2802,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
     expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UPI reference saved. Hostelzy checks it against the bank record.'));
-    // The team marks it paid (founder admin on the server).
-    s.markPaid(s.invoices.single);
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
-    expect((fake.calls.last, s.toast), ('invcheck inv-1 paid', 'HZ-INV-1100 marked paid.'));
+    // The team marks it paid in the team console (F25: not in the app).
     s.stopLive();
     s.dispose();
   });
@@ -2919,12 +2909,8 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
     expect(fake.calls.last, 'casereply c4 He moved in on the 3rd true');
-    // The team decides: a strike is recorded with the result.
-    s.decideCase(c2, 'strike');
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
-    expect(fake.calls.last, 'decide c2 h1 strike Strike 1 · ${strikeLadder[0].$2.toLowerCase()}');
-    expect(s.strikes['h1'], 1);
+    // The team decides in the team console (F25: not in the app).
+    expect(c2.key, isNotNull);
     // A tenant's private report needs the hostel of an ended hold.
     s.update(() {
       s.role = 'tenant';
@@ -3398,6 +3384,179 @@ void main() {
     again.dispose();
     anon.dispose();
   });
+
+  testWidgets('F25: a tenant never sees both notification asks; residents and owners keep the explainer', (tester) async {
+    final s = AppState(start: 'role', role: 'tenant');
+    s
+      ..data = _FakeData()
+      ..push = _FakePush(true)
+      ..signIn = _FakeSignIn(null);
+    s.update(() => s.account = (uid: 'fb-asha', name: 'Asha K', email: 'asha@gmail.com'));
+    await pumpApp(tester, s);
+    s.pickRole('tenant');
+    // Even asked directly, the role-pick explainer (S82 perm) never opens for a tenant.
+    await s.offerPush();
+    await tester.pump();
+    expect((s.screen, s.pushAsked, s.hist.contains('perm')), ('explore', false, false));
+    // The tenant's one ask is H5 after the first hold.
+    await s.askPushAfterHold();
+    await tester.pump();
+    expect((s.sheet, s.pushAsked, s.screen), ('holdNotify', true, 'explore'));
+    expect(find.text('Turn on notifications?'), findsNothing);
+
+    // An owner (or resident) gets S82 at role pick, and then never H5.
+    final o = AppState(start: 'oToday', role: 'owner');
+    o
+      ..data = _FakeData()
+      ..push = _FakePush(true)
+      ..signIn = _FakeSignIn(null);
+    o.update(() => o.account = (uid: 'fb-imran', name: 'Imran', email: 'i@gmail.com'));
+    await o.offerPush();
+    expect((o.screen, o.pushAsked), ('perm', true));
+    await o.askPushAfterHold();
+    expect(o.sheet, isNull);
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+    o.dispose();
+  });
+
+  testWidgets('F25: one "Add a resident" sheet from the + tab and Residents › Add; the date says Moves in or Joined on', (tester) async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    await pumpApp(tester, s);
+    String dateLabel() => tester.widget<T>(find.descendant(of: find.byKey(const ValueKey('addDateLabel')), matching: find.byType(T))).text;
+    // The sheet scrolls: let the scroll settle before tapping.
+    Future<void> tapS(Finder f) async {
+      await tester.ensureVisible(f);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(f);
+      await tester.pump();
+    }
+
+    // The toast sits over the button: let it go first.
+    Future<void> go() async {
+      await tester.pump(const Duration(seconds: 3));
+      await tapS(find.byKey(const ValueKey('addGo')));
+    }
+
+    // Entry 1: the centre "+" tab.
+    await tap(tester, find.text('Add tenant'));
+    expect(s.sheet, 'addR');
+    expect(find.text('Add a resident'), findsOneWidget);
+    expect(find.text('Add tenant'), findsOneWidget); // only the tab label: no second sheet
+    expect(dateLabel(), 'Joined on'); // today
+    await tapS(find.text('Tomorrow'));
+    expect((dateLabel(), s.rFuture), ('Moves in', true));
+    expect(find.byKey(const ValueKey('rBefore')), findsNothing); // only for people already living here
+    await tapS(find.text('Yesterday'));
+    expect((dateLabel(), s.rFuture), ('Joined on', false));
+    await tapS(find.text('Pick date'));
+    await tapS(find.byKey(const ValueKey('addDay-3')));
+    expect((dateLabel(), s.rJoinAt > s.now), ('Moves in', true));
+    await tapS(find.byKey(const ValueKey('addDay5')));
+    expect((dateLabel(), s.rJoinAt < s.now), ('Joined on', true));
+
+    // The merged checks: a name, a real mobile number, a bed.
+    await go();
+    expect(s.toast, 'Add the resident’s name.');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addName')), matching: find.byType(EditableText)), 'Kiran Kumar');
+    await tester.pump();
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addPhone')), matching: find.byType(EditableText)), '12345');
+    await tester.pump();
+    await go();
+    expect(s.toast, 'Add their 10-digit WhatsApp number.');
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addPhone')), matching: find.byType(EditableText)), '1234567890');
+    await tester.pump();
+    await go();
+    expect(s.toast, 'That mobile number doesn’t look right (10 digits, 6–9 first).');
+
+    // A future date is a booking (demo): Due, "Moves in …", the welcome toast.
+    final free = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;
+    s.pickResidentBed(free);
+    FocusManager.instance.primaryFocus?.unfocus();
+    s.update(() => s.rPhone = '9876500031');
+    await tester.pump(const Duration(seconds: 3));
+    await tapS(find.text('Tomorrow'));
+    expect(find.text('Book the bed'), findsOneWidget);
+    await go();
+    final r = s.residents.first;
+    expect((r.name, r.bed, r.status, r.note, r.confirmed, s.sheet), ('Kiran Kumar', free, 'Due', 'Moves in ${dayMon(appToday.add(const Duration(days: 1)))}', false, null));
+    expect(s.toast, 'Booked bed $free. Send them a welcome on WhatsApp.');
+    expect(s.findBed('anjani', free).b!.state, 'booked');
+    // The same bed can't be added twice.
+    s.openAddResident(bed: free);
+    s.update(() {
+      s.rName = 'Someone Else';
+      s.rPhone = '9876500032';
+    });
+    s.addResident();
+    expect(s.toast, 'Bed $free is already taken.');
+    s.update(() => s.sheet = null);
+    await tester.pump(const Duration(seconds: 3));
+
+    // Entry 2: Manage › Residents › Add opens the same sheet.
+    s.jump('oMore', 'owner');
+    await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('manage-Residents')));
+    await tap(tester, find.text('Add resident'));
+    expect(s.sheet, 'addR');
+    expect(find.text('Add a resident'), findsOneWidget);
+    expect(dateLabel(), 'Joined on');
+    await tester.pump(const Duration(seconds: 3));
+    s.dispose();
+  });
+
+  test('F25: "Add a resident" saves through addStayLive: a future date is a booking, a past one a stay', () async {
+    final s = AppState(start: 'oToday', role: 'owner');
+    final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner'));
+    s.data = fake;
+    s.update(() => s.account = (uid: 'fb-owner', name: 'Imran', email: 'i@gmail.com'));
+    await s.startLive();
+    final ids = <String>[], rents = <int>[];
+    for (final r in s.rooms[s.ownHid]!) {
+      for (var i = 0; i < r.beds.length && ids.length < 2; i++) {
+        final b = r.beds[i];
+        if (b.state != 'free') continue;
+        r.beds[i] = Bed(id: b.id, letter: b.letter, room: b.room, floor: b.floor, spot: b.spot, state: 'free', soon: '', key: 'bed-${ids.length}');
+        ids.add(b.id);
+        rents.add(r.rent);
+      }
+    }
+    expect(ids.length, 2);
+    Future<void> settle() async {
+      for (var k = 0; k < 4; k++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+
+    // Like the "+" tab or a free bed's "Add tenant to this bed": moves in tomorrow.
+    s.openAddResident(bed: ids[0]);
+    s.update(() {
+      s.rName = 'Ravi Kumar';
+      s.rPhone = '9876500002';
+      s.rJoin = 'Tomorrow';
+    });
+    s.addResident();
+    await settle();
+    expect(fake.calls.single, 'stay ${s.ownHid} bed-0 Ravi Kumar 9876500002 ${rents[0]} 3000');
+    expect(fake.stayJoinedOn!.difference(DateTime.fromMillisecondsSinceEpoch(s.now)).inHours, inInclusiveRange(23, 24));
+    expect((s.sheet, s.toast), (null, 'Booked bed ${ids[0]}. Send them a welcome on WhatsApp.'));
+
+    // Like Residents › Add: joined 5 days ago.
+    s.openAddResident(bed: ids[1]);
+    s.update(() {
+      s.rName = 'Sai Teja';
+      s.rPhone = '9876500003';
+      s.rJoin = 'Pick date';
+      s.rPickBack = 5;
+    });
+    s.addResident();
+    await settle();
+    expect(fake.calls.last, 'stay ${s.ownHid} bed-1 Sai Teja 9876500003 ${rents[1]} 3000');
+    expect(DateTime.fromMillisecondsSinceEpoch(s.now).difference(fake.stayJoinedOn!).inDays, 5);
+    expect(s.toast, 'Added. Sai confirms by joining with your invite code.');
+    s.stopLive();
+    s.dispose();
+  });
 }
 
 class _FakePush implements Push {
@@ -3539,6 +3698,9 @@ class _FakeLive extends SampleRepo {
 
   // C: live writes, recorded.
   final calls = <String>[];
+
+  /// F25: the date the last added stay was saved with.
+  DateTime? stayJoinedOn;
   bool fail = false;
   Future<void> _rec(String c) async {
     if (fail) throw Exception('offline');
@@ -3637,8 +3799,6 @@ class _FakeLive extends SampleRepo {
     await _rec('fix $key');
   }
 
-  @override
-  Future<void> decideCase(String key, String hid, String how, String? decision) => _rec('decide $key $hid $how $decision');
 
   // S4: reviews.
   @override
@@ -3656,8 +3816,6 @@ class _FakeLive extends SampleRepo {
   // S7: plan invoices.
   @override
   Future<void> sendInvoiceUtr(String key, String utr) => _rec('invutr $key $utr');
-  @override
-  Future<void> checkInvoice(String key, String status) => _rec('invcheck $key $status');
 
   // S3: owner edits.
   @override
@@ -3674,6 +3832,7 @@ class _FakeLive extends SampleRepo {
   Future<void> setHoldStatus(String id, String status) => _rec('holdstatus $id $status');
   @override
   Future<({String via, int lateDays})> addStay({required String hid, String? bedKey, required String name, required String phone, required int rent, required int advance, required DateTime joinedOn, bool before = false}) async {
+    stayJoinedOn = joinedOn;
     await _rec('stay $hid $bedKey $name $phone $rent $advance${before ? ' before' : ''}');
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),

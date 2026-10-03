@@ -29,9 +29,6 @@ mixin _FairPlayData {
   bool _joinLoaded = false;
   String reportNote = '';
 
-  /// Founder admin: queue tab and the open case.
-  String adminTab = 'waiting';
-  String? adminCase;
 }
 
 extension FairPlayActions on AppState {
@@ -176,38 +173,6 @@ extension FairPlayActions on AppState {
     final url = await data.casePhotoUrl(path);
     if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
     unawaited(openLink(Uri.parse(url), 'the photo'));
-  }
-
-  /// Founder decision: close, ask for more, or a strike (1 warning, 2 deals
-  /// hidden for 30 days, 3 removed). On the server `give_strike` adds it.
-  void decideCase(FairCase c, String how) {
-    final key = c.key;
-    if (onServer && key != null) {
-      final n = (strikes[c.hid] ?? 0) + 1;
-      final decision = switch (how) { 'close' => 'Closed · no issue', 'more' => null, _ => strikeDecision(n) };
-      _write(() => data.decideCase(key, c.hid, how, decision)).then((ok) {
-        if (!ok) return;
-        if (how == 'strike') update(() => strikes[c.hid] = n);
-        toastMsg(how == 'close' ? '${c.id} closed. No strike.' : how == 'more' ? 'Asked the owner for more. 48 hours again.' : '${c.id}: $decision.');
-      });
-      return;
-    }
-    update(() {
-      switch (how) {
-        case 'close':
-          c.status = 'closed';
-          c.result = 'Closed · no issue';
-        case 'more':
-          c.status = 'waiting';
-          c.result = null;
-        default:
-          final n = (strikes[c.hid] ?? 0) + 1;
-          strikes[c.hid] = n;
-          c.status = 'closed';
-          c.result = strikeDecision(n);
-      }
-    });
-    toastMsg(how == 'close' ? '${c.id} closed. No strike.' : how == 'more' ? 'Asked the owner for more. 48 hours again.' : '${c.id}: ${c.result}.');
   }
 
   /// "Did you join?": yes | not_yet | deciding (F07, F24 item 14). On the

@@ -271,18 +271,6 @@ void main() {
     expect([for (var n = 1; n <= 3; n++) strikeDecision(n)], ['Strike 1 · warning', 'Strike 2 · deals hidden for 30 days', 'Strike 3 · removed from Hostelzy']);
   });
 
-  testWidgets('the team\'s strike says what it means (sample data)', (tester) async {
-    final s = AppState(start: 'aCases', role: 'tenant');
-    _states.add(s);
-    await _pump(tester, s);
-    final c = s.cases.firstWhere((c) => c.hid == 'anjani');
-    s.update(() => s.strikes['anjani'] = 1);
-    s.decideCase(c, 'strike');
-    expect(c.result, 'Strike 2 · deals hidden for 30 days');
-    expect(s.dealsOf('anjani').on, isEmpty);
-    await _done(tester);
-  });
-
   testWidgets('the third fix in 6 months is a warning, counted on the server', (tester) async {
     final server = _Server()
       ..hostels = [_hostel('real1')]
