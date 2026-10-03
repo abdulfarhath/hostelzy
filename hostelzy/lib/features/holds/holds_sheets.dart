@@ -85,7 +85,7 @@ class HoldSheet extends StatelessWidget {
               child: Rich([sp(context, 'Hostelzy deal: ', w: 800), sp(context, perks.join(' · ')), sp(context, ' · booking code ${s.peekRef}', w: 800)], s: 13, c: p.gn, lh: 1.45),
             ),
           Cta(book ? 'Pay ${fmt(q.hzAdv)} to book' : 'Hold bed ${b.id} free', key: const ValueKey('holdGo'), px: 16, fs: 15, onTap: () => s.placeHold(s.holdOpt)),
-          T(book ? 'You pay by UPI straight to ${h.owner}. Hostelzy never holds your money.' : 'If ${h.owner} doesn’t keep it within the hour, the bed is free again. You pay nothing.', s: 12, c: p.mu, lh: 1.4),
+          T(book ? 'You pay by UPI straight to ${h.owner}. Hostelzy never holds your money.' : 'If ${h.owner} doesn’t keep it within ${s.holdSecs >= 7200 ? '${s.holdSecs ~/ 3600} hours' : 'the hour'}, the bed is free again. You pay nothing.', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );
