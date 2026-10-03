@@ -13,8 +13,8 @@
 | App full-screen states | **31** |
 | **Release app total** | **160** |
 | Team console (app/console): views 9 + states 4 | **13** |
-| Web pages (app/, index.html): pages 7 + states 2 | **9** |
-| **Overall total** | **182** |
+| Web pages (app/): pages 6 + states 2 | **8** |
+| **Overall total** | **181** |
 
 Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 30 · Team mode 13 · Shared 8.
 Sheets Tenant 10 · Resident 6 · Owner 19 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
@@ -291,24 +291,24 @@ Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 
 Not counted: "Loading…" (`console.js:87`) and "Not found." for an unknown `#hash` (`console.js:94`).
 
-## 5. Web pages (9)
+## 5. Web pages (8)
 
 | # | Path | Page | States |
 |---|---|---|---|
-| 1 | `index.html` (site root) | Old web prototype (green, Bricolage; not the app's design). Views inside: home, hostel, stay, parent, contact, owner, HQ (`index.html:426-564`) | views not counted |
-| 2 | `app/index.html` | Hostelzy · Get the app | — |
-| 3 | `app/r/` | A Hostelzy enquiry (HZ code, Open in Hostelzy) | +1: "This link has no HZ code" (`app/r/index.html:20`) |
-| 4 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
-| 5 | `app/privacy/` | Privacy policy | — |
-| 6 | `app/terms/` | Terms of use | — |
-| 7 | `app/delete-account/` | Delete your Hostelzy account | — |
+| 1 | `app/index.html` | Hostelzy · Get the app | — |
+| 2 | `app/r/` | A Hostelzy enquiry (HZ code, Open in Hostelzy) | +1: "This link has no HZ code" (`app/r/index.html:20`) |
+| 3 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
+| 4 | `app/privacy/` | Privacy policy | — |
+| 5 | `app/terms/` | Terms of use | — |
+| 6 | `app/delete-account/` | Delete your Hostelzy account | — |
 
-Pages 7 + states 2 = 9.
+Pages 6 + states 2 = 8.
 
 ## 6. Not counted (listed so nobody draws or builds them by mistake)
 
 | Item | Why not counted | Where |
 |---|---|---|
+| `index.html` (site root) | Redirect only (2026-10-03): sends `farhath.me/hostelzy/` to `app/`; the old green web prototype is gone (W1 retired) | `index.html` |
 | `otp` Enter the 6-digit code | `phoneOtpLogin = false` (SMS needs Firebase billing) | `screens_start.dart:243`, `app_config.dart` |
 | About you as "Your mobile number · Step 1 of 2" | same flag | `screens_start.dart:182` |
 | DEMO banner "Sample data. Nothing you do here is real." | only the `DATA=sample` demo APK | `shell.dart:341` |
