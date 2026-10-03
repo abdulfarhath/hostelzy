@@ -125,6 +125,28 @@ then **+21 boards**, two new rows at the bottom. **226 boards.**
   Ask Hostelzy to draw it”, “Checks before publishing”; `cCases` strike button “Strike 1 of 3 · warning”; Main cover
   counts.
 
+**v25 · 2026-10-03 (after #82–#93 merged).** **+13 boards, 27 updated → 239 boards** (214 unique screens;
+the rest are 23 dark copies, the cover and the logo).
+- *New:* `w2-waSheet` (Settings › Your WhatsApp number, owner) · `w2-ownerOnly` (manager opens plan/deals/rates/
+  Fair Play) · `w2-reportAbuse` (Report this review, 4 reasons) · console `w2-cReported` (Reported reviews, Hide /
+  Keep) · `w2-aPin` (Add hostel › Map pin) · `w2-qrCamera` (Use your camera?) · `w2-qrScan` (Scan the QR) ·
+  `w2-oTodayRates` (Today: “Are your rates still right?” + strike card) · `w2-floorLocked` (women’s PG floor plan
+  after a hold) · `w2-pickerList` (beds, cheapest first) · `w2-exploreNoMatch` (Nothing matches yet · Clear filters) ·
+  `w2-foodWeek` (resident Food › whole week) · `w2-layoutWrong` (owner: Residents say this layout is wrong).
+- *Updated to match the app:* `w1-editName` (“Change your name”, empty field, name as hint) · `w1-aboutEmpty` ·
+  `w1-didJoin` (reward line, “Only the Hostelzy team sees your answer”) · `w1-notifyReady` (“We’ll tell you” box) ·
+  `w1-notifSwitches` (3 rows) · `w1-walkInHeld` (one “Release hold”) · `w1-featured` (“Featured” tag only) ·
+  `w1-cStrikes` is now the console **Fair Play case** (owner’s reply, photos, strikes line, rules agreed, Did you
+  join? counts, “Strike 2 · deals hidden for 30 days”, signals) · `f24-trustedPerks` (3 perks, no lower-advance) ·
+  `r-filters`, `f23-Filters` (Sort: Best deals) · `r-detail` (+dark) “Confirmed by the owner · 3 Oct” ·
+  `gateOwn` (Manager at a PG? card) · `add-addR` (Lived here before Hostelzy) · `review` (Is the room layout right?
+  Yes / Mostly / No) · `menu` (Meal times box) · every console board’s nav now matches the console (adds Rewards and
+  Reported reviews).
+- *For Build (board, app differs):* `w1-dealsPaused`: tenants see no “deals paused” text today, deals just vanish
+  (F24 #21 says tenants can read it). `f24-oMeter` footer example should match the resident line
+  “Electricity · 70 units ÷ 4 · ₹8/unit”.
+- *Duplicates to merge next pass:* `f19-Console` = `f24-cLayoutFixes`; `room` ≈ `f23-Room`.
+
 ## Needs the founder 👤
 SMS OTP (card for Firebase Blaze) · map key or MapTiler · Play upload key · Telugu/Hindi native check ·
 demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amount)**.
