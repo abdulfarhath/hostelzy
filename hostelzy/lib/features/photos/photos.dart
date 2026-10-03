@@ -6,6 +6,9 @@ mixin _PhotosData {
   final Map<String, List<HostelPhoto>> photosOf = {};
   final Set<String> _photosLoading = {};
 
+  /// Perf: hostels waiting for their photos, fetched together (see loadPhotos).
+  final Map<String, Completer<void>> _photoQueue = {};
+
   /// Owner Photos screen: the album (Hostel or a room type).
   String photoAlbum = 'Hostel';
 
@@ -68,16 +71,29 @@ extension PhotosActions on AppState {
   List<HostelPhoto> photosIn(String hid, String album) => [for (final p in photosOf[hid] ?? const <HostelPhoto>[]) if (albumOf(p) == album) p];
 
   /// Loads a hostel's photos once (detail page, owner Photos).
-  Future<void> loadPhotos(String hid, {bool again = false}) async {
-    if ((!again && photosOf.containsKey(hid)) || _photosLoading.contains(hid)) return;
+  /// Perf: the hostels asked for in the same frame (Explore's cards) are
+  /// fetched together in one query instead of one query per card.
+  Future<void> loadPhotos(String hid, {bool again = false}) {
+    if ((!again && photosOf.containsKey(hid)) || _photosLoading.contains(hid)) return Future.value();
     _photosLoading.add(hid);
+    if (_photoQueue.isEmpty) scheduleMicrotask(_fetchPhotoQueue);
+    return (_photoQueue[hid] = Completer<void>()).future;
+  }
+
+  Future<void> _fetchPhotoQueue() async {
+    final q = Map.of(_photoQueue);
+    _photoQueue.clear();
+    final hids = q.keys.toList();
     try {
-      final ps = await data.photos(hid);
-      update(() => photosOf[hid] = ps);
+      final got = hids.length == 1 ? {hids.first: await data.photos(hids.first)} : await data.photosOfMany(hids);
+      update(() => photosOf.addAll(got));
     } catch (e) {
       debugPrint('photos: $e');
     } finally {
-      _photosLoading.remove(hid);
+      _photosLoading.removeAll(hids);
+      for (final c in q.values) {
+        c.complete();
+      }
     }
   }
 

@@ -73,7 +73,7 @@ class HoldsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       if (timed && !ended)
-                        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [T(cd(i.left), w: 800, s: 22, tab: true), T('left', s: 12, c: p.mu)])
+                        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Ticking((context) => T(cd(holdInfo(s, h).left), w: 800, s: 22, tab: true)), T('left', s: 12, c: p.mu)])
                       else
                         Ic('chev', size: 18, color: p.mu),
                     ],
@@ -150,6 +150,7 @@ class HoldScreen extends StatelessWidget {
     final q = s.quote(hold.hid, i.r.ac, i.r.share);
     final expired = s.expiredHolds.contains(hold.id);
     final code = hold.ref;
+    final timed = const ['waiting', 'confirmed', 'held'].contains(st);
     void wa() => s.enquire(hold.hid, "Hi $owner, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed, from: 'Hold · WhatsApp owner');
     void again() {
       final b = s.findBed(hold.hid, hold.bed).b;
@@ -260,7 +261,8 @@ class HoldScreen extends StatelessWidget {
                             children: [
                               Kicker(v.label, c: v.green ? p.gn : p.ad),
                               const SizedBox(height: 4),
-                              T(v.big, w: 800, s: 56, lh: 1, ls: -.03, tab: true, c: v.green ? p.gn : p.tx),
+                              // Perf: a held bed's countdown is the only part that ticks.
+                              if (timed) Ticking((context) => T(cd(holdInfo(s, hold).left), w: 800, s: 56, lh: 1, ls: -.03, tab: true, c: v.green ? p.gn : p.tx)) else T(v.big, w: 800, s: 56, lh: 1, ls: -.03, tab: true, c: v.green ? p.gn : p.tx),
                               const SizedBox(height: 8),
                               T(v.line, s: 14, lh: 1.45),
                             ],

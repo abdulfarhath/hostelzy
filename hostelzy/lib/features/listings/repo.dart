@@ -72,6 +72,10 @@ abstract class HostelRepo {
   /// B7: a hostel's photos, cover first. Empty on sample data.
   Future<List<HostelPhoto>> photos(String hid);
 
+  /// Perf: several hostels' photos in one go (Explore's cards), by hostel id;
+  /// every id asked for is in the map (empty when it has none).
+  Future<Map<String, List<HostelPhoto>>> photosOfMany(List<String> hids);
+
   /// B7: uploads a compressed JPEG to the hostel's folder and records it.
   /// Throws [UnsupportedError] on sample data (nothing is uploaded).
   Future<HostelPhoto> addPhoto(String hid, Uint8List jpg, {required String label, required int ord, required bool cover});

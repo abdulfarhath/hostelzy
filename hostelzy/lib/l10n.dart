@@ -32,13 +32,12 @@ const langNames = {'te': 'తెలుగు', 'hi': 'हिन्दी'};
 
 /// Reads the ARB files bundled with the app (missing or broken: none).
 Future<Map<String, LangPack>> loadLangs() async {
-  final out = <String, LangPack>{};
-  for (final e in langNames.entries) {
-    try {
-      out[e.key] = LangPack.fromArb(e.key, e.value, await rootBundle.loadString('assets/l10n/app_${e.key}.arb'));
-    } catch (_) {}
-  }
-  return out;
+  // Perf: both files are read side by side.
+  final got = await Future.wait([
+    for (final e in langNames.entries)
+      rootBundle.loadString('assets/l10n/app_${e.key}.arb').then<LangPack?>((t) => LangPack.fromArb(e.key, e.value, t)).catchError((Object _) => null),
+  ]);
+  return {for (final l in got.nonNulls) l.code: l};
 }
 
 /// The strings for the language picked; `T` looks text up here.

@@ -100,9 +100,12 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     try {
       final db = await SupabaseRepo.connect(idToken: signIn.available ? signIn.idToken : null);
       state.data = db;
+      // Perf: the switches and the hostels are fetched together; the
+      // switches still apply first.
+      final lf = db.listings()..ignore();
       final s = await db.settings();
       if (s != null) state.applySettings(s);
-      final l = await db.listings();
+      final l = await lf;
       if (l != null) state.applyListings(l);
       state.update(() => state.listState = 'ready');
       // B6: the signed-in user's holds, enquiries, payments and complaints, live.

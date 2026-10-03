@@ -15,6 +15,15 @@ mixin _SyncData {
   StreamSubscription<String>? _liveSub;
   Timer? _liveWait;
 
+  /// Perf: started by the first change of a burst; the refetch waits at most
+  /// this long for the burst to end.
+  Timer? _liveCap;
+
+  /// Perf: the refetch running now, and the one queued behind it. Callers
+  /// share them, so a burst of writes and changes never runs refetches side
+  /// by side, and a caller always gets a refetch that started after it asked.
+  Future<bool>? _liveRun, _liveNext;
+
   /// S3: the owner's UPI ID is saved a moment after they stop typing.
   Timer? _upiWait;
 
@@ -138,7 +147,21 @@ extension SyncActions on AppState {
     }
   }
 
-  Future<void> refreshLive() async {
+  Future<void> refreshLive() => _refreshLive();
+
+  /// One refetch at a time: asked while one runs, the caller waits for a
+  /// single follow-up refetch (shared by everyone who asked meanwhile).
+  /// True when the server's rows were applied (and the level and meter asked for).
+  Future<bool> _refreshLive() {
+    final run = _liveRun;
+    if (run == null) return _liveRun = _fetchLive().whenComplete(() => _liveRun = null);
+    return _liveNext ??= run.then((_) {
+      _liveNext = null;
+      return _refreshLive();
+    });
+  }
+
+  Future<bool> _fetchLive() async {
     try {
       final l = await data.live(me: account?.uid);
       if (l != null) {
@@ -150,11 +173,16 @@ extension SyncActions on AppState {
         if (l.myHostels.isNotEmpty) await loadManagerOf();
       }
       if (liveFailed) update(() => liveFailed = false);
+      return l != null;
     } catch (e) {
       debugPrint('live: $e');
       update(() => liveFailed = true);
+      return false;
     }
   }
+
+  /// Realtime sends one change per row; a burst is one refetch.
+  static const _liveQuiet = Duration(milliseconds: 400), _liveMaxWait = Duration(seconds: 2);
 
   /// Signed in on Supabase: load the live rows, then refetch whenever one of
   /// them changes (Realtime), at most once per 400 ms.
@@ -162,9 +190,19 @@ extension SyncActions on AppState {
     if (account == null) return;
     await refreshLive();
     await _liveSub?.cancel();
-    _liveSub = data.changes().listen((_) {
+    void fire() {
       _liveWait?.cancel();
-      _liveWait = Timer(const Duration(milliseconds: 400), refreshLive);
+      _liveCap?.cancel();
+      _liveCap = null;
+      unawaited(refreshLive());
+    }
+
+    _liveSub = data.changes().listen((_) {
+      // Debounced: 400 ms after the last change of a burst. A burst that
+      // never pauses still refetches every 2 s instead of waiting forever.
+      _liveWait?.cancel();
+      _liveWait = Timer(_liveQuiet, fire);
+      _liveCap ??= Timer(_liveMaxWait, fire);
     });
     // F24 #16, #25: now that this is live, the level and the electricity.
     // F24 #18: and whether this account agreed to the Fair Play rules.
@@ -227,6 +265,8 @@ extension SyncActions on AppState {
     _liveSub?.cancel();
     _liveSub = null;
     _liveWait?.cancel();
+    _liveCap?.cancel();
+    _liveCap = null;
   }
 
   /// Why the account can't be deleted yet, or null.

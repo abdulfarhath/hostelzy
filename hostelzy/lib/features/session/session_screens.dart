@@ -284,9 +284,11 @@ class OtpScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                s.resendLeft > 0
-                    ? T('Resend in ${cd(s.resendLeft.toDouble())}', s: 13, c: p.mu)
-                    : Tap(onTap: s.sendCode, child: T('Resend code', s: 13, w: 800, c: p.ad)),
+                Ticking(
+                  (context) => s.resendLeft > 0
+                      ? T('Resend in ${cd(s.resendLeft.toDouble())}', s: 13, c: p.mu)
+                      : Tap(onTap: s.sendCode, child: T('Resend code', s: 13, w: 800, c: p.ad)),
+                ),
                 if (kDebugMode)
                   Tap(
                     onTap: () => s.update(() => s.otp = '123456'),
