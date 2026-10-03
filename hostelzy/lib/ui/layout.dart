@@ -369,14 +369,14 @@ class RoomMode extends StatelessWidget {
         gap: 14,
         children: [
           const LayoutEmpty(icon: 'lock', head: 'Sign in to see room layouts', body: 'Room layouts are only for people signed in to Hostelzy.'),
-          T('It takes one OTP. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
+          T('It takes one tap with Google. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
     } else if (l == null) {
       body = VGap(
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t drawn this room yet. You can still pick a bed from Plan or List, and see the photos.'),
+          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from Plan or List, and see the photos.'),
           OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('Alerts come once the app is online. Check back here for now.')),
           T('Owners draw their rooms and residents correct them, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
@@ -497,7 +497,7 @@ class RoomMode extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('AC under repair. Complaint raised 30 Sep. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('AC under repair. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           body,
         ],
@@ -539,7 +539,7 @@ class LayerChips extends StatelessWidget {
   }
 }
 
-/// The Room tab's bottom bar: Compare beds + Hold bed (or Verify my phone).
+/// The Room tab's bottom bar: Compare beds + Hold bed (or Sign in).
 class RoomBar extends StatelessWidget {
   const RoomBar({super.key, required this.room});
   final Room room;
@@ -548,7 +548,7 @@ class RoomBar extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     if (!s.signedIn) {
-      return Cta('Verify my phone', height: 54, px: 16, fs: 15, onTap: () => s.go('phone'));
+      return Cta('Sign in', height: 54, px: 16, fs: 15, onTap: () => s.startSignIn());
     }
     final focus = roomFocus(s, room);
     final b = room.beds.where((x) => x.letter == focus).firstOrNull;

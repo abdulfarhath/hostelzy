@@ -110,7 +110,7 @@ extension LayoutFixesActions on AppState {
     });
     // F19 extras: a visitor tries the editor (nothing is saved); only Send is locked.
     final trying = !livesAt(hid);
-    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('This room has no layout yet. The owner or the Hostelzy team draws it first.');
+    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('This room has no layout yet. The owner draws it first.');
     if (!trying && mutedAt(hid)) return toastMsg('Suggestions are off for this hostel.');
     final open = myWaiting(hid);
     if (!trying && open.length >= 3 && !open.any((f) => f.room == room && !f.quick)) return update(() => sheet = 'fixLimit');

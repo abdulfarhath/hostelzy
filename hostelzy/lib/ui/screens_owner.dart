@@ -1565,7 +1565,7 @@ class RateCard extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: T('AC rooms need an AC unit in the layout. The Hostelzy team adds it within 48 hours.', s: 13, c: p.mu, lh: 1.4),
+          child: T('AC rooms need an AC unit in the layout. Add it in the room’s layout and publish.', s: 13, c: p.mu, lh: 1.4),
         ),
       ],
     );

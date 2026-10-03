@@ -225,6 +225,33 @@ demo key step · SQL runs · **monthly cap on Hostelzy-funded rewards (₹ amoun
   - Founder steps: **6a** upload key, **6b** staging project. No keys are in the repo.
 - **Tests:** `test/platform_test.dart`.
 
+**Wave 0: no fake or false lines; owners draw; deal headline; edit your name.** Branch `feature/f24-wave0`.
+- **Fake lines out (gap audit §4).**
+  - "Usually replies in ~0 min" can't show: #81 already says "Replies through Hostelzy" until 3 real replies.
+  - "Confirmed by the owner today": a live hostel's bed confirmation is now *unknown* until the server has one. The hostel page shows just "N free beds", and an unknown hostel is never called stale. Real confirmations come with items 9/19.
+  - "Complaint raised 30 Sep" is gone. The line reads "AC under repair. The owner is fixing it."
+  - "Did you join?" answers toast just "Thanks." The real build shows the card only for a real ended hold, never the Anjani / 102-B sample. On the server the line says the ₹100 Member reward unlocks once the owner confirms the stay.
+  - Owner plan 15+ days late, real build: "Your Hostelzy plan is N days late · Pay ₹X to keep your deals on" (the server doesn't pause deals yet, item 21). The demo keeps "Deals paused".
+  - **Settings › Name (item 23)** opens the `name` sheet. The field starts empty with the current name as the hint, and **Save name** writes `profiles.name`. The existing "edit own profile" RLS allows it and `guard_profile` leaves the name alone, so no SQL is needed. Offline, the name stays as it was. Sign-up never pre-fills the name: the Google name is only the hint, and the profile saves the typed name.
+- **Owners draw (DECISIONS 2026-10-02).** No more "the Hostelzy team draws it / adds the AC unit within 48 hours / Hostelzy draws its layout":
+  - AC rooms: "Add it in the room's layout and publish".
+  - New room: "Draw its layout when you're ready".
+  - Layout coming soon: "The owner hasn't published this room's layout yet".
+  - The 48 h promise stays only for a room *shape*: "Room not a rectangle? … the Hostelzy team draws the shape within 48 hours" (oShapeReq).
+  - A help request reads "Help requested · WhatsApp us the photos", because it isn't sent to the team yet (item 11).
+- **Deal headline (item 12, Design v22 `r-detail`).** A green box above the price table, from the hostel's best quote (the same one as the Explore ribbon):
+  - **"Save ₹X in 6 months"** with its parts, e.g. "₹1,000 off the advance + ₹200 off every month".
+  - With no 6-month saving it shows "₹X less upfront" or "₹X more back when you leave". Hostels with no deals show nothing.
+- **No OTP wording (item 28):**
+  - Poster: "Sign in with Google, one tap"; "never asks for your password or UPI PIN".
+  - Room tab: "It takes one tap with Google", and the button is **Sign in**.
+  - Add a manager: "signing in with Google and the code we send on WhatsApp".
+  - Add resident toast: "confirms by joining with your invite code".
+  - The all-screens overview and the jump panel list Sign in instead of OTP. So does the sample case event.
+  - The SMS `otp` screen stays behind `phoneOtpLogin` (off) for when SMS sign-in exists.
+- **Docs:** BOARD F13/F14/F18/F20/F24 rows; ARCHITECTURE "Today". There was no "170 frames" line left to fix.
+- **Screens:** added the sheet `name` (Settings › Name; Design to add a board). Changed: hostel page (deal headline), Holds, owner Today plan banner, Room tab signed out, layout request sheet, Create layout, rate card. None removed.
+- **Tests:** `test/wave0_test.dart`. Updated: `flows_test` (Google name is a hint; Room tab Sign in; help-requested label).
 **Wave B items 10 and 11: Fan/AC layer toggle, room shapes, "Ask Hostelzy to draw it".** Branch `feature/f24-shapes`.
 - **Layer toggle (10, DECISIONS F12, board `roomLayersOn`).**
   - The tenant Room tab and the resident's room view (`rRoom`) show fans and the AC as icons with labels only.

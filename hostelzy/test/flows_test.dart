@@ -959,12 +959,12 @@ void main() {
     expect(s.floorLocked('saisri'), isFalse);
     s.dispose();
 
-    // Signed out: layouts need a verified phone.
+    // Signed out: layouts need sign-in.
     final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
     await pumpApp(tester, o);
     expect(find.text('Sign in to see room layouts'), findsOneWidget);
-    await tap(tester, find.text('Verify my phone'));
-    expect(o.screen, 'phone');
+    await tap(tester, find.text('Sign in'));
+    expect(o.screen, 'login');
     o.dispose();
 
     // Owner: Beds → room 204 → mark a fan not working → approve.
@@ -1950,14 +1950,16 @@ void main() {
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
     expect(find.text('asha@gmail.com'.toUpperCase()), findsOneWidget);
     expect(find.textContaining('“not verified”'), findsOneWidget);
-    // The Google name is prefilled but editable.
-    expect(s.myName, 'Asha K');
+    // F24 item 23: never pre-filled; the Google name is only the hint.
+    expect(s.myName, '');
+    expect(find.text('Asha K'), findsOneWidget);
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('myName')), matching: find.byType(TextField)), 'Asha Kumari');
     await tester.enterText(find.byType(TextField).last, '9000000007');
     await tester.pump();
     await tap(tester, find.text('Continue'));
     await tap(tester, find.text('I run a PG'));
     await tester.pump();
-    expect(data.profile, (name: 'Asha K', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
+    expect(data.profile, (name: 'Asha Kumari', email: 'asha@gmail.com', phone: '9000000007', role: 'owner'));
     // Push token goes to the account once signed in.
     final fp = _FakePush(true);
     s.push = fp;
