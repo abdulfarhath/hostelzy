@@ -4,8 +4,8 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/layout.dart' show ConfirmLayoutsCard;
 import '../layouts/layout_fixes_screens.dart' show FixPhotoThumb;
+import '../layouts/owner_layout_screens.dart' show ConfirmLayoutsCard;
 import '../onboarding/onboarding_cards.dart';
 import '../plan/plan_screens.dart';
 

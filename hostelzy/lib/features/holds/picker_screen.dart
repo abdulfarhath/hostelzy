@@ -4,7 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../../ui/layout.dart';
+import '../layouts/layout_map.dart';
 
 // ------------------------------------------------------------ picker
 
