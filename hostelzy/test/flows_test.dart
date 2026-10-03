@@ -127,10 +127,11 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('bed picker: Plan and Room, cheapest beds as a link (F21 W2)', (tester) async {
+  testWidgets('bed picker: Plan · Room · Building tabs, cheapest beds as a link (F21 W2, F25)', (tester) async {
     final s = AppState(start: 'picker', role: 'tenant');
     await pumpApp(tester, s);
-    expect(find.text('Building'), findsNothing);
+    // F25 (founder): the Building tab is back; the list stays a link.
+    expect(find.byKey(const ValueKey('pickTab-building')), findsOneWidget);
     expect(find.text('List'), findsNothing);
     await tap(tester, find.text('See cheapest beds ›'));
     expect(find.textContaining('beds you can take'.toUpperCase()), findsOneWidget);

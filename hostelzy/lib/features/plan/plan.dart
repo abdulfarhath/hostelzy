@@ -27,6 +27,9 @@ extension PlanActions on AppState {
   /// What the owner pays on [invoice]: the plan less any Member-reward credits.
   /// On Supabase it is the server's invoice amount.
   int get invoiceAmt => invoice.key != null ? invoice.amt : (planPrice - planCredit).clamp(0, planPrice);
+  /// F25 A8: this hostel's earlier invoices, newest first: every invoice the
+  /// server sent for it (RLS: the owner's own hostels) except the current one.
+  List<Invoice> get pastInvoices => [for (final i in invoices) if (i.hid == ownHid && i != invoice && (invoice.key == null || i.key != invoice.key)) i]..sort((a, b) => b.due.compareTo(a.due));
   int get trialLeft => invoice.status == 'upcoming' ? trialEnd.difference(appToday).inDays : 0;
   /// Deals pause while the plan is 15+ days late (F10): the server says so
   /// for every hostel (`hostel_flags`); the owner also knows from their invoice.

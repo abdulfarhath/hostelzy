@@ -5,6 +5,7 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../layouts/layout_map.dart';
+import 'building_view.dart';
 
 // ------------------------------------------------------------ picker
 
@@ -22,7 +23,8 @@ class PickerScreen extends StatelessWidget {
     // F23: the room plan comes first (layout-first, founder); its "Floor view"
     // button and the floor view's room names switch between the two. The
     // list is a "See cheapest beds" link.
-    final locked = s.floorLocked(h.id) && s.mode == 'plan';
+    // F25: the Building tab follows the same women's-PG rule as Plan.
+    final locked = s.floorLocked(h.id) && (s.mode == 'plan' || s.mode == 'building');
 
     Widget body;
     if (locked) {
@@ -31,6 +33,11 @@ class PickerScreen extends StatelessWidget {
       body = RoomMode(rooms: rs, room: room);
     } else if (s.mode == 'plan') {
       body = _PlanMode(rooms: rs, room: room);
+    } else if (s.mode == 'building') {
+      body = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: BuildingView(hid: h.id, rooms: rs, selected: s.bed, dim: (r) => !AppState.fits(r, s.pR), onBed: s.pickBed),
+      );
     } else {
       body = _ListMode(rooms: rs);
     }
@@ -53,6 +60,7 @@ class PickerScreen extends StatelessWidget {
             ],
           ),
         ),
+        const PickerTabs(),
         if (s.mode == 'list')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -290,6 +298,46 @@ class _PlanMode extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// F25: Plan · Room · Building. The cheapest-beds list belongs to Plan.
+class PickerTabs extends StatelessWidget {
+  const PickerTabs({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final cur = s.mode == 'list' ? 'plan' : s.mode;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: box(w: 2, c: p.tx),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (k, label, key) in const [('plan', 'Plan', 'floorView'), ('room', 'Room', 'pickTab-room'), ('building', 'Building', 'pickTab-building')])
+              Expanded(
+                child: Tap(
+                  key: ValueKey(key),
+                  onTap: () => s.update(() {
+                    s.mode = k;
+                    if (k == 'room') s.roomBed = null;
+                  }),
+                  child: Semantics(
+                    selected: cur == k,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                      color: cur == k ? p.tx : transparent,
+                      child: T(label, s: 13, w: 600, c: cur == k ? p.bg : p.tx, align: TextAlign.center),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -211,11 +211,11 @@ void main() {
     expect(c.lastLink.toString(), contains('wa.me/919059790014'));
     c.dispose();
 
-    // Paid: Share receipt; the trial is listed under Before.
+    // Paid: Share receipt; the trial is listed under Past invoices (F25 A8).
     final p = AppState(start: 'oPlan', role: 'owner', plan: 'paid');
     await _pump(tester, p);
     expect(find.text('PAID'), findsOneWidget);
-    expect(find.text('BEFORE'), findsOneWidget);
+    expect(find.text('PAST INVOICES'), findsOneWidget);
     expect(find.text('Free trial'), findsOneWidget);
     await _tap(tester, find.text('Share receipt'));
     expect(p.lastShare, contains(p.invoice.ref));

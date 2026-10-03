@@ -211,14 +211,35 @@ class _OwnerPlanScreenState extends State<OwnerPlanScreen> {
                       ),
                     ),
                 ],
-                // The trial is the only earlier period the app knows about.
-                if (inv.status != 'upcoming') ...[
-                  const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Before')),
-                  Container(
-                    decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-                    child: row('${dayMon(s.planStart)} – ${dayMon(s.trialEnd)}', 'Free trial'),
+                // F25 A8: this hostel's earlier invoices, newest first, then the trial.
+                const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('Past invoices')),
+                Container(
+                  key: const ValueKey('pastInvoices'),
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final i in s.pastInvoices) _PastInvoice(i),
+                      if (s.pastInvoices.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                          child: T('No past invoices yet.', key: const ValueKey('noPastInvoices'), s: 14, c: p.mu),
+                        ),
+                      if (inv.status != 'upcoming') row('${dayMon(s.planStart)} – ${dayMon(s.trialEnd)}', 'Free trial'),
+                    ],
                   ),
-                ],
+                ),
+                // F25 A7: the three plans (DECISIONS F10), the owner's marked.
+                const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('All plans')),
+                Container(
+                  key: const ValueKey('allPlans'),
+                  decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [for (final (n, t) in planTiers.indexed) _Tier(t, yours: n == planTierOf(s.planBeds), n: n)],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                   child: Rich([sp(context, '$planIncluded '), sp(context, 'Hostelzy never touches your tenants’ money.', w: 800, c: p.tx)], s: 13, c: p.mu, lh: 1.45),
@@ -234,6 +255,76 @@ class _OwnerPlanScreenState extends State<OwnerPlanScreen> {
             child: VGap(gap: 8, children: actions),
           ),
       ],
+    );
+  }
+}
+
+/// F25 A8: the words for a past invoice. Only what really happened: Paid once
+/// the team matched the UTR, Checking while it's being matched, else Not paid.
+({String label, Color bg, Color fg}) pastInvoiceTag(Pal p, Invoice i) => switch (i.status) {
+  'paid' => (label: 'Paid', bg: p.gb, fg: p.gn),
+  'checking' => (label: 'Checking', bg: p.tx, fg: p.bg),
+  _ => (label: 'Not paid', bg: p.ab, fg: p.ad),
+};
+
+/// F25 A8: one earlier invoice: month, reference, amount and status.
+class _PastInvoice extends StatelessWidget {
+  const _PastInvoice(this.i);
+  final Invoice i;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    final tag = pastInvoiceTag(p, i);
+    return Container(
+      key: ValueKey('pastInvoice-${i.ref}'),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [T(monthYear(i.due), w: 800, s: 15), T('${i.ref} · ${fmt(i.amt)}', s: 12, c: p.mu, lh: 1.35)],
+            ),
+          ),
+          const SizedBox(width: 8),
+          StatusTag(tag.label, bg: tag.bg, fg: tag.fg),
+        ],
+      ),
+    );
+  }
+}
+
+/// F25 A7: one plan tier from [planTiers]; the owner's own is marked "Yours".
+class _Tier extends StatelessWidget {
+  const _Tier(this.t, {required this.yours, required this.n});
+  final ({int upTo, String label, int price, String note}) t;
+  final bool yours;
+  final int n;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    return Container(
+      key: ValueKey('planTier-$n'),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(color: yours ? p.sf : null, border: Border(bottom: bs(1, p.hl))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                T(t.label, w: 800, s: 15),
+                T('${fmt(t.price)} a month', s: 13, c: p.mu, lh: 1.35),
+                // Only the 80+ plan adds something; the others say "Everything below".
+                if (t.upTo > featuredBeds) T(t.note, s: 12, c: p.mu, lh: 1.35),
+              ],
+            ),
+          ),
+          if (yours) ...[const SizedBox(width: 8), StatusTag('Yours', key: ValueKey('planYours-$n'), bg: p.tx, fg: p.bg)],
+        ],
+      ),
     );
   }
 }
