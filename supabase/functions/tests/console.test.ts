@@ -44,3 +44,9 @@ test('layout fixes: days waited, owner silent after 7, what changed', async () =
   assert.equal(quickLine({ issue: 'broken', item: 'AC unit' }), 'Broken: AC unit');
   assert.equal(quickLine({ issue: 'not_here', item: 'Fan' }), 'Not in this room: Fan');
 });
+
+test('F24 item 14: "Did you join?" answers in words', async () => {
+  const { joinSummary } = await import('../../../app/console/logic.js');
+  assert.equal(joinSummary([]), 'No answers yet');
+  assert.equal(joinSummary([{ answer: 'yes' }, { answer: 'deciding' }, { answer: 'yes' }, { answer: 'not_yet' }]), 'Joined 2 · Not yet 1 · Still deciding 1');
+});

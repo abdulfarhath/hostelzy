@@ -36,9 +36,24 @@ extension OnboardingActions on AppState {
 
   /// Unknown (no confirmation yet) is not called stale: we just don't say.
   bool stale(String hid) => (confirmed[hid] ?? 0) >= staleAfterDays;
-  bool needsConfirm(String hid) => (confirmed[hid] ?? 0) >= confirmEveryDays;
+  /// Every 3 days; a real hostel that was never confirmed asks right away.
+  bool needsConfirm(String hid) {
+    final d = confirmed[hid];
+    if (d == null) return onServer && !isSeedHostel(hid);
+    return d >= confirmEveryDays;
+  }
 
+  /// "Yes, all free": saved on the server for a real hostel (F24 item 9), so
+  /// tenants see "confirmed by the owner today".
   void confirmBeds(String hid) {
+    if (onServer && !isSeedHostel(hid)) {
+      _write(() => data.confirmBeds(hid)).then((ok) {
+        if (!ok) return;
+        update(() => confirmed[hid] = 0);
+        toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+      });
+      return;
+    }
     update(() => confirmed[hid] = 0);
     toastMsg('Thanks. Tenants see your free beds as confirmed today.');
   }

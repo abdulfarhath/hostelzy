@@ -5,13 +5,18 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect;
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = ''});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = '', this.bedsCheckedAt, this.layoutsCheckedAt});
   final String id, name, gender, area, owner;
 
   /// F24: false for a draft the team is still onboarding (never in Explore);
   /// [visitedOn] is "Visited by Hostelzy" from the server ("2 Oct 2026").
   final bool live;
   final String visitedOn;
+
+  /// F24 item 9: the owner's last "Yes, all free" (newest bed confirmation on
+  /// the server) and the oldest published layout's last "All still correct";
+  /// null when unknown (sample data, never confirmed).
+  final DateTime? bedsCheckedAt, layoutsCheckedAt;
   final int from, reviews, reply;
   final double rating;
   final bool food, ac, instant;
@@ -316,6 +321,9 @@ class Resident {
   /// F24: their last day once notice is accepted or the owner marked it.
   DateTime? leavingOn;
 
+  /// F24 item 13: the deal perks locked when they booked, from the server.
+  List<String> perks = const [];
+
   /// hz | direct | before | wait
   String get tag => confirmed ? via : 'wait';
   Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt, lateDays: lateDays, key: key);
@@ -554,8 +562,11 @@ const memberReward = 100, referralReward = 100;
 const trustedMonths = 6;
 
 class Hold {
-  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const []});
+  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const [], this.fixedFee = 0});
   final String id, hid, bed, opt;
+
+  /// F24 item 13: the monthly rent locked by a booking on the server (0 = not known).
+  final int fixedFee;
   final int room, start;
 
   /// F04 booking: HZ code, advance paid to the owner, and the locked deal.
@@ -565,8 +576,8 @@ class Hold {
 
   /// waiting | confirmed | held | booked | released
   final String status;
-  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks);
-  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p);
+  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks, fixedFee: fixedFee);
+  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p, fixedFee: fixedFee);
 }
 
 /// Countdown text, `cd()` in the prototype.
@@ -671,6 +682,37 @@ class DealQuote {
       : moreBack > 0
       ? '${fmt(moreBack)} more back'
       : 'Hostelzy deal';
+}
+
+/// Perks locked into a booking, as the locked-deal card lists them (F04).
+List<String> dealPerks(DealQuote q, int noticeDays) => !q.any
+    ? const []
+    : [
+        if (q.hzFee < q.fee) '${fmt(q.hzFee)} monthly',
+        if (q.hzExit < q.exit) '${fmt(q.hzExit)} exit only',
+        if (q.firstOffNow > 0) '${fmt(firstOff)} off first month',
+        if (q.hzAdv < q.adv) '${fmt(q.hzAdv)} advance',
+        if (q.join > 0) 'No joining fee',
+        if (q.laundry) 'Free laundry weekly',
+        '$noticeDays days notice',
+      ];
+
+/// F24 item 13: the deal the server locked on a booking (`holds.deal`,
+/// `stays.deal`: on, fee, advance, maintenance, notice) → its perks and the
+/// fixed monthly rent. Null when there is none.
+({List<String> perks, int fee})? lockedDeal(Object? deal) {
+  if (deal is! Map) return null;
+  final fee = (deal['fee'] as num?)?.toInt() ?? 0;
+  if (fee <= 0) return null;
+  final t = Terms(advance: (deal['advance'] as num?)?.toInt() ?? 3000, maintenance: (deal['maintenance'] as num?)?.toInt() ?? 1000, noticeDays: (deal['notice'] as num?)?.toInt() ?? 30);
+  final q = DealQuote(t, fee, {...(deal['on'] as List? ?? const []).whereType<String>()});
+  return (perks: dealPerks(q, t.noticeDays), fee: q.hzFee);
+}
+
+/// Whole days from [at] to today (never negative), for "confirmed X days ago".
+int daysSince(DateTime at) {
+  final l = at.toLocal(), t = appToday;
+  return DateTime(t.year, t.month, t.day).difference(DateTime(l.year, l.month, l.day)).inDays.clamp(0, 1 << 20);
 }
 
 // ------------------------------------------------------------ F08 reviews

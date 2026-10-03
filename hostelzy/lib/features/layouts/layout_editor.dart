@@ -255,9 +255,18 @@ extension LayoutEditorActions on AppState {
     toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')} as new versions for the owner to approve.');
   }
 
+  /// "All still correct": saved on the server for a real hostel (F24 item 9).
   void confirmLayouts(String hid) {
+    if (onServer && !isSeedHostel(hid)) {
+      _write(() => data.confirmLayouts(hid)).then((ok) {
+        if (!ok) return;
+        update(() => layoutConfirmed[hid] = 0);
+        toastMsg('Thanks. Your layouts are confirmed for the next 3 months.');
+      });
+      return;
+    }
     update(() => layoutConfirmed[hid] = 0);
-    toastMsg('Thanks. Tenants see your layouts as confirmed today.');
+    toastMsg('Thanks. Your layouts are confirmed for the next 3 months.');
   }
 
   void edMirror(RoomLayout l, {bool vertical = false}) {

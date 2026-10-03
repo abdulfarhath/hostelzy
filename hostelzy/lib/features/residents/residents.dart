@@ -237,15 +237,7 @@ extension ResidentsActions on AppState {
   String get peekRef => enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == myPhone).firstOrNull?.ref ?? 'HZ-$_nextRef';
 
   /// Perks locked into a booking, as shown on the locked-deal card.
-  List<String> lockedPerks(DealQuote q, Hostel h) => [
-    if (q.hzFee < q.fee) '${fmt(q.hzFee)} monthly',
-    if (q.hzExit < q.exit) '${fmt(q.hzExit)} exit only',
-    if (q.firstOffNow > 0) '${fmt(firstOff)} off first month',
-    if (q.hzAdv < q.adv) '${fmt(q.hzAdv)} advance',
-    if (q.join > 0) 'No joining fee',
-    if (q.laundry) 'Free laundry weekly',
-    '${h.terms.noticeDays} days notice',
-  ];
+  List<String> lockedPerks(DealQuote q, Hostel h) => dealPerks(q, h.terms.noticeDays);
 
   /// [opt]: `free` (1-hour hold) or `book` (advance paid to the owner, deal
   /// locked, HZ code recorded like an enquiry so F05/F06 see it).

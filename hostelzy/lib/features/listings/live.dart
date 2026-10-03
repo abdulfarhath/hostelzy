@@ -51,6 +51,9 @@ Hold holdFromRow(Map<String, dynamic> r, {int paid = 0}) {
     status: status == 'expired' ? 'released' : (status == 'waiting' && r['opt'] == 'advance' ? 'paying' : status),
     ref: r['ref'] as String?,
     paid: paid,
+    // F24 item 13: a booking's deal, locked by the server.
+    perks: lockedDeal(r['deal'])?.perks ?? const [],
+    fixedFee: lockedDeal(r['deal'])?.fee ?? 0,
   );
 }
 
@@ -98,7 +101,9 @@ Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> paym
     joinAt: joined.millisecondsSinceEpoch,
     lateDays: r['late_days'] as int? ?? 0,
     key: r['id'] as String,
-  )..leavingOn = _day(r['leaving_on']);
+  )
+    ..leavingOn = _day(r['leaving_on'])
+    ..perks = lockedDeal(r['deal'])?.perks ?? const [];
 }
 
 DateTime? _day(Object? d) => d == null ? null : DateTime.parse(d as String);

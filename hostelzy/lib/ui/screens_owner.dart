@@ -1213,6 +1213,8 @@ class _Residents extends StatelessWidget {
                             T(r.name, w: 800, s: 15),
                             const SizedBox(height: 1),
                             T('Bed ${r.bed} · ${r.since}${r.confirmed && r.ref != null ? ' · ${r.ref}' : ''}', s: 12, c: p.mu),
+                            // F24 item 13: the perks locked when they booked.
+                            if (r.perks.isNotEmpty) T('Hostelzy deal · price fixed · ${r.perks.join(' · ')}', s: 12, c: p.gn, lh: 1.35),
                           ],
                         ),
                       ),

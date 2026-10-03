@@ -56,6 +56,13 @@ export const CASE_TABS = [
   ['closed', 'Closed'],
 ];
 
+/** F24 item 14: tenants' "Did you join?" answers for one hostel, in words. */
+export function joinSummary(rows) {
+  if (!rows.length) return 'No answers yet';
+  const n = (a) => rows.filter((r) => r.answer === a).length;
+  return [['yes', 'Joined'], ['not_yet', 'Not yet'], ['deciding', 'Still deciding']].filter(([a]) => n(a)).map(([a, l]) => `${l} ${n(a)}`).join(' · ');
+}
+
 /** Owner phone for WhatsApp, or null. */
 export function waLink(phone, text) {
   const d = String(phone ?? '').replace(/\D/g, '').slice(-10);

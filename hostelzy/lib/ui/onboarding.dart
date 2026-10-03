@@ -942,7 +942,7 @@ class FreeBedsCard extends StatelessWidget {
     if (!s.needsConfirm(hid)) return const SizedBox();
     final free = s.rooms[hid]!.expand((r) => r.beds).where((b) => b.state == 'free').toList();
     final n = free.length;
-    final days = s.confirmed[hid]!;
+    final days = s.confirmed[hid];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(12),
@@ -951,7 +951,7 @@ class FreeBedsCard extends StatelessWidget {
         gap: 8,
         children: [
           T('Still $n free ${n == 1 ? 'bed' : 'beds'}?', w: 800, s: 18),
-          T('Last confirmed $days days ago. Fresh beds rank higher.', s: 13, c: p.mu),
+          T(days == null ? 'Not confirmed yet. Fresh beds rank higher.' : 'Last confirmed $days days ago. Fresh beds rank higher.', s: 13, c: p.mu),
           Wrap(
             spacing: 6,
             runSpacing: 6,

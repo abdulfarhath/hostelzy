@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, joinSummary } from './logic.js';
 
 const app = document.getElementById('app');
 
@@ -170,13 +170,20 @@ const VIEWS = {
   async cases(db, again) {
     const tab = sessionStorage.getItem('hzCaseTab') || 'new';
     const cases = await db.from('fair_cases').select('*, hostels(name)').order('created_at', { ascending: false }).then(ok);
+    // F24 item 14: tenants' "Did you join?" answers (90 days); empty before SQL 4zy3 runs.
+    const since = new Date(Date.now() - 90 * 86400000).toISOString();
+    const joins = await db.from('join_answers').select('hostel_id, answer, updated_at').gte('updated_at', since).then(({ data }) => data ?? []);
+    const joined = el('p', { class: 'note' });
     const counts = Object.fromEntries(CASE_TABS.map(([k]) => [k, cases.filter((c) => c.status === k).length]));
     const shown = cases.filter((c) => c.status === tab);
     let sel = shown[0];
     const list = el('div', { class: 'list' });
-    const draw = () => list.replaceChildren(...(shown.length ? shown.map((c) => el('button', { class: 'row' + (c === sel ? ' hi' : ''), onclick: () => { sel = c; draw(); } },
+    let draw = () => list.replaceChildren(...(shown.length ? shown.map((c) => el('button', { class: 'row' + (c === sel ? ' hi' : ''), onclick: () => { sel = c; draw(); } },
       el('span', { class: 't' }, `${c.ref} · ${c.hostels?.name ?? ''}`, el('span', { class: 'tag ' + (c.status === 'decided' ? 'red' : 'neutral') }, CASE_TABS.find(([k]) => k === c.status)[1])),
       el('span', { class: 's' }, c.signal))) : [el('p', { class: 'empty' }, 'Nothing here.')]));
+    const drawJoined = () => joined.replaceChildren(...(sel ? [el('b', {}, `Did you join? · ${sel.hostels?.name ?? ''}`), ` · tenants whose hold ended, last 90 days: ${joinSummary(joins.filter((j) => j.hostel_id === sel.hostel_id))}. Only the team sees these.`] : []));
+    const pick = draw;
+    draw = () => { pick(); drawJoined(); };
     draw();
     const act = async (what) => {
       if (!sel) return;
@@ -194,6 +201,7 @@ const VIEWS = {
         el('h2', {}, 'Fair Play cases'),
         el('div', { class: 'seg', style: 'margin:0 16px 10px' }, CASE_TABS.map(([k, l]) => el('button', { class: k === tab ? 'on' : '', onclick: () => { sessionStorage.setItem('hzCaseTab', k); again(); } }, counts[k] ? `${l} ${counts[k]}` : l))),
         list,
+        joined,
         el('div', { class: 'acts' },
           el('button', { class: 'btn full', onclick: () => act('close') }, 'Close · no issue', '✓'),
           el('button', { class: 'btn full', onclick: () => act('ask') }, 'Ask for more', '…'),

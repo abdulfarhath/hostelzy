@@ -20,6 +20,10 @@ mixin _FairPlayData {
 
   /// Tenant's answer to "Did you join?" and the report form.
   String? joinAnswer, reportWhy;
+
+  /// F24 item 14: ended holds this tenant already answered on the server.
+  final Set<String> joinAnswered = {};
+  bool _joinLoaded = false;
   String reportNote = '';
 
   /// Founder admin: queue tab and the open case.
@@ -132,7 +136,24 @@ extension FairPlayActions on AppState {
     toastMsg(how == 'close' ? '${c.id} closed. No strike.' : how == 'more' ? 'Asked the owner for more. 48 hours again.' : '${c.id}: ${c.result}.');
   }
 
+  /// "Did you join?": yes | not_yet | deciding (F07, F24 item 14). On the
+  /// server it is a Fair Play signal only the Hostelzy team reads.
   void answerJoined(String a) {
+    final h = endedHold;
+    if (onServer && h != null) {
+      data.answerJoined(h.id, a).then((_) {
+        update(() {
+          joinAnswered.add(h.id);
+          joinAnswer = a;
+          sheet = null;
+        });
+        toastMsg(a == 'yes' ? 'Thanks. Only the Hostelzy team sees your answer. Your ₹100 Member reward unlocks once the owner confirms your stay.' : 'Thanks. Only the Hostelzy team sees your answer.');
+      }, onError: (Object e) {
+        debugPrint('did you join: $e');
+        toastMsg('Couldn’t save your answer. Check your internet and try again.');
+      });
+      return;
+    }
     update(() {
       joinAnswer = a;
       sheet = null;
@@ -144,6 +165,28 @@ extension FairPlayActions on AppState {
         : onServer
         ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
         : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');
+  }
+
+  /// Should Holds ask "Did you join?" (a real ended hold not answered yet;
+  /// the demo build may ask about a sample one).
+  bool get askJoined {
+    if (joinAnswer != null) return false;
+    final h = endedHold;
+    if (h == null) return AppState.samples;
+    return !joinAnswered.contains(h.id);
+  }
+
+  /// F24 item 14: which ended holds were answered already (once per session).
+  Future<void> loadJoinAnswers() async {
+    if (_joinLoaded || !data.remote) return;
+    _joinLoaded = true;
+    try {
+      final got = await data.joinAnswers();
+      if (got.isNotEmpty) update(() => joinAnswered.addAll(got));
+    } catch (e) {
+      // Before its SQL runs (FOUNDER-TODO 4zy3) there's nothing to load.
+      debugPrint('join answers: $e');
+    }
   }
 
   void sendReport() {
