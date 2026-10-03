@@ -50,7 +50,7 @@ All 17 earlier questions are answered or decided (see `DECISIONS.md`, 2026-10-01
 - **F20 Reminders (Me → Reminders, water settings, add reminder, notifications with Done/Snooze, Today card, first-time offer; Design approved · 2026-10-02):** https://claude.ai/artifact/U9TnnagapmbzjJt9tM6K7K
 - **F19 Residents fix their room layout (any room in the hostel, lock sheet + try mode for visitors, quick fixes, photo, “Checked by N residents”, limit + mute, owner compare, console; Design approved · 2026-10-02):** https://claude.ai/artifact/9apSaAYTzGsS8EdFQTZNBR
 - **F18 Real app v2 (sign in, role gates, empty states, map v2, owner layout editor, photos, saved, delete v2, team console, small UX; Design approved · 2026-10-02):** https://claude.ai/artifact/BESe9fQLT3m86BqgihRVU1
-- **Hostelzy · Main design (was "All screens"; the app plus the F22 redesign, 2026-10-02: 170 frames, 88 Redesigned):** https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+- **Hostelzy · Main design** (moved to the Design chat's account 2026-10-03; old copy QscJkLoFAh1MEHCZ1ckLgB is read-only): https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx
 - **Design book (all designs in one place, for the team):** https://claude.ai/artifact/VV4W8tvmbEGf7YnX66ZUJB
 - Design handoff: `project/HostelzyApp.dc.html`, `chats/chat1.md`
 - Deals mockups: https://claude.ai/artifact/F4zedqxzj4cfsrJe6Y92Wn

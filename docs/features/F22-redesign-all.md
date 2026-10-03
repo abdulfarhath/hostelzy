@@ -23,7 +23,7 @@ decisions, never take my approval").
 5. Leftovers: permission, gate, delete account, F19/F20 screens
 
 ## Design
-The redesign goes into the **All screens** canvas in place, area by area, with each new board tagged "Redesigned": https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB
+The redesign goes into the **All screens** canvas in place, area by area, with each new board tagged "Redesigned": https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx
 
 ### Area 1 · Tenant: done 2026-10-02 (founder confirmed in the Design chat)
 Board names are the frame titles on the canvas (screen id · what it shows · Redesigned).

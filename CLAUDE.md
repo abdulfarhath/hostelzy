@@ -33,7 +33,7 @@ The founder has approved every design and every merge in advance. Design marks f
 This overrides the "only the founder approves" lines below until the founder says otherwise.
 Founder, 2026-10-02 (later): "keep designing and building in parallel, never wait for my approval".
 The Ideas chat decides product details; **Design keeps the "Hostelzy · All screens" canvas
-(https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB) updated after every feature it designs or
+(https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx) updated after every feature it designs or
 Build merges** (same URL, tag Updated/New).
 Founder, 2026-10-02 (evening): "take your own decisions… never take my approval for anything". The
 chats decide designs, product details and merges themselves. Only things the founder must physically

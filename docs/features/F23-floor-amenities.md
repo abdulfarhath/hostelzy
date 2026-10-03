@@ -71,7 +71,7 @@ washroom**. So every item has a **where**: *On the floor* (shared) or *In room w
 
 ## Main design canvas
 After approval, F23 goes into the main canvas, renamed **"Hostelzy · Main design"** (same URL as
-"All screens": https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB).
+"All screens": https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx).
 
 **Done 2026-10-02 (Main design v20).** The founder confirmed in the Design chat ("approve all"). The row
 "F23 · Floor amenities, room plan first · built in #75" has 8 boards: hostel page "On each floor" (light

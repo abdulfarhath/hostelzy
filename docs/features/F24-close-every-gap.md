@@ -69,7 +69,7 @@ opens on room plan (layout-first); owner block on hostel page (number after a ho
 Rule: every new screen in the app gets a board; same count both ways (CLAUDE.md).
 
 ## Design
-**Main design v22** (https://claude.ai/artifact/QscJkLoFAh1MEHCZ1ckLgB) · Design chat, 2026-10-02. 187 → **206 boards**.
+**Main design v22** (https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx) · Design chat, 2026-10-02. 187 → **206 boards**.
 Row "F24 · Close every gap", plus the console row and the wizard row.
 
 **Added** (already in the app, now drawn, 8): `oEnquiries` (Manage › Enquiries, HZ code per row,
