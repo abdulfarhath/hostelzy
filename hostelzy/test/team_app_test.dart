@@ -80,7 +80,7 @@ void main() {
     final d = s.draft;
 
     // Step 1: Basics.
-    expect(find.text('ADD HOSTEL · STEP 1 OF 6'), findsOneWidget);
+    expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
     expect(find.text('Basics'), findsOneWidget);
     expect(d.food, '3 meals');
     await _tap(tester, find.byKey(const ValueKey('aAddFood')));
@@ -91,7 +91,7 @@ void main() {
     await _tap(tester, find.text('Next: rooms'));
 
     // Step 2: floor cards with room chips.
-    expect(find.text('ADD HOSTEL · STEP 2 OF 6'), findsOneWidget);
+    expect(find.text('ADD HOSTEL · STEP 2 OF 7'), findsOneWidget);
     expect(find.text('Next: rates · 10 rooms, 29 beds'), findsOneWidget);
     expect(find.byKey(const ValueKey('aFloor-0')), findsOneWidget);
     expect(find.text('No beds here · hidden from tenants'), findsOneWidget);
@@ -121,12 +121,12 @@ void main() {
 
     // Steps 3 to 5 keep the frame.
     await _tap(tester, find.textContaining('Next: rates'));
-    expect(find.text('ADD HOSTEL · STEP 3 OF 6'), findsOneWidget);
-    s.update(() => s.addStep = 6);
+    expect(find.text('ADD HOSTEL · STEP 3 OF 7'), findsOneWidget);
+    s.update(() => s.addStep = 7);
     await tester.pump();
 
-    // Step 6: the checklist; open items are red; the button says how many.
-    expect(find.text('ADD HOSTEL · STEP 6 OF 6'), findsOneWidget);
+    // Step 7: the checklist; open items are red; the button says how many.
+    expect(find.text('ADD HOSTEL · STEP 7 OF 7'), findsOneWidget);
     expect(find.text('Ready to go live?'), findsOneWidget);
     final left = s.goLiveLeft.length;
     expect(left, greaterThan(1));
@@ -137,7 +137,7 @@ void main() {
     expect(find.textContaining('The 30-day free trial starts today.'), findsOneWidget);
     // Back steps back through the wizard.
     await _tap(tester, find.byType(BackBtn));
-    expect((s.screen, s.addStep), ('aAdd', 5));
+    expect((s.screen, s.addStep), ('aAdd', 6));
     s.dispose();
   });
 
@@ -200,7 +200,7 @@ void main() {
     s.dispose();
   });
 
-  for (final c in const [('aTrack', 0, 'light'), ('aAdd', 1, 'light'), ('aAdd', 2, 'light'), ('aAdd', 6, 'light'), ('aAdd', 6, 'dark'), ('aPay', 0, 'light'), ('aCases', 0, 'dark')]) {
+  for (final c in const [('aTrack', 0, 'light'), ('aAdd', 1, 'light'), ('aAdd', 2, 'light'), ('aAdd', 6, 'light'), ('aAdd', 7, 'light'), ('aAdd', 7, 'dark'), ('aPay', 0, 'light'), ('aCases', 0, 'dark')]) {
     testWidgets('F22 Area 4: ${c.$1}${c.$2 > 0 ? ' step ${c.$2}' : ''} (${c.$3}) fits at 2× text', (tester) async {
       final s = AppState(start: c.$1, role: 'owner', theme: c.$3);
       if (c.$2 > 0) s.addStep = c.$2;

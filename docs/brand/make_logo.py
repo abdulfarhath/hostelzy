@@ -5,7 +5,6 @@ Writes docs/brand/assets/. The mark is drawn on a 100-unit grid. Every piece is 
 floor stays transparent in every file.
 """
 import os
-import shutil
 import cairosvg
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -119,9 +118,12 @@ def wordmark(x, baseline, size, tracking=-0.02):
     return pen.getCommands(), (cx - tracking * upm) * sc, bp.bounds[3] * sc
 
 
-if os.path.isdir(OUT):
-    shutil.rmtree(OUT)
-os.makedirs(OUT)
+# Rebuild only the top-level files; sub-folders (notification/, splash/, play-store/) come from
+# docs/brand/tools/ scripts and are kept.
+os.makedirs(OUT, exist_ok=True)
+for f in os.listdir(OUT):
+    if os.path.isfile(os.path.join(OUT, f)):
+        os.remove(os.path.join(OUT, f))
 SMALL = 64  # at or below this many px the simple mark is used
 
 # Mark alone: light / dark / one colour (transparent background).
@@ -157,25 +159,13 @@ for name, p, k in [('web-favicon', 32, .9), ('web-Icon-192', 192, .8), ('web-Ico
                    ('web-Icon-maskable-192', 192, .56), ('web-Icon-maskable-512', 512, .56)]:
     cairosvg.svg2png(bytestring=web(p, k).encode(), write_to=f'{OUT}/{name}.png', output_width=p, output_height=p)
 
-# Splash. Android 12+ splash icon: 1152 px canvas (= 288dp at 4x), transparent; the system crops
-# it to a circle of 2/3 the width, so the room (corners included) stays inside that circle.
-for theme in ('light', 'dark'):
-    sp = 1152
-    m = round(sp * (2 / 3) / 1.414 * 0.96)
-    body = svg(sp, sp, mark((sp - m) / 2, (sp - m) / 2, m, theme, False))
-    cairosvg.svg2png(bytestring=body.encode(), write_to=f'{OUT}/splash-icon-{theme}.png', output_width=sp, output_height=sp)
+# Splash and notification icon: docs/brand/tools/make_app_assets.py (spec: app-assets.md).
 
 # Legacy square launcher icons (Android 7 and older).
 dens = [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]
 save('ic_launcher', lambda p: svg(p, p, mark(p * .1, p * .1, p * .8, 'light', p * .8 <= SMALL, 'm'), bg=WHITE),
      [(192, '')] + [(p, f'-{d}') for d, p in dens])
 os.remove(f'{OUT}/ic_launcher.png')
-
-# Notification icon: one colour, transparent, 24dp with 1dp padding, simple mark.
-note = [('mdpi', 24), ('hdpi', 36), ('xhdpi', 48), ('xxhdpi', 72), ('xxxhdpi', 96)]
-save('ic_stat_hostelzy', lambda p: svg(p, p, mark(p / 24, p / 24, p * 22 / 24, 'mono', True, 'm')),
-     [(24, '')] + [(p, f'-{d}') for d, p in note])
-os.remove(f'{OUT}/ic_stat_hostelzy.png')
 
 # Lockup: mark + "hostelzy" (Archivo ExtraBold, lowercase, -0.02em, like the app header).
 SIZE, PAD = 120, 24

@@ -5,8 +5,13 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect;
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = ''});
   final String id, name, gender, area, owner;
+
+  /// F24: false for a draft the team is still onboarding (never in Explore);
+  /// [visitedOn] is "Visited by Hostelzy" from the server ("2 Oct 2026").
+  final bool live;
+  final String visitedOn;
   final int from, reviews, reply;
   final double rating;
   final bool food, ac, instant;
@@ -69,7 +74,29 @@ String dayMon(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
 /// Last-day choices when giving notice today: the earliest day the notice
 /// period allows, then 15 and 30 days after it.
-List<String> leaveDates(Terms t) => [for (final x in [0, 15, 30]) dayMon(appToday.add(Duration(days: t.noticeDays + x)))];
+List<String> leaveDates(Terms t) => [for (final d in leaveDays(t)) dayMon(d)];
+List<DateTime> leaveDays(Terms t) => [for (final x in [0, 15, 30]) appToday.add(Duration(days: t.noticeDays + x))];
+
+/// "12 min", "2 h": how long an owner usually takes to reply.
+String replyWords(int min) => min < 60 ? '$min min' : '${(min / 60).round()} h';
+
+/// F24: a resident's notice or move to another bed, from `move_requests`.
+/// [kind]: vacate | swap. [status]: open | accepted | declined | withdrawn.
+class MoveReq {
+  const MoveReq({required this.id, required this.hid, required this.stayKey, required this.kind, required this.status, this.name = '', this.bed = '', this.lastDay, this.toBed = '', this.reason = '', this.at = 0});
+  final String id, hid, stayKey, kind, status, name, bed, toBed, reason;
+  final DateTime? lastDay;
+  final int at;
+}
+
+/// F24: a former resident's advance refund. [status]: due | sent | received | not_received.
+class Refund {
+  const Refund({required this.stayKey, required this.hid, required this.name, required this.phone, required this.bed, required this.advance, required this.amt, required this.status, required this.leftOn, this.utr = ''});
+  final String stayKey, hid, name, phone, bed, status, utr;
+  final int advance, amt;
+  final DateTime leftOn;
+  DateTime get due => leftOn.add(const Duration(days: 7));
+}
 
 /// `Due 14 Oct` for a resident who joined on [joinDay].
 String dueNote(Terms t, int joinDay) => 'Due ${t.dueDay(joinDay)} ${_months[appToday.month - 1]}';
@@ -286,6 +313,9 @@ class Resident {
   /// When they moved in (ms), for residents added in the app.
   final int? joinAt;
 
+  /// F24: their last day once notice is accepted or the owner marked it.
+  DateTime? leavingOn;
+
   /// hz | direct | before | wait
   String get tag => confirmed ? via : 'wait';
   Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt, lateDays: lateDays, key: key);
@@ -471,6 +501,10 @@ class Rule {
   const Rule(this.k, this.v);
   final String k, v;
 }
+
+/// F24: a real hostel with no rules yet: gate and visitors left for the
+/// owner to fill; the rest comes from its terms.
+List<Rule> blankRules(Terms t) => [for (final r in seedRules(t)) const {'Gate closes', 'Visitors'}.contains(r.k) ? Rule(r.k, '') : r];
 
 List<Rule> seedRules(Terms t) => [
   const Rule('Gate closes', '10:30 pm'),
@@ -1230,7 +1264,7 @@ void resetSampleData() {
 bool liveListings = false;
 
 /// Hostels a tenant can find (Explore, map, ranking).
-List<Hostel> get browsable => liveListings ? hostels.where((h) => !_seedIds.contains(h.id)).toList() : hostels;
+List<Hostel> get browsable => liveListings ? hostels.where((h) => !_seedIds.contains(h.id) && h.live).toList() : hostels;
 
 /// Map positions of live hostels (from the database).
 final livePos = <String, (double, double)>{};
@@ -1337,6 +1371,28 @@ class HostelDraft {
   final List<({String name, String phone, String bed})> residents = [];
   String ownerName = 'Srinivas', ownerPhone = '';
   bool ownerVerified = false, fairPlay = false, bedsChecked = false;
+
+  /// F24: the draft's id on the server once saved; the owner's one-time code
+  /// and whether their account is linked; residents already saved as stays.
+  String? serverId;
+  String ownerCode = '';
+  bool ownerLinked = false;
+  final Set<String> savedResidents = {};
+
+  HostelDraft();
+
+  /// F24: an empty draft for real hostels (the sample one is for the demo).
+  HostelDraft.blank() {
+    name = '';
+    area = '';
+    amenities = {};
+    floors
+      ..clear()
+      ..addAll([DraftFloor('Ground floor', []), DraftFloor('1st floor', [])]);
+    prices.clear();
+    photos.clear();
+    ownerName = '';
+  }
 
   Iterable<DraftRoom> get allRooms => floors.where((f) => !f.noBeds).expand((f) => f.rooms);
   int get roomCount => allRooms.length;

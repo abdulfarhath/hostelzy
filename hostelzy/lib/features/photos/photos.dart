@@ -25,6 +25,9 @@ mixin _PhotosData {
 
   /// The photo the owner tapped (sheet 'photo').
   String? photoSel;
+
+  /// F24: the team adding photos to a draft hostel (null: the owner's own).
+  String? photoFor;
 }
 
 /// A photo on its way up. [stage]: 1 prepared, 2 uploaded; [failed] → retry.
@@ -42,6 +45,9 @@ class PhotoUpload {
 const hostelPhotoLabels = ['Front', 'Room', 'Washroom', 'Food', 'Common'];
 
 extension PhotosActions on AppState {
+  /// The hostel the Photos screen is for.
+  String get photoHid => photoFor ?? ownHid;
+
   /// Room-type albums for [hid]: "3 sharing", "AC rooms"…
   List<String> photoAlbums(String hid) {
     final types = <String>{};
@@ -77,6 +83,7 @@ extension PhotosActions on AppState {
 
   void openPhotos() {
     update(() {
+      photoFor = null;
       photoAlbum = 'Hostel';
       hist = [...hist, screen];
       screen = 'oPhotos';
@@ -92,7 +99,7 @@ extension PhotosActions on AppState {
       cropBytes = b;
       cropAspect = '4:3';
       cropLabel = photoAlbum == 'Hostel' ? 'Front' : photoAlbum;
-      cropCover = photosIn(ownHid, 'Hostel').isEmpty && photoAlbum == 'Hostel';
+      cropCover = photosIn(photoHid, 'Hostel').isEmpty && photoAlbum == 'Hostel';
       hist = [...hist, screen];
       screen = 'oCrop';
     });
@@ -110,7 +117,7 @@ extension PhotosActions on AppState {
     final jpg = prepPhoto(b, cropAspect);
     if (jpg == null) return toastMsg('That file isn’t a photo. Pick another.');
     final album = hostelPhotoLabels.contains(cropLabel) ? 'Hostel' : cropLabel;
-    final u = PhotoUpload('u${DateTime.now().microsecondsSinceEpoch}', ownHid, album, cropLabel, jpg, cover: cropCover);
+    final u = PhotoUpload('u${DateTime.now().microsecondsSinceEpoch}', photoHid, album, cropLabel, jpg, cover: cropCover);
     update(() {
       cropBytes = null;
       photoAlbum = album;
@@ -165,14 +172,14 @@ extension PhotosActions on AppState {
     }
   }
 
-  HostelPhoto? get selPhoto => (photosOf[ownHid] ?? const <HostelPhoto>[]).where((p) => p.id == photoSel).firstOrNull;
+  HostelPhoto? get selPhoto => (photosOf[photoHid] ?? const <HostelPhoto>[]).where((p) => p.id == photoSel).firstOrNull;
 
   /// Hostel album: moves the photo to the front, so it becomes the cover.
   Future<void> makeCover(HostelPhoto p) async {
     update(() => sheet = null);
-    final first = photosIn(ownHid, 'Hostel').firstOrNull;
+    final first = photosIn(photoHid, 'Hostel').firstOrNull;
     if (first == null || first.id == p.id) return;
-    await movePhoto(ownHid, p, first);
+    await movePhoto(photoHid, p, first);
   }
 
   Future<void> deletePhoto(String hid, HostelPhoto p) async {

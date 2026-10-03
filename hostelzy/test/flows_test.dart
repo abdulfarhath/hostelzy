@@ -1015,7 +1015,7 @@ void main() {
     expect(find.text('HOSTELZY TEAM · LIVE 3 OF 20 THIS MONTH'), findsOneWidget);
     await tap(tester, find.text('Add hostel'));
     expect((s.screen, s.addStep), ('aAdd', 1));
-    expect(find.text('ADD HOSTEL · STEP 1 OF 6'), findsOneWidget);
+    expect(find.text('ADD HOSTEL · STEP 1 OF 7'), findsOneWidget);
     await tap(tester, find.text('Map pin · check it at the gate'));
     expect(s.draft.pinChecked, isTrue);
     await tap(tester, find.text('Next: rooms'));
@@ -1052,6 +1052,13 @@ void main() {
     await tester.pump();
     await tap(tester, find.text('Add resident'));
     expect(s.draft.residents.single.bed, '101-A');
+    await tap(tester, find.text('Next: owner account'));
+
+    // F24: the owner's account (the demo marks it linked).
+    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone6')), matching: find.byType(TextField)), '9000000009');
+    await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('ownerLink')));
+    expect(s.draft.ownerLinked, isTrue);
     await tap(tester, find.text('Next: go live'));
 
     // Go live stays locked until all six are done.
@@ -1060,8 +1067,6 @@ void main() {
     expect(s.screen, 'aAdd');
     await tap(tester, find.text('Fair Play rules: owner agreed'));
     await tap(tester, find.text('Bed status checked on the visit'));
-    await tester.enterText(find.descendant(of: find.byKey(const ValueKey('ownerPhone')), matching: find.byType(TextField)), '9000000009');
-    await tester.pump();
     await tap(tester, find.text('Call it'));
     expect(s.lastLink.toString(), 'tel:+919000000009');
     await tap(tester, find.text('The owner’s phone rang'));
@@ -3516,7 +3521,7 @@ class _FakeLive extends SampleRepo {
   @override
   Future<String> sendEnquiry({required String hid, required String name, required String phone, String? bed, required String source, required String msg}) async {
     await _rec('enquiry $hid $bed $name $phone');
-    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    rows = (holds: rows.holds, enquiries: [Enquiry(ref: 'HZ-5009', name: name, phone: phone, hid: hid, bed: bed, at: 0, from: source, msg: msg), ...rows.enquiries], payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
     return 'HZ-5009';
   }
 
@@ -3545,7 +3550,7 @@ class _FakeLive extends SampleRepo {
       holds: [...rows.holds, Hold(id: id, hid: hid, bed: '101-A', room: 101, opt: opt, start: 0, status: opt == 'book' ? 'paying' : 'waiting', ref: 'HZ-501$n', paid: advance)],
       enquiries: rows.enquiries,
       payments: [...rows.payments, if (payId != null) Payment(id: payId, kind: 'advance', hid: hid, who: 'Asha', what: 'Advance for bed 101-A', bed: '101-A', amt: advance, note: 'HZ-501$n', holdId: id)],
-      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay,
+      complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund,
     );
     return (id: id, ref: 'HZ-501$n', payId: payId);
   }
@@ -3646,14 +3651,14 @@ class _FakeLive extends SampleRepo {
     rows = (holds: rows.holds, enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: [
       Resident(name: name, bed: '101-A', amt: rent, status: 'Due', note: '', phone: phone, via: 'direct', since: 'Added today', confirmed: false, key: 'stay-uuid'),
       ...rows.residents,
-    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    ], invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
     return (via: 'direct', lateDays: 0);
   }
 
   @override
   Future<void> releaseHold(String id, {bool cancelPay = true}) async {
     await _rec('release $id $cancelPay');
-    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay);
+    rows = (holds: [for (final h in rows.holds) h.id == id ? h.withStatus('released') : h], enquiries: rows.enquiries, payments: rows.payments, complaints: rows.complaints, expired: rows.expired, myHostel: rows.myHostel, signups: rows.signups, residents: rows.residents, invoices: rows.invoices, trialEnds: rows.trialEnds, cases: rows.cases, myHostels: rows.myHostels, managers: rows.managers, fixes: rows.fixes, rewards: rows.rewards, mutes: rows.mutes, myStay: rows.myStay, moves: rows.moves, refunds: rows.refunds, myRefund: rows.myRefund);
   }
 }
 

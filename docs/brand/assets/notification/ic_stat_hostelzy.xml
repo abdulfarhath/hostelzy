@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hostelzy notification icon (Brand, 2026-10-03). Status bar: one colour, Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+  <path android:fillColor="#FFFFFFFF" android:pathData="M2,2h20v2h-20z M2,2h2v20h-2z M20,2h2v20h-2z M2,20h10v2h-10z M16,20h6v2h-6z M6,6h5v1h-5z M6,13h5v1h-5z M6,6h1v8h-1z M10,6h1v8h-1z M6,16h7v1h-7z M6,18h7v1h-7z M6,16h1v3h-1z M12,16h1v3h-1z M14,7h4v9h-4z"/>
+</vector>
