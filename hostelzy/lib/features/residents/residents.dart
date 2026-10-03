@@ -239,6 +239,13 @@ extension ResidentsActions on AppState {
     });
   }
 
+  /// F25: the hostel page's "See the whole building": the picker's Building tab.
+  void openBuilding() {
+    holdOpt = 'free';
+    openPicker();
+    update(() => mode = 'building');
+  }
+
   void pickBed(Bed b) {
     if ((b.state != 'free' && b.state != 'soon') || b.mine) {
       toastMsg(b.state == 'held' ? 'Someone is holding this bed right now.' : 'This bed is taken.');

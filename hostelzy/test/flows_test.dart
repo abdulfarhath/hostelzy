@@ -127,10 +127,11 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('bed picker: Plan and Room, cheapest beds as a link (F21 W2)', (tester) async {
+  testWidgets('bed picker: Plan · Room · Building tabs, cheapest beds as a link (F21 W2, F25)', (tester) async {
     final s = AppState(start: 'picker', role: 'tenant');
     await pumpApp(tester, s);
-    expect(find.text('Building'), findsNothing);
+    // F25 (founder): the Building tab is back; the list stays a link.
+    expect(find.byKey(const ValueKey('pickTab-building')), findsOneWidget);
     expect(find.text('List'), findsNothing);
     await tap(tester, find.text('See cheapest beds ›'));
     expect(find.textContaining('beds you can take'.toUpperCase()), findsOneWidget);
@@ -462,7 +463,8 @@ void main() {
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
     final r = s.rooms['anjani']!.firstWhere((x) => x.n == s.room);
     expect(r.ac, isTrue);
-    expect(find.textContaining('${r.share} sharing AC · '), findsWidgets);
+    // F25: the floor map shows the room's sharing and AC under its number.
+    expect(find.descendant(of: find.byKey(ValueKey('roomCard-${r.n}')), matching: find.text('${r.share} · AC')), findsOneWidget);
     s.dispose();
 
     // Owner: edit the rate card and a room's type.
@@ -628,11 +630,11 @@ void main() {
     o.ownHid = 'saisri';
     await pumpApp(tester, o);
     await tap(tester, find.byKey(const ValueKey('obFloor-2')));
-    expect(find.text('Room 205'), findsOneWidget);
-    expect(find.text('Room 302'), findsNothing);
+    expect(find.byKey(const ValueKey('oRoom-205')), findsOneWidget);
+    expect(find.byKey(const ValueKey('oRoom-302')), findsNothing);
     await tap(tester, find.byKey(const ValueKey('obFloor-3')));
-    expect(find.text('Room 302'), findsOneWidget);
-    expect(find.text('Room 205'), findsNothing);
+    expect(find.byKey(const ValueKey('oRoom-302')), findsOneWidget);
+    expect(find.byKey(const ValueKey('oRoom-205')), findsNothing);
     o.dispose();
   });
 
@@ -918,7 +920,7 @@ void main() {
     await pumpApp(tester, s);
     expect(s.mode, 'plan');
     await tap(tester, find.byKey(const ValueKey('floor-3')));
-    await tap(tester, find.descendant(of: find.byKey(const ValueKey('roomCard-304')), matching: find.text('Room 304')));
+    await tap(tester, find.byKey(const ValueKey('roomName-304')));
     expect((s.mode, s.room), ('room', 304));
     expect(find.text('Room 304'), findsOneWidget);
     expect(find.text('Sample layout'), findsOneWidget);

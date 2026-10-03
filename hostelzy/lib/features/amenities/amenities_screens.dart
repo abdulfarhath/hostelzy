@@ -403,12 +403,22 @@ class OwnerSharedThings extends StatelessWidget {
                               children: [
                                 T(a.inRooms ? '${a.label} · in room ${a.place == 'washroom' ? 'washrooms' : 'rooms'}' : (a.qty > 1 ? '${a.label} ×${a.qty}' : a.label), w: 800, s: 16),
                                 T([if (a.inRooms) a.rooms.join(', '), a.byResident ? 'a resident' : 'you', dayMon(DateTime.fromMillisecondsSinceEpoch(a.at))].join(' · '), s: 13, c: p.mu),
+                                // F25: where it is on the floor map.
+                                if (!a.inRooms) T(a.placed ? 'On the floor map' : 'Not placed yet', key: ValueKey('ownSpot-${a.id}'), s: 13, w: 600, c: a.placed ? p.mu : p.ad),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           Tag(a.working ? 'Working' : 'Not working', bg: a.working ? transparent : p.ab, fg: a.working ? p.mu : p.ad),
                           const SizedBox(width: 8),
+                          if (!a.inRooms) ...[
+                            Tap(
+                              key: ValueKey('ownPlace-${a.id}'),
+                              onTap: () => s.openPlaceThing(a),
+                              child: Semantics(label: 'Place ${a.label} on the floor', child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: Ic('pin', size: 16, color: p.tx))),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
                           Tap(
                             key: ValueKey('ownEdit-${a.id}'),
                             onTap: () => s.openAddAmenity(edit: a),

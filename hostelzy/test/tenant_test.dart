@@ -207,7 +207,7 @@ void main() {
 
     // The room name opens the Room view: the room in the title, one bed's facts.
     await _tap(tester, find.byKey(const ValueKey('floor-3')));
-    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('roomCard-304')), matching: find.text('Room 304')));
+    await _tap(tester, find.byKey(const ValueKey('roomName-304')));
     expect((s.mode, s.room), ('room', 304));
     expect(find.text('Room 304'), findsOneWidget);
     expect(find.byKey(const ValueKey('bedFacts')), findsOneWidget);

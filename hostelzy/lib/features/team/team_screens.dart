@@ -5,6 +5,7 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../amenities/amenities_screens.dart';
+import '../holds/building_view.dart';
 
 // Hostelzy team mode (Settings → Hostelzy team) and the owner's list of room
 // layouts (Manage → Layouts).
@@ -152,12 +153,17 @@ class OwnerLayoutsScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Layouts', title: s.amOwnerTab == 'things' ? s.floorName(s.amFloor) : 'Room layouts', size: 28))]),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Layouts', title: switch (s.amOwnerTab) {
+            'things' => s.floorName(s.amFloor),
+            'building' => 'Building',
+            _ => 'Room layouts',
+          }, size: 28))]),
         ),
         // F23: the floors' shared things sit beside the room layouts.
         Seg(
           key: const ValueKey('layoutsTab'),
-          opts: [('rooms', 'Rooms'), ('things', 'Shared things ${s.amenities.where((a) => a.hid == h.id).length}')],
+          // F25: the Building view (board w4-building), owner side.
+          opts: [('rooms', 'Rooms'), ('things', 'Shared things ${s.amenities.where((a) => a.hid == h.id).length}'), ('building', 'Building')],
           cur: s.amOwnerTab,
           onPick: (v) => s.update(() {
             s.amOwnerTab = v;
@@ -168,7 +174,27 @@ class OwnerLayoutsScreen extends StatelessWidget {
           center: true,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         ),
-        if (s.amOwnerTab == 'things') const Expanded(child: OwnerSharedThings()) else ...[
+        if (s.amOwnerTab == 'things') const Expanded(child: OwnerSharedThings())
+        else if (s.amOwnerTab == 'building')
+          Expanded(
+            child: Scroll(
+              key: ValueKey('oBuilding${s.scrollEpoch}'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: BuildingView(
+                  hid: h.id,
+                  rooms: rs,
+                  tenant: false,
+                  selected: s.sheet == 'bed' ? s.obed : null,
+                  onBed: (b) => s.update(() {
+                    s.obed = b.id;
+                    s.sheet = 'bed';
+                  }),
+                ),
+              ),
+            ),
+          )
+        else ...[
         Scroll(
           horizontal: true,
           child: Padding(

@@ -4,7 +4,9 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../amenities/floor_map.dart';
 import '../layouts/layout_map.dart';
+import 'building_view.dart';
 
 // ------------------------------------------------------------ picker
 
@@ -22,7 +24,8 @@ class PickerScreen extends StatelessWidget {
     // F23: the room plan comes first (layout-first, founder); its "Floor view"
     // button and the floor view's room names switch between the two. The
     // list is a "See cheapest beds" link.
-    final locked = s.floorLocked(h.id) && s.mode == 'plan';
+    // F25: the Building tab follows the same women's-PG rule as Plan.
+    final locked = s.floorLocked(h.id) && (s.mode == 'plan' || s.mode == 'building');
 
     Widget body;
     if (locked) {
@@ -30,7 +33,9 @@ class PickerScreen extends StatelessWidget {
     } else if (s.mode == 'room') {
       body = RoomMode(rooms: rs, room: room);
     } else if (s.mode == 'plan') {
-      body = _PlanMode(rooms: rs, room: room);
+      body = _PlanMode(rooms: rs);
+    } else if (s.mode == 'building') {
+      body = _BuildingMode(rooms: rs);
     } else {
       body = _ListMode(rooms: rs);
     }
@@ -53,6 +58,7 @@ class PickerScreen extends StatelessWidget {
             ],
           ),
         ),
+        const PickerTabs(),
         if (s.mode == 'list')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -152,121 +158,64 @@ class FloorTabs extends StatelessWidget {
   }
 }
 
-/// F22 Area 1: floors as chips, then every room on the floor as a card with
-/// its beds as boxes. A bed tap picks it; the room name opens the Room view.
+/// F25 (board w4-floorMap): floors as chips, then the floor as a corridor
+/// map: rooms either side with their beds as boxes, the shared things where
+/// the owner placed them. A bed tap picks it; the room number opens the Room
+/// view; a shared thing opens the floor sheet (H42).
 class _PlanMode extends StatelessWidget {
-  const _PlanMode({required this.rooms, required this.room});
+  const _PlanMode({required this.rooms});
   final List<Room> rooms;
-  final Room room;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    final h = hostelById(s.hid);
     final floors = [
       for (final f in floorsOf(rooms)) (f, rooms.where((r) => r.floor == f && AppState.fits(r, s.pR)).fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free' && !b.mine).length)),
     ];
     final tiles = rooms.where((r) => r.floor == s.floor).toList();
-    Widget card(Room r) {
-      final fits = AppState.fits(r, s.pR);
-      return Opacity(
-        key: ValueKey('roomCard-${r.n}'),
-        opacity: fits ? 1 : .35,
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: box(w: 2, c: r.beds.any((b) => b.id == s.bed) ? p.ac : p.tx),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Tap(
-                enabled: fits,
-                // F12: the room name opens it in the Room view.
-                onTap: () => s.openRoom(r.n),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(child: T('Room ${r.label}', w: 800, s: 15, lh: 1.2)),
-                    const SizedBox(width: 8),
-                    Expanded(child: T('${r.share} sharing${r.ac ? ' AC' : ''} · ${fmt(r.rent)}', s: 12, c: p.mu, lh: 1.3)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final b in r.beds)
-                    () {
-                      final l = lookOf(p, b, s.bed);
-                      return Tap(
-                        key: ValueKey('bed-${b.id}'),
-                        enabled: fits && l.can,
-                        onTap: () => s.pickBed(b),
-                        child: Semantics(
-                          label: 'Bed ${b.id}, ${l.tag}',
-                          child: BedBox(
-                            look: l.look,
-                            width: 54,
-                            height: 48,
-                            child: Center(child: T(b.letter, w: 800, s: 17)),
-                          ),
-                        ),
-                      );
-                    }(),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final grid = <Widget>[];
-    for (var i = 0; i < tiles.length; i += 2) {
-      if (i > 0) grid.add(const SizedBox(height: 10));
-      grid.add(
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Expanded(child: card(tiles[i])), const SizedBox(width: 10), Expanded(child: i + 1 < tiles.length ? card(tiles[i + 1]) : const SizedBox())],
-          ),
-        ),
-      );
-    }
+    final placed = s.placedOn(h.id, s.floor).isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              for (var i = 0; i < floors.length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
-                Expanded(
-                  child: Tap(
-                    key: ValueKey('floor-${floors[i].$1}'),
-                    onTap: () {
-                      final f = floors[i].$1;
-                      final fit = rooms.where((r) => r.floor == f && AppState.fits(r, s.pR));
-                      final r = fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
-                      s.update(() {
-                        s.floor = f;
-                        s.room = r.n;
-                        s.bed = null;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                      decoration: box(bg: floors[i].$1 == s.floor ? p.tx : transparent, w: 1, c: floors[i].$1 == s.floor ? p.tx : p.mu),
-                      child: T('Floor ${floors[i].$1} · ${floors[i].$2} free', s: 13, w: 800, c: floors[i].$1 == s.floor ? p.bg : p.tx, lh: 1.2),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+          FloorChips(
+            keyPrefix: 'floor',
+            items: floors,
+            cur: s.floor,
+            onPick: (f) {
+              final fit = rooms.where((r) => r.floor == f && AppState.fits(r, s.pR));
+              final r = fit.where((r) => r.beds.any((b) => b.state == 'free')).firstOrNull ?? fit.firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
+              s.update(() {
+                s.floor = f;
+                s.room = r.n;
+                s.bed = null;
+              });
+            },
           ),
           const SizedBox(height: 12),
-          ...grid,
+          FloorMap(
+            hid: h.id,
+            floor: s.floor,
+            rooms: tiles,
+            dim: (r) => !AppState.fits(r, s.pR),
+            // F12: the room number opens it in the Room view.
+            onRoom: (r) => s.openRoom(r.n),
+            onThing: (a) => s.openFloorSheet(h.id, a.floor),
+            bed: (r, b) {
+              final l = lookOf(p, b, s.bed);
+              return Tap(
+                key: ValueKey('bed-${b.id}'),
+                enabled: AppState.fits(r, s.pR) && l.can,
+                onTap: () => s.pickBed(b),
+                child: Semantics(
+                  label: 'Bed ${b.id}, ${l.tag}',
+                  child: BedBox(look: l.look, width: 34, height: 34, child: Center(child: T(b.letter, w: 800, s: 13))),
+                ),
+              );
+            },
+          ),
           for (final r in tiles.where((r) => r.ac && r.acRepair))
             Container(
               margin: const EdgeInsets.only(top: 10),
@@ -274,6 +223,8 @@ class _PlanMode extends StatelessWidget {
               color: p.ab,
               child: T('Room ${r.label}: AC under repair.${r.acSince.isEmpty ? '' : ' Complaint raised ${r.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
+          const SizedBox(height: 10),
+          NotPlacedStrip(hid: h.id, floor: s.floor, onThing: (a) => s.openFloorSheet(h.id, a.floor)),
           const SizedBox(height: 12),
           Wrap(
             alignment: WrapAlignment.spaceBetween,
@@ -289,7 +240,79 @@ class _PlanMode extends StatelessWidget {
               ),
             ],
           ),
+          if (placed) ...[
+            const SizedBox(height: 8),
+            T('Shared things are drawn where the owner placed them. Tap one to see if it’s working. Residents keep this right.', s: 12, c: p.mu, lh: 1.45),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// F25 (board w4-building): the Building tab.
+class _BuildingMode extends StatelessWidget {
+  const _BuildingMode({required this.rooms});
+  final List<Room> rooms;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: BuildingView(
+        hid: s.hid,
+        rooms: rooms,
+        selected: s.bed,
+        dim: (r) => !AppState.fits(r, s.pR),
+        onBed: s.pickBed,
+        onFloor: (f) {
+          final r = rooms.where((r) => r.floor == f && r.beds.any((b) => b.state == 'free')).firstOrNull ?? rooms.firstWhere((r) => r.floor == f);
+          s.update(() {
+            s.floor = f;
+            if (s.bed == null || !s.bed!.startsWith('${r.n}-')) s.room = r.n;
+            s.mode = 'plan';
+          });
+        },
+      ),
+    );
+  }
+}
+
+/// F25: Plan · Room · Building. The cheapest-beds list belongs to Plan.
+class PickerTabs extends StatelessWidget {
+  const PickerTabs({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final cur = s.mode == 'list' ? 'plan' : s.mode;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: box(w: 2, c: p.tx),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (k, label, key) in const [('plan', 'Plan', 'floorView'), ('room', 'Room', 'pickTab-room'), ('building', 'Building', 'pickTab-building')])
+              Expanded(
+                child: Tap(
+                  key: ValueKey(key),
+                  onTap: () => s.update(() {
+                    s.mode = k;
+                    if (k == 'room') s.roomBed = null;
+                  }),
+                  child: Semantics(
+                    selected: cur == k,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                      color: cur == k ? p.tx : transparent,
+                      child: T(label, s: 13, w: 600, c: cur == k ? p.bg : p.tx, align: TextAlign.center),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

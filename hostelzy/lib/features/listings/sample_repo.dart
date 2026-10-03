@@ -181,6 +181,9 @@ class SampleRepo implements HostelRepo {
   Future<void> removeAmenity(String key) async {}
 
   @override
+  Future<bool> placeAmenity(String key, int? x, int? y) async => true;
+
+  @override
   Future<List<DayMenu>?> menu(String hid) async => null;
   @override
   Future<void> saveMenu(String hid, List<DayMenu> week) async {}
