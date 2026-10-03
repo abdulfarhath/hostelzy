@@ -16,7 +16,7 @@ select test.fails($$select public.save_hostel(null, '{"name": "Nope PG"}')$$, 'o
 select test.act('authenticated', 'fb-ob-hq', true);
 select test.fails($$select public.save_hostel(null, '{"name": "  "}')$$, 'add the hostel name');
 insert into ob select 'h', public.save_hostel(null, '{"name": "Sri Sai Annex", "gender": "Women", "area": "Kondapur", "owner_name": "Lakshmi", "food": true, "tags": ["3 meals a day", "Wi-Fi"],
-  "terms": {"advance": 4000, "maintenance": 1000, "noticeDays": 30, "dueOnJoining": true, "electricityExtra": true}, "owner_phone": "98765 11111",
+  "terms": {"advance": 4000, "maintenance": 1000, "noticeDays": 30, "dueOnJoining": true, "electricityExtra": true}, "owner_phone": "98765 11111", "lat": 17.4622, "lng": 78.3568,
   "rates": [{"ac": false, "share": 3, "rent": 7000}, {"ac": true, "share": 2, "rent": 9500}],
   "rooms": [{"number": 101, "floor": 1, "share": 3, "ac": false, "rent": 7000}, {"number": 102, "label": "102A", "floor": 1, "share": 2, "ac": true, "rent": 9500}]}');
 select test.eq((select slug || ' ' || status || ' ' || owner_name || ' ' || food::text from public.hostels where id = (select v from ob where k = 'h')::uuid), 'sri-sai-annex draft Lakshmi true');
