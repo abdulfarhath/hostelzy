@@ -133,8 +133,19 @@ extension ResidentsActions on AppState {
   void setRoomAc(Room r, bool ac) {
     if (ac && rateDraft![rateKey(true, r.share)] == null) return toastMsg('Add a ${r.share} sharing AC price first.');
     if (!ac && rateDraft![rateKey(false, r.share)] == null) return toastMsg('Add a ${r.share} sharing non-AC price first.');
+    // F24 item 19: an AC room needs an AC unit in its layout (DECISIONS 2026-10-02).
+    if (ac && !r.ac && acMissing(ownHid, r)) return toastMsg(acMissingMsg(r));
     update(() => acDraft![r.n] = ac);
   }
+
+  /// F24 item 19: the room's published layout has no AC unit, so it can't be
+  /// made AC yet. A room with no layout can (publishing it then needs one).
+  bool acMissing(String hid, Room r) {
+    final l = liveLayout(hid, r.n);
+    return l != null && l.ac == null;
+  }
+
+  String acMissingMsg(Room r) => 'Room ${r.label}’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.';
 
   void saveRates() {
     final rs = rooms[ownHid]!;
@@ -143,12 +154,34 @@ extension ResidentsActions on AppState {
       final v = rateDraft![rateKey(acDraft![r.n]!, r.share)];
       if (v == null || v < 1000) return toastMsg('Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more).');
     }
+    // F24 item 19: checked again on saving (and by the server).
+    final noUnit = rs.where((r) => acDraft![r.n]! && !r.ac && acMissing(ownHid, r)).firstOrNull;
+    if (noUnit != null) return toastMsg(acMissingMsg(noUnit));
     final newAc = rs.where((r) => acDraft![r.n]! && !r.ac).length;
-    final msg = newAc > 0 ? 'Saved. Add the AC unit to the room’s layout so tenants see it.' : 'Rate card saved. Tenants see the new prices now.';
+    final msg = newAc > 0 ? 'Saved. When you draw the room’s layout, add its AC unit.' : 'Rate card saved. Tenants see the new prices now.';
     if (onServer) {
       // S3: saved on the server first; the phone follows only if it worked.
       final draft = Map.of(rateDraft!), ac = Map.of(acDraft!), hid = ownHid;
-      _write(() => data.saveRates(hid, draft, {for (final r in rs) r.n: (ac: ac[r.n]!, rent: draft[rateKey(ac[r.n]!, r.share)]!)})).then((ok) {
+      Future<bool> save() async {
+        try {
+          await data.saveRates(hid, draft, {for (final r in rs) r.n: (ac: ac[r.n]!, rent: draft[rateKey(ac[r.n]!, r.share)]!)});
+        } catch (e) {
+          debugPrint('rates: $e');
+          // The server's own words for its two rules; anything else is the usual "couldn't save".
+          final m = '$e';
+          final room = RegExp(r'room (\S+): an AC room needs an AC unit').firstMatch(m)?.group(1);
+          toastMsg(room != null
+              ? 'Room $room’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.'
+              : m.contains('only the owner')
+              ? 'Only the owner can change rates and AC rooms.'
+              : 'Couldn’t save it. Check your internet and try again.');
+          return false;
+        }
+        await refreshLive();
+        return true;
+      }
+
+      save().then((ok) {
         if (!ok) return;
         update(() {
           rates[hid] = draft;
@@ -237,15 +270,7 @@ extension ResidentsActions on AppState {
   String get peekRef => enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == myPhone).firstOrNull?.ref ?? 'HZ-$_nextRef';
 
   /// Perks locked into a booking, as shown on the locked-deal card.
-  List<String> lockedPerks(DealQuote q, Hostel h) => [
-    if (q.hzFee < q.fee) '${fmt(q.hzFee)} monthly',
-    if (q.hzExit < q.exit) '${fmt(q.hzExit)} exit only',
-    if (q.firstOffNow > 0) '${fmt(firstOff)} off first month',
-    if (q.hzAdv < q.adv) '${fmt(q.hzAdv)} advance',
-    if (q.join > 0) 'No joining fee',
-    if (q.laundry) 'Free laundry weekly',
-    '${h.terms.noticeDays} days notice',
-  ];
+  List<String> lockedPerks(DealQuote q, Hostel h) => dealPerks(q, h.terms.noticeDays);
 
   /// [opt]: `free` (1-hour hold) or `book` (advance paid to the owner, deal
   /// locked, HZ code recorded like an enquiry so F05/F06 see it).

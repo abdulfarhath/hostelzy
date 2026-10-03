@@ -18,7 +18,7 @@ import 'sign_in.dart';
 import 'store.dart';
 import 'locate.dart';
 import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
+import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
 import 'features/links/scan.dart';
@@ -580,8 +580,18 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
       rates[h.id] = l.rates[h.id]!;
       ownerUpi[h.id] = l.upi[h.id]!;
       stats[h.id] = statsOf(l.reviews[h.id] ?? const []);
-      // Not known until the owner confirms on the server (later wave): never "today".
-      confirmed.remove(h.id);
+      // F24 item 9: the owner's last confirmations on the server; unknown
+      // (never "today") until there is one.
+      if (h.bedsCheckedAt != null) {
+        confirmed[h.id] = daysSince(h.bedsCheckedAt!);
+      } else {
+        confirmed.remove(h.id);
+      }
+      if (h.layoutsCheckedAt != null) {
+        layoutConfirmed[h.id] = daysSince(h.layoutsCheckedAt!);
+      } else {
+        layoutConfirmed.remove(h.id);
+      }
       layouts[h.id] = l.layouts[h.id] ?? {};
       deals[h.id] = l.deals[h.id] ?? const Deals();
       strikes[h.id] = l.strikes[h.id] ?? 0;

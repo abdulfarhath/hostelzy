@@ -38,10 +38,13 @@ List<Hostel> filtered(AppState s) {
 
   int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
   final score = {for (final h in out) h.id: s.rankScore(h.id)};
+  // F10: an 80+ bed hostel's plan has a featured spot: first under Recommended.
+  final feat = {for (final h in out) if (s.featured(h.id)) h.id};
 
   out.sort((a, b) {
     // F08 Recommended (Hostelzy rank), F03 Best deals, or Lowest price; then nearest.
     final d = switch (s.sortBy) {
+      'rec' when feat.contains(a.id) != feat.contains(b.id) => feat.contains(a.id) ? -1 : 1,
       'rec' => score[b.id]!.compareTo(score[a.id]!),
       'deals' => saving(b).compareTo(saving(a)),
       'price' => cheapest(a).compareTo(cheapest(b)),
@@ -52,6 +55,17 @@ List<Hostel> filtered(AppState s) {
     return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
   });
   return out;
+}
+
+/// The best-ranked hostel among [results] (the "#1 near you" card).
+String? topRanked(AppState s, List<Hostel> results) {
+  String? top;
+  var best = double.negativeInfinity;
+  for (final h in results) {
+    final v = s.rankScore(h.id);
+    if (v > best) (top, best) = (h.id, v);
+  }
+  return top;
 }
 
 String searchSummary(AppState s) {
@@ -85,6 +99,7 @@ class ExploreScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final results = filtered(s);
+    final top = s.sortBy == 'rec' ? topRanked(s, results) : null;
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     void set(void Function() f) => s.update(f);
     // F21 W2: one search bar, one row of filters; sort lives in Filters.
@@ -154,7 +169,8 @@ class ExploreScreen extends StatelessWidget {
                 ]
                 else ...[
                 // F21 W2: the rank shows once, on the first card.
-                for (final (i, h) in results.indexed) HostelCard(h, first: i == 0 && s.sortBy == 'rec'),
+                // F10: featured hostels come first, so "#1" goes to the best rank among the results.
+                for (final h in results) HostelCard(h, first: h.id == top),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -353,6 +369,7 @@ class HostelCard extends StatelessWidget {
     final best = s.bestQuote(h.id, f: s.fR);
     final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
     final free = s.freeOf(h.id).f;
+    final featured = s.featured(h.id);
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -376,8 +393,9 @@ class HostelCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
-                      if (first)
-                        Positioned(left: 8, top: 8, child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T('#1 near you', s: 13, w: 800, c: p.bg))),
+                      // F10: the 80+ bed plan's featured spot is labelled, never passed off as rank.
+                      if (first || featured)
+                        Positioned(left: 8, top: 8, child: Container(key: featured ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (featured) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
                       Positioned(
                         right: 8,
                         top: 8,
@@ -500,7 +518,7 @@ class HoldsScreen extends StatelessWidget {
               );
             }(),
           // Only about a real ended hold; the demo build may show a sample one.
-          if (s.joinAnswer == null && (s.endedHold != null || AppState.samples))
+          if (s.askJoined)
             Container(
               key: const ValueKey('joinedAsk'),
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -511,13 +529,16 @@ class HoldsScreen extends StatelessWidget {
                 children: [
                   T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
                   T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair.${s.onServer ? ' If you joined, your ₹100 Member reward unlocks once the owner confirms your stay.' : ' A yes unlocks your ₹100 Member reward.'}', s: 13, c: p.mu, lh: 1.4),
+                  // F07 / F24 item 14: Yes / Not yet / Still deciding.
+                  Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes')),
                   Row(
                     children: [
-                      Expanded(child: Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes'))),
+                      Expanded(child: OutlineCta('Not yet', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('not_yet'))),
                       const SizedBox(width: 8),
-                      Expanded(child: OutlineCta('No', icon: 'x', height: 46, fs: 14, onTap: () => s.answerJoined('no'))),
+                      Expanded(child: OutlineCta('Still deciding', icon: 'clock', height: 46, fs: 14, onTap: () => s.answerJoined('deciding'))),
                     ],
                   ),
+                  if (s.onServer) T('Only the Hostelzy team sees your answer, never the owner.', s: 12, c: p.mu, lh: 1.4),
                   Tap(onTap: () => s.update(() => s.sheet = 'report'), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: T('The owner asked me to skip the app ›', s: 13, w: 800, c: p.ad))),
                 ],
               ),
@@ -1451,7 +1472,7 @@ class HoldScreen extends StatelessWidget {
         label: 'Pay to book',
         big: amt,
         line: 'Pay $owner by UPI, then enter the UPI reference. The bed is kept for you meanwhile; it says Booked once $owner sees the money.',
-        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(q.hzFee)} a month')],
+        rows: [if (code != null) ('Booking code', code), ('Rent', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: pay == null ? null : ('Pay $amt by UPI', 'arrow', () => s.payByUpi(pay)),
         alt: pay == null ? null : ('I’ve paid · enter UPI reference', 'chev', () => s.openPayUtr(pay)),
         green: false,
@@ -1460,7 +1481,7 @@ class HoldScreen extends StatelessWidget {
         label: 'Booked',
         big: 'Yours.',
         line: pay?.done != null ? '$owner confirmed $amt on ${pay!.done}. Show ${code ?? 'your booking code'} when you move in.' : 'Advance paid to $owner. Show ${code ?? 'your booking code'} when you move in.',
-        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
+        rows: [('Pay at move-in', '${fmt(q.hzFirst)} first month'), ('Your price is fixed', '${fmt(hold.fixedFee > 0 ? hold.fixedFee : q.hzFee)} a month'), if (code != null) ('Booking code', code), if (hold.perks.isNotEmpty) ('Hostelzy deal', hold.perks.join(' · '))],
         main: ('Moving in · see what to pay', 'arrow', () => s.go('moveIn')),
         alt: ('Directions', 'pin', () => s.directions(i.hh)),
         green: true,

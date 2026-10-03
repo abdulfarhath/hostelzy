@@ -235,6 +235,25 @@ abstract class HostelRepo {
   /// photos, rooms, layouts) for the hostel page and the ranking.
   Future<Map<String, HostelSignals>> signals();
 
+  /// F24 items 20 and 21: per live hostel, its bed count, whether it has the
+  /// featured spot (80+ beds plan) and whether its deals are paused (plan 15+
+  /// days late). Empty before that SQL runs.
+  Future<Map<String, HostelFlags>> flags();
+
+  /// F24 item 17: the hostels where this user is a manager, not the owner
+  /// (plan, deals, rates and Fair Play are the owner's).
+  Future<Set<String>> managedHostels(String uid);
+
+  /// F24 item 9: the owner's "Yes, all free" (every bed of the hostel; the
+  /// server stores its own time) and "All still correct" for the layouts.
+  Future<void> confirmBeds(String hid);
+  Future<void> confirmLayouts(String hid);
+
+  /// F24 item 14: the tenant's "Did you join?" for an ended hold (yes |
+  /// not_yet | deciding), and the holds they already answered. Only the
+  /// Hostelzy team reads the answers.
+  Future<void> answerJoined(String holdId, String answer);
+  Future<Set<String>> joinAnswers();
   /// F24 #25: meter readings for [month] and the month before (staff: their
   /// hostel's; a resident: their own room's), and saving a month's readings
   /// (rooms by number). Throws before the Wave 1 SQL has run.
@@ -279,6 +298,9 @@ const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
 
 /// F24: real counts behind "Usually replies in ~N min" and the ranking.
 typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
+
+/// F24: the featured spot and paused deals, from `hostel_flags()`.
+typedef HostelFlags = ({int beds, bool featured, bool dealsPaused});
 
 String _ymd(DateTime d) => '${d.year}-${'${d.month}'.padLeft(2, '0')}-${'${d.day}'.padLeft(2, '0')}';
 
@@ -482,6 +504,18 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmRefund(String stayKey, bool got) async {}
   @override
   Future<Map<String, HostelSignals>> signals() async => {};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {};
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {};
+  @override
+  Future<void> confirmBeds(String hid) async {}
+  @override
+  Future<void> confirmLayouts(String hid) async {}
+  @override
+  Future<void> answerJoined(String holdId, String answer) async {}
+  @override
+  Future<Set<String>> joinAnswers() async => {};
   @override
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async => working ? null : DateTime.now();
   @override
@@ -956,6 +990,24 @@ class SupabaseRepo implements HostelRepo {
     for (final r in (await db.rpc('hostel_signals') as List).cast<Map<String, dynamic>>())
       r['hostel_id'] as String: (replyMin: r['reply_minutes'] as int? ?? 0, replyN: r['reply_n'] as int? ?? 0, complaints30: r['complaints_30d'] as int? ?? 0, residents: r['residents'] as int? ?? 0, photos: r['photos'] as int? ?? 0, rooms: r['rooms'] as int? ?? 0, layouts: r['layouts'] as int? ?? 0),
   };
+  // Staff may update their beds; the server stamps the time (F24 SQL 4zy1).
+  @override
+  Future<void> confirmBeds(String hid) => db.from('beds').update({'confirmed_at': DateTime.now().toUtc().toIso8601String()}).eq('hostel_id', hid);
+  @override
+  Future<void> confirmLayouts(String hid) => db.rpc('confirm_layouts', params: {'p_hostel': hid});
+  @override
+  Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
+  @override
+  Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
+  @override
+  Future<Map<String, HostelFlags>> flags() async => {
+    for (final r in (await db.rpc('hostel_flags') as List).cast<Map<String, dynamic>>())
+      r['hostel_id'] as String: (beds: r['beds'] as int? ?? 0, featured: r['featured'] == true, dealsPaused: r['deals_paused'] == true),
+  };
+  @override
+  Future<Set<String>> managedHostels(String uid) async => {
+    for (final r in await db.from('hostel_staff').select('hostel_id').eq('user_id', uid).eq('role', 'manager')) r['hostel_id'] as String,
+  };
   @override
   Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {
     final at = await db.rpc('set_item_working', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_working': working});
@@ -1086,6 +1138,9 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           electricityExtra: t['electricityExtra'] as bool? ?? true,
         ),
         live: (h['status'] as String? ?? 'live') == 'live',
+        // F24 item 9: the owner's confirmations, from the server.
+        bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
+        layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),
         visitedOn: h['visited_on'] == null ? '' : () {
           final v = DateTime.parse(h['visited_on'] as String);
           return '${dayMon(v)} ${v.year}';
@@ -1112,6 +1167,16 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
     for (final h in rows) h['id'] as String: [for (final r in ((h['amenities'] as List? ?? const []).cast<Map<String, dynamic>>().toList()..sort((a, b) => (a['created_at'] as String).compareTo(b['created_at'] as String)))) amenityFromRow(r)],
   };
   return (hostels: hs, rooms: rooms, rates: rates, pos: pos, upi: upi, layouts: lays, deals: deals, rules: rules, reviews: reviews, strikes: strikes, checks: checks, amenities: ams);
+}
+
+/// The newest (or [oldest]) of some timestamps; null when there are none.
+DateTime? _latest(List<Object?> ts, {bool oldest = false}) {
+  DateTime? out;
+  for (final t in ts) {
+    final d = t is String ? DateTime.tryParse(t) : null;
+    if (d != null && (out == null || (oldest ? d.isBefore(out) : d.isAfter(out)))) out = d;
+  }
+  return out;
 }
 
 /// A `layouts` row → the app's room layout. Beds are `{"A": [x, y]}` in

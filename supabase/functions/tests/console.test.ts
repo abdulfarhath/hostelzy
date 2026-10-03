@@ -63,3 +63,10 @@ test('layout help: shapes, typed walls, hours left, status', async () => {
   assert.deepEqual(helpStatus({ status: 'drawing', due_at: '2026-10-03T10:00:00Z' }, now), ['Late', 'red']);
   assert.deepEqual(helpStatus({ status: 'sent', due_at: '2026-10-03T10:00:00Z' }, now), ['With owner', 'neutral']);
 });
+
+test('F24 item 14: "Did you join?" answers in words', async () => {
+  // @ts-ignore plain JS module
+  const { joinSummary } = await import('../../../app/console/logic.js');
+  assert.equal(joinSummary([]), 'No answers yet');
+  assert.equal(joinSummary([{ answer: 'yes' }, { answer: 'deciding' }, { answer: 'yes' }, { answer: 'not_yet' }]), 'Joined 2 · Not yet 1 · Still deciding 1');
+});

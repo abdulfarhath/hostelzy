@@ -296,14 +296,12 @@ class PlanBanner extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final inv = s.invoice;
-    if (inv.status == 'paid' || inv.status == 'upcoming' || inv.late < remindAfterDays) return const SizedBox();
+    // F24 item 17: the plan is the owner's; managers don't see it.
+    if (s.managerHere || inv.status == 'paid' || inv.status == 'upcoming' || inv.late < remindAfterDays) return const SizedBox();
     final amt = fmt(s.invoiceAmt);
     final checking = inv.status == 'checking';
-    // The server doesn't pause deals for tenants yet (F24 item 21), so the real
-    // build never says tenants see walk-in prices; only the demo does.
-    final (icon, title, body) = inv.pausesDeals && s.onServer
-        ? ('warn', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UPI reference. Usually within a day.' : 'Pay $amt to keep your deals on. Your listing, holds and residents keep working.')
-        : inv.pausesDeals
+    // F24 item 21: the server pauses the deals for tenants too (hostel_flags).
+    final (icon, title, body) = inv.pausesDeals
         ? ('warn', 'Deals paused: plan ${inv.late} days late', checking ? 'We’re checking your UPI reference. Deals switch back on once it matches our bank record.' : 'Tenants see walk-in prices only. Your listing, holds and residents keep working. Pay $amt to switch deals back on.')
         : ('clock', 'Your Hostelzy plan is ${inv.late} days late', checking ? 'We’re checking your UPI reference. Usually within a day.' : '$amt for ${_monthNames[inv.due.month - 1]}. Pay by ${dayMon(inv.due.add(const Duration(days: pauseAfterDays)))} to keep your deals showing.');
     return Padding(
@@ -450,6 +448,48 @@ class _AdminInvoice extends StatelessWidget {
           if ((i.status == 'due' && i.late > 0) || i.status == 'missing') Cta('Send reminder', icon: 'msg', height: 42, px: 12, fs: 13, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.sendReminder(i)),
         ],
       ),
+    );
+  }
+}
+
+/// F24 item 17 (DECISIONS F14): what a manager sees if they reach the plan,
+/// deals, rates or a Fair Play check (a link, a push, an old screen).
+class OwnerOnlyScreen extends StatelessWidget {
+  const OwnerOnlyScreen(this.what, {super.key});
+  final String what;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hostelById(s.ownHid);
+    void back() => s.update(() {
+      s.hist = [];
+      s.sheet = null;
+      s.screen = 'oMore';
+      s.moreTab = 'home';
+    });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(key: const ValueKey('ownerOnlyBack'), onTap: back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · Manager', title: 'Owner only'))]),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              T('Only the owner can $what.', key: const ValueKey('ownerOnly'), s: 18, w: 800, lh: 1.3),
+              const SizedBox(height: 8),
+              T('You manage ${h.name}: beds, residents, enquiries, complaints, food and room layouts. Ask ${h.owner.isEmpty ? 'the owner' : h.owner} about the Hostelzy plan, deals, rates or Fair Play.', s: 14, c: p.mu, lh: 1.45),
+              const SizedBox(height: 16),
+              OutlineCta('Back to Manage', onTap: back),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
