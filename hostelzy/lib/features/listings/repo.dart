@@ -169,6 +169,14 @@ abstract class HostelRepo {
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout);
   Future<void> undoLayoutPublish(String hid, int room);
 
+  /// F24 item 11: "Ask Hostelzy to draw it" (staff) and the hostel's
+  /// requests, with the team's drawing once sent. Photos go up with
+  /// [uploadFixPhoto]. Publishing the room closes its sent request. The team
+  /// sends a drawing from the app's team mode (or the console).
+  Future<List<ShapeRequest>> shapeRequests(String hid);
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []});
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing);
+
   /// F23: add or change a floor / room amenity (staff or a resident of the
   /// hostel); returns the row id. Residents: at most 20 changes a day.
   Future<String> saveAmenity(Amenity a);
@@ -222,7 +230,34 @@ abstract class HostelRepo {
   /// Hostelzy team reads the answers.
   Future<void> answerJoined(String holdId, String answer);
   Future<Set<String>> joinAnswers();
+
+  /// F24 item 7: a fan, the AC or a window Working / Not working, saved for
+  /// tenants; not working raises a complaint. The complaint's date (null when working).
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working);
+
+  /// F24 item 8: the owner keeps a bed for a walk-in (1 hour); when it ends.
+  Future<DateTime> holdWalkIn(String bedKey);
+  Future<void> releaseWalkIn(String bedKey);
+
+  /// F24 item 22: the Settings switches and the areas the tenant searched,
+  /// kept on the profile (null before that SQL runs).
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid);
+  Future<void> saveNotify(String uid, Map<String, bool> notify);
+  Future<void> saveSearchedAreas(String uid, List<String> areas);
+
+  /// F24 item 29: team mode from the server (team accounts only).
+  Future<void> teamHello();
+  Future<List<TeamMember>> teamMembers();
+  Future<void> inviteTeamMember(String name, String phone, String role);
+  Future<List<Lead>> teamTracker();
+  Future<void> setLeadStage(String hid, int stage);
 }
+
+/// F24 item 29: one person on the Hostelzy team.
+typedef TeamMember = ({String name, String phone, String role, bool joined});
+
+/// The tracker's first four stages as `hostel_leads.stage` has them.
+const leadStages = ['lead', 'visited', 'signed_up', 'data_complete'];
 
 /// F24: real counts behind "Usually replies in ~N min" and the ranking.
 typedef HostelSignals = ({int replyMin, int replyN, int complaints30, int residents, int photos, int rooms, int layouts});
@@ -349,6 +384,15 @@ class SampleRepo implements HostelRepo {
   Future<void> decideLayoutFix(String id, bool approve, {String reason = ''}) async {}
   @override
   Future<void> publishLayout(String hid, int room, Map<String, dynamic> layout) async {}
+
+  @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async => const [];
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) => throw UnsupportedError('sample data');
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) async {}
   @override
   Future<void> undoLayoutPublish(String hid, int room) async {}
 
@@ -406,6 +450,28 @@ class SampleRepo implements HostelRepo {
   Future<void> answerJoined(String holdId, String answer) async {}
   @override
   Future<Set<String>> joinAnswers() async => {};
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async => working ? null : DateTime.now();
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.now().add(const Duration(hours: 1));
+  @override
+  Future<void> releaseWalkIn(String bedKey) async {}
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async => null;
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) async {}
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) async {}
+  @override
+  Future<void> teamHello() async {}
+  @override
+  Future<List<TeamMember>> teamMembers() async => const [];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) async {}
+  @override
+  Future<List<Lead>> teamTracker() async => const [];
+  @override
+  Future<void> setLeadStage(String hid, int stage) async {}
 }
 
 class SupabaseRepo implements HostelRepo {
@@ -654,6 +720,19 @@ class SupabaseRepo implements HostelRepo {
   Future<void> undoLayoutPublish(String hid, int room) => db.rpc('undo_layout_publish', params: {'p_hostel': hid, 'p_room': room});
 
   @override
+  Future<List<ShapeRequest>> shapeRequests(String hid) async {
+    final rows = await db.from('shape_requests').select().eq('hostel_id', hid).order('created_at');
+    return [for (final r in rows) shapeRequestFromRow(r)];
+  }
+
+  @override
+  Future<String> requestShape(String hid, int room, {required String shape, String note = '', double w = 0, double h = 0, List<String> photos = const []}) async =>
+      await db.rpc('request_shape', params: {'p_hostel': hid, 'p_room': room, 'p_shape': shape, 'p_note': note, 'p_w': w, 'p_h': h, 'p_photos': photos}) as String;
+
+  @override
+  Future<void> sendShapeDrawing(String id, Map<String, dynamic> drawing) => db.rpc('send_shape_drawing', params: {'p_id': id, 'p_drawing': drawing});
+
+  @override
   Future<String> saveAmenity(Amenity a) async => await db.rpc('save_amenity', params: {
     'p_hostel': a.hid,
     'p_id': a.key,
@@ -805,6 +884,57 @@ class SupabaseRepo implements HostelRepo {
   Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
   @override
   Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
+  @override
+  Future<DateTime?> setItemWorking(String hid, int room, String item, bool working) async {
+    final at = await db.rpc('set_item_working', params: {'p_hostel': hid, 'p_room': room, 'p_item': item, 'p_working': working});
+    return at == null ? null : DateTime.parse(at as String).toLocal();
+  }
+
+  @override
+  Future<DateTime> holdWalkIn(String bedKey) async => DateTime.parse(await db.rpc('hold_walk_in', params: {'p_bed': bedKey}) as String).toLocal();
+  @override
+  Future<void> releaseWalkIn(String bedKey) => db.rpc('release_walk_in', params: {'p_bed': bedKey});
+  @override
+  Future<({Map<String, bool> notify, List<String> areas})?> loadNotify(String uid) async {
+    final r = await db.from('profiles').select('notify, searched_areas').eq('id', uid).maybeSingle();
+    if (r == null) return null;
+    return (
+      notify: {for (final e in ((r['notify'] as Map?) ?? const {}).entries) if (e.value is bool) e.key as String: e.value as bool},
+      areas: [for (final a in (r['searched_areas'] as List? ?? const [])) a as String],
+    );
+  }
+
+  @override
+  Future<void> saveNotify(String uid, Map<String, bool> notify) => db.from('profiles').update({'notify': notify}).eq('id', uid);
+  @override
+  Future<void> saveSearchedAreas(String uid, List<String> areas) => db.from('profiles').update({'searched_areas': areas}).eq('id', uid);
+  @override
+  Future<void> teamHello() => db.rpc('team_hello');
+  @override
+  Future<List<TeamMember>> teamMembers() async => [
+    for (final r in await db.from('team_members').select().order('created_at'))
+      (name: r['name'] as String? ?? '', phone: r['phone'] as String? ?? '', role: r['role'] as String? ?? 'Everything', joined: r['joined_at'] != null),
+  ];
+  @override
+  Future<void> inviteTeamMember(String name, String phone, String role) => db.from('team_members').insert({'name': name, 'phone': phone, 'role': role});
+  @override
+  Future<List<Lead>> teamTracker() async => [for (final r in (await db.rpc('team_tracker') as List).cast<Map<String, dynamic>>()) leadFromRow(r)];
+  @override
+  Future<void> setLeadStage(String hid, int stage) => db.from('hostel_leads').upsert({'hostel_id': hid, 'stage': leadStages[stage], 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+}
+
+/// F24 item 29: a `team_tracker()` row → the tracker's [Lead]. With no next
+/// step noted, the stage says what comes next.
+Lead leadFromRow(Map<String, dynamic> r) {
+  final stage = (r['stage'] as num?)?.toInt() ?? 0;
+  final trial = r['trial_ends'] == null ? null : DateTime.parse(r['trial_ends'] as String);
+  final note = (r['next_step'] as String? ?? '').trim();
+  final next = stage == 5 && trial != null
+      ? 'Trial ends ${dayMon(trial)}'
+      : note.isNotEmpty
+      ? note
+      : const ['Visit the hostel', 'Sign up the owner', 'Add rooms, rates and photos', 'Go live', 'Start the trial', 'Trial running', 'Paying'][stage.clamp(0, 6)];
+  return Lead(r['name'] as String? ?? '', r['area'] as String? ?? '', next, stage, hid: r['hostel_id'] as String?);
 }
 
 /// Rows from `hostels` (with nested rooms → beds and rate_cards) → app models.
@@ -844,9 +974,9 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
                   state: b['state'] as String? ?? 'free',
                   soon: b['free_from'] == null ? '' : dayMon(DateTime.parse(b['free_from'] as String)),
                   key: b['id'] as String?,
-                ),
+                )..walkInUntil = b['walk_in_until'] == null ? 0 : DateTime.parse(b['walk_in_until'] as String).millisecondsSinceEpoch,
             ],
-          );
+          )..acSince = r['ac_repair_since'] == null ? '' : dayMon(DateTime.parse(r['ac_repair_since'] as String));
         }(),
     ]..sort((a, b) => a.n.compareTo(b.n));
     final rate = <String, int>{for (final c in (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>()) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
@@ -933,8 +1063,27 @@ RoomLayout layoutFromRow(String hid, Map<String, dynamic> r) {
   ];
   final at = DateTime.tryParse(r['updated_at'] as String? ?? '');
   return RoomLayout(hid: hid, room: r['room'] as int, w: n(r['w']).toDouble(), h: n(r['h']).toDouble(), beds: beds, items: items, version: r['version'] as int? ?? 1, drawn: at == null ? '' : dayMon(at), verified: at == null ? '' : dayMon(at))
-    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String});
+    ..bunks.addAll({for (final e in (r['bunks'] as Map? ?? const {}).entries) e.key as String: e.value as String})
+    // F24: rows from before shapes have none: a rectangle.
+    ..shape = r['shape'] as String? ?? 'Rectangle'
+    ..outline = outlineFromJson(r['outline']);
 }
+
+/// F24: a `shape_requests` row → [ShapeRequest].
+ShapeRequest shapeRequestFromRow(Map<String, dynamic> r) => ShapeRequest(
+  id: r['id'] as String,
+  hid: r['hostel_id'] as String,
+  room: r['room'] as int,
+  shape: r['shape'] as String? ?? 'Custom',
+  note: r['note'] as String? ?? '',
+  w: (r['w'] as num? ?? 0).toDouble(),
+  h: (r['h'] as num? ?? 0).toDouble(),
+  photos: [for (final x in (r['photos'] as List? ?? const [])) x as String],
+  status: r['status'] as String? ?? 'requested',
+  at: DateTime.parse(r['created_at'] as String).millisecondsSinceEpoch,
+  drawing: (r['drawing'] as Map?)?.cast<String, dynamic>(),
+  sentAt: r['sent_at'] == null ? null : DateTime.parse(r['sent_at'] as String).millisecondsSinceEpoch,
+);
 
 RemoteSettings settingsFromRows(List<Map<String, dynamic>> rows) {
   final m = {for (final r in rows) r['key'] as String: r['value'] as String? ?? ''};

@@ -18,9 +18,15 @@ mixin _RoomLayoutsData {
   /// Owner (Beds → room layout) and the Hostelzy admin editor: which room.
   int lRoom = 204;
 
-  /// Request-a-change sheet draft.
-  String lReqText = '', lReqLen = '', lReqWid = '';
-  Set<String> lReqAdded = {};
+  /// "Ask Hostelzy to draw it" sheet draft (F24 item 11): what's different,
+  /// the size (W × L ft), the shape and up to 3 photos.
+  String lReqText = '', lReqLen = '', lReqWid = '', lReqShape = 'Custom';
+  List<Uint8List> lReqPhotos = [];
+
+  /// F24: owners' shape requests (this hostel's, from the server; on sample
+  /// data kept here). Photos on sample data stay on this phone, by request.
+  List<ShapeRequest> shapeReqs = [];
+  final Map<String, List<Uint8List>> shapePhotosLocal = {};
 
   /// Admin editor: the selected AC unit's properties.
   final Map<String, String> acProps = {'Wall': 'Right', 'Blows': 'Left', 'Reach': '8 ft', 'Status': 'Working'};
@@ -59,14 +65,39 @@ extension RoomLayoutsActions on AppState {
       'ac' => 'AC unit',
       _ => 'Window',
     };
-    update(() {
-      i.working = ok;
+    void mark(bool v, String since) {
+      i.working = v;
       // Working / not working shows to tenants right away, also on the live copy.
       for (final x in l.published?.items ?? const <LItem>[]) {
-        if (x.id == i.id) x.working = ok;
+        if (x.id == i.id) x.working = v;
       }
-      if (i.kind == 'ac') r.acRepair = !ok;
-      if (!ok) {
+      if (i.kind == 'ac') {
+        r.acRepair = !v;
+        r.acSince = v ? '' : since;
+      }
+    }
+
+    // F24 item 7: on the server it is saved for tenants, and the server
+    // raises (or closes) the hostel's complaint with its real date.
+    if (onServer && !isSeedHostel(l.hid)) {
+      update(() => mark(ok, r.acSince));
+      data.setItemWorking(l.hid, l.room, i.id, ok).then((at) async {
+        if (at != null && i.kind == 'ac') update(() => r.acSince = dayMon(at));
+        toastMsg(ok ? '$name working again. Its complaint is closed.' : '$name marked not working. A complaint is raised.');
+        await refreshLive();
+      }, onError: (Object e) {
+        debugPrint('working: $e');
+        update(() => mark(!ok, ''));
+        toastMsg('$e'.contains('publish this room') ? 'Publish this room’s layout first, then mark it.' : 'Couldn’t save it. Check your internet and try again.');
+      });
+      return;
+    }
+    update(() {
+      mark(ok, dayMon(appToday));
+      final what = '$name in room ${l.room} marked not working.';
+      if (ok) {
+        complaints = [for (final c in complaints) c.text == what && c.status != 'Resolved' ? c.copyWith(status: 'Resolved', note: 'Working again') : c];
+      } else if (!complaints.any((c) => c.text == what && c.status != 'Resolved')) {
         final id = complaints.fold<int>(0, (a, c) => c.id > a ? c.id : a) + 1;
         complaints = [Complaint(id: id, by: 'Layout · ${l.room}', cat: i.kind == 'ac' ? 'AC' : i.kind == 'fan' ? 'Fan' : 'Window', text: '$name in room ${l.room} marked not working.', status: 'Open', date: dayMon(appToday), note: ''), ...complaints];
       }
@@ -84,14 +115,119 @@ extension RoomLayoutsActions on AppState {
     toastMsg('Room ${l.room} layout approved. Tenants see it now.');
   }
 
-  void sendLayoutRequest() {
+  /// F24: the open "Ask Hostelzy to draw it" request for a room, if any.
+  ShapeRequest? shapeReqFor(String hid, int n) => shapeReqs.where((q) => q.hid == hid && q.room == n && q.open).lastOrNull;
+
+  /// F24: the hostel's shape requests from the server. Until the SQL runs
+  /// (or offline) the list stays as it was.
+  Future<void> loadShapeRequests(String hid) async {
+    if (!onServer) return;
+    try {
+      final rs = await data.shapeRequests(hid);
+      update(() => shapeReqs = [...shapeReqs.where((q) => q.hid != hid), ...rs]);
+    } catch (e) {
+      debugPrint('shape requests: $e');
+    }
+  }
+
+  /// "Ask Hostelzy to draw it" for room [lRoom] ([shape]: the one picked, or
+  /// the room's current shape).
+  void openShapeRequest({String? shape}) {
     final l = layoutOf(ownHid, lRoom);
-    if (l == null) return toastMsg('This room has no layout yet.');
-    if (lReqText.trim().isEmpty && lReqAdded.isEmpty) return toastMsg('Say what’s different, or add a photo.');
     update(() {
-      l.request = (text: lReqText.trim(), added: Set.of(lReqAdded), size: lReqLen.isNotEmpty && lReqWid.isNotEmpty ? '$lReqLen × $lReqWid ft' : '', at: '${dayMon(appToday)}, 7:10 pm');
-      sheet = null;
+      lReqText = '';
+      lReqLen = l != null ? '${l.w.round()}' : clLen;
+      lReqWid = l != null ? '${l.h.round()}' : clWid;
+      lReqShape = shape ?? l?.shape ?? 'Custom';
+      lReqPhotos = [];
+      sheet = 'layoutReq';
     });
-    toastMsg('Request saved. WhatsApp us the photos and the Hostelzy team helps.');
+  }
+
+  Future<void> pickShapePhoto() async {
+    if (lReqPhotos.length >= 3) return toastMsg('3 photos is the most.');
+    final raw = await picker.pick();
+    if (raw == null) return;
+    final jpg = prepPhoto(raw, 'free');
+    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    update(() => lReqPhotos = [...lReqPhotos, jpg]);
+  }
+
+  /// Send the request: on the server the team sees it in the console's Layout
+  /// help queue (done within 48 hours); on sample data it waits here.
+  Future<void> sendLayoutRequest() async {
+    final hid = ownHid, n = lRoom;
+    final note = lReqText.trim();
+    if (note.isEmpty && lReqPhotos.isEmpty) return toastMsg('Say what’s different, or add a photo.');
+    final w = double.tryParse(lReqLen) ?? 0, h = double.tryParse(lReqWid) ?? 0;
+    final photos = List.of(lReqPhotos);
+    if (onServer) {
+      try {
+        final paths = [for (final ph in photos) await data.uploadFixPhoto(hid, account!.uid, ph)];
+        await data.requestShape(hid, n, shape: lReqShape, note: note, w: w, h: h, photos: paths);
+      } catch (e) {
+        debugPrint('shape request: $e');
+        return toastMsg('Couldn’t send it. Check your internet and try again.');
+      }
+      await loadShapeRequests(hid);
+    } else {
+      final id = 'sr${DateTime.now().millisecondsSinceEpoch}';
+      if (photos.isNotEmpty) shapePhotosLocal[id] = photos;
+      update(() {
+        for (final q in shapeReqs.where((q) => q.hid == hid && q.room == n && q.open)) {
+          q.status = 'cancelled';
+        }
+        shapeReqs = [...shapeReqs, ShapeRequest(id: id, hid: hid, room: n, shape: lReqShape, note: note, w: w, h: h, photos: [for (var i = 0; i < photos.length; i++) '$id/$i'], at: DateTime.now().millisecondsSinceEpoch)];
+      });
+    }
+    update(() {
+      sheet = null;
+      lReqPhotos = [];
+    });
+    toastMsg('Sent. The Hostelzy team draws it within 48 hours. You get a notification.');
+  }
+
+  /// F24 board oShapeBack: the team's drawing as a layout for room [n] (beds
+  /// and things fitted inside its walls when the team sent only the shape).
+  RoomLayout? drawnLayout(ShapeRequest q) {
+    final d = q.drawing;
+    if (q.status != 'sent' || d == null) return null;
+    final r = rooms[q.hid]?.where((x) => x.n == q.room).firstOrNull;
+    if (r == null) return null;
+    final cur = layoutOf(q.hid, q.room);
+    final l = mkLayout(q.hid, r, street: true)
+      ..version = (cur?.version ?? 0) + (cur?.live ?? false ? 1 : 0)
+      ..live = false
+      ..drawn = dayMon(DateTime.fromMillisecondsSinceEpoch(q.sentAt ?? now));
+    final snap = snapFromJson(d);
+    if ((d['beds'] as Map?)?.isNotEmpty ?? false) {
+      l.restore(snap);
+    } else {
+      if (cur != null) l.restore(cur.snap());
+      l.mirrorTo(snap.w, snap.h);
+      l.setShape(snap.shape, custom: snap.outline);
+      l.fitInside();
+    }
+    if (l.version < 1) l.version = 1;
+    return l;
+  }
+
+  /// "Publish v1": the team's drawing goes live for tenants.
+  void publishDrawn(ShapeRequest q) {
+    final d = drawnLayout(q);
+    if (d == null) return;
+    final cur = layoutOf(q.hid, q.room);
+    update(() {
+      if (cur == null) {
+        (layouts[q.hid] ??= {})[q.room] = d;
+      } else {
+        if (cur.live) cur.published ??= cur.snap();
+        cur.restore(d.snap());
+      }
+      lRoom = q.room;
+      // On the server, publishing the room closes the request.
+      if (!onServer) q.status = 'published';
+    });
+    publishLayout(layoutOf(q.hid, q.room)!);
   }
 }

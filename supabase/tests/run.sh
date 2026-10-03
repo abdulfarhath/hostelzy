@@ -32,6 +32,8 @@ $P -d $DB -f tests/owner_phone_test.sql
 $P -d $DB -f tests/onboard_test.sql
 $P -d $DB -f tests/moves_test.sql
 $P -d $DB -f tests/values_test.sql
+$P -d $DB -f tests/shapes_test.sql
+$P -d $DB -f tests/wave2a_test.sql
 $P -d $DB -f tests/confirm_test.sql
 $P -d $DB -f tests/lockeddeal_test.sql
 $P -d $DB -f tests/joined_test.sql

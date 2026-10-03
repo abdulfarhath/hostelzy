@@ -1285,7 +1285,7 @@ class _PlanMode extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('Room ${r.label}: AC under repair. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('Room ${r.label}: AC under repair.${r.acSince.isEmpty ? '' : ' Complaint raised ${r.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           const SizedBox(height: 12),
           Wrap(

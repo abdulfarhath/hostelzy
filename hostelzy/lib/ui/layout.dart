@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../app_config.dart';
 import '../data.dart';
 import '../state.dart';
 import 'amenities.dart';
@@ -26,7 +25,15 @@ class _RoomPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final k = size.width / l.w;
     Rect sc(Rect r) => Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k);
-    canvas.drawRect(Offset.zero & size, Paint()..color = p.bg);
+    // F24: a shaped room: outside its walls is plain surface, inside the grid.
+    final o = l.outline;
+    final walls = o == null ? null : (Path()..addPolygon([for (final q in o) Offset((q.dx * k).clamp(1, size.width - 1), (q.dy * k).clamp(1, size.height - 1))], true));
+    canvas.drawRect(Offset.zero & size, Paint()..color = walls == null ? p.bg : p.sf);
+    if (walls != null) {
+      canvas.save();
+      canvas.clipPath(walls);
+      canvas.drawRect(Offset.zero & size, Paint()..color = p.bg);
+    }
     final grid = Paint()
       ..color = p.hl
       ..strokeWidth = 1;
@@ -112,10 +119,17 @@ class _RoomPainter extends CustomPainter {
         }
       }
     }
-    canvas.drawRect((Offset.zero & size).deflate(1), ink);
-    // Windows are a bar on their wall, doors a gap in it.
+    if (walls != null) {
+      canvas.restore();
+      canvas.drawPath(walls, ink);
+    } else {
+      canvas.drawRect((Offset.zero & size).deflate(1), ink);
+    }
+    // Windows are a bar on their wall, doors a gap in it. F24: on an inner
+    // wall of a shaped room, where they are drawn.
     Rect onWall(LItem i, double t) {
       final r = sc(i.rect);
+      if (walls != null && wallOf(i.rect, l.w, l.h) == null) return r;
       return switch (wallOf(i.rect, l.w, l.h)) {
         'bottom' => Rect.fromLTWH(r.left, size.height - t, r.width, t),
         'left' => Rect.fromLTWH(0, r.top, t, r.height),
@@ -298,7 +312,7 @@ class LayoutMap extends StatelessWidget {
           handles.add(Positioned.fromRect(rect: r, child: IgnorePointer(child: Container(decoration: BoxDecoration(border: Border.all(color: p.ac, width: 2))))));
         }
         return Semantics(
-          label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet',
+          label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet${l.outline == null ? '' : ', ${l.shape}'}',
           child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(clipBehavior: Clip.hardEdge, children: [...kids, ...labels, ...handles])),
         );
       },
@@ -364,7 +378,7 @@ class RoomMode extends StatelessWidget {
         children: [
           const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from Plan or List, and see the photos.'),
           OutlineCta('Tell me when it’s ready', height: 50, onTap: () => s.toastMsg('Alerts come once the app is online. Check back here for now.')),
-          T('Layouts are drawn by Hostelzy after a visit, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
+          T('Owners draw their rooms and residents correct them, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
     } else {
@@ -374,13 +388,14 @@ class RoomMode extends StatelessWidget {
         children: [
           // F23: the shared things on this floor, above the plan.
           FloorStrip(hid: h.id, floor: room.floor),
-          // F22 Area 1: fan reach and AC airflow are always drawn.
+          // F24 item 10 (DECISIONS F12): fans and the AC show as icons; their
+          // reach and airflow only when that layer is on (off by default).
           LayoutMap(
             l: l,
             room: room,
             focus: focus,
-            fan: true,
-            ac: true,
+            fan: s.showFan,
+            ac: s.showAc,
             onPick: (k) {
               final b = room.beds.firstWhere((x) => x.letter == k);
               s.update(() {
@@ -391,7 +406,7 @@ class RoomMode extends StatelessWidget {
           ),
           Row(
             children: [
-              Expanded(child: T('${l.w.round()} × ${l.h.round()} ft', s: 12, c: p.mu)),
+              Expanded(child: T('${l.w.round()} × ${l.h.round()} ft${l.outline == null ? '' : ' · ${l.shape}'}', s: 12, c: p.mu)),
               // F19: residents' approved fixes; their names are never shown.
               if (ck != null)
                 Row(mainAxisSize: MainAxisSize.min, children: [Ic('shieldOk', size: 14, color: p.tx), const SizedBox(width: 4), T(ck, s: 12, w: 800)])
@@ -399,6 +414,7 @@ class RoomMode extends StatelessWidget {
                 T(AppState.samples ? 'Sample layout' : 'Layout v${l.version}', s: 12, c: p.mu),
             ],
           ),
+          LayerChips(l: l),
           if (fb != null)
             Container(
               key: const ValueKey('bedFacts'),
@@ -481,11 +497,44 @@ class RoomMode extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               color: p.ab,
-              child: T('AC under repair. The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
+              child: T('AC under repair.${room.acSince.isEmpty ? '' : ' Complaint raised ${room.acSince}.'} The owner is fixing it.', s: 12, w: 600, c: p.ad, lh: 1.4),
             ),
           body,
         ],
       ),
+    );
+  }
+}
+
+/// F24 item 10 (board roomLayersOn): "Show: Fan reach · AC airflow". Both
+/// start off; then fans and the AC are icons with labels only.
+class LayerChips extends StatelessWidget {
+  const LayerChips({super.key, required this.l});
+  final RoomLayout l;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final fans = l.of('fan').isNotEmpty, ac = l.ac != null;
+    if (!fans && !ac) return const SizedBox();
+    Widget chip(String t, bool on, VoidCallback tap, Key key) => Tap(
+      key: key,
+      onTap: tap,
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: box(bg: on ? p.tx : transparent, w: 2, c: on ? p.tx : p.dv),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [if (on) ...[Ic('check', size: 14, color: p.bg), const SizedBox(width: 6)], T(t, s: 13, w: 800, c: on ? p.bg : p.tx)]),
+      ),
+    );
+    return Row(
+      children: [
+        const Kicker('Show'),
+        const SizedBox(width: 8),
+        if (fans) chip('Fan reach', s.showFan, () => s.update(() => s.showFan = !s.showFan), const ValueKey('layerFan')),
+        if (fans && ac) const SizedBox(width: 6),
+        if (ac) chip('AC airflow', s.showAc, () => s.update(() => s.showAc = !s.showAc), const ValueKey('layerAc')),
+      ],
     );
   }
 }
@@ -700,10 +749,16 @@ class OwnerLayoutScreen extends StatelessWidget {
     final h = hostelById(s.ownHid);
     final room = s.rooms[h.id]!.firstWhere((r) => r.n == s.lRoom);
     final l = s.layoutOf(h.id, room.n);
-    final (stText, stBg, stFg) = l == null
+    // F24 item 11: an "Ask Hostelzy to draw it" request, and the team's
+    // drawing once it comes back (board oShapeBack).
+    final q = s.shapeReqFor(h.id, room.n);
+    final drawn = q == null ? null : s.drawnLayout(q);
+    final (stText, stBg, stFg) = drawn != null
+        ? ('Hostelzy drew a new version · check and publish', p.tx, p.bg)
+        : q != null
+        ? ('Asked Hostelzy · ${hoursLeft(q.due, DateTime.now().millisecondsSinceEpoch)} · done within 48 h', p.ab, p.ad)
+        : l == null
         ? ('No layout yet', p.ab, p.ad)
-        : l.request != null
-        ? ('Help requested · WhatsApp us the photos', p.ab, p.ad)
         : l.pending
         ? ('Hostelzy drew a new version · check and publish', p.ab, p.ad)
         : !l.live
@@ -711,6 +766,12 @@ class OwnerLayoutScreen extends StatelessWidget {
         : l.published != null
         ? ('Live · you have changes not published', p.sf, p.tx)
         : ('Live for tenants', p.tx, p.bg);
+    String at(int ms) {
+      final d = DateTime.fromMillisecondsSinceEpoch(ms);
+      return '${dayMon(d)}, ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    }
+
+    final shown = drawn ?? l;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -727,14 +788,36 @@ class OwnerLayoutScreen extends StatelessWidget {
                 gap: 10,
                 children: [
                   Container(
+                    key: const ValueKey('layoutStatus'),
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                     color: stBg,
-                    child: Row(children: [Expanded(child: T(stText, s: 13, w: 800, c: stFg)), if (l != null) T('v${l.version} · drawn ${l.drawn}', s: 13, w: 600, c: stFg)]),
+                    child: Row(children: [Expanded(child: T(stText, s: 13, w: 800, c: stFg)), if (l != null && drawn == null) T('v${l.version} · drawn ${l.drawn}', s: 13, w: 600, c: stFg)]),
                   ),
-                  if (l == null)
-                    const LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'Draw it yourself in a few minutes and publish it, or ask the Hostelzy team to draw it for you, free.')
-                  else ...[
-                    LayoutMap(l: l, room: room, mode: 'plain', fan: true, ac: true),
+                  if (shown == null)
+                    q != null
+                        ? LayoutEmpty(icon: 'pencil', head: 'Hostelzy is drawing it', body: 'You asked on ${at(q.at)}${q.w > 0 && q.h > 0 ? ' · ${q.shape} · ${q.w.round()} × ${q.h.round()} ft' : ''}. Done within 48 hours; you get a notification.')
+                        : const LayoutEmpty(icon: 'pencil', head: 'No layout yet', body: 'Draw it yourself in a few minutes and publish it, or ask the Hostelzy team to draw it for you, free.')
+                  else if (drawn != null) ...[
+                    LayoutMap(l: drawn, room: room, mode: 'plain', fan: true, ac: true),
+                    Row(
+                      children: [
+                        Expanded(child: T('${drawn.w.round()} × ${drawn.h.round()} ft · ${drawn.shape} · ${room.share} sharing', s: 12, c: p.mu)),
+                        T('v${drawn.version} · drawn by Hostelzy, ${drawn.drawn}', s: 12, c: p.mu),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      color: p.sf,
+                      child: T('You asked on ${at(q!.at)}.${q.sentAt != null ? ' Drawn in ${((q.sentAt! - q.at) / 3600000).ceil()} hours.' : ''} Check the beds, fan and window, then publish. Tenants see it straight away.', s: 13, lh: 1.45),
+                    ),
+                  ] else ...[
+                    LayoutMap(l: l!, room: room, mode: 'plain', fan: true, ac: true),
+                    if (q != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        color: p.sf,
+                        child: T('You asked Hostelzy on ${at(q.at)}${q.note.isEmpty ? '' : ': “${q.note}”'}. Tenants keep seeing this layout until you publish the new one.', s: 13, lh: 1.45),
+                      ),
                     Container(
                       decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
                       child: Column(
@@ -771,31 +854,45 @@ class OwnerLayoutScreen extends StatelessWidget {
           ),
         ),
         // F18 (DECISIONS 2026-10-02): the owner edits and publishes; Hostelzy helps if asked.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: l == null
-                    ? Cta('Create a layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.ownerLayout(room.n))
-                    : l.pending
-                    ? Cta('Publish v${l.version}', icon: 'check', height: 52, px: 16, fs: 15, onTap: () => s.approveLayout(l))
-                    : Cta('Edit layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.openLayout(room.n, editor: true, owner: true)),
-              ),
-              const SizedBox(width: 8),
-              Tap(
-                onTap: l == null ? () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the layout of room ${room.label} at ${h.name}.') : s.openLayoutRequest,
-                child: Container(height: 52, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('Ask Hostelzy', w: 800, s: 15)),
-              ),
-            ],
+        if (drawn != null)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
+            child: VGap(
+              gap: 8,
+              children: [
+                Cta('Publish v${drawn.version}', icon: 'check', key: const ValueKey('publishDrawn'), height: 54, px: 16, fs: 15, onTap: () => s.publishDrawn(q!)),
+                OutlineCta('Ask Hostelzy to change it', icon: 'msg', onTap: () => s.openShapeRequest(shape: q!.shape)),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: l == null
+                      ? Cta('Create a layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.ownerLayout(room.n, create: true))
+                      : l.pending
+                      ? Cta('Publish v${l.version}', icon: 'check', height: 52, px: 16, fs: 15, onTap: () => s.approveLayout(l))
+                      : Cta('Edit layout', icon: 'pencil', height: 52, px: 16, fs: 15, onTap: () => s.openLayout(room.n, editor: true, owner: true)),
+                ),
+                const SizedBox(width: 8),
+                Tap(
+                  onTap: s.openLayoutRequest,
+                  child: Container(height: 52, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const T('Ask Hostelzy', w: 800, s: 15)),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
 }
 
-/// Board 5: request a layout change (sheet).
+/// F24 board oShapeReq: "Ask Hostelzy to draw it" (sheet). Saved in the
+/// app; the team draws it within 48 hours and sends it back to publish.
 class LayoutRequestSheet extends StatelessWidget {
   const LayoutRequestSheet({super.key});
   @override
@@ -807,18 +904,34 @@ class LayoutRequestSheet extends StatelessWidget {
       child: VGap(
         gap: 12,
         children: [
-          VGap(gap: 6, children: [const T('What’s different?', w: 800, s: 13), Field(value: s.lReqText, maxLines: 3, height: null, placeholder: 'Bed C is against the washroom wall, not near the door.', onChanged: (v) => s.update(() => s.lReqText = v))]),
-          // F18 (F15): photos go over WhatsApp until uploads come with the backend.
-          OutlineCta('Send photos or a sketch on WhatsApp', icon: 'msg', height: 48, fs: 14, onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, photos for the layout of room ${s.lRoom} at ${hostelById(s.ownHid).name}:')),
+          VGap(gap: 6, children: [const T('What’s different?', w: 800, s: 13), Field(key: const ValueKey('lReqText'), value: s.lReqText, maxLines: 3, height: null, placeholder: 'Bed C is against the washroom wall, not near the door.', onChanged: (v) => s.update(() => s.lReqText = v))]),
+          VGap(gap: 6, children: [
+            const T('Shape', w: 800, s: 13),
+            Wrap(spacing: 6, runSpacing: 6, children: [for (final sh in layoutShapes) ChipBtn(sh, on: s.lReqShape == sh, onTap: () => s.update(() => s.lReqShape = sh))]),
+          ]),
+          // Photos or a paper sketch: up to 3, private to the owner and the team.
           Row(
             children: [
-              Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(value: s.lReqLen, numeric: true, placeholder: '18', onChanged: (v) => s.update(() => s.lReqLen = v.replaceAll(RegExp(r'\D'), '')))])),
-              const SizedBox(width: 8),
-              Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(value: s.lReqWid, numeric: true, placeholder: '15', onChanged: (v) => s.update(() => s.lReqWid = v.replaceAll(RegExp(r'\D'), '')))])),
+              for (var i = 0; i < s.lReqPhotos.length; i++) ...[
+                Tap(
+                  onTap: () => s.update(() => s.lReqPhotos = [...s.lReqPhotos]..removeAt(i)),
+                  child: Container(width: 64, height: 48, decoration: box(bg: p.sf, w: 2, c: p.tx), child: Image.memory(s.lReqPhotos[i], fit: BoxFit.cover)),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (s.lReqPhotos.length < 3)
+                Expanded(child: OutlineCta(s.lReqPhotos.isEmpty ? 'Add photos or a sketch' : 'Add another', key: const ValueKey('shapePhoto'), icon: 'camera', height: 48, fs: 14, onTap: s.pickShapePhoto)),
             ],
           ),
-          T('Free. You can also change it yourself in the layout editor and publish. Tenants keep seeing the current layout until then.', s: 12, c: p.mu, lh: 1.45),
-          Cta('Send request', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
+          Row(
+            children: [
+              Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(value: s.lReqLen, numeric: true, placeholder: '14', onChanged: (v) => s.update(() => s.lReqLen = v.replaceAll(RegExp(r'\D'), '')))])),
+              const SizedBox(width: 8),
+              Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(value: s.lReqWid, numeric: true, placeholder: '12', onChanged: (v) => s.update(() => s.lReqWid = v.replaceAll(RegExp(r'\D'), '')))])),
+            ],
+          ),
+          T('Free. The Hostelzy team draws it within 48 hours. Tenants keep seeing the current layout.', s: 12, c: p.mu, lh: 1.45),
+          Cta('Send request', icon: 'arrow', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
         ],
       ),
     );
@@ -851,6 +964,8 @@ class AdminLayoutScreen extends StatelessWidget {
       if (room.ac) (l.ac != null, l.ac != null ? 'AC room has an AC unit' : 'AC room needs an AC unit') else (true, 'Non-AC room · no AC unit needed'),
       (l.beds.length == room.share, '${l.beds.length} beds placed · ${room.share} sharing'),
       (l.window == null || l.window!.facing != null, 'Window facing: ${l.window?.facing ?? 'no window'}'),
+      // F24: beds and things inside the room's shape.
+      if (l.outline != null) wallsCheck(l, room.label),
       (true, 'No gates, CCTV or exits drawn'),
     ];
     Widget sq(String icon, VoidCallback on, {String? label, Key? key}) => Tap(
@@ -869,7 +984,8 @@ class AdminLayoutScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: VGap(gap: 8, children: [Kicker(t), ...kids]),
     );
-    final req = l.request;
+    // F24: the owner's "Ask Hostelzy to draw it" request for this room.
+    final req = s.shapeReqFor(h.id, room.n);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -954,14 +1070,10 @@ class AdminLayoutScreen extends StatelessWidget {
                     section('Window faces', [Seg(opts: const [('street', 'Street'), ('courtyard', 'Courtyard'), ('building', 'Building')], cur: selItem!.facing ?? 'street', onPick: (v) => s.update(() => selItem.facing = v), center: true)]),
                   if (selItem != null && const ['fan', 'ac', 'window'].contains(selItem.kind))
                     section('Status', [Seg(opts: const [('ok', 'Working'), ('bad', 'Not working')], cur: selItem.working ? 'ok' : 'bad', onPick: (v) => s.setWorking(l, selItem, v == 'ok'), center: true)]),
-                  section('Room size · ${l.w.round()} × ${l.h.round()} ft', [
-                    Row(
-                      children: [
-                        Expanded(child: Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1', key: const ValueKey('w-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1', key: const ValueKey('w+'))])),
-                        const SizedBox(width: 16),
-                        Expanded(child: Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1', key: const ValueKey('h-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1', key: const ValueKey('h+'))])),
-                      ],
-                    ),
+                  section('Room size · ${l.w.round()} × ${l.h.round()} ft${l.outline == null ? '' : ' · ${l.shape}'}', [
+                    // One row each, so the buttons fit a 390-wide phone.
+                    Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1', key: const ValueKey('w-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1', key: const ValueKey('w+'))]),
+                    Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1', key: const ValueKey('h-')), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1', key: const ValueKey('h+'))]),
                     Wrap(spacing: 6, runSpacing: 6, children: [
                       ChipBtn(sel != null && sel.startsWith('bed:') && (l.bunks.containsKey(sel.substring(4)) || l.upperOn(sel.substring(4)) != null) ? 'Unstack bunk' : 'Stack as bunk', on: false, onTap: () => s.edBunk(l, room)),
                       ChipBtn('Copy to same rooms', on: false, onTap: () => s.copyToSameRooms(l, room)),
@@ -1003,10 +1115,10 @@ class AdminLayoutScreen extends StatelessWidget {
                         child: VGap(
                           gap: 4,
                           children: [
-                            T('The owner asked for help', w: 800, s: 14, c: p.ad),
-                            T('${h.owner} · ${req.at}', s: 12, c: p.mu),
-                            if (req.text.isNotEmpty) T('“${req.text}”', s: 14, w: 600, lh: 1.4),
-                            T([for (final a in req.added) const {'photo': 'Room photo', 'sketch': 'Paper sketch', 'voice': 'Voice note 0:18', 'more': 'More photos'}[a], if (req.size.isNotEmpty) req.size].join(' · '), s: 12, c: p.mu),
+                            T(req.status == 'sent' ? 'Sent to ${h.owner} · waiting for them to publish' : 'Draw within 48 hours · ${hoursLeft(req.due, DateTime.now().millisecondsSinceEpoch)}', w: 800, s: 14, c: p.ad),
+                            T('${h.owner} · ${req.shape}${req.w > 0 && req.h > 0 ? ' · ${req.w.round()} × ${req.h.round()} ft' : ''}', s: 12, c: p.mu),
+                            if (req.note.isNotEmpty) T('“${req.note}”', s: 14, w: 600, lh: 1.4),
+                            if (req.photos.isNotEmpty) T('${req.photos.length} ${req.photos.length == 1 ? 'photo' : 'photos'} · in the team console', s: 12, c: p.mu),
                           ],
                         ),
                       ),
@@ -1061,6 +1173,38 @@ class ConfirmLayoutsCard extends StatelessWidget {
   }
 }
 
+/// F24 board oShape: a shape tile's little outline.
+class ShapeIconPainter extends CustomPainter {
+  ShapeIconPainter(this.shape, this.color);
+  final String shape;
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ink = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final box = Rect.fromLTRB(4, 4, size.width - 4, size.height - 4);
+    if (shape == 'Custom') {
+      canvas.drawPath(
+        Path()
+          ..moveTo(box.left + 4, box.top + 2)
+          ..cubicTo(box.left + 14, box.top - 4, box.right, box.top + 6, box.right - 2, box.center.dy)
+          ..cubicTo(box.right - 4, box.bottom, box.left + 10, box.bottom + 2, box.left, box.center.dy + 4)
+          ..close(),
+        ink,
+      );
+      return;
+    }
+    final o = shapeOutline(shape, box.width, box.height);
+    if (o == null) return canvas.drawRect(box, ink);
+    canvas.drawPath(Path()..addPolygon([for (final q in o) q + box.topLeft], true), ink);
+  }
+
+  @override
+  bool shouldRepaint(ShapeIconPainter o) => o.shape != shape || o.color != color;
+}
+
 /// F18 design "Create": a room with no layout yet.
 class CreateLayoutScreen extends StatelessWidget {
   const CreateLayoutScreen({super.key});
@@ -1086,12 +1230,41 @@ class CreateLayoutScreen extends StatelessWidget {
                 gap: 14,
                 children: [
                   T('Room ${room.label} has no layout yet. Tenants see “Layout coming soon” until you publish one.', s: 14, c: p.mu, lh: 1.5),
-                  const T('Room size', w: 800, s: 13),
+                  // F24 item 11 (board oShape): pick the room's shape first.
+                  const T('Room shape', w: 800, s: 13),
+                  GridView.count(
+                    crossAxisCount: 4,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    childAspectRatio: .95,
+                    children: [
+                      for (final sh in layoutShapes)
+                        Tap(
+                          key: ValueKey('shape-$sh'),
+                          // Custom: the Hostelzy team draws it (48 h).
+                          onTap: () => sh == 'Custom' ? s.openShapeRequest(shape: 'Custom') : s.update(() => s.clShape = sh),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            decoration: box(bg: s.clShape == sh ? p.ab : transparent, w: s.clShape == sh ? 2 : 1, c: s.clShape == sh ? p.ac : p.dv),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(width: 44, height: 36, child: CustomPaint(painter: ShapeIconPainter(sh, p.tx))),
+                                const SizedBox(height: 4),
+                                FittedBox(fit: BoxFit.scaleDown, child: T(sh, s: 12, w: 800, nowrap: true)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   Row(
                     children: [
-                      Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(key: const ValueKey('clLen'), value: s.clLen, numeric: true, onChanged: (v) => s.update(() => s.clLen = v.replaceAll(RegExp(r'\D'), '')))])),
+                      Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(key: const ValueKey('clLen'), value: s.clLen, numeric: true, onChanged: (v) => s.update(() => s.clLen = v.replaceAll(RegExp(r'\D'), '')))])),
                       const SizedBox(width: 10),
-                      Expanded(child: VGap(gap: 6, children: [const T('Width (ft)', w: 800, s: 13), Field(key: const ValueKey('clWid'), value: s.clWid, numeric: true, onChanged: (v) => s.update(() => s.clWid = v.replaceAll(RegExp(r'\D'), '')))])),
+                      Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(key: const ValueKey('clWid'), value: s.clWid, numeric: true, onChanged: (v) => s.update(() => s.clWid = v.replaceAll(RegExp(r'\D'), '')))])),
                     ],
                   ),
                   if (src != null)
@@ -1109,14 +1282,13 @@ class CreateLayoutScreen extends StatelessWidget {
                       ),
                     ),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                     color: p.sf,
                     child: VGap(
                       gap: 6,
                       children: [
-                        const T('Room not a rectangle?', w: 800, s: 14),
-                        T('Send a photo and a sketch of its shape; the Hostelzy team draws the shape within 48 hours, free. You place the beds and items.', s: 13, c: p.mu, lh: 1.4),
-                        Tap(onTap: () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, please draw the shape of room ${room.label} at ${h.name}. I’ll send a photo and a sketch.'), child: T('Ask Hostelzy to draw the shape', w: 800, s: 14, c: p.ad)),
+                        Rich([sp(context, 'Not on the list, or no time? ', w: 800), sp(context, 'Tap Custom. Send a photo and a sketch; the Hostelzy team draws it within 48 hours, free.')], s: 13, lh: 1.45),
+                        Tap(key: const ValueKey('askHostelzy'), onTap: () => s.openShapeRequest(shape: s.clShape), child: T('Ask Hostelzy to draw it', w: 800, s: 14, c: p.ad)),
                       ],
                     ),
                   ),
@@ -1129,7 +1301,7 @@ class CreateLayoutScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-          child: Cta('Start drawing', height: 54, px: 16, fs: 15, onTap: s.createLayout),
+          child: Cta(s.clShape == 'Rectangle' ? 'Start drawing' : 'Start drawing · ${s.clShape}', key: const ValueKey('startDrawing'), height: 54, px: 16, fs: 15, onTap: s.createLayout),
         ),
       ],
     );
