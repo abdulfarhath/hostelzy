@@ -274,6 +274,10 @@ abstract class HostelRepo {
   Future<void> confirmBeds(String hid);
   Future<void> confirmLayouts(String hid);
 
+  /// F24 Wave 4d (F03): the owner's "Rates still right" (every rate card of
+  /// the hostel; the server stores its own time). Owner only.
+  Future<void> confirmRates(String hid);
+
   /// F24 item 14: the tenant's "Did you join?" for an ended hold (yes |
   /// not_yet | deciding), and the holds they already answered. Only the
   /// Hostelzy team reads the answers.
@@ -553,6 +557,8 @@ class SampleRepo implements HostelRepo {
   Future<void> confirmBeds(String hid) async {}
   @override
   Future<void> confirmLayouts(String hid) async {}
+  @override
+  Future<void> confirmRates(String hid) async {}
   @override
   Future<void> answerJoined(String holdId, String answer) async {}
   @override
@@ -1102,6 +1108,8 @@ class SupabaseRepo implements HostelRepo {
   @override
   Future<void> confirmLayouts(String hid) => db.rpc('confirm_layouts', params: {'p_hostel': hid});
   @override
+  Future<void> confirmRates(String hid) => db.rpc('confirm_rates', params: {'p_hostel': hid});
+  @override
   Future<void> answerJoined(String holdId, String answer) => db.rpc('answer_joined', params: {'p_hold': holdId, 'p_answer': answer});
   @override
   Future<Set<String>> joinAnswers() async => {for (final r in await db.from('join_answers').select('hold_id')) r['hold_id'] as String};
@@ -1212,7 +1220,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           )..acSince = r['ac_repair_since'] == null ? '' : dayMon(DateTime.parse(r['ac_repair_since'] as String));
         }(),
     ]..sort((a, b) => a.n.compareTo(b.n));
-    final rate = <String, int>{for (final c in (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>()) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    final cards = (h['rate_cards'] as List? ?? const []).cast<Map<String, dynamic>>();
+    final rate = <String, int>{for (final c in cards) rateKey(c['ac'] as bool, c['share'] as int): c['rent'] as int};
+    // F24 Wave 4d: the oldest card's confirmation (a card never confirmed: none).
+    final ratesTracked = cards.isNotEmpty && cards.every((c) => c.containsKey('confirmed_at'));
+    final ratesAt = ratesTracked && cards.every((c) => c['confirmed_at'] != null) ? _latest([for (final c in cards) c['confirmed_at']], oldest: true) : null;
     final prices = [...rate.values, ...rs.map((r) => r.rent)];
     final t = (h['terms'] as Map?)?.cast<String, dynamic>() ?? const {};
     final area = h['area'] as String;
@@ -1248,6 +1260,8 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
         // F24 item 9: the owner's confirmations, from the server.
         bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
         layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),
+        ratesCheckedAt: ratesAt,
+        ratesTracked: ratesTracked,
         visitedOn: h['visited_on'] == null ? '' : () {
           final v = DateTime.parse(h['visited_on'] as String);
           return '${dayMon(v)} ${v.year}';

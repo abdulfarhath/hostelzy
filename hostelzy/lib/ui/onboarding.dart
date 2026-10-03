@@ -986,6 +986,56 @@ class FreeBedsCard extends StatelessWidget {
   }
 }
 
+/// F03 (F24 Wave 4d): "Are your rates still right?" on owner Today, monthly.
+/// Owner only (rates are the owner's, Wave 3a).
+class RatesConfirmCard extends StatelessWidget {
+  const RatesConfirmCard({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final hid = s.ownHid;
+    if (!s.needsRatesConfirm(hid)) return const SizedBox();
+    final at = s.ratesConfirmedAt[hid];
+    final rc = s.rates[hid] ?? const <String, int>{};
+    final keys = rc.keys.toList()..sort((a, b) => (a.startsWith('ac') ? 1 : 0).compareTo(b.startsWith('ac') ? 1 : 0));
+    return Container(
+      key: const ValueKey('ratesCard'),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: box(w: 2, c: p.tx),
+      child: VGap(
+        gap: 8,
+        children: [
+          const T('Are your rates still right?', w: 800, s: 18),
+          T(at == null ? 'Not confirmed yet. Tenants see the date you last confirmed them.' : 'Last confirmed ${dayMon(at.toLocal())}. Tenants see the date you last confirmed them.', s: 13, c: p.mu, lh: 1.4),
+          if (keys.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final k in keys)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    decoration: box(w: 1, c: p.tx),
+                    child: T('${k.replaceFirst(RegExp('^(ac|non)'), '')} sharing ${k.startsWith('ac') ? 'AC' : 'non-AC'} · ${fmt(rc[k]!)}', s: 12, w: 800),
+                  ),
+              ],
+            ),
+          Row(
+            children: [
+              Expanded(child: Cta('Rates still right', icon: 'check', height: 46, px: 12, fs: 14, onTap: () => s.confirmRates(hid))),
+              const SizedBox(width: 8),
+              Cta('Change', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: s.openRates),
+            ],
+          ),
+          T('Not confirmed for a month: tenants see “Not confirmed in over a month” on your prices.', s: 12, c: p.mu, lh: 1.4),
+        ],
+      ),
+    );
+  }
+}
+
 /// Board 9: hostel switcher (sheet from the hostel name on Today).
 class SwitchSheet extends StatelessWidget {
   const SwitchSheet({super.key});

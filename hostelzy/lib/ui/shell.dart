@@ -806,7 +806,7 @@ class _SearchSheet extends StatelessWidget {
       child: VGap(
         gap: 18,
         children: [
-          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
+          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('deals', 'Best deals'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
           group('For', Seg(opts: const [('Any', 'Anyone'), ('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad, center: true)),
           group(
             'Room',
