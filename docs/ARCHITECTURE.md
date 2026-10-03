@@ -90,12 +90,14 @@ Other folders: `supabase/migrations/` (schema, RLS, RPCs, jobs; applied in file-
 ## 5. How to add a migration
 
 1. New file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`, later than every existing one. Make it
-   re-runnable (`if not exists`, `create or replace`, `drop policy if exists`). RLS on every new table;
+   re-runnable (`if not exists`, `create or replace`, `drop policy if exists`; `drop function` first when a
+   function's return type changes). RLS on every new table;
    `security definer set search_path = ''` for functions; `grant execute` only to who needs it.
 2. Add `supabase/tests/<name>_test.sql` (use `test.act`, `test.rows`, `test.eq`, `test.fails`, `test.blocked`;
    unique fixture ids) and append it to `supabase/tests/run.sh`.
-3. Add a FOUNDER-TODO step in run order (label after the last one): "Supabase → SQL Editor → paste
-   `supabase/migrations/<file>` → **Run** → "Success". What it does. Until it runs, what the app does."
+3. Run `tools/sql-bundle.sh` and `tools/sql-bundle.sh --full` and commit both files in `docs/sql/`
+   (`run.sh` checks that `run-all-pending.sql` runs twice on one database). Add a FOUNDER-TODO step in run
+   order: "re-run `docs/sql/run-all-pending.sql`", plus what it does and what the app does until it runs.
 4. The app must keep working before the founder runs it: catch the missing function/column
    (`_missingFn` in `supabase_repo.dart`) and fall back or say it couldn't save.
 
