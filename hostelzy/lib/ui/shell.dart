@@ -1344,6 +1344,8 @@ class _BedSheet extends StatelessWidget {
     // F22 Area 3 (board `bedSheet`): who's in it, the room, the rent, since
     // when and how they came; then one main action.
     final via = res == null ? null : residentTag(p, res.tag).label.toLowerCase();
+    // F24 item 13: the deal the tenant booked with, locked on the server.
+    final deal = res != null && res.perks.isNotEmpty ? res.perks : s.holds.where((h) => h.hid == s.ownHid && h.bed == b.id && h.status != 'released' && h.perks.isNotEmpty).firstOrNull?.perks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1353,6 +1355,7 @@ class _BedSheet extends StatelessWidget {
         KV('Rent', '${fmt(r.rent)} a month', keyWidth: 110),
         if (res != null) KV('Since', [res.since.replaceFirst('Joined ', '').replaceFirst('Added ', ''), ?via].join(' · '), keyWidth: 110),
         KV('Advance', '${fmt(terms.advance)} · ${fmt(terms.maintenance)} kept on exit', keyWidth: 110),
+        if (deal != null) KV('Hostelzy deal', 'Price fixed · ${deal.join(' · ')}', keyWidth: 110),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
           child: VGap(
