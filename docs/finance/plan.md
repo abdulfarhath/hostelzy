@@ -20,6 +20,33 @@ The ₹40k was the founder's **salary**, not a Hostelzy budget (my earlier readi
 | **Left each month** | **15,000** |
 | Savings today | 15,000 |
 
+### Where you pay, and how much (founder, 2026-10-04: "Claude is free for me… I'll pay Play Store and Supabase… okay to lose all my money")
+
+Claude costs ₹0, so AI tokens drop out. The founder accepts the risk of losing the money; the
+recommendation to keep the ₹15,000 savings untouched still stands, but it's the founder's call.
+
+| # | What | Where (pay with an international-enabled debit/credit card) | How much | When |
+|---|---|---|---|---|
+| 1 | **Google Play Console** | play.google.com/console → sign in with the Hostelzy Google account → Personal account → pay $25 | **$25 once ≈ ₹2,400** (up to ₹2,900 if the bank adds GST + forex fee) | **This week** (the 14-day closed test can't start before it) |
+| 2 | **Supabase Pro** | supabase.com/dashboard → your organization → **Billing** → **Upgrade to Pro** → add card. Keep **Spend cap ON** (no surprise bills) and the project on **Micro** compute (covered by the plan's $10 credit) | **$25 a month ≈ ₹2,400–2,900** | **Before the first real hostel goes live** (aim: this week); daily backups start then |
+| 3 | Posters / QR stickers | Local print shop near Ameerpet, UPI | ~₹150 per hostel, **≤ ₹1,500 a month** | As hostels join |
+| 4 | Travel + tea for owner visits | Metro / bus / petrol | **≤ ₹2,000 a month** | Visit weeks |
+| 5 | Partners | UPI on the 5th of each month (Partners tab) | ₹20 per valid hold, **≤ ₹1,000 a month** for all; ₹200 per paying owner (paid from that owner's payment) | Monthly |
+| 6 | Cash referral rewards | UPI (Rewards tab) | **≤ ₹1,000 a month** | Monthly |
+| – | Not now | hostelzy.in (~₹800/yr), Firebase Blaze SMS, GitHub Pro, ads | ₹0 | Later, from Hostelzy's own revenue |
+
+**Total:** October ≈ **₹9,500** (Play + Supabase + posters + travel). From November ≈ **₹6,000–10,000** a month,
+and the owners' payments start covering it: with 20 hostels you're done paying in by **December**, having put in
+about **₹10,000** in total.
+
+| Hostels by March | Total you put in | Profit from | March profit |
+|---|---|---|---|
+| 20 | ₹10,150 | Dec 2026 | ₹4,600/month |
+| 50 | ₹10,300 | Nov 2026 | ₹20,350/month |
+| 100 | ₹10,750 | Dec 2026 | ₹33,100/month |
+
+(Same assumptions as the lean P&L below, with AI ₹0 and Supabase Pro from October. The xlsx P&L tab has these numbers.)
+
 ### What goes into Hostelzy (recommended)
 
 | Rule | Amount |
@@ -36,8 +63,8 @@ The ₹40k was the founder's **salary**, not a Hostelzy budget (my earlier readi
 
 | Bucket | Cap / month | Was (₹40k plan) | How it fits |
 |---|---|---|---|
-| AI tokens (Claude) | ₹2,300 (Pro-level plan) | ₹10,000 | The app is mostly built; a bigger plan only in a heavy build month. **If your real bill is higher, everything else shrinks first** |
-| Tech | ₹0 now; Supabase Pro ₹2,900 **only from 10 paying hostels** (paid from their money) | ₹5,000 | Free Supabase + a free weekly backup to GitHub (Build can add it), Google sign-in (no SMS), repo stays public (no GitHub Pro), Google Maps ₹0, farhath.me instead of hostelzy.in for now |
+| AI tokens (Claude) | **₹0** (free for the founder, 2026-10-04) | ₹10,000 | The app is mostly built; a bigger plan only in a heavy build month. **If your real bill is higher, everything else shrinks first** |
+| Tech | **Supabase Pro ₹2,900 from now** (founder pays) | ₹5,000 | Pro has daily backups; Google sign-in (no SMS), repo stays public (no GitHub Pro), Google Maps ₹0, farhath.me instead of hostelzy.in for now |
 | Play Console | ₹2,400 **once** (Oct) | same | The one bill we can't skip |
 | Print (QR posters) | ₹1,500 | ₹4,000 | ~10 hostels a month at ₹150 |
 | Travel + tea | ₹2,000 | ₹3,000 | Metro/bus, 3 visits an evening |
@@ -102,7 +129,7 @@ Numbers use Plan A average ₹750 per paying hostel (§4).
 | # | Question | Recommended answer | Reasoning in numbers |
 |---|---|---|---|
 | Q1 | ~~₹40,000/month all-in?~~ **Answered 2026-10-04:** ₹40k is the salary; ₹15k is left after family costs. | **₹10,000/month to Hostelzy**, ₹5,000 to savings, savings untouched | See Budget v3 above. |
-| Q1b | Your monthly Claude / AI tokens bill in ₹? | Move to a ~₹2,300 (Pro-level) plan now that the app is built | It decides whether ₹10k is enough: at ₹10,000 it would eat the whole budget. |
+| Q1b | ~~Monthly Claude bill?~~ **Answered 2026-10-04: free (₹0).** | – | Frees ₹2,300 a month, which pays Supabase Pro now. |
 | Q2 | Monthly cap on **Hostelzy-funded rewards** (referral ₹100+₹100, ₹100 next-stay credits)? | **₹1,000/month cash** (was ₹5,000), waitlist when full, raise only when paid revenue ≥ 4× cap. Next-stay credits are invoice credits, not cash | Cash goes out only for referrals (₹100 + ₹100 after the friend's first month); next-stay ₹100 is a credit on the owner's invoice. Early months: ~5 referrals × ₹200 = ₹1,000. A fraud ring (50 fake referrals = ₹10,000) stops at ₹1,000. Raise to ₹2,500 when revenue reaches ₹10,000/month. |
 | Q3 | Founding 20 at normal Plan A price (30-day trial → ₹499/₹999/₹1,499)? | **Yes**, normal price | "₹299 for life + 3 free months" = ₹6,000/month forever and ₹0 till Month 4; at Plan A the same 14 paying hostels bring ₹10,500/month. |
 | Q5 | Partner pay **₹20 per tenant hold** (already in the hiring post)? | **Keep ₹20**, but all partners' hold pay **≤ ₹1,000/month** (was ₹4,000) until revenue ≥ ₹10,000/month; review in Month 3 | Holds earn Hostelzy nothing directly (tenants pay ₹0, owners pay flat). If 20% of holds become move-ins, ₹20/hold = **₹100 per move-in**, the same as one referral reward. Cutting a promise already posted costs trust. If hold → move-in is under 10% at Month 3 (₹200+ per move-in), new partners get ₹50 per **confirmed move-in** instead. |
