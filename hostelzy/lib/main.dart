@@ -50,7 +50,9 @@ class HostelzyApp extends StatefulWidget {
 class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
   // F17: start-state shortcuts and the all-screens canvas are for
   // development only; the Play Store build always starts at Welcome.
-  final q = kDebugMode ? Uri.base.queryParameters : const <String, String>{};
+  // PROTO=true (the web prototype only, see docs/PROTOTYPE.md) keeps these shortcuts in a release build.
+  static const _proto = bool.fromEnvironment('PROTO');
+  final q = kDebugMode || _proto ? Uri.base.queryParameters : const <String, String>{};
   late final AppState state = AppState(
     start: _pick(q['start'], AppState.screens),
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
