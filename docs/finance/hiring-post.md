@@ -74,7 +74,7 @@ Start date: ________
 1. Work: Partner introduces Hostelzy to PG/hostel owners and tenants in Hyderabad. Partner is independent,
    not an employee. No salary, no fixed hours.
 2. Pay: ₹200 per owner who pays their first month (after Hostelzy confirms the UPI payment);
-   ₹20 per valid tenant hold made with the partner's code (max 100 a month);
+   ₹20 per valid tenant hold made with the partner's code (max 50 a month per partner; total hold pay for all partners is capped at ₹1,000 a month until Hostelzy earns ₹10,000 a month, first come first served);
    ₹1,000 bonus for 5 paying owners in one month. Paid by UPI by the 5th of the next month.
 3. Valid hold: from a new phone number, not the partner's own phone/UPI/contacts, not cancelled within 10 minutes.
 4. Rules: no fake listings, no fake reviews, no listing a hostel without the owner's OK, no false promises
