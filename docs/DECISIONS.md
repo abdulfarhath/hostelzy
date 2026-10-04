@@ -255,5 +255,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   table, occupancy, plan tiers and invoice history come back as parts of existing screens. No room board. Details: F25.
 - Rule from the founder: no redundant screens; every screen has its own purpose; keep it simple.
 
+**Prototype first, then build** — founder, 2026-10-04
+- Changes are tried in the clickable web prototype (`docs/PROTOTYPE.md`) first. The real app on `main` (and a new APK)
+  changes only after the founder approves them there. No more installing every new APK to review.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

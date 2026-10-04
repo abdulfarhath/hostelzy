@@ -48,6 +48,8 @@ The founder talks **only to the hub**. The hub hands out work with the Claude Co
 - **Secrets.** Never commit or paste the Supabase service_role key or private keys.
 
 ## Build rules
+- **Prototype first (founder, 2026-10-04):** changes go to the clickable prototype (`docs/PROTOTYPE.md`) and are merged to `main`
+  only after the founder approves them there. Republish the prototype at the same link after each change.
 - Branch `feature/<id>-<name>`. Pushes to `main` publish an APK (`apk-N` release with
   `hostelzy.apk` real + `hostelzy-demo.apk` sample data).
 - Run `tools/check.sh` (analyze + tests + SQL tests) before merging. Every feature gets a flow test in `hostelzy/test/`.
