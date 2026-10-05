@@ -1,6 +1,6 @@
 # F26 · Founder's prototype review, round 1 (2026-10-05)
 
-**Stage:** Ideas → **Designing** (proposal canvas, separate from the main canvas until the founder approves).
+**Stage:** Ideas → **Designing** → proposal ready for the founder (2026-10-05; proposal canvas, separate from the main canvas until the founder approves).
 Source: the founder clicked through the prototype (`docs/PROTOTYPE.md`) and dictated 20 changes. The hub shaped them.
 Rules that still apply: one job per screen, no redundant screens, honest copy, Design = app 1:1.
 
@@ -40,7 +40,39 @@ Rules that still apply: one job per screen, no redundant screens, honest copy, D
 - Owner: Today · Beds · Add tenant · Rent · Manage (unchanged)
 
 ## Design
-Proposal canvas: (Design fills in) · Boards: one per changed screen, before → after where useful, light; dark for the 3 biggest.
+Proposal canvas: **Hostelzy · F26 proposal** https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g (Design, 2026-10-05).
+It is **private until the founder shares it** (Share menu → anyone with the link). Design can't change sharing.
+18 boards: 1 cover (the 20 changes → board) + 14 light + 3 dark. Each shows **before** (the app now) next to **after**.
+
+| Board | Changes | Shows |
+|---|---|---|
+| Cover | all | The 20 changes → board, tag legend, VERIFIED badge colour |
+| [F26 #1 #2] Explore | 1, 2 | Pin inside the search field · Near me / Pick a place · sort Price ↑ / Distance / Rating |
+| [F26 #3–#7] Hostel page | 3, 4, 5, 6, 7 | Top + scrolled, before → after: ✓ VERIFIED (navy `#1f3a5f`), inline Building view, week table, tag boxes gone, contact locked |
+| [F26 #3–#7] Hostel page [dark] | 3–7 | After, dark (badge `#33598a` in dark) |
+| [F26 #7] Owner contact | 7 | Locked (lock line, both buttons off) → unlocked (number, WhatsApp with HZ code, Call) |
+| [F26 #8] Pick a bed | 8 | Every room in one list by floor; floor chips only jump |
+| [F26 #7 #9 #16] Holds | 7, 9, 16 | Steps Sent → Owner reviewing → Kept/Declined; 30-min "Still waiting. Call the owner?"; WhatsApp + Call; red dot |
+| [F26 #10 #11] Me | 10, 11 | Saved and Holds rows gone; Log out in red |
+| [F26 #12] Room layout | 12 | "Edit this layout" → try mode → Publish: "Only residents can publish. Book a bed to join." |
+| [F26 #13–#17] Tab bars | 13–17 | Tenant (red dot on Holds), resident before/after, owner |
+| [F26 #4 #13] Resident Home | 4, 13 | Week table (today first), Full week opens in place, new tab bar |
+| [F26 #4 #13] Resident Home [dark] | 4, 13 | After, dark |
+| [F26 #14] My stay tab | 14 | Bed, move, notice, refund, review, layout fix, then Help (Help page folds in) |
+| [F26 #15 #17] Find a bed tab | 15, 17 | Tenant Explore with "You're browsing as a tenant · ← My stay" |
+| [F26 #18] Owner Today | 18 | Holds · Payments · Enquiries · Fixes with counts, Fair Play pinned, empty "Nothing needs you now" |
+| [F26 #18] Owner Today [dark] | 18 | After, dark |
+| [F26 #19] Owner Beds | 19 | Building view only; tap bed → bed sheet, room → layout; Layouts › stays |
+| [F26 #20] Owner Rent | 20 | Call + WhatsApp replace the bell; ready reminder text |
+
+Design notes (for the founder's review):
+- **#6** Explore cards have no tag boxes today; only the hostel page had them.
+- **#16** For residents there are no holds (#15), so the red dot is tenant-only.
+- Resident tab bar: Rent is a plain tab now (it was the red "Pay rent" centre tab). Rent on Home keeps its red Pay button.
+- Owner Today keeps the app's Confirm / Decline wording on holds; the tenant sees Kept / Declined.
+- Menu dinners on the boards are sample text.
+
+After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 
 ## Build
