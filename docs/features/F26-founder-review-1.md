@@ -10,6 +10,19 @@ Rules that still apply: one job per screen, no redundant screens, honest copy, D
   WhatsApp opens with a ready message carrying the HZ code. Both lock again if the hold expires or is declined.
   "Enquire on WhatsApp" is removed. Changes DECISIONS F07 wording ("only after a hold" now means message AND call).
 
+## Hub decisions on Build's review (2026-10-05, on the founder's delegation)
+| # | Clash | Decision |
+|---|---|---|
+| 7 | Contact-after-hold removes the enquiry flow (F05) | **Enquiries removed.** Reply-speed ranking and the 60-day matching use holds. Owner Today has 3 groups (Holds · Payments · Fixes). `owner_contacts` → hold or stay only, and it locks again when a hold expires or is declined. DECISIONS updated after approval |
+| 2 | Price sort hides the paid featured spot (F10) | Price ↑ default; **one featured hostel pinned on top with a "Featured" tag**; "Best deals" stays in the sort list |
+| 5 | "VERIFIED" is a strong claim | Only when `visited_on` is set; one line under it: "Beds and prices checked by Hostelzy · <date>". Navy `Pal` token (light #1f3a5f, dark #33598a) |
+| 3, 8 | Women's PGs: whole floor only after a hold | Locked state (blurred building + "Hold a bed to see the floors"). 80+ beds: inline building collapses to "See all N rooms ›" |
+| 12 | Residents send fixes, they don't publish | "Only residents can send a fix. Book a bed to join." |
+| 9 | "Owner reviewing" must be true | New `holds.seen_at`, set when the owner opens the hold (SQL, bundle step). Steps: Sent → Owner reviewing → Kept / Declined |
+| 15 vs 17 | Can a resident hold a bed elsewhere from Find a bed? | **Open: founder.** A = yes (shows under My stay → "Moving?"); B = browse only |
+
+Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact). SQL: #7 (`owner_contacts`), #9 (`seen_at`).
+
 ## The 20 changes
 | # | Area | Change | Notes for Design |
 |---|---|---|---|
