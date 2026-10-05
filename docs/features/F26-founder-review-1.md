@@ -55,7 +55,7 @@ Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact
 ## Design
 Proposal canvas: **Hostelzy · F26 proposal** https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g (Design, 2026-10-05).
 It is **private until the founder shares it** (Share menu → anyone with the link). Design can't change sharing.
-19 boards: 1 cover (the 20 changes → board) + 15 light + 3 dark. Canvas version 4 (2026-10-05) has the hub's 6 settled clashes. Each shows **before** (the app now) next to **after**.
+19 boards: 1 cover (the 20 changes → board) + 15 light + 3 dark. Canvas version 5 (2026-10-05): the hub's 6 settled clashes, and no floor lock anywhere (founder decision). Each shows **before** (the app now) next to **after**.
 
 | Board | Changes | Shows |
 |---|---|---|
@@ -65,7 +65,7 @@ It is **private until the founder shares it** (Share menu → anyone with the li
 | [F26 #3–#7] Hostel page [dark] | 3–7 | After, dark (badge `#33598a` in dark) |
 | [F26 #7] Owner contact | 7 | Locked (lock line, both buttons off) → unlocked (number, WhatsApp with HZ code, Call) |
 | [F26 #8] Pick a bed | 8 | Every room in one list by floor; floor chips only jump |
-| [F26 #3 #8] Women's PG locked, 80+ beds collapsed | 3, 8 | Women's PG: building and all-rooms list blurred, "Hold a bed to see the floors" · 80+ beds: "See all 38 rooms ›" |
+| [F26 #3] Hostel page, 80+ beds | 3 | The inline building collapses to "See all 38 rooms ›". No lock anywhere: layouts, building view and bed picker are open to everyone, women's PGs included |
 | [F26 #7 #9 #16] Holds | 7, 9, 16 | Steps Sent → Owner reviewing → Kept/Declined; 30-min "Still waiting. Call the owner?"; WhatsApp + Call; red dot |
 | [F26 #10 #11] Me | 10, 11 | Saved and Holds rows gone; Log out in red |
 | [F26 #12] Room layout | 12 | "Edit this layout" → try mode → Publish: "Only residents can send a fix. Book a bed to join." |
