@@ -1,0 +1,208 @@
+<title>Hostelzy Setup Steps</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one column of service sections; each task is a card with numbered click-steps and copyable values */
+:root{--bg:#f3f2f2;--card:#fff;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--rule:#201e1d;--red:#ec3013;--redb:#ffe0d9;--gn:#1f7a3d;--gnb:#dcefe0;--am:#8a5a00;--amb:#fbecc8;--bl:#1f4f8a;--blb:#dde8f6;--f:Archivo,system-ui,sans-serif;--m:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161514;--card:#1f1d1b;--sf:#2a2724;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;--red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161514;--card:#1f1d1b;--sf:#2a2724;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;--red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:16px/1.5 var(--f);padding-inline:16px;padding-block:24px 64px}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:clamp(28px,6vw,42px);font-weight:900;margin:0;letter-spacing:-.02em}
+h2{font-size:24px;font-weight:900;margin:8px 0 0;display:flex;align-items:center;gap:10px;border-top:2px solid var(--rule);padding-top:16px}
+.hint{color:var(--mu);margin:4px 0 0;font-size:15px}
+.tw{overflow-x:auto;border:2px solid var(--rule);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:9px 10px;border-bottom:2px solid var(--rule);background:var(--sf)}
+td{padding:9px 10px;border-bottom:1px solid var(--sf);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.task{border:2px solid var(--rule);background:var(--card)}
+.task>header{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:12px 14px;border-bottom:2px solid var(--rule);flex-wrap:wrap}
+.task>header b{font-size:18px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font:600 11px var(--m);padding:3px 7px;white-space:nowrap}
+.t-now{background:var(--redb);color:var(--red)}.t-soon{background:var(--amb);color:var(--am)}.t-later{background:var(--blb);color:var(--bl)}.t-time{background:var(--sf);color:var(--tx)}
+.task ol{margin:0;padding:12px 14px 14px 38px;display:flex;flex-direction:column;gap:7px}
+.task li::marker{font-weight:800}
+.note{margin:0 14px 14px;padding:10px 12px;font-size:14px;border-left:4px solid var(--am);background:var(--amb);color:var(--tx)}
+.note.red{border-color:var(--red);background:var(--redb)}
+.note.gn{border-color:var(--gn);background:var(--gnb)}
+code{font:13px var(--m);background:var(--sf);padding:1px 5px;word-break:break-word}
+.cp{display:flex;gap:8px;align-items:stretch;margin-top:6px;flex-wrap:wrap}
+.cp pre{flex:1;min-width:0;margin:0;background:var(--sf);padding:8px 10px;font:13px/1.45 var(--m);white-space:pre-wrap;word-break:break-all;border-left:3px solid var(--red)}
+.cp button{border:2px solid var(--rule);background:var(--card);color:var(--tx);font:700 13px var(--f);padding:4px 10px;cursor:pointer}
+.cp button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+a{color:var(--red)}
+.path{font-weight:700}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hostelzy setup steps</h1>
+    <p class="hint">Everything you do yourself in Supabase, GitHub, Firebase / Google Cloud and Play Console. Click by click. 🔴 now · 🟡 before launch · 🔵 later.</p>
+  </header>
+
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>Task</th><th>Where</th><th>When</th><th>Time</th></tr></thead>
+    <tbody>
+      <tr><td>S1</td><td>Run all database steps (one file)</td><td>Supabase</td><td>🔴 Now</td><td>5 min</td></tr>
+      <tr><td>F1</td><td>Fix demo app sign-in</td><td>Google Cloud</td><td>🔴 Now</td><td>5 min</td></tr>
+      <tr><td>G1</td><td>Make the Play upload key + GitHub secrets</td><td>Your computer + GitHub</td><td>🟡 Before Play</td><td>15 min</td></tr>
+      <tr><td>P1</td><td>Play Console account + app + closed test</td><td>Play Console</td><td>🟡 Before Play</td><td>30 min</td></tr>
+      <tr><td>G2</td><td>Build the Play Store file (.aab)</td><td>GitHub</td><td>🟡 After G1</td><td>2 min + 15 min wait</td></tr>
+      <tr><td>F2</td><td>Add Play's key fingerprints to Firebase</td><td>Play Console → Firebase</td><td>🟡 After P1 (or sign-in breaks)</td><td>10 min</td></tr>
+      <tr><td>P2</td><td>Links open the app (assetlinks)</td><td>Play Console → your website</td><td>🟡 After P1</td><td>10 min</td></tr>
+      <tr><td>S2</td><td>Test (staging) database, optional</td><td>Supabase + GitHub</td><td>🔵 Later</td><td>20 min</td></tr>
+      <tr><td>G3</td><td>Add a team member (e.g. intern)</td><td>GitHub</td><td>🔵 When needed</td><td>2 min</td></tr>
+      <tr><td>F3</td><td>SMS OTP login</td><td>Firebase</td><td>🔵 When a card works</td><td>15 min</td></tr>
+      <tr><td>G4</td><td>Make the repo private</td><td>GitHub</td><td>🔵 Last (read the warning)</td><td>1 min</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>🟩 Supabase</h2>
+
+  <section class="task">
+    <header><b>S1 · Run all database steps at once</b><span class="tags"><span class="tag t-now">NOW</span><span class="tag t-time">5 min</span></span></header>
+    <ol>
+      <li>Open the file: <a href="https://github.com/abdulfarhath/hostelzy/blob/main/docs/sql/run-all-pending.sql" target="_blank" rel="noopener">docs/sql/run-all-pending.sql</a> → click <span class="path">Raw</span> (top right of the file).</li>
+      <li>Select everything (<code>Ctrl + A</code>, on Mac <code>Cmd + A</code>) → copy.</li>
+      <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a> → your Hostelzy project → <span class="path">SQL Editor</span> (left menu) → <span class="path">New query</span>.</li>
+      <li>Paste → click <span class="path">Run</span>. Wait about 10 seconds.</li>
+      <li>You should see <b>"Success. No rows returned"</b>. If Supabase asks "This query has destructive operations, run anyway?", click <span class="path">Run this query</span> (it only replaces old versions of functions).</li>
+      <li>Check it worked: <span class="path">New query</span> → paste this → <span class="path">Run</span>. Every column must say <b>true</b>:
+        <div class="cp"><pre id="chk">select to_regproc('public.go_live') is not null as onboarding,
+       to_regproc('public.confirm_rates') is not null as rates,
+       to_regproc('public.deals_hidden') is not null as strikes,
+       (select count(*) from pg_indexes where schemaname = 'public'
+          and indexname in ('beds_hostel_id_idx','fair_cases_hostel_id_idx')) = 2 as indexes;</pre><button data-c="chk">Copy</button></div></li>
+      <li>Tell the hub: <i>"SQL done, all true"</i>.</li>
+    </ol>
+    <p class="note gn">It's 37 steps (4d → 4zi) in one go. If anything fails, <b>nothing changes</b>: copy the red error and send it to me. It's safe to run twice, even if you already ran some steps one by one.</p>
+  </section>
+
+  <section class="task">
+    <header><b>S2 · Test database (staging), optional</b><span class="tags"><span class="tag t-later">LATER</span><span class="tag t-time">20 min</span></span></header>
+    <ol>
+      <li>Supabase dashboard → <span class="path">New project</span> → name <code>hostelzy-staging</code>, region <b>Mumbai</b>, Free plan → set a database password (save it) → Create.</li>
+      <li>In the new project: <span class="path">Database → Extensions</span> → turn on <code>pg_cron</code> and <code>pg_net</code>.</li>
+      <li><span class="path">SQL Editor → New query</span> → paste <a href="https://github.com/abdulfarhath/hostelzy/blob/main/docs/sql/full-schema.sql" target="_blank" rel="noopener">docs/sql/full-schema.sql</a> (Raw → copy) → Run, once.</li>
+      <li><span class="path">Authentication → Sign In / Providers → Third-party Auth → Add provider → Firebase</span> → project ID <code>hostelzy</code> (same as the real project; without it sign-in fails).</li>
+      <li><span class="path">Project Settings → API</span> → copy the <b>Project URL</b> and the <b>anon / publishable</b> key. <b>Never</b> the service_role key.</li>
+      <li>GitHub repo → <span class="path">Settings → Secrets and variables → Actions → New repository secret</span>: <code>HZ_STAGING_SUPABASE_URL</code> = the URL, then <code>HZ_STAGING_SUPABASE_ANON_KEY</code> = the anon key.</li>
+    </ol>
+  </section>
+
+  <h2>🐙 GitHub</h2>
+
+  <section class="task">
+    <header><b>G1 · Play upload key + GitHub secrets</b><span class="tags"><span class="tag t-soon">BEFORE PLAY</span><span class="tag t-time">15 min</span></span></header>
+    <ol>
+      <li>On your computer, install <b>Android Studio</b> (it includes Java's <code>keytool</code>) or any Java 17.</li>
+      <li>Open a terminal (Windows: PowerShell) in a safe folder and run:
+        <div class="cp"><pre id="kt">keytool -genkeypair -v -keystore hostelzy-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload</pre><button data-c="kt">Copy</button></div>
+        It asks for a password (choose a strong one, write it down) and your name and city. That's fine.</li>
+      <li>Turn the file into text and copy it:
+        <div class="cp"><pre id="b64w">[Convert]::ToBase64String([IO.File]::ReadAllBytes("hostelzy-upload.jks")) | Set-Clipboard</pre><button data-c="b64w">Copy</button></div>
+        <span class="hint">That's for Windows PowerShell. Mac: <code>base64 -i hostelzy-upload.jks | pbcopy</code></span></li>
+      <li>GitHub → <a href="https://github.com/abdulfarhath/hostelzy/settings/secrets/actions" target="_blank" rel="noopener">repo Settings → Secrets and variables → Actions</a> → <span class="path">New repository secret</span>, four times:
+        <ul>
+          <li><code>HZ_UPLOAD_KEYSTORE_BASE64</code> = paste (the long text)</li>
+          <li><code>HZ_UPLOAD_KEYSTORE_PASSWORD</code> = your password</li>
+          <li><code>HZ_UPLOAD_KEY_ALIAS</code> = <code>upload</code></li>
+          <li><code>HZ_UPLOAD_KEY_PASSWORD</code> = the same password</li>
+        </ul></li>
+      <li>Copy <code>hostelzy-upload.jks</code> and the password to a USB drive or password manager. <b>Not</b> in the repo, <b>not</b> in chat.</li>
+    </ol>
+    <p class="note red">Losing this key means a new Play listing. Keep 2 copies offline.</p>
+  </section>
+
+  <section class="task">
+    <header><b>G2 · Build the Play Store file</b><span class="tags"><span class="tag t-soon">AFTER G1</span><span class="tag t-time">2 min + 15 min wait</span></span></header>
+    <ol>
+      <li>GitHub → <a href="https://github.com/abdulfarhath/hostelzy/actions" target="_blank" rel="noopener">Actions</a> → left list <span class="path">Play Store build</span> → <span class="path">Run workflow</span> → choose <b>production</b> → Run.</li>
+      <li>Wait for the green tick (~15 min) → open the run → <span class="path">Artifacts</span> → download → unzip → <code>app-release.aab</code>.</li>
+      <li>Upload it in Play Console (P1, step 5).</li>
+    </ol>
+  </section>
+
+  <section class="task">
+    <header><b>G3 · Add a team member (e.g. a marketing intern)</b><span class="tags"><span class="tag t-later">WHEN NEEDED</span><span class="tag t-time">2 min</span></span></header>
+    <ol>
+      <li>The person signs in to the Hostelzy app once with their Google account.</li>
+      <li>GitHub → <span class="path">Actions → Team member → Run workflow</span> → their Gmail address → action <b>add</b> (or <b>remove</b>) → Run.</li>
+      <li>They reopen the app: <span class="path">Me → Settings → Hostelzy team</span>, and the console at farhath.me/hostelzy/app/console/.</li>
+    </ol>
+  </section>
+
+  <section class="task">
+    <header><b>G4 · Make the repo private</b><span class="tags"><span class="tag t-later">LAST</span><span class="tag t-time">1 min</span></span></header>
+    <ol>
+      <li>GitHub repo → <span class="path">Settings</span> → scroll to <span class="path">Danger Zone → Change visibility → Private</span>.</li>
+    </ol>
+    <p class="note red"><b>Read first:</b> on GitHub's free plan, a private repo <b>turns off GitHub Pages</b>. That would take down farhath.me/hostelzy/app/ (privacy policy, delete-account page, invite links and the team console, which Play requires). Do it only after the pages move to hostelzy.in hosting, or with GitHub Pro (~$4/month). APK downloads would then also need a GitHub login. Ask me before you do this.</p>
+  </section>
+
+  <h2>🔥 Firebase / Google Cloud</h2>
+
+  <section class="task">
+    <header><b>F1 · Fix sign-in in the demo app</b><span class="tags"><span class="tag t-now">NOW</span><span class="tag t-time">5 min</span></span></header>
+    <ol>
+      <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">console.cloud.google.com → APIs & Services → Credentials</a> → top bar: project <b>hostelzy</b>.</li>
+      <li>Click <span class="path">Android key (auto created by Firebase)</span>.</li>
+      <li>Under <span class="path">Application restrictions → Android apps</span> → <span class="path">Add</span>:
+        <div class="cp"><pre id="pk">app.hostelzy.hostelzy.demo</pre><button data-c="pk">Copy</button></div>
+        with the same SHA-1:
+        <div class="cp"><pre id="sha">46:55:BE:52:35:50:49:2A:E0:A4:AF:CA:26:09:78:5F:08:BD:AA:24</pre><button data-c="sha">Copy</button></div></li>
+      <li><span class="path">Save</span>. Wait 5 minutes, then try signing in on the demo app.</li>
+    </ol>
+  </section>
+
+  <section class="task">
+    <header><b>F2 · Add Play's key fingerprints (or Google sign-in breaks for Play users)</b><span class="tags"><span class="tag t-soon">AFTER P1</span><span class="tag t-time">10 min</span></span></header>
+    <ol>
+      <li>Play Console → your app → <span class="path">Test and release → Setup → App signing</span> (or <span class="path">App integrity</span>).</li>
+      <li>Copy the <b>SHA-1</b> and <b>SHA-256</b> of the <b>App signing key</b>, and also of the <b>Upload key</b>.</li>
+      <li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase console</a> → project hostelzy → ⚙ <span class="path">Project settings</span> → <span class="path">Your apps</span> → Android <code>app.hostelzy.hostelzy</code> → <span class="path">Add fingerprint</span> → add all four.</li>
+      <li>Click <span class="path">google-services.json</span> to download the new file → attach it here. Build puts it in the app.</li>
+      <li>Google Cloud → Credentials → <span class="path">Android key</span> → add <code>app.hostelzy.hostelzy</code> again with the <b>App signing SHA-1</b> → Save.</li>
+    </ol>
+  </section>
+
+  <section class="task">
+    <header><b>F3 · SMS OTP login</b><span class="tags"><span class="tag t-later">WHEN A CARD WORKS</span><span class="tag t-time">15 min</span></span></header>
+    <ol>
+      <li>Firebase console → bottom-left <span class="path">Upgrade</span> → <b>Blaze</b> (pay as you go; needs a card that works internationally).</li>
+      <li>Set a budget alert: Google Cloud → <span class="path">Billing → Budgets & alerts → Create budget</span> → ₹500/month → alerts at 50% / 90% / 100%.</li>
+      <li>Firebase → <span class="path">Authentication → Sign-in method → Add new provider → Phone → Enable</span> → Save.</li>
+      <li>Tell the hub <i>"OTP is on"</i>. Build switches the app's OTP setting and the "Verified" wording.</li>
+    </ol>
+  </section>
+
+  <h2>▶️ Play Console</h2>
+
+  <section class="task">
+    <header><b>P1 · Account, app and closed test</b><span class="tags"><span class="tag t-soon">BEFORE PLAY</span><span class="tag t-time">30 min + 14 days</span></span></header>
+    <ol>
+      <li><a href="https://play.google.com/console" target="_blank" rel="noopener">play.google.com/console</a> → sign up as <b>Personal</b> → pay $25 → verify your identity (ID + phone; can take 1–3 days).</li>
+      <li><span class="path">Create app</span> → name <b>Hostelzy</b>, default language English (India), App, Free.</li>
+      <li>Fill the <span class="path">Dashboard</span> tasks with Brand's pack (<code>docs/brand/play-store.md</code>): icon, feature graphic, screenshots, descriptions. Privacy policy URL: <code>https://farhath.me/hostelzy/app/privacy/</code>. Data safety: ask the hub for the answers.</li>
+      <li><span class="path">Test and release → Closed testing → Create track</span> → add <b>12+ testers</b> (their Gmail addresses, e.g. friends and PG residents).</li>
+      <li><span class="path">Create release</span> → upload <code>app-release.aab</code> (from G2) → Save → Review → Roll out.</li>
+      <li>Testers must keep it installed for <b>14 days</b>. Then <span class="path">Apply for production</span>.</li>
+    </ol>
+  </section>
+
+  <section class="task">
+    <header><b>P2 · Links open the app directly</b><span class="tags"><span class="tag t-soon">AFTER P1</span><span class="tag t-time">10 min</span></span></header>
+    <ol>
+      <li>Copy the <b>App signing key SHA-256</b> (from F2 step 2).</li>
+      <li>Send it to the hub. I'll prepare the <code>assetlinks.json</code> file for the root of your farhath.me site (<code>/.well-known/assetlinks.json</code>) and tell you where to put it.</li>
+    </ol>
+  </section>
+
+  <p class="hint">Never send the Supabase <b>service_role</b> key, the upload key file or any password in chat.</p>
+</div>
+
+<script>
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-c]');if(!b)return;const el=document.getElementById(b.dataset.c);const t=el.textContent;
+navigator.clipboard.writeText(t).then(()=>{b.textContent='Copied'},()=>{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected'})});
+</script>
