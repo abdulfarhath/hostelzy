@@ -55,25 +55,26 @@ Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact
 ## Design
 Proposal canvas: **Hostelzy · F26 proposal** https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g (Design, 2026-10-05).
 It is **private until the founder shares it** (Share menu → anyone with the link). Design can't change sharing.
-18 boards: 1 cover (the 20 changes → board) + 14 light + 3 dark. Each shows **before** (the app now) next to **after**.
+19 boards: 1 cover (the 20 changes → board) + 15 light + 3 dark. Canvas version 4 (2026-10-05) has the hub's 6 settled clashes. Each shows **before** (the app now) next to **after**.
 
 | Board | Changes | Shows |
 |---|---|---|
 | Cover | all | The 20 changes → board, tag legend, VERIFIED badge colour |
-| [F26 #1 #2] Explore | 1, 2 | Pin inside the search field · Near me / Pick a place · sort Price ↑ / Distance / Rating |
-| [F26 #3–#7] Hostel page | 3, 4, 5, 6, 7 | Top + scrolled, before → after: ✓ VERIFIED (navy `#1f3a5f`), inline Building view, week table, tag boxes gone, contact locked |
+| [F26 #1 #2] Explore | 1, 2 | Pin inside the search field · Near me / Pick a place · sort Price ↑ (default) / Distance / Rating / Best deals · one Featured (80+ beds) pinned on top |
+| [F26 #3–#7] Hostel page | 3, 4, 5, 6, 7 | Top + scrolled, before → after: ✓ VERIFIED (navy `#1f3a5f`) only after a team visit, with "Beds and prices checked by Hostelzy · 12 Sep", inline Building view, week table, tag boxes gone, contact locked |
 | [F26 #3–#7] Hostel page [dark] | 3–7 | After, dark (badge `#33598a` in dark) |
 | [F26 #7] Owner contact | 7 | Locked (lock line, both buttons off) → unlocked (number, WhatsApp with HZ code, Call) |
 | [F26 #8] Pick a bed | 8 | Every room in one list by floor; floor chips only jump |
+| [F26 #3 #8] Women's PG locked, 80+ beds collapsed | 3, 8 | Women's PG: building and all-rooms list blurred, "Hold a bed to see the floors" · 80+ beds: "See all 38 rooms ›" |
 | [F26 #7 #9 #16] Holds | 7, 9, 16 | Steps Sent → Owner reviewing → Kept/Declined; 30-min "Still waiting. Call the owner?"; WhatsApp + Call; red dot |
 | [F26 #10 #11] Me | 10, 11 | Saved and Holds rows gone; Log out in red |
-| [F26 #12] Room layout | 12 | "Edit this layout" → try mode → Publish: "Only residents can publish. Book a bed to join." |
+| [F26 #12] Room layout | 12 | "Edit this layout" → try mode → Publish: "Only residents can send a fix. Book a bed to join." |
 | [F26 #13–#17] Tab bars | 13–17 | Tenant (red dot on Holds), resident before/after, owner |
 | [F26 #4 #13] Resident Home | 4, 13 | Week table (today first), Full week opens in place, new tab bar |
 | [F26 #4 #13] Resident Home [dark] | 4, 13 | After, dark |
 | [F26 #14] My stay tab | 14 | Bed, move, notice, refund, review, layout fix, then Help (Help page folds in) |
 | [F26 #15 #17] Find a bed tab | 15, 17 | Tenant Explore with "You're browsing as a tenant · ← My stay" |
-| [F26 #18] Owner Today | 18 | Holds · Payments · Enquiries · Fixes with counts, Fair Play pinned, empty "Nothing needs you now" |
+| [F26 #18] Owner Today | 18 | Holds · Payments · Fixes with counts (Enquiries removed everywhere), Fair Play pinned, empty "Nothing needs you now" |
 | [F26 #18] Owner Today [dark] | 18 | After, dark |
 | [F26 #19] Owner Beds | 19 | Building view only; tap bed → bed sheet, room → layout; Layouts › stays |
 | [F26 #20] Owner Rent | 20 | Call + WhatsApp replace the bell; ready reminder text |
