@@ -1,0 +1,147 @@
+<title>Lost Building Screens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone frames side by side, each redrawn from the old Flutter code; a table below says where each lived */
+:root{--bg:#f3f2f2;--sf:#eae9e9;--card:#fff;--tx:#201e1d;--mu:#605d5d;--hl:rgba(32,30,29,.16);--tk:#bab6b6;--ac:#ec3013;--gn:#1f7a3d;--gnb:#dcefe0;--amb:#fbecc8;--am:#8a5a00;--f:Archivo,system-ui,sans-serif;--m:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--hl:rgba(240,238,238,.14);--tk:#4a4646;--ac:#ff563c;--gn:#5fcf86;--gnb:#133a22;--amb:#3a2c0c;--am:#f2c063;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--hl:rgba(240,238,238,.14);--tk:#4a4646;--ac:#ff563c;--gn:#5fcf86;--gnb:#133a22;--amb:#3a2c0c;--am:#f2c063;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:15px/1.4 var(--f);padding-inline:16px;padding-block:24px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-size:clamp(26px,5vw,40px);font-weight:800;margin:0;letter-spacing:-.02em}
+.hint{color:var(--mu);margin:6px 0 0;max-width:70ch}
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start}
+.phone{border:2px solid var(--tx);background:var(--card);display:flex;flex-direction:column;min-width:0}
+.cap{padding:12px 14px;border-bottom:2px solid var(--tx);display:flex;flex-direction:column;gap:4px}
+.cap b{font-size:17px}
+.tag{align-self:flex-start;font:600 11px var(--m);padding:3px 7px;text-transform:uppercase;letter-spacing:.05em}
+.t-red{background:#ffe0d9;color:#ae1800}.t-am{background:var(--amb);color:var(--am)}
+.scr{padding:14px 14px 16px}
+.kick{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.seg{display:flex;border:2px solid var(--tx);margin-bottom:12px}
+.seg span{flex:1;text-align:center;padding:7px 0;font-weight:600;font-size:13px}
+.seg span.on{background:var(--tx);color:var(--bg)}
+/* building */
+.roof{height:14px;margin:0 10%;background:var(--sf);border:2px solid var(--tx);border-bottom:0}
+.bld{border:2px solid var(--tx);border-bottom:0}
+.fl{display:flex;border-bottom:2px solid var(--tx)}
+.fl .lab{width:40px;flex:none;display:grid;place-items:center;font-weight:800;border-right:2px solid var(--tx)}
+.fl .rooms{flex:1;display:flex;min-width:0}
+.rm{flex:1;padding:8px 5px;min-width:0}
+.rm+.rm{border-left:1px solid var(--hl)}
+.rm .n{font-size:11px;font-weight:600;color:var(--mu)}
+.beds{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.bed{width:14px;height:24px;border:2px solid var(--tx);box-sizing:border-box}
+.bed.t{background:var(--tx)}.bed.h{background:repeating-linear-gradient(45deg,var(--tx) 0 2px,transparent 2px 5px)}.bed.me{background:var(--ac);border-color:var(--ac)}
+.share{display:flex;gap:4px;flex-wrap:wrap;padding:4px 6px;border-bottom:1px dashed var(--hl);background:var(--sf)}
+.chip{font:600 10px var(--m);border:1px solid var(--tx);padding:1px 5px;background:var(--card)}
+.chip.bad{border-color:var(--ac);color:var(--ac)}
+.g{padding:10px;font-size:12px;color:var(--mu)}
+.slab{height:8px;background:var(--tx);margin:0 -6px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mu)}
+.legend i{display:inline-block;width:10px;height:16px;border:2px solid var(--tx);margin-right:5px;vertical-align:-4px}
+/* owner plan */
+.ftabs{display:flex;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx);margin:0 -14px 12px}
+.ftabs span{flex:1;text-align:center;padding:8px 0;font-weight:700;font-size:13px;border-right:1px solid var(--hl)}
+.ftabs span.on{box-shadow:inset 0 -3px 0 var(--ac)}
+.lbl{display:flex;justify-content:space-between;font:600 10px var(--m);text-transform:uppercase;color:var(--mu);letter-spacing:.05em}
+.win{height:6px;background:var(--tx);margin:8px 18% 0}
+.plan{border:2px solid var(--tx)}
+.half{display:flex}
+.half .pr{flex:1;padding:8px;min-height:84px}
+.half .pr+.pr{border-left:2px solid var(--tx)}
+.pr .n{font-weight:800;font-size:13px}
+.pr .who{font:500 10px var(--m);color:var(--mu);margin-top:4px}
+.corr{display:flex;height:46px;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)}
+.corr .st{width:52px;border-right:2px solid var(--tx);background:repeating-linear-gradient(90deg,var(--tk) 0 2px,transparent 2px 7px)}
+.corr .mid{flex:1;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font:600 10px var(--m);color:var(--mu);text-transform:uppercase}
+.corr .wc{width:52px;border-left:2px solid var(--tx);display:grid;place-items:center;font-weight:800;font-size:11px;color:var(--mu)}
+.amen{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tw{overflow-x:auto;border:2px solid var(--tx);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th{font:600 11px var(--m);text-transform:uppercase;letter-spacing:.05em;color:var(--mu);text-align:left;padding:9px 10px;border-bottom:2px solid var(--tx);background:var(--sf)}
+td{padding:9px 10px;border-bottom:1px solid var(--hl);vertical-align:top}
+tr:last-child td{border-bottom:0}
+code{font:12px var(--m);background:var(--sf);padding:1px 4px}
+.pill{font:600 11px var(--m);padding:3px 7px;background:var(--gnb);color:var(--gn);white-space:nowrap}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>The lost building screens</h1>
+    <p class="hint">Found in the code. Each one is redrawn here from the original Flutter code, with the original sample data, so you can recognise it. The fridge / RO / washer row comes from the F23 design. Your NEW-1 combines both views.</p>
+  </header>
+
+  <div class="phones">
+    <!-- A: tenant building cross-section -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-red">Removed 2 Oct · #67</span><b>A · Tenant "Building" tab</b><span class="hint" style="margin:0">Bed picker · Plan / List / <b>Building</b></span></div>
+      <div class="scr">
+        <div class="seg"><span>Plan</span><span>List</span><span class="on">Building</span></div>
+        <div class="kick">Cross-section · tap any free bed</div>
+        <div class="roof"></div>
+        <div class="bld" id="bA"></div>
+        <div class="slab"></div>
+        <div class="legend"><span><i></i>Free</span><span><i style="background:var(--tx)"></i>Taken</span><span><i style="background:repeating-linear-gradient(45deg,var(--tx) 0 2px,transparent 2px 5px)"></i>On hold</span><span><i style="background:var(--ac);border-color:var(--ac)"></i>Your bed</span></div>
+      </div>
+    </div>
+
+    <!-- B: same building with shared things per floor -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-am">Being rebuilt · NEW-1 + NEW-2</span><b>B · Building + shared things</b><span class="hint" style="margin:0">Fridge, RO, washer… shown on each floor, above its rooms</span></div>
+      <div class="scr">
+        <div class="seg"><span>Plan</span><span>Room</span><span class="on">Building</span></div>
+        <div class="kick">Every floor · shared things on top</div>
+        <div class="roof"></div>
+        <div class="bld" id="bB"></div>
+        <div class="slab"></div>
+        <div class="legend"><span><span class="chip">Fridge</span> working</span><span><span class="chip bad">Washer</span> not working</span></div>
+      </div>
+    </div>
+
+    <!-- C: owner floor plan -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-red">Removed in F22 redesign</span><b>C · Owner "Bed map · Floor plan"</b><span class="hint" style="margin:0">Owner › Beds · Floor plan / All floors</span></div>
+      <div class="scr">
+        <div class="kick">22 of 30 beds taken</div>
+        <div class="seg"><span class="on">Floor plan</span><span>All floors</span></div>
+        <div class="ftabs"><span>F1 · 2 free</span><span class="on">F2 · 3 free</span><span>F3 · 2 free</span></div>
+        <div class="lbl"><span>Windows · street</span><span>Floor 2</span></div>
+        <div class="win"></div>
+        <div class="plan">
+          <div class="half"><div class="pr"><div class="n">201</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed"></i></div><div class="who">RV · TN</div></div><div class="pr"><div class="n">202</div><div class="beds"><i class="bed t"></i><i class="bed"></i></div><div class="who">FM</div></div></div>
+          <div class="corr"><div class="st"></div><div class="mid"><span>← Stairs</span><span>Corridor</span></div><div class="wc">WC</div></div>
+          <div class="half"><div class="pr"><div class="n">203</div><div class="beds"><i class="bed t"></i><i class="bed h"></i><i class="bed t"></i></div><div class="who">AK · SR</div></div><div class="pr"><div class="n">204</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i><i class="bed"></i></div><div class="who">RV · PK · JD</div></div></div>
+        </div>
+        <div class="amen"><span class="chip">Fridge · near stairs</span><span class="chip">RO</span><span class="chip bad">Washer · not working</span></div>
+        <div class="lbl" style="margin-top:8px"><span>Courtyard</span><span>Tap a bed to manage</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Screen</th><th>Where it lived</th><th>When it went</th><th>Now</th></tr></thead>
+    <tbody>
+      <tr><td><b>A · Building tab</b>: G at the bottom, F1, F2, F3 up the left, rooms with bed boxes on the right</td><td><code>_BuildingMode</code> in <code>screens_tenant.dart</code>, first app (1 Oct, commit 417c385)</td><td>F21 Wave 2 ("simpler picker"), #67, 2 Oct</td><td><span class="pill">NEW-1 · Build making it</span></td></tr>
+      <tr><td><b>B · Shared things per floor</b>: fridge, RO, washing machine, geyser</td><td>F23 design ("On each floor", "Floor view"); the app shows them only as a list on the hostel page</td><td>Floor drawing never built; list only</td><td><span class="pill">NEW-1 + NEW-2 · Build making it</span></td></tr>
+      <tr><td><b>C · Owner floor plan</b>: corridor, stairs, WC, rooms and residents</td><td>Owner Beds "Floor plan / All floors", first app (1 Oct)</td><td>F22 owner redesign, #73</td><td><span class="pill">NEW-3 · Build making it</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="hint">Sample hostel: Anjani Residency. A and C use the original sample rooms; the bed states are illustrative. Redrawn for recognition, not pixel-exact.</p>
+</div>
+
+<script>
+const ROOMS={3:[[301,['t','','t']],[302,['t','t']],[303,['','t','t','h']],[304,['t','']]],
+ 2:[[201,['t','t','']],[202,['t','']],[203,['t','h','t']],[204,['t','t','me','']]],
+ 1:[[101,['t','t']],[102,['','t','t']],[103,['t','t','t','']],[104,['t','']]]};
+const SHARED={3:[['RO',0],['Iron',0]],2:[['Fridge',0],['RO',0],['Washer',1]],1:[['Fridge',0],['RO',0],['Washer',0]]};
+function build(id,withShared){
+  let h='';
+  for(const f of [3,2,1]){
+    if(withShared)h+=`<div class="share">${SHARED[f].map(([n,b])=>`<span class="chip${b?' bad':''}">${n}${b?' · not working':''}</span>`).join('')}</div>`;
+    h+=`<div class="fl"><div class="lab">F${f}</div><div class="rooms">${ROOMS[f].map(([n,bs])=>`<div class="rm"><div class="n">${n}</div><div class="beds">${bs.map(b=>`<i class="bed ${b}"></i>`).join('')}</div></div>`).join('')}</div></div>`;
+  }
+  h+=`<div class="fl"><div class="lab">G</div><div class="g">Reception · dining hall · bike parking${withShared?' · <span class="chip">Geyser in 4 of 6 rooms</span>':''}</div></div>`;
+  document.getElementById(id).innerHTML=h;
+}
+build('bA',false);build('bB',true);
+</script>

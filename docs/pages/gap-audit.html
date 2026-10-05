@@ -1,0 +1,282 @@
+<title>Hostelzy Gap Audit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one column report in the app's own style: square corners, 2px rules, red for action, green for done */
+:root{
+  --bg:#f3f2f2;--sf:#eae9e9;--card:#ffffff;--tx:#201e1d;--mu:#605d5d;--ac:#ec3013;--ad:#ae1800;--ab:#ffe0d9;
+  --gn:#1f7a3d;--gb:#dcefe0;--am:#8a5a00;--amb:#fbecc8;--bl:#1f4f8a;--blb:#dde8f6;--rule:#201e1d;--hl:rgba(32,30,29,.14);
+  --f:Archivo,system-ui,sans-serif;--m:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ad:#ff9783;--ab:#4d170e;
+  --gn:#5fcf86;--gb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;--rule:#f0eeee;--hl:rgba(240,238,238,.14);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ad:#ff9783;--ab:#4d170e;
+  --gn:#5fcf86;--gb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;--rule:#f0eeee;--hl:rgba(240,238,238,.14);color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 var(--f);padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:22px;font-weight:800;margin:0 0 4px;text-wrap:balance}
+.sub{color:var(--mu);margin:6px 0 0;max-width:68ch}
+.kick{font:600 12px var(--m);letter-spacing:.08em;text-transform:uppercase;color:var(--ac)}
+section{border-top:2px solid var(--rule);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.lead{color:var(--mu);margin:0;max-width:72ch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:2px solid var(--rule)}
+.tile{padding:14px;border-right:2px solid var(--rule);border-bottom:2px solid var(--rule);margin:0 -2px -2px 0;background:var(--card)}
+.tile b{display:block;font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.tile span{display:block;color:var(--mu);font-size:13px;margin-top:6px}
+.tile.red b{color:var(--ac)} .tile.gn b{color:var(--gn)} .tile.am b{color:var(--am)}
+.bar{display:flex;height:34px;border:2px solid var(--rule)}
+.bar div{display:flex;align-items:center;justify-content:center;font:600 12px var(--m);color:var(--tx);min-width:0;overflow:hidden;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mu)}
+.legend i{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border:1px solid var(--rule)}
+.tw{overflow-x:auto;border:2px solid var(--rule);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:9px 10px;border-bottom:2px solid var(--rule);background:var(--sf)}
+td{padding:9px 10px;border-bottom:1px solid var(--hl);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n{font:600 13px var(--m);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--mu)}
+code{font:12px var(--m);background:var(--sf);padding:1px 4px}
+.pill{display:inline-block;font:600 11px var(--m);padding:3px 7px;white-space:nowrap;letter-spacing:.02em}
+.p-miss{background:var(--ab);color:var(--ad)}
+.p-local{background:var(--amb);color:var(--am)}
+.p-part{background:var(--amb);color:var(--am)}
+.p-br{background:var(--blb);color:var(--bl)}
+.p-done{background:var(--gb);color:var(--gn)}
+.p-fd{background:var(--sf);color:var(--tx);outline:1px solid var(--rule)}
+.p-con{background:var(--ac);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 13px var(--f);padding:7px 12px;border:2px solid var(--rule);background:var(--card);color:var(--tx);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--tx);color:var(--bg)}
+.chip:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.two>div{min-width:0;display:flex;flex-direction:column;gap:8px}
+h3{font-size:16px;font-weight:700;margin:0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0;border:2px solid var(--rule)}
+.step{padding:14px;background:var(--card);border-right:2px solid var(--rule);border-bottom:2px solid var(--rule);margin:0 -2px -2px 0;display:flex;flex-direction:column;gap:6px}
+.step .kick{color:var(--mu)} .step b{font-size:16px} .step p{margin:0;color:var(--mu);font-size:13px}
+.who{font:600 11px var(--m);color:var(--ac)}
+footer{color:var(--mu);font-size:13px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kick">Audit · 3 Oct 2026 · main @ 6a71a58 + open PRs #80, #81</div>
+    <h1>Hostelzy: what's missing</h1>
+    <p class="sub">Everything discussed (DECISIONS, F02–F24 specs, the original design chat, marketing, finance and brand docs) checked against the app code, the server and the "Main design" canvas. This is the list to close before we say the app and design match one to one.</p>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><b>70</b><span>app screens + 36 sheets</span></div>
+    <div class="tile"><b>181</b><span>unique canvas boards</span></div>
+    <div class="tile red"><b>6</b><span>boards with no app screen</span></div>
+    <div class="tile am"><b>6</b><span>boards where the app differs</span></div>
+    <div class="tile red"><b>29</b><span>F24 items not done on main</span></div>
+    <div class="tile red"><b>12</b><span>gaps not on any list yet</span></div>
+    <div class="tile am"><b>8</b><span>fake or false lines in the app</span></div>
+    <div class="tile"><b>15</b><span>things only the founder can do</span></div>
+  </div>
+
+  <section id="f24">
+    <div class="kick">1 · F24 progress</div>
+    <h2>31 items: 2 done, 4 waiting on open PRs, 25 still to build</h2>
+    <div class="bar" role="img" aria-label="F24: 2 done, 7 partial, 4 on open PRs, 3 phone-only, 15 missing">
+      <div style="flex:2;background:var(--gb)">2</div>
+      <div style="flex:7;background:var(--amb)">7</div>
+      <div style="flex:4;background:var(--blb)">4</div>
+      <div style="flex:3;background:var(--amb);opacity:.7">3</div>
+      <div style="flex:15;background:var(--ab)">15</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--gb)"></i>Done on main</span>
+      <span><i style="background:var(--amb)"></i>Partial (on server, gaps left)</span>
+      <span><i style="background:var(--blb)"></i>Built on open PR</span>
+      <span><i style="background:var(--amb);opacity:.7"></i>Phone only, not saved</span>
+      <span><i style="background:var(--ab)"></i>Missing</span>
+    </div>
+    <div class="chips" role="group" aria-label="Filter F24 items">
+      <button class="chip" data-f="all" aria-pressed="true">All 31</button>
+      <button class="chip" data-f="miss" aria-pressed="false">Missing</button>
+      <button class="chip" data-f="local" aria-pressed="false">Phone only</button>
+      <button class="chip" data-f="part" aria-pressed="false">Partial</button>
+      <button class="chip" data-f="br" aria-pressed="false">On open PR</button>
+      <button class="chip" data-f="done" aria-pressed="false">Done</button>
+    </div>
+    <div class="tw"><table id="f24t"><thead><tr><th>#</th><th>Item</th><th>Status</th><th>What's left</th><th>Board</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="canvas">
+    <div class="kick">2 · Design ↔ app</div>
+    <h2>Screens that don't match one to one</h2>
+    <p class="lead">Every app screen and sheet has a board. The gaps go the other way: Design has drawn F24 boards that Build hasn't made yet.</p>
+    <div class="two">
+      <div><h3>Board exists, no app screen</h3>
+        <div class="tw"><table style="min-width:0"><thead><tr><th>Board</th><th>Screen</th><th>Status</th></tr></thead><tbody id="noapp"></tbody></table></div></div>
+      <div><h3>Board exists, app looks different</h3>
+        <div class="tw"><table style="min-width:0"><thead><tr><th>Board</th><th>Difference</th></tr></thead><tbody id="diff"></tbody></table></div></div>
+    </div>
+    <h3>App states with no board (Design to add)</h3>
+    <div class="tw"><table><thead><tr><th>State</th><th>Role</th><th>Where</th></tr></thead><tbody id="noboard"></tbody></table></div>
+  </section>
+
+  <section id="new">
+    <div class="kick">3 · Not on any list yet</div>
+    <h2>Agreed earlier, never built, missing from F24</h2>
+    <div class="tw"><table><thead><tr><th>Source</th><th>Requirement</th><th>Role</th><th>Status</th></tr></thead><tbody id="newt"></tbody></table></div>
+  </section>
+
+  <section id="fake">
+    <div class="kick">4 · Honesty</div>
+    <h2>Fake values and false lines live users can see</h2>
+    <div class="tw"><table><thead><tr><th>What the app says</th><th>Truth</th><th>Where</th></tr></thead><tbody id="fakes"></tbody></table></div>
+  </section>
+
+  <section id="contra">
+    <div class="kick">5 · Contradicts DECISIONS.md</div>
+    <h2>The app goes against what was decided</h2>
+    <div class="tw"><table><thead><tr><th>Decision</th><th>App today</th><th>Fix</th></tr></thead><tbody id="cont"></tbody></table></div>
+  </section>
+
+  <section id="founder">
+    <div class="kick">6 · Founder</div>
+    <h2>Only you can do these</h2>
+    <div class="two">
+      <div><h3>Physical steps</h3>
+        <div class="tw"><table style="min-width:0"><thead><tr><th>Step</th><th>Unblocks</th></tr></thead><tbody id="fsteps"></tbody></table></div></div>
+      <div><h3>Answers needed</h3>
+        <div class="tw"><table style="min-width:0"><thead><tr><th>Question</th><th>Blocks</th></tr></thead><tbody id="fq"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <section id="docs">
+    <div class="kick">7 · Stale docs</div>
+    <h2>Docs that say the wrong thing</h2>
+    <div class="tw"><table><thead><tr><th>File</th><th>Wrong</th><th>Right</th></tr></thead><tbody id="stale"></tbody></table></div>
+  </section>
+
+  <section id="plan">
+    <div class="kick">8 · Order of work</div>
+    <h2>How we close it</h2>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <footer>Sources: three code audits of hostelzy/lib, supabase/migrations, app/console and the 205-board canvas (QscJkLoFAh1MEHCZ1ckLgB). Full list also in <code>docs/AUDIT-2026-10-03.md</code>.</footer>
+</div>
+
+<script>
+const P={miss:['p-miss','Missing'],local:['p-local','Phone only'],part:['p-part','Partial'],br:['p-br','Open PR'],done:['p-done','Done'],fd:['p-fd','Founder'],con:['p-con','Contradicts']};
+const pill=k=>`<span class="pill ${P[k][0]}">${P[k][1]}</span>`;
+const f24=[
+[1,'Owner phone on the server','part','Bed sheet "Message resident" has no phone number; no separate owner WhatsApp','—'],
+[2,'Onboard a real hostel','part','Map pin is the area centre, not the hostel; console "Go live" skips the checklist and trial; gate time, rules, amenities not saved','aAdd 1–7'],
+[3,'Owner room/floor edits saved','done','Toast still says "Hostelzy draws its layout"','oRooms'],
+[4,'Food menu','part','Meal reminders still use fixed times, not the menu times','food, menu'],
+[5,'Notice / swap / move-out / refund','br','In PR #81; needs SQL 4y','f24-oRefund, f24-rRefund'],
+[6,'Real values (reply time, ranking, availability, rules)','br','PR #81 fixes reply time and ranking. Availability "confirmed X days ago" still fake','—'],
+[7,'Item Working / Not working','local','Not saved; "Complaint raised 30 Sep" is hard-coded','f23-Today'],
+[8,'Hold for a walk-in','local','Phone timer only','bedSheet'],
+[9,'"Still N free beds?" + confirm layouts','local','Not saved, no push','f24-oTodayCards'],
+[10,'Fan / AC layer toggle','miss','Rings always drawn (against DECISIONS F12)','f24-roomLayersOn'],
+[11,'Room shapes L/T/U/custom + 48 h request','miss','Rectangles only; request goes by WhatsApp; console queue is a placeholder','f24-oShape, oShapeReq, cLayoutHelp'],
+[12,'Deal headline = 6-month saving','miss','Hostel page shows only "Hostelzy price"','r-detail'],
+[13,'"Your price is fixed" perks on server','miss','Kept on the phone','— (needs board)'],
+[14,'"Did you join?" saved','miss','Not sent; toast claims "Only Hostelzy sees your answer"','holds'],
+[15,'"Checked by N" on the hostel page','miss','Room view only','r-detail'],
+[16,'Trusted tenant perks','part','Level from local counters; no first look, no lower-advance deals','f24-trustedPerks'],
+[17,'Owner-only areas locked for managers','miss','Managers can write rates/deals, read plan and cases (RLS + app)','—'],
+[18,'Fair Play hardening','part','Rules acceptance local; strikes never expire; strike 3 app-only; 2 of 6 signals; console ignores tenant reports; wrong strike label; no "before" import','f07-Strike, cCases'],
+[19,'AC room needs an AC unit on rate change','miss','Saves anyway, says "team adds it"','rates'],
+[20,'Featured spot for 80+ beds','miss','Plan text only','— (needs board)'],
+[21,'Deals pause at 15 days late + pushes','part','Tenants can\'t read invoices so deals never pause; no rent-due, invoice, 5-day pushes','plan'],
+[22,'Notification switches on server + new-bed alerts','miss','Switches are local only','settings'],
+[23,'Edit your name; never pre-filled','miss','Google name pre-filled; Settings → Name is a toast','— (needs board)'],
+[24,'Confirm stay / camera explainer','done','Closed by Build (#77)','—'],
+[25,'Electricity by meter','miss','Resident line is sample data only','f24-oMeter, f24-rentMeter'],
+[26,'Laundry day','miss','Greyed placeholder row','f24-oLaundry'],
+[27,'"Tell me when it\'s ready" alert','miss','Toast only','f12-Soon'],
+[28,'Remove OTP wording','part','Still in poster ("Verify your phone", "OTP"), layout, onboarding, residents','f14-Poster'],
+[29,'Team tracker + members from server','miss','"Founder 9000000100" and seed leads','aTrack, aTeam'],
+[30,'Offline cache + https App Links','br','PR #80; verified links need assetlinks.json (founder)','r-offline'],
+[31,'Staging + Play AAB build','br','PR #80; needs upload key + staging project (founder)','—']];
+function drawF24(f){document.querySelector('#f24t tbody').innerHTML=f24.filter(r=>f==='all'||r[2]===f).map(r=>`<tr><td class="n">${r[0]}</td><td>${r[1]}</td><td>${pill(r[2])}</td><td>${r[3]}</td><td><code>${r[4]}</code></td></tr>`).join('')}
+drawF24('all');
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));drawF24(b.dataset.f)});
+
+const rows=(id,a,fn)=>document.getElementById(id).innerHTML=a.map(fn).join('');
+rows('noapp',[['f24-oMeter','Owner: electricity meter per room','miss'],['f24-oLaundry','Owner: laundry day','miss'],['f24-oCasePhoto','Owner: case photo proof','miss'],['f24-oShape','Owner: L/T/U/custom shapes','miss'],['f24-oRefund','Owner: refund','br'],['f24-rRefund','Resident: refund tracked','br']],r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${pill(r[2])}</td></tr>`);
+rows('diff',[['f24-rentMeter','Meter line shows on sample data only'],['f24-oShapeReq','"Ask Hostelzy" opens WhatsApp, no in-app request'],['f24-roomLayersOn','No Fan / AC toggles; always drawn'],['f24-trustedPerks','One line in Rewards, no perks section'],['f24-mgrJoin','No join screen; code typed in the resident field'],['f24-cLayoutHelp','Console page is a placeholder']],r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td></tr>`);
+rows('noboard',[['Explore: offline with cached list (PR #80)','Tenant','screens_tenant.dart'],['Owner Today: notice and move-request cards (PR #81)','Owner','screens_owner.dart'],['Bed sheet: "moved out" (PR #81)','Owner','shell.dart'],['Me: "Your refund" row (PR #81)','Resident','screens_tenant.dart'],['Resident: "not on Hostelzy yet"','Resident','screens_resident.dart:208'],['Hold "isn\'t on this phone any more"','Tenant','screens_tenant.dart:1344'],['Map: "No hostels here yet"','Tenant','ui/map.dart:170'],['Console: "Not set up yet" / "Couldn\'t start"','Team','console.js:29']],r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><code>${r[2]}</code></td></tr>`);
+
+rows('newt',[
+['F03','"Best deals" sort on Explore (owner screen still promises it)','Tenant','part'],
+['F03','Rates confirmed monthly: "Confirmed by owner · date"','Owner/Tenant','miss'],
+['F05','Enquiry WhatsApp ends with the r/HZ-… link','Tenant','part'],
+['F05 / F08','One enquiry per bed and one review per stay, enforced on the server','Tenant','miss'],
+['F08','Review asked after 30 days, editable; owner replies once; report abuse works','Resident/Owner','part'],
+['F12','Women\'s PG floor plan hidden until a hold (server side)','Tenant','part'],
+['F12','One editor at a time on a layout','Owner/Team','miss'],
+['F13 / S4','A "layout is wrong" review flags the room','Team','miss'],
+['F14','Scan the invite QR inside the app','Resident','miss'],
+['Brand','Push icon on server pushes; dark splash #161514','All','part'],
+['Finance','Partner code: ₹20 per hold (already in the hiring post)','Partner','miss'],
+['chat1','Building view, owner corridor floor plan, owner menu week table (dropped in redesign)','Tenant/Owner','fd']],
+r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td><td>${pill(r[3])}</td></tr>`);
+
+rows('fakes',[
+['"Usually replies in ~0 min" + "Quick replies"','No reply data on live hostels (fixed in PR #81)','repo.dart:771'],
+['"Confirmed by the owner today" on every hostel','Nothing is confirmed','state.dart:566'],
+['"Complaint raised 30 Sep"','Hard-coded date','screens_tenant.dart:1228'],
+['"Only Hostelzy sees your answer"','The answer is never sent','fair_play.dart:143'],
+['"Tenants see walk-in prices only" (late plan)','Tenants still see deals','plan.dart:303'],
+['"a yes unlocks your ₹100 Member reward"','Nothing is unlocked by that answer','screens_tenant.dart:499'],
+['"Editing your name comes with your account online (F13)"','The account is online now','settings.dart:107'],
+['"Did you join anjani…" fallback','Falls back to a sample hostel','fair_play.dart']],
+r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><code>${r[2]}</code></td></tr>`);
+
+rows('cont',[
+['F12: Fan / AC rings only when the layer is on','Always drawn','Add the layer toggle (F24 #10)'],
+['F07: strike 2 hides deals for 30 days','Strikes never expire','Expire strikes on the server (F24 #18)'],
+['Owners draw their own layouts','Copy says "Hostelzy team draws / adds AC within 48 h"','Rewrite 5 lines of copy'],
+['F14: only the owner sees billing, deals, rates','Managers can too','Role checks in RLS + app (F24 #17)'],
+['F03: headline is the 6-month saving','Not on the hostel page','F24 #12']],
+r=>`<tr><td>${r[0]}</td><td>${pill('con')} ${r[1]}</td><td>${r[2]}</td></tr>`);
+
+rows('fsteps',[
+['Run SQL 4d → 4x, then 4y, 4z','Every server feature since S1'],
+['Demo APK key (4n)','Sign-in on the demo APK'],
+['Merge-day: assetlinks.json (6c)','Verified https links'],
+['Play upload key (6a) + staging project (6b)','Play Store build'],
+['Play Console ($25) + hostelzy.in domain','Launch'],
+['Map key or MapTiler','Keyed map'],
+['Firebase Blaze card','SMS OTP'],
+['Native Telugu / Hindi check','Languages'],
+['Make repo private (last)','—']],r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`);
+rows('fq',[
+['Monthly cap on Hostelzy-funded rewards (₹5,000 proposed)','F09 waitlist message'],
+['Partner pay per hold (₹20 in hiring post)','Partner codes'],
+['Founding hostel badge + 3-month featured spot?','Marketing pitch'],
+['"No enquiry in 30 days" guarantee?','Owner pitch'],
+['Reward for approved layout fixes','F19'],
+['Keep or bring back: Building view, owner corridor plan, menu week table','Canvas count']],r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`);
+
+rows('stale',[
+['BOARD.md · F13 row','Holds, residents, reviews… "not on the server yet"','S1–S8 are merged'],
+['BOARD.md · F24 row','"Building item 4"','#77–#79 merged; #80, #81 open'],
+['BOARD.md · links','"170 frames"','205 boards (v23)'],
+['ARCHITECTURE.md · Today','Release runs DATA=sample','Release runs on Supabase'],
+['FOUNDER-TODO','4a/4e under "Now"; step 7 says hostelzy.in pages','Already done; pages on farhath.me'],
+['DECISIONS.md','"Logo: concept C" not struck','Final logo B3-a2'],
+['F15 Build','Placeholder URLs, debug key, 6-digit code delete','Real values'],
+['Marketing README','"App name may change (Cotkey…)"','Name stays Hostelzy']],r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`);
+
+document.getElementById('steps').innerHTML=[
+['Now','Founder','Run SQL, merge #80 + #81','Server features switch on; refunds and offline list land.'],
+['Wave 0','Build','Remove fakes, fix copy','The 8 false lines and 5 decision contradictions. Small, high trust.'],
+['Wave 1','Design + Build','6 missing boards → screens','Meter, laundry, case photo, shapes, layer toggle, perks. Same count both ways.'],
+['Wave 2','Build','Phone-only → server','Items 7, 8, 9, 13, 14, 16, 22, 29 saved and pushed.'],
+['Wave 3','Build','Rules on the server','Owner-only areas, Fair Play hardening, deals pause, featured spot.'],
+['Wave 4','Ideas + Design + Build','New gaps (section 3)','Best deals sort, confirmed date, uniqueness, QR scan, partner code.'],
+['Launch','Founder','Keys and accounts','Play, domain, map, OTP, Telugu, private repo.']
+].map(s=>`<div class="step"><span class="kick">${s[0]}</span><span class="who">${s[1]}</span><b>${s[2]}</b><p>${s[3]}</p></div>`).join('');
+</script>

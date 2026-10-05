@@ -1,0 +1,180 @@
+<title>Hostelzy Launch Steps</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one vertical stepper; each step is a card that opens to show Why / You do / Claude does / Say this / Done when */
+:root{
+  --bg:#f3f2f2;--card:#ffffff;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--rule:#201e1d;
+  --red:#ec3013;--redb:#ffe0d9;--gn:#1f7a3d;--gnb:#dcefe0;--am:#8a5a00;--amb:#fbecc8;--bl:#1f4f8a;--blb:#dde8f6;
+  --f:Archivo,system-ui,sans-serif;--m:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161514;--card:#1f1d1b;--sf:#2a2724;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;
+  --red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161514;--card:#1f1d1b;--sf:#2a2724;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;
+  --red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:16px/1.45 var(--f);padding-inline:16px;padding-block:24px 64px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:clamp(28px,6vw,44px);font-weight:900;margin:0;letter-spacing:-.02em}
+.hint{color:var(--mu);margin:4px 0 0;font-size:15px}
+.truth{border:2px solid var(--am);background:var(--amb);padding:14px;display:flex;flex-direction:column;gap:6px}
+.truth b{font-size:18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.who{font:700 11px var(--m);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;white-space:nowrap}
+.w-you{background:var(--redb);color:var(--red)} .w-cl{background:var(--blb);color:var(--bl)} .w-both{background:var(--amb);color:var(--am)}
+.prog{display:flex;align-items:center;gap:12px;font-weight:700}
+.prog .track{flex:1;height:16px;border:2px solid var(--rule);display:flex}
+.prog .track i{background:var(--gn);display:block;height:100%;width:0;transition:width .3s}
+@media (prefers-reduced-motion:reduce){.prog .track i{transition:none}}
+.day{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);border-top:2px solid var(--rule);padding-top:10px}
+details{border:2px solid var(--rule);background:var(--card)}
+details[open]{box-shadow:6px 6px 0 var(--rule)}
+details.done{opacity:.55}
+summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px}
+summary::-webkit-details-marker{display:none}
+summary:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.n{display:grid;place-items:center;width:38px;height:38px;background:var(--tx);color:var(--bg);font-weight:900;font-size:18px}
+details.done .n{background:var(--gn)}
+.st b{display:block;font-size:18px;line-height:1.2}
+.st span{color:var(--mu);font-size:14px}
+.meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.time{font:600 12px var(--m);color:var(--mu);white-space:nowrap}
+.body{padding:0 14px 14px;display:grid;grid-template-columns:1fr;gap:12px}
+.row{display:grid;grid-template-columns:110px 1fr;gap:10px;border-top:1px solid var(--sf);padding-top:10px}
+@media (max-width:560px){.row{grid-template-columns:1fr}}
+.row>b{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}
+.row ol,.row ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.say{background:var(--sf);border-left:4px solid var(--red);padding:10px 12px;font:14px/1.5 var(--m);white-space:pre-wrap;position:relative}
+.copy{margin-top:6px;font:700 13px var(--f);border:2px solid var(--rule);background:var(--card);color:var(--tx);padding:5px 10px;cursor:pointer}
+.mark{justify-self:start;font:800 15px var(--f);border:2px solid var(--rule);background:var(--gnb);color:var(--gn);padding:8px 14px;cursor:pointer}
+details.done .mark{background:var(--card);color:var(--mu)}
+code{font:13px var(--m);background:var(--sf);padding:1px 4px}
+footer{color:var(--mu);font-size:14px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hostelzy: launch steps</h1>
+    <p class="hint">One at a time, top to bottom. Tap a step to open it. Tap "Done" when finished. Today 3 Oct → tomorrow 4 Oct.</p>
+  </header>
+
+  <div class="truth">
+    <b>Read once: what "by tomorrow" can mean</b>
+    <span>✅ Tomorrow: a production-grade app on real phones, real hostels on it, marketing started. People install it from your download page.</span>
+    <span>⏳ Not tomorrow: the Google Play Store. A new personal Play account must run a closed test with 12 testers for 14 days first. We start that tomorrow, so Play goes live about 18 Oct.</span>
+  </div>
+
+  <div class="legend"><span class="who w-you">You</span><span class="who w-cl">Claude does it</span><span class="who w-both">Both</span></div>
+  <div class="prog"><span id="pc">0 of 12 done</span><div class="track"><i id="pb"></i></div></div>
+
+  <div id="steps"></div>
+
+  <footer>Every "Say this" goes to the hub chat (Hostelzy app review). The hub passes work to Build, Design, Marketing, Finance and Brand.</footer>
+</div>
+
+<script>
+const S=[
+{day:'Today · afternoon',t:'Unblock the Design chat',s:'One tap',who:'you',time:'1 min',
+ why:'Design is frozen until you approve. It has to copy the design canvas to this account.',
+ you:['Open <b>Hostelzy · Design</b> in your chat list.','Tap <b>Approve</b> on the Artifact permission.','If it asks again, choose "Always allow".'],
+ cl:['Copies all 205 design boards to a canvas you own.','Adds the missing boards.'],
+ done:'Design chat shows "working", not "waiting".'},
+{t:'Turn on the server features',s:'Paste 18 SQL files in Supabase',who:'you',time:'30–40 min',
+ why:'Half the app (holds, residents, reviews, Fair Play, food menu, real hostels…) only works after these run. Nothing else matters until this is done.',
+ you:['Open supabase.com → your project → <b>SQL Editor</b> → <b>New query</b>.','Ask the hub for the next file (say below). I paste it back to you ready to copy.','Paste → <b>Run</b> → must say "Success".','Repeat in order: 4d, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4o, 4p, 4q, 4r, 4s, 4u, 4v, 4w, 4x.','Then 4y and 4z when Build says #81 is merged.'],
+ cl:['Hands you each file in order, one at a time.','If one fails, reads the error and gives you the fix.','Ticks each one in FOUNDER-TODO.md.'],
+ say:'Give me SQL step 4d to paste in Supabase. After I say "done", give me the next one.',
+ done:'All 18 say "Success". The hub confirms every server feature is on.'},
+{t:'Merge the two waiting pull requests',s:'Refunds + offline list',who:'cl',time:'1–2 h',
+ why:'Move-out, refunds, real reply times, the offline list and the Play Store build are finished but not merged.',
+ you:['Nothing. Carry on with step 2 meanwhile.'],
+ cl:['Build makes #81 and #80 pass all tests, then merges them.','A new APK builds automatically.','The hub sends you the release page link.'],
+ say:'Status of #81 and #80?',
+ done:'You get a message: "apk-N ready" with a GitHub release page link.'},
+{t:'Remove every fake thing',s:'8 false lines + 5 rule breaks',who:'cl',time:'2–3 h',
+ why:'Rule 1 is "Honest". Real users must never see "replies in ~0 min" or "confirmed today" when nothing was confirmed.',
+ you:['Nothing.'],
+ cl:['Build fixes the 8 false lines and 5 contradictions in the audit.','Removes all "OTP / verified" wording.','Fan/AC rings only when switched on.','Strikes expire after 30 days.'],
+ say:'Start Wave 0 now: remove all fake values and false lines from the audit.',
+ done:'Hub reports "Wave 0 merged" + new APK.'},
+{t:'Test the app on your phone',s:'The 10-minute test',who:'you',time:'30 min',
+ why:'Your phone test of apk-29 found 10 bug groups. One real test beats any review.',
+ you:['Install the APK from the release page (Settings may ask to allow installs).','Do these 8 things: sign in with Google · browse as a guest · hold a bed · as owner, accept the hold · add a resident · resident pays rent with a UPI reference · owner confirms · raise a complaint with a photo.','Use a 2nd phone or ask a friend for the tenant side.','Screenshot anything wrong.'],
+ cl:['Turns each screenshot into a bug fix.','Build fixes and merges; you get a new APK.'],
+ say:'Bug: [what you did] → [what went wrong]. (attach screenshot)',
+ done:'All 8 flows work with no fake text.'},
+{day:'Today · evening',t:'Build the 6 missing screens',s:'Design = App, same count',who:'cl',time:'4–6 h, runs overnight',
+ why:'Rule 3: every design board is a real screen. 6 are drawn but not built.',
+ you:['Nothing. Go to step 7 while this runs.'],
+ cl:['Build: electricity meter, laundry day, case photo, room shapes, Fan/AC switch, Trusted perks, manager join, console layout help.','Design: draws boards for the small states that have none.','Hub checks the count: App N = Design N.'],
+ say:'Start Wave 1: the 6 missing screens and the 6 that differ.',
+ done:'Hub shows "App 181 · Design 181".'},
+{t:'Open the accounts only you can open',s:'Money + identity',who:'you',time:'1 h',
+ why:'Claude cannot pay or sign up for you. These unlock launch.',
+ you:['<b>Play Console</b> ($25): play.google.com/console. Needs an international card. Pick "Personal" account.','<b>Domain</b> hostelzy.in (~₹800/yr) on Hostinger or GoDaddy (UPI works).','<b>Map</b>: MapTiler free account (no card) → copy the API key.','<b>Play upload key</b>: tell the hub "make the upload key". It gives you 2 commands and where to store it (GitHub secret + a USB copy).','Skip OTP for now (needs a card on Firebase Blaze). Google sign-in is enough to launch.'],
+ cl:['Finance lists all costs and due dates.','Build wires the domain, map key and upload key once you send them.'],
+ say:'I bought the domain hostelzy.in and made a MapTiler key: [key]. Set them up.',
+ done:'Play Console open, domain bought, map key sent.'},
+{t:'Make it production grade',s:'Security, crashes, backups',who:'cl',time:'3–4 h, overnight',
+ why:'Real people\'s phone numbers and money records. It must be safe and you must know when it breaks.',
+ you:['Create a 2nd free Supabase project named <b>hostelzy-staging</b> and send the hub its URL + anon key (never the service_role key).'],
+ cl:['Security review of every database rule (who can read what).','Managers locked out of plan, deals and rates.','Crash reports on (Crashlytics) for every error.','Staging for testing, production for real users.','Release signed with your upload key.','Privacy policy, terms and delete-account pages on hostelzy.in.'],
+ say:'Run the production hardening: security review of all RLS, owner-only areas, crash reporting, staging split.',
+ done:'Hub reports security review clean + staging live.'},
+{day:'Tomorrow · morning',t:'Phone-only features to the server',s:'Waves 2 and 3',who:'cl',time:'runs overnight',
+ why:'Some features only save on one phone (walk-in holds, "Did you join?", notification switches). They must work across phones.',
+ you:['Nothing. Read the morning summary.'],
+ cl:['Build moves every phone-only feature to the server.','Adds SQL steps to your list (do them like step 2).','Deals pause for late owners, rent-due pushes, featured spot.'],
+ say:'Morning summary please.',
+ done:'Hub: "Waves 2–3 merged" + a short SQL list for you.'},
+{t:'Final test, then release',s:'The launch APK',who:'both',time:'1 h',
+ why:'One last real-phone check before owners see it.',
+ you:['Run any new SQL steps.','Repeat the 8-flow test from step 5.','Say "release" when happy.'],
+ cl:['Builds the signed production APK.','Puts the download button on hostelzy.in.','Uploads the same build to Play Console closed testing.'],
+ say:'Release: production APK + upload to Play closed testing.',
+ done:'hostelzy.in has a working download. Play closed test started.'},
+{day:'Tomorrow · day',t:'Put the first real hostels on',s:'3–5 PGs in one area',who:'both',time:'half a day',
+ why:'An empty app sells nothing. Real beds first, then tenants.',
+ you:['Pick one area (Madhapur or Ameerpet).','Visit 5 PGs with Marketing\'s owner pitch on your phone.','In the app: Me → Hostelzy team → Add hostel. 7 steps: rooms, rates, 8 photos, residents, owner link.','Tap "Go live". The 30-day free trial starts by itself.','Print each owner\'s poster (Invite → Print poster).'],
+ cl:['Marketing gives you the pitch, objection answers and a leave-behind.','Hub tracks hostels signed vs. the goal of 20.'],
+ say:'Give me the owner pitch for today in 5 lines, plus answers to the top 5 objections.',
+ done:'3+ hostels live with real beds and photos.'},
+{t:'Start marketing',s:'Tenants find the beds',who:'both',time:'ongoing',
+ why:'Owners stay only if tenants come. Cheap channels first, within the ₹40k/month budget.',
+ you:['Post 1 reel a day from Marketing\'s scripts (film at the live PGs).','Share hostel links in college and IT WhatsApp groups near the area.','Stick the posters at each live PG gate.','Hire a part-time marketing intern with Finance\'s hiring post.'],
+ cl:['Marketing writes each day\'s reel, caption and group message.','Finance tracks spend against budget.','Hub reports holds and enquiries per hostel.'],
+ say:'Today\'s marketing: 1 reel script, 1 WhatsApp message, and which groups to post in.',
+ done:'First tenant holds a bed through Hostelzy. 🎉'}
+];
+const icon={you:['w-you','You'],cl:['w-cl','Claude'],both:['w-both','Both']};
+let done={};try{done=JSON.parse(localStorage.getItem('hz-launch')||'{}')}catch(e){}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function render(){
+  const el=document.getElementById('steps');let h='';let firstOpen=false;
+  S.forEach((x,i)=>{
+    if(x.day)h+=`<div class="day">${x.day}</div>`;
+    const d=!!done[i];const open=!d&&!firstOpen;if(open)firstOpen=true;
+    h+=`<details class="${d?'done':''}" ${open?'open':''}><summary><span class="n">${d?'✓':i+1}</span><span class="st"><b>${x.t}</b><span>${x.s}</span></span><span class="meta"><span class="who ${icon[x.who][0]}">${icon[x.who][1]}</span><span class="time">${x.time}</span></span></summary>
+    <div class="body">
+      <div class="row"><b>Why</b><span>${x.why}</span></div>
+      <div class="row"><b>You do</b><ol>${x.you.map(a=>`<li>${a}</li>`).join('')}</ol></div>
+      <div class="row"><b>Claude does</b><ul>${x.cl.map(a=>`<li>${a}</li>`).join('')}</ul></div>
+      ${x.say?`<div class="row"><b>Say this</b><div><div class="say" id="say${i}">${esc(x.say)}</div><button class="copy" data-i="${i}">Copy</button></div></div>`:''}
+      <div class="row"><b>Done when</b><span>${x.done}</span></div>
+      <button class="mark" data-i="${i}">${d?'Undo':'Done ✓'}</button>
+    </div></details>`;
+  });
+  el.innerHTML=h;
+  const n=Object.values(done).filter(Boolean).length;
+  document.getElementById('pc').textContent=`${n} of ${S.length} done`;
+  document.getElementById('pb').style.width=(n/S.length*100)+'%';
+}
+document.addEventListener('click',e=>{
+  const m=e.target.closest('.mark');
+  if(m){const i=m.dataset.i;done[i]=!done[i];try{localStorage.setItem('hz-launch',JSON.stringify(done))}catch(_){ }render();return}
+  const c=e.target.closest('.copy');
+  if(c){const t=document.getElementById('say'+c.dataset.i).textContent;
+    navigator.clipboard.writeText(t).then(()=>{c.textContent='Copied'},()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('say'+c.dataset.i));const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent='Selected, copy it'});}
+});
+render();
+</script>

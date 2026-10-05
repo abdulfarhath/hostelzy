@@ -1,0 +1,205 @@
+<title>Missing Screens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone frames side by side, each redrawn from the old Flutter code; a table below says where each lived */
+:root{--bg:#f3f2f2;--sf:#eae9e9;--card:#fff;--tx:#201e1d;--mu:#605d5d;--hl:rgba(32,30,29,.16);--tk:#bab6b6;--ac:#ec3013;--gn:#1f7a3d;--gnb:#dcefe0;--amb:#fbecc8;--am:#8a5a00;--f:Archivo,system-ui,sans-serif;--m:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--hl:rgba(240,238,238,.14);--tk:#4a4646;--ac:#ff563c;--gn:#5fcf86;--gnb:#133a22;--amb:#3a2c0c;--am:#f2c063;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161514;--sf:#24221f;--card:#1d1b1a;--tx:#f0eeee;--mu:#bab6b6;--hl:rgba(240,238,238,.14);--tk:#4a4646;--ac:#ff563c;--gn:#5fcf86;--gnb:#133a22;--amb:#3a2c0c;--am:#f2c063;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:15px/1.4 var(--f);padding-inline:16px;padding-block:24px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-size:clamp(26px,5vw,40px);font-weight:800;margin:0;letter-spacing:-.02em}
+.hint{color:var(--mu);margin:6px 0 0;max-width:70ch}
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start}
+.phone{border:2px solid var(--tx);background:var(--card);display:flex;flex-direction:column;min-width:0}
+.cap{padding:12px 14px;border-bottom:2px solid var(--tx);display:flex;flex-direction:column;gap:4px}
+.cap b{font-size:17px}
+.tag{align-self:flex-start;font:600 11px var(--m);padding:3px 7px;text-transform:uppercase;letter-spacing:.05em}
+.t-red{background:#ffe0d9;color:#ae1800}.t-am{background:var(--amb);color:var(--am)}
+.scr{padding:14px 14px 16px}
+.kick{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.seg{display:flex;border:2px solid var(--tx);margin-bottom:12px}
+.seg span{flex:1;text-align:center;padding:7px 0;font-weight:600;font-size:13px}
+.seg span.on{background:var(--tx);color:var(--bg)}
+/* building */
+.roof{height:14px;margin:0 10%;background:var(--sf);border:2px solid var(--tx);border-bottom:0}
+.bld{border:2px solid var(--tx);border-bottom:0}
+.fl{display:flex;border-bottom:2px solid var(--tx)}
+.fl .lab{width:40px;flex:none;display:grid;place-items:center;font-weight:800;border-right:2px solid var(--tx)}
+.fl .rooms{flex:1;display:flex;min-width:0}
+.rm{flex:1;padding:8px 5px;min-width:0}
+.rm+.rm{border-left:1px solid var(--hl)}
+.rm .n{font-size:11px;font-weight:600;color:var(--mu)}
+.beds{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.bed{width:14px;height:24px;border:2px solid var(--tx);box-sizing:border-box}
+.bed.t{background:var(--tx)}.bed.h{background:repeating-linear-gradient(45deg,var(--tx) 0 2px,transparent 2px 5px)}.bed.me{background:var(--ac);border-color:var(--ac)}
+.share{display:flex;gap:4px;flex-wrap:wrap;padding:4px 6px;border-bottom:1px dashed var(--hl);background:var(--sf)}
+.chip{font:600 10px var(--m);border:1px solid var(--tx);padding:1px 5px;background:var(--card)}
+.chip.bad{border-color:var(--ac);color:var(--ac)}
+.g{padding:10px;font-size:12px;color:var(--mu)}
+.slab{height:8px;background:var(--tx);margin:0 -6px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mu)}
+.legend i{display:inline-block;width:10px;height:16px;border:2px solid var(--tx);margin-right:5px;vertical-align:-4px}
+/* owner plan */
+.ftabs{display:flex;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx);margin:0 -14px 12px}
+.ftabs span{flex:1;text-align:center;padding:8px 0;font-weight:700;font-size:13px;border-right:1px solid var(--hl)}
+.ftabs span.on{box-shadow:inset 0 -3px 0 var(--ac)}
+.lbl{display:flex;justify-content:space-between;font:600 10px var(--m);text-transform:uppercase;color:var(--mu);letter-spacing:.05em}
+.win{height:6px;background:var(--tx);margin:8px 18% 0}
+.plan{border:2px solid var(--tx)}
+.half{display:flex}
+.half .pr{flex:1;padding:8px;min-height:84px}
+.half .pr+.pr{border-left:2px solid var(--tx)}
+.pr .n{font-weight:800;font-size:13px}
+.pr .who{font:500 10px var(--m);color:var(--mu);margin-top:4px}
+.corr{display:flex;height:46px;border-top:2px solid var(--tx);border-bottom:2px solid var(--tx)}
+.corr .st{width:52px;border-right:2px solid var(--tx);background:repeating-linear-gradient(90deg,var(--tk) 0 2px,transparent 2px 7px)}
+.corr .mid{flex:1;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font:600 10px var(--m);color:var(--mu);text-transform:uppercase}
+.corr .wc{width:52px;border-left:2px solid var(--tx);display:grid;place-items:center;font-weight:800;font-size:11px;color:var(--mu)}
+.amen{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tw{overflow-x:auto;border:2px solid var(--tx);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th{font:600 11px var(--m);text-transform:uppercase;letter-spacing:.05em;color:var(--mu);text-align:left;padding:9px 10px;border-bottom:2px solid var(--tx);background:var(--sf)}
+td{padding:9px 10px;border-bottom:1px solid var(--hl);vertical-align:top}
+tr:last-child td{border-bottom:0}
+code{font:12px var(--m);background:var(--sf);padding:1px 4px}
+.pill{font:600 11px var(--m);padding:3px 7px;background:var(--gnb);color:var(--gn);white-space:nowrap}
+</style><style>
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--hl)}
+.cell{padding:8px;border:1px solid var(--hl)}
+.cell .n{font-weight:700;font-size:12px}.cell .s{font-size:11px;color:var(--mu)}
+.big{font-size:56px;font-weight:800;line-height:1}
+.obar{display:flex;height:14px;border:2px solid var(--tx);margin:10px 0 6px}
+.obar i{display:block;height:100%}
+.kpis{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--tx);margin-top:12px}
+.kpi{padding:10px;border:1px solid var(--hl)}.kpi .l{font:600 10px var(--m);text-transform:uppercase;color:var(--mu)}.kpi b{font-size:24px;display:block}.kpi span{font-size:11px;color:var(--mu)}
+.rowl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--hl);font-size:13px}
+.rowl:last-child{border-bottom:0}
+.btn{border:2px solid var(--tx);padding:3px 10px;font-weight:700;font-size:12px}
+.stag{font:600 10px var(--m);padding:2px 6px;background:var(--sf)}
+.stag.ok{background:var(--gnb);color:var(--gn)}.stag.due{background:#ffe0d9;color:#ae1800}
+.wk{width:100%;border-collapse:collapse;font-size:11px;min-width:0}
+.wk td,.wk th{border:1px solid var(--hl);padding:5px;text-align:left}
+.wk tr.today td{background:var(--sf)}
+.pick{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:2px solid var(--tx);font-weight:700;cursor:pointer}
+.pick input{width:20px;height:20px;accent-color:var(--gn)}
+.choice{border:2px solid var(--tx);background:var(--card);padding:14px;display:flex;flex-direction:column;gap:8px}
+.choice code{font-size:14px}
+.cbtn{align-self:flex-start;border:2px solid var(--tx);background:var(--tx);color:var(--bg);font:700 14px var(--f);padding:8px 14px;cursor:pointer}
+h2{font-size:22px;margin:8px 0 0}
+</style>
+<div class="wrap">
+<header><h1>Every screen that went missing</h1>
+<p class="hint">Found by checking all 87 versions of the app since 1 Oct, plus the prototype and every spec. Each one is redrawn from the old code. Tick the ones you want back, then copy your choice at the bottom.</p></header>
+<h2>🔴 Gone, no replacement</h2>
+<p class="hint">A1, A2 and A3 are your building views and are already being rebuilt (ticked for you).</p>
+<div class="phones" id="bld">
+    <!-- A: tenant building cross-section -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-red">Removed 2 Oct · #67</span><b>A · Tenant "Building" tab</b><span class="hint" style="margin:0">Bed picker · Plan / List / <b>Building</b></span></div>
+      <div class="scr">
+        <div class="seg"><span>Plan</span><span>List</span><span class="on">Building</span></div>
+        <div class="kick">Cross-section · tap any free bed</div>
+        <div class="roof"></div>
+        <div class="bld" id="bA"></div>
+        <div class="slab"></div>
+        <div class="legend"><span><i></i>Free</span><span><i style="background:var(--tx)"></i>Taken</span><span><i style="background:repeating-linear-gradient(45deg,var(--tx) 0 2px,transparent 2px 5px)"></i>On hold</span><span><i style="background:var(--ac);border-color:var(--ac)"></i>Your bed</span></div>
+      </div>
+    </div>
+
+    <!-- B: same building with shared things per floor -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-am">Being rebuilt · NEW-1 + NEW-2</span><b>B · Building + shared things</b><span class="hint" style="margin:0">Fridge, RO, washer… shown on each floor, above its rooms</span></div>
+      <div class="scr">
+        <div class="seg"><span>Plan</span><span>Room</span><span class="on">Building</span></div>
+        <div class="kick">Every floor · shared things on top</div>
+        <div class="roof"></div>
+        <div class="bld" id="bB"></div>
+        <div class="slab"></div>
+        <div class="legend"><span><span class="chip">Fridge</span> working</span><span><span class="chip bad">Washer</span> not working</span></div>
+      </div>
+    </div>
+
+    <!-- C: owner floor plan -->
+    <div class="phone">
+      <div class="cap"><span class="tag t-red">Removed in F22 redesign</span><b>C · Owner "Bed map · Floor plan"</b><span class="hint" style="margin:0">Owner › Beds · Floor plan / All floors</span></div>
+      <div class="scr">
+        <div class="kick">22 of 30 beds taken</div>
+        <div class="seg"><span class="on">Floor plan</span><span>All floors</span></div>
+        <div class="ftabs"><span>F1 · 2 free</span><span class="on">F2 · 3 free</span><span>F3 · 2 free</span></div>
+        <div class="lbl"><span>Windows · street</span><span>Floor 2</span></div>
+        <div class="win"></div>
+        <div class="plan">
+          <div class="half"><div class="pr"><div class="n">201</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed"></i></div><div class="who">RV · TN</div></div><div class="pr"><div class="n">202</div><div class="beds"><i class="bed t"></i><i class="bed"></i></div><div class="who">FM</div></div></div>
+          <div class="corr"><div class="st"></div><div class="mid"><span>← Stairs</span><span>Corridor</span></div><div class="wc">WC</div></div>
+          <div class="half"><div class="pr"><div class="n">203</div><div class="beds"><i class="bed t"></i><i class="bed h"></i><i class="bed t"></i></div><div class="who">AK · SR</div></div><div class="pr"><div class="n">204</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i><i class="bed"></i></div><div class="who">RV · PK · JD</div></div></div>
+        </div>
+        <div class="amen"><span class="chip">Fridge · near stairs</span><span class="chip">RO</span><span class="chip bad">Washer · not working</span></div>
+        <div class="lbl" style="margin-top:8px"><span>Courtyard</span><span>Tap a bed to manage</span></div>
+      </div>
+    </div>
+  </div>
+
+  
+<div class="phones">
+<div class="phone"><div class="cap"><span class="tag t-am">Being rebuilt · with NEW-3</span><b>A3 · Owner · All floors</b><span class="hint" style="margin:0">Every floor at once, rooms with bed boxes</span></div><div class="scr"><div class="kick">All floors</div><div style="display:flex;justify-content:space-between;font-weight:800;margin:10px 0 6px"><span>Floor 1</span><span style="color:var(--mu);font-weight:500">3 free</span></div><div class="grid2"><div class="cell"><div class="n">Room 101</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed "></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 102</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 103</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed "></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 104</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i></div></div></div><div style="display:flex;justify-content:space-between;font-weight:800;margin:10px 0 6px"><span>Floor 2</span><span style="color:var(--mu);font-weight:500">2 free</span></div><div class="grid2"><div class="cell"><div class="n">Room 201</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed "></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 202</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 203</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed "></i><i class="bed t"></i></div></div><div class="cell"><div class="n">Room 204</div><div class="s">3 sharing · ₹7,600</div><div class="beds"><i class="bed t"></i><i class="bed t"></i><i class="bed t"></i></div></div></div></div><label class="pick"><input type="checkbox" data-id="A3"> Bring back A3</label></div>
+<div class="phone"><div class="cap"><span class="tag t-am">Being rebuilt · NEW-4</span><b>A4 · Owner food menu · Week table</b><span class="hint" style="margin:0">Mon–Sun × Breakfast / Lunch / Dinner</span></div><div class="scr"><div class="seg"><span>Edit by day</span><span class="on">Week table</span></div><table class="wk"><tr><th>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr><tr class=""><td><b>Mon</b></td><td>Idli</td><td>Rice, dal</td><td>Chapati</td></tr><tr class=""><td><b>Tue</b></td><td>Poha</td><td>Veg biryani</td><td>Dosa</td></tr><tr class=""><td><b>Wed</b></td><td>Upma</td><td>Sambar rice</td><td>Paneer</td></tr><tr class=""><td><b>Thu</b></td><td>Puri</td><td>Curd rice</td><td>Fried rice</td></tr><tr class="today"><td><b>Fri</b></td><td>Dosa</td><td>Rajma rice</td><td>Chapati</td></tr><tr class=""><td><b>Sat</b></td><td>Vada</td><td>Chicken curry</td><td>Noodles</td></tr><tr class=""><td><b>Sun</b></td><td>Pongal</td><td>Special thali</td><td>Pulao</td></tr></table><p class="hint" style="font-size:12px">Tap a day to edit it.</p></div><label class="pick"><input type="checkbox" data-id="A4"> Bring back A4</label></div>
+<div class="phone"><div class="cap"><span class="tag t-red">Removed 2 Oct · #65</span><b>A5 · Resident · Room board</b><span class="hint" style="margin:0">Notes for your room. It was sample data; it would need to be built for real</span></div><div class="scr"><div class="kick">Room 204 board</div><div class="rowl"><span>Arjun and Sai leave 8:40 am for Mindspace. Auto share, ₹40 each.</span><span class="btn">Join</span></div><div class="rowl"><span>September electricity for room 204: ₹1,260, split 3 ways.</span></div><div class="rowl"><span>Water tank cleaning on Saturday, 10 am to 1 pm.</span></div></div><label class="pick"><input type="checkbox" data-id="A5"> Bring back A5</label></div>
+<div class="phone"><div class="cap"><span class="tag t-red">Removed 2 Oct · #68</span><b>A6 · Owner Today · Occupancy + 4 tiles</b><span class="hint" style="margin:0">Big %, occupancy bar, free beds / holds / rent / complaints</span></div><div class="scr"><div class="kick">Today</div><div style="display:flex;justify-content:space-between;align-items:flex-end"><span class="big">78%</span><span style="color:var(--mu);font-size:13px">23 of 30 beds taken</span></div><div class="obar"><i style="width:70%;background:var(--tx)"></i><i style="width:8%;background:repeating-linear-gradient(45deg,var(--tx) 0 2px,transparent 2px 5px)"></i><i style="width:6%;background:var(--ac)"></i></div><div class="legend" style="margin-top:0"><span>■ Taken</span><span>▨ On hold</span><span style="color:var(--ac)">■ Freeing up</span><span>□ Free</span></div><div class="kpis"><div class="kpi"><div class="l">Free beds</div><b>4</b><span>2 freeing up soon</span></div><div class="kpi"><div class="l">Hold requests</div><b style="color:var(--ac)">2</b><span>Need your reply</span></div><div class="kpi"><div class="l">Rent pending</div><b>₹14,800</b><span>2 overdue</span></div><div class="kpi"><div class="l">Complaints</div><b>3</b><span>Open or in progress</span></div></div></div><label class="pick"><input type="checkbox" data-id="A6"> Bring back A6</label></div>
+<div class="phone"><div class="cap"><span class="tag t-red">Removed 2 Oct · #73</span><b>A7 · Owner plan · All 3 price tiers</b><span class="hint" style="margin:0">Shows all plans and which one you're on</span></div><div class="scr"><div style="display:flex;justify-content:space-between"><span class="kick">Plans by hostel size</span><span class="kick">No commission</span></div><div class="rowl"><span>Up to 30 beds</span><b>₹499</b></div><div class="rowl" style="background:var(--sf);padding-inline:6px"><span>31 to 80 beds <span class="stag ok">Your plan</span><br><small style="color:var(--mu)">You have 42 beds</small></span><b>₹999</b></div><div class="rowl"><span>80+ beds<br><small style="color:var(--mu)">Plus a featured spot in your area</small></span><b>₹1,499</b></div></div><label class="pick"><input type="checkbox" data-id="A7"> Bring back A7</label></div>
+<div class="phone"><div class="cap"><span class="tag t-red">Removed 2 Oct · #73</span><b>A8 · Owner plan · Invoice history</b><span class="hint" style="margin:0">One row per month with its status</span></div><div class="scr"><div class="kick">Invoices</div><div class="rowl"><span><b>Oct 2026 · ₹999</b><br><small style="color:var(--mu)">HZ-INV-1042 · due 5 Oct</small></span><span class="stag due">Due</span></div><div class="rowl"><span><b>Sep 2026 · ₹999</b><br><small style="color:var(--mu)">HZ-INV-0981 · due 5 Sep</small></span><span class="stag ok">Paid</span></div><div class="rowl"><span><b>Aug 2026 · ₹999</b><br><small style="color:var(--mu)">Free trial · due 5 Aug</small></span><span class="stag ">Trial</span></div></div><label class="pick"><input type="checkbox" data-id="A8"> Bring back A8</label></div>
+</div>
+<h2>⚪ Removed on purpose (don't bring back unless you say so)</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>Screen</th><th>Why it went</th></tr></thead><tbody>
+<tr><td>A9</td><td>Resident "Confirm your stay"</td><td>The owner's approval on the server already confirms the stay</td></tr>
+<tr><td>A10</td><td>Paid hold ₹299 / 48 h</td><td>DECISIONS: Hostelzy never holds money</td></tr>
+</tbody></table></div>
+<h2>🟡 Gone but replaced by something newer (25)</h2>
+<div class="tw"><table><thead><tr><th>Old</th><th>Replaced by</th></tr></thead><tbody>
+<tr><td>Bed picker "List" tab</td><td>"See cheapest beds"</td></tr>
+<tr><td>Bed picker room drawing (beds placed by window / door)</td><td>Room cards + room layout</td></tr>
+<tr><td>"Search" tab, "Beds near X" landmark chips, area sheet</td><td>Where? + Filters + Saved</td></tr>
+<tr><td>Hostel page deal block ("With Hostelzy vs Walk in", how it works)</td><td>One price table with the 6-month deal headline</td></tr>
+<tr><td>Hold "What happens next" 3-step timeline</td><td>One status card</td></tr>
+<tr><td>Resident Home 4 quick tiles</td><td>3 actions + My stay</td></tr>
+<tr><td>Owner Today hold list + rank card</td><td>"Needs you now" + Rank in Manage</td></tr>
+<tr><td>Owner Manage tabs, Reviews filters (New / All / Low)</td><td>Manage list (filters gone)</td></tr>
+<tr><td>Fair Play case "What we saw / records"</td><td>Case timeline</td></tr>
+<tr><td>Phone OTP steps, delete-with-OTP, team passcode</td><td>Google sign-in, team claim</td></tr>
+<tr><td>Fake grid map, card / net-banking rent, deposit panel</td><td>Real map, UPI + reference, advance line</td></tr>
+</tbody></table></div>
+<h2>⚪ Ideas in the very first prototype, never built</h2>
+<div class="tw"><table><thead><tr><th>Who</th><th>Ideas</th></tr></thead><tbody>
+<tr><td>Tenant</td><td>Compare hostels · "Make an offer" · Safety tab · live WiFi / water / power</td></tr>
+<tr><td>Resident</td><td>SOS / emergency · move-in handover · Hostelzy Plus · perks nearby · bed history</td></tr>
+<tr><td>Parent</td><td>"Rahul's stay": rent, the hostel, people to call</td></tr>
+<tr><td>Owner</td><td>Who is where · mess headcount · staff · broadcast · vendors · expenses / P&amp;L · demand insights · chain of hostels · bed-level pricing · gate check-in</td></tr>
+<tr><td>Hostelzy team</td><td>Inspections · disputes · rent index · field captains · partners API</td></tr>
+</tbody></table></div>
+<div class="choice"><b>Your choice</b><code id="out">Bring back: A1, A2, A3, A4</code><button class="cbtn" id="cp">Copy</button><span class="hint" style="margin:0">Paste it to the hub chat. Prototype ideas: just name them.</span></div>
+</div>
+<script>
+const ROOMS={3:[[301,['t','','t']],[302,['t','t']],[303,['','t','t','h']],[304,['t','']]],
+ 2:[[201,['t','t','']],[202,['t','']],[203,['t','h','t']],[204,['t','t','me','']]],
+ 1:[[101,['t','t']],[102,['','t','t']],[103,['t','t','t','']],[104,['t','']]]};
+const SHARED={3:[['RO',0],['Iron',0]],2:[['Fridge',0],['RO',0],['Washer',1]],1:[['Fridge',0],['RO',0],['Washer',0]]};
+function build(id,withShared){
+  let h='';
+  for(const f of [3,2,1]){
+    if(withShared)h+=`<div class="share">${SHARED[f].map(([n,b])=>`<span class="chip${b?' bad':''}">${n}${b?' · not working':''}</span>`).join('')}</div>`;
+    h+=`<div class="fl"><div class="lab">F${f}</div><div class="rooms">${ROOMS[f].map(([n,bs])=>`<div class="rm"><div class="n">${n}</div><div class="beds">${bs.map(b=>`<i class="bed ${b}"></i>`).join('')}</div></div>`).join('')}</div></div>`;
+  }
+  h+=`<div class="fl"><div class="lab">G</div><div class="g">Reception · dining hall · bike parking${withShared?' · <span class="chip">Geyser in 4 of 6 rooms</span>':''}</div></div>`;
+  document.getElementById(id).innerHTML=h;
+}
+build('bA',false);build('bB',true);
+</script>
+<script>
+const bld=document.getElementById('bld');
+[['A1',0],['A2',2]].forEach(([id,i])=>{const ph=bld.children[i];if(!ph)return;ph.querySelector('.cap b').textContent=ph.querySelector('.cap b').textContent.replace(/^[ABC] ·/,id+' ·');ph.insertAdjacentHTML('beforeend',`<label class="pick"><input type="checkbox" data-id="${id}"> Bring back ${id}</label>`)});
+if(bld.children[1])bld.children[1].querySelector('.cap b').textContent='A1 + shared things (NEW-2)';
+const pre=['A1','A2','A3','A4'];
+document.querySelectorAll('.pick input').forEach(c=>{if(pre.includes(c.dataset.id))c.checked=true;c.addEventListener('change',upd)});
+function upd(){const ids=[...document.querySelectorAll('.pick input:checked')].map(c=>c.dataset.id);document.getElementById('out').textContent='Bring back: '+(ids.join(', ')||'none')}
+document.getElementById('cp').onclick=e=>{const t=document.getElementById('out').textContent;navigator.clipboard.writeText(t).then(()=>e.target.textContent='Copied',()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('out'));getSelection().removeAllRanges();getSelection().addRange(r);e.target.textContent='Selected, copy it'})};
+upd();
+</script>

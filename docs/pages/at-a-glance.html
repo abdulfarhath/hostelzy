@@ -1,0 +1,191 @@
+<title>Hostelzy at a Glance</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: big cards, one idea each, color = meaning (red = do now, green = done, amber = in progress, blue = info) */
+:root{
+  --bg:#f3f2f2;--card:#ffffff;--tx:#201e1d;--mu:#605d5d;--rule:#201e1d;
+  --red:#ec3013;--redb:#ffe0d9;--gn:#1f7a3d;--gnb:#dcefe0;--am:#8a5a00;--amb:#fbecc8;--bl:#1f4f8a;--blb:#dde8f6;
+  --f:Archivo,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161514;--card:#1f1d1b;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;
+  --red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161514;--card:#1f1d1b;--tx:#f0eeee;--mu:#bab6b6;--rule:#f0eeee;
+  --red:#ff563c;--redb:#4d170e;--gn:#5fcf86;--gnb:#133a22;--am:#f2c063;--amb:#3a2c0c;--bl:#8db8f0;--blb:#14263d;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font:17px/1.4 var(--f);padding-inline:16px;padding-block:24px 64px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:clamp(30px,6vw,46px);font-weight:900;margin:0;letter-spacing:-.02em}
+h2{font-size:24px;font-weight:800;margin:0;display:flex;align-items:center;gap:10px}
+.num{display:inline-grid;place-items:center;width:34px;height:34px;background:var(--tx);color:var(--bg);font-size:17px;font-weight:900;flex:none}
+.hint{color:var(--mu);margin:4px 0 0;font-size:15px}
+.box{border:2px solid var(--rule);background:var(--card);padding:16px;display:flex;flex-direction:column;gap:12px}
+.now{background:var(--redb);border-color:var(--red)}
+.now .big{font-size:22px;font-weight:800}
+.now ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{border:2px solid var(--rule);background:var(--card);padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card b{font-size:19px}
+.card span{color:var(--mu);font-size:15px}
+.tag{align-self:flex-start;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px}
+.t-red{background:var(--redb);color:var(--red)} .t-gn{background:var(--gnb);color:var(--gn)}
+.t-am{background:var(--amb);color:var(--am)} .t-bl{background:var(--blb);color:var(--bl)}
+.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.flow .card{flex:1 1 180px}
+.arrow{align-self:center;font-size:28px;font-weight:900;color:var(--red)}
+@media (max-width:640px){.arrow{transform:rotate(90deg);width:100%;text-align:center}}
+.money{display:flex;flex-wrap:wrap;gap:8px}
+.money div{flex:1 1 120px;border:2px solid var(--rule);padding:10px;background:var(--card)}
+.money b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.money span{font-size:14px;color:var(--mu)}
+.bars{display:flex;flex-direction:column;gap:14px}
+.bar-l{display:flex;justify-content:space-between;font-weight:700;gap:8px}
+.bar-l span{color:var(--mu);font-weight:500;font-variant-numeric:tabular-nums}
+.track{height:22px;border:2px solid var(--rule);display:flex;margin-top:4px}
+.track i{display:block;height:100%}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.vs .card{text-align:center;align-items:center}
+.vs .card b{font-size:40px;font-weight:900}
+.eq{font-size:30px;font-weight:900}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{border:2px solid var(--rule);padding:6px 10px;font-weight:700;font-size:15px;background:var(--card)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:0}
+.d-gn{background:var(--gn)} .d-red{background:var(--red)} .d-am{background:var(--am)}
+.todo{display:flex;flex-direction:column;gap:8px}
+.todo label{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--rule);background:var(--card);padding:12px;cursor:pointer}
+.todo input{width:22px;height:22px;accent-color:var(--gn);flex:none;margin:0}
+.todo label:has(input:checked){opacity:.5;text-decoration:line-through}
+.todo small{display:block;color:var(--mu);font-size:14px;text-decoration:none}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;border:2px solid var(--rule)}
+.steps div{padding:12px;background:var(--card);border-right:2px solid var(--rule);border-bottom:2px solid var(--rule);margin:0 -2px -2px 0}
+.steps b{display:block}
+.steps span{color:var(--mu);font-size:14px}
+footer{color:var(--mu);font-size:14px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hostelzy at a glance</h1>
+    <p class="hint">3 Oct 2026 · 2 minutes to read · red = do now, amber = in progress, green = done</p>
+  </header>
+
+  <!-- 0. Do now -->
+  <div class="box now" role="region" aria-label="Do now">
+    <span class="tag t-red">Do this now</span>
+    <div class="big">The Design chat is stuck waiting for you.</div>
+    <ol>
+      <li>Open <b>Hostelzy · Design</b> in your chat list.</li>
+      <li>Tap <b>Approve</b> on the Artifact permission.</li>
+    </ol>
+    <span class="hint">That's it. Everything else is running.</span>
+  </div>
+
+  <!-- 1. The idea -->
+  <section class="box">
+    <h2><span class="num">1</span>Your idea in one picture</h2>
+    <div class="flow">
+      <div class="card"><span class="tag t-bl">Tenant</span><b>Finds a bed</b><span>Holds it free for 1 hour. Pays ₹3,000 advance straight to the owner.</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="card"><span class="tag t-bl">Resident</span><b>Lives there</b><span>Pays rent, sees food menu, raises complaints, gets rewards.</span></div>
+      <div class="arrow" aria-hidden="true">←</div>
+      <div class="card"><span class="tag t-bl">Owner</span><b>Runs the PG</b><span>Beds, rent, residents, deals. Pays Hostelzy a small monthly plan.</span></div>
+    </div>
+    <div class="money">
+      <div><b>₹0</b><span>tenants pay Hostelzy</span></div>
+      <div><b>₹499</b><span>up to 30 beds / month</span></div>
+      <div><b>₹999</b><span>31–80 beds / month</span></div>
+      <div><b>₹1,499</b><span>80+ beds / month</span></div>
+      <div><b>30 days</b><span>free trial</span></div>
+    </div>
+    <span class="hint">Hostelzy never holds anyone's money. Hyderabad first.</span>
+  </section>
+
+  <!-- 2. Rules -->
+  <section class="box">
+    <h2><span class="num">2</span>Your 6 rules</h2>
+    <div class="grid">
+      <div class="card"><b>Honest</b><span>No fake numbers. No promises the app can't keep.</span></div>
+      <div class="card"><b>Simple</b><span>One job per screen. Plain words. Telugu too.</span></div>
+      <div class="card"><b>Design = App</b><span>Same screens in both. Nothing discussed gets missed.</span></div>
+      <div class="card"><b>All at once</b><span>6 chats work in parallel. You talk to 1.</span></div>
+      <div class="card"><b>Don't wait for me</b><span>Chats decide and merge. Only money and accounts come to you.</span></div>
+      <div class="card"><b>Fair Play</b><span>Owners can't cheat Hostelzy. 3 strikes and out.</span></div>
+    </div>
+  </section>
+
+  <!-- 3. Progress -->
+  <section class="box">
+    <h2><span class="num">3</span>How far along</h2>
+    <div class="bars">
+      <div><div class="bar-l">Big features <span>20 of 23 done</span></div>
+        <div class="track" role="img" aria-label="20 of 23"><i style="width:87%;background:var(--gn)"></i><i style="width:13%;background:var(--amb)"></i></div></div>
+      <div><div class="bar-l">Last cleanup list (F24) <span>2 done · 4 almost · 25 to go</span></div>
+        <div class="track" role="img" aria-label="2 done, 4 almost, 25 to go"><i style="width:6.5%;background:var(--gn)"></i><i style="width:13%;background:var(--am)"></i><i style="width:80.5%;background:var(--redb)"></i></div></div>
+      <div><div class="bar-l">Fake lines in the app <span>8 to remove</span></div>
+        <div class="track" role="img" aria-label="8 to remove"><i style="width:100%;background:var(--redb)"></i></div></div>
+    </div>
+  </section>
+
+  <!-- 4. Design vs app -->
+  <section class="box">
+    <h2><span class="num">4</span>Design vs app</h2>
+    <div class="vs">
+      <div class="card"><span class="tag t-bl">Design</span><b>181</b><span>screens drawn</span></div>
+      <div class="eq" aria-hidden="true">≠</div>
+      <div class="card"><span class="tag t-bl">App</span><b>175</b><span>of them built</span></div>
+    </div>
+    <div class="grid">
+      <div class="card"><span class="tag t-red">Drawn, not built · 6</span><span>Electricity meter · Laundry day · Case photo · Room shapes · Refund (owner) · Refund (resident)</span></div>
+      <div class="card"><span class="tag t-am">Built differently · 6</span><span>Meter on rent · Shape request · Fan/AC switch · Trusted perks · Manager join · Console layout help</span></div>
+      <div class="card"><span class="tag t-gn">Built, not drawn · 0</span><span>Every app screen has a design. Only a few small states need one.</span></div>
+    </div>
+    <span class="hint">181 − 6 not built = 175. Goal: both numbers the same.</span>
+  </section>
+
+  <!-- 5. Team -->
+  <section class="box">
+    <h2><span class="num">5</span>Your team right now</h2>
+    <div class="grid">
+      <div class="card"><b><i class="dot d-am"></i>Build</b><span>Merging move-out + refunds (#81)</span></div>
+      <div class="card"><b><i class="dot d-red"></i>Design</b><span>Waiting for your Approve tap</span></div>
+      <div class="card"><b><i class="dot d-am"></i>Marketing</b><span>Writing reel scripts</span></div>
+      <div class="card"><b><i class="dot d-am"></i>Finance</b><span>Money questions + bills</span></div>
+      <div class="card"><b><i class="dot d-am"></i>Brand</b><span>Play Store pack</span></div>
+      <div class="card"><b><i class="dot d-gn"></i>Hub (me)</b><span>Checks everyone every 2 hours</span></div>
+    </div>
+  </section>
+
+  <!-- 6. Next -->
+  <section class="box">
+    <h2><span class="num">6</span>What happens next</h2>
+    <div class="steps">
+      <div><b>Today</b><span>Merge refunds + offline list</span></div>
+      <div><b>Next</b><span>Remove the 8 fake lines</span></div>
+      <div><b>Then</b><span>Build the 6 missing screens</span></div>
+      <div><b>Then</b><span>Save everything on the server</span></div>
+      <div><b>Launch</b><span>Play Store</span></div>
+    </div>
+  </section>
+
+  <!-- 7. Your list -->
+  <section class="box">
+    <h2><span class="num">7</span>Only you can do these</h2>
+    <p class="hint">Tick them as you go. Your ticks stay on this phone only.</p>
+    <div class="todo" id="todo">
+      <label><input type="checkbox" id="t1"><span>Approve the Design chat<small>Takes 5 seconds</small></span></label>
+      <label><input type="checkbox" id="t2"><span>Run the database scripts 4d → 4z<small>Supabase → SQL Editor → paste → Run. Turns on real hostels.</small></span></label>
+      <label><input type="checkbox" id="t3"><span>Test the new APK on your phone<small>I'll send the release page link</small></span></label>
+      <label><input type="checkbox" id="t4"><span>Answer Finance's money questions<small>Rewards cap, partner pay. Finance gives a recommendation.</small></span></label>
+      <label><input type="checkbox" id="t5"><span>Accounts for launch<small>Play Console $25 · hostelzy.in · map key · OTP card</small></span></label>
+    </div>
+  </section>
+
+  <footer>Full details: the Hostelzy gap audit page and docs/AUDIT-2026-10-03.md.</footer>
+</div>
+
+<script>
+document.querySelectorAll('#todo input').forEach(cb=>{
+  try{cb.checked=localStorage.getItem('hz-'+cb.id)==='1'}catch(e){}
+  cb.addEventListener('change',()=>{try{localStorage.setItem('hz-'+cb.id,cb.checked?'1':'0')}catch(e){}});
+});
+</script>

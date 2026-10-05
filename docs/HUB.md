@@ -31,3 +31,7 @@ Check-in: routine "Hostelzy hub check-in", every 2 hours.
 | Design | ✅ Canvas v28: App 181 · Canvas 181 (+42 variants, +21 dark, +8 not counted) |
 | Marketing / Finance / Brand | ✅ Done |
 Check-in routine paused: nothing left for the chats. Waiting on the founder: SQL steps, phone test, accounts, 2 money answers.
+
+## 2026-10-05: handover to a new Claude account
+The sessions above belong to the old account and are retired. The new account's hub creates fresh chats
+(see `HANDOVER.md` §3) and replaces the table at the top with their session IDs.
