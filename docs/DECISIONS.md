@@ -16,7 +16,7 @@ Older entries that were later replaced are marked **(replaced)**.
 | Fair Play | Owner adds every resident; phone matched within 60 days → Via Hostelzy / Direct. 3 strikes: warning / deals hidden 30 days / removed. Fixing a wrong "Direct" within 48 h = no strike; 3 fixes in 6 months = 1 warning. No move-off fee |
 | Owner phone | Shown to a tenant only after a hold, an enquiry (recorded with an HZ code) or a stay |
 | Ranking | Rank #N with reasons, never a score. Reviews 50%, reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
-| Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. Women's PGs: full floor only after a hold |
+| Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05). Never gates, CCTV, exits or residents' names |
 | Listings | Live only when complete (rooms, a price for every type, linked owner, 8 photos). Availability confirmed every 3 days |
 | Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
 | Web | Public pages at farhath.me/hostelzy/app/ until hostelzy.in. The site root farhath.me/hostelzy/ stays the old prototype |
@@ -116,7 +116,7 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   never holds money, and the advance is paid straight to the owner.
 
 **Room layouts (F12)** *(Ideas chat)*
-- Women's PGs: room layouts only for signed-in users; whole-floor plans only after a hold.
+- **(replaced 2026-10-05: layouts are open to everyone, see "Layouts open to all")** Women's PGs: room layouts only for signed-in users; whole-floor plans only after a hold.
   Every hostel: never show gates, CCTV, exits or residents' names.
 - **No power sockets in phase 1** (phase 2).
 - The room view **sits beside the bed picker's Plan tab** as a new **Room** tab. Tapping a room in
@@ -258,6 +258,11 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 **Prototype first, then build** — founder, 2026-10-04
 - Changes are tried in the clickable web prototype (`docs/PROTOTYPE.md`) first. The real app on `main` (and a new APK)
   changes only after the founder approves them there. No more installing every new APK to review.
+
+**Layouts open to all** — founder, 2026-10-05
+- Nobody ever sees "Hold a bed to see the floors". Room layouts, the building view and the bed picker are free to open
+  for everyone, including guests and women's PGs. Replaces the women's-PG hold-first rule (F12, 2026-10-02). The safety
+  rule stays: never show gates, CCTV, exits or residents' names.
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

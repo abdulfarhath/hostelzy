@@ -16,7 +16,7 @@ Rules that still apply: one job per screen, no redundant screens, honest copy, D
 | 7 | Contact-after-hold removes the enquiry flow (F05) | **Enquiries removed.** Reply-speed ranking and the 60-day matching use holds. Owner Today has 3 groups (Holds · Payments · Fixes). `owner_contacts` → hold or stay only, and it locks again when a hold expires or is declined. DECISIONS updated after approval |
 | 2 | Price sort hides the paid featured spot (F10) | Price ↑ default; **one featured hostel pinned on top with a "Featured" tag**; "Best deals" stays in the sort list |
 | 5 | "VERIFIED" is a strong claim | Only when `visited_on` is set; one line under it: "Beds and prices checked by Hostelzy · <date>". Navy `Pal` token (light #1f3a5f, dark #33598a) |
-| 3, 8 | Women's PGs: whole floor only after a hold | Locked state (blurred building + "Hold a bed to see the floors"). 80+ beds: inline building collapses to "See all N rooms ›" |
+| 3, 8 | Women's PGs: whole floor only after a hold | **Overruled by the founder 2026-10-05: no lock for anyone.** Layouts and the building view are open to all. 80+ beds: inline building collapses to "See all N rooms ›" |
 | 12 | Residents send fixes, they don't publish | "Only residents can send a fix. Book a bed to join." |
 | 9 | "Owner reviewing" must be true | New `holds.seen_at`, set when the owner opens the hold (SQL, bundle step). Steps: Sent → Owner reviewing → Kept / Declined |
 | 15 vs 17 | Can a resident hold a bed elsewhere from Find a bed? | **Open: founder.** A = yes (shows under My stay → "Moving?"); B = browse only |
