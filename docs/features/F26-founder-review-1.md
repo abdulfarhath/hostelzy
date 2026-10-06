@@ -118,3 +118,33 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 
 ## Build
 Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+
+### Bed picker, Edit this layout, layouts open to all (#8, #12, DECISIONS 2026-10-05) · branch `feature/f26-picker-layouts`
+- **#8 Pick a bed:** no Plan / Room / Building tabs. Floor chips on top ("Floor 1 · Floor 2…") jump (scroll) to the
+  floor; below, one scroll of every room grouped by floor ("Floor 2 · 4 free"): name + share · rent, "n free", the room's
+  **drawn layout** (the F12 `LayoutMap`: beds, fan, AC, window, door, washroom). A room without a layout shows its beds
+  as boxes. Tap a free bed → the bottom bar ("Bed 201-B · ₹8,000/mo", "Floor 2 · <spot>") → Continue → hold sheet, as
+  before. A room's name opens it on its own (S17, unchanged facts / compare) with a "Floor view" link back. The AC /
+  Non-AC chips stay when a hostel has both. The "cheapest first" list (S18) is gone. "See the whole building" opens
+  this picker (the building view itself moves to the hostel page: agent A). Labels on the drawing never take a tap now,
+  so a fan label over a bed still picks the bed.
+- **#12 Edit this layout:** red primary (`Cta`, #ec3013; no orange token) under each drawn room in the picker and above
+  the bar on the room on its own → F19 `openFixEditor` (try mode for non-residents, the real fix editor for residents).
+  Try mode reads "Try a layout · Room N", "Try mode · only on this phone", "Move things to see how the room works for
+  you"; its button is **Publish** → sheet "Only residents can send a fix" · "Book a bed to join. Your tries stay on this
+  phone." · **Pick a bed** (leaves the try, back to the picker) · **Keep trying**.
+- **Open layouts:** `floorLocked`, the `FloorLocked` card, the "Sign in to see room layouts" state and every "after a
+  hold" layout message are gone. Until the SQL runs, a women's PG room opened on its own is still fetched one by one;
+  the old server's daily limit shows "Couldn’t open this room yet · Floor view" (no hold talk).
+- **Server:** `supabase/migrations/20261006100000_f26_open_layouts.sql`: "read published layouts" = published + live
+  (no women's check, no sign-in check); `room_layout()` without the hold / sign-in checks and the 6-rooms-a-day cap,
+  executable by `anon` too; `layout_peeks`, `sees_floor()`, `is_womens()` dropped. Bundles regenerated.
+  FOUNDER-TODO **4zo1** (re-run `docs/sql/run-all-pending.sql`). Safety rule unchanged.
+- **Screens:** S16 changed, S17 changed (Floor view link, Edit this layout), S18 removed, S32 try-mode copy, S87 no
+  longer a picker tab, H13 `fixLock` copy; states T10, T11, T13 removed (SCREENS.md updated, retired ids listed).
+- **Tests:** `test/f26_picker_test.dart` (Edit this layout → try → Publish → sheet → Keep trying / Pick a bed; red button
+  on the room; a room without a layout picks from boxes; women's PG open without a hold; 2× text at 360 px, light +
+  dark, both views); flows / tenant / amenities / f25 / wave4b tests updated for the new picker. SQL: `wave4b_test`
+  section 1 rewritten (everyone incl. guests and anon, any number of rooms, drafts and non-live hostels stay private,
+  old pieces gone), `rls_test` (anon and anonymous sign-in now read published layouts), `indexes_test` (45 + no
+  `layout_peeks`).
