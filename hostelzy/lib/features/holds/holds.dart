@@ -46,7 +46,7 @@ extension HoldsActions on AppState {
     // S1: a server hold is released on the server (the bed frees itself
     // there); the tenant's release also cancels its unconfirmed advance.
     if (onServer && !RegExp(r'^h\d+$').hasMatch(h.id)) {
-      _write(() => data.releaseHold(h.id, cancelPay: role == 'tenant')).then((ok) {
+      _write(() => data.releaseHold(h.id, cancelPay: role != 'owner')).then((ok) {
         if (!ok) return;
         update(() => _freeBed(h.hid, h.bed));
         if (msg != null) toastMsg(msg);

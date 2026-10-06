@@ -100,12 +100,9 @@ void main() {
     expect(find.text('Pongal $todayIdx'), findsOneWidget);
     expect(find.textContaining('hasn’t put the menu'), findsNothing);
 
-    // Food: today, the week, and Good / Okay / Poor saved on the server.
-    s.tab('food');
-    await tester.pump();
-    await _settle(tester);
-    await tester.pump();
-    expect(find.text('Pongal $todayIdx'), findsOneWidget);
+    // F26 #13: no Food page; the whole week and Good / Okay / Poor are on Home.
+    expect(find.byKey(const ValueKey('homeWeek')), findsOneWidget);
+    expect(find.text('Pongal ${(todayIdx + 1) % 7}'), findsOneWidget);
     await _tap(tester, find.text('Good'));
     await _settle(tester);
     expect(server.calls.last, 'rate saisri b good');
@@ -122,11 +119,11 @@ void main() {
     expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
     await tester.pump(const Duration(seconds: 4));
 
-    // The owner changes the menu; it shows the next time Food opens.
+    // The owner changes the menu; it shows the next time Home opens.
     server.weeks['saisri'] = _week('Upma');
-    s.tab('rHome');
+    s.tab('rStay');
     await tester.pump();
-    s.tab('food');
+    s.tab('rHome');
     await tester.pump();
     await _settle(tester);
     await tester.pump();
@@ -134,17 +131,14 @@ void main() {
 
     // No menu on the server: the honest empty message, no week link.
     server.weeks.remove('saisri');
+    s.tab('rStay');
+    await tester.pump();
     s.tab('rHome');
     await tester.pump();
     await _settle(tester);
     await tester.pump();
     expect(find.text('$owner hasn’t put the menu on Hostelzy yet.'), findsOneWidget);
-    s.tab('food');
-    await tester.pump();
-    await _settle(tester);
-    await tester.pump();
-    expect(find.text('$owner hasn’t put the menu on Hostelzy yet. It shows here once they do.'), findsOneWidget);
-    expect(find.byKey(const ValueKey('foodWeek')), findsNothing);
+    expect(find.byKey(const ValueKey('homeWeek')), findsNothing);
     expect(find.text('How was breakfast?'), findsNothing);
     s.dispose();
   });
@@ -258,9 +252,9 @@ void main() {
     s.dispose();
   });
 
-  for (final c in const ['detail', 'food', 'menu', 'foodWeek']) {
+  for (final c in const ['detail', 'rHome', 'menu', 'foodWeek']) {
     testWidgets('food: $c fits at 2× text', (tester) async {
-      final s = c == 'menu' ? AppState(start: 'oMore', role: 'owner', moreTab: 'menu') : AppState(start: c == 'foodWeek' ? 'detail' : c, role: c == 'food' ? 'resident' : 'tenant');
+      final s = c == 'menu' ? AppState(start: 'oMore', role: 'owner', moreTab: 'menu') : AppState(start: c == 'foodWeek' ? 'detail' : c, role: c == 'rHome' ? 'resident' : 'tenant');
       s.hid = 'anjani';
       if (c == 'foodWeek') s.openFoodFor('anjani');
       await _pump(tester, s, scale: 2);

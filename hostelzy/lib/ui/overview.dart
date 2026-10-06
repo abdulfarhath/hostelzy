@@ -56,8 +56,9 @@ class OverviewPage extends StatelessWidget {
       [
         ('Home', {'start': 'rHome', 'role': 'resident'}),
         ('Pay rent', {'start': 'rPay', 'role': 'resident'}),
-        ('Food', {'start': 'food', 'role': 'resident'}),
-        ('Complaints', {'start': 'help', 'role': 'resident'}),
+        ('My stay', {'start': 'rStay', 'role': 'resident'}),
+        ('Something wrong in your room?', {'start': 'rStay', 'role': 'resident', 'sheet': 'complaint'}),
+        ('Your complaints', {'start': 'rStay', 'role': 'resident', 'sheet': 'complaints'}),
         ('Give notice', {'start': 'move', 'role': 'resident', 'moveTab': 'vacate'}),
         ('30-day review', {'start': 'rReview', 'role': 'resident'}),
         ('Exit review', {'start': 'rExit', 'role': 'resident'}),

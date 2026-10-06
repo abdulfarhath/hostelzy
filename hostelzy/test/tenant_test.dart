@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
+import 'package:hostelzy/ui/kit.dart' show Pal;
 import 'package:hostelzy/ui/shell.dart';
 
 // F22 Area 1 (Tenant): Me as one list with status lines, Settings in three
@@ -49,10 +50,14 @@ void main() {
     expect(find.text('RT'), findsOneWidget);
     expect(find.text('Ravi Teja'), findsOneWidget);
     expect(find.text('+91 90000 00001 · not verified'), findsOneWidget);
-    expect(find.text('2 hostels'), findsOneWidget);
+    // F26 #10: Saved and Holds are tabs, not rows; F26 #11: Log out in red at the end.
+    expect(find.text('2 hostels'), findsNothing);
+    expect(find.byKey(const ValueKey('me-Saved')), findsNothing);
+    expect(find.byKey(const ValueKey('me-Holds')), findsNothing);
     expect(find.text('Not a member yet'), findsOneWidget);
     expect(find.text('Language, notifications, log out'), findsOneWidget);
-    expect(find.text('Log out'), findsNothing);
+    expect(find.byKey(const ValueKey('me-logout')), findsOneWidget);
+    expect(tester.widget<Text>(find.text('Log out')).style?.color, Pal.light.ad);
     await _tap(tester, find.byKey(const ValueKey('switchRole')));
     s.update(() => s.screen = 'me');
     await tester.pump();
