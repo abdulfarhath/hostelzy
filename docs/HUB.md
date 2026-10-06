@@ -39,8 +39,8 @@ The sessions above belong to the old account and are retired. The new account's 
 ## 2026-10-06 F26 status
 | Piece | State |
 |---|---|
-| Prototype v3 (https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP) | **All of F26** (#1–#14, #16–#21, open layouts; #15 became "residents can hold"). Waiting for the founder's review |
-| Build PRs | #121 B, #122 A, #123 D, #124 C, #125 E + branch f26/integration (c96d4ea): all green (367 tests, 40 SQL files). Not merged until the founder approves in the prototype |
+| Prototype v4 (https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP) | **All of F26** (#1–#14, #16–#21, open layouts; #15 became "residents can hold") + settings copy for the waitlist push. Waiting for the founder's review |
+| Build PRs | #121 B, #122 A, #123 D, #124 C, #125 E + branch f26/integration (bc66a72, main merged in): all green (367 tests, 40 SQL files). app/r page now points to the app (web 7, overall 176). Not merged until the founder approves in the prototype |
 | SQL | 2 new migrations (4zo1 open layouts, 4ze26 contact/hold steps/listings) are in `docs/sql/run-all-pending.sql`; one re-run covers everything |
 | Main canvas | **v21** = F26 merge + follow-up, 177 boards = Build's SCREENS on f26/integration (hub published from the repo; Design's own publish stays permission-blocked, so Design pushes to `design/f26-merge` and the hub publishes) |
 | F27 Save food | 8 boards on the proposal canvas v11 (https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g). Waiting for the founder's review; main canvas untouched |
