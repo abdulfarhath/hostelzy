@@ -146,7 +146,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('80+ bed hostels: a featured spot first under Recommended, marked Featured; deals paused show walk-in prices (items 20, 21)', (tester) async {
+  testWidgets('80+ bed hostels: one featured spot pinned on top of every sort, marked Featured; deals paused show walk-in prices (items 20, 21)', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     final before = filtered(s).map((h) => h.id).toList();
     final last = before.last;
@@ -167,13 +167,14 @@ void main() {
     expect(s.rankOf(last), rank);
     expect(find.byKey(ValueKey('featured-$last')), findsOneWidget);
     expect(find.textContaining('Featured'), findsWidgets);
-    // Other sorts don't move it.
+    // F26 #2: it keeps its one pinned spot in every sort; the rest follow the sort.
     s.update(() => s.sortBy = 'near');
     final near = filtered(s).map((h) => h.id).toList();
     s.flags = {};
-    expect(filtered(s).map((h) => h.id).toList(), near);
+    final plain = filtered(s).map((h) => h.id).toList();
+    expect(near, [last, ...plain.where((id) => id != last)]);
     s.flags = srv.serverFlags;
-    s.update(() => s.sortBy = 'rec');
+    s.update(() => s.sortBy = 'price');
 
     // Anjani's plan is 15+ days late on the server: tenants see walk-in prices only.
     expect(s.dealsPaused('anjani'), isTrue);

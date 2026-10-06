@@ -116,13 +116,6 @@ extension FoodActions on AppState {
     menuDirty = true;
   });
 
-  /// Tenant: the whole week of a hostel's food, from its page (a sheet).
-  void openFoodFor(String h) => update(() {
-    foodFor = h;
-    fwDay = todayIdx;
-    sheet = 'foodWeek';
-  });
-
   /// Owner: Manage › Food menu. Starts from the saved week (or one typed on
   /// this phone before), then from the server's once it arrives.
   void openMenu() {

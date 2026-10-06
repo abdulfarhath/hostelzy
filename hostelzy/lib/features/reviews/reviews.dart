@@ -47,6 +47,9 @@ mixin _ReviewsData {
   String lm = 'Hitec City', fG = 'Any', fS = 'Any', fB = 'Any';
   bool fFood = false;
 
+  /// F26 #2: Filters › Food › No food.
+  bool fNoFood = false;
+
   /// F21 W2: only hostels with a Hostelzy deal.
   bool fDeals = false;
   String mapSel = 'anjani';

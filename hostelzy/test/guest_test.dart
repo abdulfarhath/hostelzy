@@ -56,8 +56,9 @@ void main() {
     // Tabs: Saved replaces Search.
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('Search'), findsNothing);
-    // Cards: the rank once, the real cost.
-    expect(find.text('#1 near you'), findsOneWidget);
+    // Cards: F26 #2 Price ↑ by default, the first card says so; the real cost.
+    expect(find.text('Lowest price'), findsOneWidget);
+    expect(find.text('#1 near you'), findsNothing);
     final c = cardCost(s, hostelById('anjani'))!;
     expect(c.move, c.fee + 3000);
     expect(find.text('${fmt(c.fee)}/mo · ${fmt(c.move)} to move in · electricity extra', findRichText: true), findsOneWidget);
@@ -82,14 +83,14 @@ void main() {
     s.back();
     await tester.pump();
 
-    // Filters: sort lives here, a count on the button, Clear all.
+    // Filters: a count on the button, Clear all (F26 #2: sort is its own dropdown).
     await _tap(tester, find.byKey(const ValueKey('filtersBtn')));
     expect(find.text('Filters'), findsWidgets);
-    await _tap(tester, find.text('Lowest price'));
+    expect(find.text('Sort by'), findsNothing);
     await _tap(tester, find.widgetWithText(ChipBtn, 'AC').last);
     await _tap(tester, find.widgetWithText(ChipBtn, 'Under ₹10,000'));
     expect((s.sortBy, s.filterCount), ('price', 2));
-    expect(find.text('Filters · 2'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('filtersBtn')), matching: find.text('Filters · 2')), findsOneWidget);
     // Deals stay findable without a sort: "Hostelzy deals only".
     await _tap(tester, find.text('Hostelzy deals only'));
     expect(s.filterCount, 3);

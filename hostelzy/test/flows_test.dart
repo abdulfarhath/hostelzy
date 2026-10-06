@@ -429,8 +429,11 @@ void main() {
     final s = AppState(start: 'explore', role: 'tenant');
     await pumpApp(tester, s);
     expect(find.text('Sai Sri Ladies Hostel'), findsOneWidget);
+    // F26 #2: AC lives in the Filters sheet.
+    await tap(tester, find.byKey(const ValueKey('filtersBtn')));
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
     expect(s.fR, 'AC');
+    await tap(tester, find.textContaining('Show '));
     expect(find.text('Sai Sri Ladies Hostel'), findsNothing);
     expect(find.text('NON-AC'), findsNothing);
     // F21 W2: Non-AC lives in the Filters sheet.
@@ -635,15 +638,14 @@ void main() {
   });
 
   testWidgets('verified reviews, ranking and owner replies (F08)', (tester) async {
-    // Explore: Recommended is the default sort; rank and reasons, never a score.
+    // Explore: F26 #2 Price ↑ is the default sort; rank and reasons, never a score.
     final s = AppState(start: 'explore', role: 'tenant');
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    expect(s.sortBy, 'rec');
-    expect(filtered(s).first.id, 'anjani');
+    expect(s.sortBy, 'price');
     expect(s.rankOf('anjani'), 1);
     expect(s.rankReasons('anjani'), 'Quick replies, beds kept up to date');
-    expect(find.text('#1 near you'), findsOneWidget);
+    expect(find.text('#1 near you'), findsNothing);
     expect(s.rankReasons('nest42'), startsWith('Few reviews yet'));
 
     // Hostel page → Reviews.
@@ -1117,10 +1119,12 @@ void main() {
     AppState().dispose();
     expect(hostels.any((x) => x.name == 'Anjani Annex'), isFalse);
 
-    // Tenant: Visited badge and availability.
+    // Tenant: F26 #5 ✓ VERIFIED (the team visit) and availability.
     final t = AppState(start: 'detail', role: 'tenant');
     await pumpApp(tester, t);
-    expect(find.text('Visited by Hostelzy · 1 Oct 2026'), findsOneWidget);
+    expect(find.byKey(const ValueKey('verifiedBadge')), findsOneWidget);
+    expect(find.text('Beds and prices checked by Hostelzy · 1 Oct 2026'), findsOneWidget);
+    expect(find.textContaining('Visited by Hostelzy'), findsNothing);
     expect(t.stale('greenview'), isTrue);
     expect(t.rankOf('greenview'), greaterThan(t.rankOf('anjani')));
     t.dispose();
@@ -2148,7 +2152,7 @@ void main() {
       c.screen = 'detail';
     });
     await tester.pump();
-    expect(find.text('Wi-Fi'), findsOneWidget); // one tag, no RangeError
+    expect(find.text('Wi-Fi'), findsNothing); // F26 #6: no tag boxes on the hostel page
     // Owner opens the editor for a room that has no layout yet: one is made.
     final room = c.rooms['anjani']!.last;
     c.layouts['anjani']!.remove(room.n);
@@ -2171,7 +2175,7 @@ void main() {
     final s = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, s);
     // F21 W2: the same "Where?" field as Explore.
-    expect(find.text('Where? Area, landmark or hostel'), findsOneWidget);
+    expect(find.text('Area, landmark or hostel'), findsOneWidget);
     // Pick an area: only hostels there, on the map and in Explore.
     await tap(tester, find.byKey(const ValueKey('mapArea')));
     expect(s.screen, 'where');
@@ -2190,14 +2194,14 @@ void main() {
     s.tab('map');
     await tester.pump();
 
-    // Use my location: explainer first, then the map centres on you and sorts by distance.
+    // Use my location: explainer first, then the map centres on you (F26 #2: the sort stays Price ↑).
     final loc = _FakeLocator((17.4610, 78.3610));
     s.locator = loc;
     await tap(tester, find.byKey(const ValueKey('mapLoc')));
     expect((s.sheet, loc.asked), ('loc', 0));
     await tap(tester, find.text('Allow location'));
     await tester.pump();
-    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'near', 'Near me'));
+    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'price', 'Near me'));
     expect(find.byKey(const ValueKey('youAreHere')), findsOneWidget);
     expect(s.kmFrom, 'from you');
     await tester.pump(const Duration(seconds: 3));

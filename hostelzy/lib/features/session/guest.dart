@@ -113,7 +113,7 @@ extension GuestActions on AppState {
   }
 
   /// Filters set beyond the defaults (sort is not a filter).
-  int get filterCount => [fG != 'Any', fS != 'Any', fR != 'Any', fB != 'Any', fFood, fDeals].where((x) => x).length + fAm.length;
+  int get filterCount => [fG != 'Any', fS != 'Any', fR != 'Any', fB != 'Any', fFood, fNoFood, fDeals].where((x) => x).length + fAm.length;
 
   void clearFilters() => update(() {
     fG = 'Any';
@@ -121,6 +121,7 @@ extension GuestActions on AppState {
     fR = 'Any';
     fB = 'Any';
     fFood = false;
+    fNoFood = false;
     fDeals = false;
     fAm = {};
   });
