@@ -76,46 +76,49 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F22 Area 2: Food is today first; the week is one tap away; breakfast feedback is anonymous', (tester) async {
-    final s = AppState(start: 'food', role: 'resident');
+  testWidgets('F26 #4 #13: Home shows the whole week, today highlighted, no toggle; breakfast feedback is anonymous', (tester) async {
+    final s = AppState(start: 'rHome', role: 'resident');
     await _pump(tester, s);
-    expect(find.text('Whole week ›'), findsOneWidget);
-    for (var i = 0; i < 7; i++) {
-      expect(find.byKey(ValueKey('day-$i')), findsOneWidget);
+    expect(find.byKey(const ValueKey('homeWeek')), findsOneWidget);
+    expect(find.text('FOOD THIS WEEK'), findsOneWidget);
+    for (final d in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
+      expect(find.textContaining(d), findsWidgets, reason: d);
     }
-    // Today: each meal has one of Done / Next / Later, and only one is Next.
-    final tags = ['DONE', 'NEXT', 'LATER'].map((t) => tester.widgetList(find.text(t)).length).toList();
-    expect(tags.reduce((a, b) => a + b), 3);
-    expect(tags[1], lessThanOrEqualTo(1));
+    // The shared week table (same as the hostel page): today's row carries "today".
+    expect(find.byKey(const ValueKey('weekTable')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(ValueKey('weekRow-$todayIdx')), matching: find.text('today')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(ValueKey('weekRow-$todayIdx')), matching: find.text(weekDays[todayIdx][0])), findsOneWidget);
+    for (final day in s.menu) {
+      expect(find.text(day.b), findsWidgets);
+    }
+    // No Today / Full week toggle and no Food page any more.
+    expect(find.text('Full week'), findsNothing);
+    expect(find.text('Whole week ›'), findsNothing);
+    expect(AppState.screens.contains('food'), isFalse);
     expect(find.text('How was breakfast?'), findsOneWidget);
     await _tap(tester, find.text('Good'));
     expect(s.rated, 'Good');
     expect(find.text('Srinivas sees how many said each, never your name.'), findsOneWidget);
     expect(s.toast, 'Thanks. Srinivas sees how many said Good, not who.');
     expect(s.mealVotes['b']!['good'], 10);
-    await tester.pump(const Duration(seconds: 3));
-    // Another day: no tags, no feedback.
-    await _tap(tester, find.byKey(ValueKey('day-${(todayIdx + 1) % 7}')));
-    expect(find.text('How was breakfast?'), findsNothing);
-    expect(find.text('NEXT'), findsNothing);
-    await _tap(tester, find.byKey(const ValueKey('foodWeek')));
-    expect(s.foodView, 'week');
-    expect(find.text('‹ By day'), findsOneWidget);
     s.dispose();
   });
 
-  testWidgets('F22 Area 2: Me › My stay: the bed, then move, notice, review, fix a layout', (tester) async {
+  testWidgets('F26 #14: the My stay tab: the bed, then move, notice, refund, review, fix a layout, then Help', (tester) async {
     final s = AppState(start: 'me', role: 'resident');
     await _pump(tester, s);
     expect(find.text('Give notice'), findsNothing); // not on Me any more
-    await _tap(tester, find.byKey(const ValueKey('me-My stay')));
-    expect(s.screen, 'rStay');
+    expect(find.byKey(const ValueKey('me-My stay')), findsNothing); // a tab now
+    await _tap(tester, find.byKey(const ValueKey('tab-rStay')));
+    expect((s.screen, s.hist.isEmpty), ('rStay', true));
     expect(find.text('Bed 204-B · Room 204'), findsOneWidget);
     expect(find.textContaining('₹7,600 a month · rent due on the 14th'), findsOneWidget);
-    for (final r in ['Move to another bed', 'Give notice', 'Review your stay', 'Fix a room layout']) {
+    for (final r in ['Move to another bed', 'Give notice', 'Review your stay', 'Fix a room layout', 'Something wrong in your room?', 'Your complaints']) {
       expect(find.byKey(ValueKey('stay-$r')), findsOneWidget, reason: r);
     }
-    expect(find.text('Advance ₹3,000 · ₹2,000 back when you leave'), findsOneWidget);
+    expect(find.text('Your refund'), findsOneWidget);
+    expect(find.text('₹2,000 back when you leave'), findsOneWidget);
+    expect(find.text('HELP'), findsOneWidget);
 
     // Give notice: 3 last days, the reason is optional, the action at the bottom.
     await _tap(tester, find.text('Give notice'));
@@ -200,7 +203,7 @@ void main() {
     s.dispose();
   });
 
-  for (final c in const ['rPay', 'food', 'rStay', 'move', 'rReview', 'rExit', 'rewards']) {
+  for (final c in const ['rPay', 'rHome', 'rStay', 'move', 'rReview', 'rExit', 'rewards']) {
     testWidgets('F22 Area 2: $c fits at 2× text', (tester) async {
       final s = AppState(start: c, role: 'resident');
       await _pump(tester, s, scale: 2);

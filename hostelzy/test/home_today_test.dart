@@ -76,7 +76,7 @@ class _Server extends SampleRepo {
 void main() {
   mapTiles = false;
 
-  testWidgets('F21 W3: resident Home is rent, three actions and food; the rest is in Me › My stay', (tester) async {
+  testWidgets('F21 W3 + F26 #14: resident Home is rent, three actions and food; the rest is in the My stay tab', (tester) async {
     final s = AppState(start: 'rHome', role: 'resident');
     s.myName = 'Rahul Varma';
     await _pump(tester, s);
@@ -88,24 +88,28 @@ void main() {
     expect(find.textContaining('Room layouts', findRichText: true), findsNothing);
     expect(find.text('RV'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('quick-Raise complaint')));
-    expect(s.screen, 'help');
-    s.tab('me');
-    await tester.pump();
-    expect(find.text('Bed 204-B · Anjani Residency'), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('me-My stay')));
+    expect((s.screen, s.sheet), ('rHome', 'complaint'));
+    s.update(() => s.sheet = null);
+    await _tap(tester, find.byKey(const ValueKey('tab-rStay')));
     expect(s.screen, 'rStay');
+    expect(find.text('Bed 204-B · Room 204'), findsOneWidget);
     await _tap(tester, find.text('Give notice'));
     expect((s.screen, s.moveTab), ('move', 'vacate'));
     s.dispose();
   });
 
-  testWidgets('F21 W3: Help sends to the owner with a photo; the status shows inline; the owner sees the photo', (tester) async {
-    final s = AppState(start: 'help', role: 'resident');
+  testWidgets('F21 W3 + F26 #14: My stay › Help sends to the owner with a photo; the list shows it; the owner sees the photo', (tester) async {
+    final s = AppState(start: 'rStay', role: 'resident');
     s.update(() => s.complaints = s.complaints.where((c) => !c.mine).toList());
     s.picker = _Picker();
     await _pump(tester, s);
+    expect(find.text('None yet'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('stay-Your complaints')));
+    expect(s.sheet, 'complaints');
     expect(find.text('No complaints'), findsOneWidget);
     expect(find.text('When something breaks, tell Srinivas here. You’ll see when it’s fixed.'), findsOneWidget);
+    await _tap(tester, find.text('Something wrong in your room?').last);
+    expect(s.sheet, 'complaint');
     await _tap(tester, find.text('Water'));
     await tester.enterText(find.byType(EditableText).first, 'Leak under the sink');
     await tester.pump();
@@ -116,6 +120,8 @@ void main() {
     await _tap(tester, find.text('Send to owner'));
     final c = s.complaints.last;
     expect((c.cat, c.text, c.status, s.cPhoto, s.complaintPhotosLocal.containsKey(c.id)), ('Water', 'Leak under the sink', 'Open', null, true));
+    // Once sent, the list opens.
+    expect(s.sheet, 'complaints');
     expect(find.text('SENT'), findsOneWidget);
     expect(find.textContaining('Just now'), findsOneWidget);
 
@@ -129,14 +135,17 @@ void main() {
     s.update(() => s.sheet = null);
     // Start work → the resident reads "Being fixed".
     await s.advanceComplaint(s.complaints.last);
-    s.jump('help', 'resident');
+    s.jump('rStay', 'resident');
+    await tester.pump();
+    expect(find.text('1 being fixed · Water'), findsOneWidget);
+    s.update(() => s.sheet = 'complaints');
     await tester.pump();
     expect(find.text('BEING FIXED'), findsOneWidget);
     s.dispose();
   });
 
   testWidgets('F21 W3: on the server the photo goes up first, then the complaint points at it', (tester) async {
-    final s = AppState(start: 'help', role: 'resident');
+    final s = AppState(start: 'rStay', role: 'resident', sheet: 'complaints');
     final server = _Server();
     s.data = server;
     s.picker = _Picker();

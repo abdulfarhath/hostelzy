@@ -345,6 +345,8 @@ extension SyncActions on AppState {
         if (hostels.any((x) => x.id == h.hid) && findBed(h.hid, h.bed).b?.mine == true) _freeBed(h.hid, h.bed);
       }
       holds = [];
+      holdSeen.clear();
+      inFindBed = false;
       saved.clear();
       if (me.isNotEmpty) enquiries = enquiries.where((e) => e.phone != me).toList();
       account = null;

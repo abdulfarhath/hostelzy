@@ -102,6 +102,7 @@ extension MapAreaActions on AppState {
     }
     update(() {
       role = r;
+      inFindBed = false;
       // F07: a new owner accepts the Fair Play rules first.
       screen = r == 'owner' && !fairAccepted ? 'oRules' : homeOf[r]!;
       hist = [];
@@ -123,7 +124,7 @@ extension MapAreaActions on AppState {
       back();
       return false;
     }
-    final home = signedIn ? homeOf[role]! : 'welcome';
+    final home = signedIn ? homeTab : 'welcome';
     if (screen != home && screen != 'gate') {
       update(() {
         screen = home;

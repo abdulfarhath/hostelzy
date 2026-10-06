@@ -150,7 +150,7 @@ void main() {
     s.dispose();
   });
 
-  for (final c in const [('explore', 'tenant'), ('detail', 'tenant'), ('holds', 'tenant'), ('rHome', 'resident'), ('help', 'resident'), ('rPay', 'resident'), ('oToday', 'owner'), ('oMore', 'owner'), ('oRent', 'owner'), ('oBeds', 'owner'), ('welcome', 'tenant'), ('settings', 'tenant')]) {
+  for (final c in const [('explore', 'tenant'), ('detail', 'tenant'), ('holds', 'tenant'), ('rHome', 'resident'), ('rStay', 'resident'), ('savedHolds', 'resident'), ('rPay', 'resident'), ('oToday', 'owner'), ('oMore', 'owner'), ('oRent', 'owner'), ('oBeds', 'owner'), ('welcome', 'tenant'), ('settings', 'tenant')]) {
     testWidgets('F21 W4: ${c.$1} fits at 2× text', (tester) async {
       final s = AppState(start: c.$1, role: c.$2);
       await _pump(tester, s, scale: 2);
@@ -178,17 +178,20 @@ void main() {
     expect(find.text('తెలుగు (beta)'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('lang-te')));
     expect((s.lang, s.snapshot()['lang']), ('te', 'te'));
-    s.tab('help');
+    // F26 #14: Help lives in My stay.
+    s.tab('rStay');
     await tester.pump();
-    expect(find.text('TE:Help'), findsWidgets); // the title and the tab
+    expect(find.text('TE:Help'.toUpperCase()), findsOneWidget); // the Help kicker
+    s.update(() => s.sheet = 'complaint');
+    await tester.pump();
     expect(find.text('Send to owner'), findsOneWidget); // not translated yet: English
     s.dispose();
   });
 
-  testWidgets('F21 W4: Log out and the theme live in Settings only', (tester) async {
+  testWidgets('F21 W4 + F26 #11: Log out in red on Me (and in Settings); the theme in Settings only', (tester) async {
     final s = AppState(start: 'me', role: 'owner');
     await _pump(tester, s);
-    expect(find.text('Log out'), findsNothing);
+    expect(find.text('Log out'), findsOneWidget);
     expect(find.text('APPEARANCE'), findsNothing);
     await _tap(tester, find.text('Settings'));
     expect(find.text('Log out'), findsOneWidget);

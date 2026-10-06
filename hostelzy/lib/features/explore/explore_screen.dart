@@ -538,7 +538,10 @@ class HostelCard extends StatelessWidget {
 
 /// F18 (D9): the hostels the tenant saved, kept on this phone.
 class SavedScreen extends StatelessWidget {
-  const SavedScreen({super.key});
+  const SavedScreen({super.key, this.bare = false});
+
+  /// F26 #17: inside Saved & Holds, without its own title.
+  final bool bare;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -548,14 +551,15 @@ class SavedScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Row(children: [if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)], const T('Saved', s: 30, w: 800, lh: 1.02, ls: -.025)]),
-        ),
+        if (!bare)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+            child: Row(children: [if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)], const T('Saved', s: 30, w: 800, lh: 1.02, ls: -.025)]),
+          ),
         Expanded(
           child: list.isEmpty
-              ? Padding(
+              ? Scroll(child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                   child: Column(
                     children: [
@@ -568,7 +572,7 @@ class SavedScreen extends StatelessWidget {
                       Cta('Find a bed', height: 50, px: 16, fs: 15, expand: false, onTap: () => s.tab('explore')),
                     ],
                   ),
-                )
+                ))
               : Scroll(
                   key: ValueKey('saved${s.scrollEpoch}'),
                   child: Column(

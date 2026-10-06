@@ -212,13 +212,14 @@ void main() {
   });
 
   testWidgets('complaint goes to the owner queue', (tester) async {
-    final s = AppState(start: 'help', role: 'resident');
+    final s = AppState(start: 'rStay', role: 'resident', sheet: 'complaint');
     await pumpApp(tester, s);
     await tester.enterText(find.byType(EditableText).first, 'Fan is broken');
     await tester.pump();
     await tap(tester, find.text('Send to owner'));
     expect(s.complaints.last.text, 'Fan is broken');
-    // F21 W3: it shows inline as Sent.
+    // F21 W3 + F26 #14: the list opens and shows it as Sent.
+    expect(s.sheet, 'complaints');
     expect(find.text('SENT'), findsWidgets);
     s.jump('oMore', 'owner');
     await tester.pump();
@@ -231,7 +232,6 @@ void main() {
     final s = AppState(start: 'me', role: 'tenant');
     await pumpApp(tester, s);
     expect(find.text('Dark'), findsNothing);
-    expect(find.text('Log out'), findsNothing);
     await tap(tester, find.text('Settings'));
     await tap(tester, find.text('Dark'));
     expect(s.theme, 'dark');
@@ -2303,9 +2303,9 @@ void main() {
     // Saved hostels list (D9).
     s.update(() => s.saved['orchid'] = true);
     await pumpApp(tester, s);
-    s.tab('me');
+    s.tab('explore');
     await tester.pump();
-    await tap(tester, find.byKey(const ValueKey('me-Saved')));
+    await tap(tester, find.byKey(const ValueKey('tab-saved')));
     expect(s.screen, 'saved');
     expect(find.text('Orchid Women\'s PG'), findsOneWidget);
     // Fair Play hours run from when the case opened (F4).
@@ -3065,8 +3065,8 @@ void main() {
     // A resident: their room screen → Edit room → the suggestion editor.
     final r = AppState(start: 'me', role: 'resident');
     await pumpApp(tester, r);
-    // F22: Me › My stay › Fix a room layout.
-    await tap(tester, find.byKey(const ValueKey('me-My stay')));
+    // F26 #14: the My stay tab › Fix a room layout.
+    await tap(tester, find.byKey(const ValueKey('tab-rStay')));
     await tap(tester, find.text('Fix a room layout'));
     expect((r.screen, r.fixHid, r.fixRoom), ('rRoom', 'anjani', 204));
     await tap(tester, find.text('203'));
