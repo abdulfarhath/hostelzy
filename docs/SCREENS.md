@@ -14,8 +14,8 @@
 | App full-screen states | **29** |
 | **Release app total** | **154** |
 | Team console (app/console): views 11 + states 4 | **15** |
-| Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **177** |
+| Web pages (app/): pages 6 + states 1 | **7** |
+| **Overall total** | **176** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
@@ -305,18 +305,18 @@ Views 11 (C1–C9, C14, C15) + states 4 (C10–C13) = 15.
 
 Not counted: "Loading…" (`console.js:87`) and "Not found." for an unknown `#hash` (`console.js:94`).
 
-## 5. Web pages (8)
+## 5. Web pages (7)
 
 | # | Path | Page | States |
 |---|---|---|---|
 | 1 | `app/index.html` | Hostelzy · Get the app | — |
-| 2 | `app/r/` | A Hostelzy enquiry (HZ code, Open in Hostelzy). F26 #7: no new enquiries are made; old links still open (the owner lands on Today) | +1: "This link has no HZ code" (`app/r/index.html:20`) |
+| 2 | `app/r/` | Find this hostel on Hostelzy: "Hold a bed in the app to message or call the owner", Open in Hostelzy / Get the app (F26 #7: no enquiries; old links and QR posters still open the app, an old HZ code shows for reference) | — |
 | 3 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
 | 4 | `app/privacy/` | Privacy policy | — |
 | 5 | `app/terms/` | Terms of use | — |
 | 6 | `app/delete-account/` | Delete your Hostelzy account | — |
 
-Pages 6 + states 2 = 8.
+Pages 6 + states 1 = 7.
 
 ## 6. Not counted (listed so nobody draws or builds them by mistake)
 
