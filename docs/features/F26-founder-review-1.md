@@ -57,9 +57,18 @@ Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact
 | 17 | Find a bed = the full tenant app | No "browsing as a tenant" strip. Tapping Find a bed switches to the tenant tab bar (Explore · Map · Saved · Holds · Me). Back via Me → "My stay ›" on top. Implies **A**: residents can hold a bed elsewhere |
 | 20 | Owner Rent colours | **Paid** green, **Late** red, **Due** plain; Call + WhatsApp |
 
+## Round 3 (founder, 2026-10-06): two fixes, then approved
+| # | Fix |
+|---|---|
+| 8, 12 | **Edit this layout** is the app's primary red (#ec3013), not orange. The orange `or`/`oi` tokens are dropped |
+| 17 | Resident inside Find a bed gets this tenant bar: **Explore · Map · Saved & Holds · My stay · Me**. Saved and Holds merge into one tab (two segments inside). **My stay** returns to the resident app. A plain tenant keeps Explore · Map · Saved · Holds · Me |
+
+Everything else on the proposal canvas (v9) is approved as drawn. Paid in green is approved (DECISIONS: green also marks a confirmed payment).
+
 ## Tab bars after the change
 - Tenant: Explore · Map · Saved · Holds · Me (unchanged)
 - Resident: **Home · Rent · My stay · Find a bed · Me** (was Home · Rent · Food · Help · Me)
+- Resident inside Find a bed: **Explore · Map · Saved & Holds · My stay · Me**
 - Owner: Today · Beds · Add tenant · Rent · Manage (unchanged)
 
 ## Design

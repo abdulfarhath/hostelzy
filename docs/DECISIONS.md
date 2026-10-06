@@ -273,5 +273,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - **Find a bed** inside the resident app is the full tenant app (tenant tab bar). A resident **can hold a bed** at another
   hostel; their stay changes only when they move. Spec: F26 #17.
 
+**F26 approved; green also for confirmed payments** — founder, 2026-10-06
+- The founder approved the F26 proposal canvas (21 changes, rounds 1–3). Build starts on the prototype.
+- Colours: red `#ec3013` is the only action colour (no orange). Green marks savings, Hostelzy deals **and a confirmed
+  "Paid"**. Navy marks ✓ VERIFIED. Grey outline marks UNVERIFIED.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
