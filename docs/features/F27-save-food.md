@@ -1,6 +1,6 @@
 # F27 · Save food: "Are you eating?" headcount (founder idea, 2026-10-06)
 
-**Stage:** Ideas → **Designing** (F26 proposal canvas, new boards; design only for now).
+**Stage:** Ideas → Designing → **Design approved** (founder, 2026-10-06, proposal canvas v11) → **Building** (prototype first, on top of F26).
 
 ## Problem
 Hostels cook for everyone, every meal. Many residents skip meals (office, travel, weekends home). The food is wasted
