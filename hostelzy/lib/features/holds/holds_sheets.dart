@@ -98,13 +98,12 @@ class WaSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final ref = s.waRef;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
         gap: 12,
         children: [
-          // F22 Area 1: the message with the booking code; nothing is sent from here.
+          // F22 Area 1: the message; nothing is sent from here.
           Container(
             padding: const EdgeInsets.all(14),
             decoration: box(w: 2, c: p.tx),
@@ -132,7 +131,6 @@ class WaSheet extends StatelessWidget {
               s.toastMsg('Message copied.');
             },
           ),
-          if (ref != null) T('The booking code keeps your Hostelzy price.', s: 12, c: p.mu, lh: 1.45),
           T('Nothing is sent until you press send in WhatsApp.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),

@@ -13,6 +13,9 @@ mixin _HoldsData {
   /// Walk-in holds the owner placed, and when they end (F8): ms.
   final Map<String, int> walkIns = {};
 
+  /// F26 #9: holds this phone already told the server the owner opened.
+  final Set<String> _seenSent = {};
+
   /// The last text handed to the phone's share sheet (tests read it).
   String? lastShare;
 
@@ -187,4 +190,49 @@ extension HoldsActions on AppState {
   String get referralText => 'I found my PG on Hostelzy: see the exact bed before you visit. Use my code $referralCode when you join a hostel through Hostelzy and we both get ${fmt(referralReward)} after your first month.'; 
 
   void setHold(String id, String status) => update(() => holds = holds.map((h) => h.id == id ? h.withStatus(status) : h).toList());
+
+  // ---------------------------------------------------------- F26 #7, #9
+
+  /// F26 #7: a hold that still counts (waiting, kept, paying or booked, not
+  /// ended, not being released). Only then may the tenant reach the owner.
+  bool liveHold(Hold h) =>
+      const ['waiting', 'confirmed', 'held', 'paying', 'booked'].contains(h.status) && !expiredHolds.contains(h.id) && !releasing.contains(h.id);
+
+  /// F26 #7: the tenant's live hold at [hid] (null: owner contact is locked).
+  Hold? contactHold(String hid) => holds.where((h) => h.hid == hid && liveHold(h)).lastOrNull;
+
+  /// F26 #7: the ready WhatsApp message, with the hold's HZ code.
+  String holdWaText(Hold h) {
+    final hh = hostelById(h.hid);
+    final hi = hh.owner.isEmpty ? 'Hi' : 'Hi ${hh.owner}';
+    return '$hi, I held bed ${h.bed} at ${hh.name} on Hostelzy.${h.ref == null ? '' : ' Booking code ${h.ref}.'}';
+  }
+
+  /// F26 #7: WhatsApp / call the owner, only while [h] is live.
+  void waOwner(Hold h) => liveHold(h) ? whatsapp(ownerWa(h.hid), holdWaText(h)) : toastMsg('Message and call the owner after you hold a bed');
+  void callOwner(Hold h) => liveHold(h) ? call(ownerPhones[h.hid] ?? '') : toastMsg('Message and call the owner after you hold a bed');
+
+  /// F26 #9: no answer 30 minutes after the hold: "Still waiting. Call the owner?".
+  bool stillWaiting(Hold h, int nowMs) => h.status == 'waiting' && h.opt != 'book' && liveHold(h) && nowMs - h.start >= 30 * 60000;
+
+  /// F26 #9: the owner (or a manager) has these holds in front of them (Today,
+  /// bed sheet): stamped once on the server, so the tenant sees "Owner reviewing".
+  void markHoldsSeen(Iterable<String> ids) {
+    final mine = ownerHostels.toSet();
+    final fresh = [
+      for (final h in holds)
+        if (ids.contains(h.id) && h.status == 'waiting' && h.seen == null && mine.contains(h.hid) && !_seenSent.contains(h.id)) h.id,
+    ];
+    if (fresh.isEmpty) return;
+    _seenSent.addAll(fresh);
+    final at = DateTime.now().millisecondsSinceEpoch;
+    update(() => holds = [for (final h in holds) fresh.contains(h.id) ? h.withSeen(at) : h]);
+    final server = [for (final id in fresh) if (!RegExp(r'^h\d+$').hasMatch(id)) id];
+    if (onServer && server.isNotEmpty) {
+      data.holdSeen(server).then((_) {}, onError: (Object e) {
+        debugPrint('hold seen: $e');
+        _seenSent.removeAll(server);
+      });
+    }
+  }
 }

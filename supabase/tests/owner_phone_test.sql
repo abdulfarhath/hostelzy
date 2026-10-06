@@ -37,14 +37,14 @@ select test.act('authenticated', 'fb-op-stranger');
 select test.eq(pg_temp.ask('x'), '');
 select test.act('anon', null);
 select test.blocked($$select * from public.owner_contacts(array['a2500000-0000-0000-0000-000000000001']::uuid[])$$);
--- a hold (even ended) in the last 60 days: that hostel's number, digits only
+-- F26 #7: an ended hold no longer shows it (it locks again when the hold ends)
 select test.act('authenticated', 'fb-op-holder');
-select test.eq(pg_temp.ask('x'), 'op-one=9876543210');
+select test.eq(pg_temp.ask('x'), '');
 select test.act('authenticated', 'fb-op-old');
 select test.eq(pg_temp.ask('x'), '');
--- an enquiry: the number the team noted when the owner has no account yet
+-- F26 #7: an enquiry no longer shows it either
 select test.act('authenticated', 'fb-op-asker');
-select test.eq(pg_temp.ask('x'), 'op-two=9123456789');
+select test.eq(pg_temp.ask('x'), '');
 -- residents now, not ones who left long ago
 select test.act('authenticated', 'fb-op-res');
 select test.eq(pg_temp.ask('x'), 'op-one=9876543210');

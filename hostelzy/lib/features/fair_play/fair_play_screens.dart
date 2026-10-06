@@ -175,8 +175,11 @@ class OwnerRulesScreen extends StatelessWidget {
   }
 }
 
-/// F07 board 2: the owner on the hostel page. The number shows only after a
-/// hold; until then the tenant enquires through Hostelzy (F05).
+/// F07 board 2, F26 #7: the owner on the hostel page. No contact before a
+/// hold: both buttons are locked with one line saying why. A live hold
+/// (waiting, kept or booked) shows the number and switches on WhatsApp (a
+/// ready message with the HZ code) and Call; they lock again when the hold
+/// ends or the owner declines.
 class OwnerContact extends StatelessWidget {
   const OwnerContact(this.h, {super.key});
   final Hostel h;
@@ -184,10 +187,10 @@ class OwnerContact extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final held = s.heldAt(h.id);
-    final hold = s.holds.where((x) => x.hid == h.id && x.status != 'released').lastOrNull;
+    final hold = s.contactHold(h.id);
     final phone = ownerPhones[h.id] ?? '';
     return Container(
+      key: const ValueKey('ownerContact'),
       margin: const EdgeInsets.all(16),
       decoration: box(w: 2, c: p.tx),
       child: Column(
@@ -199,7 +202,7 @@ class OwnerContact extends StatelessWidget {
               children: [
                 Container(width: 44, height: 44, color: p.sf, alignment: Alignment.center, child: T(initials(h.owner.isEmpty ? h.name : h.owner), w: 800)),
                 const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${h.owner}, owner', w: 800, s: 15), T(s.replyMins(h.id) == 0 ? 'Replies through Hostelzy' : 'Usually replies in ~${replyWords(s.replyMins(h.id))}', s: 12, c: p.mu)])),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(h.owner.isEmpty ? 'The owner' : '${h.owner}, owner', w: 800, s: 15), T(s.replyMins(h.id) == 0 ? 'Replies through Hostelzy' : 'Usually replies in ~${replyWords(s.replyMins(h.id))}', s: 12, c: p.mu)])),
               ],
             ),
           ),
@@ -208,52 +211,54 @@ class OwnerContact extends StatelessWidget {
             decoration: BoxDecoration(border: Border(top: bs(1, p.hl))),
             child: Row(
               children: [
-                Ic(held ? 'phone' : 'lock', size: 16, color: held ? p.tx : p.mu),
+                Ic(hold != null ? 'phone' : 'lock', size: 16, color: hold != null ? p.tx : p.mu),
                 const SizedBox(width: 8),
-                Expanded(child: T(held ? (phone.isEmpty ? 'Number not added yet' : phoneSpaced(phone)) : maskPhone(phone), w: 800, s: 15, c: held && phone.isNotEmpty ? p.tx : p.mu)),
-                if (held && hold != null)
-                  Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T('You held ${hold.bed}', s: 11, w: 800, ls: .05, upper: true, c: p.bg))
-                else
-                  T('Shows after a hold', s: 12, c: p.mu),
+                if (hold == null)
+                  const Expanded(child: T('Message and call the owner after you hold a bed', w: 800, s: 14, lh: 1.35))
+                else ...[
+                  Expanded(child: T(phone.isEmpty ? 'Number not added yet' : phoneSpaced(phone), w: 800, s: 15, c: phone.isEmpty ? p.mu : p.tx)),
+                  Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), child: T('You held ${hold.bed}', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
+                ],
               ],
             ),
           ),
-          if (!held) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Rich([sp(context, 'Owner’s number shows after you hold a bed.', w: 800), sp(context, ' Talking through Hostelzy keeps your deal and your ₹100 reward.')], s: 13, lh: 1.45),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Tap(
-                onTap: () => s.enquire(h.id, 'Hi ${h.owner}, I found ${h.name} on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp'),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 50),
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 14),
-                  decoration: box(w: 2, c: p.tx),
-                  child: Row(
-                    children: [
-                      Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [const T('Ask on WhatsApp', w: 800, s: 14), T('Saved on Hostelzy with a booking code', s: 11, w: 600, c: p.mu)])),
-                      const Ic('msg', size: 18),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ] else
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(child: OutlineCta('Call', icon: 'phone', height: 44, px: 14, fs: 14, onTap: () => s.call(phone))),
-                  const SizedBox(width: 8),
-                  Expanded(child: OutlineCta('WhatsApp', icon: 'msg', height: 44, px: 14, fs: 14, onTap: () => s.enquire(h.id, 'Hi ${h.owner}, I held bed ${hold?.bed} at ${h.name} on Hostelzy.', bed: hold?.bed, from: 'Hold · WhatsApp owner'))),
-                ],
-              ),
-            ),
+          Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 12), child: ContactButtons(hold)),
         ],
       ),
     );
+  }
+}
+
+/// F26 #7: WhatsApp + Call for the owner of [hold]'s hostel; both locked
+/// (greyed, no tap) when [hold] is null or no longer live. [callFirst]: Call
+/// is the filled one ("Still waiting. Call the owner?").
+class ContactButtons extends StatelessWidget {
+  const ContactButtons(this.hold, {super.key, this.callFirst = false});
+  final Hold? hold;
+  final bool callFirst;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final h = hold;
+    final on = h != null && s.liveHold(h);
+    Widget btn(String label, String icon, bool filled, VoidCallback tap) => Expanded(
+      child: Cta(
+        label,
+        key: ValueKey('contact-$label'),
+        icon: icon,
+        height: 44,
+        px: 14,
+        fs: 14,
+        bg: !on ? p.sf : (filled ? p.tx : transparent),
+        fg: !on ? p.mu : (filled ? p.bg : p.tx),
+        border: !on ? p.hl : p.tx,
+        onTap: on ? tap : null,
+      ),
+    );
+    final wa = btn('WhatsApp', 'msg', !callFirst, () => s.waOwner(h!));
+    final call = btn('Call', 'phone', callFirst, () => s.callOwner(h!));
+    return Row(children: callFirst ? [call, const SizedBox(width: 8), wa] : [wa, const SizedBox(width: 8), call]);
   }
 }
 

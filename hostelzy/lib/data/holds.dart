@@ -46,7 +46,7 @@ const memberReward = 100, referralReward = 100;
 const trustedMonths = 6;
 
 class Hold {
-  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const [], this.fixedFee = 0, this.trusted = false, this.ends});
+  Hold({required this.id, required this.hid, required this.bed, required this.room, required this.opt, required this.start, required this.status, this.ref, this.paid = 0, this.perks = const [], this.fixedFee = 0, this.trusted = false, this.ends, this.seen, this.declined = false});
   final String id, hid, bed, opt;
 
   /// F24 item 13: the monthly rent locked by a booking on the server (0 = not known).
@@ -64,8 +64,16 @@ class Hold {
   final int paid;
   final List<String> perks;
 
+  /// F26 #9: when the owner (or a manager) first opened this hold (ms; null =
+  /// not yet). Only then do the tenant's steps say "Owner reviewing".
+  final int? seen;
+
+  /// F26 #9: the owner released it (said no), not the tenant.
+  final bool declined;
+
   /// waiting | confirmed | held | booked | released
   final String status;
-  Hold withStatus(String s) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks, fixedFee: fixedFee, trusted: trusted, ends: ends);
-  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p, fixedFee: fixedFee, trusted: trusted, ends: ends);
+  Hold withStatus(String s, {bool? declined}) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: s, ref: ref, paid: paid, perks: perks, fixedFee: fixedFee, trusted: trusted, ends: ends, seen: seen, declined: declined ?? this.declined);
+  Hold withPerks(List<String> p) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: p, fixedFee: fixedFee, trusted: trusted, ends: ends, seen: seen, declined: declined);
+  Hold withSeen(int at) => Hold(id: id, hid: hid, bed: bed, room: room, opt: opt, start: start, status: status, ref: ref, paid: paid, perks: perks, fixedFee: fixedFee, trusted: trusted, ends: ends, seen: at, declined: declined);
 }

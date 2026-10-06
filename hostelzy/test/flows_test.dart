@@ -214,33 +214,12 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('enquiry recorded before WhatsApp; owner sees and contacts it (F05)', (tester) async {
+  testWidgets('owner sees and contacts an enquiry from before F26 (F05 history)', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
-    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    final before = s.enquiries.length;
-    await tap(tester, find.text('Ask on WhatsApp'));
-    expect(s.sheet, 'wa');
-    final ref = s.waRef!;
-    expect(s.enquiries.length, before + 1);
-    expect(s.enquiries.first.ref, ref);
-    expect(s.enquiries.first.phone, '9000000001');
-    // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
-    expect(find.text('Ask Srinivas'), findsOneWidget);
-    expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
-    // F24 4a: the message ends with the enquiry's link the owner can open.
-    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
-    expect(find.text(s.waFull), findsOneWidget);
-    await tap(tester, find.text('Open WhatsApp'));
-    expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));
-    await tester.pump(const Duration(seconds: 3));
-
-    // Asking again about the same hostel reuses the code.
-    await tap(tester, find.text('Ask on WhatsApp'));
-    await tap(tester, find.text('Copy message'));
-    await tap(tester, find.text('Ask on WhatsApp'));
-    expect(s.waRef, ref);
-    expect(s.enquiries.length, before + 1);
+    final ref = s.enquiries.first.ref;
+    // F26 #7: tenants no longer enquire; the hostel page has no "Ask on WhatsApp".
+    expect(find.text('Ask on WhatsApp'), findsNothing);
 
     // Owner Today lists it, newest first, as New.
     s.jump('oToday', 'owner');
@@ -254,32 +233,32 @@ void main() {
     await tester.pump();
     expect(find.text('ENQUIRIES FROM HOSTELZY'), findsOneWidget);
     expect(find.text(ref), findsOneWidget);
-    expect(find.text('3 new'), findsOneWidget);
+    expect(find.text('2 new'), findsOneWidget);
     expect(find.textContaining('Not on this list = not from Hostelzy.'), findsOneWidget);
 
     // Calling marks it Contacted.
     await tap(tester, find.text('Call').first);
     expect(s.enquiries.first.contacted, isTrue);
-    expect(find.text('2 new'), findsOneWidget);
+    expect(find.text('1 new'), findsOneWidget);
 
     // Tapping an HZ code opens the enquiry sheet.
-    await tap(tester, find.text('HZ-4821'));
+    await tap(tester, find.text('HZ-4817'));
     expect(s.sheet, 'enq');
-    expect(find.text('HZ-4821 · Ravi Teja'), findsOneWidget);
-    expect(find.text('90000 00029 · not verified'), findsWidgets);
+    expect(find.text('HZ-4817 · Sandeep Kumar'), findsOneWidget);
+    expect(find.text('90000 00032 · not verified'), findsWidgets);
     await tap(tester, find.text('Mark as contacted'));
-    expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4821').contacted, isTrue);
+    expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4817').contacted, isTrue);
     expect(s.sheet, isNull);
     s.dispose();
   });
 
-  testWidgets('WhatsApp owner from a hold records the bed (F05)', (tester) async {
+  testWidgets('F26 #7: WhatsApp owner from a hold opens WhatsApp with the bed; no enquiry is recorded', (tester) async {
     final s = AppState(start: 'hold', role: 'tenant');
     await pumpApp(tester, s);
+    final n = s.enquiries.length;
     await tap(tester, find.text('Tell Srinivas on WhatsApp'));
-    expect(s.sheet, 'wa');
-    expect(s.enquiries.first.bed, s.holds.single.bed);
-    expect(s.enquiries.first.from, 'Hold · WhatsApp owner');
+    expect(s.enquiries.length, n);
+    expect(Uri.decodeFull(s.lastLink.toString()), contains('Hi Srinivas, I held bed ${s.holds.single.bed} at Anjani Residency on Hostelzy.'));
     s.dispose();
   });
 
@@ -344,8 +323,9 @@ void main() {
     final s = AppState(start: 'detail', role: 'tenant');
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    await tap(tester, find.text('Ask on WhatsApp'));
-    final ref = s.waRef!;
+    // F26 #7: tenants don't enquire any more; an enquiry from before still matches.
+    const ref = 'HZ-4900';
+    s.enquiries = [Enquiry(ref: ref, name: 'Rahul Varma', phone: '9000000001', hid: 'anjani', at: s.now, from: 'Hostel page', msg: ''), ...s.enquiries];
 
     // Owner: Manage opens on its list (F21 W3); Residents has the unassigned-beds banner.
     s.jump('oMore', 'owner');
@@ -729,11 +709,11 @@ void main() {
     expect(s.strikes['anjani'] ?? 0, 0);
     expect(s.ownerFixes, 1);
 
-    // Tenant: the owner's number is hidden until a hold.
+    // Tenant: the owner's number and both buttons are locked until a hold (F26 #7).
     s.jump('detail', 'tenant');
     await tester.pump();
-    expect(find.text('90••• •••••'), findsOneWidget);
-    expect(find.text('Shows after a hold'), findsOneWidget);
+    expect(find.text('90000 00101'), findsNothing);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     s.update(() => s.bed = '204-D');
     s.placeHold('free');
     s.jump('detail', 'tenant');
@@ -2531,7 +2511,7 @@ void main() {
     s.dispose();
   });
 
-  test('C: on Supabase, enquiries, payments and complaints are written to the server', () async {
+  test('C: on Supabase, payments, enquiry replies and complaints are written to the server', () async {
     final s = AppState(start: 'explore', role: 'tenant');
     final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [
       {'id': 'p-uuid', 'hostel_id': 'h1', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'hold-uuid', 'status': 'pending', 'created_at': '2026-10-02T10:00:00Z'},
@@ -2542,21 +2522,10 @@ void main() {
       s.myName = 'Asha K';
       s.phone = '9876543210';
     });
-    // Samples aren't on the server: nothing is written for them.
-    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
-    expect(fake.calls, isEmpty);
-    expect(s.waRef, isNotNull);
     await s.startLive();
     expect(s.onServer, isTrue);
-    // Enquiry: the server's HZ code goes into the WhatsApp message; asking again reuses it.
-    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
-    expect(fake.calls, ['enquiry anjani 204-A Asha K 9876543210']);
-    expect((s.sheet, s.waRef), ('wa', 'HZ-5009'));
-    s.enquire('anjani', 'Hi again', bed: '204-A', from: 'Hostel page');
-    await Future<void>.delayed(Duration.zero);
-    expect(fake.calls.length, 1);
+    // F26 #7: tenants no longer send enquiries.
+    expect(fake.calls, isEmpty);
     // UTR, then the owner confirms: the hold becomes a booking on the server.
     final p = s.payments.single;
     s.update(() {
@@ -2565,7 +2534,7 @@ void main() {
     });
     await s.sendPayUtr();
     await s.confirmPayment(p, true);
-    expect(fake.calls.sublist(1), ['utr p-uuid 123456789012', 'confirm p-uuid true hold-uuid']);
+    expect(fake.calls, ['utr p-uuid 123456789012', 'confirm p-uuid true hold-uuid']);
     s.markContacted('HZ-5009');
     await Future<void>.delayed(Duration.zero);
     expect(fake.calls.last, 'contacted HZ-5009');

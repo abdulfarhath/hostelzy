@@ -142,30 +142,9 @@ extension MapAreaActions on AppState {
   /// The tenant's verified number (the demo number until they log in).
   String get myPhone => phone.length == 10 ? phone : '';
 
-  /// Records (or reuses) the tenant's enquiry for this hostel + bed.
-  Enquiry _record(String hid, String body, {String? bed, required String from}) {
-    final me = myPhone;
-    var e = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull;
-    if (e == null) {
-      e = Enquiry(ref: 'HZ-${_nextRef++}', name: meName.isEmpty ? 'Hostelzy user' : meName, phone: me, hid: hid, bed: bed, at: DateTime.now().millisecondsSinceEpoch, from: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
-      enquiries = [e, ...enquiries];
-    }
-    return e;
-  }
-
-  void _enquire(String hid, String body, {String? bed, required String from}) {
-    final e = _record(hid, body, bed: bed, from: from);
-    sheet = 'wa';
-    waTo = hostelById(hid).owner;
-    waPhone = ownerWa(hid);
-    waMsg = body;
-    waRef = e.ref;
-    waHid = hid;
-  }
-
-  /// Full message the tenant sends: their text, the ref line, and (F05) the
-  /// enquiry's link last, so the owner can tap it to open it in Hostelzy.
-  String get waFull => waRef == null ? (waMsg ?? '') : '${waMsg ?? ''}\nBooking code $waRef\n${enquiryLink(waRef!)}';
+  /// The message the WhatsApp sheet hands to WhatsApp (F26 #7: tenants no
+  /// longer send enquiries, so there is no booking code line any more).
+  String get waFull => waMsg ?? '';
 
   void pickArea(String? a) => update(() {
     if (a != null) noteSearchedArea(a);

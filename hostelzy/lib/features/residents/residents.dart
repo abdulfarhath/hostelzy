@@ -308,7 +308,7 @@ extension ResidentsActions on AppState {
     }
     String? ref;
     if (opt == 'book') {
-      ref = _record(hid, 'Booked bed ${b.id} with the advance.', bed: b.id, from: 'Book · Pay advance').ref;
+      ref = 'HZ-${_nextRef++}';
     }
     // F17: a booking is "paying" until the owner confirms the advance arrived.
     _bedBefore['$hid|${b.id}'] = b.state;
@@ -399,7 +399,8 @@ extension ResidentsActions on AppState {
       b.mine = false;
     }
     if (r.hold != null) {
-      setHold(r.hold!, 'released');
+      // F26 #9: the tenant sees "Declined", not "Released".
+      update(() => holds = [for (final x in holds) x.id == r.hold ? x.withStatus('released', declined: true) : x]);
     } else {
       update(() => reqs = reqs.where((x) => x.id != r.id).toList());
     }

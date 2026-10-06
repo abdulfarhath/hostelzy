@@ -212,7 +212,8 @@ class NeedsYouNow extends StatelessWidget {
                   child: Container(color: p.tx, padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6), child: T('Trusted tenant', s: 11, w: 800, ls: .05, upper: true, c: p.bg)),
                 )
               : null,
-          extra: null,
+          // F26 #9: the owner has this hold in front of them: "Owner reviewing" for the tenant.
+          extra: r.hold == null ? null : OnShow(() => s.markHoldsSeen([r.hold!]), child: const SizedBox.shrink()),
         ),
       for (final x in s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting'))
         (
