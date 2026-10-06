@@ -285,5 +285,11 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - The **waitlist push** ("A bed is free at <hostel>") is always sent: the tenant asked for it on that hostel. The
   Me → Notifications switch "New free beds" governs only the general nearby-beds push, off by default.
 
+**F27 Save food approved** — founder, 2026-10-06
+- Residents mark each meal Eating (default) or Skip, on the Home card, the week plan or the push. The owner sets the
+  cut-off (2 / 3 / 4 h, default 3 h); after it the choice locks and the owner sees "N of M eating" on Today and the Meals
+  page. Plates saved are counted only from real skips (no sample numbers in the real build). Green is used only on the
+  saved-plates numbers. Spec and boards: `features/F27-save-food.md`, proposal canvas v11.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
