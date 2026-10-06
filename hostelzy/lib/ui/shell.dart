@@ -7,6 +7,7 @@ import '../features/amenities/amenities_screens.dart';
 import '../features/explore/explore_screen.dart';
 import '../features/explore/explore_sheets.dart';
 import '../features/explore/hostel_screen.dart';
+import '../features/explore/unverified_screen.dart';
 import '../features/fair_play/fair_play_screens.dart';
 import '../features/holds/holds_screens.dart';
 import '../features/holds/holds_sheets.dart';
@@ -419,7 +420,8 @@ class _AppBody extends StatelessWidget {
     'holds' => const HoldsSeen(child: HoldsScreen()),
     'savedHolds' => const SavedHoldsScreen(),
     'me' => const MeScreen(),
-    'detail' => const DetailScreen(),
+    // F26 #21: a listed (UNVERIFIED) hostel has its own page (T32).
+    'detail' => const HostelPage(),
     'building' => const BuildingScreen(),
     'oPhotos' => const OwnerPhotosScreen(),
     'oCrop' => const CropScreen(),
@@ -642,11 +644,13 @@ class _Sheet extends StatelessWidget {
       'scanCam' => 'Use your camera?',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
-        'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
+        'verify' => 'Sign in to hear when it’s verified',
+        'claim' => 'Sign in to claim this hostel',
         'book' => 'Sign in to book this bed',
         _ => 'Sign in to hold this bed',
       },
-      'wa' => 'Ask ${s.waTo ?? 'the owner'}',
+      'wa' => 'Message ${s.waTo ?? 'on WhatsApp'}',
+      'claim' => 'Claim ${hostelById(s.claimHid ?? s.hid).name}',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'revReport' => 'Report this review',
@@ -683,7 +687,6 @@ class _Sheet extends StatelessWidget {
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
       'scanCam' => 'Join your PG',
-      'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom} · ${s.lReqShape == 'Custom' ? 'Custom shape' : s.lReqShape}',
       'switch' => 'Your hostels',
@@ -727,6 +730,7 @@ class _Sheet extends StatelessWidget {
       'scanCam' => const CameraSheet(),
       'hold' => const HoldSheet(),
       'wa' => const WaSheet(),
+      'claim' => const ClaimSheet(),
       'bed' => const BedSheet(),
       'addR' => const AddResidentSheet(),
       'rank' => const RankSheet(),

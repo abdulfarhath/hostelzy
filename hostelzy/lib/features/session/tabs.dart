@@ -15,8 +15,13 @@ mixin _TabsData {
   final Map<String, String> holdSeen = {};
 }
 
-/// F26 #16: hold results the user is told about with a dot: kept or declined.
-const _holdResults = {'confirmed', 'held', 'released'};
+/// F26 #16: hold results the user is told about with a dot: kept or
+/// declined. A declined hold is 'released' with the owner's `declined` mark
+/// (F26 #9); the tenant's own release or an expiry gets no dot.
+const _holdResults = {'confirmed', 'held', 'declined'};
+
+/// What [holdSeen] keeps for a hold: its status, or 'declined'.
+String _seenKey(Hold h) => h.declined ? 'declined' : h.status;
 
 extension TabsActions on AppState {
   /// The tab a role starts on; inside Find a bed it is Explore.
@@ -41,13 +46,14 @@ extension TabsActions on AppState {
   /// F26 #16: a hold the user saw before changed to kept or declined since.
   bool get holdsDot => holds.any((h) {
     final seen = holdSeen[h.id];
-    return seen != null && seen != h.status && _holdResults.contains(h.status) && !releasing.contains(h.id);
+    final k = _seenKey(h);
+    return seen != null && seen != k && _holdResults.contains(k) && !releasing.contains(h.id);
   });
 
   /// Called while Holds or a hold's page is on screen. Notifies only when
   /// something changed, so it is safe after every frame.
-  void markHoldsSeen() {
-    final now = {for (final h in holds) h.id: h.status};
+  void markHoldResultsSeen() {
+    final now = {for (final h in holds) h.id: _seenKey(h)};
     if (now.length == holdSeen.length && now.entries.every((e) => holdSeen[e.key] == e.value)) return;
     holdSeen
       ..clear()

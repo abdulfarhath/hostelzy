@@ -121,14 +121,10 @@ void main() {
     expect(find.byKey(const ValueKey('holdCard')), findsOneWidget);
     expect(find.text('HELD FOR YOU · FREE'), findsOneWidget);
     expect(find.text('Tell Srinivas on WhatsApp'), findsOneWidget);
+    // F26 #7: WhatsApp opens straight away with a ready message (no enquiry sheet).
     await _tap(tester, find.text('Tell Srinivas on WhatsApp'));
-    // The WhatsApp sheet shows the whole message and the booking code line.
-    expect(s.sheet, 'wa');
-    expect(find.text('Ask Srinivas'), findsOneWidget);
-    expect(find.text(s.waFull), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code ${s.waRef}\nhttps://farhath.me/hostelzy/app/r/?c=${s.waRef}'));
-    expect(find.text('The booking code keeps your Hostelzy price.'), findsOneWidget);
-    s.update(() => s.sheet = null);
+    expect(s.sheet, isNull);
+    expect(Uri.decodeFull(s.lastLink.toString()), contains('I held bed ${h.bed} at Anjani Residency on Hostelzy.'));
 
     // Owner confirms: still held, now with "owner confirmed".
     s.setHold(h.id, 'confirmed');

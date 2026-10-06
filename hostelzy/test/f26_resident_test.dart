@@ -140,8 +140,14 @@ void main() {
     expect(find.byKey(const ValueKey('holdsDot-holds')), findsNothing);
     // Declined later, seen from elsewhere: the dot again.
     s.tab('me');
+    // A release that isn't the owner's decline (an expiry) gets no dot.
     s.setHold(id, 'released');
     await tester.pump();
+    expect(find.byKey(const ValueKey('holdsDot-holds')), findsNothing);
+    // The owner's decline (F26 #9: released + declined) does.
+    s.update(() => s.holds = [for (final x in s.holds) x.id == id ? x.withStatus('released', declined: true) : x]);
+    await tester.pump();
+    expect(s.holdsDot, isTrue);
     expect(find.byKey(const ValueKey('holdsDot-holds')), findsOneWidget);
 
     // A resident in Find a bed: the dot is on Saved & Holds, which opens on Holds.

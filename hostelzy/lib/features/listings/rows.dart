@@ -78,7 +78,7 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
         name: h['name'] as String,
         gender: h['gender'] as String,
         area: area,
-        from: prices.isEmpty ? 0 : prices.reduce((a, b) => a < b ? a : b),
+        from: prices.isEmpty ? (h['rent_min'] as int? ?? 0) : prices.reduce((a, b) => a < b ? a : b),
         // Ratings come from verified reviews (F08).
         rating: revs.isEmpty ? 0 : double.parse((revs.fold<int>(0, (a, r) => a + r.stars) / revs.length).toStringAsFixed(1)),
         reviews: revs.length,
@@ -99,7 +99,11 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
           dueOnJoining: t['dueOnJoining'] as bool? ?? true,
           electricityExtra: t['electricityExtra'] as bool? ?? true,
         ),
-        live: (h['status'] as String? ?? 'live') == 'live',
+        live: const ['live', 'listed'].contains(h['status'] as String? ?? 'live'),
+        // F26 #21: UNVERIFIED (team-listed) with its expected rent range.
+        listed: h['status'] == 'listed',
+        rentMin: h['rent_min'] as int? ?? 0,
+        rentMax: h['rent_max'] as int? ?? 0,
         // F24 item 9: the owner's confirmations, from the server.
         bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
         layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),

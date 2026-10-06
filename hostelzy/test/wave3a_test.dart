@@ -149,7 +149,7 @@ void main() {
   testWidgets('80+ bed hostels: one featured spot pinned on top of every sort, marked Featured; deals paused show walk-in prices (items 20, 21)', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     final before = filtered(s).map((h) => h.id).toList();
-    final last = before.last;
+    final last = before.lastWhere((id) => !hostelById(id).listed); // F26 #21: listed hostels are never featured
     final rank = s.rankOf(last);
     expect(s.featured(last), isFalse);
     expect(s.bestQuote('anjani'), isNotNull);

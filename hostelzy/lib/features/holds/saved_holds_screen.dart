@@ -16,7 +16,7 @@ class HoldsSeen extends StatelessWidget {
     final s = AppScope.of(context);
     // Rebuilt on every app change, so a result arriving here is seen too.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) s.markHoldsSeen();
+      if (context.mounted) s.markHoldResultsSeen();
     });
     return child;
   }

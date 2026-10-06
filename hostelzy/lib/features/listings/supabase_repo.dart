@@ -623,6 +623,38 @@ class SupabaseRepo implements HostelRepo {
   Future<List<Lead>> teamTracker() async => [for (final r in (await db.rpc('team_tracker') as List).cast<Map<String, dynamic>>()) leadFromRow(r)];
   @override
   Future<void> setLeadStage(String hid, int stage) => db.from('hostel_leads').upsert({'hostel_id': hid, 'stage': leadStages[stage], 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+
+  @override
+  Future<void> holdSeen(List<String> holdIds) async {
+    try {
+      await db.rpc('hold_seen', params: {'p_holds': holdIds});
+    } on PostgrestException catch (e) {
+      // Before FOUNDER-TODO 4ze26 runs the tenant just doesn't see "Owner reviewing".
+      if (!_missingFn(e)) rethrow;
+    }
+  }
+
+  @override
+  Future<void> joinWaitlist(String hid) => db.from('verify_waitlist').insert({'hostel_id': hid});
+
+  @override
+  Future<Set<String>> myWaitlist() async => {for (final r in await db.from('verify_waitlist').select('hostel_id')) r['hostel_id'] as String};
+
+  @override
+  Future<void> sendClaim(String hid, String name, String phone) => db.from('claim_requests').insert({'hostel_id': hid, 'name': name, 'phone': phone});
+
+  @override
+  Future<Map<String, ({int verified, int listed})>?> areaCounts() async {
+    try {
+      return {
+        for (final r in (await db.rpc('area_counts') as List).cast<Map<String, dynamic>>())
+          r['area'] as String: (verified: (r['verified'] as num).toInt(), listed: (r['listed'] as num).toInt()),
+      };
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
 }
 
 /// A function the app calls isn't on the server yet (its SQL hasn't run).

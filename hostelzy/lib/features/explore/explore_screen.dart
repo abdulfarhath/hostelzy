@@ -6,6 +6,7 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../photos/photos_screens.dart';
 import '../reminders/reminders_screens.dart';
+import 'unverified_screen.dart';
 
 // ------------------------------------------------------------ derived values
 
@@ -18,13 +19,23 @@ const sortThen = {'price': 'Then by price, lowest first', 'near': 'Then by dista
 /// One ordering step: negative when [a] goes first, 0 when it can't tell.
 typedef HostelOrder = int Function(Hostel a, Hostel b);
 
-/// F26 #21 hook: the listing-tier step (✓ VERIFIED first inside each price
-/// band), run before the picked sort. Null until #21 adds the tier.
-HostelOrder? listingTierStep(AppState s) => null;
+/// The lowest rent that fits the room filter; a listed (UNVERIFIED) hostel
+/// has only its expected range, so its lowest end.
+int cheapestRent(AppState s, Hostel h) => h.listed ? h.rentMin : s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
+
+/// F26 #21: the listing-tier step, run before the picked sort. Under
+/// Price ↑: ✓ VERIFIED first inside each ₹2,000 price band ([tierCompare]);
+/// under any other sort listed hostels come after every verified one.
+HostelOrder? listingTierStep(AppState s) => (a, b) => tierCompare(a, b, (h) => cheapestRent(s, h), byPrice: s.sortBy == 'price');
 
 List<Hostel> filtered(AppState s) {
   final lim = {'Any': 1e9, '6k': 6000, '8k': 8000, '10k': 10000}[s.fB]!;
   bool ok(Hostel h) {
+    // F26 #21: a listed (UNVERIFIED) hostel has only its expected rent range;
+    // filters it can't answer (food, deals, a free bed, AC, amenities) leave it out.
+    if (h.listed) {
+      return !s.removed(h.id) && s.inMapArea(h) && (s.fG == 'Any' || h.gender == s.fG) && h.rentMin <= lim && !s.fFood && !s.fDeals && s.fS == 'Any' && s.fR == 'Any' && s.fAm.isEmpty;
+    }
     final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
     if (rs.isEmpty) return false;
     final from = rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
@@ -45,7 +56,7 @@ List<Hostel> filtered(AppState s) {
     return q == null ? 0 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
   }
 
-  int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
+  int cheapest(Hostel h) => cheapestRent(s, h);
   // A hostel with no reviews yet has no rating: after every rated one.
   double stars(Hostel h) => h.reviews == 0 ? -1 : h.rating;
   int km(Hostel a, Hostel b) => s.kmFor(a).compareTo(s.kmFor(b));
@@ -84,7 +95,8 @@ Hostel? pinnedFeatured(AppState s, List<Hostel> results) {
   Hostel? top;
   var best = double.negativeInfinity;
   for (final h in results) {
-    if (!s.featured(h.id)) continue;
+    // F26 #21: ranking and the featured spot are for verified hostels only.
+    if (h.listed || !s.featured(h.id)) continue;
     final v = s.rankScore(h.id);
     if (v > best) (top, best) = (h, v);
   }
@@ -150,9 +162,12 @@ class ExploreScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final results = filtered(s);
     // F26 #2: one featured hostel pinned on top, then the picked sort.
-    final pinned = results.isNotEmpty && s.featured(results.first.id) ? results.first : null;
+    final pinned = results.isNotEmpty && !results.first.listed && s.featured(results.first.id) ? results.first : null;
     final rest = pinned == null ? results : results.skip(1).toList();
-    final tag = firstTag(s.sortBy);
+    // F26 #21: inside a price band a verified hostel goes before a cheaper
+    // listed one, so "Lowest price" only when it really is the lowest.
+    final lowest = rest.isEmpty || s.sortBy != 'price' || rest.every((h) => cheapestRent(s, h) >= cheapestRent(s, rest.first));
+    final tag = rest.isNotEmpty && !rest.first.listed && lowest ? firstTag(s.sortBy) : null;
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     return Scroll(
       key: ValueKey('explore${s.scrollEpoch}'),
@@ -172,7 +187,8 @@ class ExploreScreen extends StatelessWidget {
             child: VGap(
               gap: 12,
               children: [
-                PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
+                // F26 #21: "Madhapur · 12 verified · 84 listed" once anything is listed.
+                PageHead(kicker: s.listState == 'ready' ? s.tierLine(s.mapArea) ?? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere, onPin: () => openMapNearMe(s)),
               ],
@@ -222,7 +238,7 @@ class ExploreScreen extends StatelessWidget {
                   HostelCard(pinned, pinned: true),
                   if (rest.isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: Kicker(sortThen[s.sortBy] ?? '')),
                 ],
-                for (final (i, h) in rest.indexed) HostelCard(h, tag: i == 0 && rest.length > 1 ? tag : null),
+                for (final (i, h) in rest.indexed) h.listed ? UnverifiedCard(h) : HostelCard(h, tag: i == 0 && rest.length > 1 ? tag : null),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".

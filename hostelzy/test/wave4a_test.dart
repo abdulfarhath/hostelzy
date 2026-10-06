@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hostelzy/app_config.dart' show enquiryLink;
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
@@ -76,10 +75,10 @@ Map<String, dynamic> _review(String id, String author, {String body = 'Good food
 };
 
 class _Server extends SampleRepo {
-  _Server({this.joined = '2026-08-20', this.reviews = const [], this.enquiries = const []});
+  _Server({this.joined = '2026-08-20', this.reviews = const []});
   String joined;
   List<Map<String, dynamic>> reviews;
-  List<Map<String, dynamic>> enquiries;
+  final List<Map<String, dynamic>> enquiries = const [];
   final calls = <String>[];
   String? failWith;
 
@@ -135,36 +134,11 @@ Future<AppState> _onServer(_Server server, {String start = 'rHome', String role 
 void main() {
   mapTiles = false;
 
-  testWidgets('F05: the WhatsApp message ends with the enquiry link the owner can open', (tester) async {
+  testWidgets('F26 #7: the hostel page has no enquiry button; contact is locked before a hold', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
     await _pump(tester, s);
-    s.enquire('anjani', 'Hi Srinivas, is a bed free?', bed: '204-B', from: 'Hostel page · Ask on WhatsApp');
-    await tester.pump();
-    final ref = s.waRef!;
-    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
-    expect(enquiryLink(ref), 'https://farhath.me/hostelzy/app/r/?c=$ref');
-    expect(find.text(s.waFull), findsOneWidget);
-    // Asking again about the same bed reuses the code (one enquiry per bed).
-    s.update(() => s.sheet = null);
-    final n = s.enquiries.length;
-    s.enquire('anjani', 'Hi Srinivas, is a bed free?', bed: '204-B', from: 'Hostel page · Ask on WhatsApp');
-    expect((s.enquiries.length, s.waRef), (n, ref));
-    s.dispose();
-  });
-
-  test('F05: on the server a second enquiry for the same bed reuses the open one, said plainly', () async {
-    final server = _Server(enquiries: [
-      {'id': 'e1', 'hostel_id': _hid, 'tenant_id': 'fb-asha', 'ref': 'HZ-4999', 'name': 'Asha', 'phone': '', 'bed': '301-B', 'source': '', 'msg': '', 'contacted': false, 'created_at': '2026-10-01T09:00:00Z'},
-    ]);
-    final s = await _onServer(server, start: 'explore', role: 'tenant', uid: 'fb-asha');
-    // the phone's list said nothing (e.g. it was cleared); the server refuses a duplicate
-    s.update(() => s.enquiries = []);
-    server.failWith = 'duplicate key value violates unique constraint "enquiries_one_open" (23505)';
-    await s.enquireLive(_hid, 'Hi Ravi, is 301-B free?', bed: '301-B', from: 'Hostel page');
-    expect((s.sheet, s.waRef), ('wa', 'HZ-4999'));
-    expect(s.toast, 'You already asked about this bed, so it’s the same booking code: HZ-4999.');
-    expect(s.waFull, endsWith(enquiryLink('HZ-4999')));
-    s.stopLive();
+    expect(find.text('Ask on WhatsApp'), findsNothing);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     s.dispose();
   });
 

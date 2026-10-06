@@ -30,7 +30,6 @@ class OverviewPage extends StatelessWidget {
         ('Search sheet', {'start': 'explore', 'role': 'tenant', 'sheet': 'search'}),
         ('Map', {'start': 'map', 'role': 'tenant'}),
         ('Hostel detail', {'start': 'detail', 'role': 'tenant'}),
-        ('Ask on WhatsApp', {'start': 'detail', 'role': 'tenant', 'sheet': 'wa'}),
         ('Verified reviews', {'start': 'reviews', 'role': 'tenant'}),
         ('Stay Rewards', {'start': 'rewards', 'role': 'tenant'}),
         ('Trusted tenant: what you get', {'start': 'rewards', 'role': 'tenant', 'sheet': 'perks'}),

@@ -116,9 +116,14 @@ void main() {
       expect(rated[i - 1] >= rated[i], isTrue);
     }
     s.update(() => s.sortBy = 'near');
-    final km = filtered(s).map(s.kmFor).toList();
-    for (var i = 1; i < km.length; i++) {
-      expect(km[i - 1] <= km[i], isTrue);
+    // F26 #21 (integration): nearest first within each tier; listed (UNVERIFIED) after every verified hostel.
+    final near = filtered(s);
+    expect(near.skipWhile((h) => !h.listed).every((h) => h.listed), isTrue);
+    for (final tier in [near.where((h) => !h.listed), near.where((h) => h.listed)]) {
+      final km = tier.map(s.kmFor).toList();
+      for (var i = 1; i < km.length; i++) {
+        expect(km[i - 1] <= km[i], isTrue);
+      }
     }
     s.update(() => s.sortBy = 'price');
     await tester.pump();

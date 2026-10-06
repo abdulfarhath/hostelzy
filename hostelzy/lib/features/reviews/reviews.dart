@@ -73,9 +73,6 @@ mixin _ReviewsData {
   late List<Enquiry> enquiries;
   int _nextRef = 4822;
 
-  /// HZ code of the enquiry behind the open WhatsApp sheet, if any.
-  String? waRef, waHid;
-
   List<Resident> residents = seedResidents();
 
   // F06: residents list, add-resident sheet, invite sign-ups, confirm stay.
@@ -143,7 +140,8 @@ extension ReviewsActions on AppState {
   }
 
   /// All hostels, best rank first.
-  List<String> get rankOrder => (browsable.map((h) => h.id).toList()..sort((a, b) => rankScore(b).compareTo(rankScore(a))));
+  // F26 #21: only verified hostels are ranked.
+  List<String> get rankOrder => (browsable.where((h) => !h.listed).map((h) => h.id).toList()..sort((a, b) => rankScore(b).compareTo(rankScore(a))));
   int rankOf(String hid) => rankOrder.indexOf(hid) + 1;
 
   /// What tenants see as the reason for the rank: the two strongest factors.

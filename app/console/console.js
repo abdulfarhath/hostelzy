@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords, rentRangeError, rentRangeLabel, listedPhotoPath, listWords } from './logic.js';
 
 const app = document.getElementById('app');
 /** The signed-in team member (for their own storage paths). */
@@ -78,6 +78,8 @@ const NAV = [
   ['fixes', 'Layout fixes'],
   ['reviews', 'Reported reviews'],
   ['hostels', 'Hostels'],
+  ['listed', 'Listed'],
+  ['claims', 'Claims'],
 ];
 
 function shell(user, db, out) {
@@ -522,6 +524,99 @@ const VIEWS = {
         el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.status === 'live' ? 'solid' : 'neutral') }, h.status)),
         el('span', { class: 's' }, h.gender, ' · ',
           h.status === 'live' ? el('button', { class: 'btn sm', onclick: () => set(h, 'paused') }, 'Pause') : el('button', { class: 'btn sm primary', onclick: () => set(h, 'live') }, 'Go live'))))),
+    ];
+  },
+
+  // F26 #21: the team lists a hostel before it is verified (UNVERIFIED in the
+  // app): name, area, photos and an expected rent range, no go-live checklist.
+  // Verifying it later is Hostels › Go live (the full checklist).
+  async listed(db, again) {
+    const [hs, photos, waits] = await Promise.all([
+      db.from('hostels').select('id, name, area, gender, status, rent_min, rent_max').in('status', ['draft', 'listed']).not('rent_min', 'is', null).order('name').then(ok),
+      db.from('hostel_photos').select('hostel_id').then(ok),
+      db.from('verify_waitlist').select('hostel_id').is('notified_at', null).then(ok),
+    ]);
+    const count = (rows, id) => rows.filter((r) => r.hostel_id === id).length;
+    const f = { name: '', area: '', gender: 'Men', min: '', max: '' };
+    const seg = (opts, k) => el('div', { class: 'seg' }, opts.map((o) => el('button', { class: f[k] === o ? 'on' : '', onclick: (e) => { f[k] = o; [...e.target.parentNode.children].forEach((b) => b.classList.toggle('on', b === e.target)); } }, o)));
+    const save = async (id, p) => {
+      const { error } = await db.rpc('list_hostel', { p_id: id, p });
+      if (error) { toast(listWords(error.message)); return false; }
+      return true;
+    };
+    const create = async () => {
+      if (f.name.trim().length < 3) return toast('Enter the hostel’s name.');
+      if (f.area.trim().length < 2) return toast('Enter the area.');
+      const bad = rentRangeError(f.min, f.max);
+      if (bad) return toast(bad);
+      if (await save(null, { name: f.name.trim(), area: f.area.trim(), gender: f.gender, rent_min: Number(f.min), rent_max: Number(f.max) })) {
+        toast(`${f.name.trim()} saved. Add a photo, then List it.`);
+        again();
+      }
+    };
+    const upload = (h) => el('label', { class: 'btn sm' }, 'Add photo',
+      el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', style: 'display:none', onchange: async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const path = listedPhotoPath(h.id);
+        const up = await db.storage.from('hostel-photos').upload(path, file, { contentType: file.type || 'image/jpeg' });
+        if (up.error) return toast('Couldn’t upload: ' + up.error.message);
+        const n = count(photos, h.id);
+        ok(await db.from('hostel_photos').insert({ hostel_id: h.id, path, label: 'Front', ord: n, cover: n === 0 }));
+        toast('Photo added.');
+        again();
+      } }));
+    const list = async (h) => {
+      if (!confirm(`Show ${h.name} to tenants as UNVERIFIED?`)) return;
+      if (await save(h.id, { name: h.name, rent_min: h.rent_min, rent_max: h.rent_max, list: true })) {
+        toast(`${h.name} is listed (UNVERIFIED).`);
+        again();
+      }
+    };
+    const unlist = async (h) => {
+      if (!confirm(`Take ${h.name} off Explore?`)) return;
+      ok(await db.from('hostels').update({ status: 'draft' }).eq('id', h.id));
+      again();
+    };
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Listed'), el('span', { class: 'mu', style: 'font-size:13px' }, `${hs.filter((h) => h.status === 'listed').length} listed · ${hs.filter((h) => h.status === 'draft').length} not shown yet`)),
+      el('div', { class: 'board' },
+        el('div', { class: 'list', style: 'margin:0 24px' }, hs.length ? hs.map((h) => el('div', { class: 'row' },
+          el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.status === 'listed' ? 'solid' : 'neutral') }, h.status === 'listed' ? 'Unverified' : 'Not shown')),
+          el('span', { class: 's' }, `${h.gender} · ${rentRangeLabel(h.rent_min, h.rent_max)} · ${count(photos, h.id)} photos · ${count(waits, h.id)} waiting for “verified”`),
+          el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' }, upload(h),
+            h.status === 'listed' ? el('button', { class: 'btn sm', onclick: () => unlist(h) }, 'Take off') : el('button', { class: 'btn sm primary', onclick: () => list(h) }, 'List it')))) : el('p', { class: 'empty' }, 'Nothing listed yet. Add a hostel on the right.')),
+        el('aside', { class: 'add' },
+          el('h2', {}, 'List a hostel'),
+          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Tenants see it as UNVERIFIED: photos, name, area and the rent range. No beds, holds or owner contact until you verify it (Hostels › Go live).'),
+          el('label', {}, 'Hostel name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Sri Balaji Men’s PG' }),
+          el('label', {}, 'Area'), el('input', { oninput: (e) => (f.area = e.target.value), placeholder: 'Madhapur' }),
+          el('label', {}, 'For'), seg(['Men', 'Women', 'Co-living'], 'gender'),
+          el('label', {}, 'Expected rent, lowest (₹ a month)'), el('input', { inputmode: 'numeric', oninput: (e) => (f.min = e.target.value.replace(/\D/g, '')), placeholder: '7000' }),
+          el('label', {}, 'Expected rent, highest'), el('input', { inputmode: 'numeric', oninput: (e) => (f.max = e.target.value.replace(/\D/g, '')), placeholder: '9000' }),
+          el('button', { class: 'btn primary cta', onclick: create }, 'Save', '✓'),
+          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Then add at least one photo and press List it.'))),
+    ];
+  },
+
+  // F26 #21: "Are you the owner? Claim this hostel" from the app.
+  async claims(db, again) {
+    const rows = await db.from('claim_requests').select('*, hostels(name, area)').eq('status', 'new').order('created_at').then(ok);
+    const decide = async (c, status) => {
+      ok(await db.from('claim_requests').update({ status }).eq('id', c.id));
+      toast(status === 'done' ? 'Marked done.' : 'Marked not the owner.');
+      again();
+    };
+    return [
+      el('div', { class: 'title' }, el('h1', {}, 'Claims'), el('span', { class: 'mu', style: 'font-size:13px' }, `${rows.length} waiting for a call`)),
+      el('div', { class: 'list', style: 'margin:0 24px' }, rows.length ? rows.map((c) => el('div', { class: 'row' },
+        el('span', { class: 't' }, `${c.hostels?.name ?? ''} · ${c.hostels?.area ?? ''}`, el('span', { class: 'tag neutral' }, dayMon(c.created_at))),
+        el('span', { class: 's' }, `${c.name} · ${c.phone} · says they own it. Call, check, then send an owner invite from the app’s team mode.`),
+        el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' },
+          el('a', { class: 'btn sm', href: `tel:+91${c.phone}` }, 'Call'),
+          el('a', { class: 'btn sm', href: waLink(c.phone, `Hi ${c.name}, this is the Hostelzy team about ${c.hostels?.name ?? 'your hostel'}.`), target: '_blank', rel: 'noopener' }, 'WhatsApp'),
+          el('button', { class: 'btn sm primary', onclick: () => decide(c, 'done') }, 'Done'),
+          el('button', { class: 'btn sm', onclick: () => decide(c, 'rejected') }, 'Not the owner')))) : el('p', { class: 'empty' }, 'No claims waiting.')),
     ];
   },
 };

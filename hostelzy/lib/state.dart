@@ -34,6 +34,7 @@ part 'features/layouts/owner_layouts.dart';
 part 'features/layouts/room_layouts.dart';
 part 'features/links/links.dart';
 part 'features/listings/sync.dart';
+part 'features/listings/tiers.dart';
 part 'features/map/map.dart';
 part 'features/meter/meter.dart';
 part 'features/moves/moves.dart';
@@ -79,12 +80,13 @@ Future<T> _settle<T>(Future<T> Function() f) {
   return out;
 }
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
-      rooms[hostels[i].id] = mkRooms(hostels[i], i);
-      rates[hostels[i].id] = seedRates(hostels[i]);
+      // F26 #21: a listed (unverified) hostel has no rooms or prices yet.
+      rooms[hostels[i].id] = hostels[i].listed ? [] : mkRooms(hostels[i], i);
+      rates[hostels[i].id] = hostels[i].listed ? {} : seedRates(hostels[i]);
     }
     fixAnjani(rooms['anjani']!);
     final n = DateTime.now().millisecondsSinceEpoch;
@@ -347,23 +349,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     waTo = to;
     waPhone = phone;
     waMsg = msg;
-    waRef = null;
   });
-
-  /// F05 tenant → owner hand-off. Records the enquiry on Hostelzy first (the
-  /// owner is told from here, not by the WhatsApp text), then opens the
-  /// prefilled message ending with the HZ code and its link. One enquiry per
-  /// tenant + hostel + bed: tapping again reuses the code.
-  void enquire(String hid, String body, {String? bed, required String from}) {
-    // F21 W2: guests sign in first; the enquiry needs their name and phone.
-    if (!needSignIn('enquiry', () => enquire(hid, body, bed: bed, from: from))) return;
-    // C: on Supabase the server records it and issues the HZ code.
-    if (onServer) {
-      enquireLive(hid, body, bed: bed, from: from);
-      return;
-    }
-    update(() => _enquire(hid, body, bed: bed, from: from));
-  }
 
   void markContacted(String ref) {
     update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());

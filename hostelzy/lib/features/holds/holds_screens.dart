@@ -6,6 +6,7 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../explore/explore_screen.dart';
+import 'hold_steps.dart';
 
 // ------------------------------------------------------------ map
 
@@ -49,8 +50,10 @@ class HoldsScreen extends StatelessWidget {
               final i = holdInfo(s, h);
               final timed = const ['waiting', 'confirmed', 'held'].contains(h.status);
               final ended = s.expiredHolds.contains(h.id) || h.status == 'released';
-              final tag = ended ? (h.status == 'released' ? 'Released' : 'Ended') : (lab[h.status] ?? h.status);
-              return Tap(
+              // F26 #9: the owner said no: Declined, not Released.
+              final tag = ended ? (h.declined ? 'Declined' : h.status == 'released' ? 'Released' : 'Ended') : (lab[h.status] ?? h.status);
+              final steps = HoldSteps.shows(s, h);
+              final row = Tap(
                 key: ValueKey('holdRow-${h.id}'),
                 onTap: () => s.update(() {
                   s.hist = [...s.hist, s.screen];
@@ -71,7 +74,7 @@ class HoldsScreen extends StatelessWidget {
                             const SizedBox(height: 6),
                             T('Bed ${h.bed}', w: 800, s: 18),
                             const SizedBox(height: 2),
-                            T('${i.hh.name} · ${fmt(i.r.rent)}/mo', s: 13, c: p.mu),
+                            T('${i.hh.name} · ${fmt(i.r.rent)}/mo${h.ref == null ? '' : ' · ${h.ref}'}', s: 13, c: p.mu),
                           ],
                         ),
                       ),
@@ -83,6 +86,12 @@ class HoldsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+              );
+              if (!steps) return row;
+              return Container(
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                decoration: box(w: 2, c: p.tx),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [row, HoldSteps(h)]),
               );
             }(),
           // Only about a real ended hold; the demo build may show a sample one.
@@ -155,7 +164,8 @@ class HoldScreen extends StatelessWidget {
     final expired = s.expiredHolds.contains(hold.id);
     final code = hold.ref;
     final timed = const ['waiting', 'confirmed', 'held'].contains(st);
-    void wa() => s.enquire(hold.hid, "Hi $owner, I've held bed ${hold.bed} at ${i.hh.name} on Hostelzy. Can I come and see it today at 6 pm?", bed: hold.bed, from: 'Hold · WhatsApp owner');
+    // F26 #7: a ready message with the HZ code; no enquiry is recorded.
+    void wa() => s.waOwner(hold);
     void again() {
       final b = s.findBed(hold.hid, hold.bed).b;
       if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');
@@ -221,9 +231,9 @@ class HoldScreen extends StatelessWidget {
         green: st != 'waiting',
       ),
       _ => (
-        label: expired ? 'Hold ended' : 'Released',
+        label: expired ? 'Hold ended' : (hold.declined ? 'Declined' : 'Released'),
         big: expired ? '0:00' : '—',
-        line: 'Bed ${hold.bed} is free for everyone again. Nothing was charged.',
+        line: hold.declined ? 'The owner couldn’t keep bed ${hold.bed}. Call and WhatsApp are locked again. Nothing was charged.' : 'Bed ${hold.bed} is free for everyone again. Nothing was charged.',
         rows: [('Bed', '${hold.bed} · ${i.r.share} sharing'), ('Rent', '${fmt(q.hzFee)} a month')],
         main: ('Hold it again', 'arrow', again),
         alt: ('See other beds', 'chev', others),
@@ -286,6 +296,7 @@ class HoldScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (HoldSteps.shows(s, hold)) Container(key: const ValueKey('holdScreenSteps'), margin: const EdgeInsets.only(top: 12), decoration: box(w: 2, c: p.tx), child: HoldSteps(hold)),
                   const SizedBox(height: 8),
                   if (st == 'paying' && pay?.status == 'missing')
                     Tap(onTap: () => s.cancelBooking(hold), child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: T('Cancel and pick another bed', w: 600, s: 14, c: p.ad))),
