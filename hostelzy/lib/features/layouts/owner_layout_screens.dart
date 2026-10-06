@@ -200,37 +200,6 @@ class OwnerLayoutScreen extends StatelessWidget {
   }
 }
 
-/// Owner Today: every 3 months, confirm the room layouts still match (F12).
-class ConfirmLayoutsCard extends StatelessWidget {
-  const ConfirmLayoutsCard({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final days = s.layoutConfirmed[s.ownHid];
-    if (days == null || days < layoutConfirmEvery || s.layouts[s.ownHid] == null) return const SizedBox();
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: box(w: 2, c: p.tx),
-      child: VGap(
-        gap: 8,
-        children: [
-          const T('Do your room layouts still match?', w: 800, s: 17),
-          T('Last confirmed $days days ago. Every 3 months, check that beds, fans, AC and windows are still where the layouts show them.', s: 13, c: p.mu, lh: 1.4),
-          Row(
-            children: [
-              Expanded(child: Cta('All still correct', icon: 'check', height: 46, px: 12, fs: 14, onTap: () => s.confirmLayouts(s.ownHid))),
-              const SizedBox(width: 8),
-              Cta('Review', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.go('oLayouts')),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// F24 board oShape: a shape tile's little outline.
 class ShapeIconPainter extends CustomPainter {
   ShapeIconPainter(this.shape, this.color);

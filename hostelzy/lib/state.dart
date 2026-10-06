@@ -364,11 +364,6 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   // F06
 
-  void openEnquiry(String ref) => update(() {
-    enqRef = ref;
-    sheet = 'enq';
-  });
-
   /// F16: does room [r] match room-type filter [f] (Any | AC | Non-AC)?
   static bool fits(Room r, String f) => f == 'Any' || (f == 'AC') == r.ac;
 

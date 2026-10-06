@@ -58,7 +58,7 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     role: _pick(q['role'], const ['tenant', 'resident', 'owner']),
     theme: _pick(q['theme'], const ['light', 'dark', 'system']),
     mode: _pick(q['mode'], const ['plan', 'room']),
-    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'bed', 'enq', 'addR', 'rank', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom', 'fixLock', 'fixLimit', 'fixSend', 'fixReject', 'laundry', 'perks']),
+    sheet: _pick(q['sheet'], const ['search', 'hold', 'wa', 'bed', 'addR', 'rank', 'report', 'trusted', 'utr', 'layoutReq', 'switch', 'manager', 'payAdv', 'payUtr', 'team', 'addRoom', 'fixLock', 'fixLimit', 'fixSend', 'fixReject', 'laundry', 'perks']),
     moveTab: _pick(q['moveTab'], const ['vacate', 'swap']),
     moreTab: _pick(q['moreTab'], const ['home', 'residents', 'complaints', 'deals', 'rates', 'menu', 'rules']),
     foodView: _pick(q['foodView'], const ['day', 'week']),

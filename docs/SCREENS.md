@@ -22,6 +22,12 @@
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
 | **Overall total** | **180** |
+| App sheets (bottom sheets) | **41** |
+| App full-screen states | **32** |
+| **Release app total** | **157** |
+| Team console (app/console): views 9 + states 4 | **13** |
+| Web pages (app/): pages 6 + states 2 | **8** |
+| **Overall total** | **178** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
@@ -40,6 +46,12 @@ page); H44 `sort` added (Explore sort dropdown); H10 `foodWeek` retired (the hos
 
 Subtotals: screens Start 7 · Tenant 17 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
 Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+**F26 owner (2026-10-06, Build agent D):** S41 Manage › Enquiries and H19 `enq` (one enquiry sheet) retired
+(enquiries are removed, F26 #7). New state T33 owner Today "Nothing needs you now". S36, S37 and S38 changed
+(grouped Today, Building-only Beds, Rent Call + WhatsApp). Delta: screens −1, sheets −1, states +1.
+
+Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 29 · Team mode 11 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 17 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 7 · Shared 2.
 
 ## Counting rules
 
@@ -117,16 +129,15 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
 
-### Owner (30)
+### Owner (29)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 36 | `oToday` | Today (tab) · This month card with "N% full" + bar (F25 A6) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
-| 37 | `oBeds` | Beds · bed map (tab); toggle Rooms · Building (Building = the S87 component, a bed → H18) | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
-| 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
+| 36 | `oToday` | Today (tab) · F26 #18: Fair Play card pinned on top, then **Holds · Payments · Fixes** tabs with counts (most urgent opens first; Holds = hold requests (Confirm / Decline), notices and bed moves, "Still N free beds?"; Payments = payments to confirm, refunds, "Are your rates still right?"; Fixes = layout fixes, quick fixes, repairs, broken shared things, a new layout to check, "Do your room layouts still match?"), then the This month card with "N% full" + bar (F25 A6). Empty: T33 | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
+| 37 | `oBeds` | Beds (tab) · F26 #19: the Building view only (the S87 component; the Rooms list and its toggle are gone). A bed → H18; a room's number → its layout (S `oLayout` / `oCreate`); "Layouts ›" to create or copy one | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
+| 38 | `oRent` | Rent (tab) · F26 #20: tags Paid green, Late red, Due plain; **Call** + **WhatsApp** (ready reminder text, the resident's number) on every unpaid row, no bell | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
 | 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
 | 40 | `oMore` · residents | Manage › Residents | `screens_owner.dart:1129` | Manage › Residents |
-| 41 | `oMore` · enquiries | Manage › Enquiries | `screens_owner.dart:361` | Manage › Enquiries; enquiry link (`links.dart:42`) |
 | 42 | `oMore` · complaints | Manage › Complaints | `screens_owner.dart:849` | Manage › Complaints |
 | 43 | `oMore` · deals | Manage › Deals | `deals.dart:13` | Manage › Deals (`state.openDeals`, `state.dart:241`) |
 | 44 | `oMore` · rates | Manage › Rates and UPI | `screens_owner.dart:1434` (`RateCard`) | Manage › Rates and UPI (`residents.dart:120`) |
@@ -181,7 +192,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (42)
+## 2. App sheets (41)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
@@ -211,12 +222,11 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 15 | `fixSend` | Send your fix | `layout_fixes.dart:386` | Fix editor › Send (`features/layouts/layout_fixes.dart:193`) |
 | 16 | `quickFix` | Quick fix · item (fan, AC…) | `layout_fixes.dart:557` | Rooms › tap an item (`features/layouts/layout_fixes.dart:374`) |
 
-### Owner (18)
+### Owner (17)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
 | 18 | `bed` | Bed N (owner bed sheet) | `shell.dart:1322` | Beds › a bed (`screens_owner.dart:520`) |
-| 19 | `enq` | Enquiry from Hostelzy (HZ code) | `shell.dart:1011` | Today / enquiry link (`links.dart:42`; `state.dart:516`) |
 | 20 | `addR` | Add a resident (the one sheet; F25: H17 `add` merged in). Name, WhatsApp number, bed, ONE date (label "Moves in" when in the future = a booking, "Joined on" when today or past), monthly fee, advance, "Lived here before Hostelzy" (before go-live, past dates only) | `features/residents/residents_sheets.dart` (`AddResidentSheet`) | Owner tab bar "+" (`shell.dart` `_openTab`); Residents › Add; bed sheet › Add tenant to this bed (all `residents.dart` `openAddResident`) |
 | 21 | `trusted` | X is a Trusted tenant | `rewards.dart:249` | Today › hold request (`screens_owner.dart:161`) |
 | 22 | `utr` | I've paid ₹N (plan invoice UTR) | `plan.dart:243` | Your plan › I've paid (`state.dart:170`) |
@@ -253,6 +263,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
 
 ## 3. App full-screen states (28)
+## 3. App full-screen states (32)
 
 | # | Screen | State | Condition | Built at |
 |---|---|---|---|---|
@@ -278,13 +289,14 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 21 | `move` (vacate) | Notice given / Notice accepted | notice sent (not declined) | `screens_resident.dart:947` |
 | 22 | `rRoom` | No layout yet | room has no layout | `layout_fixes.dart:99` |
 | 23 | `rRefund` | No refund waiting | no open refund | `refunds.dart:83` |
-| **Owner (6)** |||||
+| **Owner (7)** |||||
 | 24 | `oRules` | Fair Play rules · before you go live (short + I agree) | `!fairAccepted && !fpFull` | `fairplay.dart:109` |
 | 25 | `oCase` | Fair Play · No open cases | no case | `fairplay.dart:343` |
 | 26 | `oLayout` | No layout yet (draw it / ask Hostelzy) | no layout, no request | `layout.dart:844` |
 | 27 | `oLayout` | Hostelzy is drawing it | open shape request | `layout.dart:843` |
 | 28 | `oLayout` | Hostelzy drew a new version · check and publish | request sent back | `layout.dart:845` |
 | 29 | `oPlan`, `oCase`, `oStrike`, Manage › Deals / Rates | Owner only (manager) | `ownerOnlyWhat` ≠ null | `plan.dart:457`, `shell.dart:354` |
+| 33 | `oToday` | Nothing needs you now (all three counts 0; "New holds, payments and fixes show up here.") | nothing waits for the owner (F26 #18) | `features/owner/owner_today_screen.dart` (`needsNothing`) |
 | **Shared (2)** |||||
 | 30 | `delAcc` | Can't delete yet (open hold / unpaid plan) | `deleteBlock != null` | `settings.dart:154` |
 | 31 | `gate` | Update Hostelzy to continue | `appBuild < minBuild` | `settings.dart:370` |

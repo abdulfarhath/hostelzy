@@ -122,7 +122,7 @@ void main() {
     await tester.pump();
     // F21 W3: it's in "Needs you now" with its countdown.
     expect(find.text('Hold on bed $bed'), findsOneWidget);
-    await tap(tester, find.text('Confirm hold').last); // soonest first: the new hold has the most time left
+    await tap(tester, find.byKey(ValueKey('hold-${s.holds.single.id}-btn0'))); // F26 #18: Confirm
     expect(s.holds.single.status, 'confirmed');
     s.dispose();
   });
@@ -181,6 +181,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.jump('oToday', 'owner');
     await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('needTab-payments'))); // F26 #18
     expect(find.text('Received ₹8,020?'), findsOneWidget);
     await tap(tester, find.text('Yes, received').first);
     expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Paid');
@@ -265,34 +266,10 @@ void main() {
     expect(s.waRef, ref);
     expect(s.enquiries.length, before + 1);
 
-    // Owner Today lists it, newest first, as New.
+    // F26: owner Today and Manage have no enquiries any more.
     s.jump('oToday', 'owner');
     await tester.pump();
-    // F21 W3: new ones in "Needs you now"; the full list in Manage → Enquiries.
-    expect(find.text('New enquiry · ${s.enquiries.first.name}'), findsOneWidget);
-    s.update(() {
-      s.screen = 'oMore';
-      s.moreTab = 'enquiries';
-    });
-    await tester.pump();
-    expect(find.text('ENQUIRIES FROM HOSTELZY'), findsOneWidget);
-    expect(find.text(ref), findsOneWidget);
-    expect(find.text('3 new'), findsOneWidget);
-    expect(find.textContaining('Not on this list = not from Hostelzy.'), findsOneWidget);
-
-    // Calling marks it Contacted.
-    await tap(tester, find.text('Call').first);
-    expect(s.enquiries.first.contacted, isTrue);
-    expect(find.text('2 new'), findsOneWidget);
-
-    // Tapping an HZ code opens the enquiry sheet.
-    await tap(tester, find.text('HZ-4821'));
-    expect(s.sheet, 'enq');
-    expect(find.text('HZ-4821 · Ravi Teja'), findsOneWidget);
-    expect(find.text('90000 00029 · not verified'), findsWidgets);
-    await tap(tester, find.text('Mark as contacted'));
-    expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4821').contacted, isTrue);
-    expect(s.sheet, isNull);
+    expect(find.textContaining('New enquiry'), findsNothing);
     s.dispose();
   });
 
@@ -492,7 +469,8 @@ void main() {
     // Owner: edit the rate card and a room's type.
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    await tap(tester, find.text('Rooms and rates ›'));
+    o.openRates(); // F26 #19: Beds has no "Rooms and rates ›" link any more; Manage › Rates and UPI
+    await tester.pump();
     expect((o.screen, o.moreTab), ('oMore', 'rates'));
     await tester.enterText(find.bySemanticsLabel('Walk-in price, 3 sharing AC'), '9500');
     await tester.pump();
@@ -609,6 +587,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.jump('oToday', 'owner');
     await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('needTab-payments'))); // F26 #18
     expect(find.text('Received ₹3,000?'), findsOneWidget);
     await tap(tester, find.text('Yes, received').last);
     s.jump('holds', 'tenant');
@@ -647,16 +626,13 @@ void main() {
     }
     s.dispose();
 
-    // Owner bed map: Sai Sri has 3, 5 and 2 rooms per floor.
+    // Owner bed map (F26 #19: the Building view): Sai Sri's floors, every room.
     final o = AppState(start: 'oBeds', role: 'owner');
     o.ownHid = 'saisri';
     await pumpApp(tester, o);
-    await tap(tester, find.byKey(const ValueKey('obFloor-2')));
-    expect(find.text('Room 205'), findsOneWidget);
-    expect(find.text('Room 302'), findsNothing);
-    await tap(tester, find.byKey(const ValueKey('obFloor-3')));
-    expect(find.text('Room 302'), findsOneWidget);
-    expect(find.text('Room 205'), findsNothing);
+    for (final x in o.rooms['saisri']!) {
+      expect(find.byKey(ValueKey('bRoomOpen-${x.n}')), findsOneWidget);
+    }
     o.dispose();
   });
 
@@ -993,7 +969,7 @@ void main() {
     // Owner: Beds → room 204 → mark a fan not working → approve.
     final w = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, w);
-    await tap(tester, find.text('New layout'));
+    await tap(tester, find.byKey(const ValueKey('bRoomOpen-204'))); // F26 #19
     expect((w.screen, w.lRoom), ('oLayout', 204));
     expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
     final l = w.layoutOf('anjani', 204)!;
@@ -1192,10 +1168,11 @@ void main() {
     expect((s.screen, s.sheet, s.bed), ('picker', 'hold', h.bed));
     s.dispose();
 
-    // Owner: Call opens the phone app (Manage → Enquiries, F21 W3).
-    final o = AppState(start: 'oMore', role: 'owner', moreTab: 'enquiries');
+    // Owner: Call opens the phone app (Rent, F26 #20).
+    final o = AppState(start: 'oRent', role: 'owner');
     await pumpApp(tester, o);
-    await tap(tester, find.text('Call').first);
+    final due = o.residents.firstWhere((x) => x.status != 'Paid');
+    await tap(tester, find.byKey(ValueKey('rentCall-${due.bed}')));
     expect(o.lastLink.toString(), startsWith('tel:+91'));
     o.dispose();
 
@@ -1439,8 +1416,8 @@ void main() {
     // Owner: Beds → a bed → "Room … layout ›" (F22: in the bed sheet).
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    final first = o.rooms['anjani']!.firstWhere((r) => r.floor == o.obFloor || o.obFloor == 0);
-    await tap(tester, find.byKey(ValueKey('obed-${first.beds.first.id}')));
+    final first = o.rooms['anjani']!.firstWhere((r) => r.floor == 2);
+    await tap(tester, find.byKey(ValueKey('bBed-${first.beds.first.id}')));
     expect(o.sheet, 'bed');
     await tap(tester, find.byKey(const ValueKey('bedLayout')));
     expect(o.screen, 'oLayout');
@@ -1537,10 +1514,10 @@ void main() {
       o.teamUnlocked = false;
       o.screen = 'oBeds';
       o.hist = [];
-      o.obFloor = 2;
     });
     await tester.pump();
-    await tap(tester, find.text('New layout'));
+    // F26 #19: tap the room's number in the Building view for its layout.
+    await tap(tester, find.byKey(const ValueKey('bRoomOpen-204')));
     await tap(tester, find.text('Publish v3'));
     expect(l.pending, isFalse);
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, l.items.firstWhere((i) => i.id == 'fan1').x);
@@ -1557,6 +1534,7 @@ void main() {
     expect(bedTraits(n, nr, 'A').bunk, 'Single bed');
     // The owner is asked every 3 months whether the layouts still match.
     await pumpApp(tester, s);
+    await tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: in the Fixes tab
     expect(find.text('Do your room layouts still match?'), findsOneWidget);
     await tap(tester, find.text('All still correct'));
     expect(s.layoutConfirmed['anjani'], 0);
@@ -2529,11 +2507,11 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: r, builder: (c, child) => AppScope(state: s, child: child!)));
     await tester.pump();
     expect(find.byType(HostelzyShell), findsOneWidget);
-    // An owner opens a tenant's enquiry link: Today, with that enquiry open.
+    // An owner opens a tenant's enquiry link: Today (F26: no enquiry sheet any more).
     s.update(() => s.screen = 'oRent');
     r.go('/r?c=hz-4821');
     await tester.pumpAndSettle();
-    expect((s.screen, s.sheet, s.enqRef), ('oToday', 'enq', 'HZ-4821'));
+    expect((s.screen, s.sheet), ('oToday', null));
     expect(r.routerDelegate.currentConfiguration.uri.path, '/');
     // Not this account's code: say so, stay put.
     s.update(() => s.sheet = null);
@@ -3149,7 +3127,8 @@ void main() {
     // The owner: Today card → compare side by side → approve & publish.
     final o = AppState(start: 'oToday', role: 'owner');
     await pumpApp(tester, o);
-    // F21 W3: in "Needs you now".
+    // F26 #18: in Today's Fixes tab.
+    await tap(tester, find.byKey(const ValueKey('needTab-fixes')));
     expect(find.text('Layout fix for Room 203'), findsOneWidget);
     await tap(tester, find.text('Compare'));
     expect(o.screen, 'oFix');
