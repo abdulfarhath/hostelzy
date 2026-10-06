@@ -1,0 +1,207 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-05T19:40:00Z"
+ },
+ "title": "Hostelzy · F26 proposal",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 1240,
+   "title": "F26 proposal · the 21 changes"
+  },
+  "f26-explore.dc.html": {
+   "x": 0,
+   "y": 1660,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #1 #2] Explore: map pin in search, one row Near me · Price ↑ · Filters"
+  },
+  "f26-unverified.dc.html": {
+   "x": 1410,
+   "y": 1660,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #21] UNVERIFIED listings: Explore card and hostel page"
+  },
+  "f26-hostel.dc.html": {
+   "x": 2820,
+   "y": 1660,
+   "w": 1768,
+   "h": 1640,
+   "title": "[F26 #3 #4 #5 #6 #7] Hostel page: top and scrolled, before → after"
+  },
+  "f26-hostelDark.dc.html": {
+   "x": 4668,
+   "y": 1660,
+   "w": 892,
+   "h": 1640,
+   "title": "[F26 #3 #4 #5 #6 #7] Hostel page [dark]"
+  },
+  "f26-contact.dc.html": {
+   "x": 5640,
+   "y": 1660,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #7] Owner contact: locked before a hold, WhatsApp + Call after"
+  },
+  "f26-pick.dc.html": {
+   "x": 0,
+   "y": 3720,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #8] Pick a bed: no tabs, floor chips, every room’s drawn layout"
+  },
+  "f26-locked.dc.html": {
+   "x": 972,
+   "y": 3720,
+   "w": 454,
+   "h": 984,
+   "title": "[F26 #3] Hostel page, 80+ bed hostel: building collapses to See all rooms"
+  },
+  "f26-holds.dc.html": {
+   "x": 1506,
+   "y": 3720,
+   "w": 1768,
+   "h": 984,
+   "title": "[F26 #7 #9 #16] Holds: steps, 30-minute nudge, WhatsApp + Call, red dot"
+  },
+  "f26-me.dc.html": {
+   "x": 3354,
+   "y": 3720,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #10 #11] Me: no Saved or Holds rows, Log out in red"
+  },
+  "f26-room.dc.html": {
+   "x": 4326,
+   "y": 3720,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #12] Room layout (tenant): Edit this layout → try mode"
+  },
+  "f26-tabs.dc.html": {
+   "x": 0,
+   "y": 5124,
+   "w": 454,
+   "h": 984,
+   "title": "[F26 #13 #14 #16 #17] Tab bars: tenant, resident, owner"
+  },
+  "f26-home.dc.html": {
+   "x": 534,
+   "y": 5124,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #4 #13] Resident Home: week table always open, new tab bar"
+  },
+  "f26-homeDark.dc.html": {
+   "x": 1506,
+   "y": 5124,
+   "w": 454,
+   "h": 984,
+   "title": "[F26 #4 #13] Resident Home [dark]"
+  },
+  "f26-stay.dc.html": {
+   "x": 2040,
+   "y": 5124,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #14] My stay tab: bed, notice/move, refund, Help inside"
+  },
+  "f26-findbed.dc.html": {
+   "x": 3450,
+   "y": 5124,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #17] Find a bed: tenant app for residents, Saved & Holds + My stay tabs"
+  },
+  "f26-today.dc.html": {
+   "x": 0,
+   "y": 6528,
+   "w": 1330,
+   "h": 984,
+   "title": "[F26 #18] Owner Today: Holds · Payments · Fixes with counts, Fair Play pinned"
+  },
+  "f26-todayDark.dc.html": {
+   "x": 1410,
+   "y": 6528,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #18] Owner Today [dark]"
+  },
+  "f26-beds.dc.html": {
+   "x": 2382,
+   "y": 6528,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #19] Owner Beds: Building view only"
+  },
+  "f26-rent.dc.html": {
+   "x": 3354,
+   "y": 6528,
+   "w": 892,
+   "h": 984,
+   "title": "[F26 #20] Owner Rent: Paid green, Late red, Due plain; Call + WhatsApp"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "f26-explore.dc.html",
+  "f26-unverified.dc.html",
+  "f26-hostel.dc.html",
+  "f26-hostelDark.dc.html",
+  "f26-contact.dc.html",
+  "f26-pick.dc.html",
+  "f26-locked.dc.html",
+  "f26-holds.dc.html",
+  "f26-me.dc.html",
+  "f26-room.dc.html",
+  "f26-tabs.dc.html",
+  "f26-home.dc.html",
+  "f26-homeDark.dc.html",
+  "f26-stay.dc.html",
+  "f26-findbed.dc.html",
+  "f26-today.dc.html",
+  "f26-todayDark.dc.html",
+  "f26-beds.dc.html",
+  "f26-rent.dc.html"
+ ],
+ "notes": {
+  "row0": {
+   "x": 0,
+   "y": 1360,
+   "text": "Tenant",
+   "kind": "title1",
+   "maxW": 6532
+  },
+  "row1": {
+   "x": 0,
+   "y": 3420,
+   "text": "Tenant, continued",
+   "kind": "title1",
+   "maxW": 5656
+  },
+  "row2": {
+   "x": 0,
+   "y": 4824,
+   "text": "Resident",
+   "kind": "title1",
+   "maxW": 4780
+  },
+  "row3": {
+   "x": 0,
+   "y": 6228,
+   "text": "Owner",
+   "kind": "title1",
+   "maxW": 4246
+  }
+ },
+ "designSystems": []
+}
