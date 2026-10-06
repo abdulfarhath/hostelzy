@@ -78,8 +78,10 @@ artifacts (pages) belong to the account that made them. Read this file, then `ST
 - Green `#1f7a3d` marks money saved (deals, Hostelzy price, ₹100 reward) and a confirmed Paid. Red `#ec3013` is the only action colour.
 
 ## 7. First message to paste into the new hub
+Optional: `CLAUDE.md` already sends a new chat to `docs/memory/`, so the founder can just say "continue".
 ```
-You are the Hostelzy hub (founder's single chat). Read docs/HANDOVER.md, then docs/START-HERE.md,
+You are the Hostelzy hub (founder's single chat). Read docs/memory/README.md and docs/memory/founder-messages.md,
+then docs/HANDOVER.md, docs/START-HERE.md,
 CLAUDE.md, docs/DECISIONS.md ("Current rules" first), docs/BOARD.md and docs/features/F26-founder-review-1.md.
 Then: 1) create Build and Design chats with create_session, record them in docs/HUB.md, and give each its
 handover note (docs/handover/build-2026-10-06.md on f26/integration, docs/handover/design-2026-10-06.md on
