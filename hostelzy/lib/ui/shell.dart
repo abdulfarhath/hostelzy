@@ -9,6 +9,7 @@ import '../features/explore/explore_sheets.dart';
 import '../features/explore/hostel_screen.dart';
 import '../features/explore/unverified_screen.dart';
 import '../features/fair_play/fair_play_screens.dart';
+import '../features/food/save_food_screens.dart';
 import '../features/holds/holds_screens.dart';
 import '../features/holds/holds_sheets.dart';
 import '../features/holds/picker_screen.dart';
@@ -475,6 +476,9 @@ class _AppBody extends StatelessWidget {
     'oRent' => const OwnerRentScreen(),
     'oMore' => const OwnerManageScreen(),
     'oInvite' => const OwnerInviteScreen(),
+    // F27 Save food.
+    'rMeals' => const WeekPlanScreen(),
+    'oMeals' => const OwnerMealsScreen(),
     _ => const SizedBox(),
   };
 }

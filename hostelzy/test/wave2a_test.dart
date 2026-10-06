@@ -313,7 +313,7 @@ void main() {
     final s = await _onServer(server, start: 'settings', role: 'tenant', uid: 'fb-asha');
     s.update(() => s.osPushAllowed = true);
     await s.loadNotifyFromServer();
-    expect(s.notif, {'hold': true, 'rent': true, 'beds': false});
+    expect(s.notif, {'hold': true, 'rent': true, 'beds': false, 'food': true});
     server
       ..fail = true
       ..failWith = 'column profiles.notify does not exist';

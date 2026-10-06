@@ -4,6 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../food/save_food_screens.dart';
 import '../owner/owner_today_screen.dart' show allRequests;
 
 // F09 Stay Rewards: Me → Stay Rewards (board 1), the Trusted tenant badge for
@@ -81,6 +82,8 @@ class RewardsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                // F27-6: plates saved by you, your hostel and Hostelzy.
+                const PlatesSavedCard(),
                 const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('How to earn')),
                 Container(
                   decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),

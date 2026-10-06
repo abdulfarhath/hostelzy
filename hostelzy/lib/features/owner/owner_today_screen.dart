@@ -4,6 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../food/save_food_screens.dart';
 import '../layouts/layout_fixes_screens.dart' show FixPhotoThumb;
 import '../plan/plan_screens.dart';
 
@@ -99,6 +100,8 @@ class OwnerTodayScreen extends StatelessWidget {
           ),
           const PlanBanner(),
           const _FairPlayCard(),
+          // F27-3: tonight's headcount, under the Fair Play pin.
+          OnShow(() => s.loadFood(s.ownHid), child: const HeadcountCard()),
           // F21 W3: one list of what needs the owner, soonest first.
           const NeedsYouNow(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('This month')),

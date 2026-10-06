@@ -231,6 +231,22 @@ abstract class HostelRepo {
   Future<void> rateMeal(String hid, String meal, String rating);
   Future<Map<String, Map<String, int>>> mealVotes(String hid);
 
+  /// F27 Save food: the hostel's meals from [from] for [days] days (counts,
+  /// the user's own answers, plates saved, staff: today's skippers). Null
+  /// until FOUNDER-TODO 4zf27 runs, or on sample data.
+  Future<FoodBoard?> foodBoard(String hid, DateTime from, int days);
+
+  /// F27: the resident's answers, [mealKey] → eating. All or nothing; throws
+  /// the server's reason ("the count for that meal has closed").
+  Future<void> answerMeals(String hid, Map<String, bool> answers);
+
+  /// F27: how many hours before a meal its count closes (2, 3 or 4); staff.
+  Future<void> setMealCutoff(String hid, int hours);
+
+  /// F27: plates saved by each live hostel (no names), for "Cooks to count".
+  /// Empty until FOUNDER-TODO 4zf27 runs, or on sample data.
+  Future<Map<String, int>> hostelPlates(List<String> hids);
+
   /// F24: owners' numbers, only for hostels where this user holds, enquired,
   /// stays or works (DECISIONS F07: the number shows after a hold).
   /// F24 Wave 4c: with the owner's WhatsApp number ('' = same as the phone).

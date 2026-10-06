@@ -3,6 +3,7 @@
 
 export 'data/amenities.dart';
 export 'data/deals.dart';
+export 'data/food.dart';
 export 'data/format.dart';
 export 'data/geo.dart';
 export 'data/holds.dart';

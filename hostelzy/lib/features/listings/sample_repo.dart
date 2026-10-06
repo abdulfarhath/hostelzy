@@ -189,6 +189,14 @@ class SampleRepo implements HostelRepo {
   @override
   Future<Map<String, Map<String, int>>> mealVotes(String hid) async => {};
   @override
+  Future<FoodBoard?> foodBoard(String hid, DateTime from, int days) async => null;
+  @override
+  Future<void> answerMeals(String hid, Map<String, bool> answers) async {}
+  @override
+  Future<void> setMealCutoff(String hid, int hours) async {}
+  @override
+  Future<Map<String, int>> hostelPlates(List<String> hids) async => {};
+  @override
   Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {};
   @override
   Future<String> saveHostel(String? id, Map<String, dynamic> p) => throw UnsupportedError('sample data');

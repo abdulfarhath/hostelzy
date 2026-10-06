@@ -6,6 +6,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../food/save_food_screens.dart';
 import '../food/week_table.dart';
 import '../reminders/reminders_screens.dart';
 
@@ -36,6 +37,7 @@ class ResidentHomeScreen extends StatelessWidget {
           OnShow(() {
             s.maybeOfferReminders();
             s.loadMenu(h.id);
+            s.loadFood(h.id);
           }, child: const SizedBox.shrink()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -116,6 +118,8 @@ class ResidentHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+          // F27-1: Eating or Skip for the next meal, above the week table.
+          const NextMealCard(),
           // F26 #4 #13: the whole week, always open, today highlighted.
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),

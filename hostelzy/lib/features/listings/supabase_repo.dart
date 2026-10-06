@@ -504,6 +504,39 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
+  Future<FoodBoard?> foodBoard(String hid, DateTime from, int days) async {
+    try {
+      final r = await db.rpc('food_board', params: {'p_hostel': hid, 'p_from': ymd(from), 'p_days': days});
+      return r is Map ? foodBoardFromJson(r.cast<String, dynamic>()) : null;
+    } on PostgrestException catch (e) {
+      // Before FOUNDER-TODO 4zf27 runs there is no Save food yet.
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<void> answerMeals(String hid, Map<String, bool> answers) => db.rpc('rsvp_meals', params: {
+    'p_hostel': hid,
+    'p': [
+      for (final e in answers.entries) {'day': e.key.split('|').first, 'meal': e.key.split('|').last, 'eating': e.value},
+    ],
+  });
+
+  @override
+  Future<void> setMealCutoff(String hid, int hours) => db.rpc('set_meal_cutoff', params: {'p_hostel': hid, 'p_hours': hours});
+
+  @override
+  Future<Map<String, int>> hostelPlates(List<String> hids) async {
+    try {
+      return {for (final r in (await db.rpc('hostel_plates', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>()) r['hostel_id'] as String: (r['n'] as num).toInt()};
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return {};
+    }
+  }
+
+  @override
   Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {
     for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
       if ('${r['phone'] ?? ''}${r['whatsapp'] ?? ''}'.isNotEmpty) r['hostel_id'] as String: (phone: r['phone'] as String? ?? '', wa: r['whatsapp'] as String? ?? ''),
