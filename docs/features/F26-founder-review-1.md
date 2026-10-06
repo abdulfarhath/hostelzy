@@ -74,7 +74,7 @@ Everything else on the proposal canvas (v9) is approved as drawn. Paid in green 
 ## Design
 Proposal canvas: **Hostelzy · F26 proposal** https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g (Design, 2026-10-05).
 It is **private until the founder shares it** (Share menu → anyone with the link). Design can't change sharing.
-20 boards: 1 cover (the 21 changes → board) + 16 light + 3 dark. Canvas version 9 (2026-10-06): founder round 2 on top of v5 (hub's 6 settled clashes, no floor lock anywhere). Each shows **before** (the app now) next to **after**.
+20 boards: 1 cover (the 21 changes → board) + 16 light + 3 dark. Canvas version 10 (2026-10-06): approved by the founder with round 3 (red Edit button; resident Find a bed bar Explore · Map · Saved & Holds · My stay · Me). Each shows **before** (the app now) next to **after**.
 
 | Board | Changes | Shows |
 |---|---|---|
@@ -84,7 +84,7 @@ It is **private until the founder shares it** (Share menu → anyone with the li
 | [F26 #3–#7] Hostel page | 3, 4, 5, 6, 7 | Top + scrolled, before → after: ✓ VERIFIED (navy `#1f3a5f`) only after a team visit, with "Beds and prices checked by Hostelzy · 12 Sep", inline Building view, week table, tag boxes gone, contact locked |
 | [F26 #3–#7] Hostel page [dark] | 3–7 | After, dark (badge `#33598a` in dark) |
 | [F26 #7] Owner contact | 7 | Locked (lock line, both buttons off) → unlocked (number, WhatsApp with HZ code, Call) |
-| [F26 #8] Pick a bed | 8 | No Plan / Room / Building tabs. Floor chips filter and jump; every room's drawn layout (beds, fan, AC, window, door, washroom) in one scroll; **Edit this layout** in orange |
+| [F26 #8] Pick a bed | 8 | No Plan / Room / Building tabs. Floor chips filter and jump; every room's drawn layout (beds, fan, AC, window, door, washroom) in one scroll; **Edit this layout** in red |
 | [F26 #3] Hostel page, 80+ beds | 3 | The inline building collapses to "See all 38 rooms ›". No lock anywhere: layouts, building view and bed picker are open to everyone, women's PGs included |
 | [F26 #7 #9 #16] Holds | 7, 9, 16 | Steps Sent → Owner reviewing → Kept/Declined; 30-min "Still waiting. Call the owner?"; WhatsApp + Call; red dot |
 | [F26 #10 #11] Me | 10, 11 | Saved and Holds rows gone; Log out in red |
@@ -93,16 +93,13 @@ It is **private until the founder shares it** (Share menu → anyone with the li
 | [F26 #4 #13] Resident Home | 4, 13 | 7-day week table always open, today highlighted, no toggle; new tab bar |
 | [F26 #4 #13] Resident Home [dark] | 4, 13 | After, dark |
 | [F26 #14] My stay tab | 14 | Bed, move, notice, refund, review, layout fix, then Help (Help page folds in) |
-| [F26 #17] Find a bed | 17 | Resident tab bar → Find a bed → the full tenant app (Explore · Map · Saved · Holds · Me), no strip → back via tenant Me → "My stay ›" on top |
+| [F26 #17] Find a bed | 17 | Resident tab bar → Find a bed → tenant app with the bar Explore · Map · **Saved & Holds** (one tab, two segments) · **My stay** (back) · Me |
 | [F26 #18] Owner Today | 18 | Holds · Payments · Fixes with counts (Enquiries removed everywhere), Fair Play pinned, empty "Nothing needs you now" |
 | [F26 #18] Owner Today [dark] | 18 | After, dark |
 | [F26 #19] Owner Beds | 19 | Building view only; tap bed → bed sheet, room → layout; Layouts › stays |
 | [F26 #20] Owner Rent | 20 | **Paid** green, **Late** red, **Due** plain; Call + WhatsApp replace the bell; ready reminder text |
 
-**Pal addition for Build (round 2):** a new orange token for "try / play" actions (Edit this layout).
-| Token | Light | Dark | Text on it |
-|---|---|---|---|
-| `or` (orange) | `#e8740c` | `#ff9a3d` | `oi` = `#201e1d` light / `#161514` dark (dark text: white on this orange fails 4.5:1) |
+**Edit this layout** uses the primary red `#ec3013` (founder round 3; no new Pal token).
 Also used on the canvas: VERIFIED navy `#1f3a5f` (dark `#33598a`), white text. UNVERIFIED = 2px outline in `mu`, text `mu`.
 Note: Paid in green is the founder's round-2 call. It widens the "green only for savings and deals" design rule to Paid.
 
