@@ -9,19 +9,24 @@
 | Group | Count |
 |---|---|
 | App screens (routes + their separate pages/views) | **85** |
-| App sheets (bottom sheets) | **42** |
-| App full-screen states | **31** |
-| **Release app total** | **158** |
-| Team console (app/console): views 9 + states 4 | **13** |
+| App sheets (bottom sheets) | **43** |
+| App full-screen states | **32** |
+| **Release app total** | **160** |
+| Team console (app/console): views 11 + states 4 | **15** |
 | Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **179** |
+| **Overall total** | **183** |
+
+**F26 #7, #9, #21 (Build agent E, 2026-10-06, +4):** H44 `claim` (Claim this hostel) and state T32 (the UNVERIFIED
+hostel page) added; console views #listed and #claims added. H6 `wa` stays (owners and residents still preview a
+WhatsApp message there) but it is no longer a tenant enquiry: "Ask on WhatsApp" / "Enquire on WhatsApp" is gone, and a
+hold's WhatsApp opens WhatsApp directly. No ids retired by this change.
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
 renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**.
 
 Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
-Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+Sheets Tenant 11 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 18 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
 
@@ -160,11 +165,11 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (42)
+## 2. App sheets (43)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
-### Tenant (10)
+### Tenant (11)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
@@ -173,11 +178,12 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 3 | `signIn` | Sign in to hold / book / message | `guest.dart:105` | Guest taps Hold, Book or WhatsApp (`guest.dart:86`) |
 | 4 | `hold` | Bed N (free hold or book with advance) | `shell.dart:877` | Picker › Continue (`screens_tenant.dart:1148`; `layout.dart:613`); hold again (`:1453`) |
 | 5 | `holdNotify` | Bed N is held for you (allow notifications; the tenant's only notification ask, never together with S82, F25) | `guest.dart:129` | After the first hold (`guest.dart:203`) |
-| 6 | `wa` | Ask the owner (WhatsApp enquiry) | `shell.dart:962` | Hostel page / hold › WhatsApp (`map.dart:158`; `sync.dart:197`; `state.dart:396`) |
+| 6 | `wa` | Message X on WhatsApp (the message, Open WhatsApp, Copy). F26 #7: no longer a tenant enquiry, no booking-code line | `features/holds/holds_sheets.dart` (`WaSheet`) | Owner › resident / enquiry WhatsApp, resident › Message owner, layout fix › Talk to owner (all `state.dart` `openWA`) |
 | 7 | `payAdv` | Pay the advance | `payments.dart:59` | Book a bed (`residents.dart:313,427`) |
 | 8 | `report` | Tell us what happened (private) | `fairplay.dart:288` | Holds › "The owner asked me to skip the app" (`screens_tenant.dart:544`) |
 | 9 | `perks` | What Trusted tenants get / You're a Trusted tenant | `stay_tools.dart:209` | Rewards / first-look bed (`features/rewards/rewards.dart:74`) |
 | 10 | `foodWeek` | Food menu · whole week (hostel page) | `screens_tenant.dart:1766` | Hostel page › Full week (`features/food/food.dart:121`) |
+| 44 | `claim` | Claim <hostel> (F26 #21): your name, your phone, Send to Hostelzy | `features/explore/unverified_screen.dart` (`ClaimSheet`) | UNVERIFIED hostel page (T32) › Are you the owner? Claim this hostel › (`features/listings/tiers.dart` `openClaim`) |
 
 ### Resident (6)
 
@@ -231,11 +237,11 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
 
-## 3. App full-screen states (31)
+## 3. App full-screen states (32)
 
 | # | Screen | State | Condition | Built at |
 |---|---|---|---|---|
-| **Tenant (17)** |||||
+| **Tenant (18)** |||||
 | 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
 | 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
 | 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
@@ -253,6 +259,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 15 | `picker` (room) | Layout coming soon · Tell me when it's ready | no published layout | `layout.dart:398` |
 | 16 | `scan` | The camera is off for Hostelzy | camera permission denied | `screens_start.dart:540` |
 | 17 | `scan` | The camera didn't start | scanner error | `screens_start.dart:540` |
+| 32 | `detail` | UNVERIFIED hostel page (F26 #21): photo, name + grey UNVERIFIED badge, "Listed by the Hostelzy team · not checked yet", Rent per month "Around ₹7,000–9,000" (expected, not confirmed), no beds/holds/contact box, Claim this hostel ›; bottom: Tell me when verified (after: "We’ll tell you when it’s verified"), Ask Hostelzy | hostel `listed` (server status `listed`) | `features/explore/unverified_screen.dart` (`UnverifiedScreen`, via `HostelPage`) |
 | **Resident (6)** |||||
 | 18 | `rPay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:198` |
 | 19 | `food` | Owner hasn't put the menu on Hostelzy yet | no menu | `screens_resident.dart:542` |
@@ -271,7 +278,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 30 | `delAcc` | Can't delete yet (open hold / unpaid plan) | `deleteBlock != null` | `settings.dart:154` |
 | 31 | `gate` | Update Hostelzy to continue | `appBuild < minBuild` | `settings.dart:370` |
 
-## 4. Team console, app/console (13)
+## 4. Team console, app/console (15)
 
 Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 
@@ -286,6 +293,8 @@ Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 | 7 | `#fixes` | Layout fixes (list + fix detail, approve / reject) | `console.js:420` |
 | 8 | `#reviews` | Reported reviews (Hide / Keep) | `console.js:478` |
 | 9 | `#hostels` | Hostels (Go live / Pause) | `console.js:507` |
+| 14 | `#listed` | Listed (F26 #21): list a hostel as UNVERIFIED (name, area, for, rent range), add photos, List it / Take off, waitlist count | `console.js` (`listed`) |
+| 15 | `#claims` | Claims (F26 #21): owners' claims, Call / WhatsApp / Done / Not the owner | `console.js` (`claims`) |
 | 10 | state | Sign in (Continue with Google; "isn't a Hostelzy team account" message) | `console.js:53` |
 | 11 | state | Not set up yet (no Firebase config) | `console.js:37` |
 | 12 | state | Couldn't start | `console.js:41` |
@@ -322,12 +331,14 @@ Pages 6 + states 2 = 8.
 
 ## 7. Status variants (same layout, not counted; for Design to check)
 
-- `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released (`screens_tenant.dart:1463-1517`).
+- `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released · Declined (`features/holds/holds_screens.dart`).
+- `holds` / `hold` (F26 #9): a free hold's steps Sent → Owner reviewing (only once the owner opened it) → Kept / Declined; after 30 min "Still waiting. Call the owner?" with Call first; WhatsApp + Call locked when declined (`features/holds/hold_steps.dart`).
+- `explore` (F26 #21): UNVERIFIED card (grey outline badge, "Around ₹7,000–9,000/mo · expected, not confirmed"); header "Madhapur · 12 verified · 84 listed" once anything is listed (`features/explore/unverified_screen.dart`, `explore_screen.dart`).
 - `oPlan`: Free trial · Due · N days late · Checking · Paid · Not received (`plan.dart:23`).
 - `rPay`: Due · Waiting · Not received · Paid (`screens_resident.dart:236-248`).
 - `oStrike`: Strike 1 · 2 (deals hidden / deals back) · 3 removed (`fairplay.dart:479`).
 - `login`: Sign in · to hold a bed · to list your PG · to join your PG (`screens_start.dart:125`).
-- `me`, `settings`: rows differ by role. `detail`: owner block before / after a hold.
+- `me`, `settings`: rows differ by role. `detail`: owner block locked ("Message and call the owner after you hold a bed", WhatsApp + Call off) / after a live hold (number, "You held N", WhatsApp + Call on) (F26 #7).
 
 ## Finding while counting (for Build)
 

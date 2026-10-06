@@ -308,7 +308,11 @@ extension ResidentsActions on AppState {
     }
     String? ref;
     if (opt == 'book') {
-      ref = 'HZ-${_nextRef++}';
+      // Demo build only (on the server the hold carries its own code): the
+      // booking goes on the owner's Hostelzy list so F06 matching sees it.
+      final e = Enquiry(ref: 'HZ-${_nextRef++}', name: meName.isEmpty ? 'Hostelzy user' : meName, phone: myPhone, hid: hid, bed: b.id, at: DateTime.now().millisecondsSinceEpoch, from: 'Book · Pay advance', msg: 'Booked bed ${b.id} with the advance.');
+      enquiries = [e, ...enquiries];
+      ref = e.ref;
     }
     // F17: a booking is "paying" until the owner confirms the advance arrived.
     _bedBefore['$hid|${b.id}'] = b.state;

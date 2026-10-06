@@ -629,7 +629,7 @@ class SupabaseRepo implements HostelRepo {
     try {
       await db.rpc('hold_seen', params: {'p_holds': holdIds});
     } on PostgrestException catch (e) {
-      // Before FOUNDER-TODO 4zz6 runs the tenant just doesn't see "Owner reviewing".
+      // Before FOUNDER-TODO 4ze26 runs the tenant just doesn't see "Owner reviewing".
       if (!_missingFn(e)) rethrow;
     }
   }

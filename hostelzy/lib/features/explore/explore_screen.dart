@@ -128,7 +128,7 @@ class ExploreScreen extends StatelessWidget {
               gap: 12,
               children: [
                 // F26 #21: "Madhapur · 12 verified · 84 listed" once anything is listed.
-                PageHead(kicker: s.tierLine(s.mapArea) ?? (s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now' : 'Hyderabad'), title: 'Find a bed', gap: 2),
+                PageHead(kicker: s.listState == 'ready' ? s.tierLine(s.mapArea) ?? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere),
               ],

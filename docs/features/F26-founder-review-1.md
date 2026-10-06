@@ -118,3 +118,30 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 
 ## Build
 Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+
+### Build E: holds, owner contact, UNVERIFIED listings (#7, #9, #21) · branch `feature/f26-holds-listings`
+| # | What changed |
+|---|---|
+| 7 | Hostel page owner block (`OwnerContact`, `fair_play_screens.dart`): locked before a hold ("Message and call the owner after you hold a bed", WhatsApp + Call greyed, no tap). A **live** hold (waiting, kept, paying or booked, not ended) shows the number, "You held N", WhatsApp (ready message "Hi Srinivas, I held bed 204-D at Anjani Residency on Hostelzy. Booking code HZ-4830.") and Call. Ends or declined → locked again. Same `ContactButtons` on the Holds tab and the hold page. "Ask on WhatsApp" and the tenant enquiry flow (`enquire`, `enquireLive`, the booking-code line in the WhatsApp sheet) are gone; the app writes no enquiries. The owner's Enquiries list stays as history (agent D's side) |
+| 9 | `hold_steps.dart`: Sent → Owner reviewing → Kept / Declined on the Holds tab (the live hold sits in a framed card) and the hold page. "Owner reviewing" only after the owner opened it (`holds.seen_at`, set by `hold_seen()` when the hold shows in owner Today or its bed sheet; `markHoldsSeen`). After 30 min with no answer: "Still waiting. Call the owner?" with Call first. Owner's no = "Declined" (`holds.declined`), not "Released". Push on keep/decline already existed |
+| 21 | Hostels can be **listed** (UNVERIFIED): `Hostel.listed`, `rentMin`/`rentMax`. Explore card `UnverifiedCard` (grey outline UNVERIFIED badge as its own widget `UnverifiedBadge`, "Around ₹7,000–9,000/mo · expected, not confirmed"); hostel page T32 `UnverifiedScreen` (via `HostelPage` on the `detail` key): no beds, holds, layouts or contact; **Tell me when verified** (waitlist, push when live), **Ask Hostelzy** (WhatsApp to `supportWhatsApp`, hostel filled in), **Are you the owner? Claim this hostel ›** (sheet H44 `claim`). Explore header "Madhapur · 12 verified · 84 listed" (`area_counts()`, else counted on the phone) once anything is listed. Tier step in `filtered()` (`tierCompare`): verified first inside each ₹2,000 price band under Price ↑; after verified under other sorts. Not ranked or featured. Demo build has one listed sample (Sri Balaji Men’s PG). Console: **Listed** (list a hostel with rent range, add photos, List it / Take off, waitlist count) and **Claims** (Call / WhatsApp / Done / Not the owner) |
+
+**Server** (`supabase/migrations/20261006110000_f26_holds_listings.sql`, FOUNDER-TODO **4ze26**, re-run `docs/sql/run-all-pending.sql`):
+`owner_contacts` only for staff, the team, a live hold (waiting/held before it ends, or booked) or a resident (left ≤ 60 days, for the refund);
+no enquiry clause, no 60-day carry-over of ended holds. `hostel_signals` reply speed from hold replies only. `holds.seen_at` +
+`hold_seen(uuid[])` (hostel staff only), `holds.declined` (set when someone else releases a waiting/kept hold). `hostels.status`
+adds `listed`, `rent_min`/`rent_max`; listed hostels and their photos are public (`is_public()`), everything else stays on
+`is_live()` (= live only), so rooms, beds, prices, layouts, deals, reviews and holds are refused. `list_hostel()` (team),
+`verify_waitlist` (own rows), `claim_requests` (own rows, team decides), `area_counts()` (public). `go_live()` now pushes the
+waitlist once (data.kind `beds`, always sent: they asked). Until it runs: contact stays locked without a hold, steps never reach
+"Owner reviewing", nothing shows as UNVERIFIED, waitlist and claim say they couldn't save.
+
+**For the hub:** DECISIONS' ranking row still says "reply speed" and the 2026-10-02 F07 line mentions "Enquire on WhatsApp"
+and enquiry reply speed; the server now uses hold replies only. "Owner phone" row: now "only with a live hold or a stay".
+
+**Tests:** `hostelzy/test/f26_holds_listings_test.dart` (contact lock/unlock, steps, seen, declined, listed rows, Explore tier
+order, T32 buttons, claim, server counts); updated enquiry tests in `flows_test`, `wave4a_test`, `tenant_test`, `guest_test`,
+`owner_phone_test`. SQL `supabase/tests/f26_listings_test.sql` (+ `owner_phone_test.sql`, `values_test.sql` updated).
+Console `supabase/functions/tests/listed.test.ts`.
+
+**Not done here:** the red dot on the Holds tab (#16, tab bars), the navy VERIFIED badge (agent A).

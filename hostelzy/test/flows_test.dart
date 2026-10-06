@@ -1875,7 +1875,7 @@ void main() {
     expect((s.screen, s.gateKind), ('gate', 'update'));
     s.dispose();
     resetSampleData();
-    expect(browsable.length, 6);
+    expect(browsable.length, 7); // F26 #21: six samples + one listed (UNVERIFIED)
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
