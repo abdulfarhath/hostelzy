@@ -17,7 +17,7 @@ Older entries that were later replaced are marked **(replaced)**.
 | Owner phone | Shown to a tenant only after a hold, an enquiry (recorded with an HZ code) or a stay |
 | Ranking | Rank #N with reasons, never a score. Reviews 50%, reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
 | Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05). Never gates, CCTV, exits or residents' names |
-| Listings | Live only when complete (rooms, a price for every type, linked owner, 8 photos). Availability confirmed every 3 days |
+| Listings | Two tiers: **UNVERIFIED** (team-listed: photos, name, rent range, no beds/holds) and **✓ VERIFIED** (full checklist: rooms, a price for every type, linked owner, 8 photos, team visit). Availability confirmed every 3 days |
 | Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
 | Web | Public pages at farhath.me/hostelzy/app/ until hostelzy.in. The site root farhath.me/hostelzy/ stays the old prototype |
 | Brand | Name Hostelzy. Logo B3-a2 "Full room" |
@@ -263,6 +263,15 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - Nobody ever sees "Hold a bed to see the floors". Room layouts, the building view and the bed picker are free to open
   for everyone, including guests and women's PGs. Replaces the women's-PG hold-first rule (F12, 2026-10-02). The safety
   rule stays: never show gates, CCTV, exits or residents' names.
+
+**Unverified listings; residents can hold elsewhere** — founder, 2026-10-06
+- The team may list hostels **before** they are verified: street photos, name, area and an expected rent **range**, marked
+  **UNVERIFIED** (grey outline). No beds, holds or owner contact until verified. Tenants can tap "Tell me when verified",
+  "Ask Hostelzy" (WhatsApp to support) and owners "Claim this hostel". Verified hostels (✓ VERIFIED, navy) sort first in
+  each price band. Replaces "a listing goes live only when complete" for the unverified tier; a **verified** listing still
+  needs the full checklist. Spec: F26 #21.
+- **Find a bed** inside the resident app is the full tenant app (tenant tab bar). A resident **can hold a bed** at another
+  hostel; their stay changes only when they move. Spec: F26 #17.
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
