@@ -44,3 +44,8 @@ The sessions above belong to the old account and are retired. The new account's 
 | SQL | 2 new migrations (4zo1 open layouts, 4ze26 contact/hold steps/listings) are in `docs/sql/run-all-pending.sql`; one re-run covers everything |
 | Main canvas | **v23** = F26 (v20–v22) + F27 Save food (S90, S91 new), 178 boards = Build's SCREENS on f26/integration + F27 (hub published from the repo; Design's own publish stays permission-blocked, so Design pushes to `design/f26-merge` and the hub publishes) |
 | F27 Save food | **Approved** by the founder 2026-10-06. Main canvas v23 has it. Build: branch feature/f27-save-food on top of f26/integration, prototype next (SQL 4zf27 bundled) |
+
+## 2026-10-06: second handover to a new Claude account
+The sessions in the table at the top belong to the account being left. The new account's hub creates fresh chats
+(see `HANDOVER.md` §4) and replaces the table with their IDs. State at the move: F26 reverts in progress on
+`f26/integration`, F27 started on `feature/f27-save-food`, main canvas v23, prototype v4 (old account).

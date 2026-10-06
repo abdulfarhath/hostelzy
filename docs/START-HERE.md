@@ -1,6 +1,6 @@
 # Start here
 
-A one-page orientation for any new Claude (or person) picking up Hostelzy. **New account? Read `docs/HANDOVER.md` first.** Last updated 2026-10-03 by the hub.
+A one-page orientation for any new Claude (or person) picking up Hostelzy. **New account? Read `docs/HANDOVER.md` first** (updated 2026-10-06 for the second move). Last updated 2026-10-06 by the hub.
 
 ## 1. The product in 60 seconds
 | Who | Does what in the app | Pays |
@@ -17,7 +17,8 @@ holds, matched against the residents the owner adds. Fair Play has 3 strikes. Ru
 | Area | State |
 |---|---|
 | Features F01–F25 | All built and merged (`BOARD.md`). Newest APK: the latest `apk-N` release |
-| Design ↔ app | 1:1: App 179 · Canvas 179 (`SCREENS.md`) |
+| F26 + F27 | In the prototype only, on branches `f26/integration` and `feature/f27-save-food` (`HANDOVER.md` §2) |
+| Design ↔ app | Main canvas v23 = 178 boards (F26 + F27); `main` app = 179 until F26 merges (`BOARD.md`) |
 | Working method | **Prototype first** (`PROTOTYPE.md`): founder approves in the web prototype, then `main` + APK |
 | Backend | Supabase (Mumbai) + Firebase Google sign-in + FCM push. Pending SQL is one file: `docs/sql/run-all-pending.sql` |
 | Code quality | Cleaned, split by feature, `tools/check.sh` (`ARCHITECTURE.md`) |
