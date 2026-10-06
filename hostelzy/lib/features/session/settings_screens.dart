@@ -112,7 +112,7 @@ class SettingsScreen extends StatelessWidget {
                 group('Notifications', [
                   toggle('hold', 'Holds and bookings', 'When the owner confirms or replies'),
                   toggle('rent', 'Rent reminders', '3 days before'),
-                  toggle('beds', 'New free beds', 'In areas you searched'),
+                  toggle('beds', 'New free beds', 'In areas you searched. “Tell me when verified” alerts always come'),
                 ]),
                 group('App', [
                   _Row('Language', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),

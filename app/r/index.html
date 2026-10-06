@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enquiry · Hostelzy</title>
+<title>Hostelzy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&display=swap">
 <link rel="stylesheet" href="../style.css">
@@ -11,27 +11,20 @@
 <body>
 <main>
 <header><span></span><a href="../">Hostelzy</a></header>
-<h1 id="t">A Hostelzy enquiry</h1>
-<div class="box" id="box" hidden>
-  <div class="mu">HZ code</div>
-  <div class="code" id="code"></div>
-  <p class="mu">This tenant found your hostel on Hostelzy. Keep this code: when they move in, add them in the app within 3 days.</p>
-</div>
-<p id="none" class="mu" hidden>This link has no HZ code. Ask the sender for the full link.</p>
-<a class="cta" id="open" href="#" hidden>Open in Hostelzy</a>
+<h1 id="t">Find this hostel on Hostelzy</h1>
+<p>Hold a bed in the app to message or call the owner.</p>
+<p class="mu" id="code" hidden></p>
+<a class="cta" id="open" href="hostelzy://app/r">Open in Hostelzy</a>
 <a class="cta ghost" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
-<p class="mu">"Open in Hostelzy" works when the app is installed: owners land on <b>Today</b> with this enquiry, tenants on <b>Holds</b>. If nothing happens, get the app first.</p>
+<p class="mu">Hostelzy doesn't take enquiries any more: owners' numbers show once you hold a bed. Old links and posters still open the app.</p>
 <script>
+  // Old enquiry links (r/?c=HZ-…) still open the app; the code is shown only for reference.
   const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
   if (/^HZ-[0-9]{3,8}$/.test(c)) {
-    document.getElementById('code').textContent = c;
-    document.getElementById('box').hidden = false;
-    const o = document.getElementById('open');
-    o.href = 'hostelzy://app/r?c=' + encodeURIComponent(c);
-    o.hidden = false;
-    document.title = c + ' · Hostelzy';
-  } else {
-    document.getElementById('none').hidden = false;
+    const el = document.getElementById('code');
+    el.textContent = 'Code ' + c;
+    el.hidden = false;
+    document.getElementById('open').href = 'hostelzy://app/r?c=' + encodeURIComponent(c);
   }
 </script>
 <footer><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../delete-account/">Delete account</a><a href="https://wa.me/919059790014">WhatsApp us</a></footer>
