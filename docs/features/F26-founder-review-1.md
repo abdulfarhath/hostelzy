@@ -114,4 +114,30 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 
 ## Build
-Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+
+### Owner screens #18 #19 #20 (Build agent D, branch `feature/f26-owner`, 2026-10-06)
+- **#18 Today** (`owner_today_screen.dart`): the long card list is now **Holds · Payments · Fixes** tabs with counts
+  (`needItems`, `NeedsYouNow`). The first tab with something urgent opens first (a hold's countdown, a late refund),
+  else the first with anything in it; a tab the owner picks stays until it empties. Holds = hold requests
+  (**Confirm** / **Decline**), notices and bed moves, "Still N free beds?". Payments = payments to confirm, refunds,
+  "Are your rates still right?". Fixes = layout fixes, quick fixes, repairs, broken shared things, "New layout for
+  Room N" (Hostelzy drew one; was the tag on the old Rooms list), "Do your room layouts still match?". The old
+  FreeBeds / Rates / ConfirmLayouts cards are items now (lead, 2026-10-06). Fair Play stays pinned on top. All empty:
+  "Nothing needs you now · New holds, payments and fixes show up here." (T33). This month card unchanged below.
+- **#19 Beds** (`owner_beds_screen.dart`): the Building view only (Rooms list, floor chips, the Rooms · Building
+  toggle and "Rooms and rates ›" are gone; `obView` / `obFloor` removed). A bed → bed sheet (H18); a room's number →
+  its layout or "Create a layout" (`BuildingView.onRoom`, new optional param); "Layouts › to create or copy one".
+- **#20 Rent** (`owner_rent_screen.dart`): Paid green (`gb`/`gn`), Late red (`ab`/`ad`), Due plain (outline `dv`;
+  `Tag` gained an optional `border`). **Call** + **WhatsApp** replace the bell on every unpaid row. WhatsApp opens
+  with the resident's real number and `rentReminder`: "Hi Faiz, October rent ₹7,600 for bed 101-A is 12 days late.
+  Pay in the Hostelzy app or by UPI to <owner UPI>." (UPI part only when the owner has one).
+- **Enquiries, owner side removed:** Manage › Enquiries (S41), its row, the Today enquiry item, the enquiry sheet
+  (H19 `enq`, `EnquirySheet`, `openEnquiry`, `enqRef`), the overview link. An owner's `app/r/` link now opens Today.
+  The tenant side, the `Enquiry` data and the server are agent E's.
+- No SQL, no FOUNDER-TODO step.
+- Tests: new `test/f26_owner_test.dart` (tabs and counts, urgent first, Fair Play above, empty state, checks in their
+  groups, Building-only Beds, room → layout, Rent colours, WhatsApp text and number, Call, 360 px at 2× light + dark).
+  Updated: `owner_test`, `home_today_test`, `f25_test`, `flows_test`, `wave2b_test`, `wave4d_test`, `amenities_test`,
+  `fix_extras_test`, `moves_test` (they open the right Today tab; Beds use the Building keys).
+- SCREENS: S36, S37, S38 changed; S41 and H19 retired; T33 added.
