@@ -35,3 +35,11 @@ Check-in routine paused: nothing left for the chats. Waiting on the founder: SQL
 ## 2026-10-05: handover to a new Claude account
 The sessions above belong to the old account and are retired. The new account's hub creates fresh chats
 (see `HANDOVER.md` §3) and replaces the table at the top with their session IDs.
+
+## 2026-10-06 F26 status
+| Piece | State |
+|---|---|
+| Prototype v2 (https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP) | F26 items 1–6, 8, 12, 18–20 + open layouts. Pending: resident tabs/My stay/Find a bed (C), contact-after-hold + holds steps + unverified (E) |
+| Build PRs | #121 B picker, #122 A tenant, #123 D owner, #124 C resident, #125 E holds+listings: open, not merged (founder approves in the prototype first) |
+| Main canvas | v20 = F26 merge (hub published). Design's 6-item follow-up pending (its session needs an Artifact permission; or the hub publishes from branch design/f26-merge) |
+| F27 Save food | Spec written; Design drawing 7 boards on the proposal canvas |
