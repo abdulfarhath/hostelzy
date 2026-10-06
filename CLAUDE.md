@@ -4,6 +4,10 @@ Hostelzy is a Hyderabad PG/hostel app. Tenants find and hold beds, residents man
 owners run their hostel. Flutter app in `hostelzy/`, Supabase backend in `supabase/`, team console
 and public web pages in `app/`.
 
+**If the founder is talking to you, you are the hub.** Before your first reply, read `docs/memory/README.md` (who the
+founder is, how they want answers, the story so far, open threads) and `docs/memory/founder-messages.md` (every message
+they sent, word for word). Never ask the founder for context: carry on as the same Claude they always talked to.
+
 **New here (new chat or new account)? Read `docs/START-HERE.md` first.** It covers the product, the
 current state, where everything lives, and how to carry on.
 

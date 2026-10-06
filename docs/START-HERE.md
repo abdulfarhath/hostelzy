@@ -35,6 +35,7 @@ holds, matched against the residents the owner adds. Fair Play has 3 strikes. Ru
 | `docs/ARCHITECTURE.md` | How the code is organised, data flow, how to add a screen or migration, CI |
 | `docs/FOUNDER-TODO.md` | The founder's manual steps (SQL runs, keys, accounts), in order |
 | `docs/HANDOVER.md` | Moving to a new Claude account: state, what to republish, gotchas, first message |
+| `docs/memory/` | The hub's memory: who the founder is, how to talk to them, the story so far, and every founder message word for word |
 | `docs/HUB.md` | Chat session IDs and the check-in log |
 | `docs/PROTOTYPE.md`, `docs/sql/`, `docs/pages/` | Prototype workflow, one-file SQL, sources of the visual pages |
 | `docs/AUDIT-2026-10-03.md` | The gap audit that F24 closed (history) |
