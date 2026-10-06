@@ -124,7 +124,8 @@ void main() {
     expect(refund.amt, r.advance - hostelById('anjani').terms.maintenance);
     await tester.pump(const Duration(seconds: 4));
 
-    // Today: "Refund ₹… to …" → the refund sheet (board `oRefund`).
+    // Today: "Refund ₹… to …" → the refund sheet (board `oRefund`), in the Payments tab (F26 #18).
+    await _tap(tester, find.byKey(const ValueKey('needTab-payments')));
     await _tap(tester, find.descendant(of: find.byKey(ValueKey('refund-${refund.stayKey}')), matching: find.text('Mark refunded')));
     expect(s.sheet, 'refund');
     expect(find.text('Refund $first’s advance'), findsOneWidget);

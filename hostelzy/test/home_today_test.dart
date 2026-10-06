@@ -16,7 +16,7 @@ import 'package:image/image.dart' as img;
 
 // F21 Wave 3: resident Home has one job (rent and food) with three actions,
 // Help sends to the owner with a photo and shows the status inline, owner
-// Today is one "Needs you now" list, and Manage is one vertical list.
+// Today is grouped in Holds · Payments · Fixes tabs (F26 #18), and Manage is one vertical list.
 
 Future<void> _pump(WidgetTester tester, AppState state) async {
   await tester.runAsync(() async {
@@ -157,12 +157,14 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F21 W3: owner Today is one "Needs you now" list; Manage is one vertical list', (tester) async {
+  testWidgets('F26 #18: owner Today is grouped Holds · Payments · Fixes; Manage is one vertical list', (tester) async {
     final s = AppState(start: 'oToday', role: 'owner');
     await _pump(tester, s);
-    final n = allRequests(s).length + s.payments.where((x) => x.hid == s.ownHid && x.status == 'waiting').length + s.enquiries.where((e) => e.hid == s.ownHid && !e.contacted).length + s.fixesWaiting.length + s.brokenThings.length + s.openMoves.length + s.refundsToDo.length;
-    expect(n, greaterThan(2));
-    expect(find.text('NEEDS YOU NOW · $n'), findsOneWidget);
+    final n = allRequests(s).length + s.openMoves.length;
+    expect(n, greaterThan(1));
+    expect(find.text('NEEDS YOU · MOST URGENT FIRST'), findsOneWidget);
+    expect(find.text('$n'), findsWidgets);
+    expect(find.text('New enquiry', findRichText: true), findsNothing);
     expect(find.text('THIS MONTH'), findsOneWidget);
     expect(find.text('beds taken'), findsOneWidget);
     expect(find.text('Add tenant'), findsOneWidget);
@@ -175,7 +177,8 @@ void main() {
     s.tab('oMore');
     s.update(() => s.moreTab = 'home');
     await tester.pump();
-    for (final r in ['Enquiries', 'Residents', 'Complaints', 'Deals', 'Rates and UPI', 'Food menu', 'House rules', 'Photos', 'Room layouts', 'Reviews and ranking', 'Team', 'Your plan']) {
+    expect(find.byKey(const ValueKey('manage-Enquiries')), findsNothing); // F26: enquiries are gone
+    for (final r in ['Residents', 'Complaints', 'Deals', 'Rates and UPI', 'Food menu', 'House rules', 'Photos', 'Room layouts', 'Reviews and ranking', 'Team', 'Your plan']) {
       expect(find.byKey(ValueKey('manage-$r')), findsOneWidget, reason: r);
     }
     await _tap(tester, find.byKey(const ValueKey('manage-Residents')));

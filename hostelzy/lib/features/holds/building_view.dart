@@ -42,14 +42,16 @@ const buildingLegend = [('Free', 'free'), ('On hold', 'held'), ('Taken', 'booked
 /// [onBed]: a tap on a bed (tenant: pick it; owner: the bed sheet). A tap on
 /// a floor's label or its shared things opens the floor sheet (H42).
 /// [selected]: the picked bed's id. [dim]: rooms that don't fit the filter.
+/// [onRoom] (F26 #19, owner Beds): a tap on a room's number opens its layout.
 class BuildingView extends StatelessWidget {
-  const BuildingView({super.key, required this.hid, required this.rooms, required this.onBed, this.selected, this.dim, this.tenant = true});
+  const BuildingView({super.key, required this.hid, required this.rooms, required this.onBed, this.selected, this.dim, this.tenant = true, this.onRoom});
   final String hid;
   final List<Room> rooms;
   final void Function(Bed b) onBed;
   final String? selected;
   final bool Function(Room r)? dim;
   final bool tenant;
+  final void Function(Room r)? onRoom;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -82,7 +84,20 @@ class BuildingView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            T(r.label, s: 12, w: 600, c: p.mu),
+            if (onRoom != null)
+              Tap(
+                key: ValueKey('bRoomOpen-${r.n}'),
+                onTap: () => onRoom!(r),
+                child: Semantics(
+                  button: true,
+                  label: 'Room ${r.label} layout',
+                  child: ExcludeSemantics(
+                    child: Container(constraints: const BoxConstraints(minHeight: 24), alignment: Alignment.centerLeft, child: T(r.label, s: 12, w: 800, c: p.tx, underline: true)),
+                  ),
+                ),
+              )
+            else
+              T(r.label, s: 12, w: 600, c: p.mu),
             const SizedBox(height: 6),
             Wrap(spacing: 4, runSpacing: 4, children: [for (final b in r.beds) bedBox(r, b)]),
           ],

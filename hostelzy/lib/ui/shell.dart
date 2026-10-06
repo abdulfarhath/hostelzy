@@ -644,7 +644,6 @@ class _Sheet extends StatelessWidget {
       'perks' => s.level == 'trusted' ? 'You’re a Trusted tenant' : 'What Trusted tenants get',
       _ => '',
     };
-    final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
       'scanCam' => 'Join your PG',
@@ -692,7 +691,6 @@ class _Sheet extends StatelessWidget {
       'hold' => const HoldSheet(),
       'wa' => const WaSheet(),
       'bed' => const BedSheet(),
-      'enq' => const EnquirySheet(),
       'addR' => const AddResidentSheet(),
       'rank' => const RankSheet(),
       'revReport' => const ReviewReportSheet(),
@@ -763,9 +761,7 @@ class _Sheet extends StatelessWidget {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: enq != null
-                                      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Kicker('Enquiry from Hostelzy'), const SizedBox(height: 2), T('${enq.ref} · ${enq.name}', w: 800, s: 20)])
-                                      : kicker != null
+                                  child: kicker != null
                                       ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(kicker), const SizedBox(height: 2), T(title, w: 800, s: 20)])
                                       : T(title, w: 800, s: 20),
                                 ),

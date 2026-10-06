@@ -322,13 +322,16 @@ class Kicker extends StatelessWidget {
 
 /// Pill tag (`font-size:10px;font-weight:600;letter-spacing:.08em;uppercase;padding:3px 7px`).
 class Tag extends StatelessWidget {
-  const Tag(this.text, {super.key, required this.bg, this.fg});
+  const Tag(this.text, {super.key, required this.bg, this.fg, this.border});
   final String text;
   final Color bg;
   final Color? fg;
+
+  /// Optional 1px outline (F26 #20: a plain "Due" tag).
+  final Color? border;
   @override
   Widget build(BuildContext context) => Container(
-    color: bg,
+    decoration: BoxDecoration(color: bg, border: border == null ? null : Border.all(color: border!)),
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
     child: T(text, s: 10, w: 600, ls: .08, lh: 1.3, upper: true, c: fg),
   );

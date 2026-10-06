@@ -202,10 +202,12 @@ void main() {
     final server = _Server()..hostels = [_hostel('real1', [_card(8000, at: '2026-08-25T09:00:00Z')])];
     final s = await _owner(tester, server);
     expect(s.ratesDays('real1'), 37);
-    final card = find.byKey(const ValueKey('ratesCard'));
+    // F26 #18: the rates check is an item in Today's Payments tab.
+    await _tap(tester, find.byKey(const ValueKey('needTab-payments')));
+    final card = find.byKey(const ValueKey('rates-real1'));
     await tester.ensureVisible(card);
     expect(find.text('Are your rates still right?'), findsOneWidget);
-    expect(find.text('Last confirmed 25 Aug. Tenants see the date you last confirmed them.'), findsOneWidget);
+    expect(find.textContaining('Last confirmed 25 Aug.'), findsOneWidget);
     expect(find.text('2 sharing non-AC · ₹8,000'), findsOneWidget);
 
     // Offline: nothing changes.
@@ -226,11 +228,12 @@ void main() {
   testWidgets('never confirmed: the owner is asked at once; a manager never is', (tester) async {
     final server = _Server()..hostels = [_hostel('real1', [_card(8000, at: null)])];
     final s = await _owner(tester, server);
-    await tester.ensureVisible(find.byKey(const ValueKey('ratesCard')));
-    expect(find.text('Not confirmed yet. Tenants see the date you last confirmed them.'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('needTab-payments')));
+    await tester.ensureVisible(find.byKey(const ValueKey('rates-real1')));
+    expect(find.textContaining('Not confirmed yet. Not confirmed for a month'), findsOneWidget);
     s.update(() => s.managerOf.add('real1'));
     await tester.pump();
-    expect(find.byKey(const ValueKey('ratesCard')), findsNothing);
+    expect(find.byKey(const ValueKey('rates-real1')), findsNothing);
     s.dispose();
   });
 
@@ -238,7 +241,7 @@ void main() {
     final server = _Server()..hostels = [_hostel('real1', [_card(8000)])];
     final s = await _owner(tester, server);
     expect(s.needsRatesConfirm('real1'), isFalse);
-    expect(find.byKey(const ValueKey('ratesCard')), findsNothing);
+    expect(find.byKey(const ValueKey('rates-real1')), findsNothing);
     s.dispose();
   });
 }

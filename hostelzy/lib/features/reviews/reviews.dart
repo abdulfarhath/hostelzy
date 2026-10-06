@@ -73,8 +73,6 @@ mixin _ReviewsData {
   /// HZ code of the enquiry behind the open WhatsApp sheet, if any.
   String? waRef, waHid;
 
-  /// Enquiry open in the owner's enquiry sheet.
-  String? enqRef;
   List<Resident> residents = seedResidents();
 
   // F06: residents list, add-resident sheet, invite sign-ups, confirm stay.
@@ -99,7 +97,6 @@ mixin _ReviewsData {
 
   /// Number the WhatsApp sheet sends to (10 digits).
   String waPhone = '';
-  int obFloor = 2;
 
   /// The owner's hostel (one per owner until F14).
   String ownHid = 'anjani';

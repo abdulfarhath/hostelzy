@@ -72,7 +72,6 @@ class OverviewPage extends StatelessWidget {
         ('Live bed map', {'start': 'oBeds', 'role': 'owner'}),
         ('Rooms and rent', {'start': 'oMore', 'role': 'owner', 'moreTab': 'rates'}),
         ('Bed actions', {'start': 'oBeds', 'role': 'owner', 'sheet': 'bed'}),
-        ('One enquiry', {'start': 'oToday', 'role': 'owner', 'sheet': 'enq'}),
         ('Residents', {'start': 'oMore', 'role': 'owner', 'moreTab': 'residents'}),
         ('Add a resident', {'start': 'oMore', 'role': 'owner', 'moreTab': 'residents', 'sheet': 'addR'}),
         ('Invite QR', {'start': 'oInvite', 'role': 'owner'}),
