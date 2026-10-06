@@ -52,6 +52,9 @@ The founder talks **only to the hub**. The hub hands out work with the Claude Co
   only after the founder approves them there. Republish the prototype at the same link after each change.
 - Branch `feature/<id>-<name>`. Pushes to `main` publish an APK (`apk-N` release with
   `hostelzy.apk` real + `hostelzy-demo.apk` sample data).
+- **Only what the spec says (founder, 2026-10-06).** A feature PR changes exactly what the feature file lists. No tidy-ups,
+  renames, removals, moved elements or new wording "while you're there". Anything extra goes in a "Not in the spec" list in
+  the PR and the feature file and needs the hub's OK before it is built. A side-effect the spec forces is listed too.
 - Run `tools/check.sh` (analyze + tests + SQL tests) before merging. Every feature gets a flow test in `hostelzy/test/`.
 - Design fidelity: use `T`, `CssLine`, `Pal`, `Cta`, `Seg`… from `lib/ui/kit.dart` and `common.dart`.
   How the code is organised: `docs/ARCHITECTURE.md`.
