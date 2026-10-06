@@ -117,4 +117,24 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 F26 merge published by the hub on 2026-10-06 (canvas version 20, Design's prepared merge from `design/f26-merge`). Because the canvas has a 512-file limit, the 19 pre-F26 copies (`z26-*`) are kept only in that branch, not on the canvas.
 
 ## Build
-Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+Prototype v4 has all 21 items + open layouts (branch `f26/integration`, PRs #121–#125). `main` only after the founder approves in the prototype.
+
+### Not in the spec (hub audit of the diff, 2026-10-06): reverted
+The founder: "I only wanted the changes I said." Build also changed these; all are being reverted on `f26/integration`:
+| # | Screen | Unrequested change |
+|---|---|---|
+| 1 | Pick a bed | "See cheapest beds ›" list removed (S18 returns) |
+| 2 | Filters | New "No food" chip |
+| 3 | Filters | "Any" rent option dropped, chip order changed, "For" → "Who" |
+| 4 | Explore cards | "#1 near you" gone; "Then by price…" kicker and "Lowest price" / "Nearest" tags added |
+| 5 | Explore header | "N beds free now" replaced by "verified · listed" (now both) |
+| 6 | Hostel page | "Talking through Hostelzy keeps your deal and your ₹100 reward." line removed |
+| 7 | Resident Home | "How was breakfast?" card moved in from the retired Food page |
+| 8 | Owner Today | The 3 bottom cards folded into the tabs |
+| 9 | Owner Today | "Confirm hold" → "Confirm" |
+| 10 | Owner Beds | "Rooms and rates ›" link removed |
+| 11 | Try mode | Wording rewritten |
+| 12 | Explore | Location on no longer switches the sort |
+
+Checked and unchanged: AC / non-AC rent table, card prices, picker room lines, sample prices; every green use (deals, Hostelzy price, ₹100 reward, Paid).
+Side-effects the spec forces (kept): enquiries retired (#7), meal reminders open Home (#13), Help as sheets and refund row in My stay (#14), Rooms list gone (#19), rank counts verified only (#21).
