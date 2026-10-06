@@ -6,69 +6,6 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import 'owner_manage_screen.dart';
 
-/// F05 board 3: one enquiry, opened from its HZ code on owner Today.
-class EnquirySheet extends StatelessWidget {
-  const EnquirySheet({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final e = s.enquiries.where((x) => x.ref == s.enqRef).firstOrNull;
-    if (e == null) return const SizedBox();
-    final first = e.name.split(' ')[0];
-    final r = e.bed != null ? s.findBed(e.hid, e.bed).r : null;
-    void contact(String how) {
-      s.markContacted(e.ref);
-      if (how == 'wa') {
-        s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
-      } else {
-        s.update(() => s.sheet = null);
-        how == 'call' ? s.call(e.phone) : s.toastMsg('Marked as contacted.');
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // F22 Area 3 (board `enquiry`): the booking code first, then two actions.
-        Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 2), child: Kicker(e.contacted ? 'Enquiry from the app · contacted' : 'Enquiry from the app')),
-        KV('Booking code', e.ref, keyWidth: 110),
-        KV('Phone', '+91 ${phoneSpaced(e.phone)} · not verified', keyWidth: 110),
-        KV('Asked about', '${e.bed != null ? 'Bed ${e.bed}${r != null ? ' · ${r.share} sharing' : ''}' : 'Any bed'} · ${clockTime(e.at)}', keyWidth: 110),
-        KV('Message', '“${e.msg}”', keyWidth: 110),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-          child: Row(
-            children: [
-              Expanded(child: Cta('WhatsApp', icon: 'msg', height: 50, px: 14, fs: 15, onTap: () => contact('wa'))),
-              const SizedBox(width: 8),
-              Expanded(child: OutlineCta('Call', icon: 'phone', height: 50, px: 14, onTap: () => contact('call'))),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: T('If $first moves in, add them with this phone number so it counts.', s: 13, c: p.mu, lh: 1.4),
-        ),
-        if (!e.contacted)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Tap(
-                onTap: () => contact('mark'),
-                child: const SizedBox(
-                  height: 44,
-                  child: Center(child: T('Mark as contacted', w: 800, s: 14, underline: true)),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 class BedSheet extends StatelessWidget {
   const BedSheet({super.key});
   @override
