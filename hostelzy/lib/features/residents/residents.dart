@@ -255,17 +255,17 @@ extension ResidentsActions on AppState {
       floor = r.floor;
       room = r.n;
       bed = null;
-      // F23 (founder): the room plan comes first; the floor view is one tap
-      // away. Guests and rooms without a drawn layout start on the floor view.
-      mode = signedIn && liveLayout(hid, r.n) != null ? 'room' : 'plan';
+      // F26 #8: every room's layout in one scroll; it opens on this floor.
+      mode = 'plan';
     });
   }
 
-  /// F25: the hostel page's "See the whole building": the picker's Building tab.
+  /// F25: the hostel page's "See the whole building". F26 #8: the picker has
+  /// no Building tab any more (the building view is on the hostel page), so
+  /// this opens the picker with every room.
   void openBuilding() {
     holdOpt = 'free';
     openPicker();
-    update(() => mode = 'building');
   }
 
   void pickBed(Bed b) {

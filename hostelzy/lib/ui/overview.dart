@@ -38,16 +38,15 @@ class OverviewPage extends StatelessWidget {
       ],
     ),
     (
-      '03 · Bed picker: three ways to choose',
-      'All three are in the prototype behind the Plan / List / Building switch, so we can test which one tenants actually use.',
+      '03 · Bed picker: every room on one scroll',
+      'Floor chips jump to a floor; each room shows its drawn layout. A room’s name opens it on its own (F26 #8).',
       [
-        ('A · Floor plan of one room', {'start': 'picker', 'role': 'tenant', 'mode': 'plan'}),
-        ('B · List of every open bed', {'start': 'picker', 'role': 'tenant', 'mode': 'list'}),
+        ('A · Every room, by floor', {'start': 'picker', 'role': 'tenant', 'mode': 'plan'}),
         ('Hold options', {'start': 'picker', 'role': 'tenant', 'sheet': 'hold'}),
         ('Hold status', {'start': 'hold', 'role': 'tenant'}),
         ('D · Room layout (F12)', {'start': 'picker', 'role': 'tenant', 'mode': 'room'}),
         ('Compare two beds', {'start': 'compare', 'role': 'tenant'}),
-        ('Room layout signed out', {'start': 'picker', 'role': 'tenant', 'mode': 'room', 'auth': 'out'}),
+        ('Room layout as a guest', {'start': 'picker', 'role': 'tenant', 'mode': 'room', 'auth': 'out'}),
       ],
     ),
     (

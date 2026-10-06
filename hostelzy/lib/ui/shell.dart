@@ -630,7 +630,7 @@ class _Sheet extends StatelessWidget {
       'name' => 'Change your name',
       'waNum' => 'Your WhatsApp number',
       'photo' => 'This photo',
-      'fixLock' => 'Fix this room?',
+      'fixLock' => s.fixTry ? 'Publish' : 'Fix this room?',
       'fixLimit' => 'Can’t send yet',
       'fixSend' => 'Send your fix',
       'fixReject' => 'Reject this fix?',

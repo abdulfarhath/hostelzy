@@ -1,5 +1,5 @@
--- F24 Wave 4b: women's PG floor on the server, one editor at a time,
--- "Tell me when it's ready".
+-- F24 Wave 4b: one editor at a time, "Tell me when it's ready"; F26: layouts
+-- open to everyone (the women's PG hold-first rule is gone).
 \set ON_ERROR_STOP 1
 set client_min_messages = warning;
 \o /dev/null
@@ -22,37 +22,44 @@ insert into public.layouts (hostel_id, room, stage, w, h, beds)
 select 'a7000000-0000-0000-0000-000000000001', n, 'published', 10, 12, '{"A":[1,1]}' from generate_series(101, 108) n;
 insert into public.layouts (hostel_id, room, stage, w, h, beds) values ('a7000000-0000-0000-0000-000000000002', 201, 'published', 10, 12, '{"A":[1,1]}');
 
--- ================================================================ 1. women's PG floor
--- a signed-in tenant can't list the women's PG's layouts; the men's PG's she can
+-- ================================================================ 1. layouts open to everyone (F26)
+-- F26 (founder 2026-10-05) replaced the women's-PG hold-first rule: every
+-- published layout of a live hostel is open to all, with no daily room limit.
 select test.act('authenticated', 'fb-w4-tenant');
-select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 0);
+select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 8);
 select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000002'$$, 1);
--- room by room (the Room tab): 6 different rooms a day, the same room again is free
+-- room by room: any number of rooms, no hold
 select test.eq((select string_agg(room::text, ',') from public.room_layout('a7000000-0000-0000-0000-000000000001', 101)), '101');
 select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 109)), '0');
 select public.room_layout('a7000000-0000-0000-0000-000000000001', n) from generate_series(102, 106) n;
-select test.eq((select string_agg(room::text, ',') from public.room_layout('a7000000-0000-0000-0000-000000000001', 101)), '101');
-select test.fails($$select public.room_layout('a7000000-0000-0000-0000-000000000001', 107)$$, 'hold a bed to see more rooms here');
--- no cap in other hostels
-select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000002', 201)), '1');
--- guests (not Google) and anon get nothing
-select test.act('authenticated', 'fb-w4-guest', false, 'anonymous');
-select test.fails($$select public.room_layout('a7000000-0000-0000-0000-000000000001', 101)$$, 'sign in with Google');
-select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000002'$$, 0);
-select test.act('anon', null);
-select test.blocked($$select public.room_layout('a7000000-0000-0000-0000-000000000001', 101)$$);
--- she holds a bed: the whole floor opens, no cap
-select test.act('authenticated', 'fb-w4-tenant');
-insert into public.holds (hostel_id, bed_id, opt) values ('a7000000-0000-0000-0000-000000000001', 'a7200000-0000-0000-0000-000000000108', 'free');
-select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 8);
 select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 107)), '1');
--- staff and the team see it all
-select test.act('authenticated', 'fb-w4-mgr');
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 108)), '1');
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000002', 201)), '1');
+-- guests (not Google) and anon see them too
+select test.act('authenticated', 'fb-w4-guest', false, 'anonymous');
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 101)), '1');
 select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 8);
-select test.act('authenticated', 'fb-w4-team', true);
-select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 8);
--- a resident (confirmed or not) sees it all
+select test.act('anon', null);
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 101)), '1');
+select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000002'$$, 1);
+-- drafts stay private; a hostel that isn't live shows nothing to tenants
 reset role;
+insert into public.layouts (hostel_id, room, stage, w, h, beds) values ('a7000000-0000-0000-0000-000000000001', 109, 'draft', 10, 12, '{"A":[1,1]}');
+insert into public.hostels (id, slug, name, gender, area, status, owner_name) values ('a7000000-0000-0000-0000-000000000003', 'w4b-draft', 'Lotus Draft PG', 'Men', 'KPHB', 'draft', 'Raju');
+insert into public.layouts (hostel_id, room, stage, w, h, beds) values ('a7000000-0000-0000-0000-000000000003', 301, 'published', 10, 12, '{"A":[1,1]}');
+select test.act('authenticated', 'fb-w4-tenant');
+select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001' and room = 109$$, 0);
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000001', 109)), '0');
+select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000003'$$, 0);
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000003', 301)), '0');
+-- staff and the team see their own hostel's, live or not
+select test.act('authenticated', 'fb-w4-team', true);
+select test.eq((select count(*)::text from public.room_layout('a7000000-0000-0000-0000-000000000003', 301)), '1');
+reset role;
+delete from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001' and room = 109;
+-- the old hold-first pieces are gone
+select test.eq((to_regclass('public.layout_peeks') is null and to_regproc('public.sees_floor') is null and to_regproc('public.is_womens') is null)::text, 'true');
+-- a resident still sees it all
 insert into public.stays (hostel_id, user_id, name) values ('a7000000-0000-0000-0000-000000000001', 'fb-w4-res', 'Divya');
 select test.act('authenticated', 'fb-w4-res');
 select test.rows($$select count(*) from public.layouts where hostel_id = 'a7000000-0000-0000-0000-000000000001'$$, 8);

@@ -188,7 +188,7 @@ void main() {
     await _tap(tester, find.byKey(ValueKey('bed-${b.id}')));
     expect(s.bed, b.id);
     expect(find.text('Bed ${b.id} · ${fmt(r.rent)}/mo'), findsOneWidget);
-    expect(find.text(b.spot), findsOneWidget);
+    expect(find.text('Floor ${r.floor} · ${b.spot}'), findsOneWidget);
     // A taken bed can't be picked.
     final taken = s.rooms['anjani']!.where((x) => x.floor == 2).expand((x) => x.beds).where((x) => x.state == 'booked').firstOrNull;
     if (taken != null) {
@@ -199,11 +199,8 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('pickContinue')));
     expect(s.sheet, 'hold');
     s.update(() => s.sheet = null);
-    // Cheapest beds is a link under the cards, and back.
-    await _tap(tester, find.text('See cheapest beds ›'));
-    expect(s.mode, 'list');
-    await _tap(tester, find.text('‹ Back to the plan'));
-    expect(s.mode, 'plan');
+    // F26 #8: no cheapest-beds list; every room with its price is on the scroll.
+    expect(find.text('See cheapest beds ›'), findsNothing);
 
     // The room name opens the Room view: the room in the title, one bed's facts.
     await _tap(tester, find.byKey(const ValueKey('floor-3')));

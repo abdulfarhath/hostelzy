@@ -3,14 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/shell.dart';
 
 // F25 (hub decision): one new screen, the Building view, with the floors'
-// shared things on top of each floor row. Tenants: the picker's Building tab
-// and the hostel page. Owners: Beds › Rooms · Building, the same component.
+// shared things on top of each floor row. Tenants: the hostel page (F26: no
+// longer a picker tab). Owners: Beds › Rooms · Building, the same component.
 
 Future<void> _pump(WidgetTester tester, AppState state, {double scale = 1, double width = 390}) async {
   await tester.runAsync(() async {
@@ -39,72 +38,25 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F25: Building view from the hostel page: floors, chips, pick a free bed, Continue; a floor opens its sheet', (tester) async {
-    final s = AppState(start: 'detail', role: 'tenant');
-    s
-      ..hid = 'anjani'
-      ..phone = '9000000001'
-      ..myName = 'Ravi Teja';
-    await _pump(tester, s);
-    await _tap(tester, find.byKey(const ValueKey('seeBuilding')));
-    expect((s.screen, s.mode), ('picker', 'building'));
-    expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
-    final rooms = s.rooms['anjani']!;
-    // Every floor, top floor first; G only because the data has things on floor 0.
-    for (final f in floorsOf(rooms)) {
-      expect(find.byKey(ValueKey('bFloorRow-$f')), findsOneWidget);
+  testWidgets('F26 #8: the picker has no Building tab; "See the whole building" opens every room, women\'s PGs too, no lock', (tester) async {
+    for (final hid in ['anjani', 'saisri']) {
+      final s = AppState(start: 'detail', role: 'tenant');
+      s
+        ..hid = hid
+        ..phone = '9000000001'
+        ..myName = 'Ravi Teja';
+      await _pump(tester, s);
+      s.openBuilding();
+      await tester.pump();
+      expect((s.screen, s.mode), ('picker', 'plan'));
+      expect(find.byKey(const ValueKey('pickTab-building')), findsNothing);
+      expect(find.byKey(const ValueKey('buildingView')), findsNothing);
+      expect(find.text('Floor plan shows after you hold a bed'), findsNothing);
+      for (final r in s.rooms[hid]!) {
+        expect(find.byKey(ValueKey('roomCard-${r.n}')), findsOneWidget);
+      }
+      s.dispose();
     }
-    expect(find.byKey(const ValueKey('bFloorRow-0')), findsOneWidget);
-    expect(find.textContaining('Reception'), findsNothing);
-    expect(tester.getTopLeft(find.byKey(const ValueKey('bFloorRow-3'))).dy, lessThan(tester.getTopLeft(find.byKey(const ValueKey('bFloorRow-1'))).dy));
-    // Shared things on top of each floor; broken ones in red words.
-    expect(find.descendant(of: find.byKey(const ValueKey('bThings-2')), matching: find.text('WASHING MACHINE · NOT WORKING')), findsOneWidget);
-    expect(find.descendant(of: find.byKey(const ValueKey('bThings-0')), matching: find.text('LIFT')), findsOneWidget);
-    // In-room things (the geyser) aren't floor chips.
-    expect(find.descendant(of: find.byKey(const ValueKey('bThings-2')), matching: find.text('GEYSER')), findsNothing);
-    for (final r in rooms) {
-      expect(find.byKey(ValueKey('bRoom-${r.n}')), findsOneWidget);
-    }
-    // A taken bed says so; a free bed is picked and Continue opens the hold.
-    final taken = rooms.expand((r) => r.beds).firstWhere((b) => b.state == 'booked');
-    await _tap(tester, find.byKey(ValueKey('bBed-${taken.id}')));
-    expect((s.bed, s.toast), (null, 'This bed is taken.'));
-    await tester.pump(const Duration(seconds: 3));
-    final free = rooms.expand((r) => r.beds).firstWhere((b) => b.state == 'free' && !b.mine);
-    await _tap(tester, find.byKey(ValueKey('bBed-${free.id}')));
-    expect(s.bed, free.id);
-    expect(find.textContaining('Bed ${free.id} · '), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('pickContinue')));
-    expect(s.sheet, 'hold');
-    s.update(() => s.sheet = null);
-    await tester.pump();
-    // A floor opens the existing floor sheet (H42).
-    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
-    expect((s.sheet, s.amFloor), ('amFloor', 2));
-    s.update(() => s.sheet = null);
-    await tester.pump();
-    // Tabs: Plan, Room, Building.
-    await _tap(tester, find.byKey(const ValueKey('floorView')));
-    expect(s.mode, 'plan');
-    await _tap(tester, find.byKey(const ValueKey('pickTab-room')));
-    expect(s.mode, 'room');
-    await _tap(tester, find.byKey(const ValueKey('pickTab-building')));
-    expect(s.mode, 'building');
-    s.dispose();
-  });
-
-  testWidgets('F25: a women\'s PG shows the Building view only after a hold', (tester) async {
-    final s = AppState(start: 'picker', role: 'tenant');
-    s.hid = 'saisri';
-    s.openPicker();
-    s.update(() => s.mode = 'building');
-    await _pump(tester, s);
-    expect(find.text('Floor plan shows after you hold a bed'), findsOneWidget);
-    expect(find.byKey(const ValueKey('buildingView')), findsNothing);
-    s.update(() => s.holds = [Hold(id: 'x', hid: 'saisri', bed: '102-A', room: 102, opt: 'free', start: s.now, status: 'waiting')]);
-    await tester.pump();
-    expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
-    s.dispose();
   });
 
   testWidgets('F25: owner Beds › Building is the same view; a bed opens the bed sheet', (tester) async {
@@ -128,11 +80,11 @@ void main() {
 
   testWidgets('F25: Building view fits at 2× text on a 360-px phone, light and dark', (tester) async {
     for (final dark in [false, true]) {
+      // F26 #8: the tenant picker (every room drawn) at 2× too.
       final t = AppState(start: 'picker', role: 'tenant');
       t.hid = 'anjani';
       t.openPicker();
       t.theme = dark ? 'dark' : 'light';
-      t.update(() => t.mode = 'building');
       await _pump(tester, t, scale: 2, width: 360);
       expect(tester.takeException(), isNull);
       t.dispose();

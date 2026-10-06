@@ -1,4 +1,4 @@
--- Hostelzy: every migration, for a NEW Supabase project (staging), in ONE file. Generated 2026-10-03 by tools/sql-bundle.sh.
+-- Hostelzy: every migration, for a NEW Supabase project (staging), in ONE file. Generated 2026-10-06 by tools/sql-bundle.sh.
 -- How: Supabase → SQL Editor → New query → paste this whole file → Run → "Success. No rows returned".
 -- One transaction: if anything fails, nothing changes. Run it ONCE on an empty project. First enable pg_cron and pg_net (Database → Extensions).
 begin;
@@ -6283,5 +6283,42 @@ create index if not exists meal_ratings_user_id_idx on public.meal_ratings (user
 -- Server jobs: the push sender looks for unsent pushes; hold expiry scans active holds.
 create index if not exists push_outbox_unsent_idx on public.push_outbox (created_at) where sent_at is null;
 create index if not exists holds_status_expires_idx on public.holds (status, expires_at);
+
+
+-- ================================================================
+-- 20261006100000_f26_open_layouts.sql
+-- ================================================================
+-- F26 (founder 2026-10-05, DECISIONS "Layouts open to all"): every published
+-- room layout of a live hostel is open to everyone: guests, signed-in tenants,
+-- women's PGs included. No hold needed, no daily room limit.
+--   layouts         "read published layouts": no women's-PG check and no
+--       sign-in check (guests see layouts too).
+--   room_layout(hostel, room)   one room's published layout, for anyone; no
+--       hold check, no 6-rooms-a-day limit (layout_peeks is dropped).
+--   sees_floor(h) and is_womens(h) are no longer used by any rule; they are
+--       dropped.
+-- The safety rule stays in the editors and the server's checks: layouts never
+-- hold gates, CCTV, exits or residents' names.
+-- Runs after 20261003070000_f24_wave4b.sql and 20261003120000_perf_indexes.sql.
+-- Safe to run again.
+
+drop policy if exists "read published layouts" on public.layouts;
+create policy "read published layouts" on public.layouts for select
+  using (stage = 'published' and public.is_live(hostel_id));
+
+create or replace function public.room_layout(p_hostel uuid, p_room int) returns setof public.layouts
+language sql stable security definer set search_path = ''
+as $$
+  select l.* from public.layouts l
+  where l.hostel_id = p_hostel and l.room = p_room and l.stage = 'published'
+    and (public.is_live(p_hostel) or public.is_staff(p_hostel) or public.is_team())
+$$;
+
+drop table if exists public.layout_peeks;
+drop function if exists public.sees_floor(uuid);
+drop function if exists public.is_womens(uuid);
+
+revoke execute on function public.room_layout(uuid, int) from public;
+grant execute on function public.room_layout(uuid, int) to anon, authenticated;
 
 commit;
