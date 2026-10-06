@@ -8,9 +8,9 @@ import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/shell.dart';
 
-// F22 Area 3, Half A (Owner): Beds as floor chips and room cards, one bed
-// sheet, Rent with "Still to come" and a bell per row, Residents with search
-// and the invite QR, Add tenant, Invite and the enquiry sheet.
+// F22 Area 3, Half A (Owner): Beds (F26 #19: the Building view only), one
+// bed sheet, Rent with "Still to come" and Call + WhatsApp per unpaid row
+// (F26 #20), Residents with search and the invite QR, Add tenant, Invite.
 
 Future<void> _pump(WidgetTester tester, AppState state, {double scale = 1}) async {
   await tester.runAsync(() async {
@@ -39,23 +39,22 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F22 Area 3: Beds is floor chips and room cards; a bed opens one sheet', (tester) async {
+  testWidgets('F26 #19: Beds is the Building view; a bed opens one sheet', (tester) async {
     final s = AppState(start: 'oBeds', role: 'owner');
     await _pump(tester, s);
     expect(find.text('Beds'), findsWidgets);
     final rooms = s.rooms['anjani']!;
+    expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
     for (final f in floorsOf(rooms)) {
-      expect(find.byKey(ValueKey('obFloor-$f')), findsOneWidget);
+      expect(find.byKey(ValueKey('bFloorRow-$f')), findsOneWidget);
     }
-    await _tap(tester, find.byKey(const ValueKey('obFloor-2')));
-    for (final r in rooms.where((r) => r.floor == 2)) {
-      expect(find.byKey(ValueKey('oRoom-${r.n}')), findsOneWidget);
+    for (final r in rooms) {
+      expect(find.byKey(ValueKey('bRoomOpen-${r.n}')), findsOneWidget);
     }
-    expect(find.text('Rooms and rates ›'), findsOneWidget);
 
     // A taken bed: who, room, rent, since; Message / Mark as leaving.
     final taken = s.residents.firstWhere((r) => r.bed.startsWith('2'));
-    await _tap(tester, find.byKey(ValueKey('obed-${taken.bed}')));
+    await _tap(tester, find.byKey(ValueKey('bBed-${taken.bed}')));
     expect(s.sheet, 'bed');
     expect(find.text('TAKEN'), findsOneWidget);
     expect(find.textContaining(taken.name), findsWidgets);
@@ -67,7 +66,7 @@ void main() {
 
     // A free bed: add a tenant to it.
     final free = rooms.where((r) => r.floor == 2).expand((r) => r.beds).firstWhere((b) => b.state == 'free');
-    await _tap(tester, find.byKey(ValueKey('obed-${free.id}')));
+    await _tap(tester, find.byKey(ValueKey('bBed-${free.id}')));
     await _tap(tester, find.text('Add tenant to this bed'));
     // F25: the one "Add a resident" sheet, with this bed picked.
     expect((s.sheet, s.rBed), ('addR', free.id));
@@ -83,7 +82,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F22 Area 3: Rent shows Collected and Still to come; Late rows have a bell', (tester) async {
+  testWidgets('F22 Area 3: Rent shows Collected and Still to come; Late rows have Call + WhatsApp', (tester) async {
     final s = AppState(start: 'oRent', role: 'owner');
     await _pump(tester, s);
     expect(find.text('Collected'), findsOneWidget);
@@ -94,13 +93,16 @@ void main() {
     await _tap(tester, find.text('Late $late'));
     expect(s.rentF, 'Overdue');
     final r = s.residents.firstWhere((r) => r.status == 'Overdue');
-    await _tap(tester, find.byKey(ValueKey('remind-${r.bed}')));
-    expect(s.lastLink.toString(), startsWith('https://wa.me/'));
-    // Paid rows have no bell.
+    await _tap(tester, find.byKey(ValueKey('rentWa-${r.bed}')));
+    expect(s.lastLink.toString(), startsWith('https://wa.me/91${r.phone}'));
+    await _tap(tester, find.byKey(ValueKey('rentCall-${r.bed}')));
+    expect(s.lastLink.toString(), 'tel:+91${r.phone}');
+    // Paid rows have no buttons.
     await tester.pump(const Duration(seconds: 3));
     await _tap(tester, find.textContaining('Paid ').first);
     final paid = s.residents.firstWhere((r) => r.status == 'Paid');
-    expect(find.byKey(ValueKey('remind-${paid.bed}')), findsNothing);
+    expect(find.byKey(ValueKey('rentWa-${paid.bed}')), findsNothing);
+    expect(find.byKey(ValueKey('rentCall-${paid.bed}')), findsNothing);
     s.dispose();
   });
 
@@ -121,23 +123,6 @@ void main() {
     expect(find.text('Print poster'), findsOneWidget);
     expect(find.text('WAITING FOR YOU · ${s.signups.length}'), findsOneWidget);
     expect(find.text('Make a new code (the old one stops working)'), findsOneWidget);
-    s.dispose();
-  });
-
-  testWidgets('F22 Area 3: the enquiry sheet puts the booking code first', (tester) async {
-    final s = AppState(start: 'oMore', role: 'owner', moreTab: 'enquiries');
-    await _pump(tester, s);
-    final e = s.enquiries.firstWhere((x) => x.hid == s.ownHid);
-    s.update(() {
-      s.enqRef = e.ref;
-      s.sheet = 'enq';
-    });
-    await tester.pump();
-    expect(find.text('Booking code'), findsOneWidget);
-    expect(find.text(e.ref), findsWidgets);
-    expect(find.text('If ${e.name.split(' ').first} moves in, add them with this phone number so it counts.'), findsOneWidget);
-    await _tap(tester, find.text('Call').last);
-    expect(s.lastLink.toString(), startsWith('tel:'));
     s.dispose();
   });
 

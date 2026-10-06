@@ -107,22 +107,15 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F25: owner Beds › Building is the same view; a bed opens the bed sheet', (tester) async {
+  testWidgets('F25/F26 #19: owner Beds is the Building view; a bed opens the bed sheet', (tester) async {
     final s = AppState(start: 'oBeds', role: 'owner');
     await _pump(tester, s);
-    expect(s.obView, 'rooms');
-    expect(find.byKey(const ValueKey('buildingView')), findsNothing);
-    await _tap(tester, find.text('Building'));
-    expect(s.obView, 'building');
     expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
+    expect(find.text('Rooms'), findsNothing); // the Rooms · Building toggle is gone
     final res = s.residents.firstWhere((r) => r.bed.startsWith('2'));
     await _tap(tester, find.byKey(ValueKey('bBed-${res.bed}')));
     expect((s.sheet, s.obed), ('bed', res.bed));
     expect(find.textContaining(res.name), findsWidgets);
-    s.update(() => s.sheet = null);
-    await tester.pump();
-    await _tap(tester, find.text('Rooms'));
-    expect(find.byKey(const ValueKey('oRoom-201')), findsOneWidget);
     s.dispose();
   });
 
@@ -138,7 +131,6 @@ void main() {
       t.dispose();
       final o = AppState(start: 'oBeds', role: 'owner');
       o.theme = dark ? 'dark' : 'light';
-      o.obView = 'building';
       await _pump(tester, o, scale: 2, width: 360);
       expect(tester.takeException(), isNull);
       o.dispose();

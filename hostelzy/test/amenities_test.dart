@@ -153,6 +153,7 @@ void main() {
     final broken = s.brokenThings.single;
     s.tab('oToday');
     await tester.pump();
+    await _tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: in the Fixes tab
     expect(find.byKey(ValueKey('broken-${broken.id}')), findsOneWidget);
     await _tap(tester, find.descendant(of: find.byKey(ValueKey('broken-${broken.id}')), matching: find.text('Fixed')));
     expect(s.brokenThings, isEmpty);

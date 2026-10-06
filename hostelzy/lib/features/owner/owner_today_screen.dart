@@ -291,7 +291,7 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
             key: 'freeBeds-${s.ownHid}',
             icon: 'bed',
             title: 'Still $n free ${n == 1 ? 'bed' : 'beds'}?',
-            sub: '${days == null ? 'Not confirmed yet' : 'Last confirmed $days days ago'}. Not confirmed for $staleAfterDays days: tenants see “Availability not confirmed” and you rank lower.',
+            sub: '${days == null ? 'Not confirmed yet' : 'Last confirmed $days days ago'}. Fresh beds rank higher. Not confirmed for $staleAfterDays days: tenants see “Availability not confirmed”.',
             right: '',
             urgent: false,
             btns: <(String, String, VoidCallback)>[('Yes, all $n free', 'check', () => s.confirmBeds(s.ownHid)), ('Update', 'chev', () => s.tab('oBeds'))],
@@ -317,6 +317,20 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
             extra: keys.isEmpty ? null : _Chips([for (final k in keys) '${k.replaceFirst(RegExp('^(ac|non)'), '')} sharing ${k.startsWith('ac') ? 'AC' : 'non-AC'} · ${fmt(rc[k]!)}']),
           );
         }(),
+      // F12/F18: Hostelzy drew a new layout for a room; the owner checks and
+      // publishes it (this was the "New layout" tag on the old Rooms list).
+      for (final r in s.rooms[s.ownHid]!.where((r) => s.layoutOf(s.ownHid, r.n)?.pending == true))
+        (
+          key: 'newLayout-${r.n}',
+          icon: 'room',
+          title: 'New layout for Room ${r.label}',
+          sub: 'Drawn by Hostelzy · check it, then publish',
+          right: '',
+          urgent: false,
+          btns: <(String, String, VoidCallback)>[('Check', 'arrow', () => s.ownerLayout(r.n))],
+          badge: null,
+          extra: null,
+        ),
       // F12: every 3 months, do the room layouts still match? (Fixes)
       if ((s.layoutConfirmed[s.ownHid] ?? 0) >= layoutConfirmEvery && s.layouts[s.ownHid] != null)
         (
