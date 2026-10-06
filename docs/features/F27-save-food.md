@@ -44,6 +44,8 @@ is shamed for eating).
 owner headcount at cut-off), plates-saved totals. Rerun-safe migration, bundle, FOUNDER-TODO step.
 
 ## Design
+**Design approved** (founder, 2026-10-06). On the main canvas: S23 and S36 updated, new S90 Week plan and S91 Owner Meals (provisional ids), Plates saved = variant of S22, chip = variant of S13, push = not counted.
+
 Drawn on the F26 proposal canvas (https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g), version 11 (2026-10-06), row **F27 · Save food**.
 8 boards: 7 light + 1 dark, each 390×844 with current tokens. Green only on the plates-saved numbers.
 
