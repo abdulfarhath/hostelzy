@@ -113,5 +113,8 @@ Design notes (for the founder's review):
 After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 
+## Main canvas
+F26 merge published by the hub on 2026-10-06 (canvas version 20, Design's prepared merge from `design/f26-merge`). Because the canvas has a 512-file limit, the 19 pre-F26 copies (`z26-*`) are kept only in that branch, not on the canvas.
+
 ## Build
 Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
