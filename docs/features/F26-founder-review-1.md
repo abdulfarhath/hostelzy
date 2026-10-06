@@ -19,7 +19,7 @@ Rules that still apply: one job per screen, no redundant screens, honest copy, D
 | 3, 8 | Women's PGs: whole floor only after a hold | **Overruled by the founder 2026-10-05: no lock for anyone.** Layouts and the building view are open to all. 80+ beds: inline building collapses to "See all N rooms ›" |
 | 12 | Residents send fixes, they don't publish | "Only residents can send a fix. Book a bed to join." |
 | 9 | "Owner reviewing" must be true | New `holds.seen_at`, set when the owner opens the hold (SQL, bundle step). Steps: Sent → Owner reviewing → Kept / Declined |
-| 15 vs 17 | Can a resident hold a bed elsewhere from Find a bed? | **Open: founder.** A = yes (shows under My stay → "Moving?"); B = browse only |
+| 15 vs 17 | Can a resident hold a bed elsewhere from Find a bed? | **Founder 2026-10-06: A, yes.** Find a bed = full tenant app; holds show under the tenant Holds tab |
 
 Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact). SQL: #7 (`owner_contacts`), #9 (`seen_at`).
 
@@ -46,6 +46,16 @@ Build estimate: ~53 h, 3–4 PRs (tenant · resident · owner · holds + contact
 | 18 | Owner Today | Grouped: Holds (n) · Payments (n) · Enquiries (n) · Fixes (n) tabs with counts; most urgent open first; Fair Play alert pinned on top; empty = "Nothing needs you now" | Replaces the long card list |
 | 19 | Owner Beds | Building view only ("Rooms" list removed); tap a bed → bed sheet; tap a room → its layout | Layouts page stays for create/copy |
 | 20 | Owner Rent | **Call** + **WhatsApp** buttons replace the 🔔 Remind bell | WhatsApp opens with a ready reminder text |
+
+## Round 2 (founder, 2026-10-06): changes to the proposal, to design first
+| # | Change | Detail |
+|---|---|---|
+| 1, 2 | Simpler filter row | Search field with 📍 inside. One row under it: **[📍 Near me ✓] [Price ↑ ▾] [Filters ·n]**. Near me tapped again → Pick a place. Men / Women / Co-living / AC / Food move inside Filters. Sort dropdown: Price ↑ · Distance · Rating · Best deals |
+| 21 | **UNVERIFIED listings** (new) | The team lists every hostel in an area first: photos, name, area, expected rent range ("Around ₹7,000–9,000 · expected, not confirmed"), no layouts. Badge **UNVERIFIED** grey outline (same spot as ✓ VERIFIED navy). No beds, holds or owner contact. Buttons: **Tell me when verified** (push when live), **Ask Hostelzy** (WhatsApp to support, hostel pre-filled), **Are you the owner? Claim this hostel ›**. Explore header "Madhapur · 12 verified · 84 listed". Verified first inside each price band. **Founder 2026-10-06: yes.** DECISIONS updated (two listing tiers) |
+| 8 | Pick a bed without Plan / Room / Building tabs | Floor chips on top as a filter; below, every room's **drawn layout** (beds, fan, AC, window, door, washroom) in a scroll; the floor chips jump. Building view stays on the hostel page. **Edit this layout** button in **orange** (new Pal token: "try / play") |
+| 4, 13 | Week table always open | No Today / Full week toggle anywhere; the 7-day table with today's row highlighted, on the hostel page and resident Home |
+| 17 | Find a bed = the full tenant app | No "browsing as a tenant" strip. Tapping Find a bed switches to the tenant tab bar (Explore · Map · Saved · Holds · Me). Back via Me → "My stay ›" on top. Implies **A**: residents can hold a bed elsewhere |
+| 20 | Owner Rent colours | **Paid** green, **Late** red, **Due** plain; Call + WhatsApp |
 
 ## Tab bars after the change
 - Tenant: Explore · Map · Saved · Holds · Me (unchanged)
