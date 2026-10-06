@@ -14,8 +14,8 @@ Older entries that were later replaced are marked **(replaced)**.
 | Deals | Owner picks from a 6-deal menu, max 3 active. Headline = 6-month saving. Paused for tenants when the plan is 15+ days late or at strike 2 |
 | Rewards | ₹100 next-stay credit (credited on the owner's invoice), referral ₹100 each. Monthly cap: founder to confirm (Finance Q2) |
 | Fair Play | Owner adds every resident; phone matched within 60 days → Via Hostelzy / Direct. 3 strikes: warning / deals hidden 30 days / removed. Fixing a wrong "Direct" within 48 h = no strike; 3 fixes in 6 months = 1 warning. No move-off fee |
-| Owner phone | Shown to a tenant only after a hold, an enquiry (recorded with an HZ code) or a stay |
-| Ranking | Rank #N with reasons, never a score. Reviews 50%, reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
+| Owner phone | Shown to a tenant only with a **live hold** or a stay (F26 #7). Message and Call buttons are off before that |
+| Ranking | Rank #N with reasons, never a score. Reviews 50%, hold reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
 | Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05). Never gates, CCTV, exits or residents' names |
 | Listings | Two tiers: **UNVERIFIED** (team-listed: photos, name, rent range, no beds/holds) and **✓ VERIFIED** (full checklist: rooms, a price for every type, linked owner, 8 photos, team visit). Availability confirmed every 3 days |
 | Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
@@ -98,8 +98,8 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - **No move-off fee** for owners — founder.
 - **Owner's phone number is shown only after a hold** — founder. Tenants are told clearly why: the
   hostel page says "Owner's number shows after you hold a bed. Talking through Hostelzy keeps your
-  deal and your ₹100 reward." Before a hold, contact is through "Enquire on WhatsApp" (F05), which
-  is recorded with an HZ code.
+  deal and your ₹100 reward." ~~Before a hold, contact is through "Enquire on WhatsApp" (F05)~~
+  *(replaced 2026-10-06, F26 #7: no contact before a hold; the hold carries the HZ code)*.
 - **3 strikes** *(Ideas chat)*: 1) warning, 2) deals hidden for 30 days, 3) removed from Hostelzy.
   A proven fake "Direct" for a tenant who came from the app counts as one strike.
 - **Matching window 60 days** *(Ideas chat)*: an app enquiry/hold matches a resident added up to
@@ -141,7 +141,7 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   strike**. Three such fixes in 6 months = one warning.
 - **F08:** tenants see the **star rating from verified reviews** (e.g. ★ 4.3 · 18 reviews) and the
   rank with reasons ("#2 in Hitec City: quick replies, beds kept up to date"). The internal score
-  number is not shown. Score weights: reviews 50%, enquiry reply speed 15%, availability kept fresh
+  number is not shown. Score weights: reviews 50%, hold reply speed 15% *(was enquiry reply speed; F26)*, availability kept fresh
   15%, complaints resolved 10%, listing complete (photos, layouts) 10%. Strikes lower the rank.
 - **F09:** the ₹100 next-stay discount is given by the owner at move-in and **credited on the
   owner's next Hostelzy invoice** (no cash moves from Hostelzy; during the trial it carries to the
@@ -277,6 +277,13 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - The founder approved the F26 proposal canvas (21 changes, rounds 1–3). Build starts on the prototype.
 - Colours: red `#ec3013` is the only action colour (no orange). Green marks savings, Hostelzy deals **and a confirmed
   "Paid"**. Navy marks ✓ VERIFIED. Grey outline marks UNVERIFIED.
+
+**Enquiry links and the waitlist push** — hub, 2026-10-06 (Build's questions)
+- The public enquiry-link page `app/r/` stays up (printed QR posters may point to it) but no longer makes enquiries: it
+  says "Hold a bed in the app to message or call the owner" with the app link. Retire the page only after the posters
+  are reprinted (Marketing).
+- The **waitlist push** ("A bed is free at <hostel>") is always sent: the tenant asked for it on that hostel. The
+  Me → Notifications switch "New free beds" governs only the general nearby-beds push, off by default.
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
