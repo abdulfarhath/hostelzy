@@ -293,7 +293,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [H19] enquiry sheet enquiry sheet → enquiries removed · Removed",
    "w": 390,
-   "x": 13630,
+   "x": 14100,
    "y": 56651
   },
   "exitReview.dc.html": {
@@ -729,7 +729,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [S41] oMore oMore → enquiries removed · Removed",
    "w": 390,
-   "x": 13160,
+   "x": 13630,
    "y": 56651
   },
   "f24-oLaundry.dc.html": {
@@ -813,7 +813,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [S24] food food → week table on Home (S23) · Removed",
    "w": 390,
-   "x": 8930,
+   "x": 8460,
    "y": 56651
   },
   "gallery.dc.html": {
@@ -953,7 +953,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [H10] food sheet food sheet → week table on the hostel page (S13) · Removed",
    "w": 390,
-   "x": 10340,
+   "x": 9870,
    "y": 56651
   },
   "notice.dc.html": {
@@ -1142,7 +1142,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [S27] help help → Help inside My stay (S28) · Removed",
    "w": 390,
-   "x": 10810,
+   "x": 10340,
    "y": 56651
   },
   "r-holdSheet.dc.html": {
@@ -1329,10 +1329,10 @@
   },
   "stay.dc.html": {
    "h": 844,
-   "title": "[S28] rStay · My stay tab: bed, move, notice, refund, review, layout fix, Help · Updated (F26)",
+   "title": "[archive · not counted] retired by F26 · was [S28] me › My stay me › My stay → S89 My stay tab · Removed",
    "w": 390,
-   "x": 1880,
-   "y": 6320
+   "x": 11750,
+   "y": 56651
   },
   "swap.dc.html": {
    "h": 844,
@@ -1527,14 +1527,14 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [T10] picker picker → no locks: layouts open to everyone · Removed",
    "w": 390,
-   "x": 12220,
+   "x": 12690,
    "y": 56651
   },
   "w2-foodWeek.dc.html": {
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [S25] food (resident) food (resident) → week table on Home (S23) · Removed",
    "w": 390,
-   "x": 9400,
+   "x": 8930,
    "y": 56651
   },
   "w2-layoutWrong.dc.html": {
@@ -1562,7 +1562,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [S18] picker picker → no cheapest-first list; every room in one scroll (S16) · Removed",
    "w": 390,
-   "x": 11280,
+   "x": 10810,
    "y": 56651
   },
   "w2-qrCamera.dc.html": {
@@ -1611,7 +1611,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [T19] food food → no Food tab · Removed",
    "w": 390,
-   "x": 9870,
+   "x": 9400,
    "y": 56651
   },
   "w3-holdGone.dc.html": {
@@ -1674,7 +1674,7 @@
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [T13] room room → no locks: layouts open to everyone · Removed",
    "w": 390,
-   "x": 12690,
+   "x": 13160,
    "y": 56651
   },
   "w3-roomError.dc.html": {
@@ -1693,10 +1693,10 @@
   },
   "w3-roomSignIn.dc.html": {
    "h": 844,
-   "title": "[T11] room · Sign in to see room layouts · New",
+   "title": "[archive · not counted] retired by F26 · was [T11] room room → layouts open to everyone, guests too · Removed",
    "w": 390,
-   "x": 940,
-   "y": 29520
+   "x": 12220,
+   "y": 56651
   },
   "w3-scanError.dc.html": {
    "h": 844,
@@ -1742,10 +1742,10 @@
   },
   "w4-building.dc.html": {
    "h": 844,
-   "title": "[archive · not counted] retired by F26 · was [S87] picker picker → no picker tabs; building on the hostel page · Removed",
+   "title": "[S87] building · Whole building page: from the hostel page and 80+ bed hostels (no longer a picker tab) · Updated (F26)",
    "w": 390,
-   "x": 11750,
-   "y": 56651
+   "x": 0,
+   "y": 30840
   },
   "w4-floorMap.dc.html": {
    "h": 844,
@@ -1833,10 +1833,10 @@
   },
   "wa.dc.html": {
    "h": 844,
-   "title": "[archive · not counted] retired by F26 · was [H6] wa sheet wa sheet → no Enquire on WhatsApp; WhatsApp after a hold · Removed",
+   "title": "[H6] wa sheet · Ask the owner, booking code · Redesigned",
    "w": 390,
-   "x": 14100,
-   "y": 56651
+   "x": 2820,
+   "y": 3792
   },
   "where-dark.dc.html": {
    "h": 844,
@@ -3378,64 +3378,78 @@
    "h": 844,
    "title": "[T32] detail · Unverified listing: rent range, Tell me when verified, Claim · New (F26)"
   },
-  "f26-todayEmpty.dc.html": {
+  "f26-myStay.dc.html": {
    "x": 940,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[S89] myStay · My stay tab: bed, move, notice, refund, review, layout fix, Help · New (F26)"
+  },
+  "f26-sort.dc.html": {
+   "x": 1410,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[H44] sort sheet · Price ↑ · Distance · Rating · Best deals · New (F26)"
+  },
+  "f26-todayEmpty.dc.html": {
+   "x": 1880,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[T33] oToday · Nothing needs you now · New (F26)"
   },
   "f26-exploreRes.dc.html": {
-   "x": 1410,
+   "x": 2350,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S8] explore · Resident in Find a bed: Explore · Map · Saved & Holds · My stay · Me · New (F26)"
   },
   "f26-exploreUnv.dc.html": {
-   "x": 1880,
+   "x": 2820,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S8] explore · Verified first in a price band, UNVERIFIED card with a rent range · New (F26)"
   },
   "f26-detailScroll.dc.html": {
-   "x": 2350,
+   "x": 3290,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · Scrolled: Building view inline, week table, contact locked · New (F26)"
   },
   "f26-detailBig.dc.html": {
-   "x": 2820,
+   "x": 3760,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · 80+ beds: See all 38 rooms › · New (F26)"
   },
   "f26-contactOpen.dc.html": {
-   "x": 3290,
+   "x": 4230,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · After a hold: number, WhatsApp (HZ code) + Call · New (F26)"
   },
   "f26-holdsKept.dc.html": {
-   "x": 3760,
+   "x": 4700,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S11] holds · Kept: WhatsApp + Call · New (F26)"
   },
   "f26-holdsDeclined.dc.html": {
-   "x": 4230,
+   "x": 5170,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S11] holds · Declined: contact locks again · New (F26)"
   },
   "f26-homeDark.dc.html": {
-   "x": 4700,
+   "x": 5640,
    "y": 55387,
    "w": 390,
    "h": 844,
@@ -3525,54 +3539,54 @@
    "h": 844,
    "title": "[archive · not counted] before F26 · rHome · Rent, 3 actions, food (F21) · Redesigned"
   },
-  "z26-stay.dc.html": {
-   "x": 5640,
-   "y": 56651,
-   "w": 390,
-   "h": 844,
-   "title": "[archive · not counted] before F26 · me › My stay · Bed, move, notice, review, layout fix · Redesigned"
-  },
   "z26-r-today.dc.html": {
-   "x": 6110,
+   "x": 5640,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oToday · Needs you now, then numbers (F21) · This month: 83% full + bar · Updated"
   },
   "z26-r-todayDark.dc.html": {
-   "x": 6580,
+   "x": 6110,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oToday · Today (dark, F21) · This month: 83% full + bar · Updated"
   },
   "z26-beds.dc.html": {
-   "x": 7050,
+   "x": 6580,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oBeds · Floors, rooms, tap a bed · Redesigned"
   },
   "z26-beds-dark.dc.html": {
-   "x": 7520,
+   "x": 7050,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oBeds · Beds (dark) · Redesigned"
   },
   "z26-oRent.dc.html": {
-   "x": 7990,
+   "x": 7520,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oRent · Collected, then who’s late · Redesigned"
   },
   "z26-oRent-dark.dc.html": {
-   "x": 8460,
+   "x": 7990,
    "y": 56651,
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · oRent · Rent (dark) · Redesigned"
+  },
+  "z26-w4-building.dc.html": {
+   "x": 11280,
+   "y": 56651,
+   "w": 390,
+   "h": 844,
+   "title": "[archive · not counted] before F26 · picker · Building view: shared things on top of each floor, Ground floor only when it exis"
   }
  },
  "createdOnFiles": {
@@ -4405,6 +4419,8 @@
   "w4-planMore.dc.html",
   "f26-savedHolds.dc.html",
   "f26-unverified.dc.html",
+  "f26-myStay.dc.html",
+  "f26-sort.dc.html",
   "f26-todayEmpty.dc.html",
   "f26-exploreRes.dc.html",
   "f26-exploreUnv.dc.html",
@@ -4426,13 +4442,13 @@
   "z26-holds.dc.html",
   "z26-me.dc.html",
   "z26-r-home.dc.html",
-  "z26-stay.dc.html",
   "z26-r-today.dc.html",
   "z26-r-todayDark.dc.html",
   "z26-beds.dc.html",
   "z26-beds-dark.dc.html",
   "z26-oRent.dc.html",
-  "z26-oRent-dark.dc.html"
+  "z26-oRent-dark.dc.html",
+  "z26-w4-building.dc.html"
  ],
  "pages": [],
  "title": "Hostelzy · Main design"

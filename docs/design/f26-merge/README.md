@@ -12,5 +12,5 @@ To publish: Artifact publish with `url` = the main canvas, `root` = this folder,
 and every other file under `project/` in `files`. If the main canvas changed since its base version, re-read its
 `canvas.json` first and merge.
 
-After publishing, the count line is **App 170 · Canvas 170 (+49 variants, +24 dark, +9 not counted) · +258 archive**
-(once Build's SCREENS PR lands with 179 − 12 + 3).
+After publishing, the count line follows Build’s final SCREENS totals (Build sends them after the C + E prototype update).
+
