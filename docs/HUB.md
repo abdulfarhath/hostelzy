@@ -39,7 +39,8 @@ The sessions above belong to the old account and are retired. The new account's 
 ## 2026-10-06 F26 status
 | Piece | State |
 |---|---|
-| Prototype v2 (https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP) | F26 items 1–6, 8, 12, 18–20 + open layouts. Pending: resident tabs/My stay/Find a bed (C), contact-after-hold + holds steps + unverified (E) |
-| Build PRs | #121 B picker, #122 A tenant, #123 D owner, #124 C resident, #125 E holds+listings: open, not merged (founder approves in the prototype first) |
+| Prototype v3 (https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP) | **All of F26** (#1–#14, #16–#21, open layouts; #15 became "residents can hold"). Waiting for the founder's review |
+| Build PRs | #121 B, #122 A, #123 D, #124 C, #125 E + branch f26/integration (c96d4ea): all green (367 tests, 40 SQL files). Not merged until the founder approves in the prototype |
+| SQL | 2 new migrations (4zo1 open layouts, 4ze26 contact/hold steps/listings) are in `docs/sql/run-all-pending.sql`; one re-run covers everything |
 | Main canvas | v20 = F26 merge (hub published). Design's 6-item follow-up pending (its session needs an Artifact permission; or the hub publishes from branch design/f26-merge) |
-| F27 Save food | Spec written; Design drawing 7 boards on the proposal canvas |
+| F27 Save food | 8 boards on the proposal canvas v11 (https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g). Waiting for the founder's review; main canvas untouched |
