@@ -115,3 +115,34 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 
 ## Build
 Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+
+### Build A · tenant Explore + hostel page (#1–#6) · branch `feature/f26-tenant` (2026-10-06, prototype first, not merged)
+- **#1** Explore's search field has the 📍 inside on the right (`wherePin`): the Map at my location; the location
+  explainer (`loc`) comes first when location isn't on yet. The field keeps its text ("Area, landmark or hostel").
+- **#2** One row under it: **[📍 Near me ✓] [Price ↑ ▾] [Filters · n]**. Near me off → the explainer; on (✓, filled) →
+  tapped again opens Pick a place (the Where? field, S12). Turning location on no longer changes the sort.
+  Sort dropdown = new sheet **H44 `sort`**: Price ↑ (default, `sortBy = 'price'`) · Distance · Rating · Best deals
+  ("Recommended" is gone from Explore; the rank stays on the owner side). Men / Women / Co-living / AC / Non-AC /
+  sharing / Food included · **No food** (new `fNoFood`) / Rent live in Filters (H1, no sort there).
+  **One featured (80+ bed, F10) hostel is pinned on top in every sort** (the best-ranked featured one) under a
+  "Featured" kicker, then "Then by price, lowest first"; the first card after it is tagged "Lowest price" /
+  "Nearest". "#1 near you" is gone. Hook for #21: `listingTierStep()` in `explore_screen.dart` (a `HostelOrder`
+  comparator run before the picked sort; returns null today) is where "verified first inside each price band" goes.
+- **#3** Hostel page shows the Building view (S87 `BuildingView`) inline (`HostelBuilding`); a free bed opens the
+  picker on that bed, a floor opens H42. "On each floor" and "See the whole building ›" are gone. A hostel with more
+  than 80 beds (`featuredBeds`, the same line as F10's featured spot) shows **"See all N rooms ›"** with "B beds on F
+  floors · n free" → new screen **S88 `building`** (the same view on its own page).
+- **#4** The hostel page food is always the whole-week table, today's row highlighted, no today card / no sheet:
+  shared component **`lib/features/food/week_table.dart`**: `FoodWeekTable(hid:, menu:)` (just the table; "Menu not
+  added yet" when empty) and `FoodWeekSection(hid:, padding:)` (kicker "Food menu · this week" + "From <owner>’s
+  menu", loads the menu on show, hidden when no food and no menu). Resident Home (C) uses the same component.
+  Sheet **H10 `foodWeek` retired** (and `openFoodFor`).
+- **#5** **✓ VERIFIED** badge (navy, white text, new `Pal.vf`: light `#1f3a5f` / dark `#33598a`) next to the name, only
+  when `visited_on` is set, with "Beds and prices checked by Hostelzy · <date>". "Visited by Hostelzy" (info line and
+  the block) is gone; the availability line stays.
+- **#6** The tag boxes are gone from the hostel page.
+- No SQL. Tests: new `test/f26_tenant_test.dart` (pin, Near me, sort dropdown, Filters, pinned Featured, VERIFIED,
+  no tags, inline building, 80+ collapse, 360 px × 2× text light + dark); updated amenities, f25, flows, food,
+  guest, wave3a, wave4d tests for the new behaviour. `flutter analyze` clean, `flutter test` all passing.
+- Screens: **+S88 `building`**, **+H44 `sort`**, **−H10 `foodWeek`**; changed S8 `explore`, S12 `where`, S13 `detail`,
+  S87 (also inline), H1 `search`.
