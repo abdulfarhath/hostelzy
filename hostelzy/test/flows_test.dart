@@ -127,15 +127,38 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('bed picker: Plan · Room · Building tabs, cheapest beds as a link (F21 W2, F25)', (tester) async {
+  testWidgets('bed picker: no tabs, every room drawn by floor, chips jump, a room opens on its own (F26 #8)', (tester) async {
     final s = AppState(start: 'picker', role: 'tenant');
+    s.openPicker();
     await pumpApp(tester, s);
-    // F25 (founder): the Building tab is back; the list stays a link.
-    expect(find.byKey(const ValueKey('pickTab-building')), findsOneWidget);
-    expect(find.text('List'), findsNothing);
-    await tap(tester, find.text('See cheapest beds ›'));
-    expect(find.textContaining('beds you can take'.toUpperCase()), findsOneWidget);
-    await tap(tester, find.text('‹ Back to the plan'));
+    for (final k in ['floorView', 'pickTab-room', 'pickTab-building', 'cheapest']) {
+      expect(find.byKey(ValueKey(k)), findsNothing);
+    }
+    expect(find.text('See cheapest beds ›'), findsNothing);
+    final rs = s.rooms[s.hid]!;
+    // Every room of every floor is in the one scroll; drawn rooms carry the red button.
+    for (final r in rs) {
+      expect(find.byKey(ValueKey('roomCard-${r.n}')), findsOneWidget);
+      expect(find.byKey(ValueKey('editLayout-${r.n}')), s.liveLayout(s.hid, r.n) != null ? findsOneWidget : findsNothing);
+    }
+    // A floor chip jumps: the floor's first room scrolls into view.
+    final last = floorsOf(rs).last;
+    await tap(tester, find.byKey(ValueKey('floor-$last')));
+    await tester.pumpAndSettle();
+    expect(s.floor, last);
+    final first = rs.firstWhere((r) => r.floor == last);
+    final y = tester.getTopLeft(find.byKey(ValueKey('roomCard-${first.n}'))).dy;
+    expect(y, lessThan(400));
+    // A free bed in a drawn room → Continue → the hold sheet.
+    await tap(tester, freeBed(s));
+    expect(s.bed, isNotNull);
+    await tap(tester, find.byKey(const ValueKey('pickContinue')));
+    expect(s.sheet, 'hold');
+    s.update(() => s.sheet = null);
+    // A room's name opens it on its own; "Floor view" comes back.
+    await tap(tester, find.text('Room ${first.label}'));
+    expect((s.mode, s.room), ('room', first.n));
+    await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.mode, 'plan');
     s.dispose();
   });
@@ -945,25 +968,22 @@ void main() {
     expect(find.text('Layout coming soon'), findsOneWidget);
     expect(find.text('Compare with another bed ›'), findsNothing);
 
-    // Women's PG: floor plan only after a hold; room layouts stay.
+    // F26: layouts are open to everyone, women's PGs and guests included.
     s.update(() {
       s.hid = 'saisri';
       s.room = 102;
       s.mode = 'plan';
     });
     await tester.pump();
-    expect(find.text('Floor plan shows after you hold a bed'), findsOneWidget);
-    await tap(tester, find.text('See rooms in the Room tab'));
-    expect(s.mode, 'room');
-    expect(find.text('Room 102'), findsOneWidget);
-    s.update(() => s.holds = [Hold(id: 'x', hid: 'saisri', bed: '102-A', room: 102, opt: 'free', start: s.now, status: 'waiting')]);
-    expect(s.floorLocked('saisri'), isFalse);
+    expect(find.text('Floor plan shows after you hold a bed'), findsNothing);
+    expect(find.byKey(const ValueKey('roomCard-102')), findsOneWidget);
     s.dispose();
 
-    // Signed out: layouts need sign-in.
+    // A guest sees the room layout; holding a bed needs sign-in.
     final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
     await pumpApp(tester, o);
-    expect(find.text('Sign in to see room layouts'), findsOneWidget);
+    expect(find.text('Sign in to see room layouts'), findsNothing);
+    expect(find.byKey(const ValueKey('bedFacts')), findsOneWidget);
     await tap(tester, find.text('Sign in'));
     expect(o.screen, 'login');
     o.dispose();
@@ -3035,7 +3055,7 @@ void main() {
 
   testWidgets('F19: residents fix room layouts; others see the residents-only sheet; the owner compares and decides', (tester) async {
     final owner = hostelById('anjani').owner;
-    // A tenant browsing Anjani: Edit room → only residents can fix it.
+    // A tenant browsing Anjani: Edit this layout (F26 #12) → try mode → Publish → only residents can send a fix.
     final t = AppState(start: 'picker', role: 'tenant');
     await pumpApp(tester, t);
     t.update(() {
@@ -3046,12 +3066,13 @@ void main() {
     });
     await tester.pump();
     // F19 extras: they can try the editor (nothing is saved); only Send is locked.
-    await tap(tester, find.text('Edit room'));
+    await tap(tester, find.byKey(const ValueKey('editLayout')));
     expect((t.screen, t.fixTry, t.sheet), ('rFix', true, null));
-    expect(find.text('Try mode · play freely, nothing is saved'), findsOneWidget);
-    await tap(tester, find.text('Send · residents only'));
+    expect(find.text('Move things to see how the room works for you'), findsOneWidget);
+    await tap(tester, find.text('Publish'));
     expect(t.sheet, 'fixLock');
-    expect(find.text('Only residents of Anjani Residency can fix room layouts'), findsOneWidget);
+    expect(find.text('Only residents can send a fix'), findsOneWidget);
+    expect(find.text('Book a bed to join. Your tries stay on this phone.'), findsOneWidget);
     expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
     // Leaving discards the try.
     t.update(() => t.sheet = null);

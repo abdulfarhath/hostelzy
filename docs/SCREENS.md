@@ -8,20 +8,26 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **85** |
+| App screens (routes + their separate pages/views) | **84** |
 | App sheets (bottom sheets) | **42** |
-| App full-screen states | **31** |
-| **Release app total** | **158** |
+| App full-screen states | **28** |
+| **Release app total** | **154** |
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **179** |
+| **Overall total** | **175** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
 renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**.
 
-Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
-Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+**F26 bed picker + open layouts (2026-10-06, −4):** the picker has no Plan / Room / Building tabs; every room's drawn
+layout is on one scroll (S16). **S18** "cheapest first" list removed (no entry point; every room with its price is on the
+scroll). S87 stays (the Building component on the hostel page and owner Beds) but is **no longer a picker tab**. Layouts are
+open to everyone: states **T10** (floor locked until a hold), **T11** (sign in to see room layouts) and **T13** (daily cap,
+hold talk) removed. **Retired ids S18, T10, T11, T13.**
+
+Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 14 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
 
@@ -43,7 +49,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (85)
+## 1. App screens (84)
 
 ### Start and sign-in (7)
 
@@ -57,7 +63,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 6 | `roleGate` (owner) | List your PG (Request a visit, owner link, "Manager at a PG?") | `screens_start.dart:369` (`if (owner)`, `:386`) | Role › I run a PG, without a live hostel |
 | 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
 
-### Tenant (16)
+### Tenant (15)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -69,14 +75,13 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 13 | `detail` | Hostel page | `screens_tenant.dart:661` | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
 | 14 | `gallery` | Photos (full-screen gallery) | `photos.dart:291` | Hostel page › photo (`photos.dart:210`) |
 | 15 | `reviews` | Reviews of a hostel | `reviews.dart:173` | Hostel page › reviews (`screens_tenant.dart:799`) |
-| 16 | `picker` (plan) | Pick a bed · room plan / floor view | `screens_tenant.dart:1053` (`_PlanMode` `:1199`) | Hostel page › See beds (`residents.dart:245`) |
-| 17 | `picker` (room) | Room 101 · room layout, layers, bed facts | `layout.dart:354` (`RoomMode`) | Picker › tap a room (`state.dart:openRoom`) |
-| 18 | `picker` (list) | Pick a bed · cheapest first | `screens_tenant.dart:1340` (`_ListMode`) | Picker › See cheapest beds |
+| 16 | `picker` (plan) | Pick a bed · floor chips on top (jump to the floor); every room's drawn layout (beds, fan, AC, window, door, washroom) in one scroll, grouped by floor ("Floor 2 · 4 free"); each room: name + share · rent, "n free", red **Edit this layout** (F26 #12); a room without a layout shows its beds as boxes; tap a free bed → Continue (F26 #8) | `features/holds/picker_screen.dart` (`PickerScreen`, `_AllRooms`, `_RoomCard`) | Hostel page › See beds (`residents.dart:openPicker`); See the whole building (`openBuilding`); fixLock › Pick a bed |
+| 17 | `picker` (room) | Room 101 · room layout, layers, bed facts, "Floor view" link back, red **Edit this layout** above the bar (F26 #12) | `features/layouts/layout_map.dart` (`RoomMode`) | Picker › a room's name (`room_layouts.dart:openRoom`) |
 | 19 | `compare` | Compare two beds | `layout.dart:644` | Room view › Compare with another bed (`room_layouts.dart:122`) |
 | 20 | `hold` | Your hold (timer / pay to book / booked / ended) | `screens_tenant.dart:1425` | After a hold (`residents.dart:312,426`); Holds row (`screens_tenant.dart:491`) |
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
-| 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Picker tab Building (`pickTab-building`); Hostel page › See the whole building (`residents.dart:openBuilding`) |
+| 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Hostel page (F26 #3); owner Beds › Building. **F26 #8: no longer a picker tab** |
 
 ### Resident (13)
 
@@ -91,7 +96,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 29 | `move` (vacate) | Give notice | `screens_resident.dart:871` | My stay › Give notice (`screens_resident.dart:767`) |
 | 30 | `move` (swap) | Move to another bed | `screens_resident.dart:871` (`else`, `:1000`) | My stay › Move to another bed |
 | 31 | `rRoom` | Rooms · room layout (resident) | `layout_fixes.dart:22` | My stay › Fix a room layout (`features/layouts/layout_fixes.dart:101`) |
-| 32 | `rFix` | Fix this room (layout fix editor) | `layout_fixes.dart:157` | Rooms › Fix (`features/layouts/layout_fixes.dart:131`) |
+| 32 | `rFix` | Fix this room (layout fix editor); for a non-resident it is try mode: "Try a layout · Room N", "Move things to see how the room works for you", red **Publish** → H13 (F26 #12) | `layout_fixes.dart:157` | Rooms › Fix (`features/layouts/layout_fixes.dart:131`); tenant Edit this layout (S16, S17) |
 | 33 | `rReview` | 30-day review | `reviews.dart:252` | Home › review card (`review_rules.dart:54`) |
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
@@ -185,7 +190,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 |---|---|---|---|---|
 | 11 | `scanCam` | Use your camera? | `screens_start.dart:499` | Join your PG › Scan the QR, first time (`links.dart:150`) |
 | 12 | `payUtr` | Enter the UPI reference (rent, also the tenant's advance) | `payments.dart:105` | After paying by UPI (`features/payments/payments.dart:35`; `state.dart:556`) |
-| 13 | `fixLock` | Fix this room? (only residents of this hostel) | `layout_fixes.dart:308` | Rooms › Fix (`features/layouts/layout_fixes.dart:116,187,367`) |
+| 13 | `fixLock` | Publish (try mode) / Fix this room?: "Only residents can send a fix" · Book a bed to join · Pick a bed · Keep trying (F26 #12) | `layout_fixes.dart:308` | Rooms › Fix (`features/layouts/layout_fixes.dart:116,187,367`) |
 | 14 | `fixLimit` | Can't send yet | `layout_fixes.dart:342` | Fix limit reached (`features/layouts/layout_fixes.dart:119,391`) |
 | 15 | `fixSend` | Send your fix | `layout_fixes.dart:386` | Fix editor › Send (`features/layouts/layout_fixes.dart:193`) |
 | 16 | `quickFix` | Quick fix · item (fan, AC…) | `layout_fixes.dart:557` | Rooms › tap an item (`features/layouts/layout_fixes.dart:374`) |
@@ -231,11 +236,11 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
 
-## 3. App full-screen states (31)
+## 3. App full-screen states (28)
 
 | # | Screen | State | Condition | Built at |
 |---|---|---|---|---|
-| **Tenant (17)** |||||
+| **Tenant (14)** |||||
 | 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
 | 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
 | 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
@@ -245,11 +250,8 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 7 | `holds` | No holds yet · Find a bed | `holds.isEmpty` | `screens_tenant.dart:548` |
 | 8 | `saved` | Nothing saved yet · Find a bed | nothing saved | `screens_tenant.dart:1617` |
 | 9 | `hold` | This hold isn't on this phone any more | hold id not found | `screens_tenant.dart:1432` |
-| 10 | `picker` (plan, building) | Floor plan shows after you hold a bed (also on the Building tab, F25) | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
-| 11 | `picker` (room) | Sign in to see room layouts | guest | `layout.dart:367` |
-| 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one | `layout.dart:375` |
-| 13 | `picker` (room) | Floor plan shows after you hold a bed (daily cap) | server `capped` | `layout.dart:379` |
-| 14 | `picker` (room) | Couldn't load this room · Try again | server fetch failed | `layout.dart:390` |
+| 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one (only until the F26 SQL 4zo1 runs) | `layout.dart:375` |
+| 14 | `picker` (room) | Couldn't load this room · Try again (also "Couldn’t open this room yet · Floor view" for the old server's daily limit, until 4zo1 runs; no hold talk) | server fetch failed / `capped` | `layout.dart:390` |
 | 15 | `picker` (room) | Layout coming soon · Tell me when it's ready | no published layout | `layout.dart:398` |
 | 16 | `scan` | The camera is off for Hostelzy | camera permission denied | `screens_start.dart:540` |
 | 17 | `scan` | The camera didn't start | scanner error | `screens_start.dart:540` |

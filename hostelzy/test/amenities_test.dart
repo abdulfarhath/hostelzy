@@ -68,7 +68,10 @@ void main() {
       ..myName = 'Ravi Teja';
     await _pump(tester, s);
     await _tap(tester, find.text('Pick a bed'));
-    expect((s.screen, s.mode), ('picker', 'room'));
+    // F26 #8: every room first; a room's name opens it on its own.
+    expect((s.screen, s.mode), ('picker', 'plan'));
+    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('roomCard-204')), matching: find.text('Room 204')));
+    expect(s.mode, 'room');
     // Room 203 has the geyser in its washroom.
     await _tap(tester, find.byKey(const ValueKey('roomChip-203')));
     expect(s.room, 203);
@@ -80,7 +83,7 @@ void main() {
     expect(s.mode, 'plan');
     s.dispose();
 
-    // A guest starts on the floor view (room plans need sign-in).
+    // A guest starts on every room too (layouts are open to everyone, F26).
     final g = AppState(start: 'explore', role: 'tenant')..signedIn = false;
     g.hid = 'anjani';
     g.openPicker();

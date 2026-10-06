@@ -204,8 +204,8 @@ class FixEditorScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Rich([sp(context, 'Edit room · '), sp(context, 'Room ${room.label}', c: p.ac)], w: 800, s: 15),
-                    T(s.fixTry ? 'You don’t live here · leaving discards your try' : 'Suggestion${s.myRoomLabel.isEmpty ? '' : ' · you live in ${s.myRoomLabel}'} · draft saved on this phone', s: 12, c: p.mu, ell: true),
+                    Rich([sp(context, s.fixTry ? 'Try a layout · ' : 'Edit room · '), sp(context, 'Room ${room.label}', c: p.ac)], w: 800, s: 15),
+                    T(s.fixTry ? 'Try mode · only on this phone' : 'Suggestion${s.myRoomLabel.isEmpty ? '' : ' · you live in ${s.myRoomLabel}'} · draft saved on this phone', s: 12, c: p.mu, ell: true),
                   ],
                 ),
               ),
@@ -216,7 +216,7 @@ class FixEditorScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
             decoration: BoxDecoration(color: p.sf, border: Border(bottom: bs(1, p.hl))),
-            child: Row(children: [Ic('eye', size: 16, color: p.tx), const SizedBox(width: 8), const Expanded(child: T('Try mode · play freely, nothing is saved', s: 13, w: 800))]),
+            child: Row(children: [Ic('eye', size: 16, color: p.tx), const SizedBox(width: 8), const Expanded(child: T('Move things to see how the room works for you', s: 13, w: 800))]),
           )
         else
           Container(
@@ -278,9 +278,9 @@ class FixEditorScreen extends StatelessWidget {
                     T('Wrong size? Change the width or length by 1 ft.', s: 12, c: p.mu),
                     Row(
                       children: [
-                        Expanded(child: Row(children: [const T('Width', s: 13), const Spacer(), sq('x', () => s.edResize(l, -1, 0), label: '−1'), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1')])),
+                        Expanded(child: Row(children: [const Expanded(child: T('Width', s: 13, ell: true)), sq('x', () => s.edResize(l, -1, 0), label: '−1'), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1')])),
                         const SizedBox(width: 16),
-                        Expanded(child: Row(children: [const T('Length', s: 13), const Spacer(), sq('x', () => s.edResize(l, 0, -1), label: '−1'), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1')])),
+                        Expanded(child: Row(children: [const Expanded(child: T('Length', s: 13, ell: true)), sq('x', () => s.edResize(l, 0, -1), label: '−1'), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 0, 1), label: '+1')])),
                       ],
                     ),
                   ]),
@@ -296,7 +296,8 @@ class FixEditorScreen extends StatelessWidget {
           decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: s.fixTry
-              ? OutlineCta('Send · residents only', icon: 'lock', height: 54, onTap: s.openSendFix)
+              // F26 #12: Publish → "Only residents can send a fix".
+              ? Cta('Publish', key: const ValueKey('tryPublish'), height: 54, px: 16, fs: 15, onTap: s.openSendFix)
               : Cta('Send to owner', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.openSendFix),
         ),
       ],
@@ -304,33 +305,31 @@ class FixEditorScreen extends StatelessWidget {
   }
 }
 
-/// Board 0: "Edit room" for someone who doesn't live here.
+/// Board 0 (F26 #12): Publish in try mode, or a fix by someone who doesn't
+/// live here: only residents can send one.
 class FixLockSheet extends StatelessWidget {
   const FixLockSheet({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final h = hostelById(s.fixHid);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: VGap(
         gap: 12,
         children: [
           Align(alignment: Alignment.centerLeft, child: Container(width: 56, height: 56, color: p.sf, alignment: Alignment.center, child: const Ic('lock', size: 26))),
-          T('Only residents of ${h.name} can fix room layouts', w: 800, s: 22, lh: 1.15),
-          T('Stay here to help others see the real room.', s: 15, c: p.mu, lh: 1.5),
-          Cta('Book a bed', height: 54, px: 16, fs: 15, onTap: () => s.update(() {
-            s.sheet = null;
-            s.hid = s.fixHid;
-          })),
-          OutlineCta('See beds', icon: 'bed', onTap: () {
-            s.update(() {
-              s.sheet = null;
-              s.hid = s.fixHid;
-            });
+          const T('Only residents can send a fix', w: 800, s: 22, lh: 1.15),
+          T(s.fixTry ? 'Book a bed to join. Your tries stay on this phone.' : 'Book a bed to join.', s: 15, c: p.mu, lh: 1.5),
+          Cta('Pick a bed', key: const ValueKey('fixLockPick'), icon: 'bed', height: 54, px: 16, fs: 15, onTap: () {
+            final hid = s.fixHid;
+            if (s.screen == 'rFix') s.leaveFixEditor();
+            s.update(() => s.sheet = null);
+            if (s.screen == 'picker' && s.hid == hid) return s.update(() => s.mode = 'plan');
+            s.update(() => s.hid = hid);
             s.openPicker();
           }),
+          OutlineCta(s.fixTry ? 'Keep trying' : 'Not now', icon: s.fixTry ? 'pencil' : 'x', onTap: () => s.update(() => s.sheet = null)),
           Center(child: Rich([sp(context, 'Already staying here? '), sp(context, 'Ask your owner for your invite code.', w: 800, c: p.tx)], s: 13, c: p.mu, align: TextAlign.center)),
         ],
       ),
