@@ -197,37 +197,42 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('a tenant sees today’s food on the hostel page and the week in a sheet', (tester) async {
+  testWidgets('F26 #4: a tenant sees the whole week on the hostel page, today highlighted, no toggle', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
     s.hid = 'anjani';
     await _pump(tester, s);
-    expect(find.byKey(const ValueKey('foodPeek')), findsOneWidget);
-    expect(find.text('Food menu · today, $todayName'.toUpperCase()), findsOneWidget);
-    expect(find.text(seedMenu[todayIdx].b), findsOneWidget);
-    expect(find.text('7:30 – 9:30'), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('foodMenu')));
-    expect((s.screen, s.sheet, s.foodFor, s.fwDay), ('detail', 'foodWeek', 'anjani', todayIdx));
-    final next = (todayIdx + 1) % 7;
-    await _tap(tester, find.byKey(ValueKey('fwDay-$next')));
-    expect(find.text(seedMenu[next].n), findsOneWidget);
+    expect(find.byKey(const ValueKey('foodWeekSection')), findsOneWidget);
+    expect(find.text('Food menu · this week'.toUpperCase()), findsOneWidget);
+    // Every day of the week is in the table, no "today" card and no sheet.
+    for (var i = 0; i < 7; i++) {
+      expect(find.byKey(ValueKey('weekRow-$i')), findsOneWidget);
+      expect(find.text(seedMenu[i].b), findsOneWidget);
+    }
+    expect(find.byKey(const ValueKey('weekToday')), findsOneWidget);
+    expect(find.text('Breakfast · 7:30'.toUpperCase()), findsOneWidget);
+    expect(find.byKey(const ValueKey('foodPeek')), findsNothing);
+    expect(find.byKey(const ValueKey('foodMenu')), findsNothing);
+    expect(find.textContaining('today, $todayName'.toUpperCase()), findsNothing);
     // Not a resident: no rating here.
     expect(find.text('How was breakfast?'), findsNothing);
-    s.update(() => s.sheet = null);
-    await tester.pump();
 
     // A hostel that serves food but has no menu says so; one without food shows nothing.
     final noMenu = hostels.firstWhere((h) => h.id != 'anjani' && h.food);
     s.update(() => s.hid = noMenu.id);
     await tester.pump();
-    expect(find.byKey(const ValueKey('foodPeek')), findsOneWidget);
+    expect(find.byKey(const ValueKey('foodWeekSection')), findsOneWidget);
     expect(find.text('Menu not added yet'), findsOneWidget);
-    expect(find.byKey(const ValueKey('foodMenu')), findsNothing);
+    expect(find.byKey(const ValueKey('weekTable')), findsNothing);
     final noFood = hostels.where((h) => !h.food).firstOrNull;
     if (noFood != null) {
       s.update(() => s.hid = noFood.id);
       await tester.pump();
-      expect(find.byKey(const ValueKey('foodPeek')), findsNothing);
+      expect(find.byKey(const ValueKey('foodWeekSection')), findsNothing);
     }
+    // The old week sheet is gone.
+    s.update(() => s.sheet = 'foodWeek');
+    await tester.pump();
+    expect(find.text('Food menu'), findsNothing);
     s.dispose();
   });
 
@@ -258,11 +263,10 @@ void main() {
     s.dispose();
   });
 
-  for (final c in const ['detail', 'food', 'menu', 'foodWeek']) {
+  for (final c in const ['detail', 'food', 'menu']) {
     testWidgets('food: $c fits at 2× text', (tester) async {
-      final s = c == 'menu' ? AppState(start: 'oMore', role: 'owner', moreTab: 'menu') : AppState(start: c == 'foodWeek' ? 'detail' : c, role: c == 'food' ? 'resident' : 'tenant');
+      final s = c == 'menu' ? AppState(start: 'oMore', role: 'owner', moreTab: 'menu') : AppState(start: c, role: c == 'food' ? 'resident' : 'tenant');
       s.hid = 'anjani';
-      if (c == 'foodWeek') s.openFoodFor('anjani');
       await _pump(tester, s, scale: 2);
       expect(tester.takeException(), isNull);
       s.dispose();

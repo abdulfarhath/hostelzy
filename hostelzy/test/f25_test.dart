@@ -39,15 +39,15 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F25: Building view from the hostel page: floors, chips, pick a free bed, Continue; a floor opens its sheet', (tester) async {
+  testWidgets('F25 / F26 #3: the Building view is inline on the hostel page: floors, chips, a floor opens its sheet, a free bed opens the picker on it', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
     s
       ..hid = 'anjani'
       ..phone = '9000000001'
       ..myName = 'Ravi Teja';
     await _pump(tester, s);
-    await _tap(tester, find.byKey(const ValueKey('seeBuilding')));
-    expect((s.screen, s.mode), ('picker', 'building'));
+    expect(find.byKey(const ValueKey('seeBuilding')), findsNothing);
+    expect(find.byKey(const ValueKey('inlineBuilding')), findsOneWidget);
     expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
     final rooms = s.rooms['anjani']!;
     // Every floor, top floor first; G only because the data has things on floor 0.
@@ -65,7 +65,33 @@ void main() {
     for (final r in rooms) {
       expect(find.byKey(ValueKey('bRoom-${r.n}')), findsOneWidget);
     }
-    // A taken bed says so; a free bed is picked and Continue opens the hold.
+    // A floor opens the existing floor sheet (H42).
+    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
+    expect((s.sheet, s.amFloor), ('amFloor', 2));
+    s.update(() => s.sheet = null);
+    await tester.pump();
+    // A free bed opens the bed picker with that bed picked.
+    final free = rooms.expand((r) => r.beds).firstWhere((b) => b.state == 'free' && !b.mine);
+    await _tap(tester, find.byKey(ValueKey('bBed-${free.id}')));
+    expect((s.screen, s.bed), ('picker', free.id));
+    // Back on the hostel page from the picker.
+    s.back();
+    await tester.pump();
+    expect(s.screen, 'detail');
+    s.dispose();
+  });
+
+  testWidgets('F25: the picker\'s Building tab: a taken bed says so; a free bed is picked; tabs', (tester) async {
+    final s = AppState(start: 'detail', role: 'tenant');
+    s
+      ..hid = 'anjani'
+      ..phone = '9000000001'
+      ..myName = 'Ravi Teja';
+    await _pump(tester, s);
+    s.openBuilding();
+    await tester.pump();
+    expect((s.screen, s.mode), ('picker', 'building'));
+    final rooms = s.rooms['anjani']!;
     final taken = rooms.expand((r) => r.beds).firstWhere((b) => b.state == 'booked');
     await _tap(tester, find.byKey(ValueKey('bBed-${taken.id}')));
     expect((s.bed, s.toast), (null, 'This bed is taken.'));
@@ -74,15 +100,6 @@ void main() {
     await _tap(tester, find.byKey(ValueKey('bBed-${free.id}')));
     expect(s.bed, free.id);
     expect(find.textContaining('Bed ${free.id} · '), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('pickContinue')));
-    expect(s.sheet, 'hold');
-    s.update(() => s.sheet = null);
-    await tester.pump();
-    // A floor opens the existing floor sheet (H42).
-    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
-    expect((s.sheet, s.amFloor), ('amFloor', 2));
-    s.update(() => s.sheet = null);
-    await tester.pump();
     // Tabs: Plan, Room, Building.
     await _tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.mode, 'plan');
