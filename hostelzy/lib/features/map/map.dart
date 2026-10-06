@@ -50,7 +50,7 @@ extension MapAreaActions on AppState {
   }
 
   /// After the location explainer: Android asks, then the map centres on you
-  /// and hostels sort by distance from you.
+  /// and distances are from you (F26 #2: the sort stays as picked).
   Future<void> useMyLocation() async {
     update(() => sheet = null);
     final (pos, fail) = await locator.locate();
@@ -60,10 +60,9 @@ extension MapAreaActions on AppState {
         mapArea = null;
         areaCenter = null;
         mapMoved = false;
-        sortBy = 'near';
         mapFocus++;
       });
-      return toastMsg('Showing hostels by distance from you.');
+      return toastMsg('Showing hostels near you.');
     }
     // F22 Area 1: no position is invented; the user types an area instead.
     openWhere();

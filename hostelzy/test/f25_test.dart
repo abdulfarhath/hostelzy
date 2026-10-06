@@ -59,6 +59,48 @@ void main() {
     }
   });
 
+  testWidgets('F25 / F26 #3: the Building view is inline on the hostel page: floors, chips, a floor opens its sheet, a free bed opens the picker on it', (tester) async {
+    final s = AppState(start: 'detail', role: 'tenant');
+    s
+      ..hid = 'anjani'
+      ..phone = '9000000001'
+      ..myName = 'Ravi Teja';
+    await _pump(tester, s);
+    expect(find.byKey(const ValueKey('seeBuilding')), findsNothing);
+    expect(find.byKey(const ValueKey('inlineBuilding')), findsOneWidget);
+    expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
+    final rooms = s.rooms['anjani']!;
+    // Every floor, top floor first; G only because the data has things on floor 0.
+    for (final f in floorsOf(rooms)) {
+      expect(find.byKey(ValueKey('bFloorRow-$f')), findsOneWidget);
+    }
+    expect(find.byKey(const ValueKey('bFloorRow-0')), findsOneWidget);
+    expect(find.textContaining('Reception'), findsNothing);
+    expect(tester.getTopLeft(find.byKey(const ValueKey('bFloorRow-3'))).dy, lessThan(tester.getTopLeft(find.byKey(const ValueKey('bFloorRow-1'))).dy));
+    // Shared things on top of each floor; broken ones in red words.
+    expect(find.descendant(of: find.byKey(const ValueKey('bThings-2')), matching: find.text('WASHING MACHINE · NOT WORKING')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('bThings-0')), matching: find.text('LIFT')), findsOneWidget);
+    // In-room things (the geyser) aren't floor chips.
+    expect(find.descendant(of: find.byKey(const ValueKey('bThings-2')), matching: find.text('GEYSER')), findsNothing);
+    for (final r in rooms) {
+      expect(find.byKey(ValueKey('bRoom-${r.n}')), findsOneWidget);
+    }
+    // A floor opens the existing floor sheet (H42).
+    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
+    expect((s.sheet, s.amFloor), ('amFloor', 2));
+    s.update(() => s.sheet = null);
+    await tester.pump();
+    // A free bed opens the bed picker with that bed picked.
+    final free = rooms.expand((r) => r.beds).firstWhere((b) => b.state == 'free' && !b.mine);
+    await _tap(tester, find.byKey(ValueKey('bBed-${free.id}')));
+    expect((s.screen, s.bed), ('picker', free.id));
+    // Back on the hostel page from the picker.
+    s.back();
+    await tester.pump();
+    expect(s.screen, 'detail');
+    s.dispose();
+  });
+
   testWidgets('F25: owner Beds › Building is the same view; a bed opens the bed sheet', (tester) async {
     final s = AppState(start: 'oBeds', role: 'owner');
     await _pump(tester, s);

@@ -39,18 +39,16 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F23: the hostel page lists what is on each floor; tenants only see it', (tester) async {
+  testWidgets('F23 / F26 #3: the hostel page shows the building inline with each floor’s shared things; tenants only see them', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
     s.hid = 'anjani';
     await _pump(tester, s);
-    expect(find.byKey(const ValueKey('onEachFloor')), findsOneWidget);
-    expect(find.text('ON EACH FLOOR'), findsOneWidget);
-    expect(find.textContaining('Updated by residents'), findsOneWidget);
-    expect(find.text('Ground floor'), findsOneWidget);
-    final all = s.roomsOnFloor('anjani', 2).length;
-    expect(find.text('Geyser in 2 of $all rooms'), findsOneWidget);
-    expect(find.text('NOT WORKING'), findsOneWidget); // the washing machine on floor 2
-    await _tap(tester, find.byKey(const ValueKey('amFloor-2')));
+    // F26 #3: the "On each floor" list is gone; the chips sit on each floor of the building.
+    expect(find.byKey(const ValueKey('onEachFloor')), findsNothing);
+    expect(find.byKey(const ValueKey('inlineBuilding')), findsOneWidget);
+    expect(find.byKey(const ValueKey('bThings-2')), findsOneWidget);
+    expect(find.textContaining('NOT WORKING'), findsOneWidget); // the washing machine on floor 2
+    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
     expect((s.sheet, s.amFloor), ('amFloor', 2));
     expect(find.text('In the room washroom of 201, 203'), findsOneWidget);
     expect(find.textContaining('Added by a resident'), findsOneWidget);

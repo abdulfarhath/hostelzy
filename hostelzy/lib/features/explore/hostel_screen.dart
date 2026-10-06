@@ -4,8 +4,9 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
-import '../amenities/amenities_screens.dart';
 import '../fair_play/fair_play_screens.dart';
+import '../food/week_table.dart';
+import '../holds/building_view.dart';
 import '../onboarding/onboarding_cards.dart';
 import '../photos/photos_screens.dart';
 
@@ -58,20 +59,6 @@ class DetailScreen extends StatelessWidget {
       ...moneyRules(h),
       ['Food', h.food ? 'Included, veg and non-veg' : 'Not included, shared kitchen'],
           ];
-    Widget tagRow(int i) => IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), child: T(h.tags[i], s: 14, w: 600)),
-          ),
-          const SizedBox(width: 1),
-          Expanded(
-            child: Container(color: p.bg, padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), child: T(i + 1 < h.tags.length ? h.tags[i + 1] : '', s: 14, w: 600)),
-          ),
-        ],
-      ),
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -136,7 +123,14 @@ class DetailScreen extends StatelessWidget {
                     gap: 6,
                     children: [
                       Kicker('${h.gender} · ${h.area}, Hyderabad', c: p.ad),
-                      T(h.name, w: 800, s: 30, lh: 1.02, ls: -.025),
+                      // F26 #5: ✓ VERIFIED next to the name, only after a team visit.
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [T(h.name, w: 800, s: 30, lh: 1.02, ls: -.025), if (s.visited[h.id] != null) const VerifiedBadge()],
+                      ),
+                      if (s.visited[h.id] case final v?) T('Beds and prices checked by Hostelzy · $v', key: const ValueKey('verifiedLine'), s: 13, c: p.mu),
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Css(
@@ -162,7 +156,6 @@ class DetailScreen extends StatelessWidget {
                                 ),
                               ),
                               T('${kmLabel(s.kmFor(h))} ${s.kmFrom}'),
-                              if (s.visited[h.id] != null) const T('Visited by Hostelzy'),
                             ],
                           ),
                         ),
@@ -302,23 +295,10 @@ class DetailScreen extends StatelessWidget {
                         ? Rich([sp(context, 'Not confirmed in over a month', w: 800, c: p.ad), sp(context, ' · ask the owner before you visit.')], s: 13, lh: 1.4)
                         : Rich([sp(context, 'Confirmed by the owner', w: 800), sp(context, ' · ${dayMon(at.toLocal())}')], s: 13, lh: 1.4),
                   ),
-                // F23: the shared things on each floor (and the geyser in rooms).
-                OnEachFloor(hid: h.id),
-                // F25: the whole building (the bed picker's Building tab).
-                if ((s.rooms[h.id] ?? const []).isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Tap(
-                        key: const ValueKey('seeBuilding'),
-                        onTap: s.openBuilding,
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('building', size: 16, color: p.tx), const SizedBox(width: 6), const Flexible(child: T('See the whole building ›', s: 14, w: 800, underline: true))]),
-                      ),
-                    ),
-                  ),
-                // Today's food, then the whole week, when the owner has put a menu.
-                FoodPeek(hid: h.id),
+                // F26 #3: the whole building inline (S87); big hostels open it on its own page.
+                HostelBuilding(hid: h.id),
+                // F26 #4: the whole week, always.
+                FoodWeekSection(hid: h.id),
                 const SizedBox(height: 12),
                 // F21 W2: rules folded under one row.
                 Tap(
@@ -348,17 +328,8 @@ class DetailScreen extends StatelessWidget {
                       ),
                     ),
                 const SizedBox(height: 16),
-                // F14: Visited by Hostelzy + whether the owner confirmed the free beds.
+                // F14: whether the owner confirmed the free beds (the visit is the ✓ VERIFIED badge, F26 #5).
                 Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: VisitedBlock(h)),
-                // F18: any number of tags (new hostels may have fewer than four).
-                if (h.tags.isNotEmpty)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: p.hl,
-                      border: Border(top: bs(2, p.dv), bottom: bs(2, p.dv)),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < h.tags.length; i += 2) ...[if (i > 0) const SizedBox(height: 1), tagRow(i)]]),
-                  ),
                 // F07: the owner's number shows only after a hold.
                 OwnerContact(h),
               ],
@@ -430,136 +401,126 @@ String dealLine(Deals d) {
   return '${d.on.contains('monthly') ? 'Hostelzy price' : 'Hostelzy deal'}: ${parts.join(' · ')}';
 }
 
-/// Hostel page (board `new-foodPeek`): today's three meals from the owner's
-/// menu, then "Whole week ›" (the `foodWeek` sheet). A hostel that serves
-/// food but has no menu yet says so; one without food shows nothing.
-class FoodPeek extends StatelessWidget {
-  const FoodPeek({super.key, required this.hid});
+/// F26 #5: navy ✓ VERIFIED, white text. Only for a hostel the Hostelzy team
+/// visited (`visited_on`); the grey UNVERIFIED badge sits in the same spot.
+class VerifiedBadge extends StatelessWidget {
+  const VerifiedBadge({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    const white = Color(0xFFFFFFFF);
+    return Container(
+      key: const ValueKey('verifiedBadge'),
+      color: p.vf,
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Ic('check', size: 14, color: white), SizedBox(width: 4), T('Verified', s: 12, w: 800, ls: .08, upper: true, c: white, nowrap: true)],
+      ),
+    );
+  }
+}
+
+/// Tenant taps a free bed in the building: the bed picker opens on it.
+/// A bed that can't be held only says why (taken, on hold).
+void pickFromBuilding(AppState s, Bed b) {
+  if ((b.state != 'free' && b.state != 'soon') || b.mine) return s.pickBed(b);
+  s.holdOpt = 'free';
+  s.openPicker();
+  s.pickBed(b);
+}
+
+/// F26 #3: the hostel page's building. Up to [featuredBeds] beds the cross-section
+/// (S87) is inline; a bigger hostel (the F10 80+ tier, the same line as its
+/// featured spot) collapses to "See all N rooms ›" (its own page).
+class HostelBuilding extends StatelessWidget {
+  const HostelBuilding({super.key, required this.hid});
   final String hid;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final m = s.menuOf(hid);
-    final show = m != null || hostelById(hid).food;
-    Widget row({Key? key, required Widget child, VoidCallback? onTap}) {
-      final c = Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-        decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-        child: child,
+    final rs = s.rooms[hid] ?? const <Room>[];
+    if (rs.isEmpty) return const SizedBox.shrink();
+    final beds = rs.fold<int>(0, (a, r) => a + r.beds.length);
+    if (beds <= featuredBeds) {
+      return Padding(
+        key: const ValueKey('inlineBuilding'),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        child: BuildingView(hid: hid, rooms: rs, onBed: (b) => pickFromBuilding(s, b)),
       );
-      return onTap == null ? c : Tap(key: key, onTap: onTap, child: c);
     }
-
-    return OnShow(
-      () => s.loadMenu(hid),
-      child: !show
-          ? const SizedBox.shrink()
-          : Column(
-              key: const ValueKey('foodPeek'),
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-                  child: Kicker('Food menu · today, $todayName'),
-                ),
-                Container(
-                  decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (m == null)
-                        row(child: T('Menu not added yet', s: 14, c: p.mu))
-                      else ...[
-                        for (final ml in meals)
-                          row(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 92,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [T(ml[1], w: 800, s: 14), T(s.mealTimeText(hid, ml[0]), s: 11, c: p.mu)],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: T(m[todayIdx].of(ml[0]).trim().isEmpty ? '—' : m[todayIdx].of(ml[0]), s: 14, c: p.mu, lh: 1.35)),
-                              ],
-                            ),
-                          ),
-                        row(
-                          key: const ValueKey('foodMenu'),
-                          onTap: () => s.openFoodFor(hid),
-                          child: Row(children: [const Expanded(child: T('Whole week', w: 800, s: 14)), Ic('chev', size: 16, color: p.tx)]),
-                        ),
+    final floors = {for (final r in rs) r.floor}.length;
+    final free = s.freeOf(hid).f;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      child: VGap(
+        gap: 10,
+        children: [
+          const Kicker('Whole building'),
+          Tap(
+            key: const ValueKey('seeAllRooms'),
+            onTap: () => s.go('building'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+              decoration: box(w: 2, c: p.tx),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        T('See all ${rs.length} rooms ›', w: 800, s: 16),
+                        T('$beds beds on $floors ${floors == 1 ? 'floor' : 'floors'} · $free free', s: 13, c: p.mu),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  const Ic('chev', size: 16),
+                ],
+              ),
             ),
+          ),
+          T('Big hostels open the building on its own page, so this page stays short.', s: 12, c: p.mu, lh: 1.45),
+        ],
+      ),
     );
   }
 }
 
-/// Board `new-foodWeek`: a hostel's menu, Mon–Sun chips and three meals.
-class FoodWeekSheet extends StatelessWidget {
-  const FoodWeekSheet({super.key});
+/// F26 #3: an 80+ bed hostel's whole building on its own page (S87).
+class BuildingScreen extends StatelessWidget {
+  const BuildingScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final m = s.menuOf(s.foodFor ?? s.hid) ?? blankWeek;
-    final d = s.fwDay;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-      child: VGap(
-        gap: 12,
-        children: [
-          Row(
+    final h = hostelById(s.hid);
+    final rs = s.rooms[h.id] ?? const <Room>[];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+          child: Row(
             children: [
-              for (var i = 0; i < 7; i++) ...[
-                if (i > 0) const SizedBox(width: 4),
-                Expanded(
-                  child: Tap(
-                    key: ValueKey('fwDay-$i'),
-                    onTap: () => s.update(() => s.fwDay = i),
-                    child: Container(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      alignment: Alignment.center,
-                      decoration: box(bg: i == d ? p.tx : transparent, w: 1, c: i == d ? p.tx : p.dv),
-                      child: FittedBox(fit: BoxFit.scaleDown, child: T(weekDays[i][0], s: 13, w: 800, c: i == d ? p.bg : p.tx, nowrap: true)),
-                    ),
-                  ),
-                ),
-              ],
+              BackBtn(onTap: s.back),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker('All ${rs.length} rooms'), T(h.name, w: 800, s: 17, ell: true)])),
             ],
           ),
-          Container(
-            decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final ml in meals)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(width: 92, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [T(ml[1], w: 800, s: 15), T(s.mealTimeText(s.foodFor ?? s.hid, ml[0]), s: 12, c: p.mu)])),
-                        const SizedBox(width: 8),
-                        Expanded(child: T(m[d].of(ml[0]).trim().isEmpty ? '—' : m[d].of(ml[0]), s: 14, lh: 1.4)),
-                      ],
-                    ),
-                  ),
-              ],
+        ),
+        Expanded(
+          child: Scroll(
+            key: ValueKey('building${s.scrollEpoch}'),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: BuildingView(hid: h.id, rooms: rs, onBed: (b) => pickFromBuilding(s, b)),
             ),
           ),
-          T('From ${hostelById(s.foodFor ?? s.hid).owner}’s menu on Hostelzy.', s: 12, c: p.mu),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

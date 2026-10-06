@@ -9,11 +9,14 @@ import '../l10n.dart';
 
 /// Colour tokens from the design (`[data-hz]` CSS variables).
 class Pal {
-  const Pal({required this.bg, required this.sf, required this.tx, required this.mu, required this.ac, required this.ai, required this.ab, required this.ad, required this.dv, required this.hl, required this.tk, required this.page, required this.gn, required this.gb});
+  const Pal({required this.bg, required this.sf, required this.tx, required this.mu, required this.ac, required this.ai, required this.ab, required this.ad, required this.dv, required this.hl, required this.tk, required this.page, required this.gn, required this.gb, this.vf = const Color(0xFF1F3A5F)});
   final Color bg, sf, tx, mu, ac, ai, ab, ad, dv, hl, tk, page, gn, gb;
 
+  /// F26 #5: navy fill of the ✓ VERIFIED badge (white text on it).
+  final Color vf;
+
   static const light = Pal(bg: Color(0xFFF3F2F2), sf: Color(0xFFEAE9E9), tx: Color(0xFF201E1D), mu: Color(0xFF605D5D), ac: Color(0xFFEC3013), ai: Color(0xFFF8F4F4), ab: Color(0xFFFFE0D9), ad: Color(0xFFAE1800), dv: Color.fromRGBO(32, 30, 29, .4), hl: Color.fromRGBO(32, 30, 29, .16), tk: Color(0xFFBAB6B6), page: Color(0xFFDCDAD9), gn: Color(0xFF1F7A3D), gb: Color(0xFFDCEFE0));
-  static const dark = Pal(bg: Color(0xFF161514), sf: Color(0xFF24221F), tx: Color(0xFFF0EEEE), mu: Color(0xFFBAB6B6), ac: Color(0xFFFF563C), ai: Color(0xFF161514), ab: Color(0xFF4D170E), ad: Color(0xFFFF9783), dv: Color.fromRGBO(240, 238, 238, .36), hl: Color.fromRGBO(240, 238, 238, .14), tk: Color(0xFF4A4646), page: Color(0xFF0C0B0B), gn: Color(0xFF5FCF86), gb: Color(0xFF133A22));
+  static const dark = Pal(bg: Color(0xFF161514), sf: Color(0xFF24221F), tx: Color(0xFFF0EEEE), mu: Color(0xFFBAB6B6), ac: Color(0xFFFF563C), ai: Color(0xFF161514), ab: Color(0xFF4D170E), ad: Color(0xFFFF9783), dv: Color.fromRGBO(240, 238, 238, .36), hl: Color.fromRGBO(240, 238, 238, .14), tk: Color(0xFF4A4646), page: Color(0xFF0C0B0B), gn: Color(0xFF5FCF86), gb: Color(0xFF133A22), vf: Color(0xFF33598A));
 }
 
 class PalScope extends InheritedWidget {

@@ -15,10 +15,17 @@
 | Team console (app/console): views 9 + states 4 | **13** |
 | Web pages (app/): pages 6 + states 2 | **8** |
 | **Overall total** | **175** |
+| App screens (routes + their separate pages/views) | **86** |
+| App sheets (bottom sheets) | **42** |
+| App full-screen states | **31** |
+| **Release app total** | **159** |
+| Team console (app/console): views 9 + states 4 | **13** |
+| Web pages (app/): pages 6 + states 2 | **8** |
+| **Overall total** | **180** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
-renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**.
+renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17, H10 (F26)**.
 
 **F26 bed picker + open layouts (2026-10-06, −4):** the picker has no Plan / Room / Building tabs; every room's drawn
 layout is on one scroll (S16). **S18** "cheapest first" list removed (no entry point; every room with its price is on the
@@ -28,6 +35,11 @@ hold talk) removed. **Retired ids S18, T10, T11, T13.**
 
 Subtotals: screens Start 7 · Tenant 15 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
 Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 14 · Resident 6 · Owner 6 · Shared 2.
+**F26 tenant (2026-10-06, +1 screen, sheets ±0):** S88 `building` added (80+ bed hostel's building on its own
+page); H44 `sort` added (Explore sort dropdown); H10 `foodWeek` retired (the hostel page shows the whole week inline).
+
+Subtotals: screens Start 7 · Tenant 17 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
+Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
 
 ## Counting rules
 
@@ -50,6 +62,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
 ## 1. App screens (84)
+## 1. App screens (86)
 
 ### Start and sign-in (7)
 
@@ -64,15 +77,16 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
 
 ### Tenant (15)
+### Tenant (17)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 8 | `explore` | Find a bed (tab) | `screens_tenant.dart:97` | Tenant tab 1; role pick; guest browse (`guest.dart:65`) |
+| 8 | `explore` | Find a bed (tab). F26 #1 #2: search field with 📍 inside (→ Map at my location; the location explainer first); one row **Near me ✓ · Price ↑ ▾ · Filters · n**; one Featured (80+ beds) pinned on top, then "Then by price, lowest first" | `features/explore/explore_screen.dart` (`ExploreScreen`) | Tenant tab 1; role pick; guest browse (`guest.dart:65`) |
 | 9 | `map` | Map (tab) | `map.dart:23` | Tenant tab 2 (also the side pane on tablets ≥1000 px) |
 | 10 | `saved` | Saved (tab) | `screens_tenant.dart:1599` | Tenant tab 3; Me › Saved |
 | 11 | `holds` | Holds (tab) | `screens_tenant.dart:461` | Tenant tab 4; Me › Holds; enquiry link for tenants (`links.dart:44`) |
-| 12 | `where` | Where? (area / landmark / hostel search) | `guest.dart:11` | Explore search bar; location refused (`guest.dart:143`) |
-| 13 | `detail` | Hostel page | `screens_tenant.dart:661` | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
+| 12 | `where` | Where? (area / landmark / hostel search) = "Pick a place" | `guest.dart:11` | Explore search bar; Explore › Near me ✓ tapped again (F26 #2); location refused (`guest.dart:143`) |
+| 13 | `detail` | Hostel page. F26: ✓ VERIFIED (navy) next to the name only after a team visit + "Beds and prices checked by Hostelzy · date"; Building view (S87) inline (80+ beds: "See all N rooms ›" → S88); the whole week's food table (today highlighted); no "On each floor" list, no tag boxes, no Visited block | `features/explore/hostel_screen.dart` (`DetailScreen`) | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
 | 14 | `gallery` | Photos (full-screen gallery) | `photos.dart:291` | Hostel page › photo (`photos.dart:210`) |
 | 15 | `reviews` | Reviews of a hostel | `reviews.dart:173` | Hostel page › reviews (`screens_tenant.dart:799`) |
 | 16 | `picker` (plan) | Pick a bed · floor chips on top (jump to the floor); every room's drawn layout (beds, fan, AC, window, door, washroom) in one scroll, grouped by floor ("Floor 2 · 4 free"); each room: name + share · rent, "n free", red **Edit this layout** (F26 #12); a room without a layout shows its beds as boxes; tap a free bed → Continue (F26 #8) | `features/holds/picker_screen.dart` (`PickerScreen`, `_AllRooms`, `_RoomCard`) | Hostel page › See beds (`residents.dart:openPicker`); See the whole building (`openBuilding`); fixLock › Pick a bed |
@@ -82,6 +96,8 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
 | 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Hostel page (F26 #3); owner Beds › Building. **F26 #8: no longer a picker tab** |
+| 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Picker tab Building (`pickTab-building`); **F26 #3: inline on the Hostel page** (`HostelBuilding`, a free bed opens the picker on it) and on S88 |
+| 88 | `building` | All N rooms: an 80+ bed hostel's Building view (S87 component) on its own page, back to the hostel page; a free bed opens the picker on it (F26 #3) | `features/explore/hostel_screen.dart` (`BuildingScreen`) | Hostel page › See all N rooms › (`seeAllRooms`, more than 80 beds) |
 
 ### Resident (13)
 
@@ -173,7 +189,8 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
-| 1 | `search` | Filters (sort, for, budget…) | `shell.dart:793` | Explore › Filters (`screens_tenant.dart:144`) |
+| 1 | `search` | Filters (F26 #2: Who · Room · Food · Rent, then deals and shared things; no sort) | `features/explore/explore_sheets.dart` (`SearchSheet`) | Explore › Filters · n |
+| 44 | `sort` | Sort by: Price ↑ (default) · Distance · Rating · Best deals (F26 #2) | `features/explore/explore_sheets.dart` (`SortSheet`) | Explore › Price ↑ ▾ (`sortBtn`) |
 | 2 | `loc` | Use your location? | `map.dart:249` | Map › Near me (`map.dart:128`; `guest.dart:180`) |
 | 3 | `signIn` | Sign in to hold / book / message | `guest.dart:105` | Guest taps Hold, Book or WhatsApp (`guest.dart:86`) |
 | 4 | `hold` | Bed N (free hold or book with advance) | `shell.dart:877` | Picker › Continue (`screens_tenant.dart:1148`; `layout.dart:613`); hold again (`:1453`) |
@@ -182,7 +199,6 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 7 | `payAdv` | Pay the advance | `payments.dart:59` | Book a bed (`residents.dart:313,427`) |
 | 8 | `report` | Tell us what happened (private) | `fairplay.dart:288` | Holds › "The owner asked me to skip the app" (`screens_tenant.dart:544`) |
 | 9 | `perks` | What Trusted tenants get / You're a Trusted tenant | `stay_tools.dart:209` | Rewards / first-look bed (`features/rewards/rewards.dart:74`) |
-| 10 | `foodWeek` | Food menu · whole week (hostel page) | `screens_tenant.dart:1766` | Hostel page › Full week (`features/food/food.dart:121`) |
 
 ### Resident (6)
 

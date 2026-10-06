@@ -417,6 +417,7 @@ class _AppBody extends StatelessWidget {
     'holds' => const HoldsScreen(),
     'me' => const MeScreen(),
     'detail' => const DetailScreen(),
+    'building' => const BuildingScreen(),
     'oPhotos' => const OwnerPhotosScreen(),
     'oCrop' => const CropScreen(),
     'gallery' => const GalleryScreen(),
@@ -598,11 +599,11 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
-      'foodWeek' => 'Food menu',
       'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
       'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
+      'sort' => 'Sort by',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
       'scanCam' => 'Use your camera?',
@@ -674,7 +675,6 @@ class _Sheet extends StatelessWidget {
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
-      'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
       'refund' => refundSheetKicker(s.refundOpen),
       'laundry' => 'House rules',
@@ -683,6 +683,7 @@ class _Sheet extends StatelessWidget {
     };
     final body = switch (s.sheet) {
       'search' => const SearchSheet(),
+      'sort' => const SortSheet(),
       'holdNotify' => const HoldNotifySheet(),
       'lang' => const LangSheet(),
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
@@ -719,7 +720,6 @@ class _Sheet extends StatelessWidget {
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
       'amFloor' => const AmenityFloorSheet(),
-      'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
       'refund' => const RefundSheet(),
       'laundry' => const LaundrySheet(),
