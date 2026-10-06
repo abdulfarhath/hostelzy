@@ -330,6 +330,7 @@ e = e.replace('Edit room · ', 'Try a layout · ', 1)
 e = re.sub(r'Suggestion · you live in 204 · draft saved on this phone', 'Try mode · only on this phone', e, count=1)
 e = e.replace('Only you see this until you send it', 'Move things to see how the room works for you', 1)
 e = e.replace('Send to owner', 'Publish', 1)
+e = e.replace('<path d="M5 11h14v10H5z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', '<path d="M17 3l4 4L8 20H4v-4z"/>', 1)
 k = e.rindex('</div>\n</x-dc>')
 e = e[:k] + sheet(kick('Publish'), 'Only residents can send a fix', [], [btn('Pick a bed', 'red', 'arrow', 48, 15), btn('Keep trying', 'out', None, 48, 15)], 'Book a bed to join. Your tries stay on this phone.') + e[k:]
 try_e = e

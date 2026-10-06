@@ -59,6 +59,22 @@ update('beds-dark.dc.html', '[dark] oBeds · Beds (dark)' + U, phone_div(beds_af
 update('oRent.dc.html', '[S38] oRent · Paid green, Late red, Due plain; Call + WhatsApp' + U, phone_div(rent_after))
 update('oRent-dark.dc.html', '[dark] oRent · Rent (dark)' + U, phone_div(rent_after), True)
 
+I['copy'] = '<path d="M8 8h12v12H8z"/><path d="M4 16V4h12"/>'
+# S12: same screen, new role
+B['add-whereFull.dc.html']['title'] = '[S12] where · Pick a place (tap Near me ✓ again, or the search bar) · real app screenshot · Updated (F26)'
+B['where-dark.dc.html']['title'] = '[dark] where · Pick a place · real app screenshot (dark) · Updated (F26)'
+# S32 try mode (non-resident) as a variant
+tm = rd('f19-Edit.dc.html')
+tm = tm.replace('Edit room · ', 'Try a layout · ', 1)
+tm = re.sub(r'Suggestion · you live in 204 · draft saved on this phone', 'Try mode · only on this phone', tm, count=1)
+tm = tm.replace('Only you see this until you send it', 'Move things to see how the room works for you', 1)
+tm = tm.replace('Send to owner', 'Publish', 1)
+tm = tm.replace('<path d="M5 11h14v10H5z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', '<path d="M17 3l4 4L8 20H4v-4z"/>', 1)
+# H6: Message <name>
+wa_body = ('<div style="padding: 14px 16px 0; display: grid; gap: 6px;">' + kick('Your message') + '<div style="padding: 12px; border: 2px solid var(--tx); font-size: 15px; line-height: 1.45;">Hi Srinivas, the geyser in room 204 isn’t working since Monday. Can someone check it today? · Rahul, bed 204-B</div></div>')
+wa_ph = phone_div(home2)
+k = wa_ph.rindex('</div>')
+wa_ph = wa_ph[:k] + sheet(kick('WhatsApp'), 'Message Srinivas', [wa_body], [btn('Open WhatsApp', 'red', 'msg', 48, 15), btn('Copy', 'out', 'copy', 48, 15)]) + wa_ph[k:]
 # ---------- Retired (to the archive row)
 retire('food.dc.html', 'week table on Home (S23)')
 retire('w2-foodWeek.dc.html', 'week table on Home (S23)')
@@ -87,6 +103,8 @@ new('f26-unverified.dc.html', '[T32] detail · Unverified listing: rent range, T
 new('f26-myStay.dc.html', '[S89] myStay · My stay tab: bed, move, notice, refund, review, layout fix, Help · New (F26)', ph(stay_body, nav_res('My stay')))
 _sort = ''.join('<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--hl); font-size: 16px; font-weight: %s;">%s%s</div>' % ('800' if on else '600', t, ico('check', 20) if on else '') for t, on in [('Price, lowest first', True), ('Distance', False), ('Rating', False), ('Best deals', False)])
 new('f26-sort.dc.html', '[H44] sort sheet · Price ↑ · Distance · Rating · Best deals · New (F26)', after2[after2.index('<div data-hz'):after2.rindex('</div>\n</x-dc>')] + sheet(kick('Sort'), 'Show first', [_sort], []) + '</div>')
+new('f26-tryMode.dc.html', '[variant of S32] rFix · Try mode (not a resident): Try a layout, Publish → H13 · New (F26)', phone_div(tm))
+update('wa.dc.html', '[H6] wa sheet · Message <name>: message text, Open WhatsApp, Copy (owner ↔ resident, layout fix) · Updated (F26)', wa_ph)
 new('f26-todayEmpty.dc.html', '[T33] oToday · Nothing needs you now · New (F26)', ph(grp_empty, NAV_O))
 new('f26-exploreRes.dc.html', '[variant of S8] explore · Resident in Find a bed: Explore · Map · Saved & Holds · My stay · Me · New (F26)', phone_div(re.sub(r'<nav.*?</nav>', lambda m: nav_rt('Explore'), after2, count=1, flags=re.S)))
 new('f26-exploreUnv.dc.html', '[variant of S8] explore · Verified first in a price band, UNVERIFIED card with a rent range · New (F26)', phone_div(list_ph))

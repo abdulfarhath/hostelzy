@@ -151,7 +151,7 @@
   },
   "add-whereFull.dc.html": {
    "h": 844,
-   "title": "[S12] where · Where? area picker · real app screenshot · Updated",
+   "title": "[S12] where · Pick a place (tap Near me ✓ again, or the search bar) · real app screenshot · Updated (F26)",
    "w": 390,
    "x": 3760,
    "y": 15280
@@ -1833,14 +1833,14 @@
   },
   "wa.dc.html": {
    "h": 844,
-   "title": "[H6] wa sheet · Ask the owner, booking code · Redesigned",
+   "title": "[H6] wa sheet · Message <name>: message text, Open WhatsApp, Copy (owner ↔ resident, layout fix) · Updated (F26)",
    "w": 390,
    "x": 2820,
    "y": 3792
   },
   "where-dark.dc.html": {
    "h": 844,
-   "title": "[dark] where · Where? area picker · real app screenshot (dark) · New",
+   "title": "[dark] where · Pick a place · real app screenshot (dark) · Updated (F26)",
    "w": 390,
    "x": 5170,
    "y": 15280
@@ -3392,64 +3392,71 @@
    "h": 844,
    "title": "[H44] sort sheet · Price ↑ · Distance · Rating · Best deals · New (F26)"
   },
-  "f26-todayEmpty.dc.html": {
+  "f26-tryMode.dc.html": {
    "x": 1880,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S32] rFix · Try mode (not a resident): Try a layout, Publish → H13 · New (F26)"
+  },
+  "f26-todayEmpty.dc.html": {
+   "x": 2350,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[T33] oToday · Nothing needs you now · New (F26)"
   },
   "f26-exploreRes.dc.html": {
-   "x": 2350,
+   "x": 2820,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S8] explore · Resident in Find a bed: Explore · Map · Saved & Holds · My stay · Me · New (F26)"
   },
   "f26-exploreUnv.dc.html": {
-   "x": 2820,
+   "x": 3290,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S8] explore · Verified first in a price band, UNVERIFIED card with a rent range · New (F26)"
   },
   "f26-detailScroll.dc.html": {
-   "x": 3290,
+   "x": 3760,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · Scrolled: Building view inline, week table, contact locked · New (F26)"
   },
   "f26-detailBig.dc.html": {
-   "x": 3760,
+   "x": 4230,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · 80+ beds: See all 38 rooms › · New (F26)"
   },
   "f26-contactOpen.dc.html": {
-   "x": 4230,
+   "x": 4700,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S13] detail · After a hold: number, WhatsApp (HZ code) + Call · New (F26)"
   },
   "f26-holdsKept.dc.html": {
-   "x": 4700,
+   "x": 5170,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S11] holds · Kept: WhatsApp + Call · New (F26)"
   },
   "f26-holdsDeclined.dc.html": {
-   "x": 5170,
+   "x": 5640,
    "y": 55387,
    "w": 390,
    "h": 844,
    "title": "[variant of S11] holds · Declined: contact locks again · New (F26)"
   },
   "f26-homeDark.dc.html": {
-   "x": 5640,
+   "x": 6110,
    "y": 55387,
    "w": 390,
    "h": 844,
@@ -3587,6 +3594,13 @@
    "w": 390,
    "h": 844,
    "title": "[archive · not counted] before F26 · picker · Building view: shared things on top of each floor, Ground floor only when it exis"
+  },
+  "z26-wa.dc.html": {
+   "x": 16450,
+   "y": 56651,
+   "w": 390,
+   "h": 844,
+   "title": "[archive · not counted] before F26 · wa sheet · Ask the owner, booking code · Redesigned"
   }
  },
  "createdOnFiles": {
@@ -4421,6 +4435,7 @@
   "f26-unverified.dc.html",
   "f26-myStay.dc.html",
   "f26-sort.dc.html",
+  "f26-tryMode.dc.html",
   "f26-todayEmpty.dc.html",
   "f26-exploreRes.dc.html",
   "f26-exploreUnv.dc.html",
@@ -4448,7 +4463,8 @@
   "z26-beds-dark.dc.html",
   "z26-oRent.dc.html",
   "z26-oRent-dark.dc.html",
-  "z26-w4-building.dc.html"
+  "z26-w4-building.dc.html",
+  "z26-wa.dc.html"
  ],
  "pages": [],
  "title": "Hostelzy · Main design"
