@@ -140,7 +140,8 @@ class BedSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 2), child: Kicker(stl)),
+        // F26 #9: the owner opened this bed's hold: the tenant sees "Owner reviewing".
+        Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 2), child: OnShow(() => s.markHoldsSeen([for (final h in s.holds) if (h.hid == s.ownHid && h.bed == b.id) h.id]), child: Kicker(stl))),
         if (b.state == 'booked') KV('Resident', res != null ? '${res.name} · rent ${res.status == 'Overdue' ? 'late' : res.status.toLowerCase()}' : 'Not added yet', keyWidth: 110),
         KV('Room', '${r.label} · ${r.share} sharing · ${b.spot}', keyWidth: 110),
         KV('Rent', '${fmt(r.rent)} a month', keyWidth: 110),

@@ -56,6 +56,9 @@ Hold holdFromRow(Map<String, dynamic> r, {int paid = 0}) {
     fixedFee: lockedDeal(r['deal'])?.fee ?? 0,
     trusted: r['trusted'] == true,
     ends: r['expires_at'] == null ? null : _ms(r['expires_at']),
+    // F26 #9: empty before its SQL runs.
+    seen: r['seen_at'] == null ? null : _ms(r['seen_at']),
+    declined: r['declined'] == true,
   );
 }
 

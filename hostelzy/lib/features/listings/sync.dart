@@ -105,8 +105,8 @@ extension SyncActions on AppState {
       if (trial != null) planStart = trial.subtract(const Duration(days: trialDays));
       invoice = mine ?? Invoice(ref: 'First invoice', hid: ownHid, beds: planBeds, amt: planPrice, due: trialEnd.add(const Duration(days: 1)));
     }
-    // F24: owners' numbers for the hostels this user holds at, asked or lives in.
-    final want = {for (final h in l.holds) h.hid, for (final e in l.enquiries) if (e.phone == myPhone) e.hid, ?l.myHostel};
+    // F24, F26 #7: owners' numbers for the hostels where this user has a live hold or lives.
+    final want = {for (final h in l.holds) if (liveHold(h)) h.hid, ?l.myHostel};
     if (want.any((h) => !ownerPhones.containsKey(h))) Future.microtask(() => loadOwnerPhones(want));
     // F24 item 14: don't ask "Did you join?" again about an answered hold.
     if (endedHold != null) Future.microtask(loadJoinAnswers);
@@ -209,36 +209,6 @@ extension SyncActions on AppState {
     unawaited(loadFairAccepted());
     unawaited(loadLevel());
     unawaited(loadMyMeter(force: true));
-  }
-
-  /// C: a tenant's enquiry on the server; the HZ code comes back from it.
-  Future<void> enquireLive(String hid, String body, {String? bed, required String from}) async {
-    final me = myPhone;
-    var ref = enquiries.where((x) => x.hid == hid && x.bed == bed && x.phone == me).firstOrNull?.ref;
-    if (ref == null) {
-      try {
-        ref = await data.sendEnquiry(hid: hid, name: meName.isEmpty ? 'Hostelzy user' : meName, phone: me, bed: bed, source: from, msg: body.replaceFirst(RegExp(r'^Hi [^,]*, '), ''));
-        await refreshLive();
-      } catch (e) {
-        debugPrint('enquiry: $e');
-        // F24 4a: one open enquiry per bed on the server; use the one already there.
-        if (!'$e'.contains('enquiries_one_open') && !'$e'.contains('23505')) return toastMsg('Couldn’t record your enquiry. Check your internet and try again.');
-        await refreshLive();
-        ref = enquiries.where((x) => x.hid == hid && x.bed == bed).firstOrNull?.ref;
-        if (ref == null) return toastMsg('You already asked the owner about this bed.');
-        toastMsg('You already asked about this bed, so it’s the same booking code: $ref.');
-      }
-    }
-    // The enquiry is recorded, so the server now gives this owner's number.
-    if (!ownerPhones.containsKey(hid)) await loadOwnerPhones([hid]);
-    update(() {
-      sheet = 'wa';
-      waTo = hostelById(hid).owner;
-      waPhone = ownerWa(hid);
-      waMsg = body;
-      waRef = ref;
-      waHid = hid;
-    });
   }
 
   Future<void> markContactedLive(String ref) => _write(() => data.markContacted(ref));
@@ -424,6 +394,8 @@ extension SyncActions on AppState {
     }
     // F24 item 8: the server's walk-in holds on the owner's beds.
     syncWalkIns();
+    // F26 #21: verified / listed counts per area and this user's waitlist.
+    Future.microtask(loadTiers);
   });
 
   /// Remote switches: too-old builds must update; maintenance mode.

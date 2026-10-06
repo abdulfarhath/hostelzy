@@ -125,7 +125,7 @@ class LoginScreen extends StatelessWidget {
     final (title, sub) = switch (s.afterSignIn) {
       'owner' => ('Sign in to list your PG', 'So the Hostelzy team knows who to call. No passwords, no codes.'),
       'resident' => ('Sign in to join your PG', 'So your owner knows it’s you. No passwords, no codes.'),
-      'enquiry' || 'book' || 'hold' => ('Sign in to hold a bed', 'So owners know who’s coming. No passwords, no codes.'),
+      'book' || 'hold' => ('Sign in to hold a bed', 'So owners know who’s coming. No passwords, no codes.'),
       _ => ('Sign in', 'With your Google account. No passwords, no codes.'),
     };
     return FillScroll(

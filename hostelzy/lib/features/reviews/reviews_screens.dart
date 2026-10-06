@@ -440,7 +440,7 @@ class OwnerReviewsScreen extends StatelessWidget {
                       children: [
                         tile(h.reviews == 0 ? '–' : jsNum(h.rating), h.reviews == 0 ? 'No reviews yet' : '${h.reviews} verified stay${h.reviews == 1 ? '' : 's'}'),
                         // How the rank is worked out (the same sheet tenants see).
-                        tile('#${s.rankOf(h.id)}', 'of ${browsable.length} near ${s.lm} ›', key: const ValueKey('rankHow'), onTap: () => s.update(() => s.sheet = 'rank'), left: true),
+                        tile('#${s.rankOf(h.id)}', 'of ${s.rankOrder.length} near ${s.lm} ›', key: const ValueKey('rankHow'), onTap: () => s.update(() => s.sheet = 'rank'), left: true),
                       ],
                     ),
                   ),

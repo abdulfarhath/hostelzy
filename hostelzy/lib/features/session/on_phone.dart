@@ -167,7 +167,10 @@ extension OnPhoneActions on AppState {
       holdId = 'h0';
     }
     if (sheet == 'bed' && obed == null) obed = '204-B';
-    if (sheet == 'wa' && waTo == null) _enquire('anjani', 'Hi Srinivas, I found Anjani Residency on Hostelzy. Can I come and see the rooms this evening?', from: 'Hostel page · Ask on WhatsApp');
+    if (sheet == 'wa' && waTo == null) {
+      waTo = 'Ravi Teja';
+      waMsg = 'Hi Ravi, this is Srinivas from Anjani Residency. Your room is ready.';
+    }
     if (sheet == 'enq' && enqRef == null) enqRef = 'HZ-4821';
     if (sheet == 'trusted' && trustedReq == null) trustedReq = 'k1';
     // F24 #25: the demo Electricity page starts from last month's sample readings.

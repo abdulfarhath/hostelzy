@@ -140,14 +140,14 @@ void main() {
     expect((s.screen, s.afterSignIn), ('login', null));
     s.dispose();
 
-    // A guest's enquiry asks for sign-in too; the X drops what was waiting.
+    // F26 #21: "Tell me when verified" asks for sign-in too; the X drops what was waiting.
     final g = AppState()..browse();
-    g.hid = 'anjani';
-    g.enquire('anjani', 'Hi Srinivas, is a bed free?', from: 'Hostel page');
-    expect((g.sheet, g.afterSignIn), ('signIn', 'enquiry'));
-    expect(g.enquiries.where((e) => e.msg.contains('is a bed free')), isEmpty);
+    g.hid = 'balaji';
+    g.tellWhenVerified(hostelById('balaji'));
+    expect((g.sheet, g.afterSignIn), ('signIn', 'verify'));
+    expect(g.waitlist, isEmpty);
     await _pump(tester, g);
-    expect(find.text('Sign in to message Srinivas'), findsOneWidget);
+    expect(find.text('Sign in to hear when it’s verified'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('sheetClose')));
     expect((g.sheet, g.afterSignIn), (null, null));
     g.dispose();
