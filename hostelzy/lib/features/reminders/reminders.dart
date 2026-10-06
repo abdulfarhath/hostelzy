@@ -66,8 +66,9 @@ extension RemindersActions on AppState {
   void _openFromReminder(String kind) {
     if (!signedIn) return;
     switch (kind) {
+      // F26 #13: the week's food is on Home.
       case 'meal' when role == 'resident':
-        tab('food');
+        tab('rHome');
       case 'rent' when role == 'resident':
         tab('rPay');
       default:

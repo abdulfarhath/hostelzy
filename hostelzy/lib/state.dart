@@ -52,6 +52,7 @@ part 'features/session/guest.dart';
 part 'features/session/login.dart';
 part 'features/session/on_phone.dart';
 part 'features/session/play_store.dart';
+part 'features/session/tabs.dart';
 part 'features/team/team_members.dart';
 part 'features/team/team_mode.dart';
 
@@ -78,7 +79,7 @@ Future<T> _settle<T>(Future<T> Function() f) {
   return out;
 }
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -139,8 +140,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter', 'scan'];
-  static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter', 'scan', 'savedHolds'];
+  static const tabScreens = ['explore', 'map', 'saved', 'holds', 'savedHolds', 'me', 'rHome', 'rPay', 'rStay', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
 
@@ -267,6 +268,10 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     account = firebaseUser ?? (a != null && !signIn.available ? (uid: a['uid'] as String, name: a['name'] as String, email: a['email'] as String) : null);
     signedIn = m['signedIn'] as bool? ?? false;
     if (a != null && signIn.available && firebaseUser == null) signedIn = false;
+    // F26 #16: which hold results were already seen.
+    for (final e in ((m['holdSeen'] as Map?) ?? const {}).entries) {
+      if (e.value is String) holdSeen[e.key as String] = e.value as String;
+    }
     for (final id in (m['saved'] as List? ?? const [])) {
       saved[id as String] = true;
     }
@@ -302,6 +307,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void tab(String s) => update(() {
+    // F26 #17: a resident tab leaves Find a bed.
+    if (const ['rHome', 'rPay', 'rStay'].contains(s)) inFindBed = false;
     screen = s;
     hist = [];
     sheet = null;
@@ -311,7 +318,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     // F12: leaving the layout editor lets the room's edit lock go.
     if (screen == 'aLayout') unawaited(releaseLayoutLock());
     final h = List.of(hist);
-    final prev = h.isNotEmpty ? h.removeLast() : homeOf[role]!;
+    final prev = h.isNotEmpty ? h.removeLast() : homeTab;
     screen = prev;
     hist = h;
     sheet = null;
@@ -327,6 +334,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   void jump(String s, String r) => update(() {
     screen = s;
     role = r;
+    inFindBed = false;
     hist = [];
     sheet = null;
     toast = null;

@@ -114,4 +114,35 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 After the founder approves: merge into the main canvas, update SCREENS.md (Food page and Help page retire; My stay and Find a bed strip are new), then Build.
 
 ## Build
-Not started. Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype.
+
+### Build · resident tabs + Me (#4/#13 resident Home, #10, #11, #14, #15–#17) · branch `feature/f26-resident`
+- **Resident tab bar** Home · Rent · My stay · Find a bed · Me (`ui/shell.dart` `_tabs`, `_tabsOf`). Rent is a plain tab;
+  Home keeps its red Pay button. Labels shrink to fit at 2× text instead of overflowing.
+- **#4 #13 Home:** the Food tab and page are gone (`food_screen.dart` deleted). Home shows **Food this week**: the 7-day
+  table (day · Breakfast · Lunch · Dinner with each meal's start time), always open, today's row highlighted
+  ("Fri · today"), no toggle (`HomeWeek` in `resident_screens.dart`, a small local widget; the lead may switch it to the
+  shared week table from the hostel-page branch). "How was breakfast?" stays under the table so owners' meal ratings
+  keep coming (it lived on the Food page; Design: add it to the Home board). No menu → one honest line. Meal reminders
+  open Home.
+- **#14 My stay tab** (`StayScreen`): bed card, then **Your bed** (Move to another bed, Give notice, Your refund, Review
+  your stay, Fix a room layout), then **Help** (Something wrong in your room? → sheet `complaint`; Your complaints → sheet
+  `complaints`, its line red while something is open: "1 being fixed · Geyser"). The Help tab is gone; Home › Raise
+  complaint opens the same sheet; after Send to owner the list opens. "Your refund" shows the open refund (opens it) or
+  what comes back from the advance (plain row).
+- **#15 #17 Find a bed** (`features/session/tabs.dart`): the resident switches to the tenant screens with the bar
+  Explore · Map · Saved & Holds · My stay · Me; **My stay** goes back; Back on Explore stays inside. **Saved & Holds**
+  (`savedHolds`, `features/holds/saved_holds_screen.dart`) is one tab with two segments (Saved · n / Holds · n). A
+  resident can hold a bed at another hostel (same hold flow, no server change); their stay doesn't change. A plain
+  tenant keeps Explore · Map · Saved · Holds · Me. The hostel page's food sheet shows the opened hostel inside Find a bed.
+  A resident's hold release cancels its unconfirmed advance like a tenant's.
+- **#16 red dot** on Holds (tenant) and on Saved & Holds (resident) when a hold the user had seen was **kept or
+  declined** since; it goes once Holds or that hold's page is on screen; Saved & Holds then opens on Holds. On the phone
+  only (`holdSeen`, kept with the app's local data), no SQL.
+- **#10 #11 Me:** no Saved, Holds or My stay rows (they are tabs); **Log out** in red at the end (Settings keeps its Log
+  out too).
+- **Screens:** retired S24, S25 (`food`), S27 (`help`), S28 (old Me › My stay) and state 19; new S88 `savedHolds`, S89
+  `rStay` (My stay tab), H44 `complaint`, H45 `complaints` (`docs/SCREENS.md`).
+- **SQL:** none. **Tests:** `test/f26_resident_test.dart` (tab bars, Find a bed round trip with a hold elsewhere, red
+  dot for tenant and resident, Me rows + red Log out, 360 px at 2× text); food, home, resident, tenant, everywhere and
+  flows tests updated to the new tabs.

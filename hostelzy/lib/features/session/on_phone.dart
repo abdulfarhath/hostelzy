@@ -106,6 +106,7 @@ extension OnPhoneActions on AppState {
     'wa': myWa,
     if (account != null) 'account': {'uid': account!.uid, 'name': account!.name, 'email': account!.email},
     'saved': [for (final e in saved.entries) if (e.value) e.key],
+    'holdSeen': holdSeen,
     'holds': [
       for (final h in holds) {'id': h.id, 'hid': h.hid, 'bed': h.bed, 'room': h.room, 'opt': h.opt, 'start': h.start, 'status': h.status, 'ref': h.ref, 'paid': h.paid, 'perks': h.perks},
     ],

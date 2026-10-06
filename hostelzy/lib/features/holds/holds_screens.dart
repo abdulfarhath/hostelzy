@@ -21,7 +21,10 @@ import '../explore/explore_screen.dart';
 }
 
 class HoldsScreen extends StatelessWidget {
-  const HoldsScreen({super.key});
+  const HoldsScreen({super.key, this.bare = false});
+
+  /// F26 #17: inside Saved & Holds, without its own title.
+  final bool bare;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -32,11 +35,12 @@ class HoldsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-            child: const T('Holds', s: 30, w: 800, lh: 1.02, ls: -.025),
-          ),
+          if (!bare)
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+              decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+              child: const T('Holds', s: 30, w: 800, lh: 1.02, ls: -.025),
+            ),
           // F21 W4: an inline error with Retry, never a silent empty list.
           if (s.liveFailed && s.onServer) InlineError('Couldn’t load your holds', onRetry: s.refreshLive),
           // F22 Area 1: one list; "Did you join …?" is asked right here (F07).
