@@ -49,3 +49,12 @@ The sessions above belong to the old account and are retired. The new account's 
 The sessions in the table at the top belong to the account being left. The new account's hub creates fresh chats
 (see `HANDOVER.md` §4) and replaces the table with their IDs. State at the move: F26 reverts in progress on
 `f26/integration`, F27 started on `feature/f27-save-food`, main canvas v23, prototype v4 (old account).
+
+## 2026-10-17: hub resumed (session_01KGJ32QudaatuZ4vkirbgAS)
+Founder: "continue, there are few chats left, use them". The old Build and Design chats are on this account, so they are reused.
+| Chat | Session | Task |
+|---|---|---|
+| Hub | session_01KGJ32QudaatuZ4vkirbgAS | Founder contact |
+| Build | session_01VYdxL9M4tryAVSw5paPAtw | 12 F26 reverts → price check → prototype republish → F27 finish (extras on hold) |
+| Design | session_01VKwqzkiTRrHcK6K1kpurt6 | Canvas v24 (reverts) → hub publishes |
+Marketing, Finance, Brand: not started (save the limit).

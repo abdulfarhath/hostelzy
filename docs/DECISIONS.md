@@ -291,5 +291,8 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   page. Plates saved are counted only from real skips (no sample numbers in the real build). Green is used only on the
   saved-plates numbers. Spec and boards: `features/F27-save-food.md`, proposal canvas v11.
 
+- **2026-10-17 (hub):** F26 revert #4: the "#1 near you" label goes on the best-ranked card whatever the sort
+  (Recommended is no longer a sort option). One pinned Featured card stays as on main.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
