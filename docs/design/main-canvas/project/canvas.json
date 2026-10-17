@@ -172,14 +172,14 @@
   },
   "beds-dark.dc.html": {
    "h": 844,
-   "title": "[dark] oBeds · Beds (dark) · Updated (F26)",
+   "title": "[dark] oBeds · Beds (dark) · Updated (F26); Rooms and rates ›",
    "w": 390,
    "x": 5170,
    "y": 7584
   },
   "beds.dc.html": {
    "h": 844,
-   "title": "[S37] oBeds · Building view only; tap a bed → bed sheet, a room → its layout · Updated (F26)",
+   "title": "[S37] oBeds · Building view only; tap a bed → bed sheet, a room → its layout · Updated (F26); Rooms and rates ›",
    "w": 390,
    "x": 1880,
    "y": 7584
@@ -475,7 +475,7 @@
   },
   "f19-Lock.dc.html": {
    "h": 844,
-   "title": "[H13] fix sheet · Only residents can send a fix. Book a bed to join. · Updated (F26)",
+   "title": "[H13] fix sheet · Only residents can send a fix · Book a bed to join. · Book a bed / See beds · Updated (F26 revert)",
    "w": 390,
    "x": 0,
    "y": 11432
@@ -1063,7 +1063,7 @@
   },
   "picker.dc.html": {
    "h": 844,
-   "title": "[S16] picker · No tabs: floor chips, every room’s drawn layout, Edit this layout · Updated (F26)",
+   "title": "[S16] picker · No tabs: floor chips, every room’s drawn layout, Edit this layout; See cheapest beds › · Updated (F26 revert)",
    "w": 390,
    "x": 0,
    "y": 3792
@@ -1133,7 +1133,7 @@
   },
   "r-filters.dc.html": {
    "h": 844,
-   "title": "[H1] filters sheet · Men / Women / Co-living / AC / Food / Rent · Updated (F26)",
+   "title": "[H1] filters sheet · For, Room, Budget (Any), Food included; sort lives in Price ↑ / Distance · Updated (F26 revert)",
    "w": 390,
    "x": 940,
    "y": 2528
@@ -1203,7 +1203,7 @@
   },
   "r-today.dc.html": {
    "h": 844,
-   "title": "[S36] oToday · Dinner tonight headcount card, then Holds · Payments · Fixes · Updated (F27)",
+   "title": "[S36] oToday · Dinner tonight headcount card, then Holds · Payments · Fixes; Confirm hold · Updated (F27)",
    "w": 390,
    "x": 0,
    "y": 7584
@@ -1560,10 +1560,10 @@
   },
   "w2-pickerList.dc.html": {
    "h": 844,
-   "title": "[archive · not counted] retired by F26 · was [S18] picker picker → no cheapest-first list; every room in one scroll (S16) · Removed",
+   "title": "[S18] picker · List, cheapest first; ‹ Back to the plan · Updated (F26 revert)",
    "w": 390,
-   "x": 11280,
-   "y": 56651
+   "x": 3760,
+   "y": 28200
   },
   "w2-qrCamera.dc.html": {
    "h": 844,
@@ -3236,7 +3236,7 @@
    "y": 55387,
    "w": 390,
    "h": 844,
-   "title": "[variant of S32] rFix · Try mode (not a resident): Try a layout, Publish → H13 · New (F26)"
+   "title": "[variant of S32] rFix · Try mode: Edit room · Room N, play freely, nothing is saved; Publish → H13 · Updated (F26 revert)"
   },
   "f26-h45.dc.html": {
    "x": 6580,
