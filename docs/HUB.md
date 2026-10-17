@@ -36,6 +36,15 @@ Check-in routine paused: nothing left for the chats. Waiting on the founder: SQL
 The sessions above belong to the old account and are retired. The new account's hub creates fresh chats
 (see `HANDOVER.md` §3) and replaces the table at the top with their session IDs.
 
+## 2026-10-17 release
+| What | Where |
+|---|---|
+| **APK apk-105** (F26 + F27, the build the founder approved as prototype v6) | https://github.com/abdulfarhath/hostelzy/releases/tag/apk-105 |
+| apk-104 (F26 only, from the first merge) | https://github.com/abdulfarhath/hostelzy/releases/tag/apk-104 |
+| Merged | F26 #141 (squash; #121–#125 closed as superseded) · F27 #140 |
+| Founder SQL | one re-run of `docs/sql/run-all-pending.sql` covers 4zo1, 4ze26, 4zf27 (FOUNDER-TODO) |
+| Screens | app 157, overall 179 (`docs/SCREENS.md`); Design: S18 back, S90 + S91 new |
+
 ## 2026-10-06 F26 status
 | Piece | State |
 |---|---|
