@@ -8,6 +8,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import 'reminders.dart' show showFoodAsk;
 import 'sign_in.dart';
 
 /// Result of asking Android for notification permission.
@@ -83,6 +84,10 @@ class FirebasePush implements Push {
   Stream<(String, String)> get foreground => FirebaseMessaging.onMessage.where((m) => m.notification != null).map((m) => (m.notification!.title ?? 'Hostelzy', m.notification!.body ?? ''));
 }
 
+/// F27-5: a data-only push while the app is closed (a meal ask).
+@pragma('vm:entry-point')
+Future<void> pushInBackground(RemoteMessage m) => showFoodAsk(m.data);
+
 /// Starts Firebase on Android: crash reports in release builds, push and
 /// Google sign-in. Returns [NoPush] / [NoSignIn] anywhere else or if Firebase
 /// can't start.
@@ -97,6 +102,12 @@ Future<(Push, SignIn)> startFirebase() async {
       c.recordError(e, st, fatal: true);
       return true;
     };
+    // F27-5: meal asks come as data only; the phone shows them with buttons,
+    // in the background and while the app is open.
+    FirebaseMessaging.onBackgroundMessage(pushInBackground);
+    FirebaseMessaging.onMessage.listen((m) {
+      if (m.notification == null) unawaited(showFoodAsk(m.data));
+    });
     return (FirebasePush(), FirebaseSignIn());
   } catch (e) {
     debugPrint('Firebase: $e');

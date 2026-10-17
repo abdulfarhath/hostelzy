@@ -104,6 +104,7 @@ void main() {
     o.fixes = [f];
     o.fixPhotosLocal.addAll(r.fixPhotosLocal);
     await _pump(tester, o);
+    await _tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18
     expect(find.text('Broken: Fan, Room 203'), findsOneWidget);
     expect(find.textContaining('“Fan doesn’t turn” · 1 photo'), findsOneWidget);
     await _tap(tester, find.text('Start work'));

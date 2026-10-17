@@ -156,7 +156,7 @@ class _RoomPainter extends CustomPainter {
 /// How a bed looks on the map. [mode]: tenant | compare | plain | edit. In
 /// edit mode items and beds can be selected and dragged ([onDrag] gets feet).
 class LayoutMap extends StatelessWidget {
-  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick, this.selected, this.onSelect, this.onDrag, this.onDragEnd, this.marked = const {}});
+  const LayoutMap({super.key, required this.l, required this.room, this.mode = 'tenant', this.focus, this.cmp = const [], this.fan = false, this.ac = false, this.onPick, this.selected, this.onSelect, this.onDrag, this.onDragEnd, this.marked = const {}, this.bedKeys = false});
   final RoomLayout l;
   final Room room;
   final String mode;
@@ -171,6 +171,9 @@ class LayoutMap extends StatelessWidget {
 
   /// F19: things outlined in red (what a resident's fix changed).
   final Set<String> marked;
+
+  /// F26 #8: each bed keyed `bed-<id>` (the bed picker's drawn rooms).
+  final bool bedKeys;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +191,7 @@ class LayoutMap extends StatelessWidget {
         final hgt = l.h * k;
         Rect sc(Rect r) => Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k);
         final kids = <Widget>[Positioned.fill(child: CustomPaint(painter: _RoomPainter(l, p, fan: fan, ac: ac)))];
+        // Labels never take a tap (F26 #8: a fan's label over a bed still picks the bed).
         final labels = <Widget>[];
         // F23: a geyser in this room's washroom shows on the plan.
         final geyser = s.inRoom(l.hid, room.n).any((a) => a.kind == 'geyser' && a.place == 'washroom');
@@ -246,6 +250,7 @@ class LayoutMap extends StatelessWidget {
         Widget bedBox(Bed b, {String? note}) {
           final (look, tag) = lookFor(b);
           return Tap(
+            key: bedKeys ? ValueKey('bed-${b.id}') : null,
             onTap: () => onPick?.call(b.letter),
             child: BedBox(
               look: look,
@@ -313,7 +318,7 @@ class LayoutMap extends StatelessWidget {
         }
         return Semantics(
           label: 'Room ${l.room} layout, ${l.w.round()} by ${l.h.round()} feet${l.outline == null ? '' : ', ${l.shape}'}',
-          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(children: [...kids, ...labels, ...handles])),
+          child: SizedBox(width: c.maxWidth, height: hgt, child: Stack(children: [...kids, Positioned.fill(child: IgnorePointer(child: Stack(clipBehavior: Clip.none, children: labels))), ...handles])),
         );
       },
     );
@@ -364,34 +369,27 @@ class RoomMode extends StatelessWidget {
     final focus = roomFocus(s, room);
     final fb = room.beds.where((b) => b.letter == focus).firstOrNull;
     Widget body;
-    if (!s.signedIn) {
-      body = VGap(
-        gap: 14,
-        children: [
-          const LayoutEmpty(icon: 'lock', head: 'Sign in to see room layouts', body: 'Room layouts are only for people signed in to Hostelzy.'),
-          T('It takes one tap with Google. We never share your number with the hostel until you choose to.', s: 12, c: p.mu, lh: 1.4),
-        ],
-      );
-    } else if (l == null && (s.needsRoomFetch(h.id, room.n) || s.roomFetch['${h.id}|${room.n}'] == 'loading')) {
-      // F24 Wave 4b: a women's PG's room comes from the server one by one.
+    // F26 (DECISIONS "Layouts open to all"): every room layout is open to
+    // everyone, guests and women's PGs included. A room missing from the
+    // list (until the 4ab SQL runs) is asked for on its own.
+    if (l == null && (s.needsRoomFetch(h.id, room.n) || s.roomFetch['${h.id}|${room.n}'] == 'loading')) {
       if (s.needsRoomFetch(h.id, room.n)) WidgetsBinding.instance.addPostFrameCallback((_) => s.fetchRoomLayout(h.id, room.n));
       body = Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Center(child: T('Loading the layout…', key: const ValueKey('roomLoading'), s: 14, c: p.mu)));
     } else if (l == null && s.roomFetch['${h.id}|${room.n}'] == 'capped') {
-      // The server shows a women's PG a few rooms a day before a hold.
+      // The server's old daily limit (until the 4ab SQL runs): no hold talk.
       body = VGap(
         key: const ValueKey('roomCapped'),
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'lock', head: 'Floor plan shows after you hold a bed', body: 'For residents’ safety, a women’s PG shows a few rooms a day before a hold. Hold a bed to see every room.'),
-          OutlineCta('Pick a bed from Plan', height: 50, onTap: () => s.update(() => s.mode = 'plan')),
-          T('Hostelzy never shows gates, CCTV, exits or residents’ names on any plan.', s: 12, c: p.mu, lh: 1.4),
+          const LayoutEmpty(icon: 'warn', head: 'Couldn’t open this room yet', body: 'Try again later. You can still pick a bed from the floor view.'),
+          OutlineCta('Floor view', height: 50, onTap: () => s.update(() => s.mode = 'plan')),
         ],
       );
     } else if (l == null && s.roomFetch['${h.id}|${room.n}'] == 'failed') {
       body = VGap(
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'warn', head: 'Couldn’t load this room', body: 'Check your internet and try again. You can still pick a bed from Plan or List.'),
+          const LayoutEmpty(icon: 'warn', head: 'Couldn’t load this room', body: 'Check your internet and try again. You can still pick a bed from the floor view.'),
           OutlineCta('Try again', key: const ValueKey('roomRetry'), height: 50, onTap: () => s.fetchRoomLayout(h.id, room.n)),
         ],
       );
@@ -401,7 +399,7 @@ class RoomMode extends StatelessWidget {
       body = VGap(
         gap: 14,
         children: [
-          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from Plan or List, and see the photos.'),
+          const LayoutEmpty(icon: 'pencil', head: 'Layout coming soon', body: 'The owner hasn’t published this room’s layout yet. You can still pick a bed from the floor view, and see the photos.'),
           // F24 item 27: saved on the server; a notification when it's published.
           waiting
               ? Container(
@@ -469,18 +467,10 @@ class RoomMode extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Tap(key: const ValueKey('compareLink'), onTap: s.openCompare, child: const T('Compare with another bed ›', s: 14, w: 800, underline: true)),
             ),
-          // F19: anyone can suggest a fix; only residents of this hostel can send one.
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Tap(
-              onTap: () => s.openFixEditor(s.hid, room.n),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('pencil', size: 14, color: p.mu), const SizedBox(width: 6), T('Edit room', s: 13, w: 600, c: p.mu)]),
-            ),
-          ),
         ],
       );
     }
-    // F23: layout first. The rooms on this floor as chips; F25: Plan · Room · Building tabs above.
+    // F23: the rooms on this floor as chips; F26 #8: "Floor view" goes back to every room.
     final onFloor = rooms.where((r) => r.floor == room.floor && AppState.fits(r, s.pR)).toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
@@ -512,6 +502,9 @@ class RoomMode extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              // F26 #8: back to every room on every floor.
+              Tap(key: const ValueKey('floorView'), onTap: () => s.update(() => s.mode = 'plan'), child: const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: T('Floor view', s: 14, w: 800, underline: true))),
             ],
           ),
           const SizedBox(height: 10),
@@ -550,12 +543,14 @@ class LayerChips extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [if (on) ...[Ic('check', size: 14, color: p.bg), const SizedBox(width: 6)], T(t, s: 13, w: 800, c: on ? p.bg : p.tx)]),
       ),
     );
-    return Row(
+    // A Wrap: at 2× text on a 360-px phone the chips go to a second line.
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        const Kicker('Show'),
-        const SizedBox(width: 8),
+        const Padding(padding: EdgeInsets.only(right: 2), child: Kicker('Show')),
         if (fans) chip('Fan reach', s.showFan, () => s.update(() => s.showFan = !s.showFan), const ValueKey('layerFan')),
-        if (fans && ac) const SizedBox(width: 6),
         if (ac) chip('AC airflow', s.showAc, () => s.update(() => s.showAc = !s.showAc), const ValueKey('layerAc')),
       ],
     );
@@ -603,27 +598,6 @@ class RoomBar extends StatelessWidget {
               : s.toastMsg('Pick a free bed first.'),
         ),
       ],
-    );
-  }
-}
-
-/// Women's PGs before a hold: the floor plan is locked (board 3).
-class FloorLocked extends StatelessWidget {
-  const FloorLocked({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: VGap(
-        gap: 14,
-        children: [
-          const LayoutEmpty(icon: 'lock', head: 'Floor plan shows after you hold a bed', body: 'For residents’ safety, the full floor plan of a women’s PG opens only after a hold. Each room’s own layout is in the Room tab.'),
-          OutlineCta('See rooms in the Room tab', height: 50, onTap: () => s.update(() => s.mode = 'room')),
-          T('Hostelzy never shows gates, CCTV, exits or residents’ names on any plan.', s: 12, c: p.mu, lh: 1.4),
-        ],
-      ),
     );
   }
 }

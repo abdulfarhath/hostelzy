@@ -33,7 +33,7 @@ update public.holds set status = 'held' where id = 'a2740000-0000-0000-0000-0000
 select test.rows($$select count(*) from public.enquiries where contacted_at is not null$$, 2);
 select test.rows($$select count(*) from public.holds where decided_at is not null and id = 'a2740000-0000-0000-0000-000000000001'$$, 1);
 select test.act('anon', null);
-select test.eq((select reply_minutes || ' ' || reply_n || ' ' || complaints_30d || ' ' || rooms || ' ' || photos || ' ' || layouts from public.hostel_signals() where hostel_id = 'a2700000-0000-0000-0000-000000000001'), '30 3 1 1 0 0');
+select test.eq((select reply_minutes || ' ' || reply_n || ' ' || complaints_30d || ' ' || rooms || ' ' || photos || ' ' || layouts from public.hostel_signals() where hostel_id = 'a2700000-0000-0000-0000-000000000001'), '50 1 1 1 0 0');   -- F26: hold replies only
 
 \o
 select 'ALL VALUE TESTS PASSED';

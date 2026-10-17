@@ -56,8 +56,9 @@ void main() {
     // Tabs: Saved replaces Search.
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('Search'), findsNothing);
-    // Cards: the rank once, the real cost.
-    expect(find.text('#1 near you'), findsOneWidget);
+    // Cards: F26 #2 Price ↑ by default; "#1 near you" on the best-ranked card; the real cost.
+    expect(find.text('Lowest price'), findsNothing);
+    expect(find.textContaining('#1 near you'), findsOneWidget);
     final c = cardCost(s, hostelById('anjani'))!;
     expect(c.move, c.fee + 3000);
     expect(find.text('${fmt(c.fee)}/mo · ${fmt(c.move)} to move in · electricity extra', findRichText: true), findsOneWidget);
@@ -82,14 +83,14 @@ void main() {
     s.back();
     await tester.pump();
 
-    // Filters: sort lives here, a count on the button, Clear all.
+    // Filters: a count on the button, Clear all (F26 #2: sort is its own dropdown).
     await _tap(tester, find.byKey(const ValueKey('filtersBtn')));
     expect(find.text('Filters'), findsWidgets);
-    await _tap(tester, find.text('Lowest price'));
+    expect(find.text('Sort by'), findsNothing);
     await _tap(tester, find.widgetWithText(ChipBtn, 'AC').last);
     await _tap(tester, find.widgetWithText(ChipBtn, 'Under ₹10,000'));
     expect((s.sortBy, s.filterCount), ('price', 2));
-    expect(find.text('Filters · 2'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('filtersBtn')), matching: find.text('Filters · 2')), findsOneWidget);
     // Deals stay findable without a sort: "Hostelzy deals only".
     await _tap(tester, find.text('Hostelzy deals only'));
     expect(s.filterCount, 3);
@@ -140,14 +141,14 @@ void main() {
     expect((s.screen, s.afterSignIn), ('login', null));
     s.dispose();
 
-    // A guest's enquiry asks for sign-in too; the X drops what was waiting.
+    // F26 #21: "Tell me when verified" asks for sign-in too; the X drops what was waiting.
     final g = AppState()..browse();
-    g.hid = 'anjani';
-    g.enquire('anjani', 'Hi Srinivas, is a bed free?', from: 'Hostel page');
-    expect((g.sheet, g.afterSignIn), ('signIn', 'enquiry'));
-    expect(g.enquiries.where((e) => e.msg.contains('is a bed free')), isEmpty);
+    g.hid = 'balaji';
+    g.tellWhenVerified(hostelById('balaji'));
+    expect((g.sheet, g.afterSignIn), ('signIn', 'verify'));
+    expect(g.waitlist, isEmpty);
     await _pump(tester, g);
-    expect(find.text('Sign in to message Srinivas'), findsOneWidget);
+    expect(find.text('Sign in to hear when it’s verified'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('sheetClose')));
     expect((g.sheet, g.afterSignIn), (null, null));
     g.dispose();

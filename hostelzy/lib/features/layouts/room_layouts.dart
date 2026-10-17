@@ -6,7 +6,8 @@ mixin _RoomLayoutsData {
   /// Room tab layer toggles: off by default (DECISIONS 2026-10-02).
   bool showFan = false, showAc = false;
 
-  /// Layouts are only for people who signed in (Google, F13).
+  /// Signed in (Google, F13). Layouts are open to guests too (F26); holding
+  /// a bed needs it.
   bool signedIn = true;
 
   /// The two beds on Compare beds (letters in [room]).
@@ -29,8 +30,8 @@ mixin _RoomLayoutsData {
   final Map<String, List<Uint8List>> shapePhotosLocal = {};
 
   /// F24 Wave 4b (F12): a women's PG's rooms fetched one by one for the Room
-  /// tab (`hid|room` → layout), and how each fetch went: loading | done |
-  /// capped (the server wants a hold first) | failed.
+  /// view (`hid|room` → layout), and how each fetch went: loading | done |
+  /// capped (the old server's daily limit, until the 4ab SQL runs) | failed.
   final Map<String, RoomLayout> peekLayouts = {};
   final Map<String, String> roomFetch = {};
 
@@ -50,9 +51,10 @@ extension RoomLayoutsActions on AppState {
     return l != null && l.live ? l.forTenants : null;
   }
 
-  /// F24 Wave 4b: a women's PG on the server lists its layouts only to
-  /// people with a hold there, so the Room tab asks for this one room.
-  bool needsRoomFetch(String hid, int n) => onServer && signedIn && hostelById(hid).gender == 'Women' && layoutOf(hid, n) == null && !roomFetch.containsKey('$hid|$n');
+  /// F24 Wave 4b: until the F26 SQL (4ab) runs, a women's PG on the server
+  /// leaves its layouts out of the list, so the Room view asks for this one
+  /// room. After it runs every layout is in the list (open to everyone).
+  bool needsRoomFetch(String hid, int n) => onServer && hostelById(hid).gender == 'Women' && layoutOf(hid, n) == null && !roomFetch.containsKey('$hid|$n');
 
   Future<void> fetchRoomLayout(String hid, int n) async {
     final k = '$hid|$n';
@@ -105,9 +107,6 @@ extension RoomLayoutsActions on AppState {
     update(() => layoutWaitSet.add(k));
     toastMsg('We’ll tell you when room $label’s layout is ready.');
   }
-
-  /// Women's PGs: whole-floor plans only after a hold here.
-  bool floorLocked(String hid) => hostelById(hid).gender == 'Women' && !heldAt(hid);
 
   void openCompare() {
     final r = rooms[hid]!.firstWhere((x) => x.n == room);
@@ -295,7 +294,7 @@ extension RoomLayoutsActions on AppState {
     publishLayout(layoutOf(q.hid, q.room)!);
   }
 
-  /// Tapping a room in Plan opens it in Room.
+  /// F26 #8: tapping a room's name in the picker opens it on its own.
   void openRoom(int n) => update(() {
     room = n;
     bed = null;

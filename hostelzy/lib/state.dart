@@ -26,6 +26,7 @@ import 'store.dart';
 part 'features/amenities/amenities.dart';
 part 'features/fair_play/fair_play.dart';
 part 'features/food/food.dart';
+part 'features/food/save_food.dart';
 part 'features/holds/holds.dart';
 part 'features/laundry/laundry.dart';
 part 'features/layouts/layout_editor.dart';
@@ -34,6 +35,7 @@ part 'features/layouts/owner_layouts.dart';
 part 'features/layouts/room_layouts.dart';
 part 'features/links/links.dart';
 part 'features/listings/sync.dart';
+part 'features/listings/tiers.dart';
 part 'features/map/map.dart';
 part 'features/meter/meter.dart';
 part 'features/moves/moves.dart';
@@ -52,6 +54,7 @@ part 'features/session/guest.dart';
 part 'features/session/login.dart';
 part 'features/session/on_phone.dart';
 part 'features/session/play_store.dart';
+part 'features/session/tabs.dart';
 part 'features/team/team_members.dart';
 part 'features/team/team_mode.dart';
 
@@ -78,12 +81,13 @@ Future<T> _settle<T>(Future<T> Function() f) {
   return out;
 }
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _SaveFoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
-      rooms[hostels[i].id] = mkRooms(hostels[i], i);
-      rates[hostels[i].id] = seedRates(hostels[i]);
+      // F26 #21: a listed (unverified) hostel has no rooms or prices yet.
+      rooms[hostels[i].id] = hostels[i].listed ? [] : mkRooms(hostels[i], i);
+      rates[hostels[i].id] = hostels[i].listed ? {} : seedRates(hostels[i]);
     }
     fixAnjani(rooms['anjani']!);
     final n = DateTime.now().millisecondsSinceEpoch;
@@ -139,8 +143,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'food', 'help', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'rStay', 'rRefund', 'oMeter', 'scan'];
-  static const tabScreens = ['explore', 'map', 'saved', 'holds', 'me', 'rHome', 'rPay', 'food', 'help', 'oToday', 'oBeds', 'oRent', 'oMore'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'building', 'rStay', 'rRefund', 'oMeter', 'scan', 'savedHolds', 'rMeals', 'oMeals'];
+  static const tabScreens = ['explore', 'map', 'saved', 'holds', 'savedHolds', 'me', 'rHome', 'rPay', 'rStay', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
 
@@ -180,8 +184,9 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   String dealTarget = 'all';
   bool? dealAc;
 
-  /// Explore sort: rec (Recommended, F08) | near | price | deals (F03).
-  String sortBy = 'rec';
+  /// Explore sort (F26 #2): price (Price ↑, the default) | near (Distance) |
+  /// rating | deals (Best deals, F03).
+  String sortBy = 'price';
 
   // F07 Fair Play
   static final seedCaseCount = seedCases().length;
@@ -267,6 +272,10 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     account = firebaseUser ?? (a != null && !signIn.available ? (uid: a['uid'] as String, name: a['name'] as String, email: a['email'] as String) : null);
     signedIn = m['signedIn'] as bool? ?? false;
     if (a != null && signIn.available && firebaseUser == null) signedIn = false;
+    // F26 #16: which hold results were already seen.
+    for (final e in ((m['holdSeen'] as Map?) ?? const {}).entries) {
+      if (e.value is String) holdSeen[e.key as String] = e.value as String;
+    }
     for (final id in (m['saved'] as List? ?? const [])) {
       saved[id as String] = true;
     }
@@ -302,6 +311,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   });
 
   void tab(String s) => update(() {
+    // F26 #17: a resident tab leaves Find a bed.
+    if (const ['rHome', 'rPay', 'rStay'].contains(s)) inFindBed = false;
     screen = s;
     hist = [];
     sheet = null;
@@ -311,7 +322,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     // F12: leaving the layout editor lets the room's edit lock go.
     if (screen == 'aLayout') unawaited(releaseLayoutLock());
     final h = List.of(hist);
-    final prev = h.isNotEmpty ? h.removeLast() : homeOf[role]!;
+    final prev = h.isNotEmpty ? h.removeLast() : homeTab;
     screen = prev;
     hist = h;
     sheet = null;
@@ -327,6 +338,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   void jump(String s, String r) => update(() {
     screen = s;
     role = r;
+    inFindBed = false;
     hist = [];
     sheet = null;
     toast = null;
@@ -338,23 +350,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     waTo = to;
     waPhone = phone;
     waMsg = msg;
-    waRef = null;
   });
-
-  /// F05 tenant → owner hand-off. Records the enquiry on Hostelzy first (the
-  /// owner is told from here, not by the WhatsApp text), then opens the
-  /// prefilled message ending with the HZ code and its link. One enquiry per
-  /// tenant + hostel + bed: tapping again reuses the code.
-  void enquire(String hid, String body, {String? bed, required String from}) {
-    // F21 W2: guests sign in first; the enquiry needs their name and phone.
-    if (!needSignIn('enquiry', () => enquire(hid, body, bed: bed, from: from))) return;
-    // C: on Supabase the server records it and issues the HZ code.
-    if (onServer) {
-      enquireLive(hid, body, bed: bed, from: from);
-      return;
-    }
-    update(() => _enquire(hid, body, bed: bed, from: from));
-  }
 
   void markContacted(String ref) {
     update(() => enquiries = enquiries.map((e) => e.ref == ref ? e.withContacted() : e).toList());
@@ -362,11 +358,6 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
   }
 
   // F06
-
-  void openEnquiry(String ref) => update(() {
-    enqRef = ref;
-    sheet = 'enq';
-  });
 
   /// F16: does room [r] match room-type filter [f] (Any | AC | Non-AC)?
   static bool fits(Room r, String f) => f == 'Any' || (f == 'AC') == r.ac;

@@ -1,12 +1,18 @@
 
 class Hostel {
-  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = '', this.bedsCheckedAt, this.layoutsCheckedAt, this.ratesCheckedAt, this.ratesTracked = false});
+  const Hostel({required this.id, required this.name, required this.gender, required this.area, required this.from, required this.rating, required this.reviews, required this.food, required this.ac, required this.instant, required this.owner, required this.reply, required this.mins, required this.x, required this.y, required this.tags, this.terms = const Terms(), this.onlyAc = false, this.live = true, this.visitedOn = '', this.bedsCheckedAt, this.layoutsCheckedAt, this.ratesCheckedAt, this.ratesTracked = false, this.listed = false, this.rentMin = 0, this.rentMax = 0});
   final String id, name, gender, area, owner;
 
   /// F24: false for a draft the team is still onboarding (never in Explore);
   /// [visitedOn] is "Visited by Hostelzy" from the server ("2 Oct 2026").
   final bool live;
   final String visitedOn;
+
+  /// F26 #21: UNVERIFIED, listed by the Hostelzy team before a visit: name,
+  /// area, photos and an expected rent range ([rentMin]–[rentMax]); no beds,
+  /// holds, layouts or owner contact. [live] is true for it too (it is public).
+  final bool listed;
+  final int rentMin, rentMax;
 
   /// F24 item 9: the owner's last "Yes, all free" (newest bed confirmation on
   /// the server) and the oldest published layout's last "All still correct";
@@ -61,6 +67,8 @@ final hostels = <Hostel>[
   const Hostel(id: 'greenview', name: "Greenview Men's PG", gender: 'Men', area: 'Kondapur', from: 6400, rating: 4.1, reviews: 22, food: true, ac: false, instant: false, owner: 'Ramesh', reply: 20, mins: {'Hitec City': 11, 'Gachibowli': 9, 'Ameerpet': 30, 'JNTU': 14}, x: 46, y: 56, tags: ['2 meals a day', 'Hot water 24h', 'Bike parking', 'Weekly laundry']),
   const Hostel(id: 'orchid', name: "Orchid Women's PG", gender: 'Women', area: 'KPHB', from: 6900, rating: 4.5, reviews: 31, food: true, ac: false, instant: false, owner: 'Lalitha', reply: 9, mins: {'Hitec City': 20, 'Gachibowli': 25, 'Ameerpet': 16, 'JNTU': 6}, x: 70, y: 18, tags: ['3 meals a day', 'Near metro', 'CCTV at gate', 'Study room'], terms: Terms(maintenance: 1200)),
   const Hostel(id: 'lakshmi', name: 'Lakshmi Students PG', gender: 'Men', area: 'Ameerpet', from: 5400, rating: 4.0, reviews: 47, food: true, ac: false, instant: false, owner: 'Venkat', reply: 15, mins: {'Hitec City': 26, 'Gachibowli': 34, 'Ameerpet': 4, 'JNTU': 15}, x: 80, y: 66, tags: ['Near coaching centres', '3 meals a day', 'Study room', 'Wi-Fi 100 Mbps']),
+  // F26 #21: a team-listed, UNVERIFIED hostel (demo only): no rooms, beds or owner contact yet.
+  const Hostel(id: 'balaji', name: 'Sri Balaji Men’s PG', gender: 'Men', area: 'Madhapur', from: 7000, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: {'Hitec City': 7, 'Gachibowli': 15, 'Ameerpet': 25, 'JNTU': 21}, x: 34, y: 38, tags: [], listed: true, rentMin: 7000, rentMax: 9000),
 ];
 
 /// F18: an id that is no longer listed (removed hostel, stale saved hold)
@@ -231,7 +239,7 @@ String maskPhone(String p) => p.length < 2 ? '••••• •••••' :
 
 // ------------------------------------------------------------ F14 onboarding
 
-const _seedIds = ['anjani', 'saisri', 'nest42', 'greenview', 'orchid', 'lakshmi'];
+const _seedIds = ['anjani', 'saisri', 'nest42', 'greenview', 'orchid', 'lakshmi', 'balaji'];
 
 bool isSeedHostel(String id) => _seedIds.contains(id);
 

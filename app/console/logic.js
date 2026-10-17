@@ -184,3 +184,26 @@ export function goLiveWords(message) {
   }
   return 'Couldn’t put it live. Check your internet and try again.';
 }
+
+/** F26 #21: a listed (UNVERIFIED) hostel's expected rent range: '' when fine, else what to fix (the server checks the same). */
+export function rentRangeError(min, max) {
+  const a = Number(min), b = Number(max);
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 1000 || b > 100000) return 'Enter the expected rent, ₹1,000 to ₹1,00,000.';
+  if (b < a) return 'The highest rent can’t be below the lowest.';
+  return '';
+}
+
+/** "Around ₹7,000–9,000", as the app shows it. */
+export const rentRangeLabel = (min, max) => (Number(max) > Number(min) ? `Around ${rupees(min)}–${Number(max).toLocaleString('en-IN')}` : `Around ${rupees(min)}`);
+
+/** F26 #21: a listed hostel's photo in the hostel-photos bucket (the app's layout: <hostel>/<random>.jpg). */
+export const listedPhotoPath = (hostelId, now = Date.now(), rnd = Math.random()) => `${hostelId}/${now.toString(36)}${Math.floor(rnd * 1e8).toString(36)}.jpg`;
+
+/** F26 #21: why list_hostel() said no, in plain words. */
+export function listWords(message) {
+  const m = String(message || '');
+  for (const k of ['add a photo first', 'add the expected rent range', 'add the hostel name', 'already verified', 'isn’t in Hyderabad', 'isn\'t in Hyderabad', 'only the Hostelzy team']) {
+    if (m.includes(k)) return `Not listed: ${k === 'isn\'t in Hyderabad' || k === 'isn’t in Hyderabad' ? 'the map pin isn’t in Hyderabad' : k}.`;
+  }
+  return 'Couldn’t save: ' + m;
+}

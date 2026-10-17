@@ -122,20 +122,44 @@ void main() {
     await tester.pump();
     // F21 W3: it's in "Needs you now" with its countdown.
     expect(find.text('Hold on bed $bed'), findsOneWidget);
-    await tap(tester, find.text('Confirm hold').last); // soonest first: the new hold has the most time left
+    await tap(tester, find.byKey(ValueKey('hold-${s.holds.single.id}-btn0'))); // F26 #18: Confirm
     expect(s.holds.single.status, 'confirmed');
     s.dispose();
   });
 
-  testWidgets('bed picker: Plan · Room · Building tabs, cheapest beds as a link (F21 W2, F25)', (tester) async {
+  testWidgets('bed picker: no tabs, every room drawn by floor, chips jump, a room opens on its own (F26 #8)', (tester) async {
     final s = AppState(start: 'picker', role: 'tenant');
+    s.openPicker();
     await pumpApp(tester, s);
-    // F25 (founder): the Building tab is back; the list stays a link.
-    expect(find.byKey(const ValueKey('pickTab-building')), findsOneWidget);
-    expect(find.text('List'), findsNothing);
-    await tap(tester, find.text('See cheapest beds ›'));
-    expect(find.textContaining('beds you can take'.toUpperCase()), findsOneWidget);
-    await tap(tester, find.text('‹ Back to the plan'));
+    for (final k in ['floorView', 'pickTab-room', 'pickTab-building']) {
+      expect(find.byKey(ValueKey(k)), findsNothing);
+    }
+    // S18 stays: "See cheapest beds ›" opens every bed you can take, cheapest first.
+    expect(find.text('See cheapest beds ›'), findsOneWidget);
+    final rs = s.rooms[s.hid]!;
+    // Every room of every floor is in the one scroll; drawn rooms carry the red button.
+    for (final r in rs) {
+      expect(find.byKey(ValueKey('roomCard-${r.n}')), findsOneWidget);
+      expect(find.byKey(ValueKey('editLayout-${r.n}')), s.liveLayout(s.hid, r.n) != null ? findsOneWidget : findsNothing);
+    }
+    // A floor chip jumps: the floor's first room scrolls into view.
+    final last = floorsOf(rs).last;
+    await tap(tester, find.byKey(ValueKey('floor-$last')));
+    await tester.pumpAndSettle();
+    expect(s.floor, last);
+    final first = rs.firstWhere((r) => r.floor == last);
+    final y = tester.getTopLeft(find.byKey(ValueKey('roomCard-${first.n}'))).dy;
+    expect(y, lessThan(400));
+    // A free bed in a drawn room → Continue → the hold sheet.
+    await tap(tester, freeBed(s));
+    expect(s.bed, isNotNull);
+    await tap(tester, find.byKey(const ValueKey('pickContinue')));
+    expect(s.sheet, 'hold');
+    s.update(() => s.sheet = null);
+    // A room's name opens it on its own; "Floor view" comes back.
+    await tap(tester, find.text('Room ${first.label}'));
+    expect((s.mode, s.room), ('room', first.n));
+    await tap(tester, find.byKey(const ValueKey('floorView')));
     expect(s.mode, 'plan');
     s.dispose();
   });
@@ -158,6 +182,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.jump('oToday', 'owner');
     await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('needTab-payments'))); // F26 #18
     expect(find.text('Received ₹8,020?'), findsOneWidget);
     await tap(tester, find.text('Yes, received').first);
     expect(s.residents.firstWhere((r) => r.bed == '204-B').status, 'Paid');
@@ -188,13 +213,14 @@ void main() {
   });
 
   testWidgets('complaint goes to the owner queue', (tester) async {
-    final s = AppState(start: 'help', role: 'resident');
+    final s = AppState(start: 'rStay', role: 'resident', sheet: 'complaint');
     await pumpApp(tester, s);
     await tester.enterText(find.byType(EditableText).first, 'Fan is broken');
     await tester.pump();
     await tap(tester, find.text('Send to owner'));
     expect(s.complaints.last.text, 'Fan is broken');
-    // F21 W3: it shows inline as Sent.
+    // F21 W3 + F26 #14: the list opens and shows it as Sent.
+    expect(s.sheet, 'complaints');
     expect(find.text('SENT'), findsWidgets);
     s.jump('oMore', 'owner');
     await tester.pump();
@@ -207,79 +233,34 @@ void main() {
     final s = AppState(start: 'me', role: 'tenant');
     await pumpApp(tester, s);
     expect(find.text('Dark'), findsNothing);
-    expect(find.text('Log out'), findsNothing);
     await tap(tester, find.text('Settings'));
     await tap(tester, find.text('Dark'));
     expect(s.theme, 'dark');
     s.dispose();
   });
 
-  testWidgets('enquiry recorded before WhatsApp; owner sees and contacts it (F05)', (tester) async {
+  testWidgets('F26 #7: no enquiries: tenants have no "Ask on WhatsApp", owners no enquiry items (F05 retired)', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
-    s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
     final before = s.enquiries.length;
-    await tap(tester, find.text('Ask on WhatsApp'));
-    expect(s.sheet, 'wa');
-    final ref = s.waRef!;
-    expect(s.enquiries.length, before + 1);
-    expect(s.enquiries.first.ref, ref);
-    expect(s.enquiries.first.phone, '9000000001');
-    // F17: honest. Nothing reaches the owner until the tenant sends it in WhatsApp.
-    expect(find.text('Ask Srinivas'), findsOneWidget);
-    expect(find.text('Nothing is sent until you press send in WhatsApp.'), findsOneWidget);
-    // F24 4a: the message ends with the enquiry's link the owner can open.
-    expect(s.waFull, endsWith('Booking code $ref\n${enquiryLink(ref)}'));
-    expect(find.text(s.waFull), findsOneWidget);
-    await tap(tester, find.text('Open WhatsApp'));
-    expect(s.lastLink.toString(), startsWith('https://wa.me/919000000101?text=Hi%20Srinivas'));
-    await tester.pump(const Duration(seconds: 3));
+    // F26 #7: tenants no longer enquire; the hostel page has no "Ask on WhatsApp".
+    expect(find.text('Ask on WhatsApp'), findsNothing);
 
-    // Asking again about the same hostel reuses the code.
-    await tap(tester, find.text('Ask on WhatsApp'));
-    await tap(tester, find.text('Copy message'));
-    await tap(tester, find.text('Ask on WhatsApp'));
-    expect(s.waRef, ref);
-    expect(s.enquiries.length, before + 1);
-
-    // Owner Today lists it, newest first, as New.
+    // F26: owner Today and Manage have no enquiries any more.
     s.jump('oToday', 'owner');
     await tester.pump();
-    // F21 W3: new ones in "Needs you now"; the full list in Manage → Enquiries.
-    expect(find.text('New enquiry · ${s.enquiries.first.name}'), findsOneWidget);
-    s.update(() {
-      s.screen = 'oMore';
-      s.moreTab = 'enquiries';
-    });
-    await tester.pump();
-    expect(find.text('ENQUIRIES FROM HOSTELZY'), findsOneWidget);
-    expect(find.text(ref), findsOneWidget);
-    expect(find.text('3 new'), findsOneWidget);
-    expect(find.textContaining('Not on this list = not from Hostelzy.'), findsOneWidget);
-
-    // Calling marks it Contacted.
-    await tap(tester, find.text('Call').first);
-    expect(s.enquiries.first.contacted, isTrue);
-    expect(find.text('2 new'), findsOneWidget);
-
-    // Tapping an HZ code opens the enquiry sheet.
-    await tap(tester, find.text('HZ-4821'));
-    expect(s.sheet, 'enq');
-    expect(find.text('HZ-4821 · Ravi Teja'), findsOneWidget);
-    expect(find.text('90000 00029 · not verified'), findsWidgets);
-    await tap(tester, find.text('Mark as contacted'));
-    expect(s.enquiries.firstWhere((e) => e.ref == 'HZ-4821').contacted, isTrue);
-    expect(s.sheet, isNull);
+    expect(find.textContaining('New enquiry'), findsNothing);
+    expect(s.enquiries.length, before);
     s.dispose();
   });
 
-  testWidgets('WhatsApp owner from a hold records the bed (F05)', (tester) async {
+  testWidgets('F26 #7: WhatsApp owner from a hold opens WhatsApp with the bed; no enquiry is recorded', (tester) async {
     final s = AppState(start: 'hold', role: 'tenant');
     await pumpApp(tester, s);
+    final n = s.enquiries.length;
     await tap(tester, find.text('Tell Srinivas on WhatsApp'));
-    expect(s.sheet, 'wa');
-    expect(s.enquiries.first.bed, s.holds.single.bed);
-    expect(s.enquiries.first.from, 'Hold · WhatsApp owner');
+    expect(s.enquiries.length, n);
+    expect(Uri.decodeFull(s.lastLink.toString()), contains('Hi Srinivas, I held bed ${s.holds.single.bed} at Anjani Residency on Hostelzy.'));
     s.dispose();
   });
 
@@ -344,8 +325,9 @@ void main() {
     final s = AppState(start: 'detail', role: 'tenant');
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    await tap(tester, find.text('Ask on WhatsApp'));
-    final ref = s.waRef!;
+    // F26 #7: tenants don't enquire any more; an enquiry from before still matches.
+    const ref = 'HZ-4900';
+    s.enquiries = [Enquiry(ref: ref, name: 'Rahul Varma', phone: '9000000001', hid: 'anjani', at: s.now, from: 'Hostel page', msg: ''), ...s.enquiries];
 
     // Owner: Manage opens on its list (F21 W3); Residents has the unassigned-beds banner.
     s.jump('oMore', 'owner');
@@ -429,8 +411,11 @@ void main() {
     final s = AppState(start: 'explore', role: 'tenant');
     await pumpApp(tester, s);
     expect(find.text('Sai Sri Ladies Hostel'), findsOneWidget);
+    // F26 #2: AC lives in the Filters sheet.
+    await tap(tester, find.byKey(const ValueKey('filtersBtn')));
     await tap(tester, find.widgetWithText(ChipBtn, 'AC'));
     expect(s.fR, 'AC');
+    await tap(tester, find.textContaining('Show '));
     expect(find.text('Sai Sri Ladies Hostel'), findsNothing);
     expect(find.text('NON-AC'), findsNothing);
     // F21 W2: Non-AC lives in the Filters sheet.
@@ -466,7 +451,8 @@ void main() {
     // Owner: edit the rate card and a room's type.
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    await tap(tester, find.text('Rooms and rates ›'));
+    o.openRates(); // F26 #19: Beds has no "Rooms and rates ›" link any more; Manage › Rates and UPI
+    await tester.pump();
     expect((o.screen, o.moreTab), ('oMore', 'rates'));
     await tester.enterText(find.bySemanticsLabel('Walk-in price, 3 sharing AC'), '9500');
     await tester.pump();
@@ -583,6 +569,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     s.jump('oToday', 'owner');
     await tester.pump();
+    await tap(tester, find.byKey(const ValueKey('needTab-payments'))); // F26 #18
     expect(find.text('Received ₹3,000?'), findsOneWidget);
     await tap(tester, find.text('Yes, received').last);
     s.jump('holds', 'tenant');
@@ -621,29 +608,26 @@ void main() {
     }
     s.dispose();
 
-    // Owner bed map: Sai Sri has 3, 5 and 2 rooms per floor.
+    // Owner bed map (F26 #19: the Building view): Sai Sri's floors, every room.
     final o = AppState(start: 'oBeds', role: 'owner');
     o.ownHid = 'saisri';
     await pumpApp(tester, o);
-    await tap(tester, find.byKey(const ValueKey('obFloor-2')));
-    expect(find.text('Room 205'), findsOneWidget);
-    expect(find.text('Room 302'), findsNothing);
-    await tap(tester, find.byKey(const ValueKey('obFloor-3')));
-    expect(find.text('Room 302'), findsOneWidget);
-    expect(find.text('Room 205'), findsNothing);
+    for (final x in o.rooms['saisri']!) {
+      expect(find.byKey(ValueKey('bRoomOpen-${x.n}')), findsOneWidget);
+    }
     o.dispose();
   });
 
   testWidgets('verified reviews, ranking and owner replies (F08)', (tester) async {
-    // Explore: Recommended is the default sort; rank and reasons, never a score.
+    // Explore: F26 #2 Price ↑ is the default sort; rank and reasons, never a score.
     final s = AppState(start: 'explore', role: 'tenant');
     s..phone = '9000000001'..myName = 'Rahul Varma'; // a signed-in user (F18: no sample identity)
     await pumpApp(tester, s);
-    expect(s.sortBy, 'rec');
-    expect(filtered(s).first.id, 'anjani');
+    expect(s.sortBy, 'price');
     expect(s.rankOf('anjani'), 1);
     expect(s.rankReasons('anjani'), 'Quick replies, beds kept up to date');
-    expect(find.text('#1 near you'), findsOneWidget);
+    // "#1 near you" goes on the best-ranked card whatever the sort (hub, 2026-10-17).
+    expect(find.textContaining('#1 near you'), findsOneWidget);
     expect(s.rankReasons('nest42'), startsWith('Few reviews yet'));
 
     // Hostel page → Reviews.
@@ -729,11 +713,11 @@ void main() {
     expect(s.strikes['anjani'] ?? 0, 0);
     expect(s.ownerFixes, 1);
 
-    // Tenant: the owner's number is hidden until a hold.
+    // Tenant: the owner's number and both buttons are locked until a hold (F26 #7).
     s.jump('detail', 'tenant');
     await tester.pump();
-    expect(find.text('90••• •••••'), findsOneWidget);
-    expect(find.text('Shows after a hold'), findsOneWidget);
+    expect(find.text('90000 00101'), findsNothing);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     s.update(() => s.bed = '204-D');
     s.placeHold('free');
     s.jump('detail', 'tenant');
@@ -945,25 +929,22 @@ void main() {
     expect(find.text('Layout coming soon'), findsOneWidget);
     expect(find.text('Compare with another bed ›'), findsNothing);
 
-    // Women's PG: floor plan only after a hold; room layouts stay.
+    // F26: layouts are open to everyone, women's PGs and guests included.
     s.update(() {
       s.hid = 'saisri';
       s.room = 102;
       s.mode = 'plan';
     });
     await tester.pump();
-    expect(find.text('Floor plan shows after you hold a bed'), findsOneWidget);
-    await tap(tester, find.text('See rooms in the Room tab'));
-    expect(s.mode, 'room');
-    expect(find.text('Room 102'), findsOneWidget);
-    s.update(() => s.holds = [Hold(id: 'x', hid: 'saisri', bed: '102-A', room: 102, opt: 'free', start: s.now, status: 'waiting')]);
-    expect(s.floorLocked('saisri'), isFalse);
+    expect(find.text('Floor plan shows after you hold a bed'), findsNothing);
+    expect(find.byKey(const ValueKey('roomCard-102')), findsOneWidget);
     s.dispose();
 
-    // Signed out: layouts need sign-in.
+    // A guest sees the room layout; holding a bed needs sign-in.
     final o = AppState(start: 'picker', role: 'tenant', mode: 'room', auth: 'out');
     await pumpApp(tester, o);
-    expect(find.text('Sign in to see room layouts'), findsOneWidget);
+    expect(find.text('Sign in to see room layouts'), findsNothing);
+    expect(find.byKey(const ValueKey('bedFacts')), findsOneWidget);
     await tap(tester, find.text('Sign in'));
     expect(o.screen, 'login');
     o.dispose();
@@ -971,7 +952,7 @@ void main() {
     // Owner: Beds → room 204 → mark a fan not working → approve.
     final w = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, w);
-    await tap(tester, find.text('New layout'));
+    await tap(tester, find.byKey(const ValueKey('bRoomOpen-204'))); // F26 #19
     expect((w.screen, w.lRoom), ('oLayout', 204));
     expect(find.text('Hostelzy drew a new version · check and publish'), findsOneWidget);
     final l = w.layoutOf('anjani', 204)!;
@@ -1117,10 +1098,12 @@ void main() {
     AppState().dispose();
     expect(hostels.any((x) => x.name == 'Anjani Annex'), isFalse);
 
-    // Tenant: Visited badge and availability.
+    // Tenant: F26 #5 ✓ VERIFIED (the team visit) and availability.
     final t = AppState(start: 'detail', role: 'tenant');
     await pumpApp(tester, t);
-    expect(find.text('Visited by Hostelzy · 1 Oct 2026'), findsOneWidget);
+    expect(find.byKey(const ValueKey('verifiedBadge')), findsOneWidget);
+    expect(find.text('Beds and prices checked by Hostelzy · 1 Oct 2026'), findsOneWidget);
+    expect(find.textContaining('Visited by Hostelzy'), findsNothing);
     expect(t.stale('greenview'), isTrue);
     expect(t.rankOf('greenview'), greaterThan(t.rankOf('anjani')));
     t.dispose();
@@ -1168,10 +1151,11 @@ void main() {
     expect((s.screen, s.sheet, s.bed), ('picker', 'hold', h.bed));
     s.dispose();
 
-    // Owner: Call opens the phone app (Manage → Enquiries, F21 W3).
-    final o = AppState(start: 'oMore', role: 'owner', moreTab: 'enquiries');
+    // Owner: Call opens the phone app (Rent, F26 #20).
+    final o = AppState(start: 'oRent', role: 'owner');
     await pumpApp(tester, o);
-    await tap(tester, find.text('Call').first);
+    final due = o.residents.firstWhere((x) => x.status != 'Paid');
+    await tap(tester, find.byKey(ValueKey('rentCall-${due.bed}')));
     expect(o.lastLink.toString(), startsWith('tel:+91'));
     o.dispose();
 
@@ -1415,8 +1399,8 @@ void main() {
     // Owner: Beds → a bed → "Room … layout ›" (F22: in the bed sheet).
     final o = AppState(start: 'oBeds', role: 'owner');
     await pumpApp(tester, o);
-    final first = o.rooms['anjani']!.firstWhere((r) => r.floor == o.obFloor || o.obFloor == 0);
-    await tap(tester, find.byKey(ValueKey('obed-${first.beds.first.id}')));
+    final first = o.rooms['anjani']!.firstWhere((r) => r.floor == 2);
+    await tap(tester, find.byKey(ValueKey('bBed-${first.beds.first.id}')));
     expect(o.sheet, 'bed');
     await tap(tester, find.byKey(const ValueKey('bedLayout')));
     expect(o.screen, 'oLayout');
@@ -1513,10 +1497,10 @@ void main() {
       o.teamUnlocked = false;
       o.screen = 'oBeds';
       o.hist = [];
-      o.obFloor = 2;
     });
     await tester.pump();
-    await tap(tester, find.text('New layout'));
+    // F26 #19: tap the room's number in the Building view for its layout.
+    await tap(tester, find.byKey(const ValueKey('bRoomOpen-204')));
     await tap(tester, find.text('Publish v3'));
     expect(l.pending, isFalse);
     expect(o.liveLayout('anjani', 204)!.items.firstWhere((i) => i.id == 'fan1').x, l.items.firstWhere((i) => i.id == 'fan1').x);
@@ -1533,6 +1517,7 @@ void main() {
     expect(bedTraits(n, nr, 'A').bunk, 'Single bed');
     // The owner is asked every 3 months whether the layouts still match.
     await pumpApp(tester, s);
+    await tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: in the Fixes tab
     expect(find.text('Do your room layouts still match?'), findsOneWidget);
     await tap(tester, find.text('All still correct'));
     expect(s.layoutConfirmed['anjani'], 0);
@@ -1895,7 +1880,7 @@ void main() {
     expect((s.screen, s.gateKind), ('gate', 'update'));
     s.dispose();
     resetSampleData();
-    expect(browsable.length, 6);
+    expect(browsable.length, 7); // F26 #21: six samples + one listed (UNVERIFIED)
 
     // Real APK, Supabase reachable but no hostels yet: an honest empty state, no samples.
     final e = AppState(start: 'explore', role: 'tenant');
@@ -2148,7 +2133,7 @@ void main() {
       c.screen = 'detail';
     });
     await tester.pump();
-    expect(find.text('Wi-Fi'), findsOneWidget); // one tag, no RangeError
+    expect(find.text('Wi-Fi'), findsNothing); // F26 #6: no tag boxes on the hostel page
     // Owner opens the editor for a room that has no layout yet: one is made.
     final room = c.rooms['anjani']!.last;
     c.layouts['anjani']!.remove(room.n);
@@ -2171,7 +2156,7 @@ void main() {
     final s = AppState(start: 'map', role: 'tenant');
     await pumpApp(tester, s);
     // F21 W2: the same "Where?" field as Explore.
-    expect(find.text('Where? Area, landmark or hostel'), findsOneWidget);
+    expect(find.text('Area, landmark or hostel'), findsOneWidget);
     // Pick an area: only hostels there, on the map and in Explore.
     await tap(tester, find.byKey(const ValueKey('mapArea')));
     expect(s.screen, 'where');
@@ -2190,7 +2175,7 @@ void main() {
     s.tab('map');
     await tester.pump();
 
-    // Use my location: explainer first, then the map centres on you and sorts by distance.
+    // Use my location: explainer first, then the map centres on you (F26 #2: the sort stays Price ↑).
     final loc = _FakeLocator((17.4610, 78.3610));
     s.locator = loc;
     await tap(tester, find.byKey(const ValueKey('mapLoc')));
@@ -2301,9 +2286,9 @@ void main() {
     // Saved hostels list (D9).
     s.update(() => s.saved['orchid'] = true);
     await pumpApp(tester, s);
-    s.tab('me');
+    s.tab('explore');
     await tester.pump();
-    await tap(tester, find.byKey(const ValueKey('me-Saved')));
+    await tap(tester, find.byKey(const ValueKey('tab-saved')));
     expect(s.screen, 'saved');
     expect(find.text('Orchid Women\'s PG'), findsOneWidget);
     // Fair Play hours run from when the case opened (F4).
@@ -2505,11 +2490,11 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: r, builder: (c, child) => AppScope(state: s, child: child!)));
     await tester.pump();
     expect(find.byType(HostelzyShell), findsOneWidget);
-    // An owner opens a tenant's enquiry link: Today, with that enquiry open.
+    // An owner opens a tenant's enquiry link: Today (F26: no enquiry sheet any more).
     s.update(() => s.screen = 'oRent');
     r.go('/r?c=hz-4821');
     await tester.pumpAndSettle();
-    expect((s.screen, s.sheet, s.enqRef), ('oToday', 'enq', 'HZ-4821'));
+    expect((s.screen, s.sheet), ('oToday', null));
     expect(r.routerDelegate.currentConfiguration.uri.path, '/');
     // Not this account's code: say so, stay put.
     s.update(() => s.sheet = null);
@@ -2531,7 +2516,7 @@ void main() {
     s.dispose();
   });
 
-  test('C: on Supabase, enquiries, payments and complaints are written to the server', () async {
+  test('C: on Supabase, payments, enquiry replies and complaints are written to the server', () async {
     final s = AppState(start: 'explore', role: 'tenant');
     final fake = _FakeLive(liveFromRows(holds: [], enquiries: [], payments: [
       {'id': 'p-uuid', 'hostel_id': 'h1', 'kind': 'advance', 'amount': 3000, 'note': 'HZ-5002', 'hold_id': 'hold-uuid', 'status': 'pending', 'created_at': '2026-10-02T10:00:00Z'},
@@ -2542,21 +2527,10 @@ void main() {
       s.myName = 'Asha K';
       s.phone = '9876543210';
     });
-    // Samples aren't on the server: nothing is written for them.
-    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
-    expect(fake.calls, isEmpty);
-    expect(s.waRef, isNotNull);
     await s.startLive();
     expect(s.onServer, isTrue);
-    // Enquiry: the server's HZ code goes into the WhatsApp message; asking again reuses it.
-    s.enquire('anjani', 'Hi Imran, is a bed free?', bed: '204-A', from: 'Hostel page');
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
-    expect(fake.calls, ['enquiry anjani 204-A Asha K 9876543210']);
-    expect((s.sheet, s.waRef), ('wa', 'HZ-5009'));
-    s.enquire('anjani', 'Hi again', bed: '204-A', from: 'Hostel page');
-    await Future<void>.delayed(Duration.zero);
-    expect(fake.calls.length, 1);
+    // F26 #7: tenants no longer send enquiries.
+    expect(fake.calls, isEmpty);
     // UTR, then the owner confirms: the hold becomes a booking on the server.
     final p = s.payments.single;
     s.update(() {
@@ -2565,7 +2539,7 @@ void main() {
     });
     await s.sendPayUtr();
     await s.confirmPayment(p, true);
-    expect(fake.calls.sublist(1), ['utr p-uuid 123456789012', 'confirm p-uuid true hold-uuid']);
+    expect(fake.calls, ['utr p-uuid 123456789012', 'confirm p-uuid true hold-uuid']);
     s.markContacted('HZ-5009');
     await Future<void>.delayed(Duration.zero);
     expect(fake.calls.last, 'contacted HZ-5009');
@@ -3035,7 +3009,7 @@ void main() {
 
   testWidgets('F19: residents fix room layouts; others see the residents-only sheet; the owner compares and decides', (tester) async {
     final owner = hostelById('anjani').owner;
-    // A tenant browsing Anjani: Edit room → only residents can fix it.
+    // A tenant browsing Anjani: Edit this layout (F26 #12) → try mode → Publish → only residents can send a fix.
     final t = AppState(start: 'picker', role: 'tenant');
     await pumpApp(tester, t);
     t.update(() {
@@ -3046,12 +3020,13 @@ void main() {
     });
     await tester.pump();
     // F19 extras: they can try the editor (nothing is saved); only Send is locked.
-    await tap(tester, find.text('Edit room'));
+    await tap(tester, find.byKey(const ValueKey('editLayout')));
     expect((t.screen, t.fixTry, t.sheet), ('rFix', true, null));
     expect(find.text('Try mode · play freely, nothing is saved'), findsOneWidget);
-    await tap(tester, find.text('Send · residents only'));
+    await tap(tester, find.text('Publish'));
     expect(t.sheet, 'fixLock');
-    expect(find.text('Only residents of Anjani Residency can fix room layouts'), findsOneWidget);
+    expect(find.text('Only residents can send a fix'), findsOneWidget);
+    expect(find.text('Book a bed to join.'), findsOneWidget);
     expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
     // Leaving discards the try.
     t.update(() => t.sheet = null);
@@ -3062,8 +3037,8 @@ void main() {
     // A resident: their room screen → Edit room → the suggestion editor.
     final r = AppState(start: 'me', role: 'resident');
     await pumpApp(tester, r);
-    // F22: Me › My stay › Fix a room layout.
-    await tap(tester, find.byKey(const ValueKey('me-My stay')));
+    // F26 #14: the My stay tab › Fix a room layout.
+    await tap(tester, find.byKey(const ValueKey('tab-rStay')));
     await tap(tester, find.text('Fix a room layout'));
     expect((r.screen, r.fixHid, r.fixRoom), ('rRoom', 'anjani', 204));
     await tap(tester, find.text('203'));
@@ -3124,7 +3099,8 @@ void main() {
     // The owner: Today card → compare side by side → approve & publish.
     final o = AppState(start: 'oToday', role: 'owner');
     await pumpApp(tester, o);
-    // F21 W3: in "Needs you now".
+    // F26 #18: in Today's Fixes tab.
+    await tap(tester, find.byKey(const ValueKey('needTab-fixes')));
     expect(find.text('Layout fix for Room 203'), findsOneWidget);
     await tap(tester, find.text('Compare'));
     expect(o.screen, 'oFix');

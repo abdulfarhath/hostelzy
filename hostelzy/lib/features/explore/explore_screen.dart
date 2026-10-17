@@ -6,12 +6,33 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../photos/photos_screens.dart';
 import '../reminders/reminders_screens.dart';
+import 'unverified_screen.dart';
 
 // ------------------------------------------------------------ derived values
+
+/// F26 #2: the sort dropdown, in its order (Price ↑ is the default).
+const sortLabels = {'price': 'Price ↑', 'near': 'Distance', 'rating': 'Rating', 'deals': 'Best deals'};
+
+/// One ordering step: negative when [a] goes first, 0 when it can't tell.
+typedef HostelOrder = int Function(Hostel a, Hostel b);
+
+/// The lowest rent that fits the room filter; a listed (UNVERIFIED) hostel
+/// has only its expected range, so its lowest end.
+int cheapestRent(AppState s, Hostel h) => h.listed ? h.rentMin : s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
+
+/// F26 #21: the listing-tier step, run before the picked sort. Under
+/// Price ↑: ✓ VERIFIED first inside each ₹2,000 price band ([tierCompare]);
+/// under any other sort listed hostels come after every verified one.
+HostelOrder? listingTierStep(AppState s) => (a, b) => tierCompare(a, b, (h) => cheapestRent(s, h), byPrice: s.sortBy == 'price');
 
 List<Hostel> filtered(AppState s) {
   final lim = {'Any': 1e9, '6k': 6000, '8k': 8000, '10k': 10000}[s.fB]!;
   bool ok(Hostel h) {
+    // F26 #21: a listed (UNVERIFIED) hostel has only its expected rent range;
+    // filters it can't answer (food, deals, a free bed, AC, amenities) leave it out.
+    if (h.listed) {
+      return !s.removed(h.id) && s.inMapArea(h) && (s.fG == 'Any' || h.gender == s.fG) && h.rentMin <= lim && !s.fFood && !s.fDeals && s.fS == 'Any' && s.fR == 'Any' && s.fAm.isEmpty;
+    }
     final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
     if (rs.isEmpty) return false;
     final from = rs.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
@@ -23,7 +44,7 @@ List<Hostel> filtered(AppState s) {
   }
 
   final out = browsable.where(ok).toList();
-  // Array.prototype.sort is stable; List.sort is not guaranteed to be, so sort by (mins, index).
+  // Array.prototype.sort is stable; List.sort is not guaranteed to be, so the last step is the index.
   final idx = {for (var i = 0; i < hostels.length; i++) hostels[i].id: i};
   // F03 Best deals: the 6-month saving (the Explore ribbon and the hostel
   // page headline); paused or hidden deals (F07, F10) have none, so 0.
@@ -32,36 +53,90 @@ List<Hostel> filtered(AppState s) {
     return q == null ? 0 : q.save6 * 10 + (q.upfront > 0 ? 1 : 0);
   }
 
-  int cheapest(Hostel h) => s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
-  final score = {for (final h in out) h.id: s.rankScore(h.id)};
-  // F10: an 80+ bed hostel's plan has a featured spot: first under Recommended.
-  final feat = {for (final h in out) if (s.featured(h.id)) h.id};
+  int cheapest(Hostel h) => cheapestRent(s, h);
+  // A hostel with no reviews yet has no rating: after every rated one.
+  double stars(Hostel h) => h.reviews == 0 ? -1 : h.rating;
+  int km(Hostel a, Hostel b) => s.kmFor(a).compareTo(s.kmFor(b));
 
+  // F26 #2: the picked sort, then nearest, then the list order.
+  final steps = <HostelOrder>[
+    ?listingTierStep(s),
+    switch (s.sortBy) {
+      'near' => km,
+      'rating' => (a, b) => stars(b).compareTo(stars(a)),
+      'deals' => (a, b) => saving(b).compareTo(saving(a)),
+      _ => (a, b) => cheapest(a).compareTo(cheapest(b)),
+    },
+    km,
+    (a, b) => idx[a.id]!.compareTo(idx[b.id]!),
+  ];
   out.sort((a, b) {
-    // F08 Recommended (Hostelzy rank), F03 Best deals, or Lowest price; then nearest.
-    final d = switch (s.sortBy) {
-      'rec' when feat.contains(a.id) != feat.contains(b.id) => feat.contains(a.id) ? -1 : 1,
-      'rec' => score[b.id]!.compareTo(score[a.id]!),
-      'deals' => saving(b).compareTo(saving(a)),
-      'price' => cheapest(a).compareTo(cheapest(b)),
-      _ => 0,
-    };
-    if (d != 0) return d;
-    final c = s.kmFor(a).compareTo(s.kmFor(b));
-    return c != 0 ? c : idx[a.id]!.compareTo(idx[b.id]!);
+    for (final f in steps) {
+      final d = f(a, b);
+      if (d != 0) return d;
+    }
+    return 0;
   });
+  // F10 / F26 #2: one featured (80+ bed) hostel keeps a pinned spot on top.
+  if (pinnedFeatured(s, out) case final pin?) {
+    out
+      ..remove(pin)
+      ..insert(0, pin);
+  }
   return out;
 }
 
-/// The best-ranked hostel among [results] (the "#1 near you" card).
+/// The one featured hostel pinned on top of [results]: the best-ranked
+/// featured one (F10 plan), or null.
+Hostel? pinnedFeatured(AppState s, List<Hostel> results) {
+  Hostel? top;
+  var best = double.negativeInfinity;
+  for (final h in results) {
+    // F26 #21: ranking and the featured spot are for verified hostels only.
+    if (h.listed || !s.featured(h.id)) continue;
+    final v = s.rankScore(h.id);
+    if (v > best) (top, best) = (h, v);
+  }
+  return top;
+}
+
+/// The best-ranked hostel among [results] (the "#1 near you" card; F26:
+/// whatever the sort, verified hostels only).
 String? topRanked(AppState s, List<Hostel> results) {
   String? top;
   var best = double.negativeInfinity;
   for (final h in results) {
+    if (h.listed) continue;
     final v = s.rankScore(h.id);
     if (v > best) (top, best) = (h.id, v);
   }
   return top;
+}
+
+/// F26 #1: the 📍 inside the search field: the map at my location (the
+/// location explainer first, when it isn't on yet).
+void openMapNearMe(AppState s) {
+  s.tab('map');
+  s.update(() {
+    if (s.myPos == null) {
+      s.sheet = 'loc';
+    } else {
+      s.mapArea = null;
+      s.areaCenter = null;
+      s.mapMoved = false;
+      s.mapFocus++;
+    }
+  });
+}
+
+/// F26 #2: "Near me" chip. Off: the location explainer. On: tapped again →
+/// Pick a place (area or landmark, the Where? field).
+void tapNearMe(AppState s) {
+  if (s.myPos == null) {
+    s.update(() => s.sheet = 'loc');
+  } else {
+    s.openWhere();
+  }
 }
 
 /// F16: small AC / Non-AC tag (AC: ink border, Non-AC: muted).
@@ -88,16 +163,10 @@ class ExploreScreen extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final results = filtered(s);
-    final top = s.sortBy == 'rec' ? topRanked(s, results) : null;
+    // F26 #2: one featured hostel pinned on top, then the picked sort.
+    final pinned = results.isNotEmpty && !results.first.listed && s.featured(results.first.id) ? results.first : null;
+    final top = topRanked(s, results);
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
-    void set(void Function() f) => s.update(f);
-    // F21 W2: one search bar, one row of filters; sort lives in Filters.
-    final chips = [
-      for (final g in const ['Men', 'Women', 'Co-living']) ChipBtn(g, on: s.fG == g, onTap: () => set(() => s.fG = s.fG == g ? 'Any' : g), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
-      ChipBtn('AC', on: s.fR == 'AC', onTap: () => set(() => s.fR = s.fR == 'AC' ? 'Any' : 'AC'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
-      ChipBtn('Under ₹8,000', on: s.fB == '8k', onTap: () => set(() => s.fB = s.fB == '8k' ? 'Any' : '8k'), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
-      ChipBtn('Hostelzy deals', on: s.fDeals, onTap: () => set(() => s.fDeals = !s.fDeals), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 12)),
-    ];
     return Scroll(
       key: ValueKey('explore${s.scrollEpoch}'),
       child: Column(
@@ -116,9 +185,10 @@ class ExploreScreen extends StatelessWidget {
             child: VGap(
               gap: 12,
               children: [
-                PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
+                // F26 #21: "· 12 verified · 84 listed" added once anything is listed.
+                PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now${s.tierLine(s.mapArea) ?? ''}' : 'Hyderabad', title: 'Find a bed', gap: 2),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
-                WhereBar(onTap: s.openWhere),
+                WhereBar(onTap: s.openWhere, onPin: () => openMapNearMe(s)),
               ],
             ),
           ),
@@ -128,8 +198,12 @@ class ExploreScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(
                 children: [
-                  FiltersBtn(onTap: () => set(() => s.sheet = 'search')),
-                  for (final c in chips) ...[const SizedBox(width: 6), c],
+                  // F26 #2: [📍 Near me ✓] [Price ↑ ▾] [Filters · n].
+                  RowBtn('Near me', key: const ValueKey('nearMeChip'), on: s.myPos != null, lead: 'pin', trail: s.myPos != null ? 'check' : null, onTap: () => tapNearMe(s)),
+                  const SizedBox(width: 6),
+                  RowBtn(sortLabels[s.sortBy] ?? 'Price ↑', key: const ValueKey('sortBtn'), trail: 'chevD', onTap: () => s.update(() => s.sheet = 'sort')),
+                  const SizedBox(width: 6),
+                  FiltersBtn(onTap: () => s.update(() => s.sheet = 'search')),
                 ],
               ),
             ),
@@ -157,9 +231,8 @@ class ExploreScreen extends StatelessWidget {
                       child: Row(children: [Ic('wifi', size: 18, color: p.tx), const SizedBox(width: 10), Expanded(child: T('Offline. Hostels as of ${dayMon(s.cachedAt!)}, ${clockTime(s.cachedAt!.millisecondsSinceEpoch).replaceFirst('Today, ', '')}. Tap to try again.', s: 13, w: 600, lh: 1.35))]),
                     ),
                   ),
-                // F21 W2: the rank shows once, on the first card.
-                // F10: featured hostels come first, so "#1" goes to the best rank among the results.
-                for (final h in results) HostelCard(h, first: h.id == top),
+                // F21 W2: the rank shows once, on the best-ranked card.
+                for (final h in results) h.listed ? UnverifiedCard(h) : HostelCard(h, pinned: h == pinned, first: h.id == top),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -277,26 +350,83 @@ class InlineError extends StatelessWidget {
 
 /// F21 W2: the one "Where?" field, on Explore and the Map.
 class WhereBar extends StatelessWidget {
-  const WhereBar({super.key, required this.onTap, this.height = 50});
+  const WhereBar({super.key, required this.onTap, this.onPin, this.height = 50});
   final VoidCallback onTap;
+
+  /// F26 #1: the 📍 inside the field (Explore: the map at my location).
+  final VoidCallback? onPin;
   final double height;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final set = s.mapArea != null || s.areaCenter != null || s.myPos != null || s.lm != landmarks.first;
-    return Tap(
+    final field = Tap(
       key: const ValueKey('whereBar'),
       onTap: onTap,
       child: Container(
-        height: height,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: box(bg: p.bg, w: 2, c: p.tx),
+        height: height - 4,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
           children: [
             const Ic('search', size: 18),
             const SizedBox(width: 10),
-            Expanded(child: set ? T(s.whereLabel, s: 15, w: 800, ell: true) : T('Where? Area, landmark or hostel', s: 15, c: p.mu, ell: true)),
+            Expanded(child: set ? T(s.whereLabel, s: 15, w: 800, ell: true) : T('Area, landmark or hostel', s: 15, c: p.mu, ell: true)),
+          ],
+        ),
+      ),
+    );
+    return Container(
+      height: height,
+      decoration: box(bg: p.bg, w: 2, c: p.tx),
+      child: Row(
+        children: [
+          Expanded(child: field),
+          if (onPin != null)
+            Tap(
+              key: const ValueKey('wherePin'),
+              onTap: onPin,
+              child: Semantics(
+                label: 'Map at my location',
+                button: true,
+                child: Container(
+                  width: height,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(border: Border(left: bs(2, p.tx))),
+                  child: Ic('pin', size: 22, color: p.ad),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F26 #2: a button in the row under the search field (40 px, 2 px rule);
+/// filled when [on].
+class RowBtn extends StatelessWidget {
+  const RowBtn(this.label, {super.key, required this.onTap, this.on = false, this.lead, this.trail});
+  final String label;
+  final VoidCallback onTap;
+  final bool on;
+  final String? lead, trail;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    final fg = on ? p.bg : p.tx;
+    return Tap(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 40),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: box(bg: on ? p.tx : transparent, w: 2, c: p.tx),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (lead != null) ...[Ic(lead!, size: 16, color: fg), const SizedBox(width: 6)],
+            T(label, s: 13, w: 800, c: fg, nowrap: true),
+            if (trail != null) ...[const SizedBox(width: 6), Ic(trail!, size: 14, color: fg)],
           ],
         ),
       ),
@@ -304,32 +434,15 @@ class WhereBar extends StatelessWidget {
   }
 }
 
-/// "Filters" with a count badge; opens the Filters sheet (sort is in there).
+/// "Filters · n"; opens the Filters sheet (Men / Women / Co-living, AC, food, rent…).
 class FiltersBtn extends StatelessWidget {
   const FiltersBtn({super.key, required this.onTap});
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final n = s.filterCount;
-    return Tap(
-      key: const ValueKey('filtersBtn'),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: box(w: 2, c: p.tx),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Ic('sliders', size: 16),
-            const SizedBox(width: 8),
-            const T('Filters', s: 13, w: 800, nowrap: true),
-            if (n > 0) ...[const SizedBox(width: 6), Container(color: p.ac, padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), child: T('$n', s: 12, w: 800, c: p.ai))],
-          ],
-        ),
-      ),
-    );
+    return RowBtn(n > 0 ? 'Filters · $n' : 'Filters', key: const ValueKey('filtersBtn'), lead: 'sliders', onTap: onTap);
   }
 }
 
@@ -343,11 +456,12 @@ class FiltersBtn extends StatelessWidget {
 }
 
 /// Photo-first hostel card (F21 W2): photo, save heart, rank once, a green
-/// Hostelzy price only when there's a deal, then the real cost.
+/// Hostelzy price only when there's a deal, then the real cost. "Featured"
+/// on the one pinned on top (F26 #2).
 class HostelCard extends StatelessWidget {
-  const HostelCard(this.h, {super.key, this.first = false});
+  const HostelCard(this.h, {super.key, this.pinned = false, this.first = false});
   final Hostel h;
-  final bool first;
+  final bool pinned, first;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -358,7 +472,6 @@ class HostelCard extends StatelessWidget {
     final best = s.bestQuote(h.id, f: s.fR);
     final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
     final free = s.freeOf(h.id).f;
-    final featured = s.featured(h.id);
     return Tap(
       onTap: () => s.update(() {
         s.hist = [...s.hist, s.screen];
@@ -383,8 +496,8 @@ class HostelCard extends StatelessWidget {
                     children: [
                       Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
                       // F10: the 80+ bed plan's featured spot is labelled, never passed off as rank.
-                      if (first || featured)
-                        Positioned(left: 8, top: 8, child: Container(key: featured ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (featured) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
+                      if (first || pinned)
+                        Positioned(left: 8, top: 8, child: Container(key: pinned ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (pinned) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
                       Positioned(
                         right: 8,
                         top: 8,
@@ -434,7 +547,10 @@ class HostelCard extends StatelessWidget {
 
 /// F18 (D9): the hostels the tenant saved, kept on this phone.
 class SavedScreen extends StatelessWidget {
-  const SavedScreen({super.key});
+  const SavedScreen({super.key, this.bare = false});
+
+  /// F26 #17: inside Saved & Holds, without its own title.
+  final bool bare;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -444,14 +560,15 @@ class SavedScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
-          child: Row(children: [if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)], const T('Saved', s: 30, w: 800, lh: 1.02, ls: -.025)]),
-        ),
+        if (!bare)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
+            child: Row(children: [if (s.hist.isNotEmpty) ...[BackBtn(onTap: s.back), const SizedBox(width: 12)], const T('Saved', s: 30, w: 800, lh: 1.02, ls: -.025)]),
+          ),
         Expanded(
           child: list.isEmpty
-              ? Padding(
+              ? Scroll(child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                   child: Column(
                     children: [
@@ -464,7 +581,7 @@ class SavedScreen extends StatelessWidget {
                       Cta('Find a bed', height: 50, px: 16, fs: 15, expand: false, onTap: () => s.tab('explore')),
                     ],
                   ),
-                )
+                ))
               : Scroll(
                   key: ValueKey('saved${s.scrollEpoch}'),
                   child: Column(

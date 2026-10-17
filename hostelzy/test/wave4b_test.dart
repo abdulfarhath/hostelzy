@@ -137,7 +137,7 @@ class _FakeScanner implements QrScanner {
 void main() {
   mapTiles = false;
 
-  testWidgets('F12: a women\'s PG\'s room comes from the server one by one; past the day\'s rooms it asks for a hold', (tester) async {
+  testWidgets('F12: a women\'s PG\'s room comes from the server one by one; until the SQL runs; the old daily limit never talks about a hold', (tester) async {
     final server = _Server();
     late AppState s;
     await tester.runAsync(() async => s = await _onServer(server));
@@ -154,13 +154,14 @@ void main() {
     expect(s.liveLayout(_w, 101), isNotNull);
     expect(find.text('Layout coming soon'), findsNothing);
     expect(find.textContaining('10 × 12 ft'), findsOneWidget);
-    // the next room: the server wants a hold first
+    // the next room: the old server's daily limit (until 4ab runs); no hold talk (F26)
     s.update(() => s.room = 102);
     await tester.pump();
     await _settle(tester);
     expect(server.calls, contains('room 102'));
     expect(find.byKey(const ValueKey('roomCapped')), findsOneWidget);
-    expect(find.text('Floor plan shows after you hold a bed'), findsOneWidget);
+    expect(find.text('Couldn’t open this room yet'), findsOneWidget);
+    expect(find.textContaining('hold'), findsNothing);
     // asked once: no loop of requests
     await tester.pump();
     expect(server.calls.where((c) => c == 'room 102').length, 1);

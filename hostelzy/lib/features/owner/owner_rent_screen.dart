@@ -6,8 +6,31 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../meter/stay_tools_screens.dart';
 
+/// F26 #20 rent tag colours: Paid green, Late red, Due plain (outline).
+({Color bg, Color fg, Color border}) rentTag(Pal p, String status) => switch (status) {
+  'Paid' => (bg: p.gb, fg: p.gn, border: p.gb),
+  'Overdue' => (bg: p.ab, fg: p.ad, border: p.ab),
+  _ => (bg: transparent, fg: p.tx, border: p.dv),
+};
+
+/// F26 #20: the ready WhatsApp reminder, from the resident's real row.
+String rentReminder(AppState s, Resident r) {
+  final month = monthYear(appToday).split(' ').first;
+  final n = r.note.trim();
+  final when = RegExp(r'^\d+ days? late$').hasMatch(n)
+      ? 'is $n'
+      : n.startsWith('Due ')
+      ? 'is due ${n.substring(4)}'
+      : r.status == 'Overdue'
+      ? 'is late'
+      : 'is due';
+  final upi = s.ownerUpi[s.ownHid]?.id ?? '';
+  return 'Hi ${r.name.split(' ').first}, $month rent ${fmt(r.amt)} for bed ${r.bed} $when. Pay in the Hostelzy app${upi.isEmpty ? '' : ' or by UPI to $upi'}.';
+}
+
 /// F22 Area 3 (board `oRent`): what came in and what's still to come, then
-/// one row per resident with a plain tag and a bell to remind.
+/// one row per resident with a status tag (F26 #20: Paid green, Late red, Due
+/// plain) and Call + WhatsApp on every unpaid row.
 class OwnerRentScreen extends StatelessWidget {
   const OwnerRentScreen({super.key});
   @override
@@ -107,19 +130,30 @@ class OwnerRentScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Tag(word(r.status), bg: tagOf(p, r.status).bg, fg: tagOf(p, r.status).fg),
+                        Tag(word(r.status), key: ValueKey('rentTag-${r.bed}'), bg: rentTag(p, r.status).bg, fg: rentTag(p, r.status).fg, border: rentTag(p, r.status).border),
                         const SizedBox(width: 10),
-                        if (r.status != 'Paid')
+                        if (r.status != 'Paid') ...[
                           Tap(
-                            key: ValueKey('remind-${r.bed}'),
-                            onTap: () => s.whatsapp(r.phone, 'Hi ${r.name.split(' ')[0]}, a reminder: your rent of ${fmt(r.amt)} for bed ${r.bed} is due. Thanks, ${hostelById(s.ownHid).owner}'),
+                            key: ValueKey('rentCall-${r.bed}'),
+                            onTap: () => s.call(r.phone),
                             child: Semantics(
-                              label: 'Remind ${r.name} on WhatsApp',
-                              child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const Ic('bell', size: 18)),
+                              button: true,
+                              label: 'Call ${r.name}',
+                              child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const Ic('phone', size: 18)),
                             ),
-                          )
-                        else
-                          const SizedBox(width: 44),
+                          ),
+                          const SizedBox(width: 6),
+                          Tap(
+                            key: ValueKey('rentWa-${r.bed}'),
+                            onTap: () => r.phone.isEmpty ? s.toastMsg('No number for ${r.name} yet.') : s.whatsapp(r.phone, rentReminder(s, r)),
+                            child: Semantics(
+                              button: true,
+                              label: 'WhatsApp reminder to ${r.name}',
+                              child: Container(width: 44, height: 44, alignment: Alignment.center, color: p.tx, child: Ic('msg', size: 18, color: p.bg)),
+                            ),
+                          ),
+                        ] else
+                          const SizedBox(width: 94),
                       ],
                     ),
                   ),

@@ -106,12 +106,9 @@ void main() {
     await _settle(tester);
     // Nothing held or asked: nothing asked for, the number stays hidden.
     expect(server.asked, isEmpty);
-    expect(find.textContaining('Owner’s number shows after you hold a bed.', findRichText: true), findsOneWidget);
-    expect(find.text('••••• •••••'), findsOneWidget);
-
-    await s.enquireLive('nest42', 'Hi, can I visit?', from: 'Hostel page · Ask on WhatsApp');
-    await _settle(tester);
-    expect((s.sheet, s.waRef, s.waPhone), ('wa', 'HZ-7001', '9123456789'));
+    // F26 #7: locked, and no enquiry to unlock it.
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Ask on WhatsApp'), findsNothing);
     s.dispose();
   });
 }

@@ -109,7 +109,8 @@ abstract class Reminders {
   Future<int> glasses();
   Future<void> setGlasses(int n);
 
-  /// Taps on a reminder that open the app: its kind (water | mine | meal | rent).
+  /// Taps on a reminder that open the app: its kind (water | mine | meal |
+  /// rent), or a meal ask's `food|hostel|day|meal|eat|skip|open` (F27-5).
   void onOpen(void Function(String kind) f);
 }
 
@@ -150,6 +151,8 @@ NotificationDetails _details(String kind) => NotificationDetails(
       'water' || 'mine' => const [AndroidNotificationAction('done', 'Done'), AndroidNotificationAction('snooze', 'Snooze 10 min')],
       'meal' => const [AndroidNotificationAction('open', 'Open menu', showsUserInterface: true)],
       'rent' => const [AndroidNotificationAction('open', 'Pay rent', showsUserInterface: true)],
+      // F27-5: the answer is saved by the app (signed in), so both open it.
+      'food' => const [AndroidNotificationAction('eat', 'Eating', showsUserInterface: true), AndroidNotificationAction('skip', 'Skip', showsUserInterface: true)],
       _ => const [],
     },
   ),
@@ -159,6 +162,49 @@ const _init = InitializationSettings(android: AndroidInitializationSettings('ic_
 
 /// Payload: `kind|title|body`, so a snooze can ring the same reminder again.
 String _payload(Ring r) => '${r.kind}|${r.title}|${r.body}';
+
+/// F27-5: a meal ask from the server ("Dinner at 8 · Eating?"), sent as data
+/// only so the phone can show it with Eating / Skip buttons.
+class FoodAsk {
+  const FoodAsk({required this.title, required this.body, required this.hostel, required this.day, required this.meal});
+  final String title, body, hostel, day, meal;
+
+  /// From the push's data; null for any other push.
+  static FoodAsk? fromData(Map<String, dynamic> d) {
+    String v(String k) => '${d[k] ?? ''}';
+    if (v('ask') != 'food' || v('title').isEmpty || v('hostel').isEmpty || !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(v('day')) || !const ['b', 'l', 'n'].contains(v('meal'))) return null;
+    return FoodAsk(title: v('title'), body: v('body'), hostel: v('hostel'), day: v('day'), meal: v('meal'));
+  }
+
+  /// `food|hostel|day|meal`; a tap adds the button (`|eat`, `|skip`, `|open`).
+  String get payload => 'food|$hostel|$day|$meal';
+
+  /// One notification per meal (a newer ask replaces the old one).
+  int get id => 6000 + const ['b', 'l', 'n'].indexOf(meal);
+}
+
+/// What the app is told about a tap: a reminder's kind, or for a meal ask
+/// `food|hostel|day|meal|eat` (the button, or `open` for the notification).
+String tapArg(String? payload, String? actionId) {
+  final p = payload ?? '';
+  if (p.startsWith('food|')) return '$p|${actionId == null || actionId.isEmpty ? 'open' : actionId}';
+  return p.split('|').first;
+}
+
+/// F27-5: shows a meal ask (from the background push handler, or a push
+/// that arrives while the app is open). Android only.
+@pragma('vm:entry-point')
+Future<void> showFoodAsk(Map<String, dynamic> data) async {
+  final a = FoodAsk.fromData(data);
+  if (a == null || kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+  try {
+    final n = FlutterLocalNotificationsPlugin();
+    await n.initialize(settings: _init);
+    await n.show(id: a.id, title: a.title, body: a.body, notificationDetails: _details('food'), payload: a.payload);
+  } catch (e) {
+    debugPrint('food ask: $e');
+  }
+}
 
 /// "Done" and "Snooze 10 min" without opening the app (background isolate).
 @pragma('vm:entry-point')
@@ -191,7 +237,7 @@ class LocalReminders implements Reminders {
       final r = LocalReminders();
       await r._n.initialize(settings: _init, onDidReceiveNotificationResponse: r._tap, onDidReceiveBackgroundNotificationResponse: reminderAction);
       final l = await r._n.getNotificationAppLaunchDetails();
-      if (l?.didNotificationLaunchApp == true) r._launched = (l!.notificationResponse?.payload ?? '').split('|').first;
+      if (l?.didNotificationLaunchApp == true) r._launched = tapArg(l!.notificationResponse?.payload, l.notificationResponse?.actionId);
       return r;
     } catch (e) {
       debugPrint('Reminders: $e');
@@ -204,7 +250,7 @@ class LocalReminders implements Reminders {
       reminderAction(r);
       return;
     }
-    _open?.call((r.payload ?? '').split('|').first);
+    _open?.call(tapArg(r.payload, r.actionId));
   }
 
   @override

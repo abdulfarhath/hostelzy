@@ -117,10 +117,180 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 F26 merge published by the hub on 2026-10-06 (canvas version 20, Design's prepared merge from `design/f26-merge`). Because the canvas has a 512-file limit, the 19 pre-F26 copies (`z26-*`) are kept only in that branch, not on the canvas.
 
 ## Build
-Prototype v4 has all 21 items + open layouts (branch `f26/integration`, PRs #121–#125). `main` only after the founder approves in the prototype.
+**Merged to `main` on 2026-10-17 (PR #141, squash)** after the founder approved prototype v6
+(https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g). Five PRs (#121–#125, closed as superseded) were integrated on
+`f26/integration` (see Integration at the end). Founder SQL: one re-run of `docs/sql/run-all-pending.sql` covers 4zo1 and 4ze26
+(and 4zf27 once F27 lands).
 
+### B · bed picker, Edit this layout, layouts open to all (#8, #12) · PR #121 · branch `feature/f26-picker-layouts`
+- **#8 Pick a bed:** no Plan / Room / Building tabs. Floor chips on top ("Floor 1 · Floor 2…") jump (scroll) to the
+  floor; below, one scroll of every room grouped by floor ("Floor 2 · 4 free"): name + share · rent, "n free", the room's
+  **drawn layout** (the F12 `LayoutMap`: beds, fan, AC, window, door, washroom). A room without a layout shows its beds
+  as boxes. Tap a free bed → the bottom bar ("Bed 201-B · ₹8,000/mo", "Floor 2 · <spot>") → Continue → hold sheet, as
+  before. A room's name opens it on its own (S17, unchanged facts / compare) with a "Floor view" link back. The AC /
+  Non-AC chips stay when a hostel has both. The "cheapest first" list (S18) is gone. "See the whole building" opens
+  this picker (the building view itself moves to the hostel page: agent A). Labels on the drawing never take a tap now,
+  so a fan label over a bed still picks the bed.
+- **#12 Edit this layout:** red primary (`Cta`, #ec3013; no orange token) under each drawn room in the picker and above
+  the bar on the room on its own → F19 `openFixEditor` (try mode for non-residents, the real fix editor for residents).
+  Try mode reads "Try a layout · Room N", "Try mode · only on this phone", "Move things to see how the room works for
+  you"; its button is **Publish** → sheet "Only residents can send a fix" · "Book a bed to join. Your tries stay on this
+  phone." · **Pick a bed** (leaves the try, back to the picker) · **Keep trying**.
+- **Open layouts:** `floorLocked`, the `FloorLocked` card, the "Sign in to see room layouts" state and every "after a
+  hold" layout message are gone. Until the SQL runs, a women's PG room opened on its own is still fetched one by one;
+  the old server's daily limit shows "Couldn’t open this room yet · Floor view" (no hold talk).
+- **Server:** `supabase/migrations/20261006100000_f26_open_layouts.sql`: "read published layouts" = published + live
+  (no women's check, no sign-in check); `room_layout()` without the hold / sign-in checks and the 6-rooms-a-day cap,
+  executable by `anon` too; `layout_peeks`, `sees_floor()`, `is_womens()` dropped. Bundles regenerated.
+  FOUNDER-TODO **4zo1** (re-run `docs/sql/run-all-pending.sql`). Safety rule unchanged.
+- **Screens:** S16 changed, S17 changed (Floor view link, Edit this layout), S18 removed, S32 try-mode copy, S87 no
+  longer a picker tab, H13 `fixLock` copy; states T10, T11, T13 removed (SCREENS.md updated, retired ids listed).
+- **Tests:** `test/f26_picker_test.dart` (Edit this layout → try → Publish → sheet → Keep trying / Pick a bed; red button
+  on the room; a room without a layout picks from boxes; women's PG open without a hold; 2× text at 360 px, light +
+  dark, both views); flows / tenant / amenities / f25 / wave4b tests updated for the new picker. SQL: `wave4b_test`
+  section 1 rewritten (everyone incl. guests and anon, any number of rooms, drafts and non-live hostels stay private,
+  old pieces gone), `rls_test` (anon and anonymous sign-in now read published layouts), `indexes_test` (45 + no
+  `layout_peeks`).
+
+### A · tenant Explore + hostel page (#1–#6) · PR #122 · branch `feature/f26-tenant`
+- **#1** Explore's search field has the 📍 inside on the right (`wherePin`): the Map at my location; the location
+  explainer (`loc`) comes first when location isn't on yet. The field keeps its text ("Area, landmark or hostel").
+- **#2** One row under it: **[📍 Near me ✓] [Price ↑ ▾] [Filters · n]**. Near me off → the explainer; on (✓, filled) →
+  tapped again opens Pick a place (the Where? field, S12). Turning location on no longer changes the sort.
+  Sort dropdown = new sheet **H44 `sort`**: Price ↑ (default, `sortBy = 'price'`) · Distance · Rating · Best deals
+  ("Recommended" is gone from Explore; the rank stays on the owner side). Men / Women / Co-living / AC / Non-AC /
+  sharing / Food included · **No food** (new `fNoFood`) / Rent live in Filters (H1, no sort there).
+  **One featured (80+ bed, F10) hostel is pinned on top in every sort** (the best-ranked featured one) under a
+  "Featured" kicker, then "Then by price, lowest first"; the first card after it is tagged "Lowest price" /
+  "Nearest". "#1 near you" is gone. Hook for #21: `listingTierStep()` in `explore_screen.dart` (a `HostelOrder`
+  comparator run before the picked sort; returns null today) is where "verified first inside each price band" goes.
+- **#3** Hostel page shows the Building view (S87 `BuildingView`) inline (`HostelBuilding`); a free bed opens the
+  picker on that bed, a floor opens H42. "On each floor" and "See the whole building ›" are gone. A hostel with more
+  than 80 beds (`featuredBeds`, the same line as F10's featured spot) shows **"See all N rooms ›"** with "B beds on F
+  floors · n free" → the same view on its own page (`building`; id **S87**, see Integration).
+- **#4** The hostel page food is always the whole-week table, today's row highlighted, no today card / no sheet:
+  shared component **`lib/features/food/week_table.dart`**: `FoodWeekTable(hid:, menu:)` (just the table; "Menu not
+  added yet" when empty) and `FoodWeekSection(hid:, padding:)` (kicker "Food menu · this week" + "From <owner>’s
+  menu", loads the menu on show, hidden when no food and no menu). Resident Home (C) uses the same component.
+  Sheet **H10 `foodWeek` retired** (and `openFoodFor`).
+- **#5** **✓ VERIFIED** badge (navy, white text, new `Pal.vf`: light `#1f3a5f` / dark `#33598a`) next to the name, only
+  when `visited_on` is set, with "Beds and prices checked by Hostelzy · <date>". "Visited by Hostelzy" (info line and
+  the block) is gone; the availability line stays.
+- **#6** The tag boxes are gone from the hostel page.
+- No SQL. Tests: new `test/f26_tenant_test.dart` (pin, Near me, sort dropdown, Filters, pinned Featured, VERIFIED,
+  no tags, inline building, 80+ collapse, 360 px × 2× text light + dark); updated amenities, f25, flows, food,
+  guest, wave3a, wave4d tests for the new behaviour. `flutter analyze` clean, `flutter test` all passing.
+- Screens: **+H44 `sort`**, **−H10 `foodWeek`**, S87 also on its own page `building`; changed S8 `explore`, S12 `where`, S13 `detail`,
+  S87 (also inline), H1 `search`.
+### D · owner screens (#18, #19, #20) · PR #123 · branch `feature/f26-owner`
+- **#18 Today** (`owner_today_screen.dart`): the long card list is now **Holds · Payments · Fixes** tabs with counts
+  (`needItems`, `NeedsYouNow`). The first tab with something urgent opens first (a hold's countdown, a late refund),
+  else the first with anything in it; a tab the owner picks stays until it empties. Holds = hold requests
+  (**Confirm** / **Decline**), notices and bed moves, "Still N free beds?". Payments = payments to confirm, refunds,
+  "Are your rates still right?". Fixes = layout fixes, quick fixes, repairs, broken shared things, "New layout for
+  Room N" (Hostelzy drew one; was the tag on the old Rooms list), "Do your room layouts still match?". The old
+  FreeBeds / Rates / ConfirmLayouts cards are items now (lead, 2026-10-06). Fair Play stays pinned on top. All empty:
+  "Nothing needs you now · New holds, payments and fixes show up here." (T33). This month card unchanged below.
+- **#19 Beds** (`owner_beds_screen.dart`): the Building view only (Rooms list, floor chips, the Rooms · Building
+  toggle and "Rooms and rates ›" are gone; `obView` / `obFloor` removed). A bed → bed sheet (H18); a room's number →
+  its layout or "Create a layout" (`BuildingView.onRoom`, new optional param); "Layouts › to create or copy one".
+- **#20 Rent** (`owner_rent_screen.dart`): Paid green (`gb`/`gn`), Late red (`ab`/`ad`), Due plain (outline `dv`;
+  `Tag` gained an optional `border`). **Call** + **WhatsApp** replace the bell on every unpaid row. WhatsApp opens
+  with the resident's real number and `rentReminder`: "Hi Faiz, October rent ₹7,600 for bed 101-A is 12 days late.
+  Pay in the Hostelzy app or by UPI to <owner UPI>." (UPI part only when the owner has one).
+- **Enquiries, owner side removed:** Manage › Enquiries (S41), its row, the Today enquiry item, the enquiry sheet
+  (H19 `enq`, `EnquirySheet`, `openEnquiry`, `enqRef`), the overview link. An owner's `app/r/` link now opens Today.
+  The tenant side, the `Enquiry` data and the server are agent E's.
+- No SQL, no FOUNDER-TODO step.
+- Tests: new `test/f26_owner_test.dart` (tabs and counts, urgent first, Fair Play above, empty state, checks in their
+  groups, Building-only Beds, room → layout, Rent colours, WhatsApp text and number, Call, 360 px at 2× light + dark).
+  Updated: `owner_test`, `home_today_test`, `f25_test`, `flows_test`, `wave2b_test`, `wave4d_test`, `amenities_test`,
+  `fix_extras_test`, `moves_test` (they open the right Today tab; Beds use the Building keys).
+- SCREENS: S36, S37, S38 changed; S41 and H19 retired; T33 added.
+### C · resident tabs + Me (#4/#13 resident Home, #10, #11, #14–#17) · PR #124 · branch `feature/f26-resident`
+- **Resident tab bar** Home · Rent · My stay · Find a bed · Me (`ui/shell.dart` `_tabs`, `_tabsOf`). Rent is a plain tab;
+  Home keeps its red Pay button. Labels shrink to fit at 2× text instead of overflowing.
+- **#4 #13 Home:** the Food tab and page are gone (`food_screen.dart` deleted). Home shows **Food this week**: the 7-day
+  table (day · Breakfast · Lunch · Dinner with each meal's start time), always open, today's row highlighted
+  ("Fri · today"), no toggle (integration: the shared `FoodWeekTable` from `features/food/week_table.dart`; C's local
+  `HomeWeek` is deleted). "How was breakfast?" stays under the table so owners' meal ratings
+  keep coming (it lived on the Food page; Design: add it to the Home board). No menu → one honest line. Meal reminders
+  open Home.
+- **#14 My stay tab** (`StayScreen`): bed card, then **Your bed** (Move to another bed, Give notice, Your refund, Review
+  your stay, Fix a room layout), then **Help** (Something wrong in your room? → sheet `complaint`; Your complaints → sheet
+  `complaints`, its line red while something is open: "1 being fixed · Geyser"). The Help tab is gone; Home › Raise
+  complaint opens the same sheet; after Send to owner the list opens. "Your refund" shows the open refund (opens it) or
+  what comes back from the advance (plain row).
+- **#15 #17 Find a bed** (`features/session/tabs.dart`): the resident switches to the tenant screens with the bar
+  Explore · Map · Saved & Holds · My stay · Me; **My stay** goes back; Back on Explore stays inside. **Saved & Holds**
+  (`savedHolds`, `features/holds/saved_holds_screen.dart`) is one tab with two segments (Saved · n / Holds · n). A
+  resident can hold a bed at another hostel (same hold flow, no server change); their stay doesn't change. A plain
+  tenant keeps Explore · Map · Saved · Holds · Me. The hostel page's food sheet shows the opened hostel inside Find a bed.
+  A resident's hold release cancels its unconfirmed advance like a tenant's.
+- **#16 red dot** on Holds (tenant) and on Saved & Holds (resident) when a hold the user had seen was **kept or
+  declined** since; it goes once Holds or that hold's page is on screen; Saved & Holds then opens on Holds. On the phone
+  only (`holdSeen`, kept with the app's local data), no SQL.
+- **#10 #11 Me:** no Saved, Holds or My stay rows (they are tabs); **Log out** in red at the end (Settings keeps its Log
+  out too).
+- **Screens:** retired S24, S25 (`food`), S27 (`help`), S28 (old Me › My stay) and state 19; new S88 `savedHolds`, S89
+  `rStay` (My stay tab), H45 `complaint`, H46 `complaints` (`docs/SCREENS.md`).
+- **SQL:** none. **Tests:** `test/f26_resident_test.dart` (tab bars, Find a bed round trip with a hold elsewhere, red
+  dot for tenant and resident, Me rows + red Log out, 360 px at 2× text); food, home, resident, tenant, everywhere and
+  flows tests updated to the new tabs.
+
+### E · holds, owner contact, UNVERIFIED listings (#7, #9, #21) · PR #125 · branch `feature/f26-holds-listings`
+| # | What changed |
+|---|---|
+| 7 | Hostel page owner block (`OwnerContact`, `fair_play_screens.dart`): locked before a hold ("Message and call the owner after you hold a bed", WhatsApp + Call greyed, no tap). A **live** hold (waiting, kept, paying or booked, not ended) shows the number, "You held N", WhatsApp (ready message "Hi Srinivas, I held bed 204-D at Anjani Residency on Hostelzy. Booking code HZ-4830.") and Call. Ends or declined → locked again. Same `ContactButtons` on the Holds tab and the hold page. "Ask on WhatsApp" and the tenant enquiry flow (`enquire`, `enquireLive`, the booking-code line in the WhatsApp sheet) are gone; the app writes no enquiries. The owner's Enquiries list is gone too (agent D) |
+| 9 | `hold_steps.dart`: Sent → Owner reviewing → Kept / Declined on the Holds tab (the live hold sits in a framed card) and the hold page. "Owner reviewing" only after the owner opened it (`holds.seen_at`, set by `hold_seen()` when the hold shows in owner Today or its bed sheet; `markHoldsSeen(ids)`). After 30 min with no answer: "Still waiting. Call the owner?" with Call first. Owner's no = "Declined" (`holds.declined`), not "Released". Push on keep/decline already existed |
+| 21 | Hostels can be **listed** (UNVERIFIED): `Hostel.listed`, `rentMin`/`rentMax`. Explore card `UnverifiedCard` (grey outline UNVERIFIED badge as its own widget `UnverifiedBadge`, "Around ₹7,000–9,000/mo · expected, not confirmed"); hostel page T32 `UnverifiedScreen` (via `HostelPage` on the `detail` key): no beds, holds, layouts or contact; **Tell me when verified** (waitlist, push when live), **Ask Hostelzy** (WhatsApp to `supportWhatsApp`, hostel filled in), **Are you the owner? Claim this hostel ›** (sheet H47 `claim`). Explore header "Madhapur · 12 verified · 84 listed" (`area_counts()`, else counted on the phone) once anything is listed. Tier step in `filtered()` (`tierCompare`): verified first inside each ₹2,000 price band under Price ↑; after verified under other sorts. Not ranked or featured. Demo build has one listed sample (Sri Balaji Men’s PG). Console: **Listed** (list a hostel with rent range, add photos, List it / Take off, waitlist count) and **Claims** (Call / WhatsApp / Done / Not the owner) |
+
+**Server** (`supabase/migrations/20261006110000_f26_holds_listings.sql`, FOUNDER-TODO **4ze26**, re-run `docs/sql/run-all-pending.sql`):
+`owner_contacts` only for staff, the team, a live hold (waiting/held before it ends, or booked) or a resident (left ≤ 60 days, for the refund);
+no enquiry clause, no 60-day carry-over of ended holds. `hostel_signals` reply speed from hold replies only. `holds.seen_at` +
+`hold_seen(uuid[])` (hostel staff only), `holds.declined` (set when someone else releases a waiting/kept hold). `hostels.status`
+adds `listed`, `rent_min`/`rent_max`; listed hostels and their photos are public (`is_public()`), everything else stays on
+`is_live()` (= live only), so rooms, beds, prices, layouts, deals, reviews and holds are refused. `list_hostel()` (team),
+`verify_waitlist` (own rows), `claim_requests` (own rows, team decides), `area_counts()` (public). `go_live()` now pushes the
+waitlist once (data.kind `beds`, always sent: they asked). Until it runs: contact stays locked without a hold, steps never reach
+"Owner reviewing", nothing shows as UNVERIFIED, waitlist and claim say they couldn't save.
+
+**For the hub:** DECISIONS' ranking row still says "reply speed" and the 2026-10-02 F07 line mentions "Enquire on WhatsApp"
+and enquiry reply speed; the server now uses hold replies only. "Owner phone" row: now "only with a live hold or a stay".
+
+**Tests:** `hostelzy/test/f26_holds_listings_test.dart` (contact lock/unlock, steps, seen, declined, listed rows, Explore tier
+order, T32 buttons, claim, server counts); updated enquiry tests in `flows_test`, `wave4a_test`, `tenant_test`, `guest_test`,
+`owner_phone_test`. SQL `supabase/tests/f26_listings_test.sql` (+ `owner_phone_test.sql`, `values_test.sql` updated).
+Console `supabase/functions/tests/listed.test.ts`.
+
+### Integration · branch `f26/integration` (2026-10-06)
+Merged in order B (#121) → A (#122) → D (#123) → C (#124) → E (#125); not merged to `main` (prototype first).
+- **Week table:** resident Home uses A's shared `FoodWeekTable` (`features/food/week_table.dart`) under C's "Food this
+  week" kicker, with C's "How was breakfast?" under it. C's local `HomeWeek` is deleted. The `food: … fits at 2× text`
+  test no longer opens the retired `foodWeek` sheet.
+- **Tier hook:** A's `listingTierStep(AppState)` now runs E's `tierCompare` (with one `cheapestRent()` for both): Price ↑ →
+  ✓ VERIFIED first inside each ₹2,000 band; any other sort → listed after every verified hostel. E's second sorting path
+  in `filtered()` is gone (A's step list is the only one). A listed hostel is never the pinned Featured one (`pinnedFeatured`
+  skips it) and is drawn as `UnverifiedCard`. "Lowest price" goes on the first card only when it really is the lowest
+  (a cheaper listed hostel can sit after it in the same band).
+- **Red dot (#16) with Declined:** E marks an owner's no as status `released` + `declined`. The dot now keys on
+  `declined` (shown) vs a plain `released` (expiry or own release: no dot). C's `markHoldsSeen()` is renamed
+  `markHoldResultsSeen()` (it clashed with E's server `markHoldsSeen(ids)` for "Owner reviewing").
+- **Enquiries:** D removed the owner side, E the tenant side; the old F05 flow test now checks neither exists.
+- **Building:** D's `BuildingView(onRoom:)` on owner Beds and A's inline `HostelBuilding` + `building` page both stay.
+  `building` (screen key) and `HostelPage` (E's `detail` switch) are both routed in `shell.dart`.
+- **SQL:** B (20261006100000, 4zo1) and E (20261006110000, 4ze26) bundles regenerated with `tools/sql-bundle.sh` and
+  `--full`; FOUNDER-TODO keeps both steps in order and says one re-run of `docs/sql/run-all-pending.sql` covers both.
+  SQL tests: `wave4b_test` (B) and `f26_listings_test` (E) both run, no fixture clashes.
+- **SCREENS.md:** recounted (ids fixed by Design + the lead): `building` is S87 on its own page (not S88); S88
+  `savedHolds`, S89 `rStay`; H44 `sort`, H45 `complaint`, H46 `complaints`, H47 `claim`; T32 unverified, T33 owner
+  empty. One "F26 changes" note. Totals: screens 81, sheets 44, states 29 (app 154), console 15, web 8, overall 177.
+- **Tests:** `f26_tenant_test` near-sort check is per tier (listed after verified); `f26_resident_test` red dot checks
+  expiry = no dot, owner decline = dot; `f26_holds_listings_test` checks a listed hostel is never pinned and sorts after
+  verified under Distance; `resident_test` checks the shared table's today row.
 ### Not in the spec (hub audit of the diff, 2026-10-06): reverted
-The founder: "I only wanted the changes I said." Build also changed these; all are being reverted on `f26/integration`:
+The founder: "I only wanted the changes I said." Build also changed these; **all 12 reverted on `f26/integration`
+(2026-10-17)**, each back to main's behaviour and wording:
 | # | Screen | Unrequested change |
 |---|---|---|
 | 1 | Pick a bed | "See cheapest beds ›" list removed (S18 returns) |
@@ -136,5 +306,23 @@ The founder: "I only wanted the changes I said." Build also changed these; all a
 | 11 | Try mode | Wording rewritten |
 | 12 | Explore | Location on no longer switches the sort |
 
-Checked and unchanged: AC / non-AC rent table, card prices, picker room lines, sample prices; every green use (deals, Hostelzy price, ₹100 reward, Paid).
+How each came back (Build, 2026-10-17): 1 the picker's legend has "See cheapest beds ›" again → S18 list, "‹ Back to the plan" ·
+2 `fNoFood` gone · 3 main's Filters sheet (For segment, 2/3/4 sharing then AC/Non-AC, Budget with Any, Deals, On the floor, the
+Food included switch), only its "Sort by" group stays out (sort is the Price ↑ dropdown, asked) · 4 no kickers, no "Lowest price" /
+"Nearest" tags; the one pinned card says "Featured"; "#1 near you" on the best-ranked verified card **whatever the sort** (hub
+answer, 2026-10-17) · 5 "Hyderabad · N beds free now" + " · N verified · M listed" once anything is listed · 6 the ₹100 line is under
+the lock line until a hold · 7 no breakfast card on Home (the rating still saves if called; no screen asks for it) · 8 FreeBedsCard,
+ConfirmLayoutsCard, RatesConfirmCard back at the bottom of Today, outside the tabs · 9 "Confirm hold" · 10 "Rooms and rates ›" under
+the Building view on owner Beds · 11 try mode reads "Edit room · Room N", "You don’t live here · leaving discards your try", "Try mode ·
+play freely, nothing is saved"; new only: the red "Edit this layout" entry and Publish → "Only residents can send a fix" / "Book a
+bed to join." (buttons Book a bed · See beds) · 12 location on → sort Distance + "Showing hostels by distance from you."
+
+**AC / non-AC price check (2026-10-17): same as main.** The picker's per-room rent line, the hostel page's AC / non-AC rent
+table, `bestQuote`, card prices and the sample rates use main's code and numbers. Only the Explore order differs (Price ↑ is
+the default, asked; one Featured card pinned on top), so a different hostel's price can show first.
+
+Checked and unchanged: every green use (deals, Hostelzy price, ₹100 reward, Paid).
+
+Test-only fix (2026-10-17, no app change): `supabase/tests/wave2a_test.sql` read the AC-off date in UTC, so it failed every
+evening after 6:30 pm UTC (India's next day); it now reads it in India time like the line it compares with.
 Side-effects the spec forces (kept): enquiries retired (#7), meal reminders open Home (#13), Help as sheets and refund row in My stay (#14), Rooms list gone (#19), rank counts verified only (#21).

@@ -504,6 +504,39 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
+  Future<FoodBoard?> foodBoard(String hid, DateTime from, int days) async {
+    try {
+      final r = await db.rpc('food_board', params: {'p_hostel': hid, 'p_from': ymd(from), 'p_days': days});
+      return r is Map ? foodBoardFromJson(r.cast<String, dynamic>()) : null;
+    } on PostgrestException catch (e) {
+      // Before FOUNDER-TODO 4zf27 runs there is no Save food yet.
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<void> answerMeals(String hid, Map<String, bool> answers) => db.rpc('rsvp_meals', params: {
+    'p_hostel': hid,
+    'p': [
+      for (final e in answers.entries) {'day': e.key.split('|').first, 'meal': e.key.split('|').last, 'eating': e.value},
+    ],
+  });
+
+  @override
+  Future<void> setMealCutoff(String hid, int hours) => db.rpc('set_meal_cutoff', params: {'p_hostel': hid, 'p_hours': hours});
+
+  @override
+  Future<Map<String, int>> hostelPlates(List<String> hids) async {
+    try {
+      return {for (final r in (await db.rpc('hostel_plates', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>()) r['hostel_id'] as String: (r['n'] as num).toInt()};
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return {};
+    }
+  }
+
+  @override
   Future<Map<String, ({String phone, String wa})>> ownerContacts(List<String> hids) async => {
     for (final r in (await db.rpc('owner_contacts', params: {'p_hostels': hids}) as List).cast<Map<String, dynamic>>())
       if ('${r['phone'] ?? ''}${r['whatsapp'] ?? ''}'.isNotEmpty) r['hostel_id'] as String: (phone: r['phone'] as String? ?? '', wa: r['whatsapp'] as String? ?? ''),
@@ -623,6 +656,38 @@ class SupabaseRepo implements HostelRepo {
   Future<List<Lead>> teamTracker() async => [for (final r in (await db.rpc('team_tracker') as List).cast<Map<String, dynamic>>()) leadFromRow(r)];
   @override
   Future<void> setLeadStage(String hid, int stage) => db.from('hostel_leads').upsert({'hostel_id': hid, 'stage': leadStages[stage], 'updated_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'hostel_id');
+
+  @override
+  Future<void> holdSeen(List<String> holdIds) async {
+    try {
+      await db.rpc('hold_seen', params: {'p_holds': holdIds});
+    } on PostgrestException catch (e) {
+      // Before FOUNDER-TODO 4ze26 runs the tenant just doesn't see "Owner reviewing".
+      if (!_missingFn(e)) rethrow;
+    }
+  }
+
+  @override
+  Future<void> joinWaitlist(String hid) => db.from('verify_waitlist').insert({'hostel_id': hid});
+
+  @override
+  Future<Set<String>> myWaitlist() async => {for (final r in await db.from('verify_waitlist').select('hostel_id')) r['hostel_id'] as String};
+
+  @override
+  Future<void> sendClaim(String hid, String name, String phone) => db.from('claim_requests').insert({'hostel_id': hid, 'name': name, 'phone': phone});
+
+  @override
+  Future<Map<String, ({int verified, int listed})>?> areaCounts() async {
+    try {
+      return {
+        for (final r in (await db.rpc('area_counts') as List).cast<Map<String, dynamic>>())
+          r['area'] as String: (verified: (r['verified'] as num).toInt(), listed: (r['listed'] as num).toInt()),
+      };
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
 }
 
 /// A function the app calls isn't on the server yet (its SQL hasn't run).

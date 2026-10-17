@@ -12,7 +12,7 @@ class SearchSheet extends StatelessWidget {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
     final count = filtered(s).length;
-    // F21 W2: Filters sheet. Sort lives here; same labels as the Explore chips.
+    // F21 W2: Filters sheet (F26 #2: sort is its own dropdown on Explore now).
     Widget group(String label, Widget child) => VGap(gap: 8, children: [T(label, w: 800, s: 15), child]);
     const segPad = EdgeInsets.symmetric(vertical: 11, horizontal: 6);
     const chipPad = EdgeInsets.symmetric(vertical: 10, horizontal: 12);
@@ -21,7 +21,6 @@ class SearchSheet extends StatelessWidget {
       child: VGap(
         gap: 18,
         children: [
-          group('Sort by', Seg(opts: const [('rec', 'Recommended'), ('near', 'Nearest'), ('deals', 'Best deals'), ('price', 'Lowest price')], cur: s.sortBy, onPick: (v) => s.update(() => s.sortBy = v), pad: segPad, center: true, byLabel: true)),
           group('For', Seg(opts: const [('Any', 'Anyone'), ('Men', 'Men'), ('Women', 'Women'), ('Co-living', 'Co-living')], cur: s.fG, onPick: (v) => s.update(() => s.fG = v), pad: segPad, center: true)),
           group(
             'Room',
@@ -81,6 +80,43 @@ class SearchSheet extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// F26 #2: the sort dropdown. Price ↑ (default) · Distance · Rating · Best deals.
+class SortSheet extends StatelessWidget {
+  const SortSheet({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final e in sortLabels.entries)
+            Tap(
+              key: ValueKey('sort-${e.key}'),
+              onTap: () => s.update(() {
+                s.sortBy = e.key;
+                s.sheet = null;
+              }),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 52),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                child: Row(
+                  children: [
+                    Expanded(child: T(e.value, s: 16, w: s.sortBy == e.key ? 800 : 600)),
+                    if (s.sortBy == e.key) Ic('check', size: 18, color: p.ad),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
