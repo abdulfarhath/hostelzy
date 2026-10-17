@@ -298,5 +298,8 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   headcount push at the cut-off, quiet hours 10 pm–7 am (breakfast ask at 9 pm the evening before), plates saved counted
   after a meal's count closes, notification buttons open the app.
 
+- **2026-10-17 (founder):** Prototype v6 (F26 with the 12 reverts + F27 Save food) **approved**: "approved, merge it and
+  build the apk". F26 (`f26/integration`) and F27 (PR #140) go to `main`; the push publishes the next `apk-N` release.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
