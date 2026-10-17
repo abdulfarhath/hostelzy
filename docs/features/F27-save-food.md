@@ -65,7 +65,8 @@ the 12 F26 reverts; must not merge before F26).
   (who can answer: residents only, anon refused with "permission denied"; who reads what; cut-off; push timing).
   `fcm.test.ts` for the food kind.
 
-### Not in the spec (needs the hub's OK; built already, nothing more added)
+### Approved extras (founder 2026-10-17)
+First listed as "Not in the spec"; the founder approved all 6 through the hub on 2026-10-17. They stay in the build.
 | # | What | Why it is there |
 |---|---|---|
 | 1 | Settings › **Meals** notification switch (residents, owners) | the meal pushes needed their own `food` kind so people can turn them off |
