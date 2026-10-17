@@ -1,6 +1,6 @@
 # Clickable prototype (founder, 2026-10-04)
 
-**Link:** https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP. It's the real app compiled for the web, with sample data,
+**Link:** https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g. It's the real app compiled for the web, with sample data,
 inside a phone frame. It has jump buttons for each role and flow, a light/dark toggle, and a notes box.
 
 ## New way of working (founder decision)
