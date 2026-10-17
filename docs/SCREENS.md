@@ -57,7 +57,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (81)
+## 1. App screens (82)
 
 ### Start and sign-in (7)
 
@@ -339,7 +339,7 @@ Pages 6 + states 1 = 7.
 
 - `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released · Declined (`features/holds/holds_screens.dart`).
 - `holds` / `hold` (F26 #9): a free hold's steps Sent → Owner reviewing (only once the owner opened it) → Kept / Declined; after 30 min "Still waiting. Call the owner?" with Call first; WhatsApp + Call locked when declined (`features/holds/hold_steps.dart`).
-- `explore` (F26 #21): UNVERIFIED card (grey outline badge, "Around ₹7,000–9,000/mo · expected, not confirmed"); header "Madhapur · 12 verified · 84 listed" once anything is listed (`features/explore/unverified_screen.dart`, `explore_screen.dart`).
+- `explore` (F26 #21): UNVERIFIED card (grey outline badge, "Around ₹7,000–9,000/mo · expected, not confirmed"); header "Hyderabad · N beds free now · 12 verified · 84 listed" once anything is listed (`features/explore/unverified_screen.dart`, `explore_screen.dart`).
 - `oPlan`: Free trial · Due · N days late · Checking · Paid · Not received (`plan.dart:23`).
 - `rPay`: Due · Waiting · Not received · Paid (`screens_resident.dart:236-248`).
 - `oStrike`: Strike 1 · 2 (deals hidden / deals back) · 3 removed (`fairplay.dart:479`).
