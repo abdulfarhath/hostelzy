@@ -56,9 +56,9 @@ void main() {
     // Tabs: Saved replaces Search.
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('Search'), findsNothing);
-    // Cards: F26 #2 Price ↑ by default, the first card says so; the real cost.
-    expect(find.text('Lowest price'), findsOneWidget);
-    expect(find.text('#1 near you'), findsNothing);
+    // Cards: F26 #2 Price ↑ by default; "#1 near you" on the best-ranked card; the real cost.
+    expect(find.text('Lowest price'), findsNothing);
+    expect(find.textContaining('#1 near you'), findsOneWidget);
     final c = cardCost(s, hostelById('anjani'))!;
     expect(c.move, c.fee + 3000);
     expect(find.text('${fmt(c.fee)}/mo · ${fmt(c.move)} to move in · electricity extra', findRichText: true), findsOneWidget);

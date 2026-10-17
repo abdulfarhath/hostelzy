@@ -136,21 +136,6 @@ class ResidentHomeScreen extends StatelessWidget {
           else ...[
             // The shared week table (same as the hostel page).
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: FoodWeekTable(key: const ValueKey('homeWeek'), hid: h.id)),
-            // The owner's breakfast ratings come from here now that Food is gone.
-            Container(
-              key: const ValueKey('rateBreakfast'),
-              margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              padding: const EdgeInsets.all(12),
-              decoration: box(w: 2, c: p.tx),
-              child: VGap(
-                gap: 8,
-                children: [
-                  const T('How was breakfast?', w: 800, s: 15),
-                  Seg(opts: same(['Good', 'Okay', 'Poor']), cur: s.rated, onPick: (v) => s.rateMeal('b', v), pad: const EdgeInsets.symmetric(vertical: 11, horizontal: 12), fs: 14, center: true, dividers: true),
-                  T('$owner sees how many said each, never your name.', s: 13, c: p.mu),
-                ],
-              ),
-            ),
           ],
           const SizedBox(height: 16),
         ],

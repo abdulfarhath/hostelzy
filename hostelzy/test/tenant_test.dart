@@ -200,8 +200,13 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('pickContinue')));
     expect(s.sheet, 'hold');
     s.update(() => s.sheet = null);
-    // F26 #8: no cheapest-beds list; every room with its price is on the scroll.
-    expect(find.text('See cheapest beds ›'), findsNothing);
+    // S18 "See cheapest beds ›" stays (F26 revert): the list, then back to the floors.
+    await tester.ensureVisible(find.text('See cheapest beds ›'));
+    await _tap(tester, find.text('See cheapest beds ›'));
+    expect(s.mode, 'list');
+    expect(find.textContaining('CHEAPEST FIRST'), findsOneWidget);
+    await _tap(tester, find.text('‹ Back to the plan'));
+    expect(s.mode, 'plan');
 
     // The room name opens the Room view: the room in the title, one bed's facts.
     await _tap(tester, find.byKey(const ValueKey('floor-3')));

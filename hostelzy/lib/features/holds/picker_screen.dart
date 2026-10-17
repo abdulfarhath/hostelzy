@@ -37,6 +37,8 @@ class PickerScreen extends StatelessWidget {
     // name opens it on its own (the Room view, "Floor view" comes back). The
     // Building view lives on the hostel page. Layouts are open to everyone.
     final roomView = s.mode == 'room';
+    // "See cheapest beds ›" (S18): every bed you can take, cheapest first.
+    final listView = s.mode == 'list';
     final floors = floorsOf(rs);
     final cur = floors.contains(s.floor) ? s.floor : floors.first;
     final roomLive = roomView && s.liveLayout(h.id, room.n) != null;
@@ -59,7 +61,19 @@ class PickerScreen extends StatelessWidget {
             ],
           ),
         ),
-        if (!roomView)
+        if (listView)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Tap(
+                key: const ValueKey('cheapest'),
+                onTap: () => s.update(() => s.mode = 'plan'),
+                child: T('‹ Back to the plan', s: 14, w: 800, c: p.ad),
+              ),
+            ),
+          ),
+        if (!roomView && !listView)
           Scroll(
             horizontal: true,
             child: Padding(
@@ -106,7 +120,7 @@ class PickerScreen extends StatelessWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),
-            child: Scroll(key: ValueKey('picker${s.scrollEpoch}'), child: roomView ? RoomMode(rooms: rs, room: room) : _AllRooms(rooms: rs)),
+            child: Scroll(key: ValueKey('picker${s.scrollEpoch}'), child: roomView ? RoomMode(rooms: rs, room: room) : listView ? _ListMode(rooms: rs) : _AllRooms(rooms: rs)),
           ),
         ),
         // F26 #12: the tenant's room layout → F19 try mode (residents: the fix editor).
@@ -181,7 +195,20 @@ class _AllRoomsState extends State<_AllRooms> {
               ],
             ),
           const SizedBox(height: 12),
-          const Legend(items: pickerLegend),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              const Legend(items: pickerLegend),
+              Tap(
+                key: const ValueKey('cheapest'),
+                onTap: () => s.update(() => s.mode = 'list'),
+                child: const T('See cheapest beds ›', s: 13, w: 800, underline: true),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           T('Hostelzy never shows gates, CCTV, exits or residents’ names on any plan.', s: 12, c: p.mu, lh: 1.4),
         ],
@@ -281,3 +308,85 @@ class _RoomCard extends StatelessWidget {
 }
 
 const pickerLegend = [('Free', 'free'), ('Free soon', 'soon'), ('On hold', 'held'), ('Taken', 'booked')];
+
+class _ListMode extends StatelessWidget {
+  const _ListMode({required this.rooms});
+  final List<Room> rooms;
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final lb = <({Bed b, Room r})>[];
+    for (final r in rooms) {
+      for (final b in r.beds) {
+        if ((b.state == 'free' || b.state == 'soon') && !b.mine && AppState.fits(r, s.pR)) lb.add((b: b, r: r));
+      }
+    }
+    // Stable sort by rent.
+    final indexed = lb.asMap().entries.toList()..sort((x, y) => x.value.r.rent != y.value.r.rent ? x.value.r.rent.compareTo(y.value.r.rent) : x.key.compareTo(y.key));
+    final sorted = indexed.map((e) => e.value).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+          child: Kicker('${sorted.length} beds you can take · cheapest first'),
+        ),
+        for (final e in sorted)
+          () {
+            final o = e.b.id == s.bed;
+            return Tap(
+              onTap: () => s.pickBed(e.b),
+              child: InsetBar(
+                edge: Edge.left,
+                size: o ? 4 : 0,
+                color: p.ac,
+                bg: o ? p.ab : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                  child: Row(
+                    children: [
+                      Stripes(
+                        step: 5,
+                        width: 60,
+                        height: 60,
+                        border: Border.all(color: p.hl),
+                        child: Container(
+                          alignment: Alignment.bottomLeft,
+                          padding: const EdgeInsets.all(4),
+                          child: T('bed', s: 9, mono: true, c: p.mu),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            T('Bed ${e.b.id}', w: 800, s: 16),
+                            const SizedBox(height: 2),
+                            T('Floor ${e.r.floor} · ${e.r.share} sharing · ${e.r.type} · ${e.r.bath} bath', s: 12, c: p.mu),
+                            const SizedBox(height: 2),
+                            T('${e.b.spot} · ${e.b.state == 'soon' ? 'Free from ${e.b.soon}' : 'Free now'}', s: 12, w: 600),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          T(fmt(e.r.rent), w: 800, s: 16),
+                          T('per month', s: 11, c: p.mu),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }(),
+      ],
+    );
+  }
+}

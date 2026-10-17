@@ -50,6 +50,11 @@ class OwnerBedsScreen extends StatelessWidget {
                 child: Rich([sp(context, 'Layouts ›', w: 800, c: p.tx), sp(context, ' to create or copy one.')], s: 13, c: p.mu),
               ),
             ),
+            Tap(
+              key: const ValueKey('roomsRates'),
+              onTap: s.openRates,
+              child: Container(constraints: const BoxConstraints(minHeight: 44), alignment: Alignment.centerLeft, child: const T('Rooms and rates ›', s: 13, w: 800)),
+            ),
           ],
         ),
       ),

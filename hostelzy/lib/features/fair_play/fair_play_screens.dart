@@ -222,6 +222,7 @@ class OwnerContact extends StatelessWidget {
               ],
             ),
           ),
+          if (hold == null) const Padding(padding: EdgeInsets.fromLTRB(12, 0, 12, 10), child: T('Talking through Hostelzy keeps your deal and your ₹100 reward.', s: 13, lh: 1.45)),
           Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 12), child: ContactButtons(hold)),
         ],
       ),

@@ -13,9 +13,6 @@ import 'unverified_screen.dart';
 /// F26 #2: the sort dropdown, in its order (Price ↑ is the default).
 const sortLabels = {'price': 'Price ↑', 'near': 'Distance', 'rating': 'Rating', 'deals': 'Best deals'};
 
-/// "Then by price, lowest first" under the pinned Featured hostel.
-const sortThen = {'price': 'Then by price, lowest first', 'near': 'Then by distance, nearest first', 'rating': 'Then by rating, highest first', 'deals': 'Then by Hostelzy deal, biggest saving first'};
-
 /// One ordering step: negative when [a] goes first, 0 when it can't tell.
 typedef HostelOrder = int Function(Hostel a, Hostel b);
 
@@ -43,7 +40,7 @@ List<Hostel> filtered(AppState s) {
     if (s.removed(h.id)) return false;
     // F18: the area picked on the map.
     if (!s.inMapArea(h)) return false;
-    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && (!s.fNoFood || !h.food) && (!s.fDeals || s.bestQuote(h.id, f: s.fR) != null) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free'))) && (s.fAm.isEmpty || s.hasAmenities(h.id, s.fAm));
+    return (s.fG == 'Any' || h.gender == s.fG) && (!s.fFood || h.food) && (!s.fDeals || s.bestQuote(h.id, f: s.fR) != null) && from <= lim && (s.fS == 'Any' || rs.any((r) => r.share == int.parse(s.fS) && r.beds.any((b) => b.state == 'free'))) && (s.fAm.isEmpty || s.hasAmenities(h.id, s.fAm));
   }
 
   final out = browsable.where(ok).toList();
@@ -103,13 +100,18 @@ Hostel? pinnedFeatured(AppState s, List<Hostel> results) {
   return top;
 }
 
-/// F26 #2: the tag on the first card after the pinned one, when the sort
-/// makes it true ("Lowest price", "Nearest"); none otherwise.
-String? firstTag(String sortBy) => switch (sortBy) {
-  'price' => 'Lowest price',
-  'near' => 'Nearest',
-  _ => null,
-};
+/// The best-ranked hostel among [results] (the "#1 near you" card; F26:
+/// whatever the sort, verified hostels only).
+String? topRanked(AppState s, List<Hostel> results) {
+  String? top;
+  var best = double.negativeInfinity;
+  for (final h in results) {
+    if (h.listed) continue;
+    final v = s.rankScore(h.id);
+    if (v > best) (top, best) = (h.id, v);
+  }
+  return top;
+}
 
 /// F26 #1: the 📍 inside the search field: the map at my location (the
 /// location explainer first, when it isn't on yet).
@@ -163,11 +165,7 @@ class ExploreScreen extends StatelessWidget {
     final results = filtered(s);
     // F26 #2: one featured hostel pinned on top, then the picked sort.
     final pinned = results.isNotEmpty && !results.first.listed && s.featured(results.first.id) ? results.first : null;
-    final rest = pinned == null ? results : results.skip(1).toList();
-    // F26 #21: inside a price band a verified hostel goes before a cheaper
-    // listed one, so "Lowest price" only when it really is the lowest.
-    final lowest = rest.isEmpty || s.sortBy != 'price' || rest.every((h) => cheapestRent(s, h) >= cheapestRent(s, rest.first));
-    final tag = rest.isNotEmpty && !rest.first.listed && lowest ? firstTag(s.sortBy) : null;
+    final top = topRanked(s, results);
     final totalFree = results.fold<int>(0, (a, h) => a + s.freeOf(h.id).f);
     return Scroll(
       key: ValueKey('explore${s.scrollEpoch}'),
@@ -187,8 +185,8 @@ class ExploreScreen extends StatelessWidget {
             child: VGap(
               gap: 12,
               children: [
-                // F26 #21: "Madhapur · 12 verified · 84 listed" once anything is listed.
-                PageHead(kicker: s.listState == 'ready' ? s.tierLine(s.mapArea) ?? 'Hyderabad · $totalFree beds free now' : 'Hyderabad', title: 'Find a bed', gap: 2),
+                // F26 #21: "· 12 verified · 84 listed" added once anything is listed.
+                PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now${s.tierLine(s.mapArea) ?? ''}' : 'Hyderabad', title: 'Find a bed', gap: 2),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere, onPin: () => openMapNearMe(s)),
               ],
@@ -233,12 +231,8 @@ class ExploreScreen extends StatelessWidget {
                       child: Row(children: [Ic('wifi', size: 18, color: p.tx), const SizedBox(width: 10), Expanded(child: T('Offline. Hostels as of ${dayMon(s.cachedAt!)}, ${clockTime(s.cachedAt!.millisecondsSinceEpoch).replaceFirst('Today, ', '')}. Tap to try again.', s: 13, w: 600, lh: 1.35))]),
                     ),
                   ),
-                if (pinned != null) ...[
-                  const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: Kicker('Featured')),
-                  HostelCard(pinned, pinned: true),
-                  if (rest.isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: Kicker(sortThen[s.sortBy] ?? '')),
-                ],
-                for (final (i, h) in rest.indexed) h.listed ? UnverifiedCard(h) : HostelCard(h, tag: i == 0 && rest.length > 1 ? tag : null),
+                // F21 W2: the rank shows once, on the best-ranked card.
+                for (final h in results) h.listed ? UnverifiedCard(h) : HostelCard(h, pinned: h == pinned, first: h.id == top),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -461,14 +455,13 @@ class FiltersBtn extends StatelessWidget {
   return (fee: q.fee, move: q.move, hz: q.hzFee < q.fee ? q.hzFee : null);
 }
 
-/// Photo-first hostel card (F21 W2): photo, save heart, a tag ("Featured" on
-/// the pinned one, F26 #2: "Lowest price" / "Nearest" on the first after it),
-/// a green Hostelzy price only when there's a deal, then the real cost.
+/// Photo-first hostel card (F21 W2): photo, save heart, rank once, a green
+/// Hostelzy price only when there's a deal, then the real cost. "Featured"
+/// on the one pinned on top (F26 #2).
 class HostelCard extends StatelessWidget {
-  const HostelCard(this.h, {super.key, this.pinned = false, this.tag});
+  const HostelCard(this.h, {super.key, this.pinned = false, this.first = false});
   final Hostel h;
-  final bool pinned;
-  final String? tag;
+  final bool pinned, first;
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
@@ -503,8 +496,8 @@ class HostelCard extends StatelessWidget {
                     children: [
                       Positioned.fill(child: LoadPhotos(h.id, child: photos.isEmpty ? const SizedBox() : PhotoImg(photos.first.url))),
                       // F10: the 80+ bed plan's featured spot is labelled, never passed off as rank.
-                      if (pinned || tag != null)
-                        Positioned(left: 8, top: 8, child: Container(key: pinned ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T(pinned ? 'Featured' : tag!, s: 13, w: 800, c: p.bg))),
+                      if (first || pinned)
+                        Positioned(left: 8, top: 8, child: Container(key: pinned ? ValueKey('featured-${h.id}') : null, color: p.tx, padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: T([if (pinned) 'Featured', if (first) '#1 near you'].join(' · '), s: 13, w: 800, c: p.bg))),
                       Positioned(
                         right: 8,
                         top: 8,

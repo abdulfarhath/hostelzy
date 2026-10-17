@@ -55,12 +55,12 @@ extension TiersActions on AppState {
     return (verified: hs.where((h) => !h.listed).length, listed: hs.where((h) => h.listed).length);
   }
 
-  /// Explore header: "Madhapur · 12 verified · 84 listed"; null when nothing
-  /// is listed yet (the header keeps its free-beds line).
+  /// Explore header, after "Hyderabad · N beds free now": " · 12 verified ·
+  /// 84 listed"; null when nothing is listed yet.
   String? tierLine(String? area) {
     final c = tierCounts(area);
     if (c.listed == 0) return null;
-    return '${area ?? 'Hyderabad'} · ${c.verified} verified · ${c.listed} listed';
+    return ' · ${c.verified} verified · ${c.listed} listed';
   }
 
   /// After the hostels load: the server's area counts and this user's waitlist.

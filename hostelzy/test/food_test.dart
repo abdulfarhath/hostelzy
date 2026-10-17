@@ -100,10 +100,12 @@ void main() {
     expect(find.text('Pongal $todayIdx'), findsOneWidget);
     expect(find.textContaining('hasn’t put the menu'), findsNothing);
 
-    // F26 #13: no Food page; the whole week and Good / Okay / Poor are on Home.
+    // F26 #13: no Food page; the whole week is on Home (no breakfast card: F26 revert #7).
     expect(find.byKey(const ValueKey('homeWeek')), findsOneWidget);
     expect(find.text('Pongal ${(todayIdx + 1) % 7}'), findsOneWidget);
-    await _tap(tester, find.text('Good'));
+    expect(find.text('How was breakfast?'), findsNothing);
+    // The rating still saves on the server (meal reminders and older builds).
+    unawaited(s.rateMeal('b', 'Good'));
     await _settle(tester);
     expect(server.calls.last, 'rate saisri b good');
     expect(s.rated, 'Good');
@@ -113,7 +115,7 @@ void main() {
 
     // Offline: the answer goes back and says so.
     server.down = true;
-    await _tap(tester, find.text('Poor'));
+    unawaited(s.rateMeal('b', 'Poor'));
     await _settle(tester);
     expect(s.rated, 'Good');
     expect(s.toast, 'Couldn’t save it. Check your internet and try again.');

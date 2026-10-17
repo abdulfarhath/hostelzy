@@ -131,10 +131,11 @@ void main() {
     final s = AppState(start: 'picker', role: 'tenant');
     s.openPicker();
     await pumpApp(tester, s);
-    for (final k in ['floorView', 'pickTab-room', 'pickTab-building', 'cheapest']) {
+    for (final k in ['floorView', 'pickTab-room', 'pickTab-building']) {
       expect(find.byKey(ValueKey(k)), findsNothing);
     }
-    expect(find.text('See cheapest beds ›'), findsNothing);
+    // S18 stays: "See cheapest beds ›" opens every bed you can take, cheapest first.
+    expect(find.text('See cheapest beds ›'), findsOneWidget);
     final rs = s.rooms[s.hid]!;
     // Every room of every floor is in the one scroll; drawn rooms carry the red button.
     for (final r in rs) {
@@ -625,7 +626,8 @@ void main() {
     expect(s.sortBy, 'price');
     expect(s.rankOf('anjani'), 1);
     expect(s.rankReasons('anjani'), 'Quick replies, beds kept up to date');
-    expect(find.text('#1 near you'), findsNothing);
+    // "#1 near you" goes on the best-ranked card whatever the sort (hub, 2026-10-17).
+    expect(find.textContaining('#1 near you'), findsOneWidget);
     expect(s.rankReasons('nest42'), startsWith('Few reviews yet'));
 
     // Hostel page → Reviews.
@@ -2180,7 +2182,7 @@ void main() {
     expect((s.sheet, loc.asked), ('loc', 0));
     await tap(tester, find.text('Allow location'));
     await tester.pump();
-    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'price', 'Near me'));
+    expect((loc.asked, s.myPos, s.mapArea, s.sortBy, s.mapAreaLabel), (1, (17.4610, 78.3610), null, 'near', 'Near me'));
     expect(find.byKey(const ValueKey('youAreHere')), findsOneWidget);
     expect(s.kmFrom, 'from you');
     await tester.pump(const Duration(seconds: 3));
@@ -3020,11 +3022,11 @@ void main() {
     // F19 extras: they can try the editor (nothing is saved); only Send is locked.
     await tap(tester, find.byKey(const ValueKey('editLayout')));
     expect((t.screen, t.fixTry, t.sheet), ('rFix', true, null));
-    expect(find.text('Move things to see how the room works for you'), findsOneWidget);
+    expect(find.text('Try mode · play freely, nothing is saved'), findsOneWidget);
     await tap(tester, find.text('Publish'));
     expect(t.sheet, 'fixLock');
     expect(find.text('Only residents can send a fix'), findsOneWidget);
-    expect(find.text('Book a bed to join. Your tries stay on this phone.'), findsOneWidget);
+    expect(find.text('Book a bed to join.'), findsOneWidget);
     expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
     // Leaving discards the try.
     t.update(() => t.sheet = null);

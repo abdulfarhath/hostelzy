@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/explore/explore_screen.dart' show filtered, sortLabels;
+import 'package:hostelzy/features/explore/explore_sheets.dart' show SearchSheet;
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/locate.dart';
 import 'package:hostelzy/state.dart';
@@ -84,12 +85,14 @@ void main() {
     s.tab('explore');
     await tester.pump();
 
-    // #2: Near me (off) → the explainer; Allow → on, with ✓; the sort stays Price ↑.
+    // #2: Near me (off) → the explainer; Allow → on, with ✓; the sort switches to Distance (as on main).
     await _tap(tester, find.byKey(const ValueKey('nearMeChip')));
     expect((s.screen, s.sheet), ('explore', 'loc'));
     await _tap(tester, find.text('Allow location'));
     await tester.pump();
-    expect((s.myPos, s.sortBy, s.screen), ((17.4483, 78.3915), 'price', 'explore'));
+    expect((s.myPos, s.sortBy, s.screen), ((17.4483, 78.3915), 'near', 'explore'));
+    expect(find.text('Showing hostels by distance from you.'), findsOneWidget);
+    s.update(() => s.sortBy = 'price');
     await tester.pump(const Duration(seconds: 3));
     // Near me tapped again → Pick a place (the Where? field).
     await _tap(tester, find.byKey(const ValueKey('nearMeChip')));
@@ -127,17 +130,20 @@ void main() {
     }
     s.update(() => s.sortBy = 'price');
     await tester.pump();
-    expect(find.text('Lowest price'), findsOneWidget);
+    // "#1 near you" on the best-ranked card whatever the sort; no "Lowest price" tag.
+    expect(find.textContaining('#1 near you'), findsOneWidget);
+    expect(find.text('Lowest price'), findsNothing);
 
-    // Filters: Who / Room / Food / Rent inside the sheet; the count on the button.
+    // Filters: main's sheet (For / Room / Budget with Any / Food included), no sort in it; the count on the button.
     await _tap(tester, find.byKey(const ValueKey('filtersBtn')));
     expect(s.sheet, 'search');
-    await _tap(tester, find.byKey(const ValueKey('fG-Women')));
-    await _tap(tester, find.byKey(const ValueKey('noFood')));
-    expect((s.fG, s.fNoFood, s.filterCount), ('Women', true, 2));
-    expect(filtered(s).every((h) => h.gender == 'Women' && !h.food), isTrue);
+    expect(find.text('For'), findsOneWidget);
+    expect(find.text('No food'), findsNothing);
+    expect(find.text('Sort by'), findsNothing);
+    await _tap(tester, find.descendant(of: find.byType(SearchSheet), matching: find.text('Women')));
     await _tap(tester, find.byKey(const ValueKey('foodToggle')));
-    expect((s.fFood, s.fNoFood), (true, false));
+    expect((s.fG, s.fFood, s.filterCount), ('Women', true, 2));
+    expect(filtered(s).every((h) => h.gender == 'Women' && h.food), isTrue);
     await _tap(tester, find.textContaining('Show '));
     expect(find.descendant(of: find.byKey(const ValueKey('filtersBtn')), matching: find.text('Filters · 2')), findsOneWidget);
     s.clearFilters();
@@ -153,13 +159,13 @@ void main() {
     final ids = filtered(s).map((h) => h.id).toList();
     expect(ids, [last, ...plain.where((id) => id != last)]);
     expect(find.byKey(ValueKey('featured-$last')), findsOneWidget);
-    expect(find.text('FEATURED'), findsOneWidget);
-    expect(find.text('THEN BY PRICE, LOWEST FIRST'), findsOneWidget);
+    expect(find.textContaining('Featured'), findsOneWidget);
+    expect(find.textContaining('THEN BY'), findsNothing);
     // Only one is pinned, even with two featured hostels.
     final other = plain.first;
     s.update(() => s.flags = {...s.flags, other: (beds: 90, featured: true, dealsPaused: false)});
     await tester.pump();
-    expect(find.textContaining('FEATURED'), findsOneWidget);
+    expect(find.textContaining('Featured'), findsOneWidget);
     s.dispose();
   });
 
