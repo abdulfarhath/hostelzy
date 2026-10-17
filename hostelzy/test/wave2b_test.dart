@@ -150,13 +150,14 @@ void main() {
     final s = await _owner(tester, server);
     expect((s.confirmed['real1'], s.layoutConfirmed['real1']), (4, 122));
     expect(find.text('Still 2 free beds?'), findsOneWidget);
-    expect(find.text('Last confirmed 4 days ago. Fresh beds rank higher.'), findsOneWidget);
+    expect(find.textContaining('Last confirmed 4 days ago. Fresh beds rank higher.'), findsOneWidget);
     await _tap(tester, find.text('Yes, all 2 free'));
     await _settle(tester);
     expect(server.calls, contains('beds real1'));
     expect(s.toast, 'Thanks. Tenants see your free beds as confirmed today.');
     expect(find.text('Still 2 free beds?'), findsNothing);
     await tester.pump(const Duration(seconds: 4));
+    await _tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: the layouts check is in Fixes
     expect(find.text('Do your room layouts still match?'), findsOneWidget);
     await _tap(tester, find.text('All still correct'));
     await _settle(tester);
@@ -170,7 +171,7 @@ void main() {
     final s = await _owner(tester, server);
     expect(s.needsConfirm('real1'), isTrue);
     expect(find.text('Still 2 free beds?'), findsOneWidget);
-    expect(find.text('Not confirmed yet. Fresh beds rank higher.'), findsOneWidget);
+    expect(find.textContaining('Not confirmed yet. Fresh beds rank higher.'), findsOneWidget);
     s.dispose();
   });
 

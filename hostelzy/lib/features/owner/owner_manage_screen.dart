@@ -10,153 +10,6 @@ import '../meter/stay_tools_screens.dart';
 import 'owner_deals.dart';
 import 'rate_card.dart';
 
-/// F05 board 2: enquiries Hostelzy recorded before the tenant's WhatsApp
-/// opened. The phone is typed by the tenant and not verified yet (no SMS
-/// check until billing works, DECISIONS 2026-10-02).
-class _Enquiries extends StatelessWidget {
-  const _Enquiries();
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final list = s.enquiries.where((e) => e.hid == s.ownHid).toList();
-    final fresh = list.where((e) => !e.contacted).length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [const Kicker('Enquiries from Hostelzy'), T(fresh > 0 ? '$fresh new' : 'All replied', s: 12, w: 800, c: p.ad)],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final e in list) _EnquiryRow(e),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shield', size: 16, color: p.mu)),
-                    const SizedBox(width: 8),
-                    Expanded(child: Rich([sp(context, 'Not on this list = not from Hostelzy.', w: 800, c: p.tx), sp(context, ' Someone says they found you on Hostelzy? Ask for their booking code (HZ-…).')], s: 12, c: p.mu, lh: 1.4)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EnquiryRow extends StatelessWidget {
-  const _EnquiryRow(this.e);
-  final Enquiry e;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final first = e.name.split(' ')[0];
-    final d = e.contacted;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-      child: VGap(
-        gap: 8,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    T(e.name, w: 800, s: 16),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Ic('check', size: 14),
-                        const SizedBox(width: 5),
-                        Rich([sp(context, phoneSpaced(e.phone)), sp(context, ' · not verified', c: p.mu)], s: 13),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        T('${e.bed != null ? 'Bed ${e.bed}' : 'Any bed'} · ', s: 13, c: p.mu),
-                        Tap(onTap: () => s.openEnquiry(e.ref), child: T(e.ref, s: 13, w: 600, c: p.ad)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
-                    decoration: box(bg: d ? transparent : p.ab, w: 1, c: d ? p.dv : p.ab),
-                    child: T(d ? 'Contacted' : 'New', s: 11, w: 800, ls: .06, upper: true, c: d ? p.mu : p.ad),
-                  ),
-                  const SizedBox(height: 4),
-                  T(ago(s.now - e.at), s: 12, c: p.mu),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Cta(
-                  'WhatsApp',
-                  icon: 'msg',
-                  height: 44,
-                  px: 12,
-                  fs: 14,
-                  bg: d ? transparent : p.ac,
-                  fg: d ? p.tx : p.ai,
-                  border: d ? p.tx : p.ac,
-                  onTap: () {
-                    s.markContacted(e.ref);
-                    s.openWA(e.name, 'Hi $first, this is ${hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}. Got your Hostelzy enquiry (${e.ref}).', phone: e.phone);
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Cta(
-                  'Call',
-                  icon: 'phone',
-                  height: 44,
-                  px: 12,
-                  fs: 14,
-                  bg: transparent,
-                  fg: p.tx,
-                  border: p.tx,
-                  onTap: () {
-                    s.markContacted(e.ref);
-                    s.call(e.phone);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class OwnerManageScreen extends StatelessWidget {
   const OwnerManageScreen({super.key});
   @override
@@ -167,7 +20,6 @@ class OwnerManageScreen extends StatelessWidget {
     // F22 Area 3: each Manage page is one job, with its one action pinned at the bottom.
     final (Widget body, Widget? foot) = switch (s.moreTab) {
       'residents' => (const _Residents(), null),
-      'enquiries' => (const _Enquiries(), null),
       'deals' => (const OwnerDeals(), Cta('Save deals', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.publishDeals)),
       'rates' => (const RateCard(), Cta('Save', key: const ValueKey('saveRates'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveRates)),
       'complaints' => (const _Complaints(), null),
@@ -176,9 +28,9 @@ class OwnerManageScreen extends StatelessWidget {
     };
     // F18: while typing, the header makes room for the field and keyboard.
     final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
-    const titles = {'enquiries': 'Enquiries', 'residents': 'Residents', 'complaints': 'Complaints', 'deals': 'Deals', 'rates': 'Rates and UPI', 'menu': 'Food menu', 'rules': 'House rules'};
-    // Residents and Enquiries keep their rule under the header; the F22 Area 3 pages draw their own.
-    final ruled = s.moreTab == 'residents' || s.moreTab == 'enquiries';
+    const titles = {'residents': 'Residents', 'complaints': 'Complaints', 'deals': 'Deals', 'rates': 'Rates and UPI', 'menu': 'Food menu', 'rules': 'House rules'};
+    // Residents keeps its rule under the header; the F22 Area 3 pages draw their own.
+    final ruled = s.moreTab == 'residents';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -551,12 +403,9 @@ class _ManageList extends StatelessWidget {
     final live = s.layouts[h.id]?.length ?? 0;
     final fixes = s.fixesWaiting.length;
     final inv = s.invoice;
-    final myE = s.enquiries.where((e) => e.hid == h.id).toList();
-    final newE = myE.where((e) => !e.contacted).length;
     void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : t == 'menu' ? s.openMenu() : s.update(() => s.moreTab = t);
     final rows = <(String, String, String, int, VoidCallback)>[
       ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
-      ('msg', 'Enquiries', newE == 0 ? '${myE.length} from Hostelzy · all replied' : '$newE new · ${myE.length} from Hostelzy', newE, () => section('enquiries')),
       ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
       // F24 item 17 (F14): deals, rates and the plan are the owner's.
       if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),

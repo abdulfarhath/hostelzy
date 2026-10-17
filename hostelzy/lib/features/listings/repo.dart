@@ -317,6 +317,22 @@ abstract class HostelRepo {
   Future<void> inviteTeamMember(String name, String phone, String role);
   Future<List<Lead>> teamTracker();
   Future<void> setLeadStage(String hid, int stage);
+
+  /// F26 #9: the owner (or a manager) opened these holds; the tenant's steps
+  /// then say "Owner reviewing". Stamped once on the server.
+  Future<void> holdSeen(List<String> holdIds);
+
+  /// F26 #21: "Tell me when verified" (a push when the hostel goes live) and
+  /// the listed hostels this user already asked about.
+  Future<void> joinWaitlist(String hid);
+  Future<Set<String>> myWaitlist();
+
+  /// F26 #21: "Are you the owner? Claim this hostel": the team calls back.
+  Future<void> sendClaim(String hid, String name, String phone);
+
+  /// F26 #21: per area, verified (live) and listed (unverified) hostels for
+  /// the Explore header; null before its SQL runs.
+  Future<Map<String, ({int verified, int listed})>?> areaCounts();
 }
 
 /// F24 item 29: one person on the Hostelzy team.

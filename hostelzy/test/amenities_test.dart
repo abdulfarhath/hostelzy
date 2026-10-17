@@ -39,18 +39,16 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F23: the hostel page lists what is on each floor; tenants only see it', (tester) async {
+  testWidgets('F23 / F26 #3: the hostel page shows the building inline with each floor’s shared things; tenants only see them', (tester) async {
     final s = AppState(start: 'detail', role: 'tenant');
     s.hid = 'anjani';
     await _pump(tester, s);
-    expect(find.byKey(const ValueKey('onEachFloor')), findsOneWidget);
-    expect(find.text('ON EACH FLOOR'), findsOneWidget);
-    expect(find.textContaining('Updated by residents'), findsOneWidget);
-    expect(find.text('Ground floor'), findsOneWidget);
-    final all = s.roomsOnFloor('anjani', 2).length;
-    expect(find.text('Geyser in 2 of $all rooms'), findsOneWidget);
-    expect(find.text('NOT WORKING'), findsOneWidget); // the washing machine on floor 2
-    await _tap(tester, find.byKey(const ValueKey('amFloor-2')));
+    // F26 #3: the "On each floor" list is gone; the chips sit on each floor of the building.
+    expect(find.byKey(const ValueKey('onEachFloor')), findsNothing);
+    expect(find.byKey(const ValueKey('inlineBuilding')), findsOneWidget);
+    expect(find.byKey(const ValueKey('bThings-2')), findsOneWidget);
+    expect(find.textContaining('NOT WORKING'), findsOneWidget); // the washing machine on floor 2
+    await _tap(tester, find.byKey(const ValueKey('bFloor-2')));
     expect((s.sheet, s.amFloor), ('amFloor', 2));
     expect(find.text('In the room washroom of 201, 203'), findsOneWidget);
     expect(find.textContaining('Added by a resident'), findsOneWidget);
@@ -68,7 +66,10 @@ void main() {
       ..myName = 'Ravi Teja';
     await _pump(tester, s);
     await _tap(tester, find.text('Pick a bed'));
-    expect((s.screen, s.mode), ('picker', 'room'));
+    // F26 #8: every room first; a room's name opens it on its own.
+    expect((s.screen, s.mode), ('picker', 'plan'));
+    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('roomCard-204')), matching: find.text('Room 204')));
+    expect(s.mode, 'room');
     // Room 203 has the geyser in its washroom.
     await _tap(tester, find.byKey(const ValueKey('roomChip-203')));
     expect(s.room, 203);
@@ -80,7 +81,7 @@ void main() {
     expect(s.mode, 'plan');
     s.dispose();
 
-    // A guest starts on the floor view (room plans need sign-in).
+    // A guest starts on every room too (layouts are open to everyone, F26).
     final g = AppState(start: 'explore', role: 'tenant')..signedIn = false;
     g.hid = 'anjani';
     g.openPicker();
@@ -153,6 +154,7 @@ void main() {
     final broken = s.brokenThings.single;
     s.tab('oToday');
     await tester.pump();
+    await _tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: in the Fixes tab
     expect(find.byKey(ValueKey('broken-${broken.id}')), findsOneWidget);
     await _tap(tester, find.descendant(of: find.byKey(ValueKey('broken-${broken.id}')), matching: find.text('Fixed')));
     expect(s.brokenThings, isEmpty);

@@ -256,4 +256,14 @@ class SampleRepo implements HostelRepo {
   Future<List<Lead>> teamTracker() async => const [];
   @override
   Future<void> setLeadStage(String hid, int stage) async {}
+  @override
+  Future<void> holdSeen(List<String> holdIds) async {}
+  @override
+  Future<void> joinWaitlist(String hid) async {}
+  @override
+  Future<Set<String>> myWaitlist() async => {};
+  @override
+  Future<void> sendClaim(String hid, String name, String phone) async {}
+  @override
+  Future<Map<String, ({int verified, int listed})>?> areaCounts() async => null;
 }

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/state.dart';
+import 'package:hostelzy/ui/kit.dart' show Pal;
 import 'package:hostelzy/ui/shell.dart';
 
 // F22 Area 1 (Tenant): Me as one list with status lines, Settings in three
@@ -49,10 +50,14 @@ void main() {
     expect(find.text('RT'), findsOneWidget);
     expect(find.text('Ravi Teja'), findsOneWidget);
     expect(find.text('+91 90000 00001 · not verified'), findsOneWidget);
-    expect(find.text('2 hostels'), findsOneWidget);
+    // F26 #10: Saved and Holds are tabs, not rows; F26 #11: Log out in red at the end.
+    expect(find.text('2 hostels'), findsNothing);
+    expect(find.byKey(const ValueKey('me-Saved')), findsNothing);
+    expect(find.byKey(const ValueKey('me-Holds')), findsNothing);
     expect(find.text('Not a member yet'), findsOneWidget);
     expect(find.text('Language, notifications, log out'), findsOneWidget);
-    expect(find.text('Log out'), findsNothing);
+    expect(find.byKey(const ValueKey('me-logout')), findsOneWidget);
+    expect(tester.widget<Text>(find.text('Log out')).style?.color, Pal.light.ad);
     await _tap(tester, find.byKey(const ValueKey('switchRole')));
     s.update(() => s.screen = 'me');
     await tester.pump();
@@ -116,14 +121,10 @@ void main() {
     expect(find.byKey(const ValueKey('holdCard')), findsOneWidget);
     expect(find.text('HELD FOR YOU · FREE'), findsOneWidget);
     expect(find.text('Tell Srinivas on WhatsApp'), findsOneWidget);
+    // F26 #7: WhatsApp opens straight away with a ready message (no enquiry sheet).
     await _tap(tester, find.text('Tell Srinivas on WhatsApp'));
-    // The WhatsApp sheet shows the whole message and the booking code line.
-    expect(s.sheet, 'wa');
-    expect(find.text('Ask Srinivas'), findsOneWidget);
-    expect(find.text(s.waFull), findsOneWidget);
-    expect(s.waFull, endsWith('Booking code ${s.waRef}\nhttps://farhath.me/hostelzy/app/r/?c=${s.waRef}'));
-    expect(find.text('The booking code keeps your Hostelzy price.'), findsOneWidget);
-    s.update(() => s.sheet = null);
+    expect(s.sheet, isNull);
+    expect(Uri.decodeFull(s.lastLink.toString()), contains('I held bed ${h.bed} at Anjani Residency on Hostelzy.'));
 
     // Owner confirms: still held, now with "owner confirmed".
     s.setHold(h.id, 'confirmed');
@@ -188,7 +189,7 @@ void main() {
     await _tap(tester, find.byKey(ValueKey('bed-${b.id}')));
     expect(s.bed, b.id);
     expect(find.text('Bed ${b.id} · ${fmt(r.rent)}/mo'), findsOneWidget);
-    expect(find.text(b.spot), findsOneWidget);
+    expect(find.text('Floor ${r.floor} · ${b.spot}'), findsOneWidget);
     // A taken bed can't be picked.
     final taken = s.rooms['anjani']!.where((x) => x.floor == 2).expand((x) => x.beds).where((x) => x.state == 'booked').firstOrNull;
     if (taken != null) {
@@ -199,9 +200,11 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('pickContinue')));
     expect(s.sheet, 'hold');
     s.update(() => s.sheet = null);
-    // Cheapest beds is a link under the cards, and back.
+    // S18 "See cheapest beds ›" stays (F26 revert): the list, then back to the floors.
+    await tester.ensureVisible(find.text('See cheapest beds ›'));
     await _tap(tester, find.text('See cheapest beds ›'));
     expect(s.mode, 'list');
+    expect(find.textContaining('CHEAPEST FIRST'), findsOneWidget);
     await _tap(tester, find.text('‹ Back to the plan'));
     expect(s.mode, 'plan');
 

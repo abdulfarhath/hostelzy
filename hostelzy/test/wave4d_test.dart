@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart';
-import 'package:hostelzy/features/explore/explore_screen.dart' show FiltersBtn, filtered;
+import 'package:hostelzy/features/explore/explore_screen.dart' show filtered, sortLabels;
 import 'package:hostelzy/features/listings/live.dart';
 import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
@@ -113,11 +113,11 @@ Future<AppState> _owner(WidgetTester tester, _Server server) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('Best deals sorts by the 6-month saving; paused deals count as none; featured only leads Recommended', (tester) async {
+  testWidgets('Best deals sorts by the 6-month saving; paused deals count as none; F26: one featured pinned on top of every sort', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     await _pump(tester, s);
-    // The Filters sheet offers it (the owner's Deals screen promises it).
-    await _tap(tester, find.byType(FiltersBtn));
+    // F26 #2: the sort dropdown offers it (the owner's Deals screen promises it).
+    await _tap(tester, find.byKey(const ValueKey('sortBtn')));
     await _settle(tester);
     await _tap(tester, find.text('Best deals'));
     expect(s.sortBy, 'deals');
@@ -136,20 +136,20 @@ void main() {
     expect(ids.sublist(ids.length - noDeal.length), noDeal);
 
     // Deals paused (plan 15+ days late): no deal, so it drops to the bottom.
-    s.update(() => s.flags = {'anjani': (beds: 120, featured: true, dealsPaused: true)});
+    s.update(() => s.flags = {'anjani': (beds: 120, featured: false, dealsPaused: true)});
     ids = [for (final h in filtered(s)) h.id];
     expect(s.bestQuote('anjani'), isNull);
     expect(ids.indexOf('anjani'), greaterThanOrEqualTo(ids.length - noDeal.length - 1));
 
-    // Featured leads Recommended only, never Best deals.
+    // F26 #2 (hub, on F10): the featured hostel keeps its one pinned spot in every sort.
     s.update(() => s.flags = {'lakshmi': (beds: 120, featured: true, dealsPaused: false)});
     expect(s.bestQuote('lakshmi'), isNull);
-    s.update(() => s.sortBy = 'rec');
-    expect(filtered(s).first.id, 'lakshmi');
+    for (final k in sortLabels.keys) {
+      s.update(() => s.sortBy = k);
+      expect(filtered(s).first.id, 'lakshmi', reason: k);
+    }
     s.update(() => s.sortBy = 'deals');
-    expect(filtered(s).first.id, 'anjani');
-    expect(filtered(s).last.id == 'lakshmi' || s.bestQuote(filtered(s).last.id) == null, isTrue);
-    expect(filtered(s).indexWhere((h) => h.id == 'lakshmi'), greaterThan(0));
+    expect(filtered(s)[1].id, 'anjani');
     s.dispose();
   });
 

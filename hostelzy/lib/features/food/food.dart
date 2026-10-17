@@ -47,7 +47,7 @@ extension FoodActions on AppState {
   }
 
   /// The hostel Food shows: a resident's own, or the one a tenant opened.
-  String get foodHid => role == 'resident' ? stayHostel.id : (foodFor ?? hid);
+  String get foodHid => role == 'resident' && !inFindBed ? stayHostel.id : (foodFor ?? hid);
 
   /// The week Food and Home show (blank when there is none).
   List<DayMenu> get menu => menuOf(foodHid) ?? blankWeek;
@@ -114,13 +114,6 @@ extension FoodActions on AppState {
     timesDraft = {};
     timesDirty = true;
     menuDirty = true;
-  });
-
-  /// Tenant: the whole week of a hostel's food, from its page (a sheet).
-  void openFoodFor(String h) => update(() {
-    foodFor = h;
-    fwDay = todayIdx;
-    sheet = 'foodWeek';
   });
 
   /// Owner: Manage › Food menu. Starts from the saved week (or one typed on

@@ -1,6 +1,7 @@
 # SCREENS: every screen, sheet and state in the release app
 
-- **Date:** 2026-10-03 · **Counted on `main` at `fdbbef8`** (Build, by reading the code, not the canvas).
+- **Date:** 2026-10-17 · **Recounted on `f26/integration`** (F26 PRs #121–#125 together, plus the 12 F26 reverts; Build,
+  by reading the code and counting the rows below, not the canvas).
 - **Why:** CLAUDE.md "Design ↔ app consistency". The Design chat matches the "Hostelzy · Main design"
   canvas 1:1 against this list. When a PR adds or removes a screen, update this file in the same PR.
 
@@ -8,20 +9,33 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **85** |
-| App sheets (bottom sheets) | **42** |
-| App full-screen states | **31** |
-| **Release app total** | **158** |
-| Team console (app/console): views 9 + states 4 | **13** |
-| Web pages (app/): pages 6 + states 2 | **8** |
-| **Overall total** | **179** |
+| App screens (routes + their separate pages/views) | **82** |
+| App sheets (bottom sheets) | **44** |
+| App full-screen states | **29** |
+| **Release app total** | **155** |
+| Team console (app/console): views 11 + states 4 | **15** |
+| Web pages (app/): pages 6 + states 1 | **7** |
+| **Overall total** | **177** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
 renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**.
 
-Subtotals: screens Start 7 · Tenant 16 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
-Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 17 · Resident 6 · Owner 6 · Shared 2.
+**F26 changes (founder review 1, PRs #121–#125, 2026-10-06; reverts 2026-10-17; screens −3, sheets +2, states −2, console +2 → overall −1):**
+
+| Change | Ids |
+|---|---|
+| **Added** | **S88** `savedHolds` Saved & Holds · **S89** `rStay` My stay tab · **H44** `sort` · **H45** `complaint` · **H46** `complaints` · **H47** `claim` · **T32** UNVERIFIED hostel page · **T33** owner Today "Nothing needs you now" · console **C14** `#listed`, **C15** `#claims` |
+| **Retired** | **S24**, **S25** `food` (tab + week) · **S27** `help` · **S28** old Me › My stay · **S41** Manage › Enquiries · **H10** `foodWeek` · **H19** `enq` · **T10**, **T11**, **T13** layout locks · **T19** `food` no menu |
+| **Changed** | **S87** Building view: inline on the hostel page S13, on its own page `building` for 80+ bed hostels, and on owner Beds; no longer a picker tab · S8 `explore`, S10, S11, S12 `where`, S13 `detail`, S16, S17, S23 `rHome`, S26 `rPay`, S29, S32 `rFix`, S35, S36 `oToday`, S37 `oBeds`, S38 `oRent`, S79 `me` · H1 `search`, H6 `wa` (kept for owner ↔ resident WhatsApp; no longer used for enquiries), H13 `fixLock`, H18 `bed` · T12, T14 (copy until SQL 4zo1), T20 (now on S89) · web page W2 `app/r/` (old links only) |
+
+**Back (F26 revert #1, 2026-10-17):** **S18** picker cheapest-first list ("See cheapest beds ›").
+
+Ids are never reused or renumbered. **All retired ids:** S24, S25, S27, S28, S41, S76, S77, H10, H17, H19, T10, T11,
+T13, T19.
+
+Subtotals: screens Start 7 · Tenant 16 · Resident 11 · Owner 29 · Team mode 11 · Shared 8.
+Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 15 · Resident 5 · Owner 7 · Shared 2.
 
 ## Counting rules
 
@@ -31,9 +45,9 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 2. **Screen** = each `s.screen` key the shell maps to a widget (`lib/ui/shell.dart:386-458`, 68 keys), minus
    `otp` (flag off). Keys that draw the very same screen count once (`oPlan` = `oInvoice` = `oPayStatus`,
    `plan.dart:78`). A key whose body is switched wholesale into a **separate page** with its own title
-   (Manage pages, wizard steps, Give notice / Move bed, Join / List your PG, picker Room / List view, Food week,
+   (Manage pages, wizard steps, Give notice / Move bed, Join / List your PG, picker room view,
    Layouts › Shared things) counts once per page. Filter tabs inside one list (All / Due / Paid…) do not.
-3. **Sheet** = each `s.sheet` key with a body in `_Sheet` (`shell.dart:674-718`, 42 keys). Every one has a
+3. **Sheet** = each `s.sheet` key with a body in `_Sheet` (`shell.dart` `_Sheet`, 44 keys). Every one has a
    real opener (file:line below). No `showDialog` / `showModalBottomSheet` / `Navigator.push` exists in `lib/`.
 4. **Full-screen state** = a state that replaces the screen's whole main content (everything under its
    header/tabs, or the map's only card) with a different message or layout: empty, offline, loading, error,
@@ -43,7 +57,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (85)
+## 1. App screens (82)
 
 ### Start and sign-in (7)
 
@@ -61,51 +75,48 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 8 | `explore` | Find a bed (tab) | `screens_tenant.dart:97` | Tenant tab 1; role pick; guest browse (`guest.dart:65`) |
+| 8 | `explore` | Find a bed (tab). F26 #1 #2: search field with 📍 inside (→ Map at my location; the location explainer first); one row **Near me ✓ · Price ↑ ▾ · Filters · n**; one Featured (80+ beds, verified) pinned on top; "#1 near you" on the best-ranked card whatever the sort; location on → sort Distance; UNVERIFIED cards (F26 #21) after the verified ones in each ₹2,000 price band (Price ↑) or after every verified one (other sorts); header "Hyderabad · N beds free now", plus " · 12 verified · 84 listed" once anything is listed | `features/explore/explore_screen.dart` (`ExploreScreen`, `listingTierStep`) | Tenant tab 1; Find a bed tab 1 (resident); role pick; guest browse (`guest.dart:65`) |
 | 9 | `map` | Map (tab) | `map.dart:23` | Tenant tab 2 (also the side pane on tablets ≥1000 px) |
-| 10 | `saved` | Saved (tab) | `screens_tenant.dart:1599` | Tenant tab 3; Me › Saved |
-| 11 | `holds` | Holds (tab) | `screens_tenant.dart:461` | Tenant tab 4; Me › Holds; enquiry link for tenants (`links.dart:44`) |
-| 12 | `where` | Where? (area / landmark / hostel search) | `guest.dart:11` | Explore search bar; location refused (`guest.dart:143`) |
-| 13 | `detail` | Hostel page | `screens_tenant.dart:661` | Hostel card (`screens_tenant.dart:378`), map card (`map.dart:231`), Saved |
+| 10 | `saved` | Saved (tab) | `features/explore/explore_screen.dart` (`SavedScreen`) | Tenant tab 3 (F26 #10: no Me row); a resident sees it as a segment of S88 |
+| 11 | `holds` | Holds (tab). F26 #16: red dot on the tab when a hold was kept or declined since Holds was last open | `features/holds/holds_screens.dart` (`HoldsScreen`) | Tenant tab 4 (F26 #10: no Me row); a resident sees it as a segment of S88 |
+| 12 | `where` | Where? (area / landmark / hostel search) = "Pick a place" | `guest.dart:11` | Explore search bar; Explore › Near me ✓ tapped again (F26 #2); location refused (`guest.dart:143`) |
+| 13 | `detail` | Hostel page. F26: ✓ VERIFIED (navy) next to the name only after a team visit + "Beds and prices checked by Hostelzy · date"; Building view (S87) inline (80+ beds: "See all N rooms ›" → S87 on its own page); the whole week's food table (today highlighted); owner contact locked until a live hold (F26 #7), with "Talking through Hostelzy keeps your deal and your ₹100 reward."; no "On each floor" list, no tag boxes, no Visited block. A listed hostel shows T32 instead | `features/explore/hostel_screen.dart` (`DetailScreen`, via `HostelPage`) | Hostel card, map card (`map.dart`), Saved |
 | 14 | `gallery` | Photos (full-screen gallery) | `photos.dart:291` | Hostel page › photo (`photos.dart:210`) |
 | 15 | `reviews` | Reviews of a hostel | `reviews.dart:173` | Hostel page › reviews (`screens_tenant.dart:799`) |
-| 16 | `picker` (plan) | Pick a bed · room plan / floor view | `screens_tenant.dart:1053` (`_PlanMode` `:1199`) | Hostel page › See beds (`residents.dart:245`) |
-| 17 | `picker` (room) | Room 101 · room layout, layers, bed facts | `layout.dart:354` (`RoomMode`) | Picker › tap a room (`state.dart:openRoom`) |
-| 18 | `picker` (list) | Pick a bed · cheapest first | `screens_tenant.dart:1340` (`_ListMode`) | Picker › See cheapest beds |
+| 16 | `picker` (plan) | Pick a bed · floor chips on top (jump to the floor); every room's drawn layout (beds, fan, AC, window, door, washroom) in one scroll, grouped by floor ("Floor 2 · 4 free"); each room: name + share · rent, "n free", red **Edit this layout** (F26 #12); a room without a layout shows its beds as boxes; tap a free bed → Continue (F26 #8); legend + "See cheapest beds ›" (S18) | `features/holds/picker_screen.dart` (`PickerScreen`, `_AllRooms`, `_RoomCard`) | Hostel page › See beds (`residents.dart:openPicker`); a free bed in the Building view (S87); fixLock › See beds |
+| 18 | `picker` (list) | Pick a bed · cheapest first ("‹ Back to the plan") | `features/holds/picker_screen.dart` (`_ListMode`) | Picker › See cheapest beds |
+| 17 | `picker` (room) | Room 101 · room layout, layers, bed facts, "Floor view" link back, red **Edit this layout** above the bar (F26 #12) | `features/layouts/layout_map.dart` (`RoomMode`) | Picker › a room's name (`room_layouts.dart:openRoom`) |
 | 19 | `compare` | Compare two beds | `layout.dart:644` | Room view › Compare with another bed (`room_layouts.dart:122`) |
 | 20 | `hold` | Your hold (timer / pay to book / booked / ended) | `screens_tenant.dart:1425` | After a hold (`residents.dart:312,426`); Holds row (`screens_tenant.dart:491`) |
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
-| 87 | `picker` (building) | Pick a bed · Building: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → Continue; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). Same component on owner Beds › Building (S37) | `features/holds/building_view.dart` (`BuildingView`) | Picker tab Building (`pickTab-building`); Hostel page › See the whole building (`residents.dart:openBuilding`) |
+| 87 | `building` | Building view: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → the picker on that bed; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). F26 #3: **inline on the hostel page S13** (`HostelBuilding`); **on its own page `building`** for hostels with more than 80 beds ("See all N rooms ›"); and on owner **Beds** (S37, a room's number → its layout via `onRoom`). No longer a picker tab (F26 #8) | `features/holds/building_view.dart` (`BuildingView`); page: `features/explore/hostel_screen.dart` (`BuildingScreen`) | Hostel page (inline); Hostel page › See all N rooms › (`seeAllRooms`); owner tab Beds |
 
-### Resident (13)
+### Resident (11)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 23 | `rHome` | Home (tab) | `screens_resident.dart:11` | Resident tab 1; after joining |
-| 24 | `food` (day) | Food (tab) · today's meals | `screens_resident.dart:498` | Resident tab 2 |
-| 25 | `food` (week) | Food · whole week table | `screens_resident.dart:340` (`WeekTable`) | Food › Whole week (`screens_resident.dart:536`) |
-| 26 | `rPay` | Rent (tab) | `screens_resident.dart:191` | Resident tab 3; Home › Pay rent |
-| 27 | `help` | Help · complaints (tab) | `screens_resident.dart:651` | Resident tab 4; Home › Raise complaint |
-| 28 | `rStay` | My stay | `screens_resident.dart:751` | Me › My stay (`screens_tenant.dart:586`) |
-| 29 | `move` (vacate) | Give notice | `screens_resident.dart:871` | My stay › Give notice (`screens_resident.dart:767`) |
+| 23 | `rHome` | Home (tab): rent card (red Pay), 3 actions, 30-day review card, **Food this week** (the shared week table from the hostel page, today's row highlighted, F26 #4 #13), no menu: one honest line (no breakfast card) | `features/residents/resident_screens.dart` (`ResidentHomeScreen`; table `features/food/week_table.dart` `FoodWeekTable`) | Resident tab 1; after joining; meal reminder |
+| 26 | `rPay` | Rent (tab) | `screens_resident.dart:191` | Resident tab 2 (plain tab, F26); Home › Pay / Pay rent |
+| 89 | `rStay` | My stay (tab, F26 #14): bed card · Your bed (Move to another bed, Give notice, Your refund, Review your stay, Fix a room layout) · Help (Something wrong in your room? › H45, Your complaints › H46) | `features/residents/resident_screens.dart` (`StayScreen`) | Resident tab 3; Find a bed tab bar › My stay (`features/session/tabs.dart` `leaveFindBed`) |
+| 88 | `savedHolds` | Saved & Holds (F26 #17): one tab, segments Saved · n / Holds · n (bodies = S10 / S11 without their titles); red dot on the tab (F26 #16) | `features/holds/saved_holds_screen.dart` (`SavedHoldsScreen`) | Find a bed tab bar, tab 3 (residents only; a plain tenant keeps Saved and Holds) |
+| 29 | `move` (vacate) | Give notice | `screens_resident.dart:871` | My stay (S89) › Give notice |
 | 30 | `move` (swap) | Move to another bed | `screens_resident.dart:871` (`else`, `:1000`) | My stay › Move to another bed |
 | 31 | `rRoom` | Rooms · room layout (resident) | `layout_fixes.dart:22` | My stay › Fix a room layout (`features/layouts/layout_fixes.dart:101`) |
-| 32 | `rFix` | Fix this room (layout fix editor) | `layout_fixes.dart:157` | Rooms › Fix (`features/layouts/layout_fixes.dart:131`) |
+| 32 | `rFix` | Fix this room (layout fix editor); for a non-resident it is try mode (main's wording: "You don’t live here · leaving discards your try", "Try mode · play freely, nothing is saved"), red **Publish** → H13 (F26 #12) | `layout_fixes.dart:157` | Rooms › Fix (`features/layouts/layout_fixes.dart:131`); tenant Edit this layout (S16, S17) |
 | 33 | `rReview` | 30-day review | `reviews.dart:252` | Home › review card (`review_rules.dart:54`) |
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
-| 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | Me › Your refund (`features/moves/moves.dart:180`) |
+| 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | My stay › Your refund; Me › Your refund for a non-resident (`features/moves/moves.dart:180`) |
 
-### Owner (30)
+### Owner (29)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 36 | `oToday` | Today (tab) · This month card with "N% full" + bar (F25 A6) | `screens_owner.dart:58` | Owner tab 1; role pick; hostel switch (`state.dart:231`) |
-| 37 | `oBeds` | Beds · bed map (tab); toggle Rooms · Building (Building = the S87 component, a bed → H18) | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
-| 38 | `oRent` | Rent (tab) | `screens_owner.dart:645` | Owner tab 4; Today › rent pending |
+| 36 | `oToday` | Today (tab) · F26 #18: Fair Play card pinned on top, then **Holds · Payments · Fixes** tabs with counts (most urgent opens first; Holds = hold requests (Confirm hold / Decline; opening one tells the tenant "Owner reviewing", F26 #9), notices and bed moves; Payments = payments to confirm, refunds; Fixes = layout fixes, quick fixes, repairs, broken shared things, a new layout to check), then the This month card with "N% full" + bar (F25 A6), then main's cards "Still N free beds?", "Do your room layouts still match?", "Are your rates still right?". Empty: T33 | `features/owner/owner_today_screen.dart` | Owner tab 1; role pick; hostel switch; an old `app/r/` link |
+| 37 | `oBeds` | Beds (tab) · F26 #19: the Building view only (S87; the Rooms list and its toggle are gone). A bed → H18; a room's number → its layout (`oLayout` / `oCreate`); "Layouts ›" to create or copy one; "Rooms and rates ›" | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
+| 38 | `oRent` | Rent (tab) · F26 #20: tags Paid green, Late red, Due plain; **Call** + **WhatsApp** (ready reminder text, the resident's number) on every unpaid row, no bell | `features/owner/owner_rent_screen.dart` | Owner tab 4; Today › rent pending |
 | 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
 | 40 | `oMore` · residents | Manage › Residents | `screens_owner.dart:1129` | Manage › Residents |
-| 41 | `oMore` · enquiries | Manage › Enquiries | `screens_owner.dart:361` | Manage › Enquiries; enquiry link (`links.dart:42`) |
 | 42 | `oMore` · complaints | Manage › Complaints | `screens_owner.dart:849` | Manage › Complaints |
 | 43 | `oMore` · deals | Manage › Deals | `deals.dart:13` | Manage › Deals (`state.openDeals`, `state.dart:241`) |
 | 44 | `oMore` · rates | Manage › Rates and UPI | `screens_owner.dart:1434` (`RateCard`) | Manage › Rates and UPI (`residents.dart:120`) |
@@ -151,7 +162,7 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 79 | `me` | Me (tab for tenant and resident; owner via Today avatar) | `screens_tenant.dart:571` | Tab 5; owner Today (`screens_owner.dart:89`) |
+| 79 | `me` | Me (tab for tenant and resident; owner via Today avatar). F26 #10 #11: no Saved / Holds / My stay rows; **Log out** in red at the end | `features/session/me_screen.dart` | Tab 5 (also in the Find a bed bar); owner Today |
 | 80 | `settings` | Settings | `settings.dart:73` | Me › Settings |
 | 81 | `reminders` | Reminders | `reminders.dart:92` | Me › Reminders; reminder notification (`features/reminders/reminders.dart:77,234`) |
 | 82 | `perm` | Turn on notifications? (explainer) | `settings.dart:309` | First role pick as **resident or owner** with push not yet allowed (`login.dart` `offerPush`). Never for tenants (F25: a tenant's only ask is H5) |
@@ -160,42 +171,44 @@ Sheets Tenant 10 · Resident 6 · Owner 18 · Team 1 · Shared 7. States Tenant 
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (42)
+## 2. App sheets (44)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
-### Tenant (10)
+### Tenant (11)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
-| 1 | `search` | Filters (sort, for, budget…) | `shell.dart:793` | Explore › Filters (`screens_tenant.dart:144`) |
+| 1 | `search` | Filters (as on main: For · Room · Budget (Any…) · Deals · On the floor · Food included; F26 #2: no sort) | `features/explore/explore_sheets.dart` (`SearchSheet`) | Explore › Filters · n |
+| 44 | `sort` | Sort by: Price ↑ (default) · Distance · Rating · Best deals (F26 #2) | `features/explore/explore_sheets.dart` (`SortSheet`) | Explore › Price ↑ ▾ (`sortBtn`) |
 | 2 | `loc` | Use your location? | `map.dart:249` | Map › Near me (`map.dart:128`; `guest.dart:180`) |
 | 3 | `signIn` | Sign in to hold / book / message | `guest.dart:105` | Guest taps Hold, Book or WhatsApp (`guest.dart:86`) |
 | 4 | `hold` | Bed N (free hold or book with advance) | `shell.dart:877` | Picker › Continue (`screens_tenant.dart:1148`; `layout.dart:613`); hold again (`:1453`) |
 | 5 | `holdNotify` | Bed N is held for you (allow notifications; the tenant's only notification ask, never together with S82, F25) | `guest.dart:129` | After the first hold (`guest.dart:203`) |
-| 6 | `wa` | Ask the owner (WhatsApp enquiry) | `shell.dart:962` | Hostel page / hold › WhatsApp (`map.dart:158`; `sync.dart:197`; `state.dart:396`) |
+| 6 | `wa` | Message X on WhatsApp (the message, Open WhatsApp, Copy). Kept for owner ↔ resident WhatsApp; F26 #7: **no longer used for enquiries** (no "Ask on WhatsApp", no booking-code line; a hold's WhatsApp opens WhatsApp directly) | `features/holds/holds_sheets.dart` (`WaSheet`) | Owner › a resident's WhatsApp, resident › Message owner, layout fix › Talk to owner (all `state.dart` `openWA`) |
 | 7 | `payAdv` | Pay the advance | `payments.dart:59` | Book a bed (`residents.dart:313,427`) |
 | 8 | `report` | Tell us what happened (private) | `fairplay.dart:288` | Holds › "The owner asked me to skip the app" (`screens_tenant.dart:544`) |
 | 9 | `perks` | What Trusted tenants get / You're a Trusted tenant | `stay_tools.dart:209` | Rewards / first-look bed (`features/rewards/rewards.dart:74`) |
-| 10 | `foodWeek` | Food menu · whole week (hostel page) | `screens_tenant.dart:1766` | Hostel page › Full week (`features/food/food.dart:121`) |
+| 47 | `claim` | Claim <hostel> (F26 #21): your name, your phone, Send to Hostelzy | `features/explore/unverified_screen.dart` (`ClaimSheet`) | UNVERIFIED hostel page (T32) › Are you the owner? Claim this hostel › (`features/listings/tiers.dart` `openClaim`) |
 
-### Resident (6)
+### Resident (8)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
 | 11 | `scanCam` | Use your camera? | `screens_start.dart:499` | Join your PG › Scan the QR, first time (`links.dart:150`) |
 | 12 | `payUtr` | Enter the UPI reference (rent, also the tenant's advance) | `payments.dart:105` | After paying by UPI (`features/payments/payments.dart:35`; `state.dart:556`) |
-| 13 | `fixLock` | Fix this room? (only residents of this hostel) | `layout_fixes.dart:308` | Rooms › Fix (`features/layouts/layout_fixes.dart:116,187,367`) |
+| 13 | `fixLock` | Publish (try mode) / Fix this room?: "Only residents can send a fix" · Book a bed to join. · Book a bed · See beds (F26 #12) | `layout_fixes.dart:308` | Rooms › Fix (`features/layouts/layout_fixes.dart:116,187,367`); try mode › Publish |
 | 14 | `fixLimit` | Can't send yet | `layout_fixes.dart:342` | Fix limit reached (`features/layouts/layout_fixes.dart:119,391`) |
 | 15 | `fixSend` | Send your fix | `layout_fixes.dart:386` | Fix editor › Send (`features/layouts/layout_fixes.dart:193`) |
 | 16 | `quickFix` | Quick fix · item (fan, AC…) | `layout_fixes.dart:557` | Rooms › tap an item (`features/layouts/layout_fixes.dart:374`) |
+| 45 | `complaint` | Something wrong in your room? (kicker Help · hostel): category chips, text, photo, Send to owner (F26 #14, was the Help tab) | `features/residents/help_sheets.dart` (`ComplaintSheet`) | My stay › Help › Something wrong in your room?; Home › Raise complaint; Your complaints (empty) |
+| 46 | `complaints` | Your complaints: each with Sent / Being fixed / Fixed (F26 #14); empty: No complaints + Something wrong in your room? | `features/residents/help_sheets.dart` (`ComplaintsSheet`) | My stay › Help › Your complaints; after Send to owner |
 
-### Owner (18)
+### Owner (17)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
-| 18 | `bed` | Bed N (owner bed sheet) | `shell.dart:1322` | Beds › a bed (`screens_owner.dart:520`) |
-| 19 | `enq` | Enquiry from Hostelzy (HZ code) | `shell.dart:1011` | Today / enquiry link (`links.dart:42`; `state.dart:516`) |
+| 18 | `bed` | Bed N (owner bed sheet; opening it tells a waiting tenant "Owner reviewing", F26 #9) | `shell.dart:1322` | Beds › a bed (Building view) |
 | 20 | `addR` | Add a resident (the one sheet; F25: H17 `add` merged in). Name, WhatsApp number, bed, ONE date (label "Moves in" when in the future = a booking, "Joined on" when today or past), monthly fee, advance, "Lived here before Hostelzy" (before go-live, past dates only) | `features/residents/residents_sheets.dart` (`AddResidentSheet`) | Owner tab bar "+" (`shell.dart` `_openTab`); Residents › Add; bed sheet › Add tenant to this bed (all `residents.dart` `openAddResident`) |
 | 21 | `trusted` | X is a Trusted tenant | `rewards.dart:249` | Today › hold request (`screens_owner.dart:161`) |
 | 22 | `utr` | I've paid ₹N (plan invoice UTR) | `plan.dart:243` | Your plan › I've paid (`state.dart:170`) |
@@ -231,11 +244,11 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
 
-## 3. App full-screen states (31)
+## 3. App full-screen states (29)
 
 | # | Screen | State | Condition | Built at |
 |---|---|---|---|---|
-| **Tenant (17)** |||||
+| **Tenant (15)** |||||
 | 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
 | 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
 | 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
@@ -245,33 +258,31 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 7 | `holds` | No holds yet · Find a bed | `holds.isEmpty` | `screens_tenant.dart:548` |
 | 8 | `saved` | Nothing saved yet · Find a bed | nothing saved | `screens_tenant.dart:1617` |
 | 9 | `hold` | This hold isn't on this phone any more | hold id not found | `screens_tenant.dart:1432` |
-| 10 | `picker` (plan, building) | Floor plan shows after you hold a bed (also on the Building tab, F25) | women's PG, no hold (`floorLocked`) | `screens_tenant.dart:1070`, `layout.dart:623` |
-| 11 | `picker` (room) | Sign in to see room layouts | guest | `layout.dart:367` |
-| 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one | `layout.dart:375` |
-| 13 | `picker` (room) | Floor plan shows after you hold a bed (daily cap) | server `capped` | `layout.dart:379` |
-| 14 | `picker` (room) | Couldn't load this room · Try again | server fetch failed | `layout.dart:390` |
+| 12 | `picker` (room) | Loading the layout… | women's PG room fetched one by one (only until the F26 SQL 4zo1 runs) | `layout.dart:375` |
+| 14 | `picker` (room) | Couldn't load this room · Try again (also "Couldn’t open this room yet · Floor view" for the old server's daily limit, until 4zo1 runs; no hold talk) | server fetch failed / `capped` | `layout.dart:390` |
 | 15 | `picker` (room) | Layout coming soon · Tell me when it's ready | no published layout | `layout.dart:398` |
 | 16 | `scan` | The camera is off for Hostelzy | camera permission denied | `screens_start.dart:540` |
 | 17 | `scan` | The camera didn't start | scanner error | `screens_start.dart:540` |
-| **Resident (6)** |||||
+| 32 | `detail` | UNVERIFIED hostel page (F26 #21): photo, name + grey UNVERIFIED badge, "Listed by the Hostelzy team · not checked yet", Rent per month "Around ₹7,000–9,000" (expected, not confirmed), no beds/holds/contact box, Claim this hostel ›; bottom: Tell me when verified (after: "We’ll tell you when it’s verified"), Ask Hostelzy | hostel `listed` (server status `listed`) | `features/explore/unverified_screen.dart` (`UnverifiedScreen`, via `HostelPage`) |
+| **Resident (5)** |||||
 | 18 | `rPay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:198` |
-| 19 | `food` | Owner hasn't put the menu on Hostelzy yet | no menu | `screens_resident.dart:542` |
-| 20 | `rStay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:799` |
+| 20 | `rStay` (S89) | Your stay isn't on Hostelzy yet | `myStay == null` | `features/residents/resident_screens.dart` (`StayScreen`) |
 | 21 | `move` (vacate) | Notice given / Notice accepted | notice sent (not declined) | `screens_resident.dart:947` |
 | 22 | `rRoom` | No layout yet | room has no layout | `layout_fixes.dart:99` |
 | 23 | `rRefund` | No refund waiting | no open refund | `refunds.dart:83` |
-| **Owner (6)** |||||
+| **Owner (7)** |||||
 | 24 | `oRules` | Fair Play rules · before you go live (short + I agree) | `!fairAccepted && !fpFull` | `fairplay.dart:109` |
 | 25 | `oCase` | Fair Play · No open cases | no case | `fairplay.dart:343` |
 | 26 | `oLayout` | No layout yet (draw it / ask Hostelzy) | no layout, no request | `layout.dart:844` |
 | 27 | `oLayout` | Hostelzy is drawing it | open shape request | `layout.dart:843` |
 | 28 | `oLayout` | Hostelzy drew a new version · check and publish | request sent back | `layout.dart:845` |
 | 29 | `oPlan`, `oCase`, `oStrike`, Manage › Deals / Rates | Owner only (manager) | `ownerOnlyWhat` ≠ null | `plan.dart:457`, `shell.dart:354` |
+| 33 | `oToday` | Nothing needs you now (all three counts 0; "New holds, payments and fixes show up here.") | nothing waits for the owner (F26 #18) | `features/owner/owner_today_screen.dart` (`needsNothing`) |
 | **Shared (2)** |||||
 | 30 | `delAcc` | Can't delete yet (open hold / unpaid plan) | `deleteBlock != null` | `settings.dart:154` |
 | 31 | `gate` | Update Hostelzy to continue | `appBuild < minBuild` | `settings.dart:370` |
 
-## 4. Team console, app/console (13)
+## 4. Team console, app/console (15)
 
 Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 
@@ -286,25 +297,29 @@ Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 | 7 | `#fixes` | Layout fixes (list + fix detail, approve / reject) | `console.js:420` |
 | 8 | `#reviews` | Reported reviews (Hide / Keep) | `console.js:478` |
 | 9 | `#hostels` | Hostels (Go live / Pause) | `console.js:507` |
+| 14 | `#listed` | Listed (F26 #21): list a hostel as UNVERIFIED (name, area, for, rent range), add photos, List it / Take off, waitlist count | `console.js` (`listed`) |
+| 15 | `#claims` | Claims (F26 #21): owners' claims, Call / WhatsApp / Done / Not the owner | `console.js` (`claims`) |
 | 10 | state | Sign in (Continue with Google; "isn't a Hostelzy team account" message) | `console.js:53` |
 | 11 | state | Not set up yet (no Firebase config) | `console.js:37` |
 | 12 | state | Couldn't start | `console.js:41` |
 | 13 | state | Couldn't load (page error) | `console.js:96` |
 
+Views 11 (C1–C9, C14, C15) + states 4 (C10–C13) = 15.
+
 Not counted: "Loading…" (`console.js:87`) and "Not found." for an unknown `#hash` (`console.js:94`).
 
-## 5. Web pages (8)
+## 5. Web pages (7)
 
 | # | Path | Page | States |
 |---|---|---|---|
 | 1 | `app/index.html` | Hostelzy · Get the app | — |
-| 2 | `app/r/` | A Hostelzy enquiry (HZ code, Open in Hostelzy) | +1: "This link has no HZ code" (`app/r/index.html:20`) |
+| 2 | `app/r/` | Find this hostel on Hostelzy: "Hold a bed in the app to message or call the owner", Open in Hostelzy / Get the app (F26 #7: no enquiries; old links and QR posters still open the app, an old HZ code shows for reference) | — |
 | 3 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
 | 4 | `app/privacy/` | Privacy policy | — |
 | 5 | `app/terms/` | Terms of use | — |
 | 6 | `app/delete-account/` | Delete your Hostelzy account | — |
 
-Pages 6 + states 2 = 8.
+Pages 6 + states 1 = 7.
 
 ## 6. Not counted (listed so nobody draws or builds them by mistake)
 
@@ -322,12 +337,17 @@ Pages 6 + states 2 = 8.
 
 ## 7. Status variants (same layout, not counted; for Design to check)
 
-- `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released (`screens_tenant.dart:1463-1517`).
+- `hold`: Held · free · Held · owner confirmed · Pay to book · Waiting for owner · Not received · Booked · Hold ended · Released · Declined (`features/holds/holds_screens.dart`).
+- `holds` / `hold` (F26 #9): a free hold's steps Sent → Owner reviewing (only once the owner opened it) → Kept / Declined; after 30 min "Still waiting. Call the owner?" with Call first; WhatsApp + Call locked when declined (`features/holds/hold_steps.dart`).
+- `explore` (F26 #21): UNVERIFIED card (grey outline badge, "Around ₹7,000–9,000/mo · expected, not confirmed"); header "Hyderabad · N beds free now · 12 verified · 84 listed" once anything is listed (`features/explore/unverified_screen.dart`, `explore_screen.dart`).
 - `oPlan`: Free trial · Due · N days late · Checking · Paid · Not received (`plan.dart:23`).
 - `rPay`: Due · Waiting · Not received · Paid (`screens_resident.dart:236-248`).
 - `oStrike`: Strike 1 · 2 (deals hidden / deals back) · 3 removed (`fairplay.dart:479`).
 - `login`: Sign in · to hold a bed · to list your PG · to join your PG (`screens_start.dart:125`).
-- `me`, `settings`: rows differ by role. `detail`: owner block before / after a hold.
+- `me`, `settings`: rows differ by role. `detail`: owner block locked ("Message and call the owner after you hold a bed", WhatsApp + Call off) / after a live hold (number, "You held N", WhatsApp + Call on) (F26 #7).
+- Tab bars (F26): tenant Explore · Map · Saved · Holds · Me; resident Home · Rent · My stay · Find a bed · Me; a resident
+  inside **Find a bed** (S8 Explore, S9 Map, S88 Saved & Holds, S79 Me) Explore · Map · Saved & Holds · My stay · Me;
+  red dot on Holds / Saved & Holds after a kept or declined hold (F26 #9 Declined included; `ui/shell.dart` `_tabsOf`, `_tabIcon`).
 
 ## Finding while counting (for Build)
 

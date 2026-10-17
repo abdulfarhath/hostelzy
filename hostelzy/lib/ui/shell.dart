@@ -7,11 +7,12 @@ import '../features/amenities/amenities_screens.dart';
 import '../features/explore/explore_screen.dart';
 import '../features/explore/explore_sheets.dart';
 import '../features/explore/hostel_screen.dart';
+import '../features/explore/unverified_screen.dart';
 import '../features/fair_play/fair_play_screens.dart';
-import '../features/food/food_screen.dart';
 import '../features/holds/holds_screens.dart';
 import '../features/holds/holds_sheets.dart';
 import '../features/holds/picker_screen.dart';
+import '../features/holds/saved_holds_screen.dart';
 import '../features/layouts/admin_layout_screen.dart';
 import '../features/layouts/layout_fixes_screens.dart';
 import '../features/layouts/layout_map.dart';
@@ -33,6 +34,7 @@ import '../features/payments/rent_pay_screen.dart';
 import '../features/photos/photos_screens.dart';
 import '../features/plan/plan_screens.dart';
 import '../features/reminders/reminders_screens.dart';
+import '../features/residents/help_sheets.dart';
 import '../features/residents/resident_screens.dart';
 import '../features/residents/residents_sheets.dart';
 import '../features/reviews/reviews_screens.dart';
@@ -101,7 +103,7 @@ class _Wide extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final map = s.role == 'tenant' && width >= 1000;
+    final map = (s.role == 'tenant' || (s.role == 'resident' && s.inFindBed)) && width >= 1000;
     final rail = AppState.tabScreens.contains(s.screen);
     return ColoredBox(
       color: p.bg,
@@ -163,7 +165,7 @@ class _JumpPanel extends StatelessWidget {
     const groups = [
       ('Start', [('welcome', 'Welcome', 'tenant'), ('phone', 'Phone number', 'tenant'), ('login', 'Sign in', 'tenant'), ('role', 'Pick a role', 'tenant')]),
       ('Tenant', [('explore', 'Explore', 'tenant'), ('map', 'Map', 'tenant'), ('detail', 'Hostel detail', 'tenant'), ('picker', 'Bed picker', 'tenant'), ('hold', 'Hold status', 'tenant'), ('holds', 'Holds', 'tenant')]),
-      ('Resident', [('rHome', 'Home', 'resident'), ('rPay', 'Pay rent', 'resident'), ('food', 'Food', 'resident'), ('help', 'Complaints', 'resident'), ('move', 'Vacate / swap', 'resident')]),
+      ('Resident', [('rHome', 'Home', 'resident'), ('rPay', 'Rent', 'resident'), ('rStay', 'My stay', 'resident'), ('move', 'Vacate / swap', 'resident')]),
       ('Owner', [('oToday', 'Today', 'owner'), ('oBeds', 'Bed map', 'owner'), ('oRent', 'Rent', 'owner'), ('oMore', 'Manage', 'owner')]),
     ];
     final children = <Widget>[
@@ -414,18 +416,20 @@ class _AppBody extends StatelessWidget {
     'role' => const RoleScreen(),
     'explore' => const ExploreScreen(),
     'map' => const MapScreen(),
-    'holds' => const HoldsScreen(),
+    // F26 #16: seeing Holds or a hold clears the red dot.
+    'holds' => const HoldsSeen(child: HoldsScreen()),
+    'savedHolds' => const SavedHoldsScreen(),
     'me' => const MeScreen(),
-    'detail' => const DetailScreen(),
+    // F26 #21: a listed (UNVERIFIED) hostel has its own page (T32).
+    'detail' => const HostelPage(),
+    'building' => const BuildingScreen(),
     'oPhotos' => const OwnerPhotosScreen(),
     'oCrop' => const CropScreen(),
     'gallery' => const GalleryScreen(),
     'picker' => const PickerScreen(),
-    'hold' => const HoldScreen(),
+    'hold' => const HoldsSeen(child: HoldScreen()),
     'rHome' => const ResidentHomeScreen(),
     'rPay' => const RentPayScreen(),
-    'food' => const FoodScreen(),
-    'help' => const HelpScreen(),
     'move' => const MoveScreen(),
     'rStay' => const StayScreen(),
     'rReview' => const ResidentReviewScreen(),
@@ -477,16 +481,45 @@ class _AppBody extends StatelessWidget {
 
 const _tabs = {
   'tenant': [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('saved', 'Saved', 'heart'), ('holds', 'Holds', 'clock'), ('me', 'Me', 'user')],
-  'resident': [('rHome', 'Home', 'home'), ('food', 'Food', 'utensils'), ('rPay', 'Pay rent', 'wallet'), ('help', 'Help', 'wrench'), ('me', 'Me', 'user')],
+  // F26 #13 #14 #17: Rent is a plain tab; Food and Help are gone.
+  'resident': [('rHome', 'Home', 'home'), ('rPay', 'Rent', 'wallet'), ('rStay', 'My stay', 'bed'), ('+find', 'Find a bed', 'search'), ('me', 'Me', 'user')],
   'owner': [('oToday', 'Today', 'chart'), ('oBeds', 'Beds', 'bed'), ('*', 'Add tenant', 'userPlus'), ('oRent', 'Rent', 'wallet'), ('oMore', 'Manage', 'inbox')],
 };
+
+/// F26 #17: a resident inside Find a bed gets the tenant screens, Saved and
+/// Holds in one tab, and My stay to go back.
+const _findBedTabs = [('explore', 'Explore', 'home'), ('map', 'Map', 'pin'), ('savedHolds', 'Saved & Holds', 'heart'), ('+stay', 'My stay', 'bed'), ('me', 'Me', 'user')];
+
+List<(String, String, String)> _tabsOf(AppState s) => s.role == 'resident' && s.inFindBed ? _findBedTabs : _tabs[s.role]!;
 
 void _openTab(AppState s, String k) {
   // F21 W3: Manage opens on its list.
   if (k == 'oMore') s.moreTab = 'home';
+  if (k == '+find') return s.openFindBed();
+  if (k == '+stay') return s.leaveFindBed();
+  // F26 #16: a new hold result opens on Holds.
+  if (k == 'savedHolds' && s.holdsDot) s.shSeg = 'holds';
   if (k != '*') return s.tab(k);
   // F25: the "+" tab opens the one "Add a resident" sheet.
   s.openAddResident();
+}
+
+/// A tab's icon; F26 #16: Holds gets a red dot when a hold result came in.
+Widget _tabIcon(AppState s, Pal p, (String, String, String) t, double size) {
+  final icon = Ic(t.$3, size: size);
+  if (!const ['holds', 'savedHolds'].contains(t.$1) || !s.holdsDot) return icon;
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      icon,
+      Positioned(
+        key: ValueKey('holdsDot-${t.$1}'),
+        right: -4,
+        top: -3,
+        child: Container(width: 9, height: 9, decoration: BoxDecoration(color: p.ac, border: Border.all(width: 2, color: p.bg))),
+      ),
+    ],
+  );
 }
 
 /// F17 board 11: tablets and desktop get the tabs as a left rail.
@@ -496,7 +529,7 @@ class _Rail extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final list = _tabs[s.role]!;
+    final list = _tabsOf(s);
     return Container(
       width: 96,
       decoration: BoxDecoration(color: p.bg, border: Border(right: bs(2, p.tx))),
@@ -524,7 +557,7 @@ class _Rail extends StatelessWidget {
                       c: center ? p.ai : act ? p.tx : p.mu,
                       s: 11,
                       w: 600,
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Ic(t.$3, size: 22), const SizedBox(height: 6), T(t.$2, nowrap: true)]),
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [_tabIcon(s, p, t, 22), const SizedBox(height: 6), FittedBox(fit: BoxFit.scaleDown, child: T(t.$2, nowrap: true))]),
                     ),
                   ),
                 ),
@@ -542,7 +575,9 @@ class _TabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final list = _tabs[s.role]!;
+    final list = _tabsOf(s);
+    // F26: the resident bars have longer labels ("Find a bed", "Saved & Holds").
+    final pad = s.role == 'resident' ? 6.0 : 12.0;
     return Container(
       height: 64,
       decoration: BoxDecoration(
@@ -558,6 +593,7 @@ class _TabBar extends StatelessWidget {
               final center = t.$1 == '*', act = s.screen == t.$1;
               return Expanded(
                 child: Tap(
+                  key: ValueKey('tab-${t.$1}'),
                   onTap: () => _openTab(s, t.$1),
                   child: InsetBar(
                     edge: Edge.top,
@@ -565,7 +601,7 @@ class _TabBar extends StatelessWidget {
                     color: p.ac,
                     bg: center ? p.ac : null,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: EdgeInsets.symmetric(horizontal: pad),
                       child: Css(
                         c: center
                             ? p.ai
@@ -574,7 +610,7 @@ class _TabBar extends StatelessWidget {
                             : p.mu,
                         s: 11,
                         w: 600,
-                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [Ic(t.$3, size: 20), const SizedBox(height: 5), T(t.$2, nowrap: true)]),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [_tabIcon(s, p, t, 20), const SizedBox(height: 5), FittedBox(fit: BoxFit.scaleDown, child: T(t.$2, nowrap: true))]),
                       ),
                     ),
                   ),
@@ -598,21 +634,23 @@ class _Sheet extends StatelessWidget {
     final sb = s.bed != null ? s.findBed(s.hid, s.bed) : null;
     final title = switch (s.sheet) {
       'amFloor' => 'On ${s.floorName(s.amFloor).toLowerCase()}',
-      'foodWeek' => 'Food menu',
       'amAdd' => s.amDraft?.id == 'new' ? 'Add to ${s.floorName(s.amFloor).toLowerCase()}' : 'Change ${s.amDraft?.label ?? ''}',
       'cPhoto' => 'Photo',
       'lang' => 'Language',
       'search' => s.filterCount > 0 ? 'Filters · ${s.filterCount}' : 'Filters',
+      'sort' => 'Sort by',
       'holdNotify' => 'Bed ${s.holds.where((h) => h.id == s.holdId).firstOrNull?.bed ?? ''} is held for you',
       'loc' => 'Use your location?',
       'scanCam' => 'Use your camera?',
       'hold' => sb?.b != null ? 'Bed ${sb!.b!.id}' : 'Pick a bed',
       'signIn' => switch (s.afterSignIn) {
-        'enquiry' => 'Sign in to message ${hostelById(s.hid).owner}',
+        'verify' => 'Sign in to hear when it’s verified',
+        'claim' => 'Sign in to claim this hostel',
         'book' => 'Sign in to book this bed',
         _ => 'Sign in to hold this bed',
       },
-      'wa' => 'Ask ${s.waTo ?? 'the owner'}',
+      'wa' => 'Message ${s.waTo ?? 'on WhatsApp'}',
+      'claim' => 'Claim ${hostelById(s.claimHid ?? s.hid).name}',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'revReport' => 'Report this review',
@@ -630,7 +668,7 @@ class _Sheet extends StatelessWidget {
       'name' => 'Change your name',
       'waNum' => 'Your WhatsApp number',
       'photo' => 'This photo',
-      'fixLock' => 'Fix this room?',
+      'fixLock' => s.fixTry ? 'Publish' : 'Fix this room?',
       'fixLimit' => 'Can’t send yet',
       'fixSend' => 'Send your fix',
       'fixReject' => 'Reject this fix?',
@@ -642,13 +680,13 @@ class _Sheet extends StatelessWidget {
       'refund' => refundSheetTitle(s.refundOpen),
       'laundry' => 'Laundry day',
       'perks' => s.level == 'trusted' ? 'You’re a Trusted tenant' : 'What Trusted tenants get',
+      'complaint' => 'Something wrong in your room?',
+      'complaints' => 'Your complaints',
       _ => '',
     };
-    final enq = s.sheet == 'enq' ? s.enquiries.where((e) => e.ref == s.enqRef).firstOrNull : null;
     final kicker = switch (s.sheet) {
       'loc' => 'Map',
       'scanCam' => 'Join your PG',
-      'wa' when s.waHid != null && s.waRef != null => hostelById(s.waHid!).name,
       'utr' => 'Invoice ${s.invoice.ref}',
       'layoutReq' => 'Room ${s.lRoom} · ${s.lReqShape == 'Custom' ? 'Custom shape' : s.lReqShape}',
       'switch' => 'Your hostels',
@@ -674,15 +712,16 @@ class _Sheet extends StatelessWidget {
       'fixLock' || 'fixLimit' || 'fixSend' => 'Room ${s.fixRoom}',
       'fixReject' => 'Room ${s.openFixItem?.room ?? ''} · ${s.openFixItem?.author ?? ''}',
       'amFloor' => hostelById(s.amHid).name,
-      'foodWeek' => hostelById(s.foodFor ?? s.hid).name,
       'amAdd' => 'Shared things',
       'refund' => refundSheetKicker(s.refundOpen),
       'laundry' => 'House rules',
       'perks' => 'Stay Rewards',
+      'complaint' || 'complaints' => 'Help · ${s.stayHostel.name}',
       _ => null,
     };
     final body = switch (s.sheet) {
       'search' => const SearchSheet(),
+      'sort' => const SortSheet(),
       'holdNotify' => const HoldNotifySheet(),
       'lang' => const LangSheet(),
       'cPhoto' => s.complaintPhotosLocal[s.cPhotoView] == null ? const SizedBox() : Padding(padding: const EdgeInsets.all(16), child: Image.memory(s.complaintPhotosLocal[s.cPhotoView]!, fit: BoxFit.contain)),
@@ -691,8 +730,8 @@ class _Sheet extends StatelessWidget {
       'scanCam' => const CameraSheet(),
       'hold' => const HoldSheet(),
       'wa' => const WaSheet(),
+      'claim' => const ClaimSheet(),
       'bed' => const BedSheet(),
-      'enq' => const EnquirySheet(),
       'addR' => const AddResidentSheet(),
       'rank' => const RankSheet(),
       'revReport' => const ReviewReportSheet(),
@@ -719,11 +758,12 @@ class _Sheet extends StatelessWidget {
       'addRem' => const AddReminderSheet(),
       'waterOffer' => const WaterOfferSheet(),
       'amFloor' => const AmenityFloorSheet(),
-      'foodWeek' => const FoodWeekSheet(),
       'amAdd' => const AmenityAddSheet(),
       'refund' => const RefundSheet(),
       'laundry' => const LaundrySheet(),
       'perks' => const PerksSheet(),
+      'complaint' => const ComplaintSheet(),
+      'complaints' => const ComplaintsSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {
@@ -763,9 +803,7 @@ class _Sheet extends StatelessWidget {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: enq != null
-                                      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Kicker('Enquiry from Hostelzy'), const SizedBox(height: 2), T('${enq.ref} · ${enq.name}', w: 800, s: 20)])
-                                      : kicker != null
+                                  child: kicker != null
                                       ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Kicker(kicker), const SizedBox(height: 2), T(title, w: 800, s: 20)])
                                       : T(title, w: 800, s: 20),
                                 ),

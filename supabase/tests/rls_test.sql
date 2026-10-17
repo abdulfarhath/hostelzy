@@ -64,7 +64,7 @@ select test.act('anon', null);
 select test.rows('select count(*) from public.hostels', 1);          -- live only
 select test.rows('select count(*) from public.rooms', 1);
 select test.rows('select count(*) from public.beds', 2);
-select test.rows('select count(*) from public.layouts', 0);           -- sign in first
+select test.rows('select count(*) from public.layouts', 1);           -- published only: open to everyone (F26)
 select test.rows('select count(*) from public.profiles', 0);
 select test.rows('select count(*) from public.stays', 0);
 select test.rows('select count(*) from public.invoices', 0);
@@ -103,9 +103,9 @@ select test.rows('select count(*) from public.fair_cases', 0);
 select test.blocked($$insert into public.hostel_staff values ('10000000-0000-0000-0000-000000000001', 'fb-tenant', 'owner')$$);
 select test.blocked($$select public.approve_layout('10000000-0000-0000-0000-000000000001', 204)$$);
 
--- anonymous Firebase sign-in: no layouts, no holds
+-- anonymous Firebase sign-in: layouts are open (F26), no holds
 select test.act('authenticated', 'fb-tenant', false, 'anonymous');
-select test.rows('select count(*) from public.layouts', 0);
+select test.rows('select count(*) from public.layouts', 1);
 select test.blocked($$insert into public.holds (hostel_id, bed_id, opt) values ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'free')$$);
 
 -- ------------------------------------------------------------ resident

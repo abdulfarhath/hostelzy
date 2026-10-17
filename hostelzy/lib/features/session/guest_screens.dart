@@ -114,7 +114,11 @@ class SignInSheet extends StatelessWidget {
       child: VGap(
         gap: 14,
         children: [
-          T(s.afterSignIn == 'enquiry' ? 'So $owner knows who’s asking. We ask only once.' : 'So $owner knows who’s coming. We ask only once.', s: 15, c: p.mu, lh: 1.45),
+          T(switch (s.afterSignIn) {
+            'verify' => 'So we know who to tell. We ask only once.',
+            'claim' => 'So the Hostelzy team knows who to call. We ask only once.',
+            _ => 'So $owner knows who’s coming. We ask only once.',
+          }, s: 15, c: p.mu, lh: 1.45),
           GoogleButton(s.signingIn ? 'Opening Google…' : 'Continue with Google', busy: s.signingIn, onTap: s.continueWithGoogle),
           // Builds without Google sign-in (the demo APK) keep everything on the phone.
           if (!s.signIn.available) OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),

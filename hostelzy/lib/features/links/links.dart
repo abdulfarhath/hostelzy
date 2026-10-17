@@ -27,8 +27,9 @@ mixin _LinksData {
 
 extension LinksActions on AppState {
 
-  /// Deep link app/r/?c=HZ-…: opens that enquiry for its owner, or the
-  /// tenant's holds. Only enquiries this account can see.
+  /// Deep link app/r/?c=HZ-…: opens owner Today for its owner (F26: the
+  /// owner's enquiry sheet is gone), or the tenant's holds. Only enquiries
+  /// this account can see.
   void openEnquiryLink(String code) {
     final c = code.trim().toUpperCase();
     if (!RegExp(r'^HZ-[0-9]{3,8}$').hasMatch(c)) return toastMsg('That link has no booking code.');
@@ -38,8 +39,7 @@ extension LinksActions on AppState {
       hist = [];
       if (role == 'owner') {
         screen = 'oToday';
-        enqRef = c;
-        sheet = 'enq';
+        sheet = null;
       } else {
         screen = 'holds';
         sheet = null;

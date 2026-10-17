@@ -5,7 +5,8 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 
-/// Board 7: Visited by Hostelzy + availability, on the hostel page.
+/// Board 7: availability, on the hostel page. F26 #5: the team visit is the
+/// ✓ VERIFIED badge next to the name now, not a block here.
 class VisitedBlock extends StatelessWidget {
   const VisitedBlock(this.h, {super.key});
   final Hostel h;
@@ -13,34 +14,12 @@ class VisitedBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final v = s.visited[h.id];
     final free = s.rooms[h.id]!.fold<int>(0, (a, r) => a + r.beds.where((b) => b.state == 'free').length);
     final days = s.confirmed[h.id];
     final stale = s.stale(h.id);
     return VGap(
       gap: 8,
       children: [
-        if (v != null)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: box(w: 2, c: p.tx),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Ic('shieldOk', size: 20, color: p.tx),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      T('Visited by Hostelzy · $v', w: 800, s: 15),
-                      T('Photos taken by our team · beds and prices checked in person', s: 12, c: p.mu, lh: 1.35),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           color: stale ? p.ab : p.sf,
