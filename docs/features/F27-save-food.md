@@ -1,6 +1,6 @@
 # F27 · Save food: "Are you eating?" headcount (founder idea, 2026-10-06)
 
-**Stage:** Ideas → Designing → **Design approved** (founder, 2026-10-06, proposal canvas v11) → **Building** (prototype first, on top of F26).
+**Stage:** Ideas → Designing → **Design approved** (founder, 2026-10-06, proposal canvas v11) → **Built · prototype first** (2026-10-17, on top of F26; not on `main`).
 
 ## Problem
 Hostels cook for everyone, every meal. Many residents skip meals (office, travel, weekends home). The food is wasted
@@ -39,9 +39,42 @@ is shamed for eating).
 - Money: no rent reduction per skipped meal (changes money rules; founder decision later).
 - Guests and extra plates (a resident bringing a friend): later.
 
-## Build (after approval)
-`meal_rsvp` (stay, date, meal, eating bool, answered_at), `hostels.meal_cutoff_hours`, counts RPC, 2 pushes (resident reminder,
-owner headcount at cut-off), plates-saved totals. Rerun-safe migration, bundle, FOUNDER-TODO step.
+## Build
+**Built · prototype first, waiting for F26 and the founder** (branch `feature/f27-save-food`, on top of `f26/integration` with
+the 12 F26 reverts; must not merge before F26).
+
+| Board | In the app |
+|---|---|
+| F27-1 | Resident Home (S23): `NextMealCard` above the week table: next meal, menu line, **Eating ✓** / **Skip**, "Closes at …", count so far, green "You saved N plates this week", "Plan the week ›" |
+| F27-2 | **S90 `rMeals`** Week plan (`WeekPlanScreen`): today first, 7 days × 3 meals, tap to toggle, closed meals locked, **Skip all weekend**, cut-off note, green weekly saving |
+| F27-3 | Owner Today (S36): `HeadcountCard` under the Fair Play pin: "Dinner tonight · 34 of 40 eating", bar, "Closes …", "6 skipping · cook for 34" → S91 |
+| F27-4 | **S91 `oMeals`** Owner Meals (`OwnerMealsScreen`): green plates saved this month, today's 3 meals, "Who's skipping" (names + bed), next 7 days, cut-off 2 h / 3 h / 4 h |
+| F27-5 | Meal ask push (data `kind: food`) with **Eating** / **Skip** buttons (`reminders.dart`, `push.dart`, `supabase/functions/_shared/fcm.ts`) |
+| F27-6 | Stay Rewards (S22): `PlatesSavedCard` (you · this hostel · Hostelzy), green, no ranking of people |
+| F27-7 | Hostel page (S13): `CooksToCountChip` "Cooks to count · N plates saved", only with real numbers |
+
+- **Server:** `supabase/migrations/20261006120000_f27_save_food.sql` (rerun-safe): `meal_rsvp` (RLS: a resident reads and changes their own
+  answers while the meal is open, the hostel's staff and the team read; no delete), `hostels.meal_cutoff_hours` (2–4, default 3), RPCs `rsvp_meals` (confirmed residents of
+  this hostel only; a closed meal is refused), `set_meal_cutoff` (owner / managers), `food_board`, `hostel_plates`, and
+  `food_pushes()` on pg_cron every 5 min (ask before the cut-off, owner headcount at the cut-off). Bundles regenerated.
+  FOUNDER-TODO **4zf27**. Until it runs the app hides the next-meal card, the headcount card, Manage › Meals and the chip.
+- **Screens:** +S90, +S91 (SCREENS app 157, overall 179); variants of S23, S36, S13, S22, S80, S39; push not counted.
+- **Prototype:** jump buttons "Save food · Home" (`start=rHome&role=resident`) and "Save food · Owner meals" (`start=oMeals&role=owner`).
+- **Tests:** `hostelzy/test/f27_save_food_test.dart` (8 flows: card, week plan, owner headcount + Meals, server + before the SQL,
+  push buttons, plates saved + chip, Settings switch, dark + 2× text at 360 px). SQL `supabase/tests/f27_save_food_test.sql`
+  (who can answer: residents only, anon refused with "permission denied"; who reads what; cut-off; push timing).
+  `fcm.test.ts` for the food kind.
+
+### Not in the spec (needs the hub's OK; built already, nothing more added)
+| # | What | Why it is there |
+|---|---|---|
+| 1 | Settings › **Meals** notification switch (residents, owners) | the meal pushes needed their own `food` kind so people can turn them off |
+| 2 | Manage › **Meals** row | the spec says S91 opens "from Manage"; the row is how |
+| 3 | Owner headcount push at the cut-off ("Dinner headcount: 34 of 40") | listed in the spec's Rules, but not drawn as a board |
+| 4 | Quiet hours: no meal asks 10 pm–7 am; breakfast asks go at 9 pm the evening before | an ask at 3:30 am for breakfast would wake people |
+| 5 | Plates saved counted only after a meal's count closes | a skip can still change before the cut-off |
+| 6 | Notification buttons open the app (saving needs the session) | Eating / Skip can't save from a closed app |
+| — | Also: demo / test clock fixed at 2:30 pm on the sample day (real India time in the Play build); meal asks are data-only pushes, so older builds don't show them | |
 
 ## Design
 **Design approved** (founder, 2026-10-06). On the main canvas: S23 and S36 updated, new S90 Week plan and S91 Owner Meals (provisional ids), Plates saved = variant of S22, chip = variant of S13, push = not counted.
