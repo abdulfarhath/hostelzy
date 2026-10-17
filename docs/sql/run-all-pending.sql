@@ -1,4 +1,4 @@
--- Hostelzy: every pending step (FOUNDER-TODO 4d onward), in ONE file. Generated 2026-10-06 by tools/sql-bundle.sh.
+-- Hostelzy: every pending step (FOUNDER-TODO 4d onward), in ONE file. Generated 2026-10-17 by tools/sql-bundle.sh.
 -- How: Supabase → SQL Editor → New query → paste this whole file → Run → "Success. No rows returned".
 -- One transaction: if anything fails, nothing changes. Safe to run again. Send any error to the hub.
 begin;

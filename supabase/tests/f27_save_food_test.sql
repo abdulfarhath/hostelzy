@@ -65,7 +65,7 @@ select test.fails($$select public.rsvp_meals('f2700000-0000-0000-0000-0000000000
 select test.act('authenticated', 'fb-f27-ores');
 select test.fails($$select public.rsvp_meals('f2700000-0000-0000-0000-000000000001', pg_temp.ans(2, 'n', false))$$, 'residents can say');
 select test.act('anon', null);
-select test.fails($$select public.rsvp_meals('f2700000-0000-0000-0000-000000000001', pg_temp.ans(2, 'n', false))$$, 'sign in first');
+select test.fails($$select public.rsvp_meals('f2700000-0000-0000-0000-000000000001', pg_temp.ans(2, 'n', false))$$, 'permission denied');
 
 -- ------------------------------------------------------------ who reads what
 select test.act('authenticated', 'fb-f27-res2');
@@ -123,6 +123,8 @@ select test.act('authenticated', 'fb-f27-owner');
 select public.set_meal_cutoff('f2700000-0000-0000-0000-000000000001', 3);
 
 -- ------------------------------------------------------------ pushes
+-- internal helpers (revoked from users): run as the database owner
+reset role;
 select test.eq(to_char(public.meal_ask_at('2026-10-06 17:00+05:30') at time zone 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI'), '2026-10-06 16:00');
 -- breakfast at 7:30 closes 4:30 am: asked at 9 pm the evening before, not at 3:30 am
 select test.eq(to_char(public.meal_ask_at('2026-10-07 04:30+05:30') at time zone 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI'), '2026-10-06 21:00');
