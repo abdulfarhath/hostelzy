@@ -411,6 +411,8 @@ class _ManageList extends StatelessWidget {
       if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
       if (!s.managerHere) ('wallet', 'Rates and UPI', '$types room type${types == 1 ? '' : 's'}${upi.isEmpty ? ' · no UPI ID yet' : ' · $upi'}', 0, () => section('rates')),
       ('utensils', 'Food menu', 'Breakfast, lunch and dinner, by day', 0, () => section('menu')),
+      // F27-4: Save food, once the server has it (FOUNDER-TODO 4zf27).
+      if (s.foodOf(h.id) case final b?) ('plate', 'Meals', 'Who’s eating · the count closes ${b.cutoff} h before each meal', 0, s.openMeals),
       ('doc', 'House rules', s.rules.isEmpty ? 'None yet' : '${s.rules.first.k} ${s.rules.first.v}', 0, () => section('rules')),
       ('camera', 'Photos', photos == null ? 'Your hostel’s photos' : '$photos photo${photos == 1 ? '' : 's'}', 0, s.openPhotos),
       ('grid', 'Room layouts', '$live live${fixes > 0 ? ' · $fixes fix${fixes == 1 ? '' : 'es'} to check' : ''}', fixes, () {
@@ -426,6 +428,7 @@ class _ManageList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          OnShow(() => s.loadFood(h.id), child: const SizedBox.shrink()),
           Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 14), child: Tap(onTap: () => s.update(() => s.sheet = 'switch'), child: PageHead(kicker: h.name, title: 'Manage'))),
           Container(
             decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),

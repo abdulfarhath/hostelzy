@@ -117,8 +117,10 @@ After the founder approves: merge into the main canvas, update SCREENS.md (Food 
 F26 merge published by the hub on 2026-10-06 (canvas version 20, Design's prepared merge from `design/f26-merge`). Because the canvas has a 512-file limit, the 19 pre-F26 copies (`z26-*`) are kept only in that branch, not on the canvas.
 
 ## Build
-Prototype first (`docs/PROTOTYPE.md`); `main` only after the founder approves in the prototype. Five PRs (#121–#125),
-integrated on `f26/integration` (see Integration at the end).
+**Merged to `main` on 2026-10-17 (PR #141, squash)** after the founder approved prototype v6
+(https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g). Five PRs (#121–#125, closed as superseded) were integrated on
+`f26/integration` (see Integration at the end). Founder SQL: one re-run of `docs/sql/run-all-pending.sql` covers 4zo1 and 4ze26
+(and 4zf27 once F27 lands).
 
 ### B · bed picker, Edit this layout, layouts open to all (#8, #12) · PR #121 · branch `feature/f26-picker-layouts`
 - **#8 Pick a bed:** no Plan / Room / Building tabs. Floor chips on top ("Floor 1 · Floor 2…") jump (scroll) to the

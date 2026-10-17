@@ -8,9 +8,10 @@ export type OutboxRow = { id: number; user_id: string; title: string; body: stri
 /** F24: each user's Settings switches (profiles.notify), e.g. { hold: true, rent: false, beds: true }. */
 export type Prefs = Record<string, Record<string, unknown>>;
 
-/** F24: does [user] want a push of [kind]? Other kinds always go; "beds" only when switched on. */
+/** F24: does [user] want a push of [kind]? Other kinds always go; "beds" only when switched on.
+ *  F27: "food" (Settings › Meals) is on unless switched off. */
 export const wantsPush = (prefs: Prefs, user: string, kind?: string | null) => {
-  if (!kind || !['hold', 'rent', 'beds'].includes(kind)) return true;
+  if (!kind || !['hold', 'rent', 'beds', 'food'].includes(kind)) return true;
   const v = prefs[user]?.[kind];
   return typeof v === 'boolean' ? v : kind !== 'beds';
 };
@@ -59,10 +60,13 @@ export const PUSH_ICON = 'ic_stat_hostelzy';
 export const PUSH_COLOR = '#EC3013';
 
 /** FCM v1 body: a visible notification plus string data for the app to route.
- *  The icon and colour are set here too, so they never depend on the manifest. */
+ *  The icon and colour are set here too, so they never depend on the manifest.
+ *  F27: a meal ask (data.ask = "food") is data only: the app shows it itself with
+ *  Eating / Skip buttons (a plain FCM notification can't have buttons). */
 export function fcmMessage(token: string, row: OutboxRow) {
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(row.data ?? {})) data[k] = String(v);
+  if (data.ask === 'food') return { message: { token, data: { ...data, title: row.title, body: row.body }, android: { priority: 'high' } } };
   return { message: { token, notification: { title: row.title, body: row.body }, data, android: { priority: 'high', notification: { icon: PUSH_ICON, color: PUSH_COLOR } } } };
 }
 

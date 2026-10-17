@@ -113,6 +113,9 @@ class SettingsScreen extends StatelessWidget {
                   toggle('hold', 'Holds and bookings', 'When the owner confirms or replies'),
                   toggle('rent', 'Rent reminders', '3 days before'),
                   toggle('beds', 'New free beds', 'In areas you searched. “Tell me when verified” alerts always come'),
+                  // F27: "Dinner at 8 · Eating?" for residents, the headcount for owners.
+                  if (s.role == 'resident') toggle('food', 'Meals', '“Eating?” 1 hour before each meal’s count closes'),
+                  if (s.role == 'owner') toggle('food', 'Meals', 'The headcount when each meal’s count closes'),
                 ]),
                 group('App', [
                   _Row('Language', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),

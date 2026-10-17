@@ -1,7 +1,7 @@
 # SCREENS: every screen, sheet and state in the release app
 
-- **Date:** 2026-10-17 · **Recounted on `f26/integration`** (F26 PRs #121–#125 together, plus the 12 F26 reverts; Build,
-  by reading the code and counting the rows below, not the canvas).
+- **Date:** 2026-10-17 · **Recounted on `main`** after F26 (#141: PRs #121–#125 plus the 12 reverts) and F27 (#140); Build,
+  by reading the code and counting the rows below, not the canvas.
 - **Why:** CLAUDE.md "Design ↔ app consistency". The Design chat matches the "Hostelzy · Main design"
   canvas 1:1 against this list. When a PR adds or removes a screen, update this file in the same PR.
 
@@ -9,13 +9,13 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **82** |
+| App screens (routes + their separate pages/views) | **84** |
 | App sheets (bottom sheets) | **44** |
 | App full-screen states | **29** |
-| **Release app total** | **155** |
+| **Release app total** | **157** |
 | Team console (app/console): views 11 + states 4 | **15** |
 | Web pages (app/): pages 6 + states 1 | **7** |
-| **Overall total** | **177** |
+| **Overall total** | **179** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
@@ -29,12 +29,17 @@ renumbered, so the canvas board titles stay valid: **retired ids S76, S77, H17**
 | **Retired** | **S24**, **S25** `food` (tab + week) · **S27** `help` · **S28** old Me › My stay · **S41** Manage › Enquiries · **H10** `foodWeek` · **H19** `enq` · **T10**, **T11**, **T13** layout locks · **T19** `food` no menu |
 | **Changed** | **S87** Building view: inline on the hostel page S13, on its own page `building` for 80+ bed hostels, and on owner Beds; no longer a picker tab · S8 `explore`, S10, S11, S12 `where`, S13 `detail`, S16, S17, S23 `rHome`, S26 `rPay`, S29, S32 `rFix`, S35, S36 `oToday`, S37 `oBeds`, S38 `oRent`, S79 `me` · H1 `search`, H6 `wa` (kept for owner ↔ resident WhatsApp; no longer used for enquiries), H13 `fixLock`, H18 `bed` · T12, T14 (copy until SQL 4zo1), T20 (now on S89) · web page W2 `app/r/` (old links only) |
 
+**F27 Save food (branch `feature/f27-save-food`, 2026-10-17; screens +2 → overall +2):** **Added** **S90** `rMeals` Week
+plan · **S91** `oMeals` Owner Meals. **Changed (variants, not counted):** S23 `rHome` next-meal card above the week table ·
+S36 `oToday` headcount card under the Fair Play pin · S13 `detail` "Cooks to count" chip · S22 `rewards` plates-saved card ·
+S80 `settings` Meals switch · S39 Manage › Meals row. The meal push (Eating / Skip) is a notification, not counted.
+
 **Back (F26 revert #1, 2026-10-17):** **S18** picker cheapest-first list ("See cheapest beds ›").
 
 Ids are never reused or renumbered. **All retired ids:** S24, S25, S27, S28, S41, S76, S77, H10, H17, H19, T10, T11,
 T13, T19.
 
-Subtotals: screens Start 7 · Tenant 16 · Resident 11 · Owner 29 · Team mode 11 · Shared 8.
+Subtotals: screens Start 7 · Tenant 16 · Resident 12 · Owner 30 · Team mode 11 · Shared 8.
 Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 15 · Resident 5 · Owner 7 · Shared 2.
 
 ## Counting rules
@@ -57,7 +62,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (82)
+## 1. App screens (84)
 
 ### Start and sign-in (7)
 
@@ -92,12 +97,13 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
 | 87 | `building` | Building view: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → the picker on that bed; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). F26 #3: **inline on the hostel page S13** (`HostelBuilding`); **on its own page `building`** for hostels with more than 80 beds ("See all N rooms ›"); and on owner **Beds** (S37, a room's number → its layout via `onRoom`). No longer a picker tab (F26 #8) | `features/holds/building_view.dart` (`BuildingView`); page: `features/explore/hostel_screen.dart` (`BuildingScreen`) | Hostel page (inline); Hostel page › See all N rooms › (`seeAllRooms`); owner tab Beds |
 
-### Resident (11)
+### Resident (12)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
 | 23 | `rHome` | Home (tab): rent card (red Pay), 3 actions, 30-day review card, **Food this week** (the shared week table from the hostel page, today's row highlighted, F26 #4 #13), no menu: one honest line (no breakfast card) | `features/residents/resident_screens.dart` (`ResidentHomeScreen`; table `features/food/week_table.dart` `FoodWeekTable`) | Resident tab 1; after joining; meal reminder |
 | 26 | `rPay` | Rent (tab) | `screens_resident.dart:191` | Resident tab 2 (plain tab, F26); Home › Pay / Pay rent |
+| 90 | `rMeals` | Week plan (F27-2): today first, 7 days × Breakfast / Lunch / Dinner, ✓ / Skip per cell, **Skip all weekend**, cut-off note, green "This week you're saving N plates" | `features/food/save_food_screens.dart` (`WeekPlanScreen`) | Home › next-meal card › Plan the week › (`save_food.dart:openWeekPlan`) |
 | 89 | `rStay` | My stay (tab, F26 #14): bed card · Your bed (Move to another bed, Give notice, Your refund, Review your stay, Fix a room layout) · Help (Something wrong in your room? › H45, Your complaints › H46) | `features/residents/resident_screens.dart` (`StayScreen`) | Resident tab 3; Find a bed tab bar › My stay (`features/session/tabs.dart` `leaveFindBed`) |
 | 88 | `savedHolds` | Saved & Holds (F26 #17): one tab, segments Saved · n / Holds · n (bodies = S10 / S11 without their titles); red dot on the tab (F26 #16) | `features/holds/saved_holds_screen.dart` (`SavedHoldsScreen`) | Find a bed tab bar, tab 3 (residents only; a plain tenant keeps Saved and Holds) |
 | 29 | `move` (vacate) | Give notice | `screens_resident.dart:871` | My stay (S89) › Give notice |
@@ -108,7 +114,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | My stay › Your refund; Me › Your refund for a non-resident (`features/moves/moves.dart:180`) |
 
-### Owner (29)
+### Owner (30)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -141,6 +147,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 63 | `oCase` | Fair Play check (case + reply) | `fairplay.dart:336` | Today › case card (`screens_owner.dart:332`); push |
 | 64 | `oStrike` | Strike notice | `fairplay.dart:471` | Today › strike card (`screens_owner.dart:332`) |
 | 65 | `oPlan` = `oInvoice` = `oPayStatus` | Your plan · invoice · payment status (one screen) · Past invoices + All plans sections (F25 A7, A8) | `plan.dart:81/87/93` | Manage › Your plan (`screens_owner.dart:1078`); Pay (`plan.dart:333`); after UTR (`features/plan/plan.dart:106,120`) |
+| 91 | `oMeals` | Meals (F27-4): green "Plates saved this month N", today's 3 meals with counts, "Who's skipping" (names + bed), next 7 days' counts, cut-off 2 h / 3 h / 4 h | `features/food/save_food_screens.dart` (`OwnerMealsScreen`) | Manage › Meals; Today › headcount card (`save_food.dart:openMeals`) |
 
 ### Hostelzy team mode (11) — release, only for Google accounts with the `team` claim
 

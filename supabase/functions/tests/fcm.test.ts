@@ -26,6 +26,9 @@ test('service account JWT is RS256-signed for the FCM scope', async () => {
 test('FCM message carries the title, body and string data', () => {
   const row: OutboxRow = { id: 1, user_id: 'u', title: 'New hold on bed 101-A', body: 'HZ-5002', data: { screen: 'oToday', n: 2 } };
   assert.deepEqual(fcmMessage('tok', row), { message: { token: 'tok', notification: { title: 'New hold on bed 101-A', body: 'HZ-5002' }, data: { screen: 'oToday', n: '2' }, android: { priority: 'high', notification: { icon: 'ic_stat_hostelzy', color: '#EC3013' } } } });
+  // F27: a meal ask is data only, so the app can show Eating / Skip
+  const ask: OutboxRow = { id: 2, user_id: 'u', title: 'Dinner at 8 · Eating?', body: 'Chapati, dal.', data: { kind: 'food', ask: 'food', meal: 'n', day: '2026-10-06', hostel: 'h' } };
+  assert.deepEqual(fcmMessage('tok', ask), { message: { token: 'tok', data: { kind: 'food', ask: 'food', meal: 'n', day: '2026-10-06', hostel: 'h', title: 'Dinner at 8 · Eating?', body: 'Chapati, dal.' }, android: { priority: 'high' } } });
   assert.ok(tokenGone(404, ''));
   assert.ok(tokenGone(400, '{"error":{"details":[{"errorCode":"UNREGISTERED"}]}}'));
   assert.ok(!tokenGone(500, 'internal'));
@@ -143,6 +146,9 @@ test('F24: a kind the user switched off is closed, not sent; other kinds still g
   assert.ok(!wantsPush({}, 'u', 'beds'));
   assert.ok(wantsPush({ u: { beds: true } }, 'u', 'beds'));
   assert.ok(wantsPush({ u: { hold: false } }, 'u', null));
+  // F27: meals are on unless switched off
+  assert.ok(wantsPush({}, 'u', 'food'));
+  assert.ok(!wantsPush({ u: { food: false } }, 'u', 'food'));
   const m = memDb([
     { id: 1, user_id: 'a', title: 'Bed kept', body: '', data: {}, kind: 'hold' },
     { id: 2, user_id: 'a', title: 'Fix approved', body: '', data: {} },

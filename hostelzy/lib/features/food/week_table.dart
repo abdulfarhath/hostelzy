@@ -4,6 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import 'save_food_screens.dart';
 
 // F26 #4 (#13): the food menu is always the whole week, one table, today's
 // row highlighted. No "today" card and no Today / Full week toggle anywhere.
@@ -108,6 +109,8 @@ class FoodWeekSection extends StatelessWidget {
                       children: [const Kicker('Food menu · this week'), if (m != null) T('From ${h.owner}’s menu', s: 12, c: p.mu)],
                     ),
                   ),
+                  // F27-7: only once the hostel really saved plates.
+                  CooksToCountChip(hid: hid),
                   FoodWeekTable(hid: hid, menu: m),
                 ],
               ),
