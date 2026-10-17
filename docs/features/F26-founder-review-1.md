@@ -320,4 +320,7 @@ table, `bestQuote`, card prices and the sample rates use main's code and numbers
 the default, asked; one Featured card pinned on top), so a different hostel's price can show first.
 
 Checked and unchanged: every green use (deals, Hostelzy price, ₹100 reward, Paid).
+
+Test-only fix (2026-10-17, no app change): `supabase/tests/wave2a_test.sql` read the AC-off date in UTC, so it failed every
+evening after 6:30 pm UTC (India's next day); it now reads it in India time like the line it compares with.
 Side-effects the spec forces (kept): enquiries retired (#7), meal reminders open Home (#13), Help as sheets and refund row in My stay (#14), Rooms list gone (#19), rank counts verified only (#21).
