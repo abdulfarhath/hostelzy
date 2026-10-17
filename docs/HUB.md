@@ -58,3 +58,12 @@ Founder: "continue, there are few chats left, use them". The old Build and Desig
 | Build | session_01VYdxL9M4tryAVSw5paPAtw | 12 F26 reverts → price check → prototype republish → F27 finish (extras on hold) |
 | Design | session_01VKwqzkiTRrHcK6K1kpurt6 | Canvas v24 (reverts) → hub publishes |
 Marketing, Finance, Brand: not started (save the limit).
+
+### 2026-10-17 20:30 UTC
+| Piece | State |
+|---|---|
+| F26 12 reverts | Done on f26/integration (46098a4), check.sh green. Price check: same as main (only Explore order differs) |
+| F27 | Done on feature/f27-save-food, draft PR #140 (do not merge before F26). 6 extras approved by the founder |
+| Prototype v6 (F26 reverts + F27) | NEW link https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g (old EztxM6… is gone). Waiting for the founder's review |
+| Main canvas | Old artifact gone. v23 source on design/f26-merge (be73cea, docs/design/main-canvas/). Design prepares v24; hub publishes as a new artifact |
+| Messaging | Child chats can't send_message the hub; hub reads their branches / get_session |
