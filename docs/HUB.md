@@ -83,3 +83,12 @@ Marketing, Finance, Brand: not started (save the limit).
 | Main canvas v24 (179 counted boards, 472 files, 6 map shots re-uploaded) | https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU |
 | Prototype v6 | https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g |
 Source of truth for the canvas: `docs/design/main-canvas/` on design/f26-merge @ 8b39f3d. Waiting on the founder: prototype review.
+
+### 2026-10-17 release
+| Piece | State |
+|---|---|
+| F26 → main | PR #141 merged (071b159) → apk-104 |
+| F27 → main | PR #140 merged (9ccda7a) → **apk-105** https://github.com/abdulfarhath/hostelzy/releases/tag/apk-105 (real + demo). Tests green |
+| Supabase functions deploy | 🔴 401 Invalid access token on both pushes: the founder's SUPABASE_ACCESS_TOKEN expired. FOUNDER-TODO step 0b |
+| Founder | Run run-all-pending.sql once (4zo1, 4ze26, 4zf27); re-create the token; test apk-105 |
+Build and Design: idle; nothing queued. Next feature waits on the founder's ideas.
