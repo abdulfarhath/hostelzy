@@ -1,6 +1,6 @@
 # Main canvas, full source (v24, 2026-10-17)
 
-The canvas artifact was deleted. This folder holds **all** of it: `project/canvas.json` and the 472 board files. It also has `shots/`, the map screenshots used by 6 boards (map, map-dark, loc, loc-dark, add-whereFull, where-dark). Those boards point at `/_blob/` asset URLs that died with the artifact.
+Live canvas: https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU (v24, published by the hub 2026-10-17; the old artifact was deleted). This folder holds **all** of it: `project/canvas.json` and the 472 board files. It also has `shots/`, the map screenshots used by 6 boards (map, map-dark, loc, loc-dark, add-whereFull, where-dark). Those boards point at `/_blob/` asset URLs that died with the artifact.
 
 To bring the canvas back on any account, in one go and with no redrawing:
 1. Create a new Design artifact (Artifact quickstart, intent `design`, then publish with the Design `type_url`, title "Hostelzy · Main design").
