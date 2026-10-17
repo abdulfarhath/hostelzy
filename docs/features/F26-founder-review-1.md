@@ -286,3 +286,41 @@ Merged in order B (#121) → A (#122) → D (#123) → C (#124) → E (#125); no
 - **Tests:** `f26_tenant_test` near-sort check is per tier (listed after verified); `f26_resident_test` red dot checks
   expiry = no dot, owner decline = dot; `f26_holds_listings_test` checks a listed hostel is never pinned and sorts after
   verified under Distance; `resident_test` checks the shared table's today row.
+### Not in the spec (hub audit of the diff, 2026-10-06): reverted
+The founder: "I only wanted the changes I said." Build also changed these; **all 12 reverted on `f26/integration`
+(2026-10-17)**, each back to main's behaviour and wording:
+| # | Screen | Unrequested change |
+|---|---|---|
+| 1 | Pick a bed | "See cheapest beds ›" list removed (S18 returns) |
+| 2 | Filters | New "No food" chip |
+| 3 | Filters | "Any" rent option dropped, chip order changed, "For" → "Who" |
+| 4 | Explore cards | "#1 near you" gone; "Then by price…" kicker and "Lowest price" / "Nearest" tags added |
+| 5 | Explore header | "N beds free now" replaced by "verified · listed" (now both) |
+| 6 | Hostel page | "Talking through Hostelzy keeps your deal and your ₹100 reward." line removed |
+| 7 | Resident Home | "How was breakfast?" card moved in from the retired Food page |
+| 8 | Owner Today | The 3 bottom cards folded into the tabs |
+| 9 | Owner Today | "Confirm hold" → "Confirm" |
+| 10 | Owner Beds | "Rooms and rates ›" link removed |
+| 11 | Try mode | Wording rewritten |
+| 12 | Explore | Location on no longer switches the sort |
+
+How each came back (Build, 2026-10-17): 1 the picker's legend has "See cheapest beds ›" again → S18 list, "‹ Back to the plan" ·
+2 `fNoFood` gone · 3 main's Filters sheet (For segment, 2/3/4 sharing then AC/Non-AC, Budget with Any, Deals, On the floor, the
+Food included switch), only its "Sort by" group stays out (sort is the Price ↑ dropdown, asked) · 4 no kickers, no "Lowest price" /
+"Nearest" tags; the one pinned card says "Featured"; "#1 near you" on the best-ranked verified card **whatever the sort** (hub
+answer, 2026-10-17) · 5 "Hyderabad · N beds free now" + " · N verified · M listed" once anything is listed · 6 the ₹100 line is under
+the lock line until a hold · 7 no breakfast card on Home (the rating still saves if called; no screen asks for it) · 8 FreeBedsCard,
+ConfirmLayoutsCard, RatesConfirmCard back at the bottom of Today, outside the tabs · 9 "Confirm hold" · 10 "Rooms and rates ›" under
+the Building view on owner Beds · 11 try mode reads "Edit room · Room N", "You don’t live here · leaving discards your try", "Try mode ·
+play freely, nothing is saved"; new only: the red "Edit this layout" entry and Publish → "Only residents can send a fix" / "Book a
+bed to join." (buttons Book a bed · See beds) · 12 location on → sort Distance + "Showing hostels by distance from you."
+
+**AC / non-AC price check (2026-10-17): same as main.** The picker's per-room rent line, the hostel page's AC / non-AC rent
+table, `bestQuote`, card prices and the sample rates use main's code and numbers. Only the Explore order differs (Price ↑ is
+the default, asked; one Featured card pinned on top), so a different hostel's price can show first.
+
+Checked and unchanged: every green use (deals, Hostelzy price, ₹100 reward, Paid).
+
+Test-only fix (2026-10-17, no app change): `supabase/tests/wave2a_test.sql` read the AC-off date in UTC, so it failed every
+evening after 6:30 pm UTC (India's next day); it now reads it in India time like the line it compares with.
+Side-effects the spec forces (kept): enquiries retired (#7), meal reminders open Home (#13), Help as sheets and refund row in My stay (#14), Rooms list gone (#19), rank counts verified only (#21).

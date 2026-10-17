@@ -38,7 +38,7 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 void main() {
   mapTiles = false;
 
-  testWidgets('F26 #12: Edit this layout on a picker room → try mode → Publish → residents only; Keep trying, then Pick a bed', (tester) async {
+  testWidgets('F26 #12: Edit this layout on a picker room → try mode → Publish → residents only; See beds', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     s.hid = 'anjani';
     s.openPicker();
@@ -46,17 +46,14 @@ void main() {
     final r = s.rooms['anjani']!.firstWhere((r) => s.liveLayout('anjani', r.n) != null);
     await _tap(tester, find.byKey(ValueKey('editLayout-${r.n}')));
     expect((s.screen, s.fixTry, s.fixRoom), ('rFix', true, r.n));
-    expect(find.text('Try mode · only on this phone'), findsOneWidget);
-    expect(find.text('Move things to see how the room works for you'), findsOneWidget);
+    // F26 #11 revert: try mode keeps main's wording.
+    expect(find.text('You don’t live here · leaving discards your try'), findsOneWidget);
+    expect(find.text('Try mode · play freely, nothing is saved'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('tryPublish')));
     expect(s.sheet, 'fixLock');
     expect(find.text('Only residents can send a fix'), findsOneWidget);
-    expect(find.text('Book a bed to join. Your tries stay on this phone.'), findsOneWidget);
-    // Keep trying: back in the editor, still trying.
-    await _tap(tester, find.text('Keep trying'));
-    expect((s.sheet, s.screen, s.fixTry), (null, 'rFix', true));
-    // Pick a bed: leaves the try and goes back to every room.
-    await _tap(tester, find.byKey(const ValueKey('tryPublish')));
+    expect(find.text('Book a bed to join.'), findsOneWidget);
+    // See beds: leaves the try and goes back to every room.
     await _tap(tester, find.byKey(const ValueKey('fixLockPick')));
     expect((s.sheet, s.screen, s.mode, s.fixTry), (null, 'picker', 'plan', false));
     s.dispose();

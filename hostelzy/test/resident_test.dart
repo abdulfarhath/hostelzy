@@ -76,7 +76,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F26 #4 #13: Home shows the whole week, today highlighted, no toggle; breakfast feedback is anonymous', (tester) async {
+  testWidgets('F26 #4 #13: Home shows the whole week, today highlighted, no toggle, no breakfast card', (tester) async {
     final s = AppState(start: 'rHome', role: 'resident');
     await _pump(tester, s);
     expect(find.byKey(const ValueKey('homeWeek')), findsOneWidget);
@@ -95,12 +95,8 @@ void main() {
     expect(find.text('Full week'), findsNothing);
     expect(find.text('Whole week ›'), findsNothing);
     expect(AppState.screens.contains('food'), isFalse);
-    expect(find.text('How was breakfast?'), findsOneWidget);
-    await _tap(tester, find.text('Good'));
-    expect(s.rated, 'Good');
-    expect(find.text('Srinivas sees how many said each, never your name.'), findsOneWidget);
-    expect(s.toast, 'Thanks. Srinivas sees how many said Good, not who.');
-    expect(s.mealVotes['b']!['good'], 10);
+    // F26 revert #7: no "How was breakfast?" card on Home.
+    expect(find.text('How was breakfast?'), findsNothing);
     s.dispose();
   });
 

@@ -4,6 +4,10 @@ Hostelzy is a Hyderabad PG/hostel app. Tenants find and hold beds, residents man
 owners run their hostel. Flutter app in `hostelzy/`, Supabase backend in `supabase/`, team console
 and public web pages in `app/`.
 
+**If the founder is talking to you, you are the hub.** Before your first reply, read `docs/memory/README.md` (who the
+founder is, how they want answers, the story so far, open threads) and `docs/memory/founder-messages.md` (every message
+they sent, word for word). Never ask the founder for context: carry on as the same Claude they always talked to.
+
 **New here (new chat or new account)? Read `docs/START-HERE.md` first.** It covers the product, the
 current state, where everything lives, and how to carry on.
 
@@ -52,6 +56,9 @@ The founder talks **only to the hub**. The hub hands out work with the Claude Co
   only after the founder approves them there. Republish the prototype at the same link after each change.
 - Branch `feature/<id>-<name>`. Pushes to `main` publish an APK (`apk-N` release with
   `hostelzy.apk` real + `hostelzy-demo.apk` sample data).
+- **Only what the spec says (founder, 2026-10-06).** A feature PR changes exactly what the feature file lists. No tidy-ups,
+  renames, removals, moved elements or new wording "while you're there". Anything extra goes in a "Not in the spec" list in
+  the PR and the feature file and needs the hub's OK before it is built. A side-effect the spec forces is listed too.
 - Run `tools/check.sh` (analyze + tests + SQL tests) before merging. Every feature gets a flow test in `hostelzy/test/`.
 - Design fidelity: use `T`, `CssLine`, `Pal`, `Cta`, `Seg`… from `lib/ui/kit.dart` and `common.dart`.
   How the code is organised: `docs/ARCHITECTURE.md`.

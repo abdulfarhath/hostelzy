@@ -172,7 +172,7 @@ void main() {
       ..myName = 'Rahul Varma'
       ..sortBy = 'price';
     await _pump(tester, s);
-    expect(find.text('HYDERABAD · 6 VERIFIED · 1 LISTED'), findsOneWidget);
+    expect(find.textContaining('BEDS FREE NOW · 6 VERIFIED · 1 LISTED'), findsOneWidget);
     // Price ↑: bands in order; inside the listed one's band (₹7,000–9,000) every verified hostel comes first.
     final hs = filtered(s);
     int price(Hostel h) => h.listed ? h.rentMin : s.rooms[h.id]!.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
@@ -232,8 +232,8 @@ void main() {
       ..data = server
       ..signedIn = true;
     await s.loadTiers();
-    expect(s.tierLine('Madhapur'), 'Madhapur · 12 verified · 84 listed');
-    expect(s.tierLine(null), 'Hyderabad · 15 verified · 89 listed');
+    expect(s.tierLine('Madhapur'), ' · 12 verified · 84 listed');
+    expect(s.tierLine(null), ' · 15 verified · 89 listed');
     expect(s.waitlist, {'x1'});
     const h = Hostel(id: 'x2', name: 'Listed PG', gender: 'Men', area: 'Madhapur', from: 7000, rating: 0, reviews: 0, food: false, ac: false, instant: false, owner: '', reply: 0, mins: {}, x: 0, y: 0, tags: [], listed: true, rentMin: 7000, rentMax: 9000);
     s.tellWhenVerified(h);

@@ -30,7 +30,7 @@ select test.blocked($$select public.set_item_working('a3000000-0000-0000-0000-00
 select test.act('authenticated', 'fb-w2-owner');
 select test.fails($$select public.set_item_working('a3000000-0000-0000-0000-000000000001', 204, 'door1', false)$$, 'only fans, the AC and windows');
 select test.fails($$select public.set_item_working('a3000000-0000-0000-0000-000000000001', 204, 'fan9', false)$$, 'publish this room');
-select test.eq(public.set_item_working('a3000000-0000-0000-0000-000000000001', 204, 'ac1', false)::date::text, (now() at time zone 'Asia/Kolkata')::date::text);
+select test.eq((public.set_item_working('a3000000-0000-0000-0000-000000000001', 204, 'ac1', false) at time zone 'Asia/Kolkata')::date::text, (now() at time zone 'Asia/Kolkata')::date::text);
 -- twice: still one complaint, same date
 select public.set_item_working('a3000000-0000-0000-0000-000000000001', 204, 'ac1', false);
 select test.rows($$select count(*) from public.complaints where hostel_id = 'a3000000-0000-0000-0000-000000000001' and item = 'layout:204:ac1' and status = 'Open' and cat = 'AC' and bed = 'Room 204'$$, 1);

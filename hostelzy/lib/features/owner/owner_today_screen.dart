@@ -6,6 +6,8 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../food/save_food_screens.dart';
 import '../layouts/layout_fixes_screens.dart' show FixPhotoThumb;
+import '../layouts/owner_layout_screens.dart' show ConfirmLayoutsCard;
+import '../onboarding/onboarding_cards.dart';
 import '../plan/plan_screens.dart';
 
 ({int t, int booked, int held, int soon, int free}) countBeds(AppState s) {
@@ -134,6 +136,9 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          const FreeBedsCard(),
+          const ConfirmLayoutsCard(),
+          const RatesConfirmCard(),
           const SizedBox(height: 20),
         ],
       ),
@@ -204,7 +209,7 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
           sub: '${r.name} · ${r.type}${r.secs > freeHoldSecs ? ' · 2 h' : ''}${r.note.isEmpty ? '' : ' · “${r.note}”'}',
           right: cd(r.secs - (s.now - r.start) / 1000),
           urgent: true,
-          btns: [('Confirm', 'check', () => s.confirmHoldReq(r)), ('Decline', 'x', () => s.declineHoldReq(r))],
+          btns: [('Confirm hold', 'check', () => s.confirmHoldReq(r)), ('Decline', 'x', () => s.declineHoldReq(r))],
           badge: r.trusted
               ? Tap(
                   onTap: () => s.update(() {
@@ -285,42 +290,6 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
           badge: null,
           extra: null,
         ),
-      // F26 (lead): the old Today cards are items now. Board 10: "Still N
-      // free beds?" every 3 days (Holds).
-      if (s.needsConfirm(s.ownHid))
-        () {
-          final free = s.rooms[s.ownHid]!.expand((r) => r.beds).where((b) => b.state == 'free').toList();
-          final n = free.length, days = s.confirmed[s.ownHid];
-          return (
-            key: 'freeBeds-${s.ownHid}',
-            icon: 'bed',
-            title: 'Still $n free ${n == 1 ? 'bed' : 'beds'}?',
-            sub: '${days == null ? 'Not confirmed yet' : 'Last confirmed $days days ago'}. Fresh beds rank higher. Not confirmed for $staleAfterDays days: tenants see “Availability not confirmed”.',
-            right: '',
-            urgent: false,
-            btns: <(String, String, VoidCallback)>[('Yes, all $n free', 'check', () => s.confirmBeds(s.ownHid)), ('Update', 'chev', () => s.tab('oBeds'))],
-            badge: null,
-            extra: free.isEmpty ? null : _Chips([for (final b in free) b.id]),
-          );
-        }(),
-      // F03 (F24 Wave 4d): "Are your rates still right?" monthly (Payments).
-      if (s.needsRatesConfirm(s.ownHid))
-        () {
-          final at = s.ratesConfirmedAt[s.ownHid];
-          final rc = s.rates[s.ownHid] ?? const <String, int>{};
-          final keys = rc.keys.toList()..sort((a, b) => (a.startsWith('ac') ? 1 : 0).compareTo(b.startsWith('ac') ? 1 : 0));
-          return (
-            key: 'rates-${s.ownHid}',
-            icon: 'wallet',
-            title: 'Are your rates still right?',
-            sub: '${at == null ? 'Not confirmed yet' : 'Last confirmed ${dayMon(at.toLocal())}'}. Not confirmed for a month: tenants see “Not confirmed in over a month” on your prices.',
-            right: '',
-            urgent: false,
-            btns: <(String, String, VoidCallback)>[('Rates still right', 'check', () => s.confirmRates(s.ownHid)), ('Change', 'chev', s.openRates)],
-            badge: null,
-            extra: keys.isEmpty ? null : _Chips([for (final k in keys) '${k.replaceFirst(RegExp('^(ac|non)'), '')} sharing ${k.startsWith('ac') ? 'AC' : 'non-AC'} · ${fmt(rc[k]!)}']),
-          );
-        }(),
       // F12/F18: Hostelzy drew a new layout for a room; the owner checks and
       // publishes it (this was the "New layout" tag on the old Rooms list).
       for (final r in s.rooms[s.ownHid]!.where((r) => s.layoutOf(s.ownHid, r.n)?.pending == true))
@@ -335,23 +304,10 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
           badge: null,
           extra: null,
         ),
-      // F12: every 3 months, do the room layouts still match? (Fixes)
-      if ((s.layoutConfirmed[s.ownHid] ?? 0) >= layoutConfirmEvery && s.layouts[s.ownHid] != null)
-        (
-          key: 'layouts-${s.ownHid}',
-          icon: 'grid',
-          title: 'Do your room layouts still match?',
-          sub: 'Last confirmed ${s.layoutConfirmed[s.ownHid]} days ago. Check that beds, fans, AC and windows are still where the layouts show them.',
-          right: '',
-          urgent: false,
-          btns: <(String, String, VoidCallback)>[('All still correct', 'check', () => s.confirmLayouts(s.ownHid)), ('Review', 'chev', () => s.go('oLayouts'))],
-          badge: null,
-          extra: null,
-        ),
     ];
   String group(NeedItem it) => switch (it.key.split('-').first) {
-    'hold' || 'move' || 'freeBeds' => 'holds',
-    'pay' || 'refund' || 'rates' => 'payments',
+    'hold' || 'move' => 'holds',
+    'pay' || 'refund' => 'payments',
     _ => 'fixes',
   };
   return {for (final (g, _) in needGroups) g: [for (final it in all) if (group(it) == g) it]};
@@ -524,19 +480,3 @@ class _FairPlayCard extends StatelessWidget {
   }
 }
 
-/// Small outlined chips (free beds, rate cards) under a Today item.
-class _Chips extends StatelessWidget {
-  const _Chips(this.labels);
-  final List<String> labels;
-  @override
-  Widget build(BuildContext context) {
-    final p = PalScope.of(context);
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        for (final l in labels) Container(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), decoration: box(w: 1, c: p.tx), child: T(l, s: 12, w: 800)),
-      ],
-    );
-  }
-}

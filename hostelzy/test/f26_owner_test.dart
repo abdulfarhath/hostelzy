@@ -80,7 +80,7 @@ void main() {
     expect(int.parse(_count(tester, 'holds')), greaterThanOrEqualTo(reqs.length));
     final first = (reqs..sort((a, b) => (a.secs - (s.now - a.start) / 1000).compareTo(b.secs - (s.now - b.start) / 1000))).first;
     expect(find.text('Hold on bed ${first.bed}'), findsOneWidget);
-    expect(find.descendant(of: find.byKey(ValueKey('hold-${first.id}')), matching: find.text('Confirm')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(ValueKey('hold-${first.id}')), matching: find.text('Confirm hold')), findsOneWidget);
     expect(find.descendant(of: find.byKey(ValueKey('hold-${first.id}')), matching: find.text('Decline')), findsOneWidget);
 
     // Payments: what's waiting for a yes/no shows only in its tab.
@@ -136,7 +136,7 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('#18 Today: free beds, rates and layouts checks sit in Holds, Payments and Fixes', (tester) async {
+  testWidgets('#18 Today: free beds, rates and layouts checks stay as cards under the tabs', (tester) async {
     final s = AppState(start: 'oToday', role: 'owner');
     _clear(s);
     s.confirmed[s.ownHid] = 5;
@@ -144,11 +144,12 @@ void main() {
     s.ratesNeverConfirmed.add(s.ownHid);
     await _pump(tester, s);
     expect(find.textContaining('free bed'), findsWidgets);
-    expect(find.byKey(ValueKey('freeBeds-${s.ownHid}')), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('needTab-payments')));
+    // Not inside the tabs: main's three cards at the bottom of Today.
+    expect(find.descendant(of: find.byKey(const ValueKey('needsYou')), matching: find.textContaining('free bed')), findsNothing);
     expect(find.text('Are your rates still right?'), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('needTab-fixes')));
     expect(find.text('Do your room layouts still match?'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('Are your rates still right?')).dy, greaterThan(tester.getTopLeft(find.byKey(const ValueKey('needsYou'))).dy));
+    await tester.ensureVisible(find.text('All still correct'));
     await _tap(tester, find.text('All still correct'));
     expect(s.layoutConfirmed[s.ownHid], 0);
     s.dispose();
