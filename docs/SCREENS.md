@@ -1,7 +1,7 @@
 # SCREENS: every screen, sheet and state in the release app
 
-- **Date:** 2026-10-17 · **Recounted on `f26/integration`** (F26 PRs #121–#125 together, plus the 12 F26 reverts; Build,
-  by reading the code and counting the rows below, not the canvas).
+- **Date:** 2026-10-17 · **Recounted on `main`** after F26 (#141: PRs #121–#125 plus the 12 reverts) and F27 (#140); Build,
+  by reading the code and counting the rows below, not the canvas.
 - **Why:** CLAUDE.md "Design ↔ app consistency". The Design chat matches the "Hostelzy · Main design"
   canvas 1:1 against this list. When a PR adds or removes a screen, update this file in the same PR.
 

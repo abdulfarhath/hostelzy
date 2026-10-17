@@ -1,6 +1,6 @@
 # F27 · Save food: "Are you eating?" headcount (founder idea, 2026-10-06)
 
-**Stage:** Ideas → Designing → **Design approved** (founder, 2026-10-06, proposal canvas v11) → **Built · prototype first** (2026-10-17, on top of F26; not on `main`).
+**Stage:** Ideas → Designing → **Design approved** (founder, 2026-10-06, proposal canvas v11) → **Built** (merged to `main` 2026-10-17, #140).
 
 ## Problem
 Hostels cook for everyone, every meal. Many residents skip meals (office, travel, weekends home). The food is wasted
@@ -40,8 +40,8 @@ is shamed for eating).
 - Guests and extra plates (a resident bringing a friend): later.
 
 ## Build
-**Built · prototype first, waiting for F26 and the founder** (branch `feature/f27-save-food`, on top of `f26/integration` with
-the 12 F26 reverts; must not merge before F26).
+**Merged to `main` on 2026-10-17 (PR #140)**, right after F26 (#141), once the founder approved prototype v6
+(https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g). Branch `feature/f27-save-food`.
 
 | Board | In the app |
 |---|---|
