@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ae1800}a:hover{color:#ec3013}
+[data-hz]{--bg:#f3f2f2;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--ac:#ec3013;--ai:#f8f4f4;--ab:#ffe0d9;--ad:#ae1800;--dv:rgba(32,30,29,.4);--hl:rgba(32,30,29,.16);--tk:#bab6b6;--gn:#1f7a3d;--gb:#dcefe0;line-height:1.4}
+[data-hz][data-theme="dark"]{--bg:#161514;--sf:#24221f;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ai:#161514;--ab:#4d170e;--ad:#ff9783;--dv:rgba(240,238,238,.36);--hl:rgba(240,238,238,.14);--tk:#4a4646;--gn:#5fcf86;--gb:#133a22}
+[data-hz] *{box-sizing:border-box}
+[data-hz] a{color:var(--ad)}
+[data-hz] button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+[data-hz] input{font:inherit;color:inherit;outline:none}
+[data-hz] :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style>
+</helmet>
+<div data-hz="" data-theme="{{theme}}" style="width: 1440px; height: 900px; background: var(--bg); color: var(--tx); font-family: Archivo, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+  <header style="flex: none; height: 64px; display: flex; align-items: center; gap: 20px; padding: 0 20px; border-bottom: 2px solid var(--tx);">
+    <span style="font-weight: 800; font-size: 20px; letter-spacing: -.02em;">Layout editor</span>
+    <span style="font-size: 14px; color: var(--mu);">Layouts /<b style="color: var(--tx);">Anjani Residency</b> / Floor 2 / <b style="color: var(--tx);">Room 204</b></span>
+    <span style="padding: 3px 8px; font-size: 12px; font-weight: 800; background: var(--ab); color: var(--ad);">v2 draft · v1 live · you publish it</span>
+    <span style="flex-grow: 1;"></span>
+    <button style="height: 40px; padding: 0 12px; border: 1px solid var(--dv); font-size: 13px; font-weight: 600;">Copy to rooms…</button>
+    <button style="height: 40px; padding: 0 12px; border: 1px solid var(--dv); font-size: 13px; font-weight: 600;">Mirror</button>
+    <button style="height: 40px; padding: 0 12px; border: 1px solid var(--dv); font-size: 13px; font-weight: 600;">Flip</button>
+    <button style="height: 40px; padding: 0 12px; border: 1px solid var(--dv); font-size: 13px; font-weight: 600;">History</button>
+    <button style="height: 44px; padding: 0 16px; display: flex; gap: 10px; align-items: center; background: var(--ac); color: var(--ai); font-weight: 800; font-size: 14px;">Publish<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+  </header>
+  <div style="flex-grow: 1; display: grid; grid-template-columns: 260px minmax(0, 1fr) 340px; min-height: 0;">
+    <aside style="border-right: 2px solid var(--tx); padding: 16px; display: flex; flex-direction: column; gap: 18px; overflow: hidden;">
+      <div style="display: grid; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Room shape</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
+          <sc-for list="{{shapes}}" as="s" hint-placeholder-count="8">
+            <button aria-label="{{s.name}}" style="height: 44px; padding: 0 8px; display: flex; gap: 8px; align-items: center; border: {{s.bd}}; background: {{s.bg}}; font-size: 13px; font-weight: 600;"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" style="flex: none;"><path d="{{s.d}}"/></svg>{{s.name}}</button>
+          </sc-for>
+        </div>
+        <span style="font-size: 12px; color: var(--mu);">Rectangle · drag walls to resize, 1 ft steps. Changing the shape keeps the beds and items.</span>
+      </div>
+      <div style="display: grid; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Items · drag onto the room</span>
+        <sc-for list="{{items}}" as="i" hint-placeholder-count="8">
+          <button style="height: 40px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--dv); font-size: 14px; font-weight: 600;"><span>{{i.name}}</span><span style="font-size: 12px; color: var(--mu);">{{i.n}}</span></button>
+        </sc-for>
+      </div>
+      <div style="margin-top: auto; padding: 10px; background: var(--sf); font-size: 12px; line-height: 1.45; color: var(--mu);">Never draw gates, CCTV or exits. Power sockets come in phase 2.</div>
+    </aside>
+
+    <main style="position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--sf);">
+      <div style="padding: 12px 16px; display: flex; gap: 16px; align-items: center; font-size: 13px; color: var(--mu); border-bottom: 1px solid var(--hl); background: var(--bg);">
+        <span><b style="color: var(--tx);">18 × 15 ft</b> · grid 1 ft</span><span>Zoom 160%</span><span>Snap on</span>
+        <span style="flex-grow: 1;"></span>
+        <span>Room type <b style="color: var(--tx);">AC</b> · 3 sharing · from the rate card</span>
+      </div>
+      <div style="flex-grow: 1; display: grid; place-items: center; overflow: hidden;">
+        <div style="width: 573px; height: 480px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; transform: scale(1.6); transform-origin: top left;">
+        <div aria-label="Room 204 layout, 18 by 15 feet" style="position: relative; width: 358px; height: 300px; border: 2px solid var(--tx); overflow: hidden; background-color: var(--bg); background-image: repeating-linear-gradient(0deg, var(--hl) 0 1px, transparent 1px 20px), repeating-linear-gradient(90deg, var(--hl) 0 1px, transparent 1px 20px);">
+          <div style="position: absolute; left: 0; bottom: 0; width: 100px; height: 80px; border-top: 2px solid var(--tx); border-right: 2px solid var(--tx); background: repeating-linear-gradient(135deg, var(--tk) 0 2px, var(--bg) 2px 7px);"><span style="position: absolute; left: 6px; bottom: 6px; padding: 1px 4px; background: var(--bg); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;">Washroom</span></div>
+          <div style="position: absolute; top: 0; left: 150px; width: 150px;"><div style="height: 6px; background: var(--tx);"></div><span style="display: inline-block; margin-top: 3px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;">Window · street</span></div>
+          <div style="position: absolute; bottom: 0; right: 30px; width: 60px; height: 4px; background: var(--bg);"></div>
+          <span style="position: absolute; bottom: 8px; right: 42px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mu);">Door</span>
+          <div>
+            <div style="position: absolute; top: 0; right: 10px; width: 150px; height: 120px; display: {{m.ac}}; clip-path: polygon(100% 22%, 100% 52%, 0 100%, 0 0); background: repeating-linear-gradient(90deg, var(--dv) 0 1px, transparent 1px 6px);"></div>
+            <div style="position: absolute; top: 26px; right: 0; width: 10px; height: 36px; background: {{m.acFg}};"></div>
+            <span style="position: absolute; top: 66px; right: 14px; padding: 1px 4px; background: var(--bg); font-size: 10px; font-weight: 800; letter-spacing: .08em; color: {{m.acFg}};">AC UNIT</span>
+          </div>
+          <sc-for list="{{m.fans}}" as="f" hint-placeholder-count="2">
+            <div style="position: absolute; left: {{f.x}}px; top: {{f.y}}px; width: 160px; height: 160px; border: 1.5px dashed var(--dv); border-radius: 50%; display: {{m.fan}};"></div>
+            <span style="position: absolute; left: {{f.ix}}px; top: {{f.iy}}px; display: flex; gap: 3px; align-items: center; padding: 1px 4px; background: var(--bg); font-size: 10px; font-weight: 800; letter-spacing: .08em; color: {{f.fg}};"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="2"/><path d="M12 10V3M14 13l6 3.5M10 13l-6 3.5"/></svg>{{f.label}}</span>
+          </sc-for>
+          <sc-for list="{{m.beds}}" as="b" hint-placeholder-count="3">
+            <button onClick="{{b.pick}}" aria-label="Bed {{b.letter}}, {{b.tag}}" style="position: absolute; left: {{b.x}}px; top: {{b.y}}px; width: 54px; height: 108px; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; background: {{b.bg}}; border: {{b.bd}}; color: {{b.fg}};">
+              <span style="font-weight: 800; font-size: 22px; line-height: 1;">{{b.letter}}</span>
+              <span style="font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;">{{b.tag}}</span>
+            </button>
+          </sc-for>
+        </div>
+          </div>
+          <div style="position: absolute; right: -10px; top: 32px; width: 34px; height: 76px; border: 2px solid var(--ac); pointer-events: none;"></div>
+          <span style="position: absolute; left: 0; top: -24px; font-size: 12px; font-weight: 600; color: var(--mu);">18 ft</span>
+          <span style="position: absolute; left: -44px; top: 230px; font-size: 12px; font-weight: 600; color: var(--mu);">15 ft</span>
+        </div>
+      </div>
+    </main>
+
+    <aside style="border-left: 2px solid var(--tx); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="padding: 16px; display: grid; gap: 12px; border-bottom: 2px solid var(--dv);">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Selected · AC unit</span>
+        <sc-for list="{{props}}" as="p" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14px;">
+            <span style="color: var(--mu);">{{p.k}}</span>
+            <span style="display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border: 2px solid var(--tx);">
+              <sc-for list="{{p.opts}}" as="o"><button style="height: 32px; font-size: 12px; font-weight: 600; text-align: center; background: {{o.bg}}; color: {{o.fg}};">{{o.l}}</button></sc-for>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding: 16px; display: grid; gap: 8px; border-bottom: 2px solid var(--dv);">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Beds · linked to the bed map</span>
+        <sc-for list="{{beds}}" as="b" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; font-size: 14px;"><b>{{b.id}}</b><span style="color: var(--mu);">{{b.note}}</span></div>
+        </sc-for>
+      </div>
+      <div style="padding: 16px; display: grid; gap: 6px; border-bottom: 2px solid var(--dv);">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Checks before publishing</span>
+        <sc-for list="{{checks}}" as="c" hint-placeholder-count="4">
+          <span style="display: flex; gap: 8px; align-items: center; font-size: 13px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M20 6 9 17l-5-5"/></svg>{{c}}</span>
+        </sc-for>
+      </div>
+      <div style="padding: 16px; display: grid; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mu);">Shape not on the list?</span>
+        <span style="font-size: 14px; line-height: 1.4;">Pick Custom and send a photo and a sketch. The Hostelzy team draws it within 48 hours, free. You check it and publish.</span>
+        <button style="height: 44px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--tx); font-weight: 800; font-size: 14px;">Ask Hostelzy to draw it<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ST = {
+      free: { bg: 'var(--bg)', bd: '2px solid var(--tx)', fg: 'var(--tx)', tag: 'Free' },
+      held: { bg: 'repeating-linear-gradient(135deg, var(--tk) 0 2px, var(--bg) 2px 6px)', bd: '2px solid var(--tk)', fg: 'var(--mu)', tag: 'On hold' },
+      booked: { bg: 'var(--tk)', bd: '2px solid var(--tk)', fg: 'var(--tx)', tag: 'Taken' },
+      sel: { bg: 'var(--ac)', bd: '2px solid var(--ac)', fg: 'var(--ai)', tag: 'Selected' },
+      cmp: { bg: 'var(--ab)', bd: '2px solid var(--ac)', fg: 'var(--ad)', tag: 'Compare' },
+      plain: { bg: 'var(--sf)', bd: '2px solid var(--tx)', fg: 'var(--tx)', tag: '3 × 6 ft' }
+    };
+    const POS = { A: [16, 16], B: [180, 16], C: [282, 170] };
+    const mkMap = (o) => {
+      const L = o.layers || {};
+      const vis = k => (L[k] === false ? 'none' : 'block');
+      return {
+        wash: vis('wash'), win: vis('win'), ac: vis('ac'), fan: vis('fan'),
+        acFg: o.acBad ? 'var(--ad)' : 'var(--tx)',
+        fans: [{ x: 127, y: 60, ix: 180, iy: 131, label: o.fan1Bad ? 'FAN · NOT WORKING' : 'FAN', fg: o.fan1Bad ? 'var(--ad)' : 'var(--tx)' }, { x: 220, y: 135, ix: 240, iy: 140, label: o.fan2Bad ? 'FAN · NOT WORKING' : 'FAN', fg: o.fan2Bad ? 'var(--ad)' : 'var(--tx)' }],
+        beds: ['A', 'B', 'C'].map(k => ({ letter: k, x: POS[k][0], y: POS[k][1], ...ST[o.state(k)], pick: o.pick ? o.pick(k) : () => {} }))
+      };
+    };
+    const seg = (opts, cur) => opts.map(l => ({ l, bg: l === cur ? 'var(--tx)' : 'transparent', fg: l === cur ? 'var(--bg)' : 'var(--tx)' }));
+    const S = [
+      ['Rectangle', 'M4 6h20v16H4z'], ['L shape', 'M4 4h10v10h10v10H4z'], ['T shape', 'M4 4h20v8h-6v12h-8V12H4z'], ['U shape', 'M4 4h6v14h8V4h6v20H4z'],
+      ['Angled corner', 'M4 4h14l6 6v14H4z'], ['Narrow end', 'M4 6h20l-4 16H8z'], ['Alcove', 'M4 4h20v20H16v-6H12v6H4z'], ['Custom', 'M6 6h6M18 6h4v4M22 18v4h-4M10 22H6v-4M6 10v4']
+    ];
+    return {
+      theme: (this.props.dark ?? false) ? 'dark' : 'light',
+      m: mkMap({ state: () => 'plain' }),
+      shapes: S.map((s, i) => ({ name: s[0], d: s[1], bd: i === 0 ? '2px solid var(--ac)' : '1px solid var(--dv)', bg: i === 0 ? 'var(--ab)' : 'transparent' })),
+      items: [
+        { name: 'Bed', n: '3 placed' }, { name: 'Bunk bed (2 beds)', n: '' }, { name: 'Window', n: '1' }, { name: 'Door', n: '1' },
+        { name: 'Fan', n: '2' }, { name: 'AC', n: '1' }, { name: 'Washroom zone', n: '1' }, { name: 'Pillar', n: '' }
+      ],
+      props: [
+        { k: 'Wall', opts: seg(['Top', 'Right', 'Bottom', 'Left'], 'Right') },
+        { k: 'Blows', opts: seg(['Left', 'Down', 'Up'], 'Left') },
+        { k: 'Reach', opts: seg(['6 ft', '8 ft', '10 ft'], '8 ft') },
+        { k: 'Status', opts: seg(['Working', 'Not working'], 'Working') }
+      ],
+      beds: [{ id: '204-A', note: 'Has a resident · can’t delete' }, { id: '204-B', note: 'Free' }, { id: '204-C', note: 'Free' }],
+      checks: ['AC room has an AC unit', '3 beds = 3 sharing', 'Window facing set: street', 'No gates, CCTV or exits drawn']
+    };
+  }
+}
+</script>
+</body>
+</html>

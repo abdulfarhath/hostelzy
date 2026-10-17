@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Explore with savings badges</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ae1800}a:hover{color:#ec3013}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #f3f2f2; color: #201e1d; font-family: Archivo, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+  <div style="padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #605d5d;">6 hostels · 4 with Hostelzy deals</div>
+    <div style="font-weight: 800; font-size: 30px; line-height: 1.02; letter-spacing: -.025em;">Beds near Hitec City</div>
+  </div>
+  <div style="display: flex; gap: 6px; padding: 0 16px 14px; overflow: hidden;">
+    <button style="flex: none; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; border: 1px solid #201e1d; background: #201e1d; color: #f3f2f2;">Best deals</button>
+    <button style="flex: none; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; border: 1px solid rgba(32,30,29,.4); background: transparent; color: #201e1d;">Nearest</button>
+    <button style="flex: none; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; border: 1px solid rgba(32,30,29,.4); background: transparent; color: #201e1d;">Men</button>
+    <button style="flex: none; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; border: 1px solid rgba(32,30,29,.4); background: transparent; color: #201e1d;">Food included</button>
+  </div>
+  <div style="border-top: 2px solid rgba(32,30,29,.4); flex-grow: 1; overflow: hidden;">
+    <sc-for list="{{cards}}" as="h" hint-placeholder-count="4">
+      <a href="z-f03-Main.dc.html" style="display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 14px 16px; border-bottom: 1px solid rgba(32,30,29,.16); color: inherit; text-decoration: none;">
+        <div style="height: 120px; position: relative; border: 1px solid rgba(32,30,29,.16); background: repeating-linear-gradient(135deg,#eae9e9 0 6px,#f3f2f2 6px 12px);">
+          <sc-if value="{{h.deal}}" hint-placeholder-val="{{true}}">
+            <div style="position: absolute; left: -1px; bottom: -1px; right: -1px; padding: 5px 6px; background: #1f7a3d; color: #f8f4f4; font-size: 11px; font-weight: 800;">{{h.save}}</div>
+          </sc-if>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #ae1800;">{{h.kicker}}</div>
+          <div style="font-weight: 800; font-size: 17px; line-height: 1.15;">{{h.name}}</div>
+          <div style="font-size: 13px; color: #605d5d;">{{h.meta}}</div>
+          <sc-if value="{{h.deal}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;">
+              <sc-for list="{{h.perks}}" as="p"><span style="font-size: 11px; font-weight: 600; padding: 3px 6px; background: #dcefe0; color: #1f7a3d;">{{p}}</span></sc-for>
+            </div>
+          </sc-if>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; gap: 8px;">
+            <span style="font-size: 12px; color: #605d5d; text-decoration: {{h.strike}};">{{h.walk}}</span>
+            <span><b style="font-size: 17px; font-weight: 800;">{{h.price}}</b><span style="font-size: 12px; color: #605d5d;">/mo</span></span>
+          </div>
+        </div>
+      </a>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      cards: [
+        { kicker: 'Men · Madhapur', name: 'Anjani Residency', meta: '6 min to Hitec City · Food · AC', deal: true, save: 'Save ₹1,200 in 6 mo', perks: ['₹200 off monthly', '₹500 exit', 'Free laundry'], walk: 'Walk in ₹7,000', strike: 'line-through', price: '₹6,800' },
+        { kicker: 'Women · Kondapur', name: 'Sai Sri Ladies Hostel', meta: '8 min to Hitec City · Food', deal: true, save: '₹1,000 less upfront', perks: ['₹0 exit maintenance', '₹1,000 lower advance'], walk: 'Same as walk in', strike: 'none', price: '₹8,200' },
+        { kicker: 'Men · Kondapur', name: "Greenview Men's PG", meta: '11 min to Hitec City · Food', deal: true, save: 'Save ₹500 in 6 mo', perks: ['₹500 off first month', '₹500 exit'], walk: 'Same as walk in', strike: 'none', price: '₹6,400' },
+        { kicker: 'Co-living · Gachibowli', name: 'Nest 42 Co-living', meta: '14 min to Hitec City · AC', deal: false, save: '', perks: [], walk: 'No Hostelzy deal yet', strike: 'none', price: '₹10,800' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

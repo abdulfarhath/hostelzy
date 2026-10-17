@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Owner: Residents list</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ae1800}a:hover{color:#ec3013}
+[data-hz]{--bg:#f3f2f2;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--ac:#ec3013;--ai:#f8f4f4;--ab:#ffe0d9;--ad:#ae1800;--dv:rgba(32,30,29,.4);--hl:rgba(32,30,29,.16);--tk:#bab6b6;--gn:#1f7a3d;--gb:#dcefe0;line-height:1.4}
+[data-hz][data-theme="dark"]{--bg:#161514;--sf:#24221f;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ai:#161514;--ab:#4d170e;--ad:#ff9783;--dv:rgba(240,238,238,.36);--hl:rgba(240,238,238,.14);--tk:#4a4646;--gn:#5fcf86;--gb:#133a22}
+[data-hz] *{box-sizing:border-box}
+[data-hz] a{color:var(--ad)}
+[data-hz] button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+[data-hz] input{font:inherit;color:inherit;outline:none}
+[data-hz] :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style>
+</helmet>
+<div data-hz="" data-theme="{{theme}}" style="width: 390px; height: 844px; background: var(--bg); color: var(--tx); font-family: Archivo, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+  <div style="padding: 12px 16px 14px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; line-height: 1.3; color: var(--mu);">Anjani Residency</div>
+    <div style="font-weight: 800; font-size: 30px; line-height: 1.02; letter-spacing: -.025em; margin-top: 4px;">Manage</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 16px; border: 2px solid var(--tx);">
+    <button style="padding: 10px 4px; font-size: 13px; font-weight: 600; text-align: center; background: var(--tx); color: var(--bg);">Residents</button>
+    <button style="padding: 10px 4px; font-size: 13px; font-weight: 600; text-align: center;">Complaints</button>
+    <button style="padding: 10px 4px; font-size: 13px; font-weight: 600; text-align: center;">Menu</button>
+    <button style="padding: 10px 4px; font-size: 13px; font-weight: 600; text-align: center;">Rules</button>
+  </div>
+
+  <div style="flex-grow: 1; overflow: hidden; margin-top: 14px; border-top: 2px solid var(--dv);">
+    <div style="margin: 12px 16px 0; padding: 12px; border: 2px solid var(--ad); background: var(--ab); display: flex; gap: 10px; align-items: flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ad)" stroke-width="2" stroke-linecap="square" style="flex: none; margin-top: 1px;"><path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/></svg>
+      <span style="display: grid; gap: 2px; font-size: 13px; line-height: 1.4;"><b style="color: var(--ad); font-size: 14px;">2 taken beds have no resident</b><span>Beds 204-A and 301-C. Add who's staying there by Sat 3 Oct.</span></span>
+    </div>
+    <div style="padding: 12px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px;">
+      <a href="z-f05-AddResident.dc.html" style="height: 50px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; background: var(--ac); color: var(--ai); font-weight: 800; font-size: 15px; text-decoration: none;">Add resident<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 5v14M5 12h14"/></svg></a>
+      <a href="z-f05-InviteQR.dc.html" style="height: 50px; padding: 0 14px; display: flex; gap: 10px; align-items: center; border: 2px solid var(--tx); color: var(--tx); font-weight: 800; font-size: 15px; text-decoration: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM21 14v1M14 21h1M18 18h3v3"/></svg>Invite QR</a>
+    </div>
+    <div style="display: flex; gap: 6px; padding: 0 16px 10px; overflow: hidden;">
+      <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+        <button onClick="{{c.pick}}" style="flex: none; height: 36px; padding: 0 10px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid {{c.bd}}; background: {{c.bg}}; color: {{c.fg}};">{{c.label}}</button>
+      </sc-for>
+    </div>
+    <div style="border-top: 2px solid var(--dv);">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--hl);">
+          <span style="width: 36px; height: 36px; display: grid; place-items: center; background: var(--sf); font-weight: 800; font-size: 13px;">{{r.ini}}</span>
+          <span style="display: grid; gap: 1px; min-width: 0;"><span style="font-weight: 800; font-size: 15px;">{{r.name}}</span><span style="font-size: 12px; color: var(--mu);">{{r.sub}}</span></span>
+          <span style="padding: 3px 7px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; background: {{r.tagBg}}; color: {{r.tagFg}}; border: 1px solid {{r.tagBd}};">{{r.tag}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <nav aria-label="Owner tabs" style="flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); height: 64px; border-top: 2px solid var(--tx); background: var(--bg);">
+    <button style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--mu); box-shadow: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 20V11M10 20V5M16 20v-7M21 20H3"/></svg>Today</button>
+    <button style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--mu);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 19V6M3 14h18v5M21 14a3 3 0 0 0-3-3h-7v3"/></svg>Beds</button>
+    <button style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--ai); background: var(--ac);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 5v14M5 12h14"/></svg>Booking</button>
+    <button style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--mu);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 7h18v12H3z"/><path d="M16 13h2"/><path d="M5 7l11-3v3"/></svg>Rent</button>
+    <button style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--tx); box-shadow: inset 0 3px 0 var(--ac);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 13h5l1 3h6l1-3h5"/><path d="M5 5h14l2 8v6H3v-6z"/></svg>Manage</button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = { f: 'All' };
+  renderVals() {
+    const T = {
+      hz: { tag: 'Via Hostelzy', tagBg: 'var(--tx)', tagFg: 'var(--bg)', tagBd: 'var(--tx)' },
+      direct: { tag: 'Direct', tagBg: 'transparent', tagFg: 'var(--tx)', tagBd: 'var(--tx)' },
+      before: { tag: 'Before Hostelzy', tagBg: 'transparent', tagFg: 'var(--mu)', tagBd: 'var(--dv)' },
+      wait: { tag: 'Waiting OTP', tagBg: 'var(--ab)', tagFg: 'var(--ad)', tagBd: 'var(--ab)' }
+    };
+    const R = [
+      { name: 'Ravi Teja', bed: '204-A', when: 'Added today', k: 'wait' },
+      { name: 'Manoj Kumar', bed: '103-B', when: 'Added today', k: 'wait' },
+      { name: 'Vamsi Reddy', bed: '301-A', when: 'Joined 28 Sep · HZ-4790', k: 'hz' },
+      { name: 'Karthik M', bed: '102-C', when: 'Joined 20 Sep · HZ-4712', k: 'hz' },
+      { name: 'Naveen Goud', bed: '202-B', when: 'Joined 18 Sep', k: 'direct' },
+      { name: 'Rahul Varma', bed: '204-B', when: 'Since Mar 2026', k: 'before' },
+      { name: 'Harsha Vardhan', bed: '302-B', when: 'Since Jan 2026', k: 'before' },
+      { name: 'Suresh Babu', bed: '101-A', when: 'Since Nov 2025', k: 'before' }
+    ];
+    const F = [['All', null, 27], ['Via Hostelzy', 'hz', 6], ['Direct', 'direct', 3], ['Waiting OTP', 'wait', 2], ['Before Hostelzy', 'before', 16]];
+    const cur = F.find(x => x[0] === this.state.f);
+    const ini = n => n.split(' ').map(w => w[0]).join('').slice(0, 2);
+    return {
+      theme: (this.props.dark ?? false) ? 'dark' : 'light',
+      chips: F.map(x => {
+        const on = x[0] === this.state.f;
+        return { label: x[0] + ' ' + x[2], bg: on ? 'var(--tx)' : 'transparent', fg: on ? 'var(--bg)' : 'var(--tx)', bd: on ? 'var(--tx)' : 'var(--dv)', pick: () => this.setState({ f: x[0] }) };
+      }),
+      rows: R.filter(r => !cur[1] || r.k === cur[1]).map(r => ({ name: r.name, ini: ini(r.name), sub: 'Bed ' + r.bed + ' · ' + r.when, ...T[r.k] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

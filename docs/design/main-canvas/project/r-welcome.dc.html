@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome: browse first, pick a language</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ae1800}a:hover{color:#ec3013}
+[data-hz]{--bg:#f3f2f2;--sf:#eae9e9;--tx:#201e1d;--mu:#605d5d;--ac:#ec3013;--ai:#f8f4f4;--ab:#ffe0d9;--ad:#ae1800;--dv:rgba(32,30,29,.4);--hl:rgba(32,30,29,.16);--tk:#bab6b6;--gn:#1f7a3d;--gb:#dcefe0;line-height:1.4}
+[data-hz][data-theme="dark"]{--bg:#161514;--sf:#24221f;--tx:#f0eeee;--mu:#bab6b6;--ac:#ff563c;--ai:#161514;--ab:#4d170e;--ad:#ff9783;--dv:rgba(240,238,238,.36);--hl:rgba(240,238,238,.14);--tk:#4a4646;--gn:#5fcf86;--gb:#133a22}
+[data-hz] *{box-sizing:border-box}
+[data-hz] a{color:var(--ad)}
+[data-hz] button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+[data-hz] input{font:inherit;color:inherit;outline:none}
+[data-hz] :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style>
+</helmet>
+<div data-hz="" data-theme="{{theme}}" style="width: 390px; height: 844px; position: relative; background: var(--bg); color: var(--tx); font-family: Archivo, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+<div style="flex-grow: 1; background: var(--ac); color: var(--ai); display: flex; flex-direction: column;"><div style="padding: 12px 20px 0; display: flex; justify-content: space-between; align-items: center;"><span style="display: flex; gap: 6px; align-items: center;"><svg role="img" aria-label="Hostelzy logo" viewBox="0 0 512 512" width="17" height="17" style="display: block; flex: none;"><g transform="translate(0.000 0.000)"><rect x="20.480" y="20.480" width="81.920" height="46.080" fill="var(--ai)"/><rect x="215.040" y="20.480" width="276.480" height="46.080" fill="var(--ai)"/><rect x="20.480" y="20.480" width="46.080" height="471.040" fill="var(--ai)"/><rect x="445.440" y="20.480" width="46.080" height="471.040" fill="var(--ai)"/><rect x="20.480" y="445.440" width="245.760" height="46.080" fill="var(--ai)"/><rect x="348.160" y="445.440" width="143.360" height="46.080" fill="var(--ai)"/><rect x="102.400" y="30.720" width="112.640" height="11.264" fill="var(--ai)"/><rect x="102.400" y="50.176" width="112.640" height="11.264" fill="var(--ai)"/><rect x="256.000" y="74.240" width="122.880" height="8.192" fill="var(--ai)"/><rect x="256.000" y="101.888" width="122.880" height="8.192" fill="var(--ai)"/><rect x="256.000" y="74.240" width="8.192" height="35.840" fill="var(--ai)"/><rect x="370.688" y="74.240" width="8.192" height="35.840" fill="var(--ai)"/><rect x="271.360" y="90.112" width="92.160" height="6.144" fill="var(--ai)"/><rect x="277.504" y="122.880" width="8.192" height="8.192" fill="var(--ai)"/><rect x="277.504" y="139.264" width="8.192" height="8.192" fill="var(--ai)"/><rect x="277.504" y="155.648" width="8.192" height="8.192" fill="var(--ai)"/><rect x="313.344" y="122.880" width="8.192" height="8.192" fill="var(--ai)"/><rect x="313.344" y="139.264" width="8.192" height="8.192" fill="var(--ai)"/><rect x="313.344" y="155.648" width="8.192" height="8.192" fill="var(--ai)"/><rect x="349.184" y="122.880" width="8.192" height="8.192" fill="var(--ai)"/><rect x="349.184" y="139.264" width="8.192" height="8.192" fill="var(--ai)"/><rect x="349.184" y="155.648" width="8.192" height="8.192" fill="var(--ai)"/><rect x="87.040" y="87.040" width="81.920" height="13.312" fill="var(--ai)"/><rect x="87.040" y="237.568" width="81.920" height="13.312" fill="var(--ai)"/><rect x="87.040" y="87.040" width="13.312" height="163.840" fill="var(--ai)"/><rect x="155.648" y="87.040" width="13.312" height="163.840" fill="var(--ai)"/><rect x="113.664" y="113.664" width="28.672" height="110.592" fill="var(--ai)"/><rect x="87.040" y="337.920" width="30.720" height="71.680" fill="var(--ai)"/><rect x="131.072" y="337.920" width="99.328" height="71.680" fill="var(--ai)"/><rect x="343.040" y="174.080" width="81.920" height="30.720" fill="var(--ai)"/><rect x="343.040" y="218.112" width="81.920" height="119.808" fill="var(--ai)"/><rect x="237.158" y="194.560" width="17.203" height="40.960" fill="var(--ai)" transform="rotate(0 245.760 235.520)"/><rect x="237.158" y="194.560" width="17.203" height="40.960" fill="var(--ai)" transform="rotate(120 245.760 235.520)"/><rect x="237.158" y="194.560" width="17.203" height="40.960" fill="var(--ai)" transform="rotate(240 245.760 235.520)"/><circle cx="245.760" cy="235.520" r="12.698" fill="var(--ai)"/></g></svg>
+<b style="font-size: 20px; letter-spacing: -.02em;">hostelzy</b></span><span style="font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;">Hyderabad</span></div><div style="padding: 16px 20px 0;"><div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid var(--ai);"><button lang="en" style="height: 40px; font-size: 14px; font-weight: 800; text-align: center; background: var(--ai); color: var(--ac);">English</button><button lang="te" style="height: 40px; font-size: 14px; font-weight: 800; text-align: center; border-left: 2px solid var(--ai);">తెలుగు</button><button lang="hi" style="height: 40px; font-size: 14px; font-weight: 800; text-align: center; border-left: 2px solid var(--ai);">हिन्दी</button></div></div><div style="flex-grow: 1; padding: 20px 20px 24px; display: flex; align-items: flex-end;"><b style="font-size: 56px; line-height: .94; letter-spacing: -.04em;">See the bed before you see the building.</b></div><div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid var(--ai); border-bottom: 2px solid var(--ai);"><span style="padding: 12px 14px; display: grid; gap: 2px; "><span style="font-size: 12px; font-weight: 600;">01</span><b style="font-size: 15px;">Floor</b></span><span style="padding: 12px 14px; display: grid; gap: 2px; border-left: 2px solid var(--ai);"><span style="font-size: 12px; font-weight: 600;">02</span><b style="font-size: 15px;">Room</b></span><span style="padding: 12px 14px; display: grid; gap: 2px; border-left: 2px solid var(--ai);"><span style="font-size: 12px; font-weight: 600;">03</span><b style="font-size: 15px;">Your bed</b></span></div><div style="padding: 20px 20px 24px; display: grid; gap: 12px;"><button style="height: 56px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; background: var(--ai); color: var(--ac); font-weight: 800; font-size: 16px;">Find a bed<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="flex: none;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button><span style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600;"><span>No sign-in needed to look around.</span></span><span style="display: flex; gap: 18px; font-size: 14px; font-weight: 800;"><a href="#" style="color: var(--ai);">I run a PG</a><a href="#" style="color: var(--ai);">I live in a PG</a><a href="#" style="color: var(--ai);">Sign in</a></span></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark": {"editor": "boolean", "default": false}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const out = { theme: (this.props.dark ?? false) ? 'dark' : 'light' };
+    return out;
+  }
+}
+</script>
+</body>
+</html>
