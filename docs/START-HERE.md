@@ -50,13 +50,13 @@ holds, matched against the residents the owner adds. Fair Play has 3 strikes. Ru
 ## 4. Key links
 | What | Link |
 |---|---|
-| Design canvas (Hostelzy · Main design) | https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx |
+| Design canvas (Hostelzy · Main design) | https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU |
 | Brand guide | https://claude.ai/artifact/29kRWoLpWYYvW9AGuC2jSi |
 | APK releases | https://github.com/abdulfarhath/hostelzy/releases (always give the founder the `tag/apk-N` page) |
 | Public pages | https://farhath.me/hostelzy/app/ · team console: https://farhath.me/hostelzy/app/console/ |
 | Gap audit (visual) | https://claude.ai/artifact/M4uyXDSmthjLk8AVTwcQQS |
 | Launch steps (visual) | https://claude.ai/artifact/WMb8J3gN6c8MGgRK2ycDhg |
-| Prototype (clickable app) | https://claude.ai/artifact/EztxM6k1kud7ivGoG6K6iP |
+| Prototype (clickable app) | https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g |
 | Setup steps (Supabase / GitHub / Firebase / Play) | https://claude.ai/artifact/N2k3RxnvPqFTxLrAtZXYbx (source `docs/pages/setup-steps.html`) |
 
 Artifacts are private to the account that made them. On a new account they open only if the owner

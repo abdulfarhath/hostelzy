@@ -58,3 +58,37 @@ The sessions above belong to the old account and are retired. The new account's 
 The sessions in the table at the top belong to the account being left. The new account's hub creates fresh chats
 (see `HANDOVER.md` §4) and replaces the table with their IDs. State at the move: F26 reverts in progress on
 `f26/integration`, F27 started on `feature/f27-save-food`, main canvas v23, prototype v4 (old account).
+
+## 2026-10-17: hub resumed (session_01KGJ32QudaatuZ4vkirbgAS)
+Founder: "continue, there are few chats left, use them". The old Build and Design chats are on this account, so they are reused.
+| Chat | Session | Task |
+|---|---|---|
+| Hub | session_01KGJ32QudaatuZ4vkirbgAS | Founder contact |
+| Build | session_01VYdxL9M4tryAVSw5paPAtw | 12 F26 reverts → price check → prototype republish → F27 finish (extras on hold) |
+| Design | session_01VKwqzkiTRrHcK6K1kpurt6 | Canvas v24 (reverts) → hub publishes |
+Marketing, Finance, Brand: not started (save the limit).
+
+### 2026-10-17 20:30 UTC
+| Piece | State |
+|---|---|
+| F26 12 reverts | Done on f26/integration (46098a4), check.sh green. Price check: same as main (only Explore order differs) |
+| F27 | Done on feature/f27-save-food, draft PR #140 (do not merge before F26). 6 extras approved by the founder |
+| Prototype v6 (F26 reverts + F27) | NEW link https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g (old EztxM6… is gone). Waiting for the founder's review |
+| Main canvas | Old artifact gone. v23 source on design/f26-merge (be73cea, docs/design/main-canvas/). Design prepares v24; hub publishes as a new artifact |
+| Messaging | Child chats can't send_message the hub; hub reads their branches / get_session |
+
+### 2026-10-17 20:58 UTC: both re-homed on this account
+| Page | New link |
+|---|---|
+| Main canvas v24 (179 counted boards, 472 files, 6 map shots re-uploaded) | https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU |
+| Prototype v6 | https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g |
+Source of truth for the canvas: `docs/design/main-canvas/` on design/f26-merge @ 8b39f3d. Waiting on the founder: prototype review.
+
+### 2026-10-17 release
+| Piece | State |
+|---|---|
+| F26 → main | PR #141 merged (071b159) → apk-104 |
+| F27 → main | PR #140 merged (9ccda7a) → **apk-105** https://github.com/abdulfarhath/hostelzy/releases/tag/apk-105 (real + demo). Tests green |
+| Supabase functions deploy | 🔴 401 Invalid access token on both pushes: the founder's SUPABASE_ACCESS_TOKEN expired. FOUNDER-TODO step 0b |
+| Founder | Run run-all-pending.sql once (4zo1, 4ze26, 4zf27); re-create the token; test apk-105 |
+Build and Design: idle; nothing queued. Next feature waits on the founder's ideas.

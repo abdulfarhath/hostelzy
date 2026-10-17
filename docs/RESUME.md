@@ -4,7 +4,7 @@ Goal: continue on a new account with as few tokens as possible. Don't re-read th
 
 ## Design chat
 - Canvases stay where they are (shared to the new account with edit access):
-  - Main https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx: v23, 178 counted boards, 472 of 512 files.
+  - Main https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU: v24, 179 counted boards, 472 of 512 files.
   - F26 proposal https://claude.ai/artifact/QXYxc9NdqqtJCarAy2XS7g: v11, reference only.
 - Generator scripts and saved boards are on branch `design/f26-merge` (`docs/design/`). Details, only when needed: `docs/handover/design-2026-10-06.md`.
 - Next job: **v24**. Revert boards to match Build's reverts (list in the handover, "Pending v24"). Change only those boards and ship them as `docs/design/v24/` (canvas.json + changed boards).

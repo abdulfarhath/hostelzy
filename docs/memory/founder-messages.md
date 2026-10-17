@@ -198,3 +198,18 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 **05:35**
 > is everything done can i just linnk the repo to claude and ask it to continue?
 
+
+
+## 2026-10-17
+
+**19:23**
+> continue with hostelzy, there are few chats left use them if needed
+
+**19:30**
+> all 6 yes
+
+**20:50**
+> what's the update
+
+**21:05**
+> approved, merge it and build the apk

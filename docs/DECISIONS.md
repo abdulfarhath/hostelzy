@@ -291,5 +291,15 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   page. Plates saved are counted only from real skips (no sample numbers in the real build). Green is used only on the
   saved-plates numbers. Spec and boards: `features/F27-save-food.md`, proposal canvas v11.
 
+- **2026-10-17 (hub):** F26 revert #4: the "#1 near you" label goes on the best-ranked card whatever the sort
+  (Recommended is no longer a sort option). One pinned Featured card stays as on main.
+
+- **2026-10-17 (founder):** All 6 F27 Save food extras approved: Settings › Meals switch, Manage › Meals row, owner
+  headcount push at the cut-off, quiet hours 10 pm–7 am (breakfast ask at 9 pm the evening before), plates saved counted
+  after a meal's count closes, notification buttons open the app.
+
+- **2026-10-17 (founder):** Prototype v6 (F26 with the 12 reverts + F27 Save food) **approved**: "approved, merge it and
+  build the apk". F26 (`f26/integration`) and F27 (PR #140) go to `main`; the push publishes the next `apk-N` release.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
