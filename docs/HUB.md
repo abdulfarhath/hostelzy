@@ -67,3 +67,10 @@ Marketing, Finance, Brand: not started (save the limit).
 | Prototype v6 (F26 reverts + F27) | NEW link https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g (old EztxM6… is gone). Waiting for the founder's review |
 | Main canvas | Old artifact gone. v23 source on design/f26-merge (be73cea, docs/design/main-canvas/). Design prepares v24; hub publishes as a new artifact |
 | Messaging | Child chats can't send_message the hub; hub reads their branches / get_session |
+
+### 2026-10-17 20:58 UTC: both re-homed on this account
+| Page | New link |
+|---|---|
+| Main canvas v24 (179 counted boards, 472 files, 6 map shots re-uploaded) | https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU |
+| Prototype v6 | https://claude.ai/artifact/Euhs4QdxQWgizgpzuuRj5g |
+Source of truth for the canvas: `docs/design/main-canvas/` on design/f26-merge @ 8b39f3d. Waiting on the founder: prototype review.

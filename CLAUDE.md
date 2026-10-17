@@ -69,7 +69,7 @@ The founder talks **only to the hub**. The hub hands out work with the Claude Co
 ## Design rules
 - Archivo font. `#ec3013` red for actions. Green `#1f7a3d` / `#dcefe0` only for savings and Hostelzy
   deals. 2px rules, square corners, light + dark. Phone boards are 390×844. Tokens come from `hostelzy/lib/ui/kit.dart` (`Pal`).
-- Canvas "Hostelzy · Main design": https://claude.ai/artifact/6n9U2zJw3jri1SeAUz1gCx. Update it after
+- Canvas "Hostelzy · Main design": https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU. Update it after
   every Build merge (same URL, tags New / Updated / Removed).
 
 ## Talking to the founder (hub only)
