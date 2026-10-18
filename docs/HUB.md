@@ -135,3 +135,8 @@ created (Fable 5.1). Build 1 integrates in order 0 → 1 → 2 → 3 → 4 → 5
 Design 1's v25 (F28 + F29 + F30 boards, 188 counted) is on https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU. Design 2's parallel F28 set
 (design/f28-boards) was not needed and stays in git. The artifact's 512 cap counts the Design type's ~21 files and the 6 assets, so the
 hub moved 35 archive boards to git only (461 boards on the canvas). W8 = delete-account; F28's pages are W9/W10.
+
+### 2026-10-18 20:35 UTC: usage limit hit and reset
+Every chat stopped at ~16:00 UTC on the shared 5-hour limit (reset 20:30). Done before the stop: wave 0 on main, wave 1 pushed
+(not merged), W3 DONE, canvas v25 live, F31 boards ready. Builds 2, 4, 5 had pushed nothing. All resumed at 20:32 with
+"push WIP every 30 minutes". Hub on Opus 5.5 (founder switched it); check-in trigger now re-creates chats as `claude-opus-5-5`.
