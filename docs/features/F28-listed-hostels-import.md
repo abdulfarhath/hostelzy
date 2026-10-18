@@ -47,7 +47,7 @@ Rules (hub decisions, money ones marked ₹ for the founder to change later):
 | 28-80 | **OSM import** `tools/import/osm.mjs` | Overpass query for `tourism=hostel`, `amenity=dormitory`, `building=dormitory` in Hyderabad; same draft rows with `source = 'osm'`; credit line "Map data © OpenStreetMap contributors" in the console footer |
 | | Workflow `.github/workflows/import-hostels.yml` | `workflow_dispatch` + monthly; runs both scripts with `SUPABASE_DB_URL` (same secret as the SQL autorun). Never prints keys |
 | 28-21 | **Console › Listed › To call** segment (C14) | Drafts from Places/OSM/web: name, area, phone (tap to call), the call script (6 lines: who we are, free listing, rent range, men/women, food, "want to be verified?"), fields rent range + For + Food, buttons **List** (→ `listed`, `rent_confirmed_at = now()`), **Not a PG / Closed** (→ removed), **Call later**. **Export CSV** (name, phone, area, id) for the founder's WhatsApp run |
-| 28-50 | **Owner self-serve** web page **W8 `app/list/`** | "List your PG on Hostelzy, free": hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → RPC `self_list_request` (anon, max 3 per phone per day) → draft with `source = 'web'` → To call. Page says "We'll call you within 2 days to confirm" (honest; no "Listed!"). **W9 `app/list/poster.html`**: printable A4/A5 poster with the QR to W8, red headline "Get tenants from Hostelzy. Free listing.", for tea stalls, gates, Xerox shops |
+| 28-50 | **Owner self-serve** web page **W9 `app/list/`** | "List your PG on Hostelzy, free": hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → RPC `self_list_request` (anon, max 3 per phone per day) → draft with `source = 'web'` → To call. Page says "We'll call you within 2 days to confirm" (honest; no "Listed!"). **W10 `app/list/poster.html`**: printable A4/A5 poster with the QR to W8, red headline "Get tenants from Hostelzy. Free listing.", for tea stalls, gates, Xerox shops |
 | 28-60 | **WhatsApp sender** `tools/outreach/send.mjs` (founder runs it) | Reads the CSV from C14, sends one personalised message per number through `whatsapp-web.js` from a **separate SIM**: QR login, warm-up note, ≤ 25 messages/hour with random 60–180 s gaps, ≤ 150/day, skips numbers already messaged (local `sent.json`), stops on any reply (the founder answers by hand), text: "Hi, this is <founder> from Hostelzy, a free app where tenants find PGs in Hyderabad. <Hostel> is listed as unverified. Reply 1 to add your rent and get verified, 2 to remove it. – Hostelzy" with "Reply STOP to never hear from us". README with the limits and the ban risk in plain words. Not in the app; not counted |
 
 ## Part 4 · Keep it honest over time (28-90, wave 4)
@@ -70,8 +70,8 @@ Rules (hub decisions, money ones marked ₹ for the founder to change later):
 | S22 `rewards` (variant) | ₹200 / ₹20 rows | — |
 | C14 `#listed` (changed) | Segments: Listed · To call · To refresh · Partners; Export CSV | console view, variants |
 | C15 `#claims` (variant) | "added by Ravi (resident)" line | — |
-| **W8** `app/list/` (new web page) | List your PG | + sent state (variant) |
-| **W9** `app/list/poster.html` (new web page) | Poster with QR | A4 and A5 |
+| **W9** `app/list/` (new web page) | List your PG | + sent state (variant) |
+| **W10** `app/list/poster.html` (new web page) | Poster with QR | A4 and A5 |
 
 ## Server
 Migration `f28_add_hostels.sql` (rerun-safe): `hostels.source` (team|resident|partner|places|osm|web), `added_by`,
@@ -85,7 +85,7 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 ## Build notes
 - Wave 1: Part 1. Wave 2: Part 2 (S92, S93, entry points, rewards, C14 Partners, C15 line). Wave 3: Part 3. Wave 4: Part 4.
 - Demo (sample data): one hostel "added by you" at step "Owner asked", one partner code `HZ-PART-1`.
-- SCREENS: +2 screens (S92, S93), +2 web pages (W8, W9). Changed H1, S8, S9, S79, T20, S22, C14, C15.
+- SCREENS: +2 screens (S92, S93), +2 web pages (W9, W10; W8 is already app/delete-account). Changed H1, S8, S9, S79, T20, S22, C14, C15.
 
 ## Not in the spec
 Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
@@ -100,3 +100,6 @@ site, auto-rent from portals, tenants adding reviews for a hostel they added, co
 - **Console:** C14 Listed gets the segments Listed · To call · To refresh · Partners; [variants] To call (drafts with phone, the 6-line call script, rent from–to, For, Food, List / Not a PG · Closed / Call later, Export CSV, OSM credit), To refresh (past 50 days, Rent confirmed today / Closed, Export CSV), Partners (add partner with code, list, listed count, ₹ due). [variant of C15] Claims: "added by Ravi (resident) · owner phone matches ✓ / ✗".
 Rule A (F31) applied: no helper lines. Not drawn: S9 map pins with the switch (screenshot boards).
 
+
+## Id fix (hub, 2026-10-18 15:50)
+W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page is **W9** and the poster **W10** everywhere (spec, boards, SCREENS).
