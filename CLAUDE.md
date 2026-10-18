@@ -19,7 +19,7 @@ current state, where everything lives, and how to carry on.
    other's conversations.
 
 ## The team: one hub, six chats
-The founder talks **only to the hub**. The hub hands out work with the Claude Code Remote tools
+The founder talks **only to the hub** (sidebar title `Hostelzy · Hub`; Build and Design are `Hostelzy · Build` / `Hostelzy · Design`, the rest are created on demand). The hub hands out work with the Claude Code Remote tools
 (`create_session`, `send_message`), checks in, and reports milestones. The session IDs are in `docs/HUB.md`.
 
 | Chat | Role | Writes to |
