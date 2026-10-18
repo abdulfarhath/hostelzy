@@ -23,4 +23,14 @@ Branch **`feature/w5-clean`** (from `main` @ 6bf2983). Integrated last by Build 
 4. The language packs are empty, so nothing to drop there; `docs/i18n/te-review.md` still lists the old lines (Hub/i18n owner).
 
 ## Checks
-See the bottom of this file for the `tools/check.sh` result on the last commit.
+`tools/check.sh` green on the last commit (log below).
+
+## `tools/check.sh` on the last commit (2026-10-18)
+```
+== flutter analyze      No issues found!
+== flutter test         +374: All tests passed!
+== SQL tests            41 SQL test files passed (incl. the regenerated run-all-pending.sql bundle twice)
+== push / console tests # pass 20  # fail 0
+OK
+```
+Done: W5 DONE. Build 1 integrates `feature/w5-clean` last (waves 0→5), then retires sheet #41 in SCREENS and recounts.
