@@ -117,6 +117,9 @@ extension OnPhoneActions on AppState {
     'pushAsked': pushAsked,
     'camAsked': camAsked,
     'opens': opens,
+    // F30: the verified hostels a guest opened here (3 are free), and the Explore hint.
+    'guestHostels': guestHostels,
+    'guestHint': guestHintOff,
     // F24 item 22: the Settings switches and searched areas (also on the profile).
     'notif': notif,
     'areas': searchedAreas,

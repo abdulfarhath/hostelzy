@@ -57,7 +57,52 @@ extension ResidentsActions on AppState {
         ...cases,
       ];
     }
-    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : before ? 'before' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays);
+    return Resident(name: name, bed: bed, amt: amt, status: 'Paid', note: 'Paid at move-in', phone: phone, via: m != null ? 'hz' : before ? 'before' : 'direct', since: confirmed ? 'Joined $joined' : 'Added today', ref: m != null && m.ref.startsWith('HZ-') ? m.ref : null, confirmed: confirmed, advance: adv, joinAt: joinAt, lateDays: lateDays, paidOn: DateTime.fromMillisecondsSinceEpoch(joinAt));
+  }
+
+  /// F29 Part 1 (S40): Notify: a short note pushed to one resident's phone.
+  /// The sheet is H6 `wa` in its Notify form. Off for a resident without the
+  /// app (no account on their stay): the row says so.
+  void openNotify(Resident r) {
+    if (!r.onApp) return;
+    update(() {
+      waMode = 'notify';
+      waTo = r.name;
+      waPhone = r.phone;
+      waMsg = null;
+      noteDraft = '';
+      noteTo = r;
+      sheet = 'wa';
+    });
+  }
+
+  /// Sends the note as a Hostelzy notification (`notify_resident` on the
+  /// server). Sample data has no server: the note goes nowhere, and the demo
+  /// says it was sent like its other sample actions. Until the server has the
+  /// function, the owner is told to use WhatsApp instead.
+  Future<void> sendNote() async {
+    final r = noteTo;
+    final note = noteDraft.trim();
+    if (r == null) return;
+    if (note.isEmpty) return toastMsg('Type the note first.');
+    final first = r.name.split(' ').first;
+    if (data.remote) {
+      if (r.key == null) return toastMsg('Couldn’t send it. Open the app again and try once more.');
+      try {
+        await data.notifyResident(r.key!, note);
+      } on UnsupportedError {
+        return toastMsg('Notifications to residents aren’t switched on yet. Send it on WhatsApp for now.');
+      } catch (e) {
+        debugPrint('notify: $e');
+        return toastMsg('Couldn’t send it. Check your internet and try again.');
+      }
+    }
+    update(() {
+      sheet = null;
+      noteDraft = '';
+      noteTo = null;
+    });
+    toastMsg('Sent. $first gets it as a notification.');
   }
 
   /// F25 "Add a resident" (the "+" tab and Residents › Add): the resident is

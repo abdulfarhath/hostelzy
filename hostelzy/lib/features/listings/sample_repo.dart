@@ -274,4 +274,6 @@ class SampleRepo implements HostelRepo {
   Future<void> sendClaim(String hid, String name, String phone) async {}
   @override
   Future<Map<String, ({int verified, int listed})>?> areaCounts() async => null;
+  @override
+  Future<void> notifyResident(String stayKey, String note) => throw UnsupportedError('sample data');
 }
