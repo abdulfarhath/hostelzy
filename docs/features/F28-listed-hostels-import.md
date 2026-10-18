@@ -110,6 +110,7 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
   last verified hostel, the listed one is last now). No SQL.
 
 ## Not in the spec
+- Console (integration, hub's ask): C2 **Payouts due** sits above the owner invoices; **Paid** takes a 12-digit UTR ("Enter the 12-digit UTR."); C14 Partners shows each partner's hostels under their row (Checked ✓ → "Checked. ₹20 due."). decided.
 - Part 1: the pin key `pin-<id>` (test hook only). `priceBand` kept in place (no removals). decided.
 - Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
@@ -165,6 +166,8 @@ Payments), adder photos, adder-only owner phone, S22 row, Rule A, no Realtime fo
 #5 accepted with one copy change (Rule A): the partner line in S93 reads **"₹20 when checked"**.
 
 ## Build (wave 3 · Build 3, 2026-10-18, branch `feature/w3-import`, not merged: the original Build chat integrates waves 0→4)
+Merged to `main` (#155, 2026-10-18), with waves 2–5 on `integration/w2-5`.
+
 Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C15 line) and the Part 4 console segment. Handover: `docs/handover/w3-build.md`.
 
 | Piece | Where | State |

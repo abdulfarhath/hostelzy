@@ -117,6 +117,11 @@ one-time: Drive scope on the consent screen (wave 4). Everything ships with the 
 | 9 | `id_upload_target` reads the token through a **hook function `join_hostel_for_token(text)`** that is a stub until wave 2's `join_requests` replaces it | Wave 4 was built apart from wave 2 (`docs/handover/w4-build.md`) |
 | 10 | **F31 Rule A applied from the start** (hub, 2026-10-18): H50 = status line ("Not connected" / "Connected · 12 files" / "Not available yet") + Connect or Disconnect + the Full copy switch, nothing else; "Not available yet" is one line, no button. IdCapture = the button, then the photo with the guide label "Cover the first 8 digits" (or "Full copy needed (police file)"), Retake / Upload, "Uploaded to <owner>'s Drive". IdThumb fallbacks "Loading…" / "Open in Drive" / "Not available yet". Toasts ≤ 3 words. Removed lines: H50 · "Keep tenant IDs in your own Google Drive. Hostelzy never stores them." · "Google asks you once. Hostelzy can see only the files it makes, in Hostelzy / <hostel> / Tenant IDs." · "Off: the tenant covers the first 8 digits of the ID number." / "On: the tenant sends the whole ID." · "Files stay in your Drive; Hostelzy keeps only a link to each one." · "Only the owner connects / disconnects Google Drive." · the Try again button and the two "Not available yet" explanations; Manage row · "In your own Google Drive" / "· IDs come on WhatsApp"; IdCapture · "It goes straight to <owner>'s own Google Drive; Hostelzy never stores it." · "Drag the black bar over the first 8 digits of the ID number. Only the last 4 stay visible." · "…Check the photo is sharp." · "…Nothing is kept on Hostelzy." · "Send your ID on WhatsApp instead." | Founder rule F31 |
 
+- **`clear_join_id(id)`** (integration glue, `20261018160000_w24_wiring.sql`): staff only; H49 **Delete from my Drive** clears the
+  request's Drive pointer (`id_received = 'none'`, `id_file_id = null`) after the file is deleted in the owner's Drive. decided.
+- **`notify_resident`** landed in the integration (`20261018170000_notify_resident.sql`, contract above, test
+  `notify_resident_test.sql`).
+
 ## Design
 **Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Sample: bed 203-B · ₹8,000/month (room 203's rate) · advance ₹3,000 · Ravi Teja · owner Srinivas.
 - **[H48]** askJoin over Residents: free-bed chips, Monthly fee, Advance, Moves in, First name (optional), Send on WhatsApp.
@@ -138,6 +143,8 @@ F29 #1–7 accepted as built (`join_request_info(token)`, Ask to join alone unde
 Drive stub replaced by Build 4's pieces at integration, Rule A, demo without an ID image, no Realtime).
 
 ## Build (wave 2 · Build 2, 2026-10-18, branch `feature/w2-add-join`, not merged: the original Build chat integrates waves 0→4)
+Merged to `main` (#155, 2026-10-18), with waves 2–5 on `integration/w2-5`.
+
 Part 2 (29-10 + 29-23) with the WhatsApp ID path; the Drive option is hidden until `owner_drive` (wave 4) exists. Handover
 with Build 4's three wiring points: `docs/handover/w2-build.md` §4.
 

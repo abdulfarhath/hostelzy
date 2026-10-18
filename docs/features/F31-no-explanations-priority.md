@@ -43,6 +43,8 @@ you hold a bed." stays (it is a state).
 | Manage, Me, Settings, every sheet with a helper line | Copy removed per Rule A; Build lists each removed line in its Build section (screen · old line) |
 
 ## Build (wave 5, Build 5 on `feature/w5-clean`, integrated last by Build 1)
+Merged to `main` (#155, 2026-10-18), with waves 2–5 on `integration/w2-5`.
+
 1. Audit: grep every `T('…', s: 12|13, c: p.mu` / subtitle / `hint` string in `hostelzy/lib`, `app/`, l10n packs; classify Keep / Remove with the rule above; write the table into this file's Build section **before** editing.
 2. Apply Rule A and Rule B. Retire the offer sheet and `maybeOfferReminders()`. Keep tests green; update the texts the tests assert.
 3. `tools/check.sh` green; feature file Build section = the full table of removed lines and the new orders; `docs/handover/w5-build.md`; last commit "W5 DONE". No SCREENS/BOARD edits (the integrator does them: retire the offer sheet id, totals).
