@@ -170,12 +170,12 @@ extension FoodActions on AppState {
       });
       toastMsg(
         !timesSaved
-            ? 'Menu saved. Meal times save once Hostelzy updates the server; residents keep the usual times till then.'
+            ? 'Menu saved · meal times after the next server update'
             : weekEmpty(week) && withTimes && times.isNotEmpty
-            ? 'Meal times saved. Residents’ meal reminders ring at them.'
+            ? 'Meal times saved'
             : weekEmpty(week)
-            ? 'Menu cleared. Residents see “no menu yet”.'
-            : 'Menu saved. Residents see it in their Food tab now.',
+            ? 'Menu cleared'
+            : 'Menu saved',
       );
     }
 
@@ -206,7 +206,7 @@ extension FoodActions on AppState {
       } catch (e) {
         debugPrint('rate: $e');
         update(() => rated = before);
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
     } else {
       update(() {
@@ -215,7 +215,7 @@ extension FoodActions on AppState {
         c[v.toLowerCase()] = (c[v.toLowerCase()] ?? 0) + 1;
       });
     }
-    toastMsg('Thanks. $stayOwner sees how many said $v, not who.');
+    toastMsg('Saved');
   }
 
   /// Owner: this week's rating counts for their hostel.

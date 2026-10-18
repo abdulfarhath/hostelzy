@@ -131,7 +131,7 @@ void main() {
     final month = monthYear(appToday).split(' ').first;
     expect(find.text('Electricity'), findsOneWidget);
     expect(find.text('Anjani Residency · Rent · $month'.toUpperCase()), findsOneWidget);
-    expect(find.text('Type each room’s meter now. We split it between the residents in the room.'), findsOneWidget);
+    expect(find.text('Type each room’s meter now. We split it between the residents in the room.'), findsNothing); // F31
     expect(s.meterRate, '8');
     expect(find.text('1,870'), findsOneWidget); // room 204 last month
     final all = s.rooms['anjani']!.length;
@@ -147,12 +147,12 @@ void main() {
     await _type(tester, 'meter-204', '1800');
     expect(find.descendant(of: find.byKey(const ValueKey('meterRow-204')), matching: find.text('Check it')), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('meterGo')));
-    expect(s.toast, 'Room 204: the reading is lower than last month’s (1,870).');
+    expect(s.toast, 'Room 204: lower than 1,870');
     await tester.pump(const Duration(seconds: 3));
     await _type(tester, 'meter-204', '1940');
     await _tap(tester, find.byKey(const ValueKey('meterGo')));
     expect(s.screen, 'oRent');
-    expect(s.toast, 'Added to $month rent for 1 room. Residents see their share on their rent.');
+    expect(s.toast, 'Added to $month rent · 1 room');
     expect(s.meterOf(204)!.units, 70);
     s.dispose();
   });
@@ -226,7 +226,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('laundryOpen')));
     expect(s.sheet, 'laundry');
     expect(find.text('Machine free'), findsOneWidget);
-    expect(find.text('Residents who turn on the Laundry reminder get it at 8 pm the evening before.'), findsOneWidget);
+    expect(find.text('Residents who turn on the Laundry reminder get it at 8 pm the evening before.'), findsNothing); // F31
     await _tap(tester, find.byKey(const ValueKey('laundryDay-6')));
     await _tap(tester, find.text('Evening'));
     await _tap(tester, find.byKey(const ValueKey('laundrySave')));
@@ -254,10 +254,10 @@ void main() {
     final s = AppState(start: 'oCase', role: 'owner');
     await _pump(tester, s);
     expect(find.text('Photo from Teja'.toUpperCase()), findsOneWidget);
-    expect(find.text('Shown only to you and the Hostelzy team.'), findsOneWidget);
+    expect(find.text('Shown only to you and the Hostelzy team.'), findsNothing); // F31
     expect(find.text('Add a photo to your reply'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('casePhoto')));
-    expect(s.toast, 'Photos open from the server in the real app. This is sample data.');
+    expect(s.toast, 'Photo: sample data');
     s.dispose();
 
     // On the server: the photo goes up, onto the case, then the reply.
@@ -304,7 +304,7 @@ void main() {
     expect(m.level, 'member');
     // A bed that just turned free: the first hour is for Trusted tenants.
     final b = Bed(id: '101-C', letter: 'C', room: 101, floor: 1, spot: '', state: 'free', soon: '')..freedAt = DateTime.now().subtract(const Duration(minutes: 10));
-    expect(m.firstLookBlock(b), startsWith('Trusted tenants get the first hour on this bed. It opens to you at '));
+    expect(m.firstLookBlock(b), startsWith('Trusted tenants first · opens to you at '));
     b.freedAt = DateTime.now().subtract(const Duration(minutes: 61));
     expect(m.firstLookBlock(b), isNull);
     m.dispose();
@@ -334,8 +334,7 @@ void main() {
     expect(find.text('Join your PG'), findsOneWidget);
     expect(find.text('I live in a PG'.toUpperCase()), findsOneWidget);
     expect(find.text('MGR-'), findsOneWidget);
-    expect(find.byKey(const ValueKey('mgrHint')), findsOneWidget);
-    expect(find.text('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mgrHint')), findsNothing); // F31: no hint under the field
     expect(find.text('Scan the QR'), findsNothing);
     s.dispose();
   });

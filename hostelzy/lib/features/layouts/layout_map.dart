@@ -410,7 +410,6 @@ class RoomMode extends StatelessWidget {
                   child: Row(mainAxisSize: MainAxisSize.min, children: [Ic('bell', size: 16, color: p.tx), const SizedBox(width: 8), const T('We’ll tell you', w: 800, s: 15)]),
                 )
               : OutlineCta('Tell me when it’s ready', key: const ValueKey('layoutNotify'), icon: 'bell', height: 50, onTap: () => s.tellMeWhenReady(h.id, room.n)),
-          T(waiting ? 'You get a notification when the owner publishes room ${room.label}’s layout.' : 'Owners draw their rooms and residents correct them, so what you see matches the room.', s: 12, c: p.mu, lh: 1.4),
         ],
       );
     } else {
@@ -578,7 +577,7 @@ class RoomBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               T(can ? 'Bed ${b.id} · ${fmt(room.rent)}/mo' : (b == null ? 'No bed picked' : 'Bed ${b.id} is taken'), w: 800, s: 17, lh: 1.25),
-              T(can ? 'Same price for every bed here' : 'Tap a free bed', s: 12, c: p.mu, ell: true),
+              T(can ? '${fmt(room.rent)} a month' : 'Tap a free bed', s: 12, c: p.mu, ell: true),
             ],
           ),
         ),
@@ -662,7 +661,7 @@ class CompareScreen extends StatelessWidget {
                           s.update(() => s.cmpB = k);
                         },
                       ),
-                      T('Comparing two open beds. Both cost ${fmt(room.rent)} a month.', s: 12, c: p.mu),
+                      T('Both ${fmt(room.rent)} a month', s: 12, c: p.mu),
                     ],
                   ),
                 ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -419,10 +420,26 @@ class SupabaseRepo implements HostelRepo {
       }
     }
 
-    // Perf: the four reads don't depend on each other, so they go together
-    // (one round trip of waiting instead of four in a row).
-    final got = await Future.wait<Object>([hostelRows(), standingRows(), checkRows(), checkerRows()]);
+    // F28 Part 4: the server's own 60-day rule (view `listed_rent_visible`,
+    // wave 3). A listed hostel it hides the rent of counts as never confirmed
+    // here, so the server's clock decides. Before the view exists: the column.
+    Future<Set<String>> staleRows() async {
+      try {
+        return {for (final r in await db.from('listed_rent_visible').select('id, rent_visible').eq('status', 'listed')) if (r['rent_visible'] != true) r['id'] as String};
+      } on PostgrestException catch (e) {
+        debugPrint('listed_rent_visible: ${e.message}');
+        return {};
+      }
+    }
+
+    // Perf: the five reads don't depend on each other, so they go together
+    // (one round trip of waiting instead of five in a row).
+    final got = await Future.wait<Object>([hostelRows(), standingRows(), checkRows(), checkerRows(), staleRows()]);
     final rows = got[0] as List<Map<String, dynamic>>;
+    for (final id in got[4] as Set<String>) {
+      final r = rows.where((r) => r['id'] == id).firstOrNull;
+      if (r != null) r['rent_confirmed_at'] = null;
+    }
     final (st, standing) = got[1] as (List, Map<String, Standing>);
     // F19: "Checked by N residents · date" per room.
     final ck = got[2] as List<Object?>;
@@ -700,6 +717,129 @@ class SupabaseRepo implements HostelRepo {
       return null;
     }
   }
+
+  // ---------------------------------------------------------------- W2 F28 Part 2
+  @override
+  Future<Map<String, dynamic>> addHostel(Map<String, dynamic> p) async => (await db.rpc('add_hostel', params: {'p': p}) as Map).cast<String, dynamic>();
+
+  @override
+  Future<Map<String, dynamic>?> myAddedHostel() async {
+    try {
+      final r = await db.rpc('my_added_hostel');
+      return r == null ? null : (r as Map).cast<String, dynamic>();
+    } on PostgrestException catch (e) {
+      // Before the F28 SQL has run there is nothing to show.
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<void> askedOwner(String hid) => db.rpc('asked_owner', params: {'p_hostel': hid});
+  @override
+  Future<void> setAdderUpi(String upi) => db.rpc('set_adder_upi', params: {'p_upi': upi});
+
+  // ---------------------------------------------------------------- W2 F29 Part 2
+  @override
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''}) async =>
+      await db.rpc('new_join_request', params: {'p_bed': bedKey, 'p_fee': fee, 'p_advance': advance, 'p_moves_in': _ymd(movesIn), 'p_name': name}) as String;
+
+  @override
+  Future<Map<String, dynamic>?> joinRequestInfo(String token) async {
+    final r = await db.rpc('join_request_info', params: {'p_token': token});
+    return r == null ? null : (r as Map).cast<String, dynamic>();
+  }
+
+  @override
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async =>
+      (await db.rpc('fill_join_request', params: {'p_token': token, 'p_name': name, 'p_phone': phone, 'p_date': _ymd(date), 'p_id_received': idReceived, 'p_id_file_id': idFileId}) as Map).cast<String, dynamic>();
+
+  @override
+  Future<List<Map<String, dynamic>>> joinRequests(String hid) async {
+    try {
+      return await db.from('join_requests').select('*, beds(letter, rooms(number, label))').eq('hostel_id', hid).eq('status', 'filled').order('filled_at');
+    } on PostgrestException catch (e) {
+      // Before the F29 SQL has run the Joining tab just stays empty.
+      if (!_missingFn(e) && e.code != '42P01' && e.code != 'PGRST205') rethrow;
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> decideJoin(String id, bool approve, {String note = ''}) => db.rpc('decide_join', params: {'p_id': id, 'p_approve': approve, 'p_note': note});
+  @override
+  Future<String> askIdAgain(String id) async => await db.rpc('ask_id_again', params: {'p_id': id}) as String;
+  @override
+  Future<void> clearJoinId(String id) => db.rpc('clear_join_id', params: {'p_id': id});
+
+  // ------------------------------------------------------------ F29 Part 3: Drive
+
+  static DriveStatus _driveRow(Map<String, dynamic> r) => (connected: r['connected'] as bool? ?? false, files: (r['files'] as num?)?.toInt() ?? 0, fullCopy: r['full_copy'] as bool? ?? false);
+
+  /// One of the three Drive Edge Functions, with the user's Firebase token
+  /// (the client adds it). A refusal becomes [DriveFail] with the function's
+  /// own code; a function that isn't deployed yet is `not_ready`.
+  Future<Map<String, dynamic>> _driveFn(String name, Map<String, dynamic> body) async {
+    try {
+      final r = await db.functions.invoke(name, body: body);
+      return (r.data as Map?)?.cast<String, dynamic>() ?? const {};
+    } on FunctionException catch (e) {
+      final d = e.details;
+      final m = d is Map ? d.cast<String, dynamic>() : d is String ? _json(d) : const <String, dynamic>{};
+      if (e.status == 404 && m['error'] == null) throw const DriveFail('not_ready', 'Not available yet');
+      throw DriveFail(m['error'] as String? ?? 'failed', m['message'] as String? ?? 'Couldn’t do that. Try again.');
+    }
+  }
+
+  static Map<String, dynamic> _json(String s) {
+    try {
+      return (jsonDecode(s) as Map).cast<String, dynamic>();
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  @override
+  Future<DriveStatus?> driveStatus(String hid) async {
+    try {
+      final rows = (await db.rpc('drive_status', params: {'h': hid}) as List).cast<Map<String, dynamic>>();
+      return rows.isEmpty ? (connected: false, files: 0, fullCopy: false) : _driveRow(rows.first);
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<DriveStatus> driveConnect(String hid, String code) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'code': code}));
+  @override
+  Future<DriveStatus> driveDisconnect(String hid) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'action': 'disconnect'}));
+  @override
+  Future<void> setFullCopy(String hid, bool v) => db.rpc('set_full_copy', params: {'h': hid, 'v': v});
+  @override
+  Future<({String hid, bool fullCopy})?> idTarget(String token) async {
+    try {
+      final rows = (await db.rpc('id_upload_target', params: {'p_token': token}) as List).cast<Map<String, dynamic>>();
+      return rows.isEmpty ? null : (hid: rows.first['hostel_id'] as String, fullCopy: rows.first['full_copy'] as bool? ?? false);
+    } on PostgrestException catch (e) {
+      // Not connected, or the SQL isn't there yet: the WhatsApp path. A bad
+      // token is the tenant's problem to hear about.
+      if (_missingFn(e) || e.message.contains('connected Google Drive') || e.message.contains('isn’t ready yet')) return null;
+      throw DriveFail('bad_token', e.message);
+    }
+  }
+
+  @override
+  Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'}) async =>
+      (await _driveFn('id-upload', {'token': token, 'image': base64Encode(bytes), 'mime': mime}))['file_id'] as String;
+  @override
+  Future<({String url, String open})> idView(String hid, String fileId) async {
+    final r = await _driveFn('id-view', {'hostel_id': hid, 'file_id': fileId});
+    return (url: r['url'] as String? ?? '', open: r['open'] as String? ?? '');
+  }
+
+  @override
+  Future<void> idDelete(String hid, String fileId) => _driveFn('id-view', {'hostel_id': hid, 'file_id': fileId, 'action': 'delete'});
 }
 
 /// A function the app calls isn't on the server yet (its SQL hasn't run).

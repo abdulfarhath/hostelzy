@@ -104,6 +104,8 @@ Listings listingsFromRows(List<Map<String, dynamic>> rows, {Map<String, int> str
         listed: h['status'] == 'listed',
         rentMin: h['rent_min'] as int? ?? 0,
         rentMax: h['rent_max'] as int? ?? 0,
+        // F28 Part 4: rent shown only within 60 days of a person's confirmation.
+        rentConfirmedAt: h['rent_confirmed_at'] == null ? null : DateTime.parse(h['rent_confirmed_at'] as String).toLocal(),
         // F24 item 9: the owner's confirmations, from the server.
         bedsCheckedAt: _latest([for (final r in (h['rooms'] as List? ?? const []).cast<Map>()) for (final b in (r['beds'] as List? ?? const []).cast<Map>()) b['confirmed_at']]),
         layoutsCheckedAt: _latest([for (final l in (h['layouts'] as List? ?? const []).cast<Map>()) if (l['stage'] == 'published') l['confirmed_at'] ?? l['updated_at']], oldest: true),

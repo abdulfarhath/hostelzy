@@ -132,7 +132,7 @@ void main() {
     await tester.pump();
     await _tap(tester, find.byKey(const ValueKey('muteLink')));
     expect(o.sheet, 'fixMute');
-    expect(find.text('Unmute any time in Manage → Residents.'), findsOneWidget);
+    expect(find.text('Unmute any time in Manage → Residents.'), findsNothing); // F31
     await _tap(tester, find.text('Mute Rahul’s suggestions').last);
     await tester.pump();
     expect((f.status, o.sheet, o.mutedHere.single.name), ('rejected', null, 'Rahul V.'));

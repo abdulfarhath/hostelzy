@@ -13,7 +13,7 @@ extension TeamMembersActions on AppState {
 
   Future<void> addTeamMember() async {
     final ph = tmPhone.replaceAll(RegExp(r'\D'), '');
-    if (tmName.trim().isEmpty || ph.length != 10) return toastMsg('Add a name and a 10-digit number.');
+    if (tmName.trim().isEmpty || ph.length != 10) return toastMsg('Name and 10-digit number needed');
     final name = tmName.trim();
     // F24 item 29: saved on the server; Active once they open team tools.
     if (data.remote && account != null) {
@@ -21,20 +21,20 @@ extension TeamMembersActions on AppState {
         await data.inviteTeamMember(name, ph, tmRole);
       } catch (e) {
         debugPrint('team invite: $e');
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
       update(() {
         tmName = '';
         tmPhone = '';
       });
       await loadTeam();
-      return toastMsg('Saved. $name shows as Active after the founder adds their Google account and they open team tools.');
+      return toastMsg('Saved · $name');
     }
     update(() {
       teamMembers.add((name: name, phone: ph, role: tmRole, joined: false));
       tmName = '';
       tmPhone = '';
     });
-    toastMsg('Invite pending. This demo has no server, so nothing is sent.');
+    toastMsg('Invite pending · sample data');
   }
 }

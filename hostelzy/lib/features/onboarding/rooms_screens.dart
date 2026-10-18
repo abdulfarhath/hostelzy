@@ -25,7 +25,6 @@ class OwnerRoomsScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [BackBtn(onTap: s.back), const SizedBox(width: 12), Expanded(child: PageHead(kicker: '${h.name} · ${rs.length} rooms · ${rs.fold<int>(0, (a, r) => a + r.beds.length)} beds', title: 'Rooms', size: 28))]),
         ),
-        Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 10), child: T('Add or remove rooms and floors. A room with a resident or a hold can’t be removed. Prices come from Manage → Rates.', s: 13, c: p.mu, lh: 1.45)),
         Expanded(
           child: Scroll(
             key: ValueKey('oRooms${s.scrollEpoch}'),
@@ -158,7 +157,6 @@ class TeamMembersScreen extends StatelessWidget {
                       Field(key: const ValueKey('tmPhone'), value: s.tmPhone, numeric: true, placeholder: 'WhatsApp number', onChanged: (v) => s.update(() => s.tmPhone = v)),
                       Seg(opts: const [('Visits', 'Visits'), ('Layouts', 'Layouts'), ('Payments', 'Payments')], cur: s.tmRole, onPick: (v) => s.update(() => s.tmRole = v), center: true),
                       Cta('Send invite', icon: 'userPlus', height: 52, px: 16, fs: 15, onTap: s.addTeamMember),
-                      T('Visits: add hostels and residents. Layouts: draw rooms. Payments: check UTRs. They show as Active once the founder adds their Google account and they open team tools.', s: 12, c: p.mu, lh: 1.45),
                       const SizedBox(height: 20),
                     ],
                   ),

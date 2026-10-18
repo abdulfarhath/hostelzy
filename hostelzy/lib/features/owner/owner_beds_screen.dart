@@ -36,7 +36,6 @@ class OwnerBedsScreen extends StatelessWidget {
             else
               BuildingView(hid: s.ownHid, rooms: a, tenant: false, selected: s.sheet == 'bed' ? s.obed : null, onBed: openBed, onRoom: (r) => s.ownerLayout(r.n)),
             const SizedBox(height: 10),
-            T('Tap a bed for its bed sheet. Tap a room number for its layout.', s: 12, c: p.mu, lh: 1.45),
             const SizedBox(height: 12),
             Tap(
               key: const ValueKey('obLayouts'),
@@ -47,7 +46,7 @@ class OwnerBedsScreen extends StatelessWidget {
               child: Container(
                 constraints: const BoxConstraints(minHeight: 44),
                 alignment: Alignment.centerLeft,
-                child: Rich([sp(context, 'Layouts ›', w: 800, c: p.tx), sp(context, ' to create or copy one.')], s: 13, c: p.mu),
+                child: Rich([sp(context, 'Layouts ›', w: 800, c: p.tx)], s: 13, c: p.mu),
               ),
             ),
             Tap(

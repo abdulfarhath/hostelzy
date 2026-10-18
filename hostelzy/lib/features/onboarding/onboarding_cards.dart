@@ -73,7 +73,7 @@ class FreeBedsCard extends StatelessWidget {
         gap: 8,
         children: [
           T('Still $n free ${n == 1 ? 'bed' : 'beds'}?', w: 800, s: 18),
-          T(days == null ? 'Not confirmed yet. Fresh beds rank higher.' : 'Last confirmed $days days ago. Fresh beds rank higher.', s: 13, c: p.mu),
+          T(days == null ? 'Not confirmed yet' : 'Last confirmed $days days ago', s: 13, c: p.mu),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -95,7 +95,7 @@ class FreeBedsCard extends StatelessWidget {
               Cta('Update', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: () => s.tab('oBeds')),
             ],
           ),
-          T('Not confirmed for $staleAfterDays days: tenants see “Availability not confirmed” and you rank lower.', s: 12, c: p.mu, lh: 1.4),
+          T('Not confirmed for $staleAfterDays days', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );
@@ -124,7 +124,7 @@ class RatesConfirmCard extends StatelessWidget {
         gap: 8,
         children: [
           const T('Are your rates still right?', w: 800, s: 18),
-          T(at == null ? 'Not confirmed yet. Tenants see the date you last confirmed them.' : 'Last confirmed ${dayMon(at.toLocal())}. Tenants see the date you last confirmed them.', s: 13, c: p.mu, lh: 1.4),
+          T(at == null ? 'Not confirmed yet' : 'Last confirmed ${dayMon(at.toLocal())}', s: 13, c: p.mu, lh: 1.4),
           if (keys.isNotEmpty)
             Wrap(
               spacing: 6,
@@ -145,7 +145,7 @@ class RatesConfirmCard extends StatelessWidget {
               Cta('Change', icon: 'chev', height: 46, px: 14, fs: 14, expand: false, bg: transparent, fg: p.tx, border: p.tx, onTap: s.openRates),
             ],
           ),
-          T('Not confirmed for a month: tenants see “Not confirmed in over a month” on your prices.', s: 12, c: p.mu, lh: 1.4),
+          T('Not confirmed for a month', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );

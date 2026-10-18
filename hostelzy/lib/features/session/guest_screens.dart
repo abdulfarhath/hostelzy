@@ -129,7 +129,6 @@ class WhereScreen extends StatelessWidget {
                 if (hostels.isNotEmpty) group('Hostels'),
                 for (final h in browsable) row('home', h.name, '${h.gender} · ${h.area}', () => s.pickWhereHostel(h.id), key: ValueKey('hostel-${h.id}')),
                 if (lms.isEmpty && areas.isEmpty && hostels.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing called “${s.whereQ.trim()}” on Hostelzy yet.', s: 14, c: p.mu)),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 20, 16, 20), child: T('The same field is on Explore and on the Map.', s: 12, c: p.mu)),
               ],
             ),
           ),
@@ -155,12 +154,13 @@ class SignInSheet extends StatelessWidget {
           T(switch (s.afterSignIn) {
             'verify' => 'So we know who to tell. We ask only once.',
             'claim' => 'So the Hostelzy team knows who to call. We ask only once.',
+            'add' => 'So we know who added it and who to pay. We ask only once.',
+            'join' => 'So your owner knows it’s you. We ask only once.',
             _ => 'So $owner knows who’s coming. We ask only once.',
           }, s: 15, c: p.mu, lh: 1.45),
           GoogleButton(s.signingIn ? 'Opening Google…' : 'Continue with Google', busy: s.signingIn, onTap: s.continueWithGoogle),
           // Builds without Google sign-in (the demo APK) keep everything on the phone.
           if (!s.signIn.available) OutlineCta('Use on this phone only', icon: 'chev', onTap: s.continueOnPhone),
-          T('Then your name and phone number. Owners see it as “not verified”.', s: 12, c: p.mu, align: TextAlign.center),
         ],
       ),
     );
@@ -216,7 +216,6 @@ class LangSheet extends StatelessWidget {
                 child: T(label, w: 800, s: 16),
               ),
             ),
-          T('Words not checked yet show in English.', s: 12, c: p.mu),
         ],
       ),
     );

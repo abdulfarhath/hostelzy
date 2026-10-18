@@ -199,7 +199,6 @@ class BuildingView extends StatelessWidget {
         const SizedBox(height: 14),
         Legend(items: tenant ? buildingLegend : buildingLegend.take(3).toList()),
         const SizedBox(height: 8),
-        T('Shared things sit on top of each floor. Tap a floor to see if they’re working.', s: 12, c: p.mu, lh: 1.45),
       ],
     );
   }

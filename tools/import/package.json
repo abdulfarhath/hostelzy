@@ -1,0 +1,15 @@
+{
+  "name": "hostelzy-import",
+  "private": true,
+  "type": "module",
+  "description": "F28: Google Places (New) and OpenStreetMap → draft hostels. Run by .github/workflows/import-hostels.yml.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "osm": "node osm.mjs",
+    "places": "node places.mjs",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

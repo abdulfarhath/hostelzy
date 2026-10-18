@@ -49,11 +49,11 @@ Kept out by Build until confirmed: Building view, owner corridor floor plan, men
 ## Building now (founder go 2026-10-18: "start designing and building everything, never require my input")
 | Feature | Stage | Wave |
 |---|---|---|
-| F30 Guests see 3 hostels, then sign in | 🔨 Building · **Wave 1 built (PR #W1)**: T34 wall, S8 hint, counter on the phone | 1 |
-| F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | 🔨 Building · **Part 1 · Wave 1 built (PR #W1)**: Verified only switch, verified first in every sort, pins | 1–4 |
-| F29 Ask to join · ID in the owner's Drive · contact buttons for all | 🔨 Building · **Part 1 · Wave 1 built (PR #W1)**: Call · WhatsApp on every Rent row, Call · WhatsApp · Notify on every resident row (Notify's SQL: see the feature file) | 1, 2, 4 |
+| F30 Guests see 3 hostels, then sign in | ✅ Built · **Wave 1 (#152)**: T34 wall, S8 hint, counter on the phone | 1 |
+| F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | ✅ Built · Part 1 wave 1 (#152) · Parts 2–4 waves 2–4 (#155): S92 Add a hostel, S93 Your hostel, import + C14 To call / To refresh / Partners, W9 / W10, rent freshness | 1–4 |
+| F29 Ask to join · ID in the owner's Drive · contact buttons for all | ✅ Built · Part 1 wave 1 (#152) · Parts 2–3 waves 2 + 4 (#155): S94 join form, H48 Ask to join, H49 review, H50 Drive, Notify SQL | 1, 2, 4 |
 | SQL + functions ship themselves (CI) | 🔨 Building | 0 |
-| F31 No explanations · priority order (whole app) | 🔨 Building | 5 |
+| F31 No explanations · priority order (whole app) | ✅ Built · Wave 5 (#155): Rule A copy, Rule B orders, H41 retired | 5 |
 Full register: `docs/IDEAS.md`. Hub answers: `docs/QUESTIONS.md`.
 
 ## Ideas (not planned yet)

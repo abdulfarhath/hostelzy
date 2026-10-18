@@ -50,7 +50,7 @@ void main() {
     expect(occupancy(s)!.pct, pct);
     await _see(tester, find.byKey(const ValueKey('occupancy')));
     expect(find.text('$pct% full'), findsOneWidget);
-    expect(find.text('$full of ${c.t} beds have a resident. Holds don’t count.'), findsOneWidget);
+    expect(find.text('$full of ${c.t} beds'), findsOneWidget);
     // The bar is the same share of its width.
     final bar = tester.getSize(find.byKey(const ValueKey('occBar'))).width - 2; // 1px border each side
     final fill = tester.getSize(find.byKey(const ValueKey('occBarFill'))).width;

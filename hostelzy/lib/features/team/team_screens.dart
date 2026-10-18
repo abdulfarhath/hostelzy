@@ -15,21 +15,18 @@ class TeamSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final a = s.account;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
         gap: 12,
         children: [
-          T('For the Hostelzy team only. Owners and tenants don’t need this.', s: 13, c: p.mu, lh: 1.45),
           if (a == null)
             const T('Sign in with your Hostelzy team Google account, then come back here.', s: 14, w: 600, lh: 1.45)
           else ...[
             T('Signed in as ${a.email}', s: 14, w: 600),
             Cta(s.teamChecking ? 'Checking…' : 'Open team tools', icon: 'lock', height: 54, px: 16, fs: 15, onTap: s.checkTeam),
           ],
-          T('The founder adds team accounts. There is no passcode.', s: 12, c: p.mu),
         ],
       ),
     );
@@ -43,14 +40,14 @@ class TeamHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
-    final tools = <(String, String, String, VoidCallback)>[
-      ('plus', 'Add hostel', 'On a visit: basics, rooms floor by floor, rates, photos, residents, go live', s.openAddHostel),
-      ('chart', 'Onboarding tracker', 'Lead → Visited → Signed up → Live → Trial → Paying', () {
+    final tools = <(String, String, VoidCallback)>[
+      ('plus', 'Add hostel', s.openAddHostel),
+      ('chart', 'Onboarding tracker', () {
         s.go('aTrack');
         s.loadTeam();
       }),
-      ('room', 'Layout editor', 'Draw and move beds, fans, AC, windows; send to the owner', () => s.openLayout(s.lRoom, editor: true)),
-      ('userPlus', 'Team members', 'Who helps with visits, layouts and payments', () {
+      ('room', 'Layout editor', () => s.openLayout(s.lRoom, editor: true)),
+      ('userPlus', 'Team members', () {
         s.go('aTeam');
         s.loadTeam();
       }),
@@ -73,7 +70,7 @@ class TeamHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final (icon, t, sub, go) in tools)
+                  for (final (icon, t, go) in tools)
                     Tap(
                       onTap: go,
                       child: Container(
@@ -83,7 +80,7 @@ class TeamHomeScreen extends StatelessWidget {
                           children: [
                             Container(width: 40, height: 40, color: p.sf, alignment: Alignment.center, child: Ic(icon, size: 20, color: p.tx)),
                             const SizedBox(width: 12),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 16), const SizedBox(height: 2), T(sub, s: 12, c: p.mu, lh: 1.35)])),
+                            Expanded(child: T(t, w: 800, s: 16)),
                             Ic('chev', size: 18, color: p.mu),
                           ],
                         ),
@@ -93,7 +90,7 @@ class TeamHomeScreen extends StatelessWidget {
                   Padding(
                     key: const ValueKey('aHomeConsole'),
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: T('Payments and Fair Play cases are in the team console: farhath.me/hostelzy/app/console', s: 13, c: p.mu, lh: 1.4),
+                    child: T('Team console · farhath.me/hostelzy/app/console', s: 13, c: p.mu, lh: 1.4),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16),
@@ -217,10 +214,6 @@ class OwnerLayoutsScreen extends StatelessWidget {
                         );
                       }(),
                   ],
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Ic('pencil', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.', s: 12, c: p.mu, lh: 1.45))]),
-                  ),
                 ],
               ),
             ),

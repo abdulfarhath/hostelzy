@@ -90,7 +90,7 @@ class SwitchSheet extends StatelessWidget {
             );
           }(),
         Tap(
-          onTap: () => s.toastMsg('Message the Hostelzy team on WhatsApp to book a visit.'),
+          onTap: () => s.toastMsg('Book a visit on WhatsApp'),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
@@ -103,17 +103,12 @@ class SwitchSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       T('Add another hostel', w: 800, s: 15, c: p.ad),
-                      T('The Hostelzy team visits to set it up', s: 12, c: p.mu),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: T('Each hostel has its own plan and its own managers.', s: 12, c: p.mu),
         ),
       ],
     );
@@ -246,7 +241,6 @@ class ManagerSheet extends StatelessWidget {
             ],
           ),
           Cta('Send invite', icon: 'msg', height: 54, px: 16, fs: 15, onTap: s.addManager),
-          T('${s.mgrName.trim().isEmpty ? 'They' : s.mgrName.trim()} join${s.mgrName.trim().isEmpty ? '' : 's'} by signing in with Google and the code we send on WhatsApp.', s: 12, c: p.mu),
         ],
       ),
     );

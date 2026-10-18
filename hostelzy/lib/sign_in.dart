@@ -70,9 +70,18 @@ class NoSignIn implements SignIn {
 /// `google-services.json` once Google sign-in is switched on in Firebase.
 const _webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
+bool _googleReady = false;
+
+/// google_sign_in is initialised once per process, for sign-in and for the
+/// Drive consent (F29 Part 3, `features/drive/drive_auth.dart`).
+Future<void> ensureGoogleReady() async {
+  if (_googleReady) return;
+  await GoogleSignIn.instance.initialize(serverClientId: _webClientId.isEmpty ? null : _webClientId);
+  _googleReady = true;
+}
+
 class FirebaseSignIn implements SignIn {
   final _auth = FirebaseAuth.instance;
-  bool _ready = false;
   String? _err;
 
   @override
@@ -92,10 +101,7 @@ class FirebaseSignIn implements SignIn {
     _err = null;
     try {
       final g = GoogleSignIn.instance;
-      if (!_ready) {
-        await g.initialize(serverClientId: _webClientId.isEmpty ? null : _webClientId);
-        _ready = true;
-      }
+      await ensureGoogleReady();
       final a = await g.authenticate();
       final cred = GoogleAuthProvider.credential(idToken: a.authentication.idToken);
       final u = (await _auth.signInWithCredential(cred)).user!;
@@ -138,7 +144,7 @@ class FirebaseSignIn implements SignIn {
   @override
   Future<void> signOut() async {
     await _auth.signOut();
-    if (_ready) await GoogleSignIn.instance.signOut();
+    if (_googleReady) await GoogleSignIn.instance.signOut();
   }
 
   @override
@@ -147,10 +153,7 @@ class FirebaseSignIn implements SignIn {
     if (u == null) return SignInFail.failed;
     try {
       final g = GoogleSignIn.instance;
-      if (!_ready) {
-        await g.initialize(serverClientId: _webClientId.isEmpty ? null : _webClientId);
-        _ready = true;
-      }
+      await ensureGoogleReady();
       final a = await g.authenticate();
       await u.reauthenticateWithCredential(GoogleAuthProvider.credential(idToken: a.authentication.idToken));
       return null;
@@ -168,6 +171,6 @@ class FirebaseSignIn implements SignIn {
   @override
   Future<void> deleteUser() async {
     await _auth.currentUser?.delete();
-    if (_ready) await GoogleSignIn.instance.disconnect();
+    if (_googleReady) await GoogleSignIn.instance.disconnect();
   }
 }

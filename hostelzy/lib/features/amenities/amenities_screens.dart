@@ -93,7 +93,7 @@ class OnEachFloor extends StatelessWidget {
           child: () {
             final ex = s.amenities.where((a) => a.hid == hid && a.inRooms).firstOrNull;
             final inRooms = ex == null ? '' : ' “${s.amenityLine(ex).replaceFirst('${ex.label} ', '')}” means the room’s own ${ex.place == 'washroom' ? 'washroom' : 'room'} has it. Each room plan shows its own.';
-            return T('Shared by everyone on that floor.$inRooms', s: 13, c: p.mu, lh: 1.4);
+            return inRooms.trim().isEmpty ? const SizedBox.shrink() : T(inRooms.trim(), s: 13, c: p.mu, lh: 1.4);
           }(),
         ),
       ],
@@ -126,7 +126,7 @@ class FloorStrip extends StatelessWidget {
                 children: [
                   T('On ${s.floorName(floor).toLowerCase()}', w: 800, s: 13),
                   const SizedBox(height: 6),
-                  if (shared.isEmpty) T('Nothing listed yet. Add the fridge, RO, washing machine…', s: 13, c: p.mu) else Wrap(spacing: 6, runSpacing: 6, children: [for (final a in shared) AmenityChip(a)]),
+                  if (shared.isEmpty) T('Nothing listed yet', s: 13, c: p.mu) else Wrap(spacing: 6, runSpacing: 6, children: [for (final a in shared) AmenityChip(a)]),
                 ],
               ),
             ),
@@ -211,12 +211,7 @@ class AmenityFloorSheet extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-            child: T(s.amBreak ? 'Tap what isn’t working (or works again).' : staff ? 'Residents can add or fix this list. You see every change here.' : 'Residents can add or fix this list. ${h.owner} sees every change.', s: 13, c: p.mu, lh: 1.4),
-          ),
-        ] else
-          Padding(padding: const EdgeInsets.all(16), child: T('Residents and ${h.owner} keep this list up to date.', s: 13, c: p.mu)),
+        ],
       ],
     );
   }
@@ -373,7 +368,7 @@ class OwnerSharedThings extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const T('A resident changed this floor', w: 800, s: 14),
-                      T('${last.label}${last.working ? '' : ' marked Not working'} · ${dayMon(DateTime.fromMillisecondsSinceEpoch(last.at))}. Keep it, or correct it.', s: 13, c: p.mu, lh: 1.4),
+                      T('${last.label}${last.working ? '' : ' marked Not working'} · ${dayMon(DateTime.fromMillisecondsSinceEpoch(last.at))}', s: 13, c: p.mu, lh: 1.4),
                     ],
                   ),
                 ),
@@ -418,7 +413,6 @@ class OwnerSharedThings extends StatelessWidget {
                       ),
                     ),
                   if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Nothing on this floor yet. Add the fridge, RO, washing machine…', s: 14, c: p.mu)),
-                  Padding(padding: const EdgeInsets.all(16), child: T('Broken things also show on Today as a repair.', s: 13, c: p.mu)),
                 ],
               ),
             ),

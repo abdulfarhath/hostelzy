@@ -49,7 +49,7 @@ extension OwnerLayoutsActions on AppState {
     if (from == null && clShape == 'Custom') return openShapeRequest(shape: 'Custom');
     final r = rooms[ownHid]!.firstWhere((x) => x.n == lRoom);
     final len = double.tryParse(clLen) ?? 0, wid = double.tryParse(clWid) ?? 0;
-    if (from == null && (len < 6 || wid < 6 || len > 60 || wid > 60)) return toastMsg('Enter the room size in feet (6 to 60).');
+    if (from == null && (len < 6 || wid < 6 || len > 60 || wid > 60)) return toastMsg('Room size: 6 to 60 ft');
     final l = mkLayout(ownHid, r, street: true)
       ..published = null
       ..live = false
@@ -75,7 +75,7 @@ extension OwnerLayoutsActions on AppState {
     if (onServer) {
       // F12: one editor at a time; the server refuses too.
       final by = edLockedBy;
-      if (by != null) return toastMsg('${by.name} is editing this room. Try again when they’re done.');
+      if (by != null) return toastMsg('${by.name} is editing this room');
       // F19 server: owners publish their own layouts (the server checks them).
       () async {
         try {
@@ -85,9 +85,9 @@ extension OwnerLayoutsActions on AppState {
           final who = RegExp(r'([^,:(]+?) is editing this room').firstMatch('$e')?.group(1)?.trim();
           if (who != null) {
             update(() => edLock = (hid: l.hid, room: l.room, name: who, mine: false));
-            return toastMsg('$who is editing this room. Try again when they’re done.');
+            return toastMsg('$who is editing this room');
           }
-          return toastMsg('Couldn’t save it. Check your internet and try again.');
+          return toastMsg('Couldn’t save. Check your internet.');
         }
         await refreshLive();
         await refreshListings();

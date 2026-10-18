@@ -184,7 +184,7 @@ void main() {
     s.goLive();
     await _settle(tester);
     expect(server.calls.last, 'live h-new');
-    expect((s.screen, s.toast), ('aTrack', 'Anjani Annex is live. The 30-day trial starts today.'));
+    expect((s.screen, s.toast), ('aTrack', 'Anjani Annex is live · trial started'));
     s.dispose();
   });
 

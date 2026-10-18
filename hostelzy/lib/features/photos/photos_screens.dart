@@ -140,7 +140,6 @@ class OwnerPhotosScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Expanded(child: T(album == 'Hostel' ? 'Drag to reorder. The first is the cover.' : 'Drag to reorder.', s: 13, c: p.mu)),
                       const SizedBox(width: 8),
                       T('$total of ${HostelDraft.minPhotos} minimum', s: 13, w: 800, c: total >= HostelDraft.minPhotos ? p.tx : p.ad),
                     ],

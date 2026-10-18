@@ -66,7 +66,7 @@ void main() {
     await _tap(tester, find.text('All areas'));
 
     // Add hostel opens the wizard on step 1.
-    await _tap(tester, find.widgetWithText(Row, 'Add hostel').last);
+    await _tap(tester, find.text('Add hostel').last);
     expect((s.screen, s.addStep), ('aAdd', 1));
     s.dispose();
   });
@@ -136,7 +136,7 @@ void main() {
     await _tap(tester, find.text('Fair Play rules: owner agreed'));
     expect(d.fairPlay, isTrue);
     expect(find.text('Go live · ${left - 1} ${left - 1 == 1 ? 'thing' : 'things'} left'), findsOneWidget);
-    expect(find.textContaining('The 30-day free trial starts today.'), findsOneWidget);
+    expect(find.textContaining('30-day free trial'), findsOneWidget);
     // Back steps back through the wizard.
     await _tap(tester, find.byType(BackBtn));
     expect((s.screen, s.addStep), ('aAdd', 6));
@@ -149,7 +149,7 @@ void main() {
     expect(find.text('Payments check'), findsNothing);
     expect(find.text('Fair Play cases'), findsNothing);
     expect(find.byKey(const ValueKey('aHomeConsole')), findsOneWidget);
-    expect(find.text('Payments and Fair Play cases are in the team console: farhath.me/hostelzy/app/console'), findsOneWidget);
+    expect(find.text('Team console · farhath.me/hostelzy/app/console'), findsOneWidget);
     expect(AppState.screens.contains('aPay') || AppState.screens.contains('aCases'), isFalse);
     s.dispose();
   });

@@ -23,6 +23,21 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    (a) **Database URL:** Supabase → Project Settings → Database → **Connect** → pick **Session pooler** (IPv4; the direct connection is IPv6 and GitHub can't reach it) → copy the URI **with the password filled in** → GitHub → hostelzy repo → Settings → Secrets and variables → Actions → **New repository secret** → name `SUPABASE_DB_URL` → paste → Save. Nothing ever prints it.
    (b) **Access token** (the old one expired 2026-10-17, so the push function `send-push`, which F27's meal asks use, isn't redeployed until this is done): https://supabase.com/dashboard/account/tokens → **Generate new token** (name `github-actions`) → copy → GitHub → Settings → Secrets and variables → Actions → `SUPABASE_ACCESS_TOKEN` → **Update** → paste → Save.
    (c) GitHub → **Actions** → "Supabase SQL" → **Run workflow** → green (it applies `docs/sql/run-all-pending.sql`, safe to run again, and checks every column of `docs/sql/check.sql` is `true`). Then Actions → "Supabase functions" → **Run workflow** → green. Done: from now on both run on their own after each merge. If one is red, send the hub the link.
+0c. **Google Places key (F28, one-time, needs the card on the Google Cloud project):** console.cloud.google.com → project
+   hostelzy → APIs & Services → Library → **Places API (New)** → Enable → Credentials → **Create credentials → API key** →
+   name `places-import` → API restrictions: **Places API (New)** only → Save → copy the key → GitHub → hostelzy repo →
+   Settings → Secrets and variables → Actions → **New repository secret** `GOOGLE_PLACES_KEY` → paste → Add. Then Actions →
+   **Import hostels** → Run workflow. Without it the import still runs OpenStreetMap and prints "No key yet". Cost: Text
+   Search (New) is billed per request; one full run is about 260 searches (32 areas × 4 terms × up to 2 pages) plus one
+   Place Details call per draft older than 30 days; the $200 monthly free credit covers a monthly run.
+0d. **Google Cloud consent screen: add the drive.file scope + the OAuth client for the app** (F29 Part 3, tenant IDs in the
+   owner's Drive). Google Cloud → the Hostelzy project (same as Google sign-in) → **APIs & Services › OAuth consent screen › Data
+   access › Add scope** → `https://www.googleapis.com/auth/drive.file` → Save. Then **Library → Google Drive API → Enable**. Then
+   **Credentials → the Web client** (the one `google-services.json` / `GOOGLE_WEB_CLIENT_ID` uses): copy its **Client ID** and
+   **Client secret**. Then Supabase → Edge Functions → **Secrets**: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, and
+   `DRIVE_TOKEN_KEY` = any long random string (e.g. `openssl rand -hex 32`; never change it after the first owner connects, or their
+   tokens can't be read). Until this is done the app says "Not available yet" in Manage › Tenant IDs and tenants send their ID on
+   WhatsApp. (While the consent screen is in "Testing", only test users can connect; publish it for everyone.)
 1. **Test the newest APK** from https://github.com/abdulfarhath/hostelzy/releases (real app `hostelzy.apk`; `hostelzy-demo.apk` has sample data). Send the hub ✅ / ❌ with screenshots.
 2. ~~Google login in the demo APK~~ (done 2026-10-02; in the app via PR #38).
 3. ~~Server rules (B5)~~ (done 2026-10-02).

@@ -110,7 +110,7 @@ extension MeterActions on AppState {
     if (rows.isEmpty) return toastMsg('Type at least one room’s meter.');
     for (final x in rows) {
       final last = meterOf(x.room, last: true)?.reading;
-      if (last != null && x.reading < last) return toastMsg('Room ${x.room}: the reading is lower than last month’s (${grouped(last)}).');
+      if (last != null && x.reading < last) return toastMsg('Room ${x.room}: lower than ${grouped(last)}');
     }
     final month = monthYear(appToday).split(' ').first;
     if (onServer) {
@@ -123,7 +123,7 @@ extension MeterActions on AppState {
         update(() => meterSaving = false);
         final m = '$e';
         if (m.contains('lower than last month')) return toastMsg(m.substring(m.indexOf('room')).split(RegExp(r'[,}\n]')).first.replaceFirst('room', 'Room'));
-        return toastMsg(meterOff || m.contains('save_meter') || m.contains('meter_readings') ? 'Electricity by meter starts after Hostelzy’s next server update.' : 'Couldn’t save it. Check your internet and try again.');
+        return toastMsg(meterOff || m.contains('save_meter') || m.contains('meter_readings') ? 'Meter: after the next server update' : 'Couldn’t save. Check your internet.');
       }
       update(() => meterSaving = false);
       await loadMeters();
@@ -137,7 +137,7 @@ extension MeterActions on AppState {
       });
     }
     back();
-    toastMsg('Added to $month rent for ${rows.length} room${rows.length == 1 ? '' : 's'}. Residents see their share on their rent.');
+    toastMsg('Added to $month rent · ${rows.length} room${rows.length == 1 ? '' : 's'}');
   }
 
   /// Rooms with a reading typed, and all rooms.

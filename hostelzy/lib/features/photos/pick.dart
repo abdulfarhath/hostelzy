@@ -11,6 +11,9 @@ abstract class PhotoPicker {
   Future<Uint8List?> pick();
 }
 
+/// W2 (F28 S92): a photo from the camera; pickers without one use the gallery.
+Future<Uint8List?> cameraPick(PhotoPicker p) => p is GalleryPicker ? p.camera() : p.pick();
+
 class NoPicker implements PhotoPicker {
   const NoPicker();
   @override
@@ -23,6 +26,11 @@ class GalleryPicker implements PhotoPicker {
   Future<Uint8List?> pick() async {
     // The phone shrinks it first; [prepPhoto] then crops and compresses.
     final f = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 2400, imageQuality: 90);
+    return f?.readAsBytes();
+  }
+
+  Future<Uint8List?> camera() async {
+    final f = await ImagePicker().pickImage(source: ImageSource.camera, maxWidth: 2400, imageQuality: 90);
     return f?.readAsBytes();
   }
 }

@@ -112,6 +112,20 @@ class RewardsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // W2 (F28 Part 2): the ₹200 / ₹20 for a hostel this user added.
+                if (s.myAdd case final a? when a.reward != null || a.verified)
+                  Container(
+                    key: const ValueKey('addReward'),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(
+                      children: [
+                        Container(width: 32, height: 32, alignment: Alignment.center, color: a.paidAt != null ? p.tx : p.sf, child: a.paidAt != null ? Ic('check', size: 16, color: p.bg) : Ic('building', size: 16, color: p.tx)),
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${fmt(a.rewardDue)} · ${a.name} ${a.partner ? 'listed' : 'verified'}', w: 800, s: 16), T(a.paidAt != null ? 'Paid ${dayMon(a.paidAt!)} by UPI' : a.queued && a.payMonth != null ? 'Queued for ${monthYear(a.payMonth!)} (monthly cap)' : 'Paid by UPI on the 5th', s: 13, c: p.mu, lh: 1.35)])),
+                      ],
+                    ),
+                  ),
                 // F24 #16 (board `trustedPerks`): what Trusted tenants get.
                 Tap(
                   key: const ValueKey('perksOpen'),
@@ -207,13 +221,6 @@ class MoveInScreen extends StatelessWidget {
                   ),
                 ),
                 if (reward > 0) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('${h.owner} gives you ${fmt(reward)} off. Hostelzy credits that ${fmt(reward)} on ${h.owner}’s next Hostelzy invoice, so the hostel loses nothing.', s: 12, c: p.mu, lh: 1.45))],
-                    ),
-                  ),
                   const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('Your reward')),
                   Container(
                     decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -269,7 +276,6 @@ class TrustedSheet extends StatelessWidget {
           check('6 months in Hostelzy hostels'),
           check('Rent paid on time every month'),
           check('Signed in to Hostelzy'),
-          Padding(padding: const EdgeInsets.only(top: 10), child: T('Hostelzy checks this from real stays. We don’t share which hostels $first stayed at before.', s: 13, c: p.mu, lh: 1.45)),
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Cta('Confirm hold', icon: 'check', height: 54, px: 16, fs: 15, onTap: () {

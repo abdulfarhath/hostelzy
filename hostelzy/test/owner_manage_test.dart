@@ -50,7 +50,7 @@ void main() {
     expect(find.textContaining('3 of 3 on.'), findsOneWidget);
     // A fourth is refused; switching one off makes room.
     await _tap(tester, find.byKey(const ValueKey('deal-first')));
-    expect(s.toast, 'Pick up to 3. Remove one first.');
+    expect(s.toast, 'Limit: 3 deals');
     await tester.pump(const Duration(seconds: 3)); // let the toast go
     await _tap(tester, find.byKey(const ValueKey('deal-laundry')));
     await _tap(tester, find.byKey(const ValueKey('deal-first')));
@@ -232,7 +232,7 @@ void main() {
     expect(find.text('Add a photo as proof'), findsNothing);
     // An empty reply is refused; a written one goes to the team.
     await _tap(tester, find.text('Send my reply'));
-    expect(s.toast, 'Write what happened, or fix the resident.');
+    expect(s.toast, 'Add your reply or a fix');
     await tester.pump(const Duration(seconds: 3)); // let the toast go
     await tester.enterText(find.byType(EditableText).first, 'Teja came through a friend.');
     await tester.pump();
