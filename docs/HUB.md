@@ -64,6 +64,9 @@ Check-in routine paused: nothing left for the chats. Waiting on the founder: SQL
 The sessions above belong to the old account and are retired. The new account's hub creates fresh chats
 (see `HANDOVER.md` §3) and replaces the table at the top with their session IDs.
 
+## 2026-10-18 · SQL ships itself
+- **#144 merged:** the "Supabase SQL" GitHub action applies `docs/sql/run-all-pending.sql` on every merge that changes SQL (and checks `docs/sql/check.sql`); the founder's only step is FOUNDER-TODO **0** (two secrets, run twice, never again). Waves 1–4 (F30, F28, F29) are being built next, one PR each.
+
 ## 2026-10-17 release
 | What | Where |
 |---|---|
