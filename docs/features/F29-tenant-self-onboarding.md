@@ -82,3 +82,7 @@ Rule A (F31) applied: no helper lines, no sheet intros. Not drawn: S39 Manage "T
 1–10 accepted as built (owner-only connect, switch only when connected, revoke on disconnect, 10-minute proxied view link,
 JPEG/PNG/WebP ≤ 6 MB, camera-only capture with a fixed draggable bar, counter restarts on reconnect, 3 Edge Function secrets
 added to the founder's one-time list, `join_hostel_for_token` hook replaced by wave 2 at integration, Rule A applied).
+
+## Hub decisions on Build 2's wave 2 extras (2026-10-18 20:50)
+F29 #1–7 accepted as built (`join_request_info(token)`, Ask to join alone under search, Approve needs an ID (tick or Drive file),
+Drive stub replaced by Build 4's pieces at integration, Rule A, demo without an ID image, no Realtime).

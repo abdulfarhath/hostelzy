@@ -343,5 +343,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   full-copy switch; ID view via a 10-minute link served by our function; IDs are camera photos ≤ 6 MB with a draggable bar.
   Stale listed rent: card and page say only "Rent on request" (+ "Ask on WhatsApp" on the page).
 
+- **2026-10-18 (hub, wave 2 extras):** payouts are recorded (`reward_payouts`; console lists what is due and marks paid);
+  a partner's ₹20 is granted by the team's "checked" tick; the owner can approve a joining tenant only with an ID received
+  (Drive file or the WhatsApp tick); the adder alone can see the owner phone they typed.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
