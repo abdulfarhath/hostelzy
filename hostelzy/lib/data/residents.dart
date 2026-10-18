@@ -91,7 +91,7 @@ List<Resident> seedResidents() => [
   Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9000000010', since: 'Since Jun 2026', paidOn: DateTime(2026, 9, 29)),
   Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000000011', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712', uid: 'sample-sai', paidOn: DateTime(2026, 9, 30)),
   Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late', phone: '9000000012', since: 'Since Nov 2025'),
-  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9000000013', via: 'direct', since: 'Joined 18 Sep', paidOn: DateTime(2026, 10, 1)),
+  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9000000013', via: 'direct', since: 'Joined 18 Sep', paidOn: DateTime(2026, 10)),
   Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late', phone: '9000000014', since: 'Since Feb 2026'),
   Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9000000015', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790', uid: 'sample-nikhil'),
   Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9000000016', since: 'Since Jan 2026', paidOn: DateTime(2026, 9, 28)),
@@ -110,9 +110,9 @@ List<Resident> seedResidents() => [
     ('Sunil Naik', '303-C', 7900, '9000000027', 'Since Apr 2026'),
     ('Ramesh Goud', '304-C', 9000, '9000000028', 'Since May 2026'),
   ])
-    Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since, paidOn: DateTime(2026, 10, 1)),
+    Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since, paidOn: DateTime(2026, 10)),
   // Added by the owner today, waiting for the resident's WhatsApp code.
-  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9000000029', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false, uid: 'sample-ravi', paidOn: DateTime(2026, 10, 1)),
+  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9000000029', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false, uid: 'sample-ravi', paidOn: DateTime(2026, 10)),
 ];
 
 /// F06 board 6: people who scanned the owner's invite QR and verified their

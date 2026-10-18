@@ -87,14 +87,14 @@ extension ResidentsActions on AppState {
     if (note.isEmpty) return toastMsg('Type the note first.');
     final first = r.name.split(' ').first;
     if (data.remote) {
-      if (r.key == null) return toastMsg('Couldn’t send it. Open the app again and try once more.');
+      if (r.key == null) return toastMsg('Couldn’t send. Try again.');
       try {
         await data.notifyResident(r.key!, note);
       } on UnsupportedError {
-        return toastMsg('Notifications to residents aren’t switched on yet. Send it on WhatsApp for now.');
+        return toastMsg('Not available yet. Use WhatsApp.');
       } catch (e) {
         debugPrint('notify: $e');
-        return toastMsg('Couldn’t send it. Check your internet and try again.');
+        return toastMsg('Couldn’t send. Check your internet.');
       }
     }
     update(() {
@@ -102,7 +102,7 @@ extension ResidentsActions on AppState {
       noteDraft = '';
       noteTo = null;
     });
-    toastMsg('Sent. $first gets it as a notification.');
+    toastMsg('Sent to $first.');
   }
 
   /// F25 "Add a resident" (the "+" tab and Residents › Add): the resident is
