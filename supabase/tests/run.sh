@@ -48,6 +48,7 @@ $P -d $DB -f tests/rates_confirm_test.sql
 $P -d $DB -f tests/indexes_test.sql
 $P -d $DB -f tests/f26_listings_test.sql
 $P -d $DB -f tests/f27_save_food_test.sql
+$P -d $DB -f tests/f28_import_test.sql
 
 # Rerun safety: the founder's one-file bundle (docs/sql/run-all-pending.sql) must succeed twice on the
 # same database. Fresh database: the migrations already run in production (before the bundle's FROM),

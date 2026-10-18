@@ -1,0 +1,51 @@
+name: Import hostels
+
+# F28 28-20 / 28-80: OpenStreetMap and Google Places → draft hostels for
+# console › Listed › To call. Monthly, or by hand (Actions → Run workflow).
+# Secrets: SUPABASE_DB_URL (the same one the SQL autorun uses) and
+# GOOGLE_PLACES_KEY (founder one-time, FOUNDER-TODO). Missing either: the job
+# prints a plain line and ends green. Keys are never printed.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 1 * *'   # 08:47 IST on the 1st of each month
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secrets present?
+        id: ok
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "No database secret yet (SUPABASE_DB_URL): nothing imported."
+            echo "db=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "db=yes" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "$GOOGLE_PLACES_KEY" ]; then
+            echo "No key yet (GOOGLE_PLACES_KEY): the Google Places import is skipped; OpenStreetMap still runs."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.ok.outputs.db == 'yes'
+        with:
+          node-version: '22'
+      - name: Install
+        if: steps.ok.outputs.db == 'yes'
+        working-directory: tools/import
+        run: npm install --no-audit --no-fund --omit=dev
+      - name: OpenStreetMap
+        if: steps.ok.outputs.db == 'yes'
+        working-directory: tools/import
+        run: node osm.mjs
+      - name: Google Places
+        if: steps.ok.outputs.db == 'yes'
+        working-directory: tools/import
+        run: node places.mjs

@@ -94,3 +94,30 @@ site, auto-rent from portals, tenants adding reviews for a hostel they added, co
 ## Design
 Boards S92 (+ partner variant), S93 (+ 5 state variants), W8 (+ sent), W9, H1 with the switch, S8 with the end row,
 S79 row, T20 button, S22 variant, C14 segments (To call, To refresh, Partners), C15 variant. Light + dark for S92, S93.
+
+## Build (wave 3 · Build 3, 2026-10-18, branch `feature/w3-import`, not merged: the original Build chat integrates waves 0→4)
+Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C15 line) and the Part 4 console segment. Handover: `docs/handover/w3-build.md`.
+
+| Piece | Where | State |
+|---|---|---|
+| 28-20 Places import | `tools/import/places.mjs` (+ `lib.mjs`, `areas.json` 32 areas, `package.json`, `test.mjs`) | Built. Text Search (New) for the 4 terms per area, drafts `status='draft', source='places'`, dedupe by `place_id` and by name within 150 m, refresh after 30 days, gone → dropped. "No key yet" exit 0 |
+| 28-80 OSM import | `tools/import/osm.mjs` | Built. Overpass `tourism=hostel`, `amenity=dormitory`, `building=dormitory` in the Hyderabad box; `source='osm'`, `place_id='osm:n…'`; credit line in the console footer |
+| Workflow | `.github/workflows/import-hostels.yml` | Built. `workflow_dispatch` + monthly (1st, 08:47 IST); plain message and exit 0 without `SUPABASE_DB_URL` / `GOOGLE_PLACES_KEY` |
+| 28-21 C14 segments | `app/console/console.js` (`listed`), `logic.js`, `console.css` | Built: **Listed · To call · To refresh · Partners**. To call: call script (6 lines), rent + For + Food, List / Not a PG / Closed / Call later, owner's web photos, Export CSV `name,phone,area,id`. To refresh: > 50 days, Export CSV, Rent confirmed today / Closed. Partners: add partner → `new_partner`, list from `partners_due()` (Build 2's SQL; honest message until it exists) |
+| C15 line | `app/console/console.js` (`claims`) | Built: "added by Ravi (resident) · owner phone matches ✓/✗" from `claim_adders()` |
+| 28-50 W8 | `app/list/index.html` (+ `mark.svg`) | Built: form → photos to the private `self-list` bucket → `self_list_request` → "We'll call you within 2 days" (sent state). No "Listed!" |
+| 28-50 W9 | `app/list/poster.html` | Built: A4 / A5 toggle, print, QR to W8, red headline "Get tenants from Hostelzy. Free listing.", Archivo, brand mark |
+| SQL | `supabase/migrations/20261018120000_f28_import.sql`, test `supabase/tests/f28_import_test.sql` | Built, rerun-safe: the 6 `hostels` columns (`add column if not exists`, same as Build 2), `self_list_requests`, `self_list_request()` (anon, 3 per phone a day), `list_draft`, `draft_not_pg`, `rent_confirmed`, `call_later`, `call_list()`, `claim_adders()`, `hostel_owner_phone()`, view `listed_rent_visible` (60 days) |
+| Checks | `tools/check.sh` | Green on the branch (analyze, Flutter tests, SQL incl. F28, 25 function tests incl. `import.test.ts`); `tools/import/test.mjs` 3/3 against the local DB. SQL bundle **not** regenerated (integrator) |
+
+### Not in the spec (wave 3, for the hub)
+1. **`hostels.removed_at`**: "Not a PG / Closed" needs a mark; the row stays (status `draft`) so the import never re-adds the same `place_id`. **`hostels.call_after`**: "Call later" puts the row last for 3 days. **`hostels.source_photos`**: Google photo *names* (the media URL needs the key), up to 3, team-only in meaning.
+2. **The owner's phone stays team-only by a trigger**, not column RLS (Postgres has none): `owner_phone_hint` stays on a row only while it is a draft (invisible to the public); on `listed`/`live` the trigger moves it to `hostel_leads.owner_phone` and blanks the column. `hostel_owner_phone(h)` (definer-only) reads either. **Build 2's `add_hostel` phone dedupe must use `hostel_owner_phone()` or check `hostel_leads` too.**
+3. `list_draft` needs **no photo** (Places/OSM drafts have none in our bucket); the team adds one later in Listed. `list_hostel` (F26) still needs one.
+4. Web-form photos go to a new private bucket **`self-list`** (anon may upload `web/<uuid>/n.jpg`, team reads via signed URLs); they are not copied into `hostel_photos`.
+5. Web-form dedupe = same name + same area (no pin on the web); a duplicate request points at the existing hostel, no second row. Phone must be an Indian mobile (6–9 start).
+6. Import gender from the name (women/ladies/girls → Women, co-living → Co-living, else Men); the call confirms. Hotels/lodges/resorts skipped unless the name says PG/hostel. Area = nearest `areas.json` centre.
+7. A gone Google place that is already `listed`/`live` keeps its row (a human confirmed it) and loses only the Google fields; only drafts are deleted.
+8. Partners segment calls Build 2's `new_partner(p_name, p_phone, p_upi)` → code and `partners_due()` → `(code, name, phone, upi, active, listed, due)`; the integrator aligns the names.
+9. The Listed segment no longer shows import/web drafts (they live in To call) nor removed rows.
+10. The import connects with `SUPABASE_DB_URL` over TLS without certificate verification (`rejectUnauthorized: false`), like `psql sslmode=require`.
