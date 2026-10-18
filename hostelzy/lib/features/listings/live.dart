@@ -106,6 +106,9 @@ Resident residentFromRow(Map<String, dynamic> r, List<Map<String, dynamic>> paym
     joinAt: joined.millisecondsSinceEpoch,
     lateDays: r['late_days'] as int? ?? 0,
     key: r['id'] as String,
+    // F29: an account on the stay = they have the app (Notify works).
+    uid: r['user_id'] as String?,
+    paidOn: last?['status'] == 'paid' ? DateTime.parse((last!['confirmed_at'] ?? last['created_at']) as String).toLocal() : null,
   )
     ..leavingOn = _day(r['leaving_on'])
     ..perks = lockedDeal(r['deal'])?.perks ?? const [];

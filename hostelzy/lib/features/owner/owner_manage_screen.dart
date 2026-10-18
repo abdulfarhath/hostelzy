@@ -560,9 +560,13 @@ class _Residents extends StatelessWidget {
             children: [
               for (final r in rows)
                 Container(
+                  key: ValueKey('resRow-${r.bed}'),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                  Row(
                     children: [
                       Container(width: 36, height: 36, alignment: Alignment.center, color: p.sf, child: T(initials(r.name), w: 800, s: 13)),
                       const SizedBox(width: 12),
@@ -603,6 +607,24 @@ class _Residents extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // F29 Part 1: Call · WhatsApp · Notify on every row. Notify is
+                  // off for a resident without the app, and the row says so.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(48, 8, 0, 0),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _ContactBtn('Call', key: ValueKey('resCall-${r.bed}'), icon: 'phone', onTap: () => s.call(r.phone)),
+                        _ContactBtn('WhatsApp', key: ValueKey('resWa-${r.bed}'), icon: 'msg', onTap: () => s.openWA(r.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: r.phone)),
+                        _ContactBtn('Notify', key: ValueKey('resNotify-${r.bed}'), icon: 'bell', onTap: r.onApp ? () => s.openNotify(r) : null),
+                        if (!r.onApp) T('Not on the app yet · Ask to join', key: ValueKey('resNoApp-${r.bed}'), s: 12, c: p.mu),
+                      ],
+                    ),
+                  ),
+                    ],
+                  ),
                 ),
               if (rows.isEmpty)
                 Padding(
@@ -628,6 +650,30 @@ class _Residents extends StatelessWidget {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// F29 Part 1: a small outlined contact action in a resident row (icon +
+/// label, 2 px rule); off (muted, no tap) when [onTap] is null.
+class _ContactBtn extends StatelessWidget {
+  const _ContactBtn(this.label, {super.key, required this.icon, required this.onTap});
+  final String label, icon;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) {
+    final p = PalScope.of(context);
+    final on = onTap != null;
+    final c = on ? p.tx : p.mu;
+    return Tap(
+      onTap: onTap,
+      enabled: on,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 36),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        decoration: box(w: 2, c: on ? p.tx : p.dv),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Ic(icon, size: 14, color: c), const SizedBox(width: 6), T(label, s: 13, w: 800, c: c, nowrap: true)]),
+      ),
     );
   }
 }

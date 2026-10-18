@@ -173,13 +173,15 @@ void main() {
       ..sortBy = 'price';
     await _pump(tester, s);
     expect(find.textContaining('BEDS FREE NOW · 6 VERIFIED · 1 LISTED'), findsOneWidget);
-    // Price ↑: bands in order; inside the listed one's band (₹7,000–9,000) every verified hostel comes first.
+    // Price ↑ (F28 Part 1, DECISIONS 2026-10-18): every verified hostel first, in price
+    // order, then the listed one (no longer interleaved by ₹2,000 band).
     final hs = filtered(s);
     int price(Hostel h) => h.listed ? h.rentMin : s.rooms[h.id]!.map((r) => r.rent).reduce((a, b) => a < b ? a : b);
-    final bands = [for (final h in hs) priceBand(price(h))];
-    expect(bands, [...bands]..sort());
-    final i = hs.indexWhere((h) => h.id == 'balaji');
-    expect(hs.skip(i + 1).where((h) => priceBand(price(h)) == priceBand(7000)).every((h) => h.listed), isTrue);
+    expect(hs.skipWhile((h) => !h.listed).every((h) => h.listed), isTrue);
+    expect(hs.last.id, 'balaji');
+    final pin = pinnedFeatured(s, hs);
+    final prices = [for (final h in hs) if (!h.listed && h != pin) price(h)];
+    expect(prices, [...prices]..sort());
     // Not ranked.
     expect(s.rankOrder.contains('balaji'), isFalse);
     // Never the featured pin, and under any other sort after every verified hostel (A's tier hook).

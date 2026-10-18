@@ -49,6 +49,9 @@ mixin _ReviewsData {
 
   /// F21 W2: only hostels with a Hostelzy deal.
   bool fDeals = false;
+
+  /// F28 Part 1: Filters › Verified only: UNVERIFIED (listed) hostels hidden.
+  bool fVerified = false;
   String mapSel = 'anjani';
   /// Food: today's weekday first (E1).
   int day = appToday.weekday - 1;
@@ -94,6 +97,14 @@ mixin _ReviewsData {
 
   /// Number the WhatsApp sheet sends to (10 digits).
   String waPhone = '';
+
+  /// F29: the H6 `wa` sheet's form: wa (a WhatsApp message) | notify (the
+  /// owner's short note, pushed to one resident).
+  String waMode = 'wa';
+
+  /// F29 Notify: the note being typed, and the resident it goes to.
+  String noteDraft = '';
+  Resident? noteTo;
 
   /// The owner's hostel (one per owner until F14).
   String ownHid = 'anjani';

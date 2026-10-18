@@ -97,12 +97,13 @@ void main() {
     expect(s.lastLink.toString(), startsWith('https://wa.me/91${r.phone}'));
     await _tap(tester, find.byKey(ValueKey('rentCall-${r.bed}')));
     expect(s.lastLink.toString(), 'tel:+91${r.phone}');
-    // Paid rows have no buttons.
+    // F29 Part 1: paid rows have the buttons too; WhatsApp carries a thanks.
     await tester.pump(const Duration(seconds: 3));
     await _tap(tester, find.textContaining('Paid ').first);
     final paid = s.residents.firstWhere((r) => r.status == 'Paid');
-    expect(find.byKey(ValueKey('rentWa-${paid.bed}')), findsNothing);
-    expect(find.byKey(ValueKey('rentCall-${paid.bed}')), findsNothing);
+    expect(find.byKey(ValueKey('rentCall-${paid.bed}')), findsOneWidget);
+    await _tap(tester, find.byKey(ValueKey('rentWa-${paid.bed}')));
+    expect(Uri.decodeComponent(s.lastLink.toString()), 'https://wa.me/91${paid.phone}?text=Hi Arjun, thanks, September rent received. – Anjani Residency');
     s.dispose();
   });
 

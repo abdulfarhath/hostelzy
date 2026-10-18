@@ -20,18 +20,19 @@ typedef HostelOrder = int Function(Hostel a, Hostel b);
 /// has only its expected range, so its lowest end.
 int cheapestRent(AppState s, Hostel h) => h.listed ? h.rentMin : s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).fold<int>(1 << 30, (a, r) => r.rent < a ? r.rent : a);
 
-/// F26 #21: the listing-tier step, run before the picked sort. Under
-/// Price ↑: ✓ VERIFIED first inside each ₹2,000 price band ([tierCompare]);
-/// under any other sort listed hostels come after every verified one.
-HostelOrder? listingTierStep(AppState s) => (a, b) => tierCompare(a, b, (h) => cheapestRent(s, h), byPrice: s.sortBy == 'price');
+/// F26 #21 / F28 Part 1: the listing-tier step, run before the picked sort:
+/// every ✓ VERIFIED hostel first, then the UNVERIFIED ones, each tier in the
+/// picked sort (whatever the sort; DECISIONS 2026-10-18).
+HostelOrder? listingTierStep(AppState s) => (a, b) => tierCompare(a, b, (h) => cheapestRent(s, h), byPrice: false);
 
 List<Hostel> filtered(AppState s) {
   final lim = {'Any': 1e9, '6k': 6000, '8k': 8000, '10k': 10000}[s.fB]!;
   bool ok(Hostel h) {
     // F26 #21: a listed (UNVERIFIED) hostel has only its expected rent range;
     // filters it can't answer (food, deals, a free bed, AC, amenities) leave it out.
+    // F28 Part 1: "Verified only" hides it.
     if (h.listed) {
-      return !s.removed(h.id) && s.inMapArea(h) && (s.fG == 'Any' || h.gender == s.fG) && h.rentMin <= lim && !s.fFood && !s.fDeals && s.fS == 'Any' && s.fR == 'Any' && s.fAm.isEmpty;
+      return !s.fVerified && !s.removed(h.id) && s.inMapArea(h) && (s.fG == 'Any' || h.gender == s.fG) && h.rentMin <= lim && !s.fFood && !s.fDeals && s.fS == 'Any' && s.fR == 'Any' && s.fAm.isEmpty;
     }
     final rs = s.rooms[h.id]!.where((r) => AppState.fits(r, s.fR)).toList();
     if (rs.isEmpty) return false;
@@ -187,6 +188,19 @@ class ExploreScreen extends StatelessWidget {
               children: [
                 // F26 #21: "· 12 verified · 84 listed" added once anything is listed.
                 PageHead(kicker: s.listState == 'ready' ? 'Hyderabad · $totalFree beds free now${s.tierLine(s.mapArea) ?? ''}' : 'Hyderabad', title: 'Find a bed', gap: 2),
+                // F30: the first-visit hint, until it is dismissed or the user signs in.
+                if (!s.signedIn && !s.guestHintOff)
+                  Row(
+                    key: const ValueKey('guestHint'),
+                    children: [
+                      Expanded(child: T('$guestFreeHostels hostels free to open, then sign in (free)', s: 13, w: 600, c: p.mu)),
+                      Tap(
+                        key: const ValueKey('guestHintClose'),
+                        onTap: s.dismissGuestHint,
+                        child: Semantics(label: 'Dismiss', child: SizedBox(width: 28, height: 28, child: Center(child: Ic('x', size: 14, color: p.mu)))),
+                      ),
+                    ],
+                  ),
                 if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere, onPin: () => openMapNearMe(s)),
               ],
@@ -473,14 +487,8 @@ class HostelCard extends StatelessWidget {
     final ribbon = cost?.hz != null ? 'Hostelzy price ${fmt(cost!.hz!)}' : best?.ribbon;
     final free = s.freeOf(h.id).f;
     return Tap(
-      onTap: () => s.update(() {
-        s.hist = [...s.hist, s.screen];
-        s.screen = 'detail';
-        s.sheet = null;
-        s.hid = h.id;
-        s.dealAc = null;
-        s.rulesOpen = false;
-      }),
+      // F30: a guest's opens are counted; the 4th verified hostel shows T34.
+      onTap: () => s.openHostel(h.id),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 22),
         child: Column(
@@ -593,13 +601,7 @@ class SavedScreen extends StatelessWidget {
                           final cost = cardCost(s, h);
                           return Tap(
                             key: ValueKey('savedRow-${h.id}'),
-                            onTap: () => s.update(() {
-                              s.hist = [...s.hist, s.screen];
-                              s.screen = 'detail';
-                              s.hid = h.id;
-                              s.dealAc = null;
-                              s.rulesOpen = false;
-                            }),
+                            onTap: () => s.openHostel(h.id),
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                               decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),

@@ -34,8 +34,36 @@ None. Client-side counter only. Sign-in is the existing Google flow (`afterSignI
 - `SharedPreferences` persisted like `opens`. Tests: 3 free, 4th walls, same hostel again is free, sign-in clears, shared link counts.
 - SCREENS: +1 state (T34). BOARD count +1.
 
+## Build (wave 1, branch `feature/w1-filter-wall-contacts`, PR #W1, 2026-10-18)
+- **State** `features/session/guest.dart`: `guestFreeHostels = 3`; `guestHostels` (the verified hostels this guest opened,
+  ids in order) and `guestHintOff`, both kept on the phone (`snapshot()` keys `guestHostels`, `guestHint`; `restore()` in
+  `state.dart`); `canOpenHostel(h)` (signed in · UNVERIFIED · one of the 3 · under 3), `wallFor(h)`, `openHostel(id)` (the one
+  opener for the hostel card, the map card, Saved and the UNVERIFIED card; `pickWhereHostel` counts too), `wallContinue()`
+  (`afterSignIn = 'wall'`, `_afterScreen = 'detail'`; Google when the build has it, else the existing sample path
+  `continueOnPhone` → About you), `wallNotNow()` (→ Explore), `dismissGuestHint()`. Sign-in clears the list (`_finishSignIn`,
+  `savePhone`), so a signed-in user has no limit.
+- **T34** `SignInWallScreen` in `features/session/guest_screens.dart`, shown by `HostelPage`
+  (`features/explore/unverified_screen.dart`) when `wallFor(h)`; the page itself is untouched. **S8 hint** in `ExploreScreen`
+  (`features/explore/explore_screen.dart`, keys `guestHint`, `guestHintClose`).
+- **Copy** (F31 Rule A, applied on the coordinator's instruction, 2026-10-18): title "Sign in to see all N hostels" (N =
+  `tierCounts(null).verified`), the state line "Your 3 free hostels: A, B, C.", red **Continue with Google**, **Not now**. The
+  spec's "Free. One tap with Google." was a helper sentence and is **dropped**. The S8 hint "3 hostels free to open, then sign in
+  (free)" stays (a count / state).
+- **Tests** `hostelzy/test/f30_guest_limit_test.dart` (7): 3 free, the 4th walls (title, names, buttons, no "Login required"),
+  re-opening one of the 3 is free, Not now → Explore, an UNVERIFIED page never walls or counts, kept on the phone; Continue with
+  Google lands on the hostel and clears the count (the sample path and a Google fake); the map card, Saved and Where? count;
+  restore / snapshot and the rules; the hint until dismissed and never when signed in; the wall fits 360 px at 2× text, light
+  and dark. No SQL.
+
 ## Not in the spec
-Nothing. Anything extra Build finds goes here and waits for the hub.
+- "A hostel opened from a shared link counts": there is **no hostel share link yet** (`app/r/` carries HZ codes only; the
+  `?h=<id>` link arrives with F28 Part 2's claim link, wave 2). Every opener goes through `openHostel`, so a link counts the day
+  it exists. decided: no new deep link in wave 1.
+- N on the wall = every live verified hostel in Explore's data (`tierCounts(null)`), not the current filtered list. decided.
+- "Not now" always goes to Explore (the spec's copy), also from the map or Saved; Android back returns to where the user was. decided.
+- The wall has no back arrow (not in the spec's element list); Android back works as everywhere. decided.
+- Sign-in empties `guestHostels`, so a later log-out starts a fresh 3 on that phone. decided.
+- "Free. One tap with Google." dropped (F31 Rule A, coordinator 2026-10-18). decided.
 
 ## Design
 **Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes): **[T34]** signInWall light + dark (logo, "Sign in to see all N hostels", "Free. One tap with Google.", the 3 hostels, red Continue with Google, Not now) · [variant of S8] first-visit hint line with a dismiss ×. Rule A (F31) applied: no other helper lines.

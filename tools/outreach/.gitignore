@@ -1,0 +1,6 @@
+# The founder's laptop only: the WhatsApp session, the record of who was messaged, and any CSV with phone numbers.
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+sent.json
+*.csv
