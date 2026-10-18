@@ -77,3 +77,8 @@ Build lists extras here; the hub decides within the day. Known later items: OneD
 - S38 (+ dark): Call · WhatsApp on the Paid row too. S40: Call · WhatsApp · Notify on every row (Notify disabled + "Not on the app yet · Ask to join ›" for a resident without the app), red Add resident · Ask to join in the beds notice.
 Rule A (F31) applied: no helper lines, no sheet intros. Not drawn: S39 Manage "Tenant IDs" row (not in the hub's list), W3 `app/j/` join-token copy (Build's wording).
 
+
+## Hub decisions on Build 4's Part 3 extras (2026-10-18 20:45)
+1–10 accepted as built (owner-only connect, switch only when connected, revoke on disconnect, 10-minute proxied view link,
+JPEG/PNG/WebP ≤ 6 MB, camera-only capture with a fixed draggable bar, counter restarts on reconnect, 3 Edge Function secrets
+added to the founder's one-time list, `join_hostel_for_token` hook replaced by wave 2 at integration, Rule A applied).
