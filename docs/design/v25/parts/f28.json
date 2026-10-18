@@ -1,0 +1,215 @@
+{
+ "boards": {
+  "f28-addHostel.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[S92] addHostel · Add a hostel: name, gate photo, pin, for, what you pay, sharing, food, owner’s name + phone (required), I live here · New (F28)",
+   "x": 0,
+   "y": 57907
+  },
+  "f28-addHostel-dark.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[dark] addHostel · Add a hostel (dark) · New (F28)",
+   "x": 0,
+   "y": 58871
+  },
+  "f28-addHostelPartner.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S92] addHostel · Partner: partner code typed once (remembered on the phone), rent as a range, ₹20 after the team check · New (F28)",
+   "x": 470,
+   "y": 58871
+  },
+  "f28-myAdd.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[S93] myAdd · Your hostel on Hostelzy: the card as tenants see it, 5 steps (Added ✓), Send to your owner (WhatsApp), honest pay line · New (F28)",
+   "x": 940,
+   "y": 57907
+  },
+  "f28-myAdd-dark.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)",
+   "x": 940,
+   "y": 58871
+  },
+  "f28-myAddAsked.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner asked: sent, no reply, Ask again after 3 days · New (F28)",
+   "x": 1410,
+   "y": 58871
+  },
+  "f28-myAddAgreed.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner agreed: team visits within 7 days, UPI ID asked once · New (F28)",
+   "x": 1880,
+   "y": 58871
+  },
+  "f28-myAddVerified.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Verified: card goes VERIFIED, ₹200 due on the 5th · New (F28)",
+   "x": 2350,
+   "y": 58871
+  },
+  "f28-myAddPaid.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · ₹200 paid by UPI · New (F28)",
+   "x": 2820,
+   "y": 58871
+  },
+  "f28-myAddWaiting.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Still waiting (60 days): steps stop at Owner asked, no payout, Ask again · New (F28)",
+   "x": 3290,
+   "y": 58871
+  },
+  "f28-myAddQueued.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Queued: monthly ₹2,000 cap reached, pays next month · New (F28)",
+   "x": 3760,
+   "y": 58871
+  },
+  "f28-wList.dc.html": {
+   "w": 390,
+   "h": 1360,
+   "title": "[W8] app/list/ · List your PG on Hostelzy, free: name, your name, phone, area, rent from–to, for, food, photos → Send to Hostelzy; “We’ll call you within 2 days” · New (F28)",
+   "x": 4230,
+   "y": 57907
+  },
+  "f28-wListSent.dc.html": {
+   "w": 390,
+   "h": 900,
+   "title": "[variant of W8] app/list/ · Sent: “We’ll call you within 2 days to confirm”, 3 steps, no “Listed!” · New (F28)",
+   "x": 4230,
+   "y": 59387
+  },
+  "f28-wPoster.dc.html": {
+   "w": 794,
+   "h": 1123,
+   "title": "[W9] app/list/poster.html · Printable A4 poster: “Get tenants from Hostelzy. Free listing.”, QR to app/list/, 3 steps · New (F28)",
+   "x": 4700,
+   "y": 57907
+  },
+  "r-filters.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[H1] filters sheet · For, Room, Budget (Any), Food included, Verified only (off) · Updated (F28)",
+   "x": 940,
+   "y": 2528
+  },
+  "f28-explore.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S8] explore · First-visit hint line, verified cards then listed ones, end row “Can’t find your PG? Add it” · New (F28)",
+   "x": 5574,
+   "y": 57907
+  },
+  "me.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[S79] me · Add a hostel row (becomes “Your hostel” → S93 once one exists); no Saved / Holds rows; Log out in red · Updated (F28)",
+   "x": 3290,
+   "y": 5056
+  },
+  "w3-stayNotYet.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[T20] rStay · Not on Hostelzy yet: Add my hostel button · Updated (F28)",
+   "x": 4230,
+   "y": 29520
+  },
+  "f28-rewards.dc.html": {
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S22] rewards · Hostels you added: ₹200 hostel verified (paid by UPI on the 5th), ₹20 partner listing · New (F28)",
+   "x": 6044,
+   "y": 57907
+  },
+  "f26-c14.dc.html": {
+   "w": 1440,
+   "h": 900,
+   "title": "[C14] console · Listed: segments Listed · To call · To refresh · Partners, Export CSV; list a hostel as UNVERIFIED, source column, List it / Take off · Updated (F28)",
+   "x": 7990,
+   "y": 55387
+  },
+  "f28-c14ToCall.dc.html": {
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › To call: drafts from Places / OSM / web, phone, 6-line call script, rent + for + food, List / Not a PG / Call later, Export CSV · New (F28)",
+   "x": 6514,
+   "y": 57907
+  },
+  "f28-c14ToRefresh.dc.html": {
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › To refresh: listed hostels past 50 days, Rent confirmed today / Closed, Export CSV · New (F28)",
+   "x": 8034,
+   "y": 57907
+  },
+  "f28-c14Partners.dc.html": {
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › Partners: add partner (code made for them), list with listed / checked counts, ₹ due, Active · New (F28)",
+   "x": 9554,
+   "y": 57907
+  },
+  "f28-c15.dc.html": {
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C15] console · Claims: “added by Ravi (resident) · owner phone matches ✓”, partner line with ✗ · New (F28)",
+   "x": 11074,
+   "y": 57907
+  }
+ },
+ "order": [
+  "f28-addHostel.dc.html",
+  "f28-addHostel-dark.dc.html",
+  "f28-addHostelPartner.dc.html",
+  "f28-myAdd.dc.html",
+  "f28-myAdd-dark.dc.html",
+  "f28-myAddAsked.dc.html",
+  "f28-myAddAgreed.dc.html",
+  "f28-myAddVerified.dc.html",
+  "f28-myAddPaid.dc.html",
+  "f28-myAddWaiting.dc.html",
+  "f28-myAddQueued.dc.html",
+  "f28-wList.dc.html",
+  "f28-wListSent.dc.html",
+  "f28-wPoster.dc.html",
+  "r-filters.dc.html",
+  "f28-explore.dc.html",
+  "me.dc.html",
+  "w3-stayNotYet.dc.html",
+  "f28-rewards.dc.html",
+  "f26-c14.dc.html",
+  "f28-c14ToCall.dc.html",
+  "f28-c14ToRefresh.dc.html",
+  "f28-c14Partners.dc.html",
+  "f28-c15.dc.html"
+ ],
+ "row_note": {
+  "f28": {
+   "kind": "title1",
+   "maxW": 12594,
+   "text": "F28 · Every Hyderabad hostel in: S92 addHostel, S93 myAdd, W8 app/list, W9 poster + variants; H1, S8, S79, T20, S22, C14, C15 changes",
+   "w": 240,
+   "x": 0,
+   "y": 57507
+  }
+ },
+ "updated_in_place": [
+  "r-filters.dc.html",
+  "me.dc.html",
+  "w3-stayNotYet.dc.html",
+  "f26-c14.dc.html"
+ ],
+ "base": "main-canvas v24 (docs/design/main-canvas/project/canvas.json), new row y = max y + 1200 = 57907"
+}
