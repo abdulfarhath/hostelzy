@@ -54,3 +54,16 @@ Not mirrored on purpose: Build's "33 of 40 beds" line under This month (the stat
 ## Next
 Build 5's toast / push tables and orders are still to come; if they change a board, the hub says so.
 If Build 5's table of removed lines changes again in `docs/features/F31-no-explanations-priority.md › Build`, re-check the `A` table in `scripts/f31.py` against it, add any line Build removed that the boards still show, rebuild, push again.
+
+## v26 publish set (Design, 2026-10-18) · 457 boards, **191 counted** = SCREENS on `main`
+Publish with `root` = `docs/design/v26`, `file_path` = `project/canvas.json`; `publish.json` lists every file to add or change (221: the index + 220 boards) and the 6 to delete. Rebuild: `python3 docs/design/v26/scripts/v26.py` (after `f31.py`).
+
+| | |
+|---|---|
+| Start | v25 live index (461 boards, 188 counted) + `parts/f31.json` (216 retitled in place, 4 retired: `f20-Offer` = H41, `f20-Home`, `f20-HomeDark`, `f20-HomeTenant`) |
+| **T35** `myAdd` empty | new `f28-myAddEmpty` (kicker Me · "No hostel added yet" · Add a hostel), after S93's variants |
+| **T36** `joinForm` sent | `f29-joinFormDone` retitled `[T36]` (was a variant of S94) |
+| **T37** `joinForm` closed | new `f29-joinFormClosed` (red box "This bed was just taken, ask your owner."), end of the F29 row |
+| **W9 sent** | `f28-wListSent` retitled `[W9 · sent]` (was a variant of W9); SCREENS gives the state no id of its own, so the count regex is `^\[[SHTCW]\d+( · sent)?\]` |
+| Room | 2 new files → 2 archive boards off the artifact (kept in git, `docs/design/main-canvas/project`): `z-f21-Help` (→ retired S27), `z-f21-Stay` (DROPPED) |
+| Count | S 87 · H 46 · T 33 · C 15 · W 10 = **191**; every SCREENS id has exactly one main board, no extra ids |
