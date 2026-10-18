@@ -64,8 +64,44 @@ one-time: Drive scope on the consent screen (wave 4). Everything ships with the 
 - Demo (sample data): one pending join request with a sample ID placeholder image (drawn, not a real document).
 - SCREENS: +1 screen (S94), +3 sheets (H48–H50). Changed S36, S38, S40, W3.
 
+## Build · Part 1 (wave 1, branch `feature/w1-filter-wall-contacts`, PR #W1, 2026-10-18)
+- **Model** `lib/data/residents.dart`: `Resident.uid` (`stays.user_id`; `onApp`) and `Resident.paidOn` (the last paid rent's
+  `confirmed_at` / `created_at`; a move-in payment = the join date; the sample rows carry their dates), parsed in
+  `features/listings/live.dart` `residentFromRow`; `copy()` and the Fair Play fix path keep both.
+- **S38** `features/owner/owner_rent_screen.dart`: **Call · WhatsApp** on every row (the Paid rows' blank spacer went);
+  `rentThanks(s, r)` = "Hi Ravi, thanks, August rent received. – <hostel>" (the month of the payment), `rentWhatsApp(s, r)` by
+  status (Paid → thanks; Due / Late / Waiting → `rentReminder`).
+- **S40** `features/owner/owner_manage_screen.dart` (`_Residents`, `_ContactBtn`): under every row **Call** (`call`),
+  **WhatsApp** (the H6 sheet with the Beds › Message resident greeting, `openWA`), **Notify** (`openNotify`); a resident without
+  the app: Notify muted, no tap, and "Not on the app yet · Ask to join" as plain text (key `resNoApp-<bed>`).
+- **Notify** `features/residents/residents.dart` `openNotify` / `sendNote`: the H6 `wa` sheet in its Notify form (`waMode =
+  'notify'`, `noteDraft`, `noteTo` in `reviews.dart`; `WaSheet` in `features/holds/holds_sheets.dart`; title "Notify X", kicker
+  "Residents · bed N" in `ui/shell.dart`): the note field and **Send**, nothing else (F31 Rule A). `HostelRepo.notifyResident
+  (stayKey, note)` → `SupabaseRepo` RPC `notify_resident(p_stay, p_note)`; a missing function → `UnsupportedError` → toast "Not
+  available yet. Use WhatsApp."; sample data (no server) → "Sent to Ravi." like the demo's other sample actions. Toasts ≤ 6 words.
+- **Tests** `hostelzy/test/f29_contacts_test.dart` (5): Rent rows and texts by status (the Paid filter too); Residents rows,
+  Notify off with the text, WhatsApp → H6, the note sends, WhatsApp is the plain sheet again; the server path (`uid`, `paidOn`,
+  the RPC call, "not available yet"); Rent and Residents fit 360 px at 2× text, light and dark. Updated `owner_test`,
+  `f26_owner_test` (paid rows have the buttons now). No SQL in wave 1.
+
 ## Not in the spec
-Build lists extras here; the hub decides within the day. Known later items: OneDrive, OCR masking, police verification form export.
+- **Notify needs SQL** (wave 1 ships none): the app has no push it can send today (`push_outbox` has no client policy;
+  `tell_resident` is server-internal, execute revoked). The app already calls RPC **`notify_resident(p_stay uuid, p_note
+  text)`** and says "Not available yet. Use WhatsApp." until it exists. For wave 2's `f29_join.sql` (or now, if the hub says so):
+  `security definer set search_path = ''`; only staff of the stay's hostel (`is_staff`); the stay current (`left_on is null`)
+  with a `user_id`; `p_note` trimmed, 1–200 chars; `insert into push_outbox (user_id, title, body, data, kind)` with the hostel's
+  name as the title, the note as the body, `{"screen":"rHome"}`, kind `note`; `grant execute … to authenticated`; a SQL test.
+  decided: wire the app now, the function lands with Part 2.
+- The note sheet is a **variant of H6 `wa`** (same key, `waMode`), not a new sheet id: Design draws no new board; the hub may
+  give it its own id later. decided.
+- S40 WhatsApp text = the existing Beds › Message resident greeting ("Hi, this is <owner> from <hostel>."), through the H6
+  sheet, as the bed sheet does. decided.
+- "Ask to join" is plain text in wave 1; wave 2 (H48) turns it into the link: open H48 for that resident from key
+  `resNoApp-<bed>`. (For wave 2.)
+- Sample data: who is on the app (Rahul Varma, Sai Kiran, Nikhil Goud, Ravi Teja = the demo resident and those who came
+  through Hostelzy) and the paid dates added to the sample rows. decided.
+- "On the app" = an account on the stay (`stays.user_id`), so an owner-added resident who never signed up gets the text. decided.
+- Build lists extras here; the hub decides within the day. Known later items: OneDrive, OCR masking, police verification form export.
 
 ## Design
 Boards H48, S94 (+ done variant), H49 (+ Drive and WhatsApp variants), H50 (+ not-available variant), S36 Joining tab variant,
