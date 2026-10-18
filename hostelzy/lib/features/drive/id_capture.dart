@@ -91,7 +91,7 @@ class _IdCaptureState extends State<IdCapture> {
       // Shrunk to 1600 px, as taken (no crop): the whole card stays in.
       final prepped = prepPhoto(raw, 'free');
       if (prepped == null) {
-        setState(() => _error = 'That isn’t a photo. Try again.');
+        setState(() => _error = 'Not a photo');
         return;
       }
       final im = img.decodeImage(prepped);
@@ -115,16 +115,16 @@ class _IdCaptureState extends State<IdCapture> {
     });
     try {
       final bytes = _full ? photo : maskImage(photo, _bar);
-      if (bytes == null) throw const DriveFail('bad_image', 'That isn’t a photo. Try again.');
+      if (bytes == null) throw const DriveFail('bad_image', 'Not a photo');
       final id = await s.data.idUpload(widget.token, bytes);
       if (!mounted) return;
       setState(() => _fileId = id);
       widget.onUploaded(id);
     } on DriveFail catch (e) {
-      if (mounted) setState(() => _error = e.code == 'not_ready' ? 'Not available yet. Send your ID on WhatsApp instead.' : e.message);
+      if (mounted) setState(() => _error = e.code == 'not_ready' ? 'Not available yet' : e.message);
     } catch (e) {
       debugPrint('id upload: $e');
-      if (mounted) setState(() => _error = 'Couldn’t upload. Check your internet and try again.');
+      if (mounted) setState(() => _error = 'Couldn’t upload');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -145,7 +145,7 @@ class _IdCaptureState extends State<IdCapture> {
           children: [
             Ic('check', size: 18, color: p.tx),
             const SizedBox(width: 10),
-            Expanded(child: T('Uploaded to $who’s Google Drive. Nothing is kept on Hostelzy.', s: 14, lh: 1.4)),
+            Expanded(child: T('Uploaded to $who’s Drive', w: 800, s: 14)),
           ],
         ),
       );
@@ -154,11 +154,10 @@ class _IdCaptureState extends State<IdCapture> {
       gap: 10,
       children: [
         if (photo == null) ...[
-          T('It goes straight to $who’s own Google Drive; Hostelzy never stores it.', s: 13, c: p.mu, lh: 1.45),
           Cta(_busy ? 'Opening the camera…' : 'Take a photo of your ID', key: const ValueKey('idTake'), icon: 'camera', height: 54, px: 16, fs: 15, opacity: _busy ? .6 : 1, onTap: _busy ? null : _take),
         ] else ...[
-          T(_full ? '$who needs the full copy (police file). Check the photo is sharp.' : 'Cover the first 8 digits', w: 800, s: 15, key: const ValueKey('idGuide')),
-          if (!_full) T('Drag the black bar over the first 8 digits of the ID number. Only the last 4 stay visible.', s: 13, c: p.mu, lh: 1.45),
+          // F31 Rule A: the guide is the one label; no sentence under it.
+          T(_full ? 'Full copy needed (police file)' : 'Cover the first 8 digits', w: 800, s: 15, key: const ValueKey('idGuide')),
           LayoutBuilder(
             builder: (context, c) {
               final w = c.maxWidth, h = w / _ratio;

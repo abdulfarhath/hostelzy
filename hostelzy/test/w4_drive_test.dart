@@ -12,6 +12,7 @@ import 'package:hostelzy/features/listings/repo.dart';
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/features/photos/pick.dart';
 import 'package:hostelzy/state.dart';
+import 'package:hostelzy/ui/common.dart' show Cta;
 import 'package:hostelzy/ui/kit.dart';
 import 'package:hostelzy/ui/shell.dart';
 import 'package:image/image.dart' as img;
@@ -58,6 +59,9 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
   await tester.tap(f);
   await tester.pump();
 }
+
+/// The H50 status line says [t] (the Manage row behind the sheet may say the same).
+Finder _status(String t) => find.descendant(of: find.byKey(const ValueKey('driveStatus')), matching: find.text(t));
 
 /// A server with Drive: what the owner connected, what tenants uploaded.
 class _Server extends SampleRepo {
@@ -208,24 +212,24 @@ void main() {
       await _pump(tester, s);
       final row = find.byKey(const ValueKey('manage-Tenant IDs'));
       expect(row, findsOneWidget);
-      expect(find.text('In your own Google Drive'), findsOneWidget);
       await _tap(tester, row);
       expect(s.sheet, 'drive');
       await tester.pump();
       expect(find.text('Tenant IDs in your Drive'), findsOneWidget);
-      expect(find.text('Keep tenant IDs in your own Google Drive. Hostelzy never stores them.'), findsOneWidget);
+      // F31 Rule A: a status line, the button, the switch; nothing explained.
+      expect(_status('Not connected'), findsOneWidget);
       expect(find.byKey(const ValueKey('driveNotYet')), findsNothing);
+      expect(find.byKey(const ValueKey('fullCopy')), findsNothing);
+      expect(find.textContaining('Hostelzy never stores'), findsNothing);
       await _tap(tester, find.byKey(const ValueKey('driveConnect')));
       await tester.pump();
       expect(s.driveStatus?.connected, isTrue);
       expect(find.text('Connected · 0 files'), findsOneWidget);
-      expect(s.toast, 'Google Drive connected.');
+      expect(s.toast, 'Google Drive connected');
       expect(find.text('Full copy needed (police file)'), findsOneWidget);
-      expect(find.textContaining('Off: the tenant covers the first 8 digits'), findsOneWidget);
       await _tap(tester, find.byKey(const ValueKey('fullCopy')));
       await tester.pump();
       expect(s.driveStatus?.fullCopy, isTrue);
-      expect(find.textContaining('On: the tenant sends the whole ID.'), findsOneWidget);
       expect((await const SampleRepo().driveStatus('anjani'))?.fullCopy, isTrue);
       await _tap(tester, find.byKey(const ValueKey('driveDisconnect')));
       await tester.pump();
@@ -234,7 +238,7 @@ void main() {
       // The Manage row follows.
       s.update(() => s.sheet = null);
       await tester.pump();
-      expect(find.text('Not connected · IDs come on WhatsApp'), findsOneWidget);
+      expect(find.text('Not connected'), findsOneWidget);
       await tester.pump(const Duration(seconds: 4)); // let the toast go
       _end(s);
     }
@@ -263,7 +267,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('driveDisconnect')));
     await tester.pump();
     expect(srv.calls.last, 'disconnect anjani');
-    expect(s.toast, 'Disconnected. Your files stay in your Drive.');
+    expect(s.toast, 'Disconnected');
     // The owner backs out of Google's consent: nothing happens, no "not available".
     s.driveAuth = _Code(null, DriveAuthFail.cancelled);
     await _tap(tester, find.byKey(const ValueKey('driveConnect')));
@@ -282,12 +286,12 @@ void main() {
     await _pump(tester, s);
     await _tap(tester, find.byKey(const ValueKey('manage-Tenant IDs')));
     await tester.pump();
+    // F31: one line, no button.
     expect(find.byKey(const ValueKey('driveNotYet')), findsOneWidget);
-    expect(find.textContaining('Hostelzy’s server doesn’t have Google Drive yet'), findsOneWidget);
+    expect(find.text('Not available yet'), findsOneWidget);
     expect(find.byKey(const ValueKey('driveConnect')), findsNothing);
-    await _tap(tester, find.byKey(const ValueKey('driveRetry')));
-    await tester.pump();
-    expect(none.calls, ['status anjani', 'status anjani']);
+    expect(find.byType(Cta), findsNothing);
+    expect(none.calls, ['status anjani']);
     // 2. Google refuses the Drive scope on this device (consent screen lacks it).
     final srv = _Server();
     s.data = srv;
@@ -296,7 +300,9 @@ void main() {
     await tester.pump();
     await _tap(tester, find.byKey(const ValueKey('driveConnect')));
     await tester.pump();
-    expect(find.textContaining('Google hasn’t allowed Drive access for Hostelzy yet'), findsOneWidget);
+    expect(s.driveUnavailable, 'scope');
+    expect(find.text('Not available yet'), findsOneWidget);
+    expect(find.byKey(const ValueKey('driveConnect')), findsNothing);
     expect(srv.calls.any((c) => c.startsWith('connect')), isFalse);
     // 3. The server says no_scope.
     final noScope = _Server(connectFail: const DriveFail('no_scope', 'Google didn’t allow Drive access'));
@@ -329,7 +335,7 @@ void main() {
     await _pump(tester, s);
     await _tap(tester, find.byKey(const ValueKey('manage-Tenant IDs')));
     await tester.pump();
-    expect(find.byKey(const ValueKey('driveOwnerOnly')), findsOneWidget);
+    expect(_status('Not connected'), findsOneWidget);
     expect(find.byKey(const ValueKey('driveConnect')), findsNothing);
     srv.st = (connected: true, files: 3, fullCopy: false);
     await s.loadDrive();
@@ -364,7 +370,7 @@ void main() {
       String? got;
       await _pumpWidget(tester, s, IdCapture(key: ValueKey(dark), token: 'tok-1', fullCopy: false, ownerName: 'Srinivas', camera: cam, onUploaded: (id) => got = id), dark: dark);
       expect(find.text('Take a photo of your ID'), findsOneWidget);
-      expect(find.textContaining('Srinivas’s own Google Drive; Hostelzy never stores it.'), findsOneWidget);
+      expect(find.byType(T), findsOneWidget, reason: 'F31: the button only, no sentence under it');
       await _tap(tester, find.byKey(const ValueKey('idTake')));
       await tester.pump();
       expect(cam.taken, 1);
@@ -381,7 +387,7 @@ void main() {
       expect(srv.calls.last, 'upload tok-1 image/jpeg');
       expect(got, 'file-1');
       expect(find.byKey(const ValueKey('idDone')), findsOneWidget);
-      expect(find.textContaining('Uploaded to Srinivas’s Google Drive'), findsOneWidget);
+      expect(find.text('Uploaded to Srinivas’s Drive'), findsOneWidget);
       final im = img.decodeImage(srv.uploads.single)!;
       expect(_dark(im, .02, .02), isTrue);
       expect(_dark(im, .3, .66), isFalse);
@@ -398,7 +404,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('idTake')));
     await tester.pump();
     expect(find.byKey(const ValueKey('maskBar')), findsNothing);
-    expect(find.textContaining('needs the full copy (police file)'), findsOneWidget);
+    expect(find.text('Full copy needed (police file)'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('idRetake')));
     await tester.pump();
     expect(cam.taken, 2);
@@ -407,7 +413,7 @@ void main() {
     final im = img.decodeImage(srv.uploads.single)!;
     expect(_dark(im, .3, .66), isFalse);
     // Not available yet / the owner isn't connected: said on the spot, the tenant can try again.
-    for (final (fail, words) in [(const DriveFail('not_ready', 'x'), 'Not available yet. Send your ID on WhatsApp instead.'), (const DriveFail('not_connected', 'The owner hasn’t connected Google Drive'), 'The owner hasn’t connected Google Drive')]) {
+    for (final (fail, words) in [(const DriveFail('not_ready', 'x'), 'Not available yet'), (const DriveFail('not_connected', 'The owner hasn’t connected Google Drive'), 'The owner hasn’t connected Google Drive')]) {
       final bad = _Server(connectFail: fail);
       s.data = bad;
       await _pumpWidget(tester, s, IdCapture(key: ValueKey(fail.code), token: 'tok-1', fullCopy: false, camera: _Camera(_photo()), onUploaded: (_) {}));
@@ -428,7 +434,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('idTake')));
     await tester.pump();
     expect(find.byKey(const ValueKey('maskBar')), findsNothing);
-    expect(find.textContaining('needs the full copy (police file)'), findsOneWidget);
+    expect(find.text('Full copy needed (police file)'), findsOneWidget);
     // The camera closed without a photo: back to the button.
     await _pumpWidget(tester, s, IdCapture(key: const ValueKey('none'), token: 'tok-1', fullCopy: false, camera: _Camera(null), onUploaded: (_) {}));
     await _tap(tester, find.byKey(const ValueKey('idTake')));
@@ -455,7 +461,7 @@ void main() {
     s.data = off;
     await _pumpWidget(tester, s, const IdThumb(key: ValueKey('off'), hid: 'anjani', fileId: 'file-9'));
     await tester.pump();
-    expect(find.text('Not available yet.'), findsOneWidget);
+    expect(find.text('Not available yet'), findsOneWidget);
     s.data = const SampleRepo();
     await _pumpWidget(tester, s, const IdThumb(key: ValueKey('sample'), hid: 'anjani', fileId: 'sample-id-1'));
     await tester.pump();

@@ -45,11 +45,11 @@ class _IdThumbState extends State<IdThumb> {
       builder: (context, snap) {
         if (snap.hasError) {
           final e = snap.error;
-          final why = e is DriveFail ? (e.code == 'not_ready' ? 'Not available yet.' : e.message) : 'Couldn’t load the ID. Check your internet and try again.';
+          final why = e is DriveFail ? (e.code == 'not_ready' ? 'Not available yet' : e.message) : 'Couldn’t load';
           return frame(Padding(padding: const EdgeInsets.all(12), child: T(why, s: 13, c: p.mu, lh: 1.4, key: const ValueKey('idThumbError'))));
         }
         final link = snap.data;
-        if (link == null) return frame(T('Loading the ID…', s: 13, c: p.mu, key: const ValueKey('idThumbLoading')));
+        if (link == null) return frame(T('Loading…', s: 13, c: p.mu, key: const ValueKey('idThumbLoading')));
         // Demo data: no real Drive, a drawn stand-in (never a real document).
         if (link.url.isEmpty) {
           return frame(
@@ -65,7 +65,7 @@ class _IdThumbState extends State<IdThumb> {
             link.url,
             fit: BoxFit.contain,
             width: double.infinity,
-            errorBuilder: (_, _, _) => Padding(padding: const EdgeInsets.all(12), child: T('Couldn’t load the ID here. Tap to open it in Drive.', s: 13, c: p.mu, lh: 1.4, key: const ValueKey('idThumbError'))),
+            errorBuilder: (_, _, _) => Padding(padding: const EdgeInsets.all(12), child: T('Open in Drive', s: 13, w: 800, c: p.mu, key: const ValueKey('idThumbError'))),
           ),
           open: link.open,
         );

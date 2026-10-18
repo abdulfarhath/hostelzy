@@ -65,7 +65,7 @@ extension DriveActions on AppState {
         driveStatus = st;
         driveUnavailable = null;
       });
-      toastMsg('Google Drive connected.');
+      toastMsg('Google Drive connected');
     } on DriveFail catch (e) {
       debugPrint('drive connect: $e');
       switch (e.code) {
@@ -78,7 +78,7 @@ extension DriveActions on AppState {
       }
     } catch (e) {
       debugPrint('drive connect: $e');
-      toastMsg('Couldn’t connect. Check your internet and try again.');
+      toastMsg('Couldn’t connect');
     } finally {
       update(() => driveBusy = false);
     }
@@ -93,13 +93,13 @@ extension DriveActions on AppState {
     try {
       final st = await data.driveDisconnect(hid);
       update(() => driveStatus = st);
-      toastMsg('Disconnected. Your files stay in your Drive.');
+      toastMsg('Disconnected');
     } on DriveFail catch (e) {
       debugPrint('drive disconnect: $e');
-      toastMsg(e.code == 'not_ready' ? 'Not available yet.' : e.message);
+      toastMsg(e.code == 'not_ready' ? 'Not available yet' : e.message);
     } catch (e) {
       debugPrint('drive disconnect: $e');
-      toastMsg('Couldn’t disconnect. Check your internet and try again.');
+      toastMsg('Couldn’t disconnect');
     } finally {
       update(() => driveBusy = false);
     }
@@ -116,7 +116,7 @@ extension DriveActions on AppState {
     } catch (e) {
       debugPrint('full copy: $e');
       update(() => driveStatus = st);
-      toastMsg('Couldn’t save that. Check your internet and try again.');
+      toastMsg('Couldn’t save');
     }
   }
 }
