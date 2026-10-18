@@ -225,3 +225,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **04:10**
 > structure all the chats
+
+**04:30**
+> I want to have a filter of verified and unverified hostels. And the plan is to scrape all the data from internet and put the actual details of all the hostels in the verified hostels will be having the detailed information rather than the dummy information scrapped from the internet. So can we scrap from Google Maps or any other platform like that? Ideate on this

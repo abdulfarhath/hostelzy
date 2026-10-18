@@ -47,6 +47,7 @@ Money questions Q1–Q9 with recommendations: `docs/finance/plan.md` §0. Market
 Kept out by Build until confirmed: Building view, owner corridor floor plan, menu week table (dropped in the F22 redesign).
 
 ## Ideas (not planned yet)
+- **F28 Verified filter + listed-hostel import** (founder 2026-10-18, ideating): `features/F28-listed-hostels-import.md`.
 From the first prototype: compare hostels, "make an offer", safety tab, SOS / emergency, move-in handover, parent view of a stay,
 owner staff / mess headcount / expenses and P&L, chains of hostels, bed-level pricing, a room notice board.
 
