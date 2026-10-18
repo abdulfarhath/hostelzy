@@ -225,3 +225,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **04:10**
 > structure all the chats
+
+**06:30**
+> start designing and building everything. You should never require my input. Keep the tasks as milestones and keep building one after the other. If there is any decision making thing, take your own decisions as of now and put them in decisions.md. And if there are any questions, answer them yourself as of now. Put them in questions.md. And never test anything. I'll be the one who will be testing everything. So after you build everything, if there are any changes to be made, I'll be changing them. Otherwise, the one you have done will be finalized forever. So most of the time I'll be depending on you only for decisions. I'll not make any decisions as of now. So until the entire build process is done, I don't want you to ask me anything. You notify me once everything is done. What I'm expecting is a new design and also a new APK and other things that you have mentioned. Keep going, you can do it.

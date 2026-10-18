@@ -41,7 +41,9 @@ Read, in order: this file → `founder-messages.md` (their words) → `../HANDOV
 6. **Parallel work.** The hub runs Build and Design (and Marketing, Finance, Brand when needed) as separate chats and keeps them moving.
 7. **Take your own decisions** on product details and record them in `DECISIONS.md` with the date. Only money amounts,
    accounts, keys, SQL runs and store listings go to the founder.
-8. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
+8. **As little work as possible for the founder (2026-10-18).** One-time setup steps only, batched; everything repeatable
+   (SQL, functions, APK, pages) ships itself from `main`. Never hand them a recurring step.
+9. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
    Hostelzy price, ₹100 reward) and a confirmed Paid. Navy `#1f3a5f` = ✓ VERIFIED. Grey outline = UNVERIFIED.
 9. Never touch the site root `index.html` (their old prototype page).
 
@@ -70,6 +72,12 @@ Read, in order: this file → `founder-messages.md` (their words) → `../HANDOV
 | 2026-10-06 05:10 | F27 design approved → main canvas v23 (178 boards). Build started F27 |
 | 2026-10-06 05:22 | Founder found unrequested changes in the prototype → audit (`F26-CHANGE-LIST.md`), 12 reverts ordered, "only what the spec says" rule |
 | 2026-10-06 05:30 | Second account move. Repo prepared: `HANDOVER.md`, this memory, Build and Design notes on their branches |
+
+## 5b. 2026-10-18: the autonomous build run
+Founder: "start designing and building everything, never require my input, decide yourself (DECISIONS.md), answer questions
+yourself (QUESTIONS.md), never test, notify me once everything is done; I expect a new design and a new APK." Specs F28,
+F29, F30 are final; waves 1–4 in `docs/IDEAS.md`; Build + Design run them; the hub publishes the canvas and the prototype
+at the end and sends ONE message with the APK release page, the canvas, the prototype, QUESTIONS.md and the one-time setup list.
 
 ## 6. Open threads (pick these up without being asked)
 | # | Thread | Next step |
