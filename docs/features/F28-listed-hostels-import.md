@@ -86,6 +86,13 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 - Wave 1: Part 1. Wave 2: Part 2 (S92, S93, entry points, rewards, C14 Partners, C15 line). Wave 3: Part 3. Wave 4: Part 4.
 - Demo (sample data): one hostel "added by you" at step "Owner asked", one partner code `HZ-PART-1`.
 - SCREENS: +2 screens (S92, S93), +2 web pages (W9, W10; W8 is already app/delete-account). Changed H1, S8, S9, S79, T20, S22, C14, C15.
+- **28-60 built early (Build 1, 2026-10-18):** `tools/outreach/send.mjs` (whatsapp-web.js 1.34.7 pinned, QR login with
+  `LocalAuth`, ≤ 25/hour with random 60–180 s gaps, ≤ 150/day, `sent.json` never-twice record incl. numbers not on
+  WhatsApp, stops on the first reply from a messaged number, "STOP" marks the number final, `--dry` prints without sending),
+  the pure rules in `tools/outreach/lib.mjs` (tested by `supabase/functions/tests/outreach.test.ts`: message word for
+  word, CSV parsing, limits, gaps, never twice, STOP), `tools/outreach/README.md` (limits, the ban risk in plain words,
+  separate SIM, how to run). The CSV comes from C14 › To call › Export CSV (wave 3); until then any CSV with
+  name, phone, area, id columns works. Not in the app; not counted.
 
 ## Not in the spec
 Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
