@@ -240,3 +240,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **05:15**
 > The GHMC idea is fail. I don't like it. Because no hostel in Hyderabad is doing that registration thing. Everyone runs it without any registration.
+
+**05:20**
+> And one more thing to add, as I have said earlier, the Aadhaar card is to be taken of the tenant who has been added. So this should be uploaded by the tenant itself. So hostel owner should not have a mess of adding things by himself. He will be sharing, he will be clicking a button, something like we had notify, message, call, right? So in the same way, there should be a button for those who are not authorized in the application, the tenants. So when clicked on it, a link to be shared in the WhatsApp to the tenant by owner's number. So where the tenant will be adding the picture of his Aadhaar card, which will be verified and approved by the owner. Then he will get it into the application. Here I am reducing the work of owner of maintaining all the Aadhaar cards and other proofs. And also in the tenant section, you have kept a notification, notify, message, call, etc. to the only people who did not pay, but it should be there to everyone. Just ideate on this, keep it with you. We are not designing or building anything right now.
