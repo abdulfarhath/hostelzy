@@ -339,5 +339,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   web photos in a private `self-list` bucket; gender and area are import hints the call confirms. **Scripts verify TLS**
   certificates by default; `PGSSL_NO_VERIFY=1` is a local-test opt-out only.
 
+- **2026-10-18 (hub, wave 4 extras):** Drive: owner connects/disconnects (revokes at Google), managers see status and the
+  full-copy switch; ID view via a 10-minute link served by our function; IDs are camera photos ≤ 6 MB with a draggable bar.
+  Stale listed rent: card and page say only "Rent on request" (+ "Ask on WhatsApp" on the page).
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

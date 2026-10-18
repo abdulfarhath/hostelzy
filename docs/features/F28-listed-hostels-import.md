@@ -118,3 +118,11 @@ W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page i
 | 9 | Drafts and removed rows hidden from Listed | ✅ Keep |
 | 10 | F31 Rule A applied | ✅ |
 | 11 | TLS **without** certificate verification for the DB connection | ❌ Change: verify the certificate by default (Node's CA store + Supabase's CA; the pooler presents a public cert). `PGSSL_NO_VERIFY=1` is an explicit opt-out for local tests only, and the script prints one line when it is on |
+
+## Hub decisions on Build 4's Part 4 extras (2026-10-18 20:45)
+| # | Decision |
+|---|---|
+| 1 | ✅ Demo's listed sample counts as confirmed today |
+| 2 | ❌ Change (F31 Rule A): card says **"Rent on request"** only; hostel page says **"Rent on request"** + the button **"Ask on WhatsApp"**, no sentence |
+| 3 | ✅ Stale rent still answers the Budget filter; sorts after priced cards |
+| 4 | ✅ App reads `listed_rent_visible`, falls back to the 60-day rule |
