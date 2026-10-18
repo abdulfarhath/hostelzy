@@ -15,6 +15,8 @@ One hub, two standing chats, three on-demand chats. Only the chats with work run
 | **Hostelzy · Build 2** (wave 2) | session_01QkhjRxJds7AVmuDKVsTZNM | 2026-10-18 run | F28 Part 2 + F29 Part 2 on `feature/w2-add-join` | app + SQL |
 | **Hostelzy · Build 3** (wave 3) | session_01Xg9Wc1vxrQ6AyXdceS336L | 2026-10-18 run | F28 Part 3: import scripts, workflow, console C14/C15, W8/W9 on `feature/w3-import` | tools/import, app/console, app/list, SQL |
 | **Hostelzy · Build 4** (wave 4) | session_01F5gdrWLJ9YR47oEBeroLu5 | 2026-10-18 run | F29 Part 3 Drive + F28 Part 4 freshness on `feature/w4-drive-fresh` | supabase/functions, features/drive, SQL |
+| **Hostelzy · Build 5** (wave 5, F31) | session_01EQgGBXEmuCTZGr1c9gTcKj | 2026-10-18 run | No explanations + priority order across the app on `feature/w5-clean`; integrated last | hostelzy/, app/ copy |
+| **Hostelzy · Design 3** (F31 boards) | session_011emUJWpqDppY4RARYgyJ4r | 2026-10-18 run | Rule A/B on every board, retire the water offer board, on `design/f31-clean` → docs/design/v26 | docs/design/v26 |
 | **Hostelzy · Design 2** (F28 boards) | session_01DiPSUmg1b2dDZh7YsUU5AU | 2026-10-18 run | F28 boards on `design/f28-boards`; Design 1 assembles canvas.json | docs/design/v25 |
 | **Hostelzy · Marketing** | not created yet | On demand | Owner pitch, hostel collection sheet, tenant growth, reels, launch plan | `docs/marketing/` |
 | **Hostelzy · Finance** | not created yet | On demand | Budget, pricing, rewards caps, bills | `docs/finance/` |
@@ -126,5 +128,10 @@ Build and Design: idle; nothing queued. Next feature waits on the founder's idea
 
 ### 2026-10-18 15:00 UTC: the autonomous run, parallel
 Founder: "Hire as many chats and agents as possible… use the tokens at max… finish as soon as possible." Build 2/3/4 and Design 2
-created (Fable 5.1). Build 1 integrates in order 0 → 1 → 2 → 3 → 4 and builds prototype/v7. Hub check-in trigger hourly
+created (Fable 5.1). Build 1 integrates in order 0 → 1 → 2 → 3 → 4 → 5 (F31 last, so it cleans the new screens too) and builds prototype/v7. 15:40: Build 5 + Design 3 added for F31. Hub check-in trigger hourly
 (trig_01RkB8B5qD75UzBnM3HRkehP) decides "Not in the spec" items, publishes canvas v25 and the prototype, then sends the founder one message.
+
+### 2026-10-18 15:50 UTC: canvas v25 published
+Design 1's v25 (F28 + F29 + F30 boards, 188 counted) is on https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU. Design 2's parallel F28 set
+(design/f28-boards) was not needed and stays in git. The artifact's 512 cap counts the Design type's ~21 files and the 6 assets, so the
+hub moved 35 archive boards to git only (461 boards on the canvas). W8 = delete-account; F28's pages are W9/W10.
