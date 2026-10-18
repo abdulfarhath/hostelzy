@@ -91,6 +91,5 @@ F29: `join_request_info(token)` (owner's WhatsApp number to the invited tenant o
 Approve needs the ID tick; Drive stubbed; Rule A applied; demo has no ID image; no Realtime.
 
 ## 6. Checks
-`tools/check.sh` on the branch: see the last commit message ("W2 DONE …") for the counts. Flutter analyze clean; all Flutter
-tests incl. `w2_add_join_test.dart` (8); SQL tests incl. `f28_add_hostels_test.sql` and `f29_join_test.sql`, bundle twice;
-function tests unchanged. The SQL bundle is **not** regenerated (integrator, after all waves).
+`tools/check.sh` green on the branch (2026-10-18): Flutter analyze clean; 383 Flutter tests incl. `w2_add_join_test.dart` (8);
+43 SQL test files incl. `f28_add_hostels_test.sql` and `f29_join_test.sql`, the bundle twice; 20 function tests unchanged. The SQL bundle is **not** regenerated (integrator, after all waves).

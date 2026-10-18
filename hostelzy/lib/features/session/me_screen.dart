@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_config.dart';
 import '../../data.dart';
 import '../../state.dart';
+import '../../ui/common.dart';
 import '../../ui/kit.dart';
 
 // ------------------------------------------------------------ me
@@ -46,6 +47,8 @@ class MeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // W2 (F28 Part 2): the adder's hostel from the server, once.
+          OnShow(s.loadMyAdd, child: const SizedBox.shrink()),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),
