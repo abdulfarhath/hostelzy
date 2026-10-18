@@ -223,7 +223,7 @@ void main() {
     await _tap(tester, find.text('Send request'));
     await _settle(tester);
     expect(server.calls, ['photo anjani fb-sai', 'request anjani ${room.n} Custom Slanted wall near the balcony. 14x12 anjani/fb-sai/1.jpg']);
-    expect(s.toast, 'Sent. The Hostelzy team draws it within 48 hours. You get a notification.');
+    expect(s.toast, 'Sent · within 48 hours');
     expect(s.shapeReqFor('anjani', room.n)?.status, 'requested');
     await tester.pump(const Duration(seconds: 4));
 

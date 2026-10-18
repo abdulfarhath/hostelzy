@@ -44,7 +44,7 @@ class ResidentRoomScreen extends StatelessWidget {
     if (show && f.status == 'pending') {
       state = card([
         T('Waiting for $owner', w: 800, s: 15),
-        T('Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))}${f.note.isEmpty ? '' : ' · “${f.note}”'} Tenants still see the current layout.', s: 13, c: p.mu, lh: 1.45),
+        T('Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))}${f.note.isEmpty ? '' : ' · “${f.note}”'}', s: 13, c: p.mu, lh: 1.45),
         Kicker('Your suggestion · only you and $owner see it'),
         OutlineCta('Change my suggestion', icon: 'pencil', height: 46, fs: 14, onTap: () => s.changeFix(f)),
         OutlineCta('Withdraw it', icon: 'x', height: 46, fs: 14, onTap: () => s.withdrawFix(f)),
@@ -58,7 +58,7 @@ class ResidentRoomScreen extends StatelessWidget {
     } else if (show && f.status == 'rejected') {
       state = card([
         T('$owner didn’t approve it', w: 800, s: 15),
-        T('${f.reason == null ? '' : '“${f.reason}” '}You can send a new fix any time.', s: 13, c: p.mu, lh: 1.45),
+        if (f.reason != null) T('“${f.reason}”', s: 13, c: p.mu, lh: 1.45),
         OutlineCta('Edit room again', icon: 'pencil', height: 46, fs: 14, onTap: () {
           s.update(() => s.fixSeen.add(f.id));
           s.openFixEditor(s.fixHid, room!.n);
@@ -122,21 +122,12 @@ class ResidentRoomScreen extends StatelessWidget {
                   if (muted)
                     card([
                       const T('Suggestions are off for this hostel', w: 800, s: 15),
-                      T('You can still see every room here.', s: 13, c: p.mu, lh: 1.45),
                     ])
                   else
                     state ??
                         card([
                           const T('Something in the wrong place?', w: 800, s: 15),
-                          T('You live in ${h.name}, so you can fix any room here. Tap an item for a quick fix, or move things in the editor and send it to $owner.', s: 13, c: p.mu, lh: 1.45),
                         ]),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Ic('user', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Residents of ${h.name} can see and fix every room here.', s: 12, c: p.mu, lh: 1.45))],
-                    ),
-                  ),
                 ],
               ],
             ),
@@ -270,12 +261,9 @@ class FixEditorScreen extends StatelessWidget {
                 children: [
                   section('Status · tap an item', [
                     if (selItem != null && const ['fan', 'ac', 'window'].contains(selItem.kind))
-                      Seg(opts: const [('ok', 'Working'), ('bad', 'Not working')], cur: selItem.working ? 'ok' : 'bad', onPick: (v) => s.fixSetWorking(selItem, v == 'ok'), center: true)
-                    else
-                      T('Tap a fan, the AC or a window to mark it working or not.', s: 12, c: p.mu),
+                      Seg(opts: const [('ok', 'Working'), ('bad', 'Not working')], cur: selItem.working ? 'ok' : 'bad', onPick: (v) => s.fixSetWorking(selItem, v == 'ok'), center: true),
                   ]),
                   section('Room size · ${l.w.round()} × ${l.h.round()} ft', [
-                    T('Wrong size? Change the width or length by 1 ft.', s: 12, c: p.mu),
                     Row(
                       children: [
                         Expanded(child: Row(children: [const Expanded(child: T('Width', s: 13, ell: true)), sq('x', () => s.edResize(l, -1, 0), label: '−1'), const SizedBox(width: 6), sq('plus', () => s.edResize(l, 1, 0), label: '+1')])),
@@ -337,7 +325,6 @@ class FixLockSheet extends StatelessWidget {
             s.update(() => s.hid = hid);
             s.openPicker();
           }),
-          Center(child: Rich([sp(context, 'Already staying here? '), sp(context, 'Ask your owner for your invite code.', w: 800, c: p.tx)], s: 13, c: p.mu, align: TextAlign.center)),
         ],
       ),
     );
@@ -420,7 +407,6 @@ class FixSendSheet extends StatelessWidget {
           T('A note for $owner (optional)', w: 800, s: 13),
           Field(value: s.fixNote, onChanged: (v) => s.update(() => s.fixNote = v), placeholder: 'The cupboard is on the left wall, next to the window.', maxLines: 3, height: null),
           FixPhotoRow(owner: owner),
-          T('$owner sees your name${s.myRoomLabel.isEmpty ? '' : ' and that you live in ${s.myRoomLabel}'}. Tenants never see who sent it.', s: 12, c: p.mu, lh: 1.45),
           Cta('Send to owner', height: 54, px: 16, fs: 15, onTap: s.sendFix),
         ],
       ),
@@ -550,7 +536,6 @@ class FixPhotoRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               T(ph == null ? '1 photo (optional)' : '1 photo · tap to remove', w: 800, s: 13),
-              T('Only $owner and the Hostelzy team see it.', s: 12, c: p.mu),
             ],
           ),
         ),
@@ -612,7 +597,7 @@ class QuickFixSheet extends StatelessWidget {
                   ),
                 ],
               ),
-              T(s.fixPhoto == null ? 'Bigger change? Close this and move things in the editor.' : '1 photo · only $owner and the Hostelzy team see it. Tap it to remove.', s: 12, c: p.mu),
+              if (s.fixPhoto != null) T('1 photo', s: 12, c: p.mu),
             ],
           ),
         ),
@@ -639,7 +624,6 @@ class FixMuteSheet extends StatelessWidget {
           T('You won’t get $first’s layout fixes or notifications. Waiting ones are closed. $first isn’t told who muted them; they see “Suggestions are off for this hostel”.', s: 15, c: p.mu, lh: 1.5),
           Cta('Mute $first’s suggestions', icon: 'x', height: 54, px: 16, fs: 15, bg: p.tx, fg: p.bg, onTap: () => s.muteFixAuthor(f)),
           OutlineCta('Cancel', icon: 'back', onTap: () => s.update(() => s.sheet = null)),
-          T('Unmute any time in Manage → Residents.', s: 12, c: p.mu),
         ],
       ),
     );
@@ -685,7 +669,7 @@ class OwnerFixScreen extends StatelessWidget {
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [side('Now · v${now.version}', now, const {}), const SizedBox(width: 10), side('Suggested', sug, diff.ids)]),
                   Kicker('What changed · ${diff.lines.length}'),
                   for (final (what, change) in diff.lines) Row(children: [Ic('arrow', size: 14, color: p.ad), const SizedBox(width: 8), Expanded(child: Rich([sp(context, '$what ', w: 800), sp(context, change)], s: 14))]),
-                  T('All checks pass. Bed IDs and prices don’t change.', s: 13, c: p.mu),
+                  T('All checks pass', s: 13, c: p.mu),
                   Container(
                     padding: const EdgeInsets.all(12),
                     color: p.sf,
@@ -695,7 +679,7 @@ class OwnerFixScreen extends StatelessWidget {
                         T([f.author, if (f.authorBed.isNotEmpty) 'lives in ${f.authorBed}'].join(' · '), w: 800, s: 14),
                         if (f.note.isNotEmpty) T('“${f.note}”', s: 14, lh: 1.4),
                         if (f.photo != null) FixPhotoThumb(f, size: 120),
-                        T('${f.photo != null ? '1 photo · ' : ''}Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))} · only you see who sent it', s: 12, c: p.mu),
+                        T('${f.photo != null ? '1 photo · ' : ''}Sent ${dayMon(DateTime.fromMillisecondsSinceEpoch(f.at))}', s: 12, c: p.mu),
                         Tap(key: const ValueKey('muteLink'), onTap: () => s.update(() => s.sheet = 'fixMute'), child: Padding(padding: const EdgeInsets.only(top: 4), child: T('Mute $first’s suggestions', s: 13, w: 800))),
                       ],
                     ),
@@ -716,7 +700,6 @@ class OwnerFixScreen extends StatelessWidget {
                 s.fixReason = '';
                 s.sheet = 'fixReject';
               })),
-              T('Tenants never see that $first sent it.', s: 12, c: p.mu),
             ],
           ),
         ),
@@ -731,7 +714,6 @@ class FixRejectSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final f = s.openFixItem;
     if (f == null) return const SizedBox();
     final first = f.author.split(' ').first;
@@ -745,7 +727,6 @@ class FixRejectSheet extends StatelessWidget {
           Wrap(spacing: 6, runSpacing: 6, children: [for (final c in chips) ChipBtn(c, on: s.fixReason == c, onTap: () => s.update(() => s.fixReason = c == 'Other' ? '' : c))]),
           Field(value: s.fixReason, onChanged: (v) => s.update(() => s.fixReason = v), placeholder: 'The cupboard was moved back last week.', maxLines: 3, height: null),
           Cta('Reject the fix', icon: 'x', height: 54, px: 16, fs: 15, onTap: () => s.rejectFix(f)),
-          T('The current layout stays live. $first can send a new fix.', s: 12, c: p.mu),
         ],
       ),
     );

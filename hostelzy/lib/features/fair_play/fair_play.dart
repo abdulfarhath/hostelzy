@@ -66,7 +66,7 @@ extension FairPlayActions on AppState {
       screen = 'oToday';
       hist = [];
     });
-    toastMsg('Fair Play rules accepted. Welcome to Hostelzy.');
+    toastMsg('Fair Play rules accepted');
   }
 
   /// F24 #18: the owner agreed on another phone (or before reinstalling):
@@ -100,15 +100,15 @@ extension FairPlayActions on AppState {
         await refreshListings();
         final now = strikes[c.hid] ?? 0;
         toastMsg(now > had
-            ? '${c.resident} now shows as came from the app. Case closed. That’s 3 fixes in 6 months, which counts as one warning (strike $now of 3).'
-            : '${c.resident} now shows as came from the app. Case closed, no strike.');
+            ? 'Case closed · strike $now of 3'
+            : 'Case closed · no strike');
       }, onError: (Object e) {
         final m = '$e';
         toastMsg(m.contains('48 hours are over')
-            ? 'The 48 hours are over. Reply instead and the Hostelzy team decides.'
+            ? '48 hours over · reply instead'
             : m.contains('closed')
             ? 'This case is already closed.'
-            : 'Couldn’t save it. Check your internet and try again.');
+            : 'Couldn’t save. Check your internet.');
       });
       return;
     }
@@ -122,11 +122,11 @@ extension FairPlayActions on AppState {
         ownerFixes = 0;
       }
     });
-    toastMsg('${c.resident} now shows as came from the app. Case closed, no strike.');
+    toastMsg('Case closed · no strike');
   }
 
   void replyCase(FairCase c) {
-    if (fpReply.trim().isEmpty) return toastMsg('Write what happened, or fix the resident.');
+    if (fpReply.trim().isEmpty) return toastMsg('Add your reply or a fix');
     final key = c.key;
     final photo = fpPhoto;
     final saved = photo == null ? 'Reply saved. The Hostelzy team reads it before deciding.' : 'Reply and photo saved. The Hostelzy team reads them before deciding.';
@@ -162,16 +162,16 @@ extension FairPlayActions on AppState {
     final raw = await picker.pick();
     if (raw == null) return;
     final jpg = prepPhoto(raw, 'free');
-    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    if (jpg == null) return toastMsg('That photo didn’t open');
     update(() => fpPhoto = jpg);
   }
 
   /// Opens a case photo (a short-lived private link on the server).
   Future<void> openCasePhoto(String? path) async {
     if (path == null) return;
-    if (path == 'sample' || path == 'local') return toastMsg('Photos open from the server in the real app. This is sample data.');
+    if (path == 'sample' || path == 'local') return toastMsg('Photo: sample data');
     final url = await data.casePhotoUrl(path);
-    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    if (url == null) return toastMsg('Couldn’t open. Check your internet.');
     unawaited(openLink(Uri.parse(url), 'the photo'));
   }
 
@@ -189,7 +189,7 @@ extension FairPlayActions on AppState {
         toastMsg(a == 'yes' ? 'Thanks. Only the Hostelzy team sees your answer. Your ₹100 Member reward unlocks once the owner confirms your stay.' : 'Thanks. Only the Hostelzy team sees your answer.');
       }, onError: (Object e) {
         debugPrint('did you join: $e');
-        toastMsg('Couldn’t save your answer. Check your internet and try again.');
+        toastMsg('Couldn’t save. Check your internet.');
       });
       return;
     }
@@ -202,8 +202,8 @@ extension FairPlayActions on AppState {
     toastMsg(a != 'yes'
         ? 'Thanks.'
         : onServer
-        ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
-        : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');
+        ? 'Saved · ₹100 unlocks once confirmed'
+        : 'Saved · ₹100 unlocked');
   }
 
   /// Should Holds ask "Did you join?" (a real ended hold not answered yet;
@@ -234,7 +234,7 @@ extension FairPlayActions on AppState {
     if (onServer) {
       // S5: a private report to the Hostelzy team about the hostel of the ended hold.
       final hid = endedHold?.hid;
-      if (hid == null) return toastMsg('Reports are about a hostel you held a bed at. Hold one first.');
+      if (hid == null) return toastMsg('Hold a bed there first');
       final note = reportNote.trim();
       _write(() => data.sendReport(hid, why, note)).then((ok) {
         if (!ok) return;
@@ -243,7 +243,7 @@ extension FairPlayActions on AppState {
           reportNote = '';
           sheet = null;
         });
-        toastMsg('Report sent to the Hostelzy team. The owner never sees your name.');
+        toastMsg('Report sent');
       });
       return;
     }
@@ -253,6 +253,6 @@ extension FairPlayActions on AppState {
       reportNote = '';
       sheet = null;
     });
-    toastMsg('Report saved for the Hostelzy team. The owner never sees your name.');
+    toastMsg('Report saved');
   }
 }

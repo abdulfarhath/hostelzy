@@ -1,4 +1,4 @@
--- Hostelzy: every migration, for a NEW Supabase project (staging), in ONE file. Generated 2026-10-17 by tools/sql-bundle.sh.
+-- Hostelzy: every migration, for a NEW Supabase project (staging), in ONE file. Generated 2026-10-18 by tools/sql-bundle.sh.
 -- How: Supabase → SQL Editor → New query → paste this whole file → Run → "Success. No rows returned".
 -- One transaction: if anything fails, nothing changes. Run it ONCE on an empty project. First enable pg_cron and pg_net (Database → Extensions).
 begin;
@@ -6919,5 +6919,1334 @@ begin
     perform cron.schedule('hz-food-pushes', '*/5 * * * *', 'select public.food_pushes()');
   end if;
 end $$;
+
+
+-- ================================================================
+-- 20261018100000_f28_add_hostels.sql
+-- ================================================================
+-- F28 Part 2 (wave 2): anyone signed in adds a hostel; partners add many.
+--   hostels.source            team | resident | partner | places | osm | web
+--   hostels.added_by          the adder's uid (resident / partner path)
+--   hostels.place_id, source_seen_at   kept for the Places import (wave 3)
+--   hostels.rent_confirmed_at a human confirmed the rent (wave 4 shows it only within 60 days)
+--   hostels.owner_phone_hint  '' for added hostels: the owner's number goes straight to hostel_leads.owner_phone
+--                             (team-only); hostel_owner_phone(h) (Build 3's, stubbed here) reads it wherever it is
+--   hostels.partner_code      which partner listed it (₹20 after the team check)
+--   hostels.owner_asked_at    when the adder sent the claim link to the owner ("Ask again" after 3 days)
+--   partners                  code, name, phone, upi, active (team makes codes in the console)
+--   add_hostel(p)             signed in; dedupe (same owner phone, or same name within 150 m) → {duplicate:true};
+--                             one in-progress hostel per resident; partners any number
+--   my_added_hostel()         the adder's latest hostel with the 5 steps' dates, the reward and the payout
+--   asked_owner(h)            stamps owner_asked_at
+--   set_adder_upi(upi)        the adder's UPI id for the payout (profiles.payout_upi)
+--   reward kinds              hostel_added ₹200 (when the hostel goes live), hostel_listed ₹20 (partner, after the team
+--                             check); together capped at ₹2,000 a month, queued to the next month (pay_month)
+--   console (Build 3)         new_partner(name, phone, upi) → code · partners_due() · check_partner_hostel(h) ·
+--                             payouts_due() · mark_payout_paid(ledger_id, utr)
+-- Money amounts are DECISIONS 2026-10-18 (hub, ₹: the founder can change them later).
+-- Safe to run again.
+
+-- ------------------------------------------------------------ hostels columns
+
+alter table public.hostels add column if not exists source text not null default 'team';
+alter table public.hostels drop constraint if exists hostels_source_check;
+alter table public.hostels add constraint hostels_source_check check (source in ('team', 'resident', 'partner', 'places', 'osm', 'web'));
+alter table public.hostels add column if not exists added_by text;
+alter table public.hostels add column if not exists place_id text;
+create unique index if not exists hostels_place_id_key on public.hostels (place_id) where place_id is not null;
+alter table public.hostels add column if not exists source_seen_at timestamptz;
+alter table public.hostels add column if not exists rent_confirmed_at timestamptz;
+alter table public.hostels add column if not exists owner_phone_hint text not null default '';
+alter table public.hostels add column if not exists partner_code text;
+alter table public.hostels add column if not exists owner_asked_at timestamptz;
+create index if not exists hostels_added_by_idx on public.hostels (added_by) where added_by is not null;
+
+-- ------------------------------------------------------------ partners
+
+create table if not exists public.partners (
+  code text primary key,
+  name text not null check (length(trim(name)) between 2 and 80),
+  phone text not null check (phone ~ '^[6-9][0-9]{9}$'),
+  upi text not null default '',
+  active boolean not null default true,
+  created_by text default public.uid(),
+  created_at timestamptz not null default now()
+);
+alter table public.partners enable row level security;
+drop policy if exists "team partners" on public.partners;
+create policy "team partners" on public.partners for all using (public.is_team()) with check (public.is_team());
+grant select, insert, update on public.partners to authenticated;
+
+-- The team makes a partner code in the console: "HZ-PART-7".
+create or replace function public.new_partner(p_name text, p_phone text, p_upi text default '') returns text
+language plpgsql security definer set search_path = ''
+as $$
+declare c text; n int;
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team adds partners'; end if;
+  if length(trim(coalesce(p_name, ''))) < 2 then raise exception 'add the partner''s name'; end if;
+  if coalesce(p_phone, '') !~ '^[6-9][0-9]{9}$' then raise exception 'the partner''s phone needs 10 digits'; end if;
+  select count(*) into n from public.partners;
+  loop
+    n := n + 1;
+    c := 'HZ-PART-' || n;
+    exit when not exists (select 1 from public.partners where code = c);
+  end loop;
+  insert into public.partners (code, name, phone, upi) values (c, trim(p_name), p_phone, trim(coalesce(p_upi, '')));
+  return c;
+end $$;
+revoke execute on function public.new_partner(text, text, text) from public, anon;
+grant execute on function public.new_partner(text, text, text) to authenticated;
+
+-- ------------------------------------------------------------ rewards: kinds, cap, payouts
+
+alter table public.reward_ledger drop constraint if exists reward_ledger_kind_check;
+alter table public.reward_ledger add constraint reward_ledger_kind_check
+  check (kind in ('member', 'referral_friend', 'referral_referrer', 'spend', 'owner_credit', 'reversal', 'hostel_added', 'hostel_listed'));
+-- The month the payout is due (IST). Beyond the ₹2,000 cap it moves to a later month.
+alter table public.reward_ledger add column if not exists pay_month date;
+
+-- The team paid a reward by UPI (console › Payments). One row per ledger entry.
+create table if not exists public.reward_payouts (
+  ledger_id uuid primary key references public.reward_ledger (id) on delete cascade,
+  utr text not null default '',
+  paid_by text default public.uid(),
+  paid_at timestamptz not null default now()
+);
+alter table public.reward_payouts enable row level security;
+drop policy if exists "team payouts" on public.reward_payouts;
+create policy "team payouts" on public.reward_payouts for all using (public.is_team()) with check (public.is_team());
+grant select, insert on public.reward_payouts to authenticated;
+
+alter table public.profiles add column if not exists payout_upi text not null default '';
+
+-- The first month (this one or later) where p_amount still fits under the
+-- ₹2,000 cap for hostel_added + hostel_listed together.
+create or replace function public.reward_cap_month(p_amount int) returns date
+language plpgsql stable security definer set search_path = ''
+as $$
+declare m date := date_trunc('month', (now() at time zone 'Asia/Kolkata'))::date; used int;
+begin
+  loop
+    select coalesce(sum(amount), 0) into used from public.reward_ledger
+    where kind in ('hostel_added', 'hostel_listed') and pay_month = m;
+    exit when used + p_amount <= 2000;
+    m := (m + interval '1 month')::date;
+  end loop;
+  return m;
+end $$;
+revoke execute on function public.reward_cap_month(int) from public, anon, authenticated;
+
+-- A resident-added hostel goes live: ₹200 to the adder, once; a push tells them.
+create or replace function public.hostel_live_reward() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare m date;
+begin
+  if new.status = 'live' and old.status is distinct from 'live' and new.source = 'resident' and new.added_by is not null then
+    m := public.reward_cap_month(200);
+    insert into public.reward_ledger (event_key, kind, user_id, hostel_id, amount, reason, pay_month, created_by)
+    values ('added:' || new.id, 'hostel_added', new.added_by, new.id, 200, new.name || ' verified', m, 'server')
+    on conflict (event_key) do nothing;
+    if found then
+      insert into public.push_outbox (user_id, title, body, data)
+      values (new.added_by, new.name || ' is verified', '₹200 is yours. Hostelzy pays it by UPI' || case when m > date_trunc('month', (now() at time zone 'Asia/Kolkata'))::date then ' in ' || to_char(m, 'Month') else '' end || '. Open Your hostel to add your UPI ID.',
+        jsonb_build_object('screen', 'myAdd', 'hostel', new.id));
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists hostel_live_reward on public.hostels;
+create trigger hostel_live_reward after update of status on public.hostels
+for each row execute function public.hostel_live_reward();
+revoke execute on function public.hostel_live_reward() from public, anon, authenticated;
+
+-- Console › Listed › Partners: the team ticks "checked" on a partner-listed hostel → ₹20 to the partner, once.
+create or replace function public.check_partner_hostel(p_hostel uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare h record; m date;
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team checks listings'; end if;
+  select * into h from public.hostels where id = p_hostel;
+  if h.id is null then raise exception 'that hostel isn''t on Hostelzy'; end if;
+  if h.source <> 'partner' or h.partner_code is null then raise exception 'not a partner listing'; end if;
+  if h.status not in ('listed', 'live') then raise exception 'list it first'; end if;
+  m := public.reward_cap_month(20);
+  insert into public.reward_ledger (event_key, kind, user_id, hostel_id, amount, reason, pay_month, created_by)
+  values ('listed:' || h.id, 'hostel_listed', h.added_by, h.id, 20, h.name || ' listed · partner ' || h.partner_code, m, 'server')
+  on conflict (event_key) do nothing;
+end $$;
+revoke execute on function public.check_partner_hostel(uuid) from public, anon;
+grant execute on function public.check_partner_hostel(uuid) to authenticated;
+
+-- Console › Listed › Partners: each partner's listed count and ₹ due / paid.
+create or replace function public.partners_due() returns table (code text, name text, phone text, upi text, active boolean, listed int, checked int, due int, paid int)
+language sql stable security definer set search_path = ''
+as $$
+  select p.code, p.name, p.phone, p.upi, p.active,
+    (select count(*)::int from public.hostels h where h.partner_code = p.code),
+    (select count(*)::int from public.reward_ledger l join public.hostels h on h.id = l.hostel_id where h.partner_code = p.code and l.kind = 'hostel_listed'),
+    (select coalesce(sum(l.amount), 0)::int from public.reward_ledger l join public.hostels h on h.id = l.hostel_id
+       where h.partner_code = p.code and l.kind = 'hostel_listed' and not exists (select 1 from public.reward_payouts x where x.ledger_id = l.id)),
+    (select coalesce(sum(l.amount), 0)::int from public.reward_ledger l join public.hostels h on h.id = l.hostel_id
+       where h.partner_code = p.code and l.kind = 'hostel_listed' and exists (select 1 from public.reward_payouts x where x.ledger_id = l.id))
+  from public.partners p
+  where public.is_team()
+  order by p.created_at
+$$;
+revoke execute on function public.partners_due() from public, anon;
+grant execute on function public.partners_due() to authenticated;
+
+-- Console › Payments: ₹200 / ₹20 payouts not paid yet, with the UPI id to pay.
+create or replace function public.payouts_due() returns table (ledger_id uuid, kind text, amount int, pay_month date, hostel text, user_id text, who text, upi text, created_at timestamptz)
+language sql stable security definer set search_path = ''
+as $$
+  select l.id, l.kind, l.amount, l.pay_month, h.name, l.user_id,
+    coalesce(nullif(pr.name, ''), pa.name, ''),
+    coalesce(nullif(pr.payout_upi, ''), pa.upi, ''),
+    l.created_at
+  from public.reward_ledger l
+  left join public.hostels h on h.id = l.hostel_id
+  left join public.profiles pr on pr.id = l.user_id
+  left join public.partners pa on pa.code = h.partner_code and l.kind = 'hostel_listed'
+  where public.is_team() and l.kind in ('hostel_added', 'hostel_listed')
+    and not exists (select 1 from public.reward_payouts x where x.ledger_id = l.id)
+  order by l.pay_month, l.created_at
+$$;
+revoke execute on function public.payouts_due() from public, anon;
+grant execute on function public.payouts_due() to authenticated;
+
+create or replace function public.mark_payout_paid(p_ledger uuid, p_utr text default '') returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team marks payouts'; end if;
+  if not exists (select 1 from public.reward_ledger where id = p_ledger and kind in ('hostel_added', 'hostel_listed')) then raise exception 'no such payout'; end if;
+  insert into public.reward_payouts (ledger_id, utr) values (p_ledger, trim(coalesce(p_utr, ''))) on conflict (ledger_id) do nothing;
+end $$;
+revoke execute on function public.mark_payout_paid(uuid, text) from public, anon;
+grant execute on function public.mark_payout_paid(uuid, text) to authenticated;
+
+-- The adder's UPI id for the payout (asked once in S93 after the owner agrees).
+create or replace function public.set_adder_upi(p_upi text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare u text := trim(coalesce(p_upi, ''));
+begin
+  if not public.is_verified() then raise exception 'sign in with Google first'; end if;
+  if u !~ '^[A-Za-z0-9._-]{2,}@[A-Za-z][A-Za-z0-9]{1,}$' then raise exception 'that UPI id doesn''t look right'; end if;
+  insert into public.profiles (id, payout_upi) values (public.uid(), u)
+  on conflict (id) do update set payout_upi = excluded.payout_upi;
+end $$;
+revoke execute on function public.set_adder_upi(text) from public, anon;
+grant execute on function public.set_adder_upi(text) to authenticated;
+
+-- ------------------------------------------------------------ adding a hostel
+
+-- The adder of a listed hostel (may add up to 3 gate photos).
+create or replace function public.is_adder(h uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$ select exists (select 1 from public.hostels x where x.id = h and x.added_by = public.uid() and x.status = 'listed') $$;
+
+drop policy if exists "adder adds photos" on public.hostel_photos;
+create policy "adder adds photos" on public.hostel_photos for insert
+  with check (public.is_adder(hostel_id) and created_by = public.uid()
+    and (select count(*) from public.hostel_photos x where x.hostel_id = hostel_photos.hostel_id) < 3);
+drop policy if exists "hz adder upload photos" on storage.objects;
+create policy "hz adder upload photos" on storage.objects for insert
+  with check (bucket_id = 'hostel-photos' and public.is_adder(public.photo_hostel(name)));
+
+-- The owner's phone wherever the team has it (the draft hint, the lead row or
+-- the owner's profile). Same body as Build 3's 20261018120000_f28_import.sql,
+-- which runs after this and wins; here so add_hostel() works on its own.
+-- Definer-only: no grant to app roles.
+create or replace function public.hostel_owner_phone(h uuid) returns text
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(
+    nullif(regexp_replace((select coalesce(x.owner_phone_hint, '') from public.hostels x where x.id = h), '\D', '', 'g'), ''),
+    nullif((select regexp_replace(l.owner_phone, '\D', '', 'g') from public.hostel_leads l where l.hostel_id = h), ''),
+    nullif((select regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') from public.hostel_staff st join public.profiles p on p.id = st.user_id
+            where st.hostel_id = h and st.role = 'owner' order by p.created_at limit 1), ''),
+    '')
+$$;
+revoke execute on function public.hostel_owner_phone(uuid) from public, anon, authenticated;
+
+-- Metres between two points (haversine).
+create or replace function public.metres_between(lat1 double precision, lng1 double precision, lat2 double precision, lng2 double precision) returns double precision
+language sql immutable set search_path = ''
+as $$
+  select 2 * 6371000 * asin(sqrt(
+    power(sin(radians(lat2 - lat1) / 2), 2) + cos(radians(lat1)) * cos(radians(lat2)) * power(sin(radians(lng2 - lng1) / 2), 2)))
+$$;
+
+-- "Add a hostel" (S92). p: name, gender, lat, lng, area, rent (resident) or
+-- rent_min + rent_max (partner), share, food, owner_name, owner_phone,
+-- partner_code. Returns {duplicate: false, hostel_id} or, when the same
+-- owner phone or the same name within 150 m is already on Hostelzy,
+-- {duplicate: true, hostel_id, name} and makes nothing.
+create or replace function public.add_hostel(p jsonb) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  me text := public.uid();
+  v_name text := regexp_replace(trim(coalesce(p ->> 'name', '')), '\s+', ' ', 'g');
+  v_key text; v_gender text := coalesce(p ->> 'gender', 'Men'); v_area text := trim(coalesce(p ->> 'area', ''));
+  v_lat double precision := (p ->> 'lat')::double precision; v_lng double precision := (p ->> 'lng')::double precision;
+  v_owner text := regexp_replace(trim(coalesce(p ->> 'owner_name', '')), '\s+', ' ', 'g');
+  v_phone text := regexp_replace(coalesce(p ->> 'owner_phone', ''), '\D', '', 'g');
+  v_code text := nullif(upper(trim(coalesce(p ->> 'partner_code', ''))), '');
+  v_min int; v_max int; v_share int := coalesce((p ->> 'share')::int, 0); v_food boolean := coalesce((p ->> 'food')::boolean, false);
+  v_slug text; hid uuid; dup record;
+begin
+  if not public.is_verified() then raise exception 'sign in with Google first'; end if;
+  if length(v_name) < 2 or length(v_name) > 80 then raise exception 'add the hostel name'; end if;
+  if v_gender not in ('Men', 'Women', 'Co-living') then raise exception 'pick Men, Women or Co-living'; end if;
+  if v_lat is null or v_lng is null or v_lat not between 17.0 and 18.0 or v_lng not between 78.0 and 79.0 then raise exception 'drop the pin at the gate'; end if;
+  if length(v_owner) < 2 then raise exception 'add the owner''s name'; end if;
+  if v_phone !~ '^[6-9][0-9]{9}$' then raise exception 'the owner''s phone needs 10 digits'; end if;
+  if v_code is not null then
+    if not exists (select 1 from public.partners where code = v_code and active) then raise exception 'that partner code isn''t valid'; end if;
+    v_min := (p ->> 'rent_min')::int; v_max := (p ->> 'rent_max')::int;
+  else
+    v_min := (p ->> 'rent')::int; v_max := v_min;
+  end if;
+  if v_min is null or v_max is null or v_min < 1000 or v_max < v_min or v_max > 100000 then raise exception 'add the rent (₹1,000 to ₹1,00,000)'; end if;
+  if v_share not between 1 and 4 then raise exception 'pick the sharing'; end if;
+  if v_code is null and exists (select 1 from public.hostels where added_by = me and source = 'resident' and status = 'listed') then
+    raise exception 'you already have a hostel in progress';
+  end if;
+  -- Dedupe: same owner phone, or same name within 150 m, of a hostel tenants can see.
+  v_key := regexp_replace(lower(v_name), '[^a-z0-9]', '', 'g');
+  select h.id, h.name into dup from public.hostels h
+  where h.status in ('listed', 'live') and (
+    public.hostel_owner_phone(h.id) = v_phone
+    or (regexp_replace(lower(h.name), '[^a-z0-9]', '', 'g') = v_key and h.lat is not null and h.lng is not null
+        and public.metres_between(h.lat, h.lng, v_lat, v_lng) <= 150))
+  order by h.status = 'live' desc, h.created_at
+  limit 1;
+  if dup.id is not null then
+    return jsonb_build_object('duplicate', true, 'hostel_id', dup.id, 'name', dup.name);
+  end if;
+  v_slug := trim(both '-' from regexp_replace(lower(v_name), '[^a-z0-9]+', '-', 'g'));
+  if v_slug = '' then v_slug := 'hostel'; end if;
+  while exists (select 1 from public.hostels where slug = v_slug) loop
+    v_slug := v_slug || '-' || substr(md5(random()::text), 1, 4);
+  end loop;
+  insert into public.hostels (slug, name, gender, area, lat, lng, status, source, added_by, rent_min, rent_max, rent_confirmed_at, owner_name, owner_phone_hint, partner_code, food, tags)
+  values (v_slug, v_name, v_gender, v_area, v_lat, v_lng, 'listed', case when v_code is null then 'resident' else 'partner' end, me, v_min, v_max, now(),
+    v_owner, '', v_code, v_food,
+    array[v_share || case when v_share = 4 then '+ sharing' else ' sharing' end] || case when v_food then array['Food included'] else '{}'::text[] end)
+  returning id into hid;
+  -- The owner's full number: team-only (hostel_leads has RLS "team only").
+  insert into public.hostel_leads (hostel_id, owner_phone, next_step)
+  values (hid, v_phone, 'Added by a ' || case when v_code is null then 'resident' else 'partner ' || v_code end || ' · owner to claim')
+  on conflict (hostel_id) do update set owner_phone = excluded.owner_phone, next_step = excluded.next_step, updated_at = now();
+  return jsonb_build_object('duplicate', false, 'hostel_id', hid);
+end $$;
+revoke execute on function public.add_hostel(jsonb) from public, anon;
+grant execute on function public.add_hostel(jsonb) to authenticated;
+
+-- "Send to your owner" was tapped: the steps show "Owner asked" and "Ask again" after 3 days.
+create or replace function public.asked_owner(p_hostel uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  update public.hostels set owner_asked_at = now() where id = p_hostel and added_by = public.uid();
+  if not found then raise exception 'not your hostel'; end if;
+end $$;
+revoke execute on function public.asked_owner(uuid) from public, anon;
+grant execute on function public.asked_owner(uuid) to authenticated;
+
+-- S93 "Your hostel on Hostelzy": the adder's latest hostel and its steps.
+-- Added ✓ → Owner asked (owner_asked_at) → Owner agreed (a claim for it) →
+-- Verified (live) → ₹200 paid (reward_payouts). Null when nothing was added.
+-- The owner's phone comes back only to the adder (they typed it).
+create or replace function public.my_added_hostel() returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select jsonb_build_object(
+    'id', h.id, 'name', h.name, 'gender', h.gender, 'area', h.area, 'status', h.status, 'source', h.source, 'partner_code', h.partner_code,
+    'rent_min', h.rent_min, 'rent_max', h.rent_max, 'lat', h.lat, 'lng', h.lng,
+    'created_at', h.created_at, 'owner_asked_at', h.owner_asked_at,
+    'owner_agreed_at', (select min(c.created_at) from public.claim_requests c where c.hostel_id = h.id and c.status <> 'rejected'),
+    'live_at', case when h.status = 'live' then coalesce(h.live_since, h.visited_on, current_date) end,
+    'removed', public.is_removed(h.id),
+    'reward', (select l.amount from public.reward_ledger l where l.hostel_id = h.id and l.kind in ('hostel_added', 'hostel_listed') and l.user_id = public.uid() limit 1),
+    'pay_month', (select l.pay_month from public.reward_ledger l where l.hostel_id = h.id and l.kind in ('hostel_added', 'hostel_listed') and l.user_id = public.uid() limit 1),
+    'paid_at', (select x.paid_at from public.reward_payouts x join public.reward_ledger l on l.id = x.ledger_id
+                where l.hostel_id = h.id and l.kind in ('hostel_added', 'hostel_listed') and l.user_id = public.uid() limit 1),
+    'upi', coalesce((select pr.payout_upi from public.profiles pr where pr.id = public.uid()), ''),
+    'photos', (select count(*) from public.hostel_photos p where p.hostel_id = h.id),
+    'owner_name', h.owner_name,
+    'owner_phone', coalesce((select l.owner_phone from public.hostel_leads l where l.hostel_id = h.id), ''))
+  from public.hostels h
+  where h.added_by = public.uid() and public.uid() is not null
+  order by h.created_at desc
+  limit 1
+$$;
+revoke execute on function public.my_added_hostel() from public, anon;
+grant execute on function public.my_added_hostel() to authenticated;
+
+
+-- ================================================================
+-- 20261018110000_f29_join.sql
+-- ================================================================
+-- F29 Part 2 (wave 2): "Ask to join". The owner picks a free bed and a date
+-- and sends a WhatsApp link; the tenant fills name, phone, date and sends
+-- their ID to the owner; the owner approves and the stay is made the same way
+-- as "Add a resident" (a public.stays row: hz_match, bed booked).
+--   join_requests          token (single use, 7 days, one bed), the owner's fee / advance / date / name hint,
+--                          the tenant's name / phone / date, id_received drive | whatsapp | none, id_file_id
+--   new_join_request(bed, fee, advance, moves_in, name) → token      (staff)
+--   join_request_info(token) → jsonb                                 (signed-in tenant opens the link)
+--   fill_join_request(token, name, phone, date, id_received, id_file_id) → jsonb   (tenant)
+--   decide_join(id, approve, note)                                   (staff; approve = a stay)
+--   ask_id_again(id) → tenant phone                                  (staff; a push + the WhatsApp text)
+--   expire_join_tokens()   pg_cron, hourly
+-- Hostelzy never stores the ID image or number: Drive gets the file (wave 4),
+-- the WhatsApp path stores only the tick. The Drive option shows only when
+-- owner_drive (wave 4) has a row: join_request_info returns drive = false
+-- until then (Build 4 wiring point).
+-- Safe to run again.
+
+create table if not exists public.join_requests (
+  id uuid primary key default gen_random_uuid(),
+  token text not null unique,
+  hostel_id uuid not null references public.hostels (id) on delete cascade,
+  bed_id uuid not null references public.beds (id) on delete cascade,
+  fee int not null check (fee between 1000 and 100000),
+  advance int not null default 0 check (advance between 0 and 100000),
+  moves_in date not null,
+  name_hint text not null default '',
+  status text not null default 'sent' check (status in ('sent', 'filled', 'approved', 'declined', 'expired')),
+  tenant_id text,
+  tenant_name text,
+  tenant_phone text,
+  tenant_date date,
+  id_received text not null default 'none' check (id_received in ('drive', 'whatsapp', 'none')),
+  id_file_id text,
+  id_asked_at timestamptz,
+  note text not null default '',
+  created_by text default public.uid(),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '7 days',
+  filled_at timestamptz,
+  decided_at timestamptz
+);
+create index if not exists join_requests_hostel_id_idx on public.join_requests (hostel_id);
+create index if not exists join_requests_tenant_id_idx on public.join_requests (tenant_id) where tenant_id is not null;
+alter table public.join_requests enable row level security;
+drop policy if exists "read join requests" on public.join_requests;
+create policy "read join requests" on public.join_requests for select
+  using (public.is_staff(hostel_id) or public.is_team() or (tenant_id is not null and tenant_id = public.uid()));
+-- Writes go through the functions below only.
+grant select on public.join_requests to authenticated;
+
+-- Not in the Realtime publication: the owner's Today reloads the Joining tab
+-- when it opens and after each decision (Build 4 may add it with the Drive work).
+
+-- "203" or "204A-B": the bed's label as the app shows it.
+create or replace function public.bed_label(p_bed uuid) returns text
+language sql stable security definer set search_path = ''
+as $$ select coalesce(r.label, r.number::text) || '-' || b.letter from public.beds b join public.rooms r on r.id = b.room_id where b.id = p_bed $$;
+revoke execute on function public.bed_label(uuid) from public, anon, authenticated;
+
+-- A bed with nobody living in it (holds don't count: the bed isn't held for a joiner).
+create or replace function public.bed_free_to_join(p_bed uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$ select not exists (select 1 from public.stays s where s.bed_id = p_bed and s.left_on is null) $$;
+revoke execute on function public.bed_free_to_join(uuid) from public, anon, authenticated;
+
+-- H48 "Ask to join": the owner (or a manager) makes a 7-day, single-use link for one bed.
+create or replace function public.new_join_request(p_bed uuid, p_fee int, p_advance int, p_moves_in date, p_name text default '') returns text
+language plpgsql security definer set search_path = ''
+as $$
+declare h uuid; t text; abc text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+begin
+  select hostel_id into h from public.beds where id = p_bed;
+  if h is null then raise exception 'pick a bed'; end if;
+  if not (public.is_staff(h) or public.is_team()) then raise exception 'only this hostel''s staff can ask someone to join'; end if;
+  if not public.bed_free_to_join(p_bed) then raise exception 'bed % is taken', public.bed_label(p_bed); end if;
+  if p_fee is null or p_fee not between 1000 and 100000 then raise exception 'add the monthly fee'; end if;
+  if p_advance is null or p_advance not between 0 and 100000 then raise exception 'add the advance'; end if;
+  if p_moves_in is null then raise exception 'pick the move-in date'; end if;
+  loop
+    t := '';
+    for i in 1..12 loop t := t || substr(abc, 1 + floor(random() * 32)::int, 1); end loop;
+    exit when not exists (select 1 from public.join_requests where token = t);
+  end loop;
+  insert into public.join_requests (token, hostel_id, bed_id, fee, advance, moves_in, name_hint)
+  values (t, h, p_bed, p_fee, p_advance, p_moves_in, left(regexp_replace(trim(coalesce(p_name, '')), '\s+', ' ', 'g'), 80));
+  return t;
+end $$;
+revoke execute on function public.new_join_request(uuid, int, int, date, text) from public, anon;
+grant execute on function public.new_join_request(uuid, int, int, date, text) to authenticated;
+
+-- S94 opens: what the link is for. The owner's WhatsApp number comes back
+-- while the request is open, so the tenant can send their ID to the owner
+-- who invited them (never to anyone else). drive = false until owner_drive
+-- (wave 4) exists: Build 4 replaces it with `exists (select 1 from
+-- public.owner_drive d where d.hostel_id = j.hostel_id)`.
+create or replace function public.join_request_info(p_token text) returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select jsonb_build_object(
+    'id', j.id, 'hostel_id', j.hostel_id, 'hostel', h.name,
+    'owner', coalesce(nullif(h.owner_name, ''), (select split_part(pr.name, ' ', 1) from public.hostel_staff st join public.profiles pr on pr.id = st.user_id
+                                                   where st.hostel_id = h.id and st.role = 'owner' order by pr.created_at limit 1), 'your owner'),
+    'bed', public.bed_label(j.bed_id), 'fee', j.fee, 'advance', j.advance, 'moves_in', j.moves_in, 'name_hint', j.name_hint,
+    'status', case when j.status = 'sent' and j.expires_at <= now() then 'expired' else j.status end,
+    'taken', not public.bed_free_to_join(j.bed_id),
+    'mine', j.tenant_id is not null and j.tenant_id = public.uid(),
+    'id_received', j.id_received,
+    'drive', false,
+    'owner_phone', case when j.status in ('sent', 'filled') and j.expires_at > now() or j.tenant_id = public.uid() then coalesce(
+      nullif((select coalesce(nullif(pr.whatsapp, ''), regexp_replace(coalesce(pr.phone, ''), '\D', '', 'g')) from public.hostel_staff st join public.profiles pr on pr.id = st.user_id
+              where st.hostel_id = h.id and st.role = 'owner' order by pr.created_at limit 1), ''),
+      nullif((select regexp_replace(coalesce(l.owner_whatsapp, l.owner_phone), '\D', '', 'g') from public.hostel_leads l where l.hostel_id = h.id), ''),
+      '') else '' end)
+  from public.join_requests j join public.hostels h on h.id = j.hostel_id
+  where j.token = upper(trim(p_token)) and public.is_verified()
+$$;
+revoke execute on function public.join_request_info(text) from public, anon;
+grant execute on function public.join_request_info(text) to authenticated;
+
+-- S94 "Send to owner": the tenant's own details. The bed must still be free
+-- (first approved wins; a second form says so). Returns {hostel, owner}.
+create or replace function public.fill_join_request(p_token text, p_name text, p_phone text, p_date date, p_id_received text default 'none', p_id_file_id text default null) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare j record; nm text := regexp_replace(trim(coalesce(p_name, '')), '\s+', ' ', 'g'); ph text := regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'); hn text;
+begin
+  if not public.is_verified() then raise exception 'sign in with Google first'; end if;
+  select * into j from public.join_requests where token = upper(trim(p_token));
+  if j.id is null or j.status <> 'sent' or j.expires_at <= now() then raise exception 'this link isn''t valid any more; ask your owner for a new one'; end if;
+  if length(nm) < 2 then raise exception 'enter your name'; end if;
+  if ph !~ '^[6-9][0-9]{9}$' then raise exception 'enter your 10-digit phone'; end if;
+  if p_date is null then raise exception 'pick your move-in date'; end if;
+  if coalesce(p_id_received, 'none') not in ('drive', 'whatsapp', 'none') then raise exception 'bad id_received'; end if;
+  if not public.bed_free_to_join(j.bed_id) then raise exception 'this bed was just taken; ask your owner'; end if;
+  update public.join_requests set tenant_id = public.uid(), tenant_name = nm, tenant_phone = ph, tenant_date = p_date,
+    id_received = coalesce(p_id_received, 'none'), id_file_id = case when coalesce(p_id_received, 'none') = 'drive' then p_id_file_id end,
+    status = 'filled', filled_at = now()
+  where id = j.id;
+  select name into hn from public.hostels where id = j.hostel_id;
+  perform public.notify_staff(j.hostel_id, split_part(nm, ' ', 1) || ' wants to join · bed ' || public.bed_label(j.bed_id),
+    'Moves in ' || to_char(p_date, 'FMDD Mon') || ' · open Today → Joining to approve', jsonb_build_object('screen', 'oToday', 'kind', 'join', 'join', j.id));
+  return jsonb_build_object('hostel', hn, 'owner', public.join_request_info(j.token) ->> 'owner');
+end $$;
+revoke execute on function public.fill_join_request(text, text, text, date, text, text) from public, anon;
+grant execute on function public.fill_join_request(text, text, text, date, text, text) to authenticated;
+
+-- H49: Approve (→ the same stays row the owner's "Add a resident" makes:
+-- hz_match, Fair Play late check, bed booked) or Decline.
+create or replace function public.decide_join(p_id uuid, p_approve boolean, p_note text default '') returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare j record; hn text;
+begin
+  select * into j from public.join_requests where id = p_id;
+  if j.id is null then raise exception 'no such request'; end if;
+  if not (public.is_staff(j.hostel_id) or public.is_team()) then raise exception 'only this hostel''s staff can decide'; end if;
+  if j.status <> 'filled' then raise exception 'already decided'; end if;
+  select name into hn from public.hostels where id = j.hostel_id;
+  if p_approve then
+    if not public.bed_free_to_join(j.bed_id) then raise exception 'bed % is taken', public.bed_label(j.bed_id); end if;
+    insert into public.stays (hostel_id, bed_id, user_id, name, phone, rent, advance, joined_on, confirmed)
+    values (j.hostel_id, j.bed_id, j.tenant_id, j.tenant_name, j.tenant_phone, j.fee, j.advance, j.tenant_date, true);
+    update public.join_requests set status = 'approved', decided_at = now(), note = trim(coalesce(p_note, '')) where id = j.id;
+    insert into public.push_outbox (user_id, title, body, data)
+    values (j.tenant_id, 'You’re in. Welcome to ' || hn, 'Bed ' || public.bed_label(j.bed_id) || ' · open Hostelzy to see your stay.', jsonb_build_object('screen', 'rHome', 'kind', 'join'));
+  else
+    update public.join_requests set status = 'declined', decided_at = now(), note = trim(coalesce(p_note, '')) where id = j.id;
+    insert into public.push_outbox (user_id, title, body, data)
+    values (j.tenant_id, hn || ' didn’t approve your request', case when length(trim(coalesce(p_note, ''))) > 0 then trim(p_note) else 'Ask your owner what to do next.' end, jsonb_build_object('screen', 'joinForm', 'kind', 'join', 'token', j.token));
+  end if;
+end $$;
+revoke execute on function public.decide_join(uuid, boolean, text) from public, anon;
+grant execute on function public.decide_join(uuid, boolean, text) to authenticated;
+
+-- H49 "Ask again": a push to the tenant; returns their phone for the owner's WhatsApp text.
+create or replace function public.ask_id_again(p_id uuid) returns text
+language plpgsql security definer set search_path = ''
+as $$
+declare j record; hn text;
+begin
+  select * into j from public.join_requests where id = p_id;
+  if j.id is null then raise exception 'no such request'; end if;
+  if not (public.is_staff(j.hostel_id) or public.is_team()) then raise exception 'only this hostel''s staff can ask'; end if;
+  if j.status <> 'filled' then raise exception 'already decided'; end if;
+  select name into hn from public.hostels where id = j.hostel_id;
+  update public.join_requests set id_received = 'none', id_file_id = null, id_asked_at = now() where id = j.id;
+  insert into public.push_outbox (user_id, title, body, data)
+  values (j.tenant_id, 'Please re-send your ID', hn || ' needs a clear photo of your ID for bed ' || public.bed_label(j.bed_id) || '.', jsonb_build_object('screen', 'joinForm', 'kind', 'join', 'token', j.token));
+  return j.tenant_phone;
+end $$;
+revoke execute on function public.ask_id_again(uuid) from public, anon;
+grant execute on function public.ask_id_again(uuid) to authenticated;
+
+-- Hourly (pg_cron): links older than 7 days stop working.
+create or replace function public.expire_join_tokens() returns int
+language plpgsql security definer set search_path = ''
+as $$
+declare n int;
+begin
+  update public.join_requests set status = 'expired' where status = 'sent' and expires_at <= now();
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke execute on function public.expire_join_tokens() from public, anon, authenticated;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.schedule('hz-expire-join-tokens', '15 * * * *', 'select public.expire_join_tokens()');
+  end if;
+end $$;
+
+
+-- ================================================================
+-- 20261018120000_f28_import.sql
+-- ================================================================
+-- F28 wave 3 (Part 3, plus the console side of Parts 2 and 4): hostels found
+-- at scale and the team's call lists.
+--   hostels.source            team | resident | partner | places | osm | web
+--   hostels.added_by          the Firebase uid of the resident / partner who
+--                             added it (Build 2 fills it)
+--   hostels.place_id          Google place id ("osm:n123" for OpenStreetMap);
+--                             the import dedupes on it
+--   hostels.source_seen_at    when the import last saw the place (Places
+--                             fields are refreshed after 30 days)
+--   hostels.rent_confirmed_at when a human confirmed the rent (List button,
+--                             Add a hostel, "Rent confirmed today")
+--   hostels.owner_phone_hint  the owner's phone as the import / the web form
+--                             heard it. Postgres has no column RLS, so the
+--                             hint stays on a row only while it is a DRAFT
+--                             (drafts are invisible to the public). The moment
+--                             a row is listed or live, the trigger below moves
+--                             it to hostel_leads.owner_phone (team-only table)
+--                             and blanks the column. hostel_owner_phone(h)
+--                             reads whichever holds it (team / definer only).
+--   hostels.source_photos     Google photo resource names (up to 3); the media
+--                             URL needs the key, so nothing public is stored
+--   hostels.removed_at        "Not a PG / Closed": kept so the import doesn't
+--                             add it again; hidden from every list
+--   hostels.call_after        "Call later": back in To call after this
+--   self_list_requests        W8 "List your PG" form (anon RPC, 3 per phone a
+--                             day) → a draft with source 'web' → To call
+--   list_draft / draft_not_pg / rent_confirmed   console › Listed buttons
+--   call_list('to_call' | 'to_refresh')         the two console segments, with
+--                             the team-only phone (Export CSV)
+--   claim_adders()            console › Claims: "added by Ravi (resident) ·
+--                             owner phone matches ✓/✗"
+--   listed_rent_visible       a listed hostel's rent only within 60 days of a
+--                             human confirmation (Part 4: "Rent on request")
+-- Build 2's migration adds the same six hostels columns; both use
+-- add column if not exists. Safe to run again.
+
+-- ------------------------------------------------------------ hostels columns
+
+alter table public.hostels add column if not exists source text not null default 'team';
+alter table public.hostels drop constraint if exists hostels_source_check;
+alter table public.hostels add constraint hostels_source_check check (source in ('team', 'resident', 'partner', 'places', 'osm', 'web'));
+alter table public.hostels add column if not exists added_by text;
+alter table public.hostels add column if not exists place_id text;
+alter table public.hostels add column if not exists source_seen_at timestamptz;
+alter table public.hostels add column if not exists rent_confirmed_at timestamptz;
+alter table public.hostels add column if not exists owner_phone_hint text not null default '';
+alter table public.hostels add column if not exists source_photos text[] not null default '{}';
+alter table public.hostels add column if not exists removed_at timestamptz;
+alter table public.hostels add column if not exists call_after timestamptz;
+create unique index if not exists hostels_place_id_key on public.hostels (place_id) where place_id is not null;
+create index if not exists hostels_status_source_idx on public.hostels (status, source);
+
+-- ------------------------------------------------------------ the owner's phone stays team-only
+
+create or replace function public.keep_phone_hint_private() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare ph text := regexp_replace(coalesce(new.owner_phone_hint, ''), '\D', '', 'g');
+begin
+  if new.status <> 'draft' and ph <> '' then
+    insert into public.hostel_leads (hostel_id, owner_phone, stage) values (new.id, ph, 'lead')
+    on conflict (hostel_id) do update
+      set owner_phone = case when public.hostel_leads.owner_phone = '' then excluded.owner_phone else public.hostel_leads.owner_phone end,
+          updated_at = now();
+    update public.hostels set owner_phone_hint = '' where id = new.id;
+  end if;
+  return null;
+end $$;
+revoke execute on function public.keep_phone_hint_private() from public, anon, authenticated;
+drop trigger if exists hostels_phone_hint on public.hostels;
+create trigger hostels_phone_hint after insert or update of status, owner_phone_hint on public.hostels
+  for each row execute function public.keep_phone_hint_private();
+
+-- The owner's phone wherever the team has it: the draft hint, the lead row, or
+-- the owner's own profile. Definer-only: no grant to app roles. Build 2's
+-- add_hostel() can dedupe "same owner phone" with it.
+create or replace function public.hostel_owner_phone(h uuid) returns text
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(
+    nullif(regexp_replace((select coalesce(x.owner_phone_hint, '') from public.hostels x where x.id = h), '\D', '', 'g'), ''),
+    nullif((select regexp_replace(l.owner_phone, '\D', '', 'g') from public.hostel_leads l where l.hostel_id = h), ''),
+    nullif((select regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') from public.hostel_staff st join public.profiles p on p.id = st.user_id
+            where st.hostel_id = h and st.role = 'owner' order by p.created_at limit 1), ''),
+    '')
+$$;
+revoke execute on function public.hostel_owner_phone(uuid) from public, anon, authenticated;
+
+-- ------------------------------------------------------------ W8: owner self-serve requests
+
+create table if not exists public.self_list_requests (
+  id uuid primary key default gen_random_uuid(),
+  hostel_id uuid references public.hostels (id) on delete set null,
+  hostel_name text not null check (length(trim(hostel_name)) between 3 and 80),
+  name text not null check (length(trim(name)) between 2 and 80),
+  phone text not null check (phone ~ '^[0-9]{10}$'),
+  area text not null check (length(trim(area)) between 2 and 40),
+  rent_min int not null check (rent_min between 1000 and 100000),
+  rent_max int not null check (rent_max between rent_min and 100000),
+  gender text not null check (gender in ('Men', 'Women', 'Co-living')),
+  food boolean not null default false,
+  photos text[] not null default '{}',                -- paths in the self-list bucket
+  status text not null default 'new' check (status in ('new', 'done')),
+  created_at timestamptz not null default now()
+);
+create index if not exists self_list_requests_phone_idx on public.self_list_requests (phone, created_at);
+create index if not exists self_list_requests_hostel_id_idx on public.self_list_requests (hostel_id);
+alter table public.self_list_requests enable row level security;
+drop policy if exists "team reads requests" on public.self_list_requests;
+create policy "team reads requests" on public.self_list_requests for select using (public.is_team());
+drop policy if exists "team closes requests" on public.self_list_requests;
+create policy "team closes requests" on public.self_list_requests for update using (public.is_team()) with check (public.is_team());
+revoke all on public.self_list_requests from anon;
+grant select, update on public.self_list_requests to authenticated;
+
+-- The owner's 1–3 photos from the web form: a private bucket, anyone may put
+-- a small image under web/<uuid>/, only the team reads.
+insert into storage.buckets (id, name, public) values ('self-list', 'self-list', false) on conflict (id) do nothing;
+drop policy if exists "hz self-list upload" on storage.objects;
+create policy "hz self-list upload" on storage.objects for insert
+  with check (bucket_id = 'self-list' and name ~ '^web/[0-9a-f-]{36}/[0-9a-z]{1,20}\.(jpg|jpeg|png|webp)$');
+drop policy if exists "hz team reads self-list" on storage.objects;
+create policy "hz team reads self-list" on storage.objects for select
+  using (bucket_id = 'self-list' and public.is_team());
+
+-- "List your PG on Hostelzy, free": p = {hostel_name, name, phone, area,
+-- rent_min, rent_max, gender, food, photos[]}. Anonymous; at most 3 a day per
+-- phone. Makes a draft (source 'web') unless a hostel with the same name in
+-- the same area already exists, then the request points at that one. Returns
+-- the request id. The page says "We'll call you within 2 days", nothing more.
+create or replace function public.self_list_request(p jsonb) returns uuid
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_hostel text := trim(coalesce(p ->> 'hostel_name', ''));
+  v_name text := trim(coalesce(p ->> 'name', ''));
+  v_phone text := regexp_replace(coalesce(p ->> 'phone', ''), '\D', '', 'g');
+  v_area text := trim(coalesce(p ->> 'area', ''));
+  v_min int := (p ->> 'rent_min')::int;
+  v_max int := (p ->> 'rent_max')::int;
+  v_gender text := coalesce(p ->> 'gender', 'Men');
+  v_food boolean := coalesce((p ->> 'food')::boolean, false);
+  v_photos text[] := coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p -> 'photos', '[]'::jsonb)) x
+                               where x ~ '^web/[0-9a-f-]{36}/[0-9a-z]{1,20}\.(jpg|jpeg|png|webp)$'), '{}');
+  hid uuid; rid uuid; v_slug text;
+begin
+  if length(v_hostel) < 3 then raise exception 'add the hostel name'; end if;
+  if length(v_name) < 2 then raise exception 'add your name'; end if;
+  if v_phone !~ '^[6-9][0-9]{9}$' then raise exception 'add a 10-digit phone number'; end if;
+  if length(v_area) < 2 then raise exception 'add the area'; end if;
+  if v_min is null or v_max is null or v_min < 1000 or v_max < v_min or v_max > 100000 then raise exception 'add the rent range'; end if;
+  if v_gender not in ('Men', 'Women', 'Co-living') then raise exception 'pick Men, Women or Co-living'; end if;
+  if (select count(*) from public.self_list_requests r where r.phone = v_phone and r.created_at > now() - interval '1 day') >= 3 then
+    raise exception 'that''s 3 requests today from this number; we''ll call you';
+  end if;
+  v_photos := v_photos[1:3];
+  select h.id into hid from public.hostels h
+    where h.removed_at is null and lower(h.name) = lower(v_hostel) and lower(h.area) = lower(v_area)
+    order by (h.status = 'live') desc, h.created_at limit 1;
+  if hid is null then
+    v_slug := trim(both '-' from regexp_replace(lower(v_hostel), '[^a-z0-9]+', '-', 'g'));
+    if v_slug = '' then v_slug := 'hostel'; end if;
+    while exists (select 1 from public.hostels where slug = v_slug) loop
+      v_slug := v_slug || '-' || substr(md5(random()::text), 1, 4);
+    end loop;
+    insert into public.hostels (slug, name, gender, area, food, status, source, rent_min, rent_max, owner_phone_hint, source_seen_at)
+    values (v_slug, v_hostel, v_gender, v_area, v_food, 'draft', 'web', v_min, v_max, v_phone, now())
+    returning id into hid;
+  elsif exists (select 1 from public.hostels h where h.id = hid and h.status = 'draft' and h.owner_phone_hint = '') then
+    update public.hostels set owner_phone_hint = v_phone where id = hid;
+  end if;
+  insert into public.self_list_requests (hostel_id, hostel_name, name, phone, area, rent_min, rent_max, gender, food, photos)
+  values (hid, v_hostel, v_name, v_phone, v_area, v_min, v_max, v_gender, v_food, v_photos)
+  returning id into rid;
+  return rid;
+end $$;
+grant execute on function public.self_list_request(jsonb) to anon, authenticated;
+
+-- ------------------------------------------------------------ console › Listed buttons
+
+-- To call › List: the draft goes UNVERIFIED with the rent the owner just gave.
+-- A human confirmed the rent, so rent_confirmed_at = now(). No photo needed
+-- (Places / OSM drafts have none yet; the team adds one in Listed).
+create or replace function public.list_draft(p_id uuid, p_rent_min int, p_rent_max int, p_gender text, p_food boolean) returns uuid
+language plpgsql security definer set search_path = ''
+as $$
+declare st text;
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team lists hostels'; end if;
+  select status into st from public.hostels where id = p_id and removed_at is null;
+  if st is null then raise exception 'that hostel isn''t on Hostelzy'; end if;
+  if st = 'live' then raise exception 'this hostel is already verified'; end if;
+  if p_rent_min is null or p_rent_max is null or p_rent_min < 1000 or p_rent_max < p_rent_min or p_rent_max > 100000 then raise exception 'add the expected rent range'; end if;
+  if p_gender is null or p_gender not in ('Men', 'Women', 'Co-living') then raise exception 'pick Men, Women or Co-living'; end if;
+  update public.hostels set rent_min = p_rent_min, rent_max = p_rent_max, gender = p_gender, food = coalesce(p_food, food),
+    status = 'listed', rent_confirmed_at = now(), call_after = null
+  where id = p_id;
+  update public.self_list_requests set status = 'done' where hostel_id = p_id and status = 'new';
+  return p_id;
+end $$;
+revoke execute on function public.list_draft(uuid, int, int, text, boolean) from public, anon;
+grant execute on function public.list_draft(uuid, int, int, text, boolean) to authenticated;
+
+-- To call › Not a PG, To refresh › Closed: off Explore, out of every list, and
+-- the import never adds it again. A verified (live) hostel is paused in
+-- Hostels instead.
+create or replace function public.draft_not_pg(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare st text;
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team removes hostels'; end if;
+  select status into st from public.hostels where id = p_id;
+  if st is null then raise exception 'that hostel isn''t on Hostelzy'; end if;
+  if st = 'live' then raise exception 'this hostel is verified: pause it in Hostels'; end if;
+  update public.hostels set status = 'draft', removed_at = now(), call_after = null where id = p_id;
+  update public.self_list_requests set status = 'done' where hostel_id = p_id and status = 'new';
+end $$;
+revoke execute on function public.draft_not_pg(uuid) from public, anon;
+grant execute on function public.draft_not_pg(uuid) to authenticated;
+
+-- To call › Call later: back in the list after 3 days.
+create or replace function public.call_later(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team'; end if;
+  update public.hostels set call_after = now() + interval '3 days' where id = p_id and status = 'draft';
+end $$;
+revoke execute on function public.call_later(uuid) from public, anon;
+grant execute on function public.call_later(uuid) to authenticated;
+
+-- To refresh › Rent confirmed today.
+create or replace function public.rent_confirmed(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team confirms rents'; end if;
+  if not exists (select 1 from public.hostels where id = p_id and status = 'listed' and rent_min is not null) then
+    raise exception 'that hostel isn''t listed with a rent';
+  end if;
+  update public.hostels set rent_confirmed_at = now() where id = p_id;
+end $$;
+revoke execute on function public.rent_confirmed(uuid) from public, anon;
+grant execute on function public.rent_confirmed(uuid) to authenticated;
+
+-- The two call lists, with the team-only phone.
+--   to_call     drafts from Places / OSM / the web form, not removed; "Call
+--               later" rows come last, after their date
+--   to_refresh  listed hostels whose rent nobody confirmed in 50 days
+drop function if exists public.call_list(text);
+create function public.call_list(p_kind text)
+returns table (id uuid, name text, area text, gender text, food boolean, source text, status text, phone text,
+               rent_min int, rent_max int, rent_confirmed_at timestamptz, created_at timestamptz, call_after timestamptz,
+               lat double precision, lng double precision, photos text[], adder text)
+language sql stable security definer set search_path = ''
+as $$
+  select h.id, h.name, h.area, h.gender, h.food, h.source, h.status, public.hostel_owner_phone(h.id),
+    h.rent_min, h.rent_max, h.rent_confirmed_at, h.created_at, h.call_after, h.lat, h.lng,
+    coalesce((select array_agg(distinct ph) from public.self_list_requests r, unnest(r.photos) ph where r.hostel_id = h.id), '{}'),
+    coalesce((select r.name from public.self_list_requests r where r.hostel_id = h.id order by r.created_at desc limit 1), '')
+  from public.hostels h
+  where public.is_team() and h.removed_at is null
+    and ((p_kind = 'to_call' and h.status = 'draft' and h.source in ('places', 'osm', 'web'))
+      or (p_kind = 'to_refresh' and h.status = 'listed' and h.rent_min is not null
+          and (h.rent_confirmed_at is null or h.rent_confirmed_at < now() - interval '50 days')))
+  order by (h.call_after is not null and h.call_after > now()), h.call_after, h.rent_confirmed_at nulls first, h.created_at
+$$;
+revoke execute on function public.call_list(text) from public, anon;
+grant execute on function public.call_list(text) to authenticated;
+
+-- console › Claims: who added the hostel and whether the claimant's phone is
+-- the owner's phone we have.
+drop function if exists public.claim_adders();
+create function public.claim_adders() returns table (claim_id uuid, source text, adder text, phone_match boolean)
+language sql stable security definer set search_path = ''
+as $$
+  select c.id, h.source,
+    coalesce(nullif((select p.name from public.profiles p where p.id = h.added_by), ''),
+             nullif((select r.name from public.self_list_requests r where r.hostel_id = h.id order by r.created_at desc limit 1), ''), ''),
+    public.hostel_owner_phone(h.id) <> '' and public.hostel_owner_phone(h.id) = regexp_replace(c.phone, '\D', '', 'g')
+  from public.claim_requests c join public.hostels h on h.id = c.hostel_id
+  where public.is_team() and c.status = 'new'
+$$;
+revoke execute on function public.claim_adders() from public, anon;
+grant execute on function public.claim_adders() to authenticated;
+
+-- ------------------------------------------------------------ Part 4: rent only when fresh
+
+-- A listed hostel's rent shows only within 60 days of a human confirmation;
+-- a verified hostel's rates are live data, always visible.
+drop view if exists public.listed_rent_visible;
+create view public.listed_rent_visible with (security_invoker = true) as
+  select h.id, h.status, h.rent_confirmed_at,
+    (h.status = 'live' or h.rent_confirmed_at > now() - interval '60 days') as rent_visible,
+    case when h.status = 'live' or h.rent_confirmed_at > now() - interval '60 days' then h.rent_min end as rent_min,
+    case when h.status = 'live' or h.rent_confirmed_at > now() - interval '60 days' then h.rent_max end as rent_max
+  from public.hostels h
+  where h.status in ('listed', 'live');
+grant select on public.listed_rent_visible to anon, authenticated;
+
+
+-- ================================================================
+-- 20261018140000_f29_drive.sql
+-- ================================================================
+-- F29 Part 3 (wave 4): tenant IDs in the owner's own Google Drive.
+-- Hostelzy never stores a tenant's ID image or number (DECISIONS 2026-10-18).
+-- The owner connects their Drive once (scope `drive.file`); the tenant's app
+-- uploads the (masked) photo through the Edge Function `id-upload`, which
+-- puts it in the owner's folder with the owner's refresh token; the owner
+-- and managers see it through `id-view`. This file:
+--
+--   owner_drive          one row per connected hostel: the refresh token
+--                        encrypted with pgcrypto and a server secret
+--                        (the Edge Function secret DRIVE_TOKEN_KEY; the
+--                        database holds only ciphertext), the Drive folder
+--                        id, the "Full copy needed (police file)" switch and
+--                        a count of the files the app put there. No RLS
+--                        policy at all: only the service role reads it.
+--   drive_status(h)      owner / managers: connected, file count, full_copy.
+--   set_full_copy(h, v)  owner / managers: the switch.
+--   drive_role(h)        the caller's role on the hostel (+ its name), for the
+--                        Edge Functions to check who is asking.
+--   id_upload_target(t)  the tenant's app (by join token): which hostel and
+--                        whether the full copy is needed. Reads the token
+--                        through join_hostel_for_token(), a stub here until
+--                        F29 Part 2's join_requests lands (wave 2).
+--   drive_put / drive_token / drive_forget / drive_file_added
+--                        service role only (the Edge Functions).
+--
+-- F28 Part 4 (28-90): hostels.rent_confirmed_at, added here too (same
+-- `add column if not exists` as wave 2/3) so this branch tests alone.
+-- Rerun-safe.
+
+-- pgcrypto: Supabase keeps extensions in `extensions`; a plain Postgres
+-- (the tests) puts it in public. The wrappers below find either.
+do $$ begin
+  if exists (select 1 from pg_namespace where nspname = 'extensions') then
+    create extension if not exists pgcrypto with schema extensions;
+  else
+    create extension if not exists pgcrypto;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------ F28 Part 4
+alter table public.hostels add column if not exists rent_confirmed_at timestamptz;
+
+-- ------------------------------------------------------------ owner_drive
+create table if not exists public.owner_drive (
+  hostel_id uuid primary key references public.hostels (id) on delete cascade,
+  refresh_token bytea not null,
+  folder_id text not null,
+  full_copy boolean not null default false,
+  connected_by text,
+  connected_at timestamptz not null default now(),
+  files int not null default 0 check (files >= 0)
+);
+alter table public.owner_drive enable row level security;
+-- The stub's default privileges grant everything; nobody but the service
+-- role may touch this table (it bypasses RLS). No policy is created.
+revoke all on public.owner_drive from anon, authenticated;
+
+-- The two sides of the secret: text in, bytea out and back. `key` is the
+-- Edge Function secret; the database never sees it at rest.
+create or replace function public.drive_enc(v text, key text) returns bytea
+language sql security definer set search_path = extensions, public
+as $$ select pgp_sym_encrypt(v, key) $$;
+revoke all on function public.drive_enc(text, text) from public, anon, authenticated;
+
+create or replace function public.drive_dec(v bytea, key text) returns text
+language sql stable security definer set search_path = extensions, public
+as $$ select pgp_sym_decrypt(v, key) $$;
+revoke all on function public.drive_dec(bytea, text) from public, anon, authenticated;
+
+-- ------------------------------------------------------------ owner / managers
+-- H50: "Connected · 12 files" and the Full copy switch.
+drop function if exists public.drive_status(uuid);
+create function public.drive_status(h uuid) returns table (connected boolean, files int, full_copy boolean)
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if not public.is_staff(h) then raise exception 'not your hostel'; end if;
+  return query select true, d.files, d.full_copy from public.owner_drive d where d.hostel_id = h;
+  if not found then return query select false, 0, false; end if;
+end $$;
+grant execute on function public.drive_status(uuid) to authenticated;
+
+create or replace function public.set_full_copy(h uuid, v boolean) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not public.is_staff(h) then raise exception 'not your hostel'; end if;
+  update public.owner_drive set full_copy = v where hostel_id = h;
+  if not found then raise exception 'Connect Google Drive first'; end if;
+end $$;
+grant execute on function public.set_full_copy(uuid, boolean) to authenticated;
+
+-- Who is asking, for drive-connect / id-view: 'owner', 'manager' or no row.
+drop function if exists public.drive_role(uuid);
+create function public.drive_role(h uuid) returns table (role text, name text)
+language sql stable security definer set search_path = ''
+as $$
+  select s.role, x.name from public.hostel_staff s join public.hostels x on x.id = s.hostel_id
+  where s.hostel_id = h and s.user_id = public.uid()
+$$;
+grant execute on function public.drive_role(uuid) to authenticated;
+
+-- ------------------------------------------------------------ the tenant's upload
+-- Which hostel a join token belongs to, for the caller. A stub until
+-- F29 Part 2 (join_requests, wave 2) replaces it with `create or replace`:
+-- that version checks the token exists, isn't expired, and is the caller's
+-- (status 'sent' with no tenant yet, or tenant_id = public.uid()).
+do $$ begin
+  if to_regprocedure('public.join_hostel_for_token(text)') is null then
+    create function public.join_hostel_for_token(p_token text) returns uuid
+    language plpgsql stable security definer set search_path = ''
+    as $f$ begin raise exception 'Ask to join isn’t ready yet'; end $f$;
+  end if;
+end $$;
+revoke all on function public.join_hostel_for_token(text) from public, anon;
+grant execute on function public.join_hostel_for_token(text) to authenticated;
+
+drop function if exists public.id_upload_target(text);
+create function public.id_upload_target(p_token text) returns table (hostel_id uuid, full_copy boolean)
+language plpgsql stable security definer set search_path = ''
+as $$
+declare h uuid;
+begin
+  if public.uid() is null then raise exception 'sign in first'; end if;
+  h := public.join_hostel_for_token(p_token);
+  if h is null then raise exception 'This link isn’t valid any more'; end if;
+  return query select d.hostel_id, d.full_copy from public.owner_drive d where d.hostel_id = h;
+  if not found then raise exception 'The owner hasn’t connected Google Drive'; end if;
+end $$;
+grant execute on function public.id_upload_target(text) to authenticated;
+
+-- ------------------------------------------------------------ service role only
+-- drive-connect stores the owner's refresh token (encrypted) and folder.
+create or replace function public.drive_put(h uuid, p_uid text, p_token text, p_folder text, p_key text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.hostel_staff s where s.hostel_id = h and s.user_id = p_uid and s.role = 'owner') then
+    raise exception 'only the owner connects Drive';
+  end if;
+  if coalesce(p_key, '') = '' or coalesce(p_token, '') = '' or coalesce(p_folder, '') = '' then raise exception 'missing value'; end if;
+  insert into public.owner_drive (hostel_id, refresh_token, folder_id, connected_by, connected_at, files)
+  values (h, public.drive_enc(p_token, p_key), p_folder, p_uid, now(), 0)
+  on conflict (hostel_id) do update
+    set refresh_token = excluded.refresh_token, folder_id = excluded.folder_id, connected_by = excluded.connected_by, connected_at = now(), files = 0;
+end $$;
+revoke all on function public.drive_put(uuid, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.drive_put(uuid, text, text, text, text) to service_role;
+
+-- id-upload / id-view / drive-connect read the token back (memory only).
+drop function if exists public.drive_token(uuid, text);
+create function public.drive_token(h uuid, p_key text) returns table (refresh_token text, folder_id text, full_copy boolean)
+language sql stable security definer set search_path = ''
+as $$
+  select public.drive_dec(d.refresh_token, p_key), d.folder_id, d.full_copy from public.owner_drive d where d.hostel_id = h
+$$;
+revoke all on function public.drive_token(uuid, text) from public, anon, authenticated;
+grant execute on function public.drive_token(uuid, text) to service_role;
+
+create or replace function public.drive_forget(h uuid) returns void
+language sql security definer set search_path = ''
+as $$ delete from public.owner_drive where hostel_id = h $$;
+revoke all on function public.drive_forget(uuid) from public, anon, authenticated;
+grant execute on function public.drive_forget(uuid) to service_role;
+
+-- +1 after an upload, -1 after "Delete from my Drive".
+create or replace function public.drive_file_added(h uuid, delta int) returns void
+language sql security definer set search_path = ''
+as $$ update public.owner_drive set files = greatest(0, files + delta) where hostel_id = h $$;
+revoke all on function public.drive_file_added(uuid, int) from public, anon, authenticated;
+grant execute on function public.drive_file_added(uuid, int) to service_role;
+
+
+-- ================================================================
+-- 20261018150000_f31_push_copy.sql
+-- ================================================================
+-- F31 (2026-10-18): push bodies are facts, not explanations. Same six functions
+-- as before (their latest versions), only the body strings change:
+--   send_layout_fix      "Compare it with the current layout and decide."  → "Room N"
+--   decide_layout_fix    "Room N is live for tenants now. Thanks for helping." → "Room N is live"
+--                        "Thanks for telling them about Room N."           → "Room N"
+--   send_shape_drawing   "Check it and publish. Tenants see it straight away." → "Room N · ready to publish"
+--   save_meter           "…/unit. It’s on your rent in Hostelzy."          → "…/unit"
+--   decide_signup        "Your owner approved you. Open Hostelzy to see your stay." → "Your stay is open"
+--   join_with_invite     "Approve them in Manage → Residents"             → "Manage → Residents"
+-- Safe to run again.
+
+create or replace function public.send_layout_fix(p_hostel uuid, p_room int, p_layout jsonb, p_note text default '', p_photo text default null) returns uuid
+language plpgsql security definer set search_path = ''
+as $$
+declare s record; me text := public.uid(); n int; fid uuid; who text; base int;
+begin
+  s := public.fix_author(p_hostel);
+  if not public.fix_photo_ok(p_hostel, p_photo) then raise exception 'that photo isn''t yours'; end if;
+  perform public.check_layout(p_hostel, p_room, p_layout);
+  select count(*) into n from public.layout_fixes where hostel_id = p_hostel and author_id = me and status = 'pending' and not (kind = 'layout' and room = p_room);
+  if n >= 3 then raise exception 'you have 3 fixes waiting here'; end if;
+  select version into base from public.layouts where hostel_id = p_hostel and room = p_room and stage = 'published';
+  update public.layout_fixes set status = 'withdrawn' where hostel_id = p_hostel and room = p_room and author_id = me and status = 'pending' and kind = 'layout';
+  insert into public.layout_fixes (hostel_id, room, author_name, author_bed, layout, note, base_version, photo)
+  values (p_hostel, p_room, s.name, coalesce(s.bed_label, ''), p_layout, left(coalesce(trim(p_note), ''), 300), coalesce(base, 0), p_photo)
+  returning id into fid;
+  who := split_part(s.name, ' ', 1) || case when s.my_room is not null then ' (lives in ' || s.my_room || ')' else '' end;
+  insert into public.push_outbox (user_id, title, body, data)
+  select st.user_id, who || ' suggested a fix for Room ' || p_room, 'Room ' || p_room, jsonb_build_object('screen', 'oToday', 'fix', fid)
+  from public.hostel_staff st where st.hostel_id = p_hostel and st.role = 'owner';
+  return fid;
+end $$;
+
+create or replace function public.decide_layout_fix(p_id uuid, p_approve boolean, p_reason text default null) returns int
+language plpgsql security definer set search_path = ''
+as $$
+declare f record; v int; oname text;
+begin
+  select * into f from public.layout_fixes where id = p_id;
+  if f is null or f.status <> 'pending' then raise exception 'that fix isn''t waiting any more'; end if;
+  if not (public.is_staff(f.hostel_id) or (public.is_team() and f.created_at < now() - interval '7 days')) then
+    raise exception 'the owner decides first; the team can after 7 days';
+  end if;
+  select h.owner_name into oname from public.hostels h where h.id = f.hostel_id;
+  if p_approve then
+    if f.kind = 'layout' then
+      perform public.check_layout(f.hostel_id, f.room, f.layout);
+      v := public.put_layout(f.hostel_id, f.room, f.layout);
+    end if;
+    update public.layout_fixes set status = 'approved', decided_by = public.uid(), decided_at = now() where id = p_id;
+    insert into public.push_outbox (user_id, title, body, data)
+    values (f.author_id, coalesce(nullif(oname, ''), 'Your owner') || ' approved your fix',
+      case when f.kind = 'layout' then 'Room ' || f.room || ' is live' else 'Room ' || f.room end,
+      jsonb_build_object('screen', 'rRoom', 'room', f.room));
+  else
+    update public.layout_fixes set status = 'rejected', reason = nullif(left(trim(coalesce(p_reason, '')), 300), ''), decided_by = public.uid(), decided_at = now() where id = p_id;
+    insert into public.push_outbox (user_id, title, body, data)
+    values (f.author_id, coalesce(nullif(oname, ''), 'Your owner') || ' didn’t approve your fix', coalesce(nullif(trim(coalesce(p_reason, '')), ''), 'You can send a new fix any time.'), jsonb_build_object('screen', 'rRoom', 'room', f.room));
+  end if;
+  return v;
+end $$;
+
+create or replace function public.send_shape_drawing(p_id uuid, p_drawing jsonb) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare q record; o jsonb := p_drawing -> 'outline'; w double precision; h double precision;
+begin
+  if not public.is_team() then raise exception 'only the Hostelzy team draws'; end if;
+  select * into q from public.shape_requests where id = p_id;
+  if q is null or q.status not in ('requested', 'drawing', 'sent') then raise exception 'that request isn''t open any more'; end if;
+  w := (p_drawing ->> 'w')::double precision; h := (p_drawing ->> 'h')::double precision;
+  if w is null or h is null or w < 6 or w > 60 or h < 6 or h > 60 then raise exception 'room size is 6 to 60 ft'; end if;
+  if coalesce(p_drawing ->> 'shape', 'Rectangle') not in ('Rectangle', 'L shape', 'T shape', 'U shape', 'Angled corner', 'Narrow end', 'Alcove', 'Custom') then raise exception 'that room shape isn''t known'; end if;
+  if o is not null and jsonb_typeof(o) <> 'null' and (jsonb_typeof(o) <> 'array' or jsonb_array_length(o) < 3 or jsonb_array_length(o) > 40
+     or exists (select 1 from jsonb_array_elements(o) p where jsonb_typeof(p) <> 'array' or jsonb_array_length(p) <> 2
+                or (p ->> 0)::double precision not between 0 and w or (p ->> 1)::double precision not between 0 and h)) then
+    raise exception 'the room''s walls don''t fit its size';
+  end if;
+  -- A full layout (with beds) gets the editor's checks now; a shape alone is
+  -- fitted with beds in the owner's app and checked when they publish.
+  if jsonb_typeof(p_drawing -> 'beds') = 'object' and exists (select 1 from jsonb_object_keys(p_drawing -> 'beds')) then
+    perform public.check_layout(q.hostel_id, q.room, p_drawing);
+  end if;
+  update public.shape_requests set status = 'sent', drawing = p_drawing, sent_by = public.uid(), sent_at = now() where id = p_id;
+  insert into public.push_outbox (user_id, title, body, data)
+  select st.user_id, 'Hostelzy drew room ' || q.room, 'Room ' || q.room || ' · ready to publish', jsonb_build_object('screen', 'oLayout', 'room', q.room)
+  from public.hostel_staff st where st.hostel_id = q.hostel_id;
+end $$;
+
+create or replace function public.save_meter(p_hostel uuid, p_month date, p_rate numeric, p_rows jsonb) returns int
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  m date := date_trunc('month', p_month)::date;
+  e jsonb; rm record; prev int; u int; ppl int; amt int; n int := 0; old_each int; hname text;
+begin
+  if not (public.is_staff(p_hostel) or public.is_team()) then raise exception 'only this hostel''s owner or managers add meter readings'; end if;
+  if p_rate is null or p_rate <= 0 or p_rate > 100 then raise exception 'type the ₹ per unit'; end if;
+  select name into hname from public.hostels where id = p_hostel;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    if (e ->> 'reading') is null then continue; end if;
+    select id, coalesce(label, number::text) as label into rm from public.rooms where hostel_id = p_hostel and number = (e ->> 'room')::int;
+    if rm.id is null then raise exception 'room % isn''t in this hostel', e ->> 'room'; end if;
+    select reading into prev from public.meter_readings where room_id = rm.id and month < m order by month desc limit 1;
+    if prev is not null and (e ->> 'reading')::int < prev then
+      raise exception 'room %: the reading is lower than last month''s (%)', rm.label, prev;
+    end if;
+    u := case when prev is null then null else (e ->> 'reading')::int - prev end;
+    select count(*) into ppl from public.stays s join public.beds b on b.id = s.bed_id where b.room_id = rm.id and s.left_on is null;
+    amt := case when u is null or ppl = 0 then null else ceil(u * p_rate / ppl)::int end;
+    select each_amt into old_each from public.meter_readings where room_id = rm.id and month = m;
+    insert into public.meter_readings (room_id, hostel_id, month, reading, rate, units, people, each_amt)
+    values (rm.id, p_hostel, m, (e ->> 'reading')::int, p_rate, u, ppl, amt)
+    on conflict (room_id, month) do update set reading = excluded.reading, rate = excluded.rate, units = excluded.units,
+      people = excluded.people, each_amt = excluded.each_amt, created_by = public.uid(), created_at = now();
+    -- The room's residents hear about a new or changed amount.
+    if amt is not null and amt is distinct from old_each then
+      insert into public.push_outbox (user_id, title, body, data)
+      select s.user_id, 'Electricity for ' || to_char(m, 'FMMonth') || ': ₹' || amt,
+        u || ' units ÷ ' || ppl || ' · ₹' || trim(to_char(p_rate, 'FM999990.##')) || '/unit', '{"screen":"rPay"}'::jsonb
+      from public.stays s join public.beds b on b.id = s.bed_id
+      where b.room_id = rm.id and s.left_on is null and s.user_id is not null and s.confirmed;
+    end if;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+create or replace function public.decide_signup(p_id uuid, p_approve boolean) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare g record; s_id uuid;
+begin
+  select * into g from public.invite_signups where id = p_id and status = 'pending';
+  if g is null then raise exception 'already decided'; end if;
+  if not (public.is_staff(g.hostel_id) or public.is_team()) then raise exception 'only this hostel''s staff can decide'; end if;
+  update public.invite_signups set status = case when p_approve then 'approved' else 'rejected' end where id = p_id;
+  if p_approve then
+    -- The owner may already have added them (same phone, not yet confirmed).
+    select id into s_id from public.stays
+    where hostel_id = g.hostel_id and phone = g.phone and user_id is null and not confirmed and left_on is null
+    order by joined_on desc limit 1;
+    if s_id is not null then
+      update public.stays set user_id = g.user_id, confirmed = true where id = s_id;
+    else
+      insert into public.stays (hostel_id, user_id, name, phone, confirmed) values (g.hostel_id, g.user_id, g.name, g.phone, true);
+    end if;
+    insert into public.push_outbox (user_id, title, body, data) values (g.user_id, 'You’re in', 'Your stay is open', '{"screen":"rHome"}');
+  end if;
+end $$;
+
+create or replace function public.join_with_invite(p_code text, p_name text, p_phone text, p_bed text default '') returns text
+language plpgsql security definer set search_path = ''
+as $$
+declare i record; hn text;
+begin
+  if not public.is_verified() then raise exception 'sign in with Google first'; end if;
+  select * into i from public.invites where code = upper(trim(p_code)) and active;
+  if i is null then raise exception 'that invite code isn''t valid any more; ask your owner for the new one'; end if;
+  if length(trim(p_name)) < 2 or p_phone !~ '^[6-9][0-9]{9}$' then raise exception 'enter your name and 10-digit phone'; end if;
+  if exists (select 1 from public.invite_signups where hostel_id = i.hostel_id and user_id = public.uid() and status = 'pending') then
+    raise exception 'you already asked; your owner will approve it';
+  end if;
+  insert into public.invite_signups (code, hostel_id, name, phone, bed) values (i.code, i.hostel_id, trim(p_name), p_phone, trim(coalesce(p_bed, '')));
+  select name into hn from public.hostels where id = i.hostel_id;
+  perform public.notify_staff(i.hostel_id, trim(p_name) || ' wants to join', 'Manage → Residents', jsonb_build_object('screen', 'oInvite'));
+  return hn;
+end $$;
+
+
+-- ================================================================
+-- 20261018160000_w24_wiring.sql
+-- ================================================================
+-- Waves 2 + 4 wired together (integration, 2026-10-18). Runs after
+-- 20261018110000_f29_join.sql (join_requests) and 20261018140000_f29_drive.sql
+-- (owner_drive, the join_hostel_for_token stub). Safe to run again.
+--
+-- 1. join_hostel_for_token(token): the real body (wave 4 §2.3 of its handover).
+--    id_upload_target() calls it to find the hostel whose owner's Drive gets
+--    the tenant's ID. Wave 4 created only a stub ("isn't ready yet").
+-- 2. join_request_info(token): `drive` is true once the owner connected Drive
+--    (an owner_drive row), so S94 shows the camera path instead of WhatsApp
+--    (wave 2 left it false until wave 4 existed).
+-- 3. clear_join_id(id): H49 "Delete from my Drive" deleted the file in the
+--    owner's Drive (Edge Function id-view, action delete); the request forgets
+--    the pointer and goes back to "No ID yet". Staff of the hostel only.
+
+create or replace function public.join_hostel_for_token(p_token text) returns uuid
+language sql stable security definer set search_path = ''
+as $$
+  select j.hostel_id from public.join_requests j
+  where j.token = upper(trim(p_token)) and j.expires_at > now() and j.status in ('sent', 'filled')
+    and (j.tenant_id is null or j.tenant_id = public.uid())
+$$;
+revoke all on function public.join_hostel_for_token(text) from public, anon;
+grant execute on function public.join_hostel_for_token(text) to authenticated;
+
+create or replace function public.join_request_info(p_token text) returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select jsonb_build_object(
+    'id', j.id, 'hostel_id', j.hostel_id, 'hostel', h.name,
+    'owner', coalesce(nullif(h.owner_name, ''), (select split_part(pr.name, ' ', 1) from public.hostel_staff st join public.profiles pr on pr.id = st.user_id
+                                                   where st.hostel_id = h.id and st.role = 'owner' order by pr.created_at limit 1), 'your owner'),
+    'bed', public.bed_label(j.bed_id), 'fee', j.fee, 'advance', j.advance, 'moves_in', j.moves_in, 'name_hint', j.name_hint,
+    'status', case when j.status = 'sent' and j.expires_at <= now() then 'expired' else j.status end,
+    'taken', not public.bed_free_to_join(j.bed_id),
+    'mine', j.tenant_id is not null and j.tenant_id = public.uid(),
+    'id_received', j.id_received,
+    'drive', exists (select 1 from public.owner_drive d where d.hostel_id = j.hostel_id),
+    'owner_phone', case when j.status in ('sent', 'filled') and j.expires_at > now() or j.tenant_id = public.uid() then coalesce(
+      nullif((select coalesce(nullif(pr.whatsapp, ''), regexp_replace(coalesce(pr.phone, ''), '\D', '', 'g')) from public.hostel_staff st join public.profiles pr on pr.id = st.user_id
+              where st.hostel_id = h.id and st.role = 'owner' order by pr.created_at limit 1), ''),
+      nullif((select regexp_replace(coalesce(l.owner_whatsapp, l.owner_phone), '\D', '', 'g') from public.hostel_leads l where l.hostel_id = h.id), ''),
+      '') else '' end)
+  from public.join_requests j join public.hostels h on h.id = j.hostel_id
+  where j.token = upper(trim(p_token)) and public.is_verified()
+$$;
+revoke execute on function public.join_request_info(text) from public, anon;
+grant execute on function public.join_request_info(text) to authenticated;
+
+create or replace function public.clear_join_id(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare j record;
+begin
+  select * into j from public.join_requests where id = p_id;
+  if j.id is null then raise exception 'no such request'; end if;
+  if not public.is_staff(j.hostel_id) then raise exception 'only this hostel''s owner or managers'; end if;
+  update public.join_requests set id_received = 'none', id_file_id = null where id = p_id;
+end $$;
+revoke all on function public.clear_join_id(uuid) from public, anon;
+grant execute on function public.clear_join_id(uuid) to authenticated;
+
+
+-- ================================================================
+-- 20261018170000_notify_resident.sql
+-- ================================================================
+-- F29 Part 1 · Notify (S40): the owner or a manager sends a current resident a
+-- short note as a Hostelzy notification. The app has called this RPC since wave 1.
+create or replace function public.notify_resident(p_stay uuid, p_note text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare s record; note text := trim(coalesce(p_note, ''));
+begin
+  select st.id, st.hostel_id, st.user_id, st.left_on, h.name into s
+  from public.stays st join public.hostels h on h.id = st.hostel_id where st.id = p_stay;
+  if s.id is null then raise exception 'no such resident'; end if;
+  if not public.is_staff(s.hostel_id) then raise exception 'only this hostel''s owner or managers'; end if;
+  if s.left_on is not null then raise exception 'this resident has left'; end if;
+  if s.user_id is null then raise exception 'not on the app yet'; end if;
+  if length(note) < 1 or length(note) > 200 then raise exception 'note must be 1-200 characters'; end if;
+  insert into public.push_outbox (user_id, title, body, data, kind)
+  values (s.user_id, s.name, note, '{"screen":"rHome"}'::jsonb, 'note');
+end $$;
+revoke all on function public.notify_resident(uuid, text) from public, anon;
+grant execute on function public.notify_resident(uuid, text) to authenticated;
 
 commit;

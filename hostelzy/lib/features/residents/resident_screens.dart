@@ -8,7 +8,6 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../food/save_food_screens.dart';
 import '../food/week_table.dart';
-import '../reminders/reminders_screens.dart';
 
 class ResidentHomeScreen extends StatelessWidget {
   const ResidentHomeScreen({super.key});
@@ -35,7 +34,6 @@ class ResidentHomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OnShow(() {
-            s.maybeOfferReminders();
             s.loadMenu(h.id);
             s.loadFood(h.id);
           }, child: const SizedBox.shrink()),
@@ -50,7 +48,6 @@ class ResidentHomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (s.showToday) const TodayCard(),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
@@ -66,7 +63,7 @@ class ResidentHomeScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       T(fmt(rentAmt), w: 800, s: 34, ls: -.02, lh: 1.05),
                       const SizedBox(height: 2),
-                      T(s.paid ? 'Paid. Thank you.' : '${dueNote(terms, st?.joinDay ?? 1)} · ${dueLeft(terms, st?.joinDay ?? 1)}', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
+                      T(s.paid ? 'Paid' : '${dueNote(terms, st?.joinDay ?? 1)} · ${dueLeft(terms, st?.joinDay ?? 1)}', s: 13, w: 600, c: s.paid ? p.gn : p.ad),
                     ],
                   ),
                 ),
@@ -75,8 +72,32 @@ class ResidentHomeScreen extends StatelessWidget {
               ],
             ),
           ),
+          // F31 Rule B: rent → next meal → food this week → the 3 actions → review.
+          // F27-1: Eating or Skip for the next meal, above the week table.
+          const NextMealCard(),
+          // F26 #4 #13: the whole week, always open, today highlighted.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Expanded(child: Kicker('Food this week')),
+                if (s.menuOf(h.id) != null) Flexible(child: T('From ${owner == 'your owner' ? 'your owner' : '$owner’s'} menu', s: 12, c: p.mu, align: TextAlign.right)),
+              ],
+            ),
+          ),
+          if (s.menuOf(h.id) == null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
+              child: T('No menu yet', s: 14, c: p.mu),
+            )
+          else ...[
+            // The shared week table (same as the hostel page).
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: FoodWeekTable(key: const ValueKey('homeWeek'), hid: h.id)),
+          ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: IntrinsicHeight(
               child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,39 +129,16 @@ class ResidentHomeScreen extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                 decoration: box(w: 1, c: p.dv),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Ic('star', size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(child: Rich([sp(context, 'How is your stay so far? ', w: 800), sp(context, 'Rate ${h.name.split(' ').first} for other tenants.', c: p.mu)], s: 14, lh: 1.35)),
-                    const Ic('chev', size: 18),
+                    Ic('star', size: 18),
+                    SizedBox(width: 10),
+                    Expanded(child: T('How is your stay so far?', w: 800, s: 14, lh: 1.35)),
+                    Ic('chev', size: 18),
                   ],
                 ),
               ),
             ),
-          // F27-1: Eating or Skip for the next meal, above the week table.
-          const NextMealCard(),
-          // F26 #4 #13: the whole week, always open, today highlighted.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Expanded(child: Kicker('Food this week')),
-                if (s.menuOf(h.id) != null) Flexible(child: T('From ${owner == 'your owner' ? 'your owner' : '$owner’s'} menu', s: 12, c: p.mu, align: TextAlign.right)),
-              ],
-            ),
-          ),
-          if (s.menuOf(h.id) == null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
-              child: T('${owner == 'your owner' ? 'Your owner' : owner} hasn’t put the menu on Hostelzy yet.', s: 14, c: p.mu),
-            )
-          else ...[
-            // The shared week table (same as the hostel page).
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: FoodWeekTable(key: const ValueKey('homeWeek'), hid: h.id)),
-          ],
           const SizedBox(height: 16),
         ],
       ),
@@ -236,7 +234,17 @@ class StayScreen extends StatelessWidget {
           if (st == null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: T('Your stay isn’t on Hostelzy yet. Once ${s.stayOwner} adds you, it shows here.', s: 14, c: p.mu, lh: 1.45),
+              child: VGap(
+                gap: 10,
+                children: [
+                  T('Your stay isn’t on Hostelzy yet. Once ${s.stayOwner} adds you, it shows here.', s: 14, c: p.mu, lh: 1.45),
+                  // W2 (F28 Part 2): add the hostel yourself.
+                  if (s.myAdd != null)
+                    OutlineCta('Your hostel on Hostelzy', key: const ValueKey('addMyHostel'), icon: 'chev', onTap: s.openMyAdd)
+                  else
+                    Cta('Add my hostel', key: const ValueKey('addMyHostel'), icon: 'plus', height: 52, px: 16, fs: 15, onTap: s.openAddPg),
+                ],
+              ),
             )
           else
             Container(

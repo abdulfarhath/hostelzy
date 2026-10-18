@@ -131,7 +131,7 @@ extension PhotosActions on AppState {
     final b = cropBytes;
     if (b == null) return;
     final jpg = prepPhoto(b, cropAspect);
-    if (jpg == null) return toastMsg('That file isn’t a photo. Pick another.');
+    if (jpg == null) return toastMsg('Not a photo');
     final album = hostelPhotoLabels.contains(cropLabel) ? 'Hostel' : cropLabel;
     final u = PhotoUpload('u${DateTime.now().microsecondsSinceEpoch}', photoHid, album, cropLabel, jpg, cover: cropCover);
     update(() {
@@ -159,7 +159,7 @@ extension PhotosActions on AppState {
       });
     } on UnsupportedError {
       update(() => uploads = [for (final x in uploads) if (x != u) x]);
-      toastMsg('Photos upload in the real Hostelzy app. This is sample data.');
+      toastMsg('Photos: sample data');
     } catch (e) {
       debugPrint('upload: $e');
       update(() => u.failed = true);
@@ -184,7 +184,7 @@ extension PhotosActions on AppState {
     try {
       await data.savePhotoOrder(list, coverId);
     } catch (e) {
-      toastMsg('Couldn’t save the new order. Check your internet.');
+      toastMsg('Couldn’t save. Check your internet.');
     }
   }
 

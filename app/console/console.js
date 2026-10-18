@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords, rentRangeError, rentRangeLabel, listedPhotoPath, listWords } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords, rentRangeError, rentRangeLabel, listedPhotoPath, listWords, SOURCE_WORDS, callScript, csv, rentAgeLine, callLaterLabel, claimAddedLine, partnerLine, w3Words, partnerHostels, PAYOUT_WORDS, utrError } from './logic.js';
 
 const app = document.getElementById('app');
 /** The signed-in team member (for their own storage paths). */
@@ -53,10 +53,10 @@ async function start() {
   const signInView = (msg) => mount(el('div', { class: 'signin' }, el('div', { class: 'card' },
     word(),
     el('h1', { style: 'font-size:30px;margin:0' }, 'Team console'),
-    el('p', { class: 'mu', style: 'margin:0' }, 'Onboarding, payments, Fair Play and layout help. Only Hostelzy team Google accounts can sign in.'),
+    el('p', { class: 'mu', style: 'margin:0' }, 'Hostelzy team Google accounts only'),
     el('button', { class: 'google', onclick: () => fa.signInWithPopup(auth, new fa.GoogleAuthProvider()).catch((e) => toast(e.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : 'Couldn’t sign in: ' + e.code)) },
       el('span', { class: 'g' }, 'G'), 'Continue with Google'),
-    el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, msg ?? 'Not on the team? Use the Hostelzy app instead.'))));
+    msg ? el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, msg) : '')));
 
   fa.onAuthStateChanged(auth, async (u) => {
     if (!u) return signInView();
@@ -90,6 +90,8 @@ function shell(user, db, out) {
     mount(
       el('header', { class: 'top' }, word(), el('span', { class: 'sp' }), el('span', { class: 'who' }, `${user.email} · Team`), el('button', { class: 'btn', onclick: out }, 'Sign out')),
       el('div', { class: 'shell' }, el('aside', { class: 'side' }, NAV.map(([k, l]) => el('a', { href: '#' + k, class: k === view ? 'on' : '' }, l))), main),
+      // F28 28-80: OpenStreetMap drafts come through the import (ODbL credit).
+      el('footer', { class: 'foot' }, 'Map data © OpenStreetMap contributors'),
     );
     try {
       const v = await VIEWS[view]?.(db, render);
@@ -145,8 +147,7 @@ const VIEWS = {
           el('label', {}, 'Area'), seg(['Ameerpet', 'SR Nagar', 'Madhapur'], 'area'),
           el('label', {}, 'For'), seg(['Men', 'Women', 'Co-living'], 'gender'),
           el('label', {}, 'Visit on'), el('input', { type: 'datetime-local', oninput: (e) => (f.visit = e.target.value) }),
-          el('button', { class: 'btn primary cta', onclick: create }, 'Create draft hostel', '✓'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'The rest (rooms, rates, photos, residents) is done on the visit, in the app’s team mode.'))),
+          el('button', { class: 'btn primary cta', onclick: create }, 'Create draft hostel', '✓')))),
     ];
   },
 
@@ -172,10 +173,30 @@ const VIEWS = {
           : i.status === 'paid' ? el('span', { class: 'mu', style: 'font-size:13px' }, 'Paid')
           : wa ? el('a', { class: 'btn sm', href: wa, target: '_blank', rel: 'noopener' }, 'Remind on WhatsApp') : el('span', { class: 'mu', style: 'font-size:13px' }, 'No owner phone')));
     };
+    // F28: ₹200 / ₹20 payouts not paid yet; Paid asks the UTR (mark_payout_paid).
+    const dueQ = await db.rpc('payouts_due');
+    const due = dueQ.data ?? [];
+    const paid = async (p) => {
+      const utr = prompt(`UTR for ${rupees(p.amount)} to ${p.who || 'this person'}`);
+      if (utr == null) return;
+      const bad = utrError(utr);
+      if (bad) return toast(bad);
+      const { error } = await db.rpc('mark_payout_paid', { p_ledger: p.ledger_id, p_utr: utr.replace(/\s/g, '') });
+      if (error) return toast(w3Words(error.message));
+      toast('Marked paid.');
+      again();
+    };
+    const payoutRow = (p) => el('div', { class: 'tr' },
+      el('div', {}, p.who || '—'), el('div', {}, PAYOUT_WORDS[p.kind] ?? p.kind), el('div', {}, p.hostel ?? ''), el('div', {}, rupees(p.amount)),
+      el('div', {}, p.upi || 'No UPI id'), el('div', {}, dayMon(p.pay_month)),
+      el('div', {}, el('button', { class: 'btn sm primary', onclick: () => paid(p) }, 'Paid')));
     return [
+      el('div', { class: 'title' }, el('h1', {}, 'Payouts due'), el('span', { class: 'mu', style: 'font-size:13px' }, `${due.length}`)),
+      el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Who', 'For', 'Hostel', 'Amount', 'UPI', 'Month', 'Action'].map((h) => el('div', {}, h))),
+        dueQ.error ? el('p', { class: 'empty' }, w3Words(dueQ.error.message)) : due.length ? due.map(payoutRow) : el('p', { class: 'empty' }, 'Nothing due.')),
       el('div', { class: 'title' }, el('h1', {}, 'Owner payments'), el('span', { class: 'mu', style: 'font-size:13px' }, `Pay to ${hostelzyUpi} · match every UTR in the bank app. Never trust screenshots.`)),
       el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Invoice', 'Amount', 'UTR', 'Due', 'Status', 'Action'].map((h) => el('div', {}, h))),
-        invs.length ? invs.map(row) : el('p', { class: 'empty' }, 'No invoices yet. They start when a hostel’s 30-day trial ends.')),
+        invs.length ? invs.map(row) : el('p', { class: 'empty' }, 'No invoices yet')),
     ];
   },
 
@@ -214,7 +235,7 @@ const VIEWS = {
         const up = await db.storage.from('case-photos').upload(path, f, { contentType: 'image/jpeg' });
         if (up.error) return toast('Couldn’t upload: ' + up.error.message);
         ok(await db.from('fair_cases').update({ tenant_photo: path }).eq('id', c.id));
-        toast('Photo added. The owner sees it with the case.');
+        toast('Photo added');
         again();
       } }));
     const drawDetail = async () => {
@@ -296,13 +317,12 @@ const VIEWS = {
           el('button', { class: 'btn full', onclick: () => act('close') }, 'Close · no issue', '✓'),
           el('button', { class: 'btn full', onclick: () => act('ask') }, 'Ask for more', '…'),
           strikeBtn),
-        el('p', { class: 'note' }, 'Strikes: 1 warning · 2 deals hidden for 30 days · 3 removed from Hostelzy. 3 fixes within 48 hours in 6 months = 1 warning (counted by the server). No fines.')),
+        el('p', { class: 'note' }, '1 warning · 2 deals hidden 30 days · 3 removed')),
       el('section', {},
         el('h2', {}, 'Tenant reports'),
         el('div', { class: 'list' }, reportRows),
         el('h2', {}, sel ? `Signals · ${sel.hostels?.name ?? ''}` : 'Signals'),
         signals,
-        el('p', { class: 'note' }, 'Owners draw and publish their own layouts. When one asks us to draw a room, it shows in Layout help, due within 48 hours.'),
         el('div', { style: 'padding:0 16px 16px' }, el('a', { class: 'btn', href: '#layout' }, 'Open Layout help ›'))))];
   },
 
@@ -332,14 +352,14 @@ const VIEWS = {
         for (let x = 1; x < d.w; x++) s.append(svg('line', { x1: x * k, y1: 0, x2: x * k, y2: d.h * k, stroke: 'var(--hl)' }));
         for (let y = 1; y < d.h; y++) s.append(svg('line', { x1: 0, y1: y * k, x2: d.w * k, y2: y * k, stroke: 'var(--hl)' }));
         if (o) s.append(svg('polygon', { points: o.map(([x, y]) => `${x * k},${y * k}`).join(' '), fill: 'none', stroke: 'var(--tx)', 'stroke-width': 2 }));
-        preview.replaceChildren(s, o ? '' : el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, 'Type the corners clockwise from the top-left, in feet: 0,0 14,0 14,8 10,12 0,12'));
+        preview.replaceChildren(s, o ? '' : el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, '0,0 14,0 14,8 10,12 0,12'));
       };
       const num = (k) => el('input', { inputmode: 'numeric', value: String(d[k]), oninput: (e) => { d[k] = Math.max(6, Math.min(60, Number(e.target.value) || 0)); draw(); } });
       const seg = el('div', { class: 'seg', style: 'grid-auto-flow:row;grid-template-columns:repeat(4,1fr)' }, SHAPES.map((sh) => el('button', { class: d.shape === sh ? 'on' : '', onclick: (e) => { d.shape = sh; [...seg.children].forEach((b) => b.classList.toggle('on', b === e.target)); pts.style.display = sh === 'Custom' ? '' : 'none'; draw(); } }, sh)));
       const pts = el('input', { value: d.pts, placeholder: '0,0 14,0 14,8 10,12 0,12', style: d.shape === 'Custom' ? '' : 'display:none', oninput: (e) => { d.pts = e.target.value; draw(); } });
       const send = async () => {
         const o = walls();
-        if (d.shape === 'Custom' && !o) return toast('Type at least 3 corners inside the room.');
+        if (d.shape === 'Custom' && !o) return toast('At least 3 corners');
         ok(await db.rpc('send_shape_drawing', { p_id: q.id, p_drawing: { w: d.w, h: d.h, shape: d.shape, ...(o ? { outline: o } : {}) } }));
         toast(`Sent to ${q.hostels?.owner_name || 'the owner'}. They check it and publish.`);
         again();
@@ -352,7 +372,6 @@ const VIEWS = {
         pts, preview,
         el('button', { class: 'btn primary cta', onclick: send }, 'Send to owner', '✓'),
         el('button', { class: 'btn full', onclick: () => drawDetail() }, 'Back to the request'),
-        el('p', { class: 'note' }, 'The owner’s app places the beds, fans and windows inside these walls; they check it and publish.'),
       );
     };
     const drawDetail = async () => {
@@ -527,18 +546,151 @@ const VIEWS = {
     ];
   },
 
-  // F26 #21: the team lists a hostel before it is verified (UNVERIFIED in the
-  // app): name, area, photos and an expected rent range, no go-live checklist.
-  // Verifying it later is Hostels › Go live (the full checklist).
+  // F26 #21 + F28 wave 3: Listed · To call · To refresh · Partners.
+  //   Listed     the team lists a hostel before it is verified (UNVERIFIED in
+  //              the app): name, area, photos, expected rent range.
+  //   To call    drafts from Google Places / OpenStreetMap / the web form: call
+  //              script, rent + For + Food, List / Not a PG / Call later, CSV.
+  //   To refresh listed hostels nobody confirmed the rent of in 50 days.
+  //   Partners   codes for people who list hostels for ₹20 each (Build 2 SQL).
   async listed(db, again) {
-    const [hs, photos, waits] = await Promise.all([
-      db.from('hostels').select('id, name, area, gender, status, rent_min, rent_max').in('status', ['draft', 'listed']).not('rent_min', 'is', null).order('name').then(ok),
+    const seg = sessionStorage.getItem('hzListedSeg') || 'listed';
+    const SEGS = [['listed', 'Listed'], ['tocall', 'To call'], ['refresh', 'To refresh'], ['partners', 'Partners']];
+    const segRow = (counts) => el('div', { class: 'seg', style: 'margin:0 24px 12px;max-width:640px' }, SEGS.map(([k, l]) =>
+      el('button', { class: k === seg ? 'on' : '', onclick: () => { sessionStorage.setItem('hzListedSeg', k); again(); } }, counts[k] ? `${l} ${counts[k]}` : l)));
+    const segOf = (opts, f, k) => el('div', { class: 'seg' }, opts.map((o) => el('button', { class: f[k] === o ? 'on' : '', onclick: (e) => { f[k] = o; [...e.target.parentNode.children].forEach((b) => b.classList.toggle('on', b === e.target)); } }, o)));
+    const rpc = async (fn, args, done) => {
+      const { data, error } = await db.rpc(fn, args);
+      if (error) { toast(w3Words(error.message)); return false; }
+      if (done) toast(done);
+      again();
+      return data ?? true;
+    };
+    // Export CSV: name, phone, area, id (the founder's WhatsApp run).
+    const exportCsv = (rows, file) => el('button', { class: 'btn sm', onclick: () => {
+      const a = el('a', { href: URL.createObjectURL(new Blob([csv(rows, ['name', 'phone', 'area', 'id'])], { type: 'text/csv' })), download: file });
+      document.body.append(a); a.click(); a.remove();
+    } }, 'Export CSV');
+    const srcTag = (h) => el('span', { class: 'tag neutral' }, SOURCE_WORDS[h.source] ?? h.source);
+    const callBtns = (phone, name) => [
+      phone ? el('a', { class: 'btn sm', href: `tel:+91${phone}` }, 'Call') : el('span', { class: 'tag neutral' }, 'No phone'),
+      phone ? el('a', { class: 'btn sm', href: waLink(phone, `Hi, this is the Hostelzy team about ${name}.`), target: '_blank', rel: 'noopener' }, 'WhatsApp') : null,
+    ];
+    // The wave-3 lists; [] with a note until the F28 SQL has run.
+    const list = async (kind) => {
+      const { data, error } = await db.rpc('call_list', { p_kind: kind });
+      return { rows: data ?? [], note: error ? w3Words(error.message) : '' };
+    };
+    const title = (h1, right) => el('div', { class: 'title' }, el('h1', {}, h1), el('span', { class: 'mu', style: 'font-size:13px;display:flex;gap:10px;align-items:center' }, right));
+
+    if (seg === 'tocall') {
+      const { rows, note } = await list('to_call');
+      // Photos the owner sent from the web form (private bucket, signed for 10 min).
+      const paths = [...new Set(rows.flatMap((h) => h.photos ?? []))];
+      const signed = paths.length ? await db.storage.from('self-list').createSignedUrls(paths, 600).then(({ data }) => Object.fromEntries((data ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl]))) : {};
+      const row = (h) => {
+        const f = { min: h.rent_min ?? '', max: h.rent_max ?? '', gender: h.gender || 'Men', food: h.food ? 'Yes' : 'No' };
+        const later = callLaterLabel(h.call_after);
+        const listIt = async () => {
+          const bad = rentRangeError(f.min, f.max);
+          if (bad) return toast(bad);
+          if (!confirm(`Show ${h.name} to tenants as UNVERIFIED with ${rentRangeLabel(Number(f.min), Number(f.max))}?`)) return;
+          await rpc('list_draft', { p_id: h.id, p_rent_min: Number(f.min), p_rent_max: Number(f.max), p_gender: f.gender, p_food: f.food === 'Yes' }, 'Listed as UNVERIFIED.');
+        };
+        const notPg = async () => {
+          if (!confirm(`Remove ${h.name}? It never comes back from the import.`)) return;
+          await rpc('draft_not_pg', { p_id: h.id }, 'Removed.');
+        };
+        return el('div', { class: 'row' },
+          el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', {}, srcTag(h), later ? el('span', { class: 'tag neutral', style: 'margin-left:6px' }, later) : null)),
+          el('span', { class: 's' }, [h.phone ? `+91 ${h.phone}` : 'no phone yet', h.adder ? `asked by ${h.adder} (web form)` : null, h.rent_min ? `says ${rentRangeLabel(h.rent_min, h.rent_max)}` : null, dayMon(h.created_at)].filter(Boolean).join(' · ')),
+          (h.photos ?? []).length ? el('span', { class: 's', style: 'display:flex;gap:6px;margin-top:4px' }, h.photos.map((p) => signed[p] ? el('a', { href: signed[p], target: '_blank', rel: 'noopener' }, el('img', { src: signed[p], alt: 'Photo from the owner', style: 'width:72px;height:54px;object-fit:cover;border:2px solid var(--tx)' })) : null)) : null,
+          el('details', { class: 'script' }, el('summary', {}, 'Call script'), el('ol', {}, callScript(h).map((l) => el('li', {}, l)))),
+          el('span', { class: 'fields' },
+            el('input', { inputmode: 'numeric', value: f.min, placeholder: 'Rent from ₹', oninput: (e) => (f.min = e.target.value.replace(/\D/g, '')) }),
+            el('input', { inputmode: 'numeric', value: f.max, placeholder: 'to ₹', oninput: (e) => (f.max = e.target.value.replace(/\D/g, '')) }),
+            segOf(['Men', 'Women', 'Co-living'], f, 'gender'),
+            el('span', { class: 'foodseg' }, el('span', { class: 'mu', style: 'font-size:12px' }, 'Food'), segOf(['Yes', 'No'], f, 'food'))),
+          el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, ...callBtns(h.phone, h.name),
+            el('button', { class: 'btn sm primary', onclick: listIt }, 'List'),
+            el('button', { class: 'btn sm', onclick: notPg }, 'Not a PG / Closed'),
+            el('button', { class: 'btn sm', onclick: () => rpc('call_later', { p_id: h.id }, 'Call later: 3 days.') }, 'Call later')));
+      };
+      return [
+        title('Listed', [`${rows.length} to call`, exportCsv(rows, 'hostelzy-to-call.csv')]),
+        segRow({ tocall: rows.length }),
+        el('div', { class: 'list', style: 'margin:0 24px' }, note ? el('p', { class: 'empty' }, note) : rows.length ? rows.map(row) : el('p', { class: 'empty' }, 'Nobody to call.')),
+      ];
+    }
+
+    if (seg === 'refresh') {
+      const { rows, note } = await list('to_refresh');
+      const closed = async (h) => {
+        if (!confirm(`Take ${h.name} off Explore for good?`)) return;
+        await rpc('draft_not_pg', { p_id: h.id }, 'Closed.');
+      };
+      return [
+        title('Listed', [`${rows.length} to refresh`, exportCsv(rows, 'hostelzy-to-refresh.csv')]),
+        segRow({ refresh: rows.length }),
+        el('div', { class: 'list', style: 'margin:0 24px' }, note ? el('p', { class: 'empty' }, note) : rows.length ? rows.map((h) => el('div', { class: 'row' },
+          el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.rent_confirmed_at ? 'neutral' : 'red') }, rentAgeLine(h.rent_confirmed_at))),
+          el('span', { class: 's' }, [`${h.gender} · ${rentRangeLabel(h.rent_min, h.rent_max)}`, h.phone ? `+91 ${h.phone}` : 'no phone'].join(' · ')),
+          el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, ...callBtns(h.phone, h.name),
+            el('button', { class: 'btn sm primary', onclick: () => rpc('rent_confirmed', { p_id: h.id }, 'Rent confirmed.') }, 'Rent confirmed today'),
+            el('button', { class: 'btn sm', onclick: () => closed(h) }, 'Closed')))) : el('p', { class: 'empty' }, 'Nothing to refresh.')),
+      ];
+    }
+
+    if (seg === 'partners') {
+      // Build 2's SQL: new_partner(name, phone, upi) → the code; partners_due() → listed count and ₹ due.
+      const q = await db.rpc('partners_due');
+      const rows = q.data ?? [];
+      // Their listed hostels; Checked ✓ = check_partner_hostel (₹20 ledger row, once).
+      const [pHostels, pLedger] = await Promise.all([
+        db.from('hostels').select('id, name, area, status, source, partner_code').eq('source', 'partner').order('name').then(({ data }) => data ?? []),
+        db.from('reward_ledger').select('hostel_id, kind').eq('kind', 'hostel_listed').then(({ data }) => data ?? []),
+      ]);
+      const hostelRows = (code) => partnerHostels(pHostels, pLedger, code).map((h) => el('span', { class: 's', style: 'display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap' },
+        `${h.name} · ${h.area}`,
+        h.checked ? el('span', { class: 'tag neutral' }, 'Checked')
+          : el('button', { class: 'btn sm primary', onclick: () => rpc('check_partner_hostel', { p_hostel: h.id }, 'Checked. ₹20 due.') }, 'Checked ✓')));
+      const f = { name: '', phone: '', upi: '' };
+      const add = async () => {
+        if (f.name.trim().length < 2) return toast('Enter the partner’s name.');
+        if (f.phone.replace(/\D/g, '').length !== 10) return toast('Enter their 10-digit phone.');
+        const code = await rpc('new_partner', { p_name: f.name.trim(), p_phone: f.phone.replace(/\D/g, ''), p_upi: f.upi.trim() });
+        if (code) toast(`Partner code ${typeof code === 'string' ? code : JSON.stringify(code)}`);
+      };
+      return [
+        title('Listed', `${rows.length} partners`),
+        segRow({ partners: rows.length }),
+        el('div', { class: 'board' },
+          el('div', { class: 'list', style: 'margin:0 24px' }, q.error ? el('p', { class: 'empty' }, w3Words(q.error.message)) : rows.length ? rows.map((p) => el('div', { class: 'row' },
+            el('span', { class: 't' }, `${p.name} · ${p.code}`, el('span', { class: 'tag ' + (p.active === false ? 'neutral' : 'solid') }, p.active === false ? 'Inactive' : 'Active')),
+            el('span', { class: 's' }, [p.phone ? `+91 ${p.phone}` : null, p.upi || 'no UPI id yet', partnerLine(p)].filter(Boolean).join(' · ')),
+            ...hostelRows(p.code))) : el('p', { class: 'empty' }, 'No partners yet.')),
+          el('aside', { class: 'add' },
+            el('h2', {}, 'Add partner'),
+            el('label', {}, 'Name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Suresh' }),
+            el('label', {}, 'Phone'), el('input', { inputmode: 'numeric', oninput: (e) => (f.phone = e.target.value), placeholder: '98765 43210' }),
+            el('label', {}, 'UPI id'), el('input', { oninput: (e) => (f.upi = e.target.value), placeholder: 'suresh@upi' }),
+            el('button', { class: 'btn primary cta', onclick: add }, 'Add partner', '✓'))),
+      ];
+    }
+
+    // Listed (as before): the team's own drafts and every listed hostel. Import
+    // and web drafts live in To call until the team lists them.
+    const hostelsQ = await db.from('hostels').select('id, name, area, gender, status, rent_min, rent_max, source, removed_at').in('status', ['draft', 'listed']).not('rent_min', 'is', null).order('name');
+    const all = hostelsQ.error
+      ? await db.from('hostels').select('id, name, area, gender, status, rent_min, rent_max').in('status', ['draft', 'listed']).not('rent_min', 'is', null).order('name').then(ok)
+      : hostelsQ.data;
+    const hs = all.filter((h) => !h.removed_at && (h.status === 'listed' || !['places', 'osm', 'web'].includes(h.source)));
+    const [photos, waits] = await Promise.all([
       db.from('hostel_photos').select('hostel_id').then(ok),
       db.from('verify_waitlist').select('hostel_id').is('notified_at', null).then(ok),
     ]);
     const count = (rows, id) => rows.filter((r) => r.hostel_id === id).length;
     const f = { name: '', area: '', gender: 'Men', min: '', max: '' };
-    const seg = (opts, k) => el('div', { class: 'seg' }, opts.map((o) => el('button', { class: f[k] === o ? 'on' : '', onclick: (e) => { f[k] = o; [...e.target.parentNode.children].forEach((b) => b.classList.toggle('on', b === e.target)); } }, o)));
     const save = async (id, p) => {
       const { error } = await db.rpc('list_hostel', { p_id: id, p });
       if (error) { toast(listWords(error.message)); return false; }
@@ -550,7 +702,7 @@ const VIEWS = {
       const bad = rentRangeError(f.min, f.max);
       if (bad) return toast(bad);
       if (await save(null, { name: f.name.trim(), area: f.area.trim(), gender: f.gender, rent_min: Number(f.min), rent_max: Number(f.max) })) {
-        toast(`${f.name.trim()} saved. Add a photo, then List it.`);
+        toast('Saved.');
         again();
       }
     };
@@ -569,7 +721,7 @@ const VIEWS = {
     const list = async (h) => {
       if (!confirm(`Show ${h.name} to tenants as UNVERIFIED?`)) return;
       if (await save(h.id, { name: h.name, rent_min: h.rent_min, rent_max: h.rent_max, list: true })) {
-        toast(`${h.name} is listed (UNVERIFIED).`);
+        toast('Listed as UNVERIFIED.');
         again();
       }
     };
@@ -579,29 +731,30 @@ const VIEWS = {
       again();
     };
     return [
-      el('div', { class: 'title' }, el('h1', {}, 'Listed'), el('span', { class: 'mu', style: 'font-size:13px' }, `${hs.filter((h) => h.status === 'listed').length} listed · ${hs.filter((h) => h.status === 'draft').length} not shown yet`)),
+      title('Listed', `${hs.filter((h) => h.status === 'listed').length} listed · ${hs.filter((h) => h.status === 'draft').length} not shown yet`),
+      segRow({}),
       el('div', { class: 'board' },
         el('div', { class: 'list', style: 'margin:0 24px' }, hs.length ? hs.map((h) => el('div', { class: 'row' },
           el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.status === 'listed' ? 'solid' : 'neutral') }, h.status === 'listed' ? 'Unverified' : 'Not shown')),
           el('span', { class: 's' }, `${h.gender} · ${rentRangeLabel(h.rent_min, h.rent_max)} · ${count(photos, h.id)} photos · ${count(waits, h.id)} waiting for “verified”`),
           el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' }, upload(h),
-            h.status === 'listed' ? el('button', { class: 'btn sm', onclick: () => unlist(h) }, 'Take off') : el('button', { class: 'btn sm primary', onclick: () => list(h) }, 'List it')))) : el('p', { class: 'empty' }, 'Nothing listed yet. Add a hostel on the right.')),
+            h.status === 'listed' ? el('button', { class: 'btn sm', onclick: () => unlist(h) }, 'Take off') : el('button', { class: 'btn sm primary', onclick: () => list(h) }, 'List it')))) : el('p', { class: 'empty' }, 'Nothing listed yet.')),
         el('aside', { class: 'add' },
           el('h2', {}, 'List a hostel'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Tenants see it as UNVERIFIED: photos, name, area and the rent range. No beds, holds or owner contact until you verify it (Hostels › Go live).'),
           el('label', {}, 'Hostel name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Sri Balaji Men’s PG' }),
           el('label', {}, 'Area'), el('input', { oninput: (e) => (f.area = e.target.value), placeholder: 'Madhapur' }),
-          el('label', {}, 'For'), seg(['Men', 'Women', 'Co-living'], 'gender'),
+          el('label', {}, 'For'), segOf(['Men', 'Women', 'Co-living'], f, 'gender'),
           el('label', {}, 'Expected rent, lowest (₹ a month)'), el('input', { inputmode: 'numeric', oninput: (e) => (f.min = e.target.value.replace(/\D/g, '')), placeholder: '7000' }),
           el('label', {}, 'Expected rent, highest'), el('input', { inputmode: 'numeric', oninput: (e) => (f.max = e.target.value.replace(/\D/g, '')), placeholder: '9000' }),
-          el('button', { class: 'btn primary cta', onclick: create }, 'Save', '✓'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Then add at least one photo and press List it.'))),
+          el('button', { class: 'btn primary cta', onclick: create }, 'Save', '✓'))),
     ];
   },
 
   // F26 #21: "Are you the owner? Claim this hostel" from the app.
+  // F28 Part 2 step 5: "added by Ravi (resident) · owner phone matches ✓/✗".
   async claims(db, again) {
     const rows = await db.from('claim_requests').select('*, hostels(name, area)').eq('status', 'new').order('created_at').then(ok);
+    const adders = await db.rpc('claim_adders').then(({ data }) => Object.fromEntries((data ?? []).map((a) => [a.claim_id, a])));
     const decide = async (c, status) => {
       ok(await db.from('claim_requests').update({ status }).eq('id', c.id));
       toast(status === 'done' ? 'Marked done.' : 'Marked not the owner.');
@@ -611,7 +764,8 @@ const VIEWS = {
       el('div', { class: 'title' }, el('h1', {}, 'Claims'), el('span', { class: 'mu', style: 'font-size:13px' }, `${rows.length} waiting for a call`)),
       el('div', { class: 'list', style: 'margin:0 24px' }, rows.length ? rows.map((c) => el('div', { class: 'row' },
         el('span', { class: 't' }, `${c.hostels?.name ?? ''} · ${c.hostels?.area ?? ''}`, el('span', { class: 'tag neutral' }, dayMon(c.created_at))),
-        el('span', { class: 's' }, `${c.name} · ${c.phone} · says they own it. Call, check, then send an owner invite from the app’s team mode.`),
+        el('span', { class: 's' }, `${c.name} · ${c.phone}`),
+        adders[c.id] ? el('span', { class: 's' }, claimAddedLine(adders[c.id])) : null,
         el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' },
           el('a', { class: 'btn sm', href: `tel:+91${c.phone}` }, 'Call'),
           el('a', { class: 'btn sm', href: waLink(c.phone, `Hi ${c.name}, this is the Hostelzy team about ${c.hostels?.name ?? 'your hostel'}.`), target: '_blank', rel: 'noopener' }, 'WhatsApp'),

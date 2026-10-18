@@ -106,7 +106,7 @@ extension HoldsActions on AppState {
           _bedBefore[k] = before;
         }
       });
-      toastMsg('Couldn’t release it. Check your internet and try again.');
+      toastMsg('Couldn’t release. Check your internet.');
     });
   }
 
@@ -173,7 +173,7 @@ extension HoldsActions on AppState {
       await SharePlus.instance.share(ShareParams(text: text));
     } catch (_) {
       copyText(text);
-      toastMsg('Sharing isn’t available here. The text is copied.');
+      toastMsg('Copied');
     }
   }
   Future<void> sharePoster(String link) async {
@@ -209,8 +209,8 @@ extension HoldsActions on AppState {
   }
 
   /// F26 #7: WhatsApp / call the owner, only while [h] is live.
-  void waOwner(Hold h) => liveHold(h) ? whatsapp(ownerWa(h.hid), holdWaText(h)) : toastMsg('Message and call the owner after you hold a bed');
-  void callOwner(Hold h) => liveHold(h) ? call(ownerPhones[h.hid] ?? '') : toastMsg('Message and call the owner after you hold a bed');
+  void waOwner(Hold h) => liveHold(h) ? whatsapp(ownerWa(h.hid), holdWaText(h)) : toastMsg('Hold a bed first');
+  void callOwner(Hold h) => liveHold(h) ? call(ownerPhones[h.hid] ?? '') : toastMsg('Hold a bed first');
 
   /// F26 #9: no answer 30 minutes after the hold: "Still waiting. Call the owner?".
   bool stillWaiting(Hold h, int nowMs) => h.status == 'waiting' && h.opt != 'book' && liveHold(h) && nowMs - h.start >= 30 * 60000;

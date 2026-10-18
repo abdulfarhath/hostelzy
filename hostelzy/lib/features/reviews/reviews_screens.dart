@@ -158,7 +158,7 @@ class ReviewCard extends StatelessWidget {
                 gap: 8,
                 children: [
                   const T('Your reply', w: 800, s: 13),
-                  Field(value: s.replyText, onChanged: (v) => s.update(() => s.replyText = v), placeholder: 'Thank them, or say what you are fixing', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
+                  Field(value: s.replyText, onChanged: (v) => s.update(() => s.replyText = v), placeholder: '', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
                   Cta('Post reply', icon: 'check', height: 48, px: 14, fs: 14, onTap: () => s.postReply(r)),
                 ],
               ),
@@ -236,7 +236,6 @@ class ReviewsScreen extends StatelessWidget {
                 ),
                 for (final r in list) ReviewCard(r),
                 if (list.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Reviews from residents with a confirmed stay show up here.', s: 14, c: p.mu)),
-                Padding(padding: const EdgeInsets.all(16), child: T('Only people who stayed here can review. Owners can reply, not delete.', s: 12, c: p.mu, lh: 1.4)),
               ],
             ),
           ),
@@ -293,7 +292,7 @@ class ResidentReviewScreen extends StatelessWidget {
                     children: [
                       const T('Anything others should know? (optional)', w: 800, s: 13),
                       Field(value: s.rvText, onChanged: (v) => s.update(() => s.rvText = v), placeholder: 'Food, water, the owner…', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
-                      T('Shown as ${s.meShort} · verified resident. One review per stay; you can change it later. ${s.stayOwner} can reply, not delete.', s: 13, c: p.mu, lh: 1.4),
+                      T('Shown as ${s.meShort} · verified resident', s: 13, c: p.mu, lh: 1.4),
                     ],
                   ),
                 ),
@@ -370,7 +369,7 @@ class ExitReviewScreen extends StatelessWidget {
                     children: [
                       const T('Anything others should know? (optional)', w: 800, s: 13),
                       Field(value: s.exText, onChanged: (v) => s.update(() => s.exText = v), placeholder: 'The room, the owner, getting the advance back…', maxLines: 3, height: null, pad: const EdgeInsets.all(12)),
-                      T('Shown as ${s.meShort} · verified stay. Your answer counts toward the hostel’s “advance returned” record.', s: 13, c: p.mu, lh: 1.4),
+                      T('Shown as ${s.meShort} · verified stay', s: 13, c: p.mu, lh: 1.4),
                     ],
                   ),
                 ),
@@ -462,10 +461,6 @@ class OwnerReviewsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: T('You can reply once to each review. Reviews can’t be removed; report one only if it breaks the rules (abuse, personal details).', s: 13, c: p.mu, lh: 1.4),
-                ),
               ],
             ),
           ),
@@ -486,7 +481,6 @@ class RankSheet extends StatelessWidget {
   const RankSheet({super.key});
   @override
   Widget build(BuildContext context) {
-    final p = PalScope.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(
@@ -494,9 +488,7 @@ class RankSheet extends StatelessWidget {
         children: [
           const T('Hostels are ranked by what residents and Hostelzy can check, never by who pays.', s: 14, lh: 1.45),
           for (final k in rankWeights.keys) Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [T(rankLabel[k]!, s: 14), T('${(rankWeights[k]! * 100).round()}%', w: 800, s: 14)]),
-          T('Reviews count only from residents with a confirmed stay. Fair Play strikes lower the rank.', s: 12, c: p.mu, lh: 1.4),
           // F24 item 20 (DECISIONS F10): the 80+ bed plan's featured spot, said plainly.
-          T('Hostels with more than 80 beds get a featured spot at the top of Recommended with their Hostelzy plan. They are always marked Featured, and their rank doesn’t change.', key: const ValueKey('rankFeatured'), s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );
@@ -531,7 +523,6 @@ class ReviewReportSheet extends StatelessWidget {
                 ),
               ),
             ),
-          T('Reviews can’t be removed for being low. The Hostelzy team hides a review only if it breaks the rules.', s: 12, c: p.mu, lh: 1.45),
           Cta('Send to Hostelzy', height: 54, px: 16, fs: 15, onTap: s.sendReviewReport),
         ],
       ),

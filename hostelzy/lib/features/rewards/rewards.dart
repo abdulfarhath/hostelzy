@@ -68,7 +68,7 @@ extension RewardsActions on AppState {
     if (f == null || level == 'trusted') return null;
     final opens = f.add(const Duration(hours: 1));
     if (!DateTime.now().isBefore(opens)) return null;
-    return 'Trusted tenants get the first hour on this bed. It opens to you at ${clock(opens.hour * 60 + opens.minute)}.';
+    return 'Trusted tenants first · opens to you at ${clock(opens.hour * 60 + opens.minute)}';
   }
 
   void openPerks() => update(() => sheet = 'perks');
@@ -97,25 +97,25 @@ extension RewardsActions on AppState {
   /// S6: a new tenant enters a friend's code before their first stay.
   Future<void> useFriendCode() async {
     final c = friendCode.trim().toUpperCase();
-    if (!RegExp(r'^[A-Z]{3,5}-[A-Z0-9]{4}$').hasMatch(c)) return toastMsg('Enter your friend’s code, like ASHA-4K7Q.');
+    if (!RegExp(r'^[A-Z]{3,5}-[A-Z0-9]{4}$').hasMatch(c)) return toastMsg('Code needed, like ASHA-4K7Q');
     try {
-      final who = await data.useReferralCode(c);
+      await data.useReferralCode(c);
       update(() {
         referred = true;
         friendCode = '';
       });
-      toastMsg('Code saved. You and $who each get ${fmt(referralReward)} after your first month at a Hostelzy hostel.');
+      toastMsg('Code saved · ${fmt(referralReward)} each');
     } catch (e) {
       final m = '$e';
       toastMsg(m.contains('isn\'t valid') || m.contains('isn’t valid')
-          ? 'That code isn’t valid. Check it with your friend.'
+          ? 'Code not valid'
           : m.contains('own code')
-          ? 'That’s your own code. Share it with a friend instead.'
+          ? 'That’s your own code'
           : m.contains('already used')
           ? 'You already used a friend’s code.'
           : m.contains('first stay')
-          ? 'Codes are for your first stay through Hostelzy.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'First Hostelzy stay only'
+          : 'Couldn’t save. Check your internet.');
     }
   }
 

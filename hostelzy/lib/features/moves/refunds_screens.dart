@@ -108,11 +108,6 @@ class ResidentRefundScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _rows(context, [('Advance', fmt(r.advance)), ('Kept on leaving', '− ${fmt(r.advance - r.amt)}'), ('Due by', dayMon(r.due))]),
-                if (sent)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: VGap(gap: 8, children: [T('Did ${fmt(r.amt)} reach your bank?', w: 800, s: 17), T('Check your bank app for the UPI reference above.', s: 13, c: p.mu, lh: 1.45)]),
-                  ),
               ],
             ),
           ),

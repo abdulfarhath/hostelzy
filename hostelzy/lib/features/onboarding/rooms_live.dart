@@ -44,7 +44,7 @@ extension RoomsLiveActions on AppState {
       n++;
     }
     final rent = rates[hid]?[rateKey(nrAc, nrShare)] ?? 0;
-    if (rent == 0) return toastMsg('Add a price for $nrShare sharing ${nrAc ? 'AC' : 'Non-AC'} in Manage → Rates first.');
+    if (rent == 0) return toastMsg('$nrShare sharing ${nrAc ? 'AC' : 'Non-AC'} price needed');
     final before = List.of(rs);
     update(() {
       rs.add(Room(
@@ -83,8 +83,8 @@ extension RoomsLiveActions on AppState {
       toastMsg(m.contains('has someone in it') && i >= 0
           ? 'Not saved: ${m.substring(i, m.indexOf('in it', i) + 5)}.'
           : ac != null
-          ? 'Not saved: room $ac’s layout has no AC unit. Add it in the layout and publish first.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'Not saved: room $ac has no AC in its layout'
+          : 'Couldn’t save. Check your internet.');
     }
   }
 
@@ -109,7 +109,7 @@ extension RoomsLiveActions on AppState {
   void removeFloor(String hid, int floor) {
     final rs = rooms[hid]!.where((r) => r.floor == floor).toList();
     final blocked = rs.where((r) => roomBlock(hid, r.n) != null).toList();
-    if (blocked.isNotEmpty) return toastMsg('Floor $floor can’t be removed: room ${blocked.map((r) => r.label).join(', ')} ${blocked.length == 1 ? 'has' : 'have'} a resident or hold.');
+    if (blocked.isNotEmpty) return toastMsg('Room ${blocked.map((r) => r.label).join(', ')}: resident or hold');
     final before = List.of(rooms[hid]!);
     update(() {
       rooms[hid]!.removeWhere((r) => r.floor == floor);

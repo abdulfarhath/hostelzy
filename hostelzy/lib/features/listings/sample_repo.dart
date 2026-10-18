@@ -8,6 +8,11 @@ import 'repo.dart';
 
 class SampleRepo implements HostelRepo {
   const SampleRepo();
+
+  /// F29 Part 3 (demo): Drive "connections" kept in memory for the session.
+  static final Map<String, DriveStatus> _drive = {};
+  static void resetDrive() => _drive.clear();
+
   @override
   bool get remote => false;
   @override
@@ -276,4 +281,67 @@ class SampleRepo implements HostelRepo {
   Future<Map<String, ({int verified, int listed})>?> areaCounts() async => null;
   @override
   Future<void> notifyResident(String stayKey, String note) => throw UnsupportedError('sample data');
+  // W2: sample data keeps these on the phone (AppState does the demo paths itself).
+  @override
+  Future<Map<String, dynamic>> addHostel(Map<String, dynamic> p) async => throw UnsupportedError('sample data');
+  @override
+  Future<Map<String, dynamic>?> myAddedHostel() async => null;
+  @override
+  Future<void> askedOwner(String hid) async {}
+  @override
+  Future<void> setAdderUpi(String upi) async {}
+  @override
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''}) async => throw UnsupportedError('sample data');
+  @override
+  Future<Map<String, dynamic>?> joinRequestInfo(String token) async => null;
+  @override
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async => throw UnsupportedError('sample data');
+  @override
+  Future<List<Map<String, dynamic>>> joinRequests(String hid) async => const [];
+  @override
+  Future<void> decideJoin(String id, bool approve, {String note = ''}) async {}
+  @override
+  Future<String> askIdAgain(String id) async => '';
+  @override
+  Future<void> clearJoinId(String id) async {}
+  @override
+  Future<DriveStatus?> driveStatus(String hid) async => _drive[hid] ?? (connected: false, files: 0, fullCopy: false);
+  @override
+  Future<DriveStatus> driveConnect(String hid, String code) async => _drive[hid] = (connected: true, files: 0, fullCopy: false);
+  @override
+  Future<DriveStatus> driveDisconnect(String hid) async {
+    _drive.remove(hid);
+    return (connected: false, files: 0, fullCopy: false);
+  }
+
+  @override
+  Future<void> setFullCopy(String hid, bool v) async {
+    final d = _drive[hid];
+    if (d == null) throw const DriveFail('not_connected', 'Connect Google Drive first');
+    _drive[hid] = (connected: true, files: d.files, fullCopy: v);
+  }
+
+  @override
+  Future<({String hid, bool fullCopy})?> idTarget(String token) async {
+    final e = _drive.entries.firstOrNull;
+    return e == null ? null : (hid: e.key, fullCopy: e.value.fullCopy);
+  }
+
+  @override
+  Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'}) async {
+    final hid = _drive.keys.firstOrNull;
+    if (hid == null) throw const DriveFail('not_connected', 'The owner hasn’t connected Google Drive');
+    final d = _drive[hid]!;
+    _drive[hid] = (connected: true, files: d.files + 1, fullCopy: d.fullCopy);
+    return 'sample-id-${d.files + 1}';
+  }
+
+  /// Demo: no real Drive; [IdThumb] draws a placeholder for an empty url.
+  @override
+  Future<({String url, String open})> idView(String hid, String fileId) async => (url: '', open: '');
+  @override
+  Future<void> idDelete(String hid, String fileId) async {
+    final d = _drive[hid];
+    if (d != null) _drive[hid] = (connected: true, files: d.files > 0 ? d.files - 1 : 0, fullCopy: d.fullCopy);
+  }
 }

@@ -217,7 +217,7 @@ class ConfirmLayoutsCard extends StatelessWidget {
         gap: 8,
         children: [
           const T('Do your room layouts still match?', w: 800, s: 17),
-          T('Last confirmed $days days ago. Every 3 months, check that beds, fans, AC and windows are still where the layouts show them.', s: 13, c: p.mu, lh: 1.4),
+          T('Last confirmed $days days ago', s: 13, c: p.mu, lh: 1.4),
           Row(
             children: [
               Expanded(child: Cta('All still correct', icon: 'check', height: 46, px: 12, fs: 14, onTap: () => s.confirmLayouts(s.ownHid))),

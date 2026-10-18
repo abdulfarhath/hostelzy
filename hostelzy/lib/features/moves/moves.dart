@@ -42,7 +42,7 @@ extension MoveActions on AppState {
         return '${w[0].toUpperCase()}${w.substring(1)}.';
       }
     }
-    return 'Couldn’t save it. Check your internet and try again.';
+    return 'Couldn’t save. Check your internet.';
   }
 
   Future<bool> _moveWrite(Future<void> Function() f) async {
@@ -65,13 +65,13 @@ extension MoveActions on AppState {
     if (onServer) {
       if (!await _moveWrite(() => data.giveNotice(day, vReason ?? ''))) return;
       update(() => notice = true);
-      return toastMsg('Notice sent. $stayOwner accepts it in Hostelzy.');
+      return toastMsg('Notice sent to $stayOwner');
     }
     update(() {
       notice = true;
       moves = [MoveReq(id: 'n${_nowMs()}', hid: stayHostel.id, stayKey: '', kind: 'vacate', status: 'open', name: meName, bed: myStay?.bed ?? '', lastDay: day, reason: vReason ?? '', at: _nowMs()), ...moves.where((m) => m.kind != 'vacate')];
     });
-    toastMsg('Notice sent. $stayOwner accepts it in Hostelzy.');
+    toastMsg('Notice sent to $stayOwner');
   }
 
   int _nowMs() => DateTime.now().millisecondsSinceEpoch;
@@ -127,7 +127,7 @@ extension MoveActions on AppState {
     toastMsg(!accept
         ? '$who is told. Talk to them on WhatsApp.'
         : m.kind == 'vacate'
-        ? 'Accepted. Bed ${m.bed} shows free from ${dayMon(m.lastDay ?? appToday)}.'
+        ? 'Accepted · bed ${m.bed} free from ${dayMon(m.lastDay ?? appToday)}'
         : '$who moves to bed ${m.toBed}. New rent from next month.');
   }
 
@@ -142,7 +142,7 @@ extension MoveActions on AppState {
       b.soon = dayMon(day);
       sheet = null;
     });
-    toastMsg('Bed ${b.id} is listed as free from ${dayMon(day)}.');
+    toastMsg('Bed ${b.id} free from ${dayMon(day)}');
   }
 
   /// Owner: they moved out today; the refund is due in 7 days.
@@ -192,7 +192,7 @@ extension MoveActions on AppState {
       update(() => refunds = [for (final x in refunds) x.stayKey == r.stayKey ? Refund(stayKey: x.stayKey, hid: x.hid, name: x.name, phone: x.phone, bed: x.bed, advance: x.advance, amt: x.amt, status: 'sent', utr: u, leftOn: x.leftOn, sentOn: appToday) : x]);
     }
     update(() => sheet = null);
-    toastMsg('Marked ${fmt(r.amt)} refunded. ${r.name.split(' ').first} is asked to confirm.');
+    toastMsg('${fmt(r.amt)} marked refunded');
   }
 
   /// Former resident: "Yes, I got it" / "Not received" (board `rRefund`).

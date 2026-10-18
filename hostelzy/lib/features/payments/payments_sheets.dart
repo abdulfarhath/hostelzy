@@ -47,13 +47,6 @@ class PaySteps4 extends StatelessWidget {
   }
 }
 
-Widget _shieldNote(BuildContext context, List<InlineSpan> spans) {
-  final p = PalScope.of(context);
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: Rich(spans, s: 12, c: p.mu, lh: 1.45))],
-  );
-}
 
 /// Board 1: pay the advance (sheet `payAdv`).
 class PayAdvSheet extends StatelessWidget {
@@ -94,7 +87,6 @@ class PayAdvSheet extends StatelessWidget {
           T(fee == null ? 'Booked once ${h.owner} confirms the money arrived.' : '${fmt(fee.hzBack)} back when you leave. Your price ${fmt(fee.hzFee)} is fixed once ${h.owner} confirms.', s: 14, lh: 1.45),
           Cta('Pay with a UPI app', height: 54, px: 16, fs: 15, onTap: () => s.payByUpi(pay)),
           OutlineCta('I’ve paid · enter UPI reference', icon: 'chev', onTap: () => s.openPayUtr(pay)),
-          T('Hostelzy never holds your money. It goes straight to the owner.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),
     );
@@ -107,7 +99,6 @@ class PayUtrSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final pay = s.pay;
     if (pay == null) return const SizedBox();
     final owner = hostelById(pay.hid).owner;
@@ -122,7 +113,6 @@ class PayUtrSheet extends StatelessWidget {
             children: [
               // F21 W2: plain words, with a picture of where it is.
               const T('UPI reference', w: 800, s: 15),
-              T('12 digits, in your UPI app under the payment', s: 13, c: p.mu),
               Field(
                 value: s.payUtr,
                 numeric: true,
@@ -139,7 +129,6 @@ class PayUtrSheet extends StatelessWidget {
             ],
           ),
           UpiRefHint(amount: pay.amt, to: owner),
-          _shieldNote(context, [sp(context, '$owner checks this number in their bank or UPI app. No screenshots needed.')]),
           Cta('Send to $owner', height: 54, px: 16, fs: 15, opacity: s.payUtr.length == 12 ? 1 : .4, onTap: s.sendPayUtr),
         ],
       ),
@@ -253,10 +242,6 @@ class PaymentsToCheck extends StatelessWidget {
                       ],
                     ),
                   ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _shieldNote(context, [sp(context, 'Open your bank or UPI app and look for this UPI reference. Tap “Yes, received” only when you see the money. The tenant sees “Booked” or “Paid” only after that.')]),
-                ),
               ],
             ),
           ),
@@ -284,12 +269,10 @@ class UpiCard extends StatelessWidget {
           // F18 (F11): name@bank, e.g. srinivas@okaxis or 98xxxxxx10@ybl.
           if (u.id.isNotEmpty && !validUpiId(u.id)) T('That isn’t a UPI ID. It looks like name@bank (for example srinivas@okaxis).', s: 13, w: 800, c: p.ad),
           if (u.id.startsWith('sample.')) T('This is a sample ID. Type your own before tenants pay you.', s: 13, w: 800, c: p.ad),
-          T('Advances and rent go straight here. Hostelzy never holds the money; you confirm each payment in the app.', s: 13, c: p.mu, lh: 1.4),
           const SizedBox(height: 4),
           VGap(gap: 6, children: [const T('Name shown in UPI', w: 800, s: 13), Field(key: const ValueKey('upiName'), value: u.name, onChanged: (v) => s.setOwnerUpi(u.id, v))]),
           const SizedBox(height: 4),
           OutlineCta('Test with ₹1', icon: 'chev', height: 48, fs: 14, onTap: () => s.openLink(upiUri(id: u.id, name: u.name, amt: 1, note: 'Hostelzy test'), 'a UPI app')),
-          T('Pays you ₹1 from your own phone to check it works.', s: 13, c: p.mu),
         ],
       ),
     );

@@ -110,9 +110,18 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
   last verified hostel, the listed one is last now). No SQL.
 
 ## Not in the spec
+- Console (integration, hub's ask): C2 **Payouts due** sits above the owner invoices; **Paid** takes a 12-digit UTR ("Enter the 12-digit UTR."); C14 Partners shows each partner's hostels under their row (Checked ✓ → "Checked. ₹20 due."). decided.
 - Part 1: the pin key `pin-<id>` (test hook only). `priceBand` kept in place (no removals). decided.
 - Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
+
+**Part 4, decided by Build 4 (2026-10-18, wave 4):**
+| # | What Build 4 did | Why |
+|---|---|---|
+| 1 | The demo's listed sample hostel (Sri Balaji) counts as **confirmed today**, so the demo APK shows a range; the "Rent on request" state is covered by the flow test | Sample data only; no second sample hostel was added |
+| 2 | ~~Card "Rent on request · not confirmed lately"; page with a sentence~~ → **hub (F31 Rule A):** the card says only **"Rent on request"**; the page says "Rent on request" plus the button **Ask on WhatsApp** (the existing Ask Hostelzy number), no sentence | Hub decision, 2026-10-18 |
+| 3 | A stale listed hostel still answers the **Budget filter** by its old range (unchanged), and under Price ↑ it sorts after every priced card (fresh listed ones included), then by its old range among the stale ones | The number is kept back from the tenant, not thrown away |
+| 4 | The app **reads the server's view `listed_rent_visible`** (Build 3) when it exists: a listed hostel the view hides the rent of is treated as never confirmed (the server's clock decides); before the view exists the app applies the same 60-day rule to `rent_confirmed_at` itself | Hub, 2026-10-18 |
 
 ## Design
 **Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Note: the hub later assigned these boards to Design 2 (`design/f28-boards`); the set below already exists, see `docs/design/main-canvas/README.md` § v25.
@@ -155,3 +164,69 @@ F28 #1–4, #6–9 accepted as built (partner_code, owner_asked_at, `reward_payo
 `check_partner_hostel(h)` (integrator wires it to the C14 Partners "checked" tick and lists `payouts_due()` in console
 Payments), adder photos, adder-only owner phone, S22 row, Rule A, no Realtime for these tables).
 #5 accepted with one copy change (Rule A): the partner line in S93 reads **"₹20 when checked"**.
+
+## Build (wave 3 · Build 3, 2026-10-18, branch `feature/w3-import`, not merged: the original Build chat integrates waves 0→4)
+Merged to `main` (#155, 2026-10-18), with waves 2–5 on `integration/w2-5`.
+
+Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C15 line) and the Part 4 console segment. Handover: `docs/handover/w3-build.md`.
+
+| Piece | Where | State |
+|---|---|---|
+| 28-20 Places import | `tools/import/places.mjs` (+ `lib.mjs`, `areas.json` 32 areas, `package.json`, `test.mjs`) | Built. Text Search (New) for the 4 terms per area, drafts `status='draft', source='places'`, dedupe by `place_id` and by name within 150 m, refresh after 30 days, gone → dropped. "No key yet" exit 0 |
+| 28-80 OSM import | `tools/import/osm.mjs` | Built. Overpass `tourism=hostel`, `amenity=dormitory`, `building=dormitory` in the Hyderabad box; `source='osm'`, `place_id='osm:n…'`; credit line in the console footer |
+| Workflow | `.github/workflows/import-hostels.yml` | Built. `workflow_dispatch` + monthly (1st, 08:47 IST); plain message and exit 0 without `SUPABASE_DB_URL` / `GOOGLE_PLACES_KEY` |
+| 28-21 C14 segments | `app/console/console.js` (`listed`), `logic.js`, `console.css` | Built: **Listed · To call · To refresh · Partners**. To call: call script (6 lines), rent + For + Food, List / Not a PG / Closed / Call later, owner's web photos, Export CSV `name,phone,area,id`. To refresh: > 50 days, Export CSV, Rent confirmed today / Closed. Partners: add partner → `new_partner`, list from `partners_due()` (Build 2's SQL; honest message until it exists) |
+| C15 line | `app/console/console.js` (`claims`) | Built: "added by Ravi (resident) · owner phone matches ✓/✗" from `claim_adders()` |
+| 28-50 W9 | `app/list/index.html` (+ `mark.svg`) | Built: form → photos to the private `self-list` bucket → `self_list_request` → "We'll call you within 2 days" (sent state). No "Listed!" |
+| 28-50 W10 | `app/list/poster.html` | Built: A4 / A5 toggle, print, QR to W9, red headline "Get tenants from Hostelzy. Free listing.", Archivo, brand mark |
+| SQL | `supabase/migrations/20261018120000_f28_import.sql`, test `supabase/tests/f28_import_test.sql` | Built, rerun-safe: the 6 `hostels` columns (`add column if not exists`, same as Build 2), `self_list_requests`, `self_list_request()` (anon, 3 per phone a day), `list_draft`, `draft_not_pg`, `rent_confirmed`, `call_later`, `call_list()`, `claim_adders()`, `hostel_owner_phone()`, view `listed_rent_visible` (60 days) |
+| Checks | `tools/check.sh` | Green on the branch (analyze, Flutter tests, SQL incl. F28, 25 function tests incl. `import.test.ts`); `tools/import/test.mjs` 3/3 against the local DB. SQL bundle **not** regenerated (integrator) |
+
+### Not in the spec (wave 3, for the hub)
+1. **`hostels.removed_at`**: "Not a PG / Closed" needs a mark; the row stays (status `draft`) so the import never re-adds the same `place_id`. **`hostels.call_after`**: "Call later" puts the row last for 3 days. **`hostels.source_photos`**: Google photo *names* (the media URL needs the key), up to 3, team-only in meaning.
+2. **The owner's phone stays team-only by a trigger**, not column RLS (Postgres has none): `owner_phone_hint` stays on a row only while it is a draft (invisible to the public); on `listed`/`live` the trigger moves it to `hostel_leads.owner_phone` and blanks the column. `hostel_owner_phone(h)` (definer-only) reads either. **Build 2's `add_hostel` phone dedupe must use `hostel_owner_phone()` or check `hostel_leads` too.**
+3. `list_draft` needs **no photo** (Places/OSM drafts have none in our bucket); the team adds one later in Listed. `list_hostel` (F26) still needs one.
+4. Web-form photos go to a new private bucket **`self-list`** (anon may upload `web/<uuid>/n.jpg`, team reads via signed URLs); they are not copied into `hostel_photos`.
+5. Web-form dedupe = same name + same area (no pin on the web); a duplicate request points at the existing hostel, no second row. Phone must be an Indian mobile (6–9 start).
+6. Import gender from the name (women/ladies/girls → Women, co-living → Co-living, else Men); the call confirms. Hotels/lodges/resorts skipped unless the name says PG/hostel. Area = nearest `areas.json` centre.
+7. A gone Google place that is already `listed`/`live` keeps its row (a human confirmed it) and loses only the Google fields; only drafts are deleted.
+8. Partners segment calls Build 2's `new_partner(p_name, p_phone, p_upi)` → code and `partners_due()` → `(code, name, phone, upi, active, listed, due)`; the integrator aligns the names.
+9. The Listed segment no longer shows import/web drafts (they live in To call) nor removed rows.
+10. **F31 Rule A applied** (hub message, 2026-10-18): no helper sentences in C14/C15, W9, W10; the F26 Listed aside's two grey lines and the Claims "says they own it" sentence went too (see `docs/handover/w3-build.md` §7).
+11. ~~TLS without certificate verification~~ → **hub: verify by default.** Done: Node's CA store, optional `tools/import/supabase-ca.pem` for a direct host, `PGSSL_NO_VERIFY=1` the only opt-out (local tests, prints one line). Items 1–10 accepted by the hub (2026-10-18).
+
+## Build (wave 2 · Build 2, 2026-10-18, branch `feature/w2-add-join`, not merged: the original Build chat integrates waves 0→4)
+Part 2 in the app and its SQL (28-30, 28-31, 28-40). Console pieces (C14 Partners segment, C15 line) are Build 3's; they call
+the RPC names below. Handover: `docs/handover/w2-build.md`.
+
+| Piece | Where | State |
+|---|---|---|
+| **S92** `addHostel` | `hostelzy/lib/features/add_hostel/add_hostel_screens.dart` (`AddPgScreen`), state `add_hostel.dart` | Built. Name · gate photos 1–3 (camera / gallery, `cameraPick`) · pin on the team's map (aPin in `pinFor = 'add'` mode, area read off the pin) · For · "What do you pay? ₹ a month" (partner: from–to) · Sharing 1/2/3/4+ · Food · Owner's name + phone · "I live here" / "I'm a Hostelzy partner" + code (remembered on the phone, `partnerCode` in the snapshot) · **Add**. Dedupe box "Already on Hostelzy: X. Ask your owner to verify it instead." with **Share the link with your owner**. Rule A (F31): no helper lines |
+| **S93** `myAdd` | same files (`MyAddScreen`) | Built. The listed card (photo · name + UNVERIFIED / ✓ VERIFIED · gender · area · rent range), 5 steps **Added ✓ → Owner asked → Owner agreed → Verified → ₹200 paid** (states only), **Send to your owner** (WhatsApp from the adder's phone: "Your PG X is on Hostelzy. Agree to get it verified (free): `app/r/?h=<id>&claim=1`"), **Ask again** after 3 days ("Sent 18 Oct · ask again in N days" before), UPI id box after the owner agrees (`set_adder_upi`), the honest line "Paid only when the owner agrees and Hostelzy verifies the hostel." Variants: Still waiting (60 days) · Queued (cap, `pay_month`) · Paid · Removed · empty ("No hostel added yet" + Add a hostel) |
+| Entry points | `explore_screen.dart` (`AddItRow` after the cards and in the empty state), `me_screen.dart` (**Add a hostel** · `₹200 when verified`, or **Your hostel** · `<name> · owner asked`), `resident_screens.dart` T20 (**Add my hostel** / **Your hostel on Hostelzy**) | Built. Guests get "Sign in to add a hostel" (`afterSignIn = 'add'`) |
+| Claim link | `router.dart` (`/r?h=<id>&claim=1` → `openClaimLink`), `app/r/index.html` (opens the app) | Built: the UNVERIFIED page (T32) with H47 Claim pre-opened; submitting = owner agreed |
+| S22 variant | `rewards_screens.dart` (`addReward` row) | Built: "₹200 · <hostel> verified · Paid by UPI on the 5th" / "Queued for <Month> · monthly cap" / "Paid 5 Nov by UPI" (from `my_added_hostel()`) |
+| SQL | `supabase/migrations/20261018100000_f28_add_hostels.sql`, test `supabase/tests/f28_add_hostels_test.sql` | Built, rerun-safe (twice on one DB). `hostels.source/added_by/place_id/source_seen_at/rent_confirmed_at/owner_phone_hint` (+ `partner_code`, `owner_asked_at`), `partners`, `new_partner(p_name, p_phone, p_upi) → code`, `partners_due()`, `add_hostel(p) → {duplicate, hostel_id, name}` (dedupe: `hostel_owner_phone(h)` = typed phone, or same normalised name within 150 m; one in-progress per resident), `my_added_hostel()`, `asked_owner(h)`, `set_adder_upi(upi)`, `is_adder(h)` + photo policies (adder: ≤ 3 gate photos), reward kinds `hostel_added` ₹200 (trigger on `hostels.status → live`, push to the adder) / `hostel_listed` ₹20 (`check_partner_hostel(h)`, team), `reward_ledger.pay_month` with the ₹2,000 cap (`reward_cap_month`), `reward_payouts` + `payouts_due()` / `mark_payout_paid(ledger_id, utr)` (console › Payments), `profiles.payout_upi`. `hostel_owner_phone(h)` is a stub with Build 3's body (theirs runs after and wins) |
+| Demo | `add_hostel.dart` (`myAdd` seed), `demoPartnerCode` | "Sri Balaji Men's PG" shows as added by you at **Owner asked**; partner code `HZ-PART-1` works; dedupe runs against the sample hostels |
+| Tests | `hostelzy/test/w2_add_join_test.dart` (F28 group, 4 flows) | Green |
+| Checks | `tools/check.sh` | See `docs/handover/w2-build.md` §6 |
+
+### Not in the spec (wave 2, F28, for the hub)
+1. **`hostels.partner_code`** (which partner listed it) and **`hostels.owner_asked_at`** ("Owner asked" step and the 3-day "Ask again"), two columns the spec's list doesn't name. The owner's phone itself is **not** on `hostels` (`owner_phone_hint` stays `''`): it goes straight to the team-only `hostel_leads.owner_phone`, in line with Build 3's trigger.
+2. **Payout record**: `reward_payouts` + `payouts_due()` + `mark_payout_paid()` so "₹200 paid" (step 5) and the console's payouts list are real, not a promise. The ledger stays append-only.
+3. **`check_partner_hostel(h)`** (team): the C14 "checked" tick that grants the ₹20. Build 3's Partners segment can call it; until then the team runs it in SQL.
+4. The adder's own gate photos go to `hostel_photos` through two new policies (adder of a listed hostel, ≤ 3); `add_hostel` makes the row `listed` without a photo (the photos follow a moment later), unlike `list_hostel` which needs one first.
+5. S93 for a **partner** reuses the same 5 steps; its reward line reads "₹20 when checked" (hub copy). The Me row / S93 show the **latest** hostel only (partners with many listed see the newest).
+6. `my_added_hostel()` returns the owner's phone **to the adder only** (they typed it), so "Send to your owner" works after a reinstall. Nobody else ever gets it.
+7. The reward row in S22 comes from the same `my_added_hostel()` call (no change to the `Rewards` record / live rows).
+8. **Rule A (F31, hub message)** applied to S92 and S93: no helper lines; step subtitles are dates/states; toasts ≤ 6 words. The spec's honest line in S93 is kept as the one state sentence.
+9. `join_requests` / `add_hostel` are **not** in the Realtime publication (the F26 RLS test pins the publication's table list); S93 and Today reload when opened and after each action.
+
+## Build · Part 4, app side (wave 4, Build 4, 2026-10-18)
+Branch `feature/w4-drive-fresh`, not merged (`docs/handover/w4-build.md`). Console "To refresh" is Build 3's.
+| Piece | Where | State |
+|---|---|---|
+| `hostels.rent_confirmed_at` (`add column if not exists`, same as wave 2/3) | `supabase/migrations/20261018140000_f29_drive.sql` (+ a row in its SQL test) | Done |
+| `Hostel.rentConfirmedAt` from the row; `rentFresh` (60 days), `rentLine`, `rentFreshCompare`; `SupabaseRepo.listings()` overlays the view `listed_rent_visible` (`rent_visible = false` → stale) | `hostelzy/lib/data/hostels.dart`, `features/listings/rows.dart`, `features/listings/tiers.dart`, `supabase_repo.dart` | Done |
+| Explore card and T32 page say **"Rent on request"** after 60 days; the card sorts after every priced one (first sort step) | `features/explore/unverified_screen.dart`, `explore_screen.dart` | Done |
+| Tests | `hostelzy/test/w4_drive_test.dart` (28-90 unit + flow) | Green |

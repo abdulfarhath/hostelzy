@@ -150,11 +150,11 @@ void main() {
     final s = await _owner(tester, server);
     expect((s.confirmed['real1'], s.layoutConfirmed['real1']), (4, 122));
     expect(find.text('Still 2 free beds?'), findsOneWidget);
-    expect(find.textContaining('Last confirmed 4 days ago. Fresh beds rank higher.'), findsOneWidget);
+    expect(find.text('Last confirmed 4 days ago'), findsOneWidget);
     await _tap(tester, find.text('Yes, all 2 free'));
     await _settle(tester);
     expect(server.calls, contains('beds real1'));
-    expect(s.toast, 'Thanks. Tenants see your free beds as confirmed today.');
+    expect(s.toast, 'Free beds confirmed today');
     expect(find.text('Still 2 free beds?'), findsNothing);
     await tester.pump(const Duration(seconds: 4));
     await _tap(tester, find.byKey(const ValueKey('needTab-fixes'))); // F26 #18: the layouts check is in Fixes
@@ -171,7 +171,7 @@ void main() {
     final s = await _owner(tester, server);
     expect(s.needsConfirm('real1'), isTrue);
     expect(find.text('Still 2 free beds?'), findsOneWidget);
-    expect(find.textContaining('Not confirmed yet. Fresh beds rank higher.'), findsOneWidget);
+    expect(find.text('Not confirmed yet'), findsOneWidget);
     s.dispose();
   });
 
@@ -228,13 +228,13 @@ void main() {
       expect(find.text(t), findsOneWidget, reason: t);
     }
     expect(find.text('No'), findsNothing);
-    expect(find.text('Only the Hostelzy team sees your answer, never the owner.'), findsOneWidget);
+    expect(find.text('Only the Hostelzy team sees your answer, never the owner.'), findsNothing); // F31
 
     // Offline: nothing claimed, the card stays.
     server.down = true;
     await _tap(tester, find.text('Still deciding'));
     await _settle(tester);
-    expect(s.toast, 'Couldn’t save your answer. Check your internet and try again.');
+    expect(s.toast, 'Couldn’t save. Check your internet.');
     expect(find.byKey(const ValueKey('joinedAsk')), findsOneWidget);
     await tester.pump(const Duration(seconds: 4));
 

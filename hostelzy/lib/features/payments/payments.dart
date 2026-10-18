@@ -25,7 +25,7 @@ extension PaymentsActions on AppState {
   void payByUpi(Payment p) {
     final u = ownerUpi[p.hid]!;
     // F18: never pay a sample UPI ID in the Play Store build.
-    if (!AppState.samples && u.id.startsWith('sample.')) return toastMsg('This is a sample listing, so it has no real UPI ID. Don’t pay it.');
+    if (!AppState.samples && u.id.startsWith('sample.')) return toastMsg('Sample listing · no real UPI');
     if (u.id.isNotEmpty && !validUpiId(u.id)) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner}’s UPI ID isn’t valid. Ask them on WhatsApp.');
     if (u.id.isEmpty) return toastMsg('${hostelById(p.hid).owner.isEmpty ? 'The owner' : hostelById(p.hid).owner} hasn’t added a UPI ID yet. Ask them on WhatsApp.');
     openLink(upiUri(id: u.id, name: u.name, amt: p.amt, note: p.note), 'a UPI app');
@@ -56,7 +56,7 @@ extension PaymentsActions on AppState {
       }
       sheet = null;
     });
-    toastMsg('Saved. ${h.owner} confirms once they see the money.');
+    toastMsg('Sent to ${h.owner}');
   }
 
   /// Owner: checked the bank. Only now is the bed Booked or the rent Paid.

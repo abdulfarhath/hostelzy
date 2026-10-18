@@ -12,7 +12,6 @@ mixin _RemindersData {
   bool remMeals = true, remRent = true;
 
   /// The first-time offer ("Want water reminders?") was shown.
-  bool remOffered = false;
 
   /// Glasses today (a "Done" on the notification counts too).
   int glasses = 0;
@@ -40,7 +39,6 @@ extension RemindersActions on AppState {
     'meals': remMeals,
     'rent': remRent,
     'laundry': remLaundry,
-    'offered': remOffered,
   };
 
   void restoreRem(Map<String, dynamic>? m) {
@@ -50,7 +48,6 @@ extension RemindersActions on AppState {
     remMeals = m['meals'] as bool? ?? true;
     remRent = m['rent'] as bool? ?? true;
     remLaundry = m['laundry'] as bool? ?? false;
-    remOffered = m['offered'] as bool? ?? false;
   }
 
   /// App start: plug in the phone's notifications, bring back today's
@@ -219,7 +216,6 @@ extension RemindersActions on AppState {
   }
 
   /// The Today card shows while something is on.
-  bool get showToday => water.on || nextMine() != null;
 
   /// Me row: "water every 30 min" / "2 on" / "off".
   String get remSummary {
@@ -264,7 +260,7 @@ extension RemindersActions on AppState {
 
   Future<void> saveWater() async {
     final d = waterDraft ?? water;
-    if (d.to - d.from < 60) return toastMsg('Awake hours need at least an hour.');
+    if (d.to - d.from < 60) return toastMsg('Awake hours: at least an hour');
     update(() {
       water = d.copyWith(on: true);
       waterDraft = null;
@@ -298,8 +294,8 @@ extension RemindersActions on AppState {
     final name = remName.trim();
     if (name.isEmpty) return toastMsg('Give it a name.');
     if (remRepeat == 'days' && remDays.isEmpty) return toastMsg('Pick at least one day.');
-    if (remEdit == null && myRems.length >= maxMyRems) return toastMsg('You can keep $maxMyRems reminders. Delete one first.');
-    if (!awake(remAt, end: true)) return toastMsg('That’s outside your awake hours ($awakeLabel). Change them under Drink water first.');
+    if (remEdit == null && myRems.length >= maxMyRems) return toastMsg('Limit: $maxMyRems reminders');
+    if (!awake(remAt, end: true)) return toastMsg('Outside awake hours ($awakeLabel)');
     int? onceAt;
     if (remRepeat == 'once') {
       final n = DateTime.now();
@@ -351,18 +347,4 @@ extension RemindersActions on AppState {
     };
   }
 
-  /// First-time offer, once after sign-in, where reminders can ring. F21 W2:
-  /// not on first arrival, only from the 3rd app open.
-  void maybeOfferReminders() {
-    if (!rem.available || remOffered || opens < 3 || !signedIn || sheet != null || screen != homeOf[role]) return;
-    update(() {
-      remOffered = true;
-      sheet = 'waterOffer';
-    });
-  }
-
-  Future<void> acceptOffer() async {
-    update(() => sheet = null);
-    await _turnOnWater();
-  }
 }

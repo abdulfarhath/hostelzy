@@ -201,7 +201,7 @@ void main() {
     await _tap(tester, card);
     expect(find.byKey(const ValueKey('unverifiedPage')), findsOneWidget);
     expect(find.text('Around ₹7,000–9,000'), findsOneWidget);
-    expect(find.text('Expected, not confirmed. The owner hasn’t joined Hostelzy yet.'), findsOneWidget);
+    expect(find.text('Expected, not confirmed'), findsOneWidget);
     expect(find.text('Pick a bed'), findsNothing);
     expect(find.byKey(const ValueKey('ownerContact')), findsNothing);
 

@@ -178,7 +178,6 @@ class _AllRoomsState extends State<_AllRooms> {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final rooms = widget.rooms;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -210,7 +209,6 @@ class _AllRoomsState extends State<_AllRooms> {
             ],
           ),
           const SizedBox(height: 8),
-          T('Hostelzy never shows gates, CCTV, exits or residents’ names on any plan.', s: 12, c: p.mu, lh: 1.4),
         ],
       ),
     );

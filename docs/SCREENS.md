@@ -2,7 +2,8 @@
 
 - **Date:** 2026-10-18 · **Recounted on `main`** after F26 (#141: PRs #121–#125 plus the 12 reverts) and F27 (#140); Build,
   by reading the code and counting the rows below, not the canvas. **Wave 1** (F28 Part 1 · F29 Part 1 · F30, branch
-  `feature/w1-filter-wall-contacts`) adds T34 (see "Wave 1" below).
+  `feature/w1-filter-wall-contacts`) adds T34 (see "Wave 1" below). **Waves 2–5** (F28 Parts 2–4 · F29 Parts 2–4 · F31,
+  branch `integration/w2-5`) add S92–S94, H48–H50, T35–T37, W9, W10 and retire H41 (see "Waves 2–5" below).
 - **Why:** CLAUDE.md "Design ↔ app consistency". The Design chat matches the "Hostelzy · Main design"
   canvas 1:1 against this list. When a PR adds or removes a screen, update this file in the same PR.
 
@@ -10,13 +11,13 @@
 
 | Group | Count |
 |---|---|
-| App screens (routes + their separate pages/views) | **84** |
-| App sheets (bottom sheets) | **44** |
-| App full-screen states | **30** |
-| **Release app total** | **158** |
+| App screens (routes + their separate pages/views) | **87** |
+| App sheets (bottom sheets) | **46** |
+| App full-screen states | **33** |
+| **Release app total** | **166** |
 | Team console (app/console): views 11 + states 4 | **15** |
-| Web pages (app/): pages 6 + states 1 | **7** |
-| **Overall total** | **180** |
+| Web pages (app/): pages 8 + states 2 | **10** |
+| **Overall total** | **191** |
 
 **F25 merges (2026-10-03, −3):** H17 `add` merged into H20 `addR` (one "Add a resident" sheet; the id H20 is kept),
 S76 `aPay` and S77 `aCases` removed (the team uses the console's Payments C2 and Fair Play C3). Ids are not reused or
@@ -43,11 +44,20 @@ UNVERIFIED, in every sort; a first-visit hint line for guests, a variant) · S9 
 (a guest's 4th verified hostel shows T34) · H1 `search` (Verified only switch) · S38 `oRent` (Call · WhatsApp on every row) ·
 S40 Manage › Residents (Call · WhatsApp · Notify on every row) · H6 `wa` (its Notify form, a variant).
 
-Ids are never reused or renumbered. **All retired ids:** S24, S25, S27, S28, S41, S76, S77, H10, H17, H19, T10, T11,
+**Waves 2–5 (F28 Parts 2–4 · F29 Parts 2–4 · F31; branch `integration/w2-5`, 2026-10-18; screens +3, sheets +2, states +3,
+web +3 → overall +11):**
+
+| Change | Ids |
+|---|---|
+| **Added** | **S92** `addHostel` Add a hostel · **S93** `myAdd` Your hostel on Hostelzy · **S94** `joinForm` Join <hostel> · **H48** `askJoin` · **H49** `joinReview` · **H50** `drive` · **T35** `myAdd` empty · **T36** `joinForm` sent · **T37** `joinForm` closed (W2 wrote 34–36; T34 is the F30 wall) · web **W9** `app/list/` (+ sent state) · **W10** `app/list/poster.html` |
+| **Retired** | **H41** `waterOffer` (F31: the first-time reminder offer is gone) |
+| **Changed** | S36 `oToday` (F31 order: money strip, tabs Holds · Payments · Joining · Fixes, Fair Play only while a case is open, This month, Headcount, cards) · S23 `rHome` (no water card, no offer) · S39 Manage (F31 order + Tenant IDs row) · S40 Residents (Ask to join opens H48) · S79 `me`, S80 `settings` (F31 orders) · console C2 (Payouts due), C14, C15 · web W2 `app/r/?h=&claim=1`, W3 `app/j/?t=` |
+
+Ids are never reused or renumbered. **All retired ids:** S24, S25, S27, S28, S41, S76, S77, H10, H17, H19, H41, T10, T11,
 T13, T19.
 
-Subtotals: screens Start 7 · Tenant 16 · Resident 12 · Owner 30 · Team mode 11 · Shared 8.
-Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 16 · Resident 5 · Owner 7 · Shared 2.
+Subtotals: screens Start 7 · Tenant 18 · Resident 13 · Owner 30 · Team mode 11 · Shared 8.
+Sheets Tenant 11 · Resident 8 · Owner 20 · Team 1 · Shared 6. States Tenant 19 · Resident 5 · Owner 7 · Shared 2.
 
 ## Counting rules
 
@@ -69,7 +79,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 5. **Console view** = each nav page in `app/console/console.js` `NAV` plus a detail view that replaces the page's
    detail pane with a different tool. **Web page** = each HTML file served from the repo root and `app/`.
 
-## 1. App screens (84)
+## 1. App screens (87)
 
 ### Start and sign-in (7)
 
@@ -83,7 +93,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 6 | `roleGate` (owner) | List your PG (Request a visit, owner link, "Manager at a PG?") | `screens_start.dart:369` (`if (owner)`, `:386`) | Role › I run a PG, without a live hostel |
 | 7 | `scan` | Scan the QR (invite poster) | `screens_start.dart:534` | Join your PG › Scan the QR (`features/links/links.dart:152,162`) |
 
-### Tenant (16)
+### Tenant (18)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
@@ -103,12 +113,14 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 21 | `moveIn` | Moving in · what to pay | `rewards.dart:152` | Hold › Moving in (`screens_tenant.dart:1496,1505`) |
 | 22 | `rewards` | Stay Rewards | `rewards.dart:15` | Me › Stay Rewards (`screens_tenant.dart:589`) |
 | 87 | `building` | Building view: cross-section (roof, F3…F1, G only when the data has a ground floor, base slab), shared-thing chips on top of each floor (red when not working), every room's beds; a free bed → the picker on that bed; a floor → floor sheet H42 (F25 NEW-1 `w4-building`, NEW-2 merged in). F26 #3: **inline on the hostel page S13** (`HostelBuilding`); **on its own page `building`** for hostels with more than 80 beds ("See all N rooms ›"); and on owner **Beds** (S37, a room's number → its layout via `onRoom`). No longer a picker tab (F26 #8) | `features/holds/building_view.dart` (`BuildingView`); page: `features/explore/hostel_screen.dart` (`BuildingScreen`) | Hostel page (inline); Hostel page › See all N rooms › (`seeAllRooms`); owner tab Beds |
+| 92 | `addHostel` | Add a hostel (F28 Part 2): name · gate photos 1–3 (camera / gallery) · pin on the map (aPin in add mode; area read off the pin) · For · "What do you pay? ₹ a month" (partner: from–to) · Sharing · Food · Owner's name + phone · I live here / I'm a Hostelzy partner + code · Add. Duplicate box "Already on Hostelzy: X. Ask your owner to verify it instead." + Share | `features/add_hostel/add_hostel_screens.dart` (`AddPgScreen`) | Explore end row / empty state "Can't find your PG? Add it ›"; Me › Add a hostel; My stay T20 › Add my hostel |
+| 93 | `myAdd` | Your hostel on Hostelzy (F28 Part 2): the listed card, steps Added ✓ → Owner asked → Owner agreed → Verified → ₹200 paid, Send to your owner / Ask again (3 days), UPI id box after the owner agrees, the honest line | `features/add_hostel/add_hostel_screens.dart` (`MyAddScreen`) | Me › Your hostel; after Add; My stay T20 › Your hostel on Hostelzy |
 
-### Resident (12)
+### Resident (13)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 23 | `rHome` | Home (tab): rent card (red Pay), 3 actions, 30-day review card, **Food this week** (the shared week table from the hostel page, today's row highlighted, F26 #4 #13), no menu: one honest line (no breakfast card) | `features/residents/resident_screens.dart` (`ResidentHomeScreen`; table `features/food/week_table.dart` `FoodWeekTable`) | Resident tab 1; after joining; meal reminder |
+| 23 | `rHome` | Home (tab) · F31 Rule B order: rent card ("Paid" when paid) · next meal card · **Food this week** (today's row highlighted) · the 3 actions (Pay rent · Raise complaint · Message owner) · 30-day review card. No water card, no reminder offer | `features/residents/resident_screens.dart` (`ResidentHomeScreen`; table `features/food/week_table.dart` `FoodWeekTable`) | Resident tab 1; after joining; meal reminder |
 | 26 | `rPay` | Rent (tab) | `screens_resident.dart:191` | Resident tab 2 (plain tab, F26); Home › Pay / Pay rent |
 | 90 | `rMeals` | Week plan (F27-2): today first, 7 days × Breakfast / Lunch / Dinner, ✓ / Skip per cell, **Skip all weekend**, cut-off note, green "This week you're saving N plates" | `features/food/save_food_screens.dart` (`WeekPlanScreen`) | Home › next-meal card › Plan the week › (`save_food.dart:openWeekPlan`) |
 | 89 | `rStay` | My stay (tab, F26 #14): bed card · Your bed (Move to another bed, Give notice, Your refund, Review your stay, Fix a room layout) · Help (Something wrong in your room? › H45, Your complaints › H46) | `features/residents/resident_screens.dart` (`StayScreen`) | Resident tab 3; Find a bed tab bar › My stay (`features/session/tabs.dart` `leaveFindBed`) |
@@ -120,16 +132,17 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 33 | `rReview` | 30-day review | `reviews.dart:252` | Home › review card (`review_rules.dart:54`) |
 | 34 | `rExit` | Exit review | `reviews.dart:317` | Give notice › Review your stay (`review_rules.dart:67`) |
 | 35 | `rRefund` | Your refund (former resident) | `refunds.dart:69` | My stay › Your refund; Me › Your refund for a non-resident (`features/moves/moves.dart:180`) |
+| 94 | `joinForm` | Join <hostel> (F29 Part 2): kicker "Bed 203 · ₹6,500/month", advance, name, phone, moving in, Your ID (Send ID on WhatsApp; F29 Part 3: `IdCapture` when the owner takes IDs in Drive), Send to owner | `features/join/join_screens.dart` (`JoinFormScreen`) | Link `app/j/?t=<token>` (router `/j?t=`), after sign-in |
 
 ### Owner (30)
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 36 | `oToday` | Today (tab) · F26 #18: Fair Play card pinned on top, then **Holds · Payments · Fixes** tabs with counts (most urgent opens first; Holds = hold requests (Confirm hold / Decline; opening one tells the tenant "Owner reviewing", F26 #9), notices and bed moves; Payments = payments to confirm, refunds; Fixes = layout fixes, quick fixes, repairs, broken shared things, a new layout to check), then the This month card with "N% full" + bar (F25 A6), then main's cards "Still N free beds?", "Do your room layouts still match?", "Are your rates still right?". Empty: T33 | `features/owner/owner_today_screen.dart` | Owner tab 1; role pick; hostel switch; an old `app/r/` link |
+| 36 | `oToday` | Today (tab) · F31 Rule B order: **money strip** "Due today ₹X · Late ₹Y" (tap → Rent; hidden when both are 0) · **Holds · Payments · Joining · Fixes** tabs with counts, most urgent first (Joining, F29 Part 2, only while non-empty; Holds = hold requests, notices and bed moves; Payments = payments to confirm, refunds; Fixes = layout fixes, quick fixes, repairs, broken shared things, a new layout to check) · Fair Play card **only while a case is open** · This month (beds taken · free · rent pending · % full) · Headcount card (meals) · "Still N free beds?" · "Do your room layouts still match?" · rates card. Empty: T33 | `features/owner/owner_today_screen.dart` | Owner tab 1; role pick; hostel switch; an old `app/r/` link |
 | 37 | `oBeds` | Beds (tab) · F26 #19: the Building view only (S87; the Rooms list and its toggle are gone). A bed → H18; a room's number → its layout (`oLayout` / `oCreate`); "Layouts ›" to create or copy one; "Rooms and rates ›" | `features/owner/owner_beds_screen.dart` | Owner tab 2 |
 | 38 | `oRent` | Rent (tab) · F26 #20: tags Paid green, Late red, Due plain; **Call** + **WhatsApp** (the resident's number) on **every** row (F29 Part 1): Paid → "Hi Ravi, thanks, August rent received. – <hostel>" (the month of the payment), Due / Late → the ready reminder; no bell | `features/owner/owner_rent_screen.dart` (`rentWhatsApp`, `rentThanks`, `rentReminder`) | Owner tab 4; Today › rent pending |
-| 39 | `oMore` (home) | Manage (tab, list) | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
-| 40 | `oMore` · residents | Manage › Residents · F29 Part 1: under every row **Call · WhatsApp · Notify** (WhatsApp → H6 with the greeting; Notify → H6 in its Notify form); a resident without the app: Notify off (muted) + "Not on the app yet · Ask to join" (plain text until F29 Part 2) | `features/owner/owner_manage_screen.dart` (`_Residents`, `_ContactBtn`) | Manage › Residents |
+| 39 | `oMore` (home) | Manage (tab, list) · F31 order: Residents · Rates and UPI · Room layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · **Tenant IDs** (F29 Part 3, subtitle "Google Drive · N files" / "Not connected" → H50) · Reviews and ranking · Team · Your plan | `screens_owner.dart:1043` (`_ManageList`) | Owner tab 5 |
+| 40 | `oMore` · residents | Manage › Residents · F29 Part 1: under every row **Call · WhatsApp · Notify** (WhatsApp → H6 with the greeting; Notify → H6 in its Notify form); a resident without the app: Notify off (muted) + "Not on the app yet · Ask to join" (F29 Part 2: Ask to join opens H48 for that bed); **Ask to join** button (H48) | `features/owner/owner_manage_screen.dart` (`_Residents`, `_ContactBtn`) | Manage › Residents |
 | 42 | `oMore` · complaints | Manage › Complaints | `screens_owner.dart:849` | Manage › Complaints |
 | 43 | `oMore` · deals | Manage › Deals | `deals.dart:13` | Manage › Deals (`state.openDeals`, `state.dart:241`) |
 | 44 | `oMore` · rates | Manage › Rates and UPI | `screens_owner.dart:1434` (`RateCard`) | Manage › Rates and UPI (`residents.dart:120`) |
@@ -176,8 +189,8 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 
 | # | id | Name | Built at | How it's reached |
 |---|---|---|---|---|
-| 79 | `me` | Me (tab for tenant and resident; owner via Today avatar). F26 #10 #11: no Saved / Holds / My stay rows; **Log out** in red at the end | `features/session/me_screen.dart` | Tab 5 (also in the Find a bed bar); owner Today |
-| 80 | `settings` | Settings | `settings.dart:73` | Me › Settings |
+| 79 | `me` | Me (tab for tenant and resident; owner via Today avatar). F31 order: name + phone · Your hostel / Add a hostel (F28 Part 2) · (Your refund, when open) · Stay Rewards · Reminders · Settings · Help on WhatsApp · **Log out** in red · Switch role › · version | `features/session/me_screen.dart` | Tab 5 (also in the Find a bed bar); owner Today |
+| 80 | `settings` | Settings · F31 order: Account (Name · Phone · WhatsApp) · Notifications (switch labels only) · Language (Language · Look) · About (Privacy · Terms · Fair Play rules · Hostelzy team · version line) · Log out · Delete account last | `settings.dart:73` | Me › Settings |
 | 81 | `reminders` | Reminders | `reminders.dart:92` | Me › Reminders; reminder notification (`features/reminders/reminders.dart:77,234`) |
 | 82 | `perm` | Turn on notifications? (explainer) | `settings.dart:309` | First role pick as **resident or owner** with push not yet allowed (`login.dart` `offerPush`). Never for tenants (F25: a tenant's only ask is H5) |
 | 83 | `delAcc` | Delete account | `settings.dart:143` | Settings › Delete account |
@@ -185,7 +198,7 @@ Sheets Tenant 11 · Resident 8 · Owner 17 · Team 1 · Shared 7. States Tenant 
 | 85 | `delDone` | Your account is deleted | `settings.dart:278` | After delete (`sync.dart:291`) |
 | 86 | `gate` | Back in a few minutes (maintenance) | `settings.dart:364` | Remote settings from Supabase (`state.dart:643`); `app_config.dart` switches |
 
-## 2. App sheets (44)
+## 2. App sheets (46)
 
 All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675-717`.
 
@@ -218,7 +231,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 45 | `complaint` | Something wrong in your room? (kicker Help · hostel): category chips, text, photo, Send to owner (F26 #14, was the Help tab) | `features/residents/help_sheets.dart` (`ComplaintSheet`) | My stay › Help › Something wrong in your room?; Home › Raise complaint; Your complaints (empty) |
 | 46 | `complaints` | Your complaints: each with Sent / Being fixed / Fixed (F26 #14); empty: No complaints + Something wrong in your room? | `features/residents/help_sheets.dart` (`ComplaintsSheet`) | My stay › Help › Your complaints; after Send to owner |
 
-### Owner (17)
+### Owner (20)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
@@ -239,6 +252,9 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 33 | `refund` | Refund X's advance | `refunds.dart:36` | Today › refund card (`features/moves/moves.dart:171`) |
 | 34 | `laundry` | Laundry day | `stay_tools.dart:166` | House rules › Laundry day (`features/laundry/laundry.dart:40`) |
 | 35 | `waNum` | Your WhatsApp number | `settings.dart:418` | Settings › WhatsApp, owners (`features/session/on_phone.dart:65`) |
+| 48 | `askJoin` | Ask to join (F29 Part 2): free bed chips, monthly fee (room's rate), advance (terms), moves in, first name, Send on WhatsApp | `features/join/join_screens.dart` (`AskJoinSheet`) | Manage › Residents › Ask to join (`owner_manage_screen.dart` `askJoin`); S40 row "Ask to join" (`s.openAskJoin(bed: r.bed)`) |
+| 49 | `joinReview` | <Name> wants to join (F29 Part 2): name, phone, moves in, bed, fee; ID row (ID received on WhatsApp tick / No ID yet / F29 Part 3: `IdThumb` + **Delete from my Drive**); Approve · Ask again · Decline | `features/join/join_screens.dart` (`JoinReviewSheet`) | Today › Joining › Review (`owner_today_screen.dart` `join-<id>-btn0`) |
+| 50 | `drive` | Tenant IDs in your Drive (F29 Part 3, F31 Rule A): status line "Not connected" / "Connected · N files" · **Connect Google Drive** or **Disconnect** (owner only; a manager sees the line and the switch) · switch **Full copy needed (police file)** (connected only) | `features/drive/drive_sheets.dart` (`DriveSheet`) | Manage › Tenant IDs (`features/drive/drive.dart` `openDrive`) |
 
 ### Team (1)
 
@@ -246,7 +262,7 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 |---|---|---|---|---|
 | 36 | `team` | Hostelzy team (check the team account) | `team.dart:13` | Settings › Hostelzy team, not yet unlocked (`team_mode.dart:18`) |
 
-### Shared (7)
+### Shared (6)
 
 | # | id | Title | Body class | Opened at |
 |---|---|---|---|---|
@@ -254,15 +270,14 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 38 | `name` | Change your name | `settings.dart:395` | Settings › Name (`on_phone.dart:33`) |
 | 39 | `water` | Drink water | `reminders.dart:326` | Reminders › Water (`features/reminders/reminders.dart:257`) |
 | 40 | `addRem` | Add a reminder / Edit reminder | `reminders.dart:437` | Reminders › Add (`features/reminders/reminders.dart:286`) |
-| 41 | `waterOffer` | Want water reminders? | `reminders.dart:506` | 3rd app open (`features/reminders/reminders.dart:357`) |
 | 42 | `amFloor` | On floor N (shared things) | `amenities.dart:149` | Hostel page / Rooms / Shared things › a floor (`features/amenities/amenities.dart:100`) |
 | 43 | `amAdd` | Add to floor / Change item | `amenities.dart:226` | Floor sheet › Add (`features/amenities/amenities.dart:110`) |
 
-## 3. App full-screen states (30)
+## 3. App full-screen states (33)
 
 | # | Screen | State | Condition | Built at |
 |---|---|---|---|---|
-| **Tenant (16)** |||||
+| **Tenant (19)** |||||
 | 1 | `explore` | Loading (2 grey skeleton cards) | `listState == 'loading'` while Supabase loads | `screens_tenant.dart:157`, `:229` |
 | 2 | `explore` | You're offline · Retry | load failed, no cached list | `screens_tenant.dart:158`, `:246` |
 | 3 | `explore` | Offline · hostels as of date (cached banner) | load failed, last list on the phone | `screens_tenant.dart:159` (banner + saved cards) |
@@ -279,6 +294,9 @@ All in `_Sheet`, `lib/ui/shell.dart:581`; the key's body line is `shell.dart:675
 | 17 | `scan` | The camera didn't start | scanner error | `screens_start.dart:540` |
 | 32 | `detail` | UNVERIFIED hostel page (F26 #21): photo, name + grey UNVERIFIED badge, "Listed by the Hostelzy team · not checked yet", Rent per month "Around ₹7,000–9,000" (expected, not confirmed), no beds/holds/contact box, Claim this hostel ›; bottom: Tell me when verified (after: "We’ll tell you when it’s verified"), Ask Hostelzy | hostel `listed` (server status `listed`) | `features/explore/unverified_screen.dart` (`UnverifiedScreen`, via `HostelPage`) |
 | 34 | `detail` | Sign-in wall (F30, **T34** `signInWall`): Hostelzy mark, "Sign in to see all N hostels" (N = live verified hostels), "Your 3 free hostels: A, B, C.", red **Continue with Google** (builds without Google: the sample sign-in path, About you), **Not now** (→ Explore); after sign-in the user lands on this hostel. Light + dark. No helper line (F31 Rule A) | a guest (not signed in) opens a 4th verified hostel on this phone (`guestHostels` holds 3 other ids, kept across restarts); UNVERIFIED pages and the 3 already opened never wall | `features/session/guest_screens.dart` (`SignInWallScreen`, via `HostelPage`; `guest.dart` `wallFor`) |
+| 35 | `myAdd` | No hostel added yet (+ Add a hostel) | `myAdd == null` | `features/add_hostel/add_hostel_screens.dart` (`myAddEmptyAdd`) |
+| 36 | `joinForm` | Sent · <owner> will approve · we'll notify you (done state, same screen) | `jSent` | `features/join/join_screens.dart` (`joinDone`) |
+| 37 | `joinForm` | This bed was just taken, ask your owner / link not valid any more / already in | `!joinInfo.open` | `features/join/join_screens.dart` (`joinClosed`) |
 | **Resident (5)** |||||
 | 18 | `rPay` | Your stay isn't on Hostelzy yet | `myStay == null` | `screens_resident.dart:198` |
 | 20 | `rStay` (S89) | Your stay isn't on Hostelzy yet | `myStay == null` | `features/residents/resident_screens.dart` (`StayScreen`) |
@@ -304,7 +322,7 @@ Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 | # | id | View | Built at |
 |---|---|---|---|
 | 1 | `#onboarding` | Onboarding (stage columns, add lead, advance) | `console.js:109` |
-| 2 | `#payments` | Payments (invoices, mark paid / not received) | `console.js:151` |
+| 2 | `#payments` | Payments: **Payouts due** (F28: who, for, hostel, ₹, UPI, month, **Paid** → asks the UTR), then owner invoices (mark paid / not received) | `console.js` (`payments`) |
 | 3 | `#cases` | Fair Play (case tabs, list + case detail, signals, strikes, tenant reports, case photo) | `console.js:180` |
 | 4 | `#layout` | Layout help (requests table + request detail) | `console.js:311` |
 | 5 | `#layout` › editor | Layout help · draw the walls (shape, W × L, Send to owner) | `console.js:316` (`editor`) |
@@ -312,8 +330,8 @@ Firebase sign-in, `team` claim only. Built in `app/console/console.js`.
 | 7 | `#fixes` | Layout fixes (list + fix detail, approve / reject) | `console.js:420` |
 | 8 | `#reviews` | Reported reviews (Hide / Keep) | `console.js:478` |
 | 9 | `#hostels` | Hostels (Go live / Pause) | `console.js:507` |
-| 14 | `#listed` | Listed (F26 #21): list a hostel as UNVERIFIED (name, area, for, rent range), add photos, List it / Take off, waitlist count | `console.js` (`listed`) |
-| 15 | `#claims` | Claims (F26 #21): owners' claims, Call / WhatsApp / Done / Not the owner | `console.js` (`claims`) |
+| 14 | `#listed` | Listed (F26 #21, F28): segments **Listed · To call · To refresh · Partners**. Listed: list a hostel as UNVERIFIED (name, area, for, rent range), add photos, List it / Take off, waitlist count. To call (28-21): Places / OSM / web drafts with the 6-line call script, rent + For + Food, List / Not a PG, Closed / Call later, owner's photos, Export CSV. To refresh (28-90): listed hostels past 50 days, Rent confirmed today / Closed, Export CSV. Partners (28-40): add partner (name, phone, UPI → code), list with listed count and ₹ due, each partner's listed hostels with **Checked ✓** (₹20) or Checked. Footer: "Map data © OpenStreetMap contributors" | `console.js` (`listed`) |
+| 15 | `#claims` | Claims (F26 #21, F28): owners' claims, Call / WhatsApp / Done / Not the owner; line "added by Ravi (resident) · owner phone matches ✓/✗" | `console.js` (`claims`) |
 | 10 | state | Sign in (Continue with Google; "isn't a Hostelzy team account" message) | `console.js:53` |
 | 11 | state | Not set up yet (no Firebase config) | `console.js:37` |
 | 12 | state | Couldn't start | `console.js:41` |
@@ -323,18 +341,20 @@ Views 11 (C1–C9, C14, C15) + states 4 (C10–C13) = 15.
 
 Not counted: "Loading…" (`console.js:87`) and "Not found." for an unknown `#hash` (`console.js:94`).
 
-## 5. Web pages (7)
+## 5. Web pages (10)
 
 | # | Path | Page | States |
 |---|---|---|---|
 | 1 | `app/index.html` | Hostelzy · Get the app | — |
-| 2 | `app/r/` | Find this hostel on Hostelzy: "Hold a bed in the app to message or call the owner", Open in Hostelzy / Get the app (F26 #7: no enquiries; old links and QR posters still open the app, an old HZ code shows for reference) | — |
-| 3 | `app/j/` | You're invited to your hostel (invite code) | +1: "This link has no invite code" (`app/j/index.html:20`) |
+| 2 | `app/r/` | Find this hostel on Hostelzy (old HZ links) · **F28: `?h=<id>&claim=1`** "Your PG is on Hostelzy" → opens the app on the UNVERIFIED page with Claim this hostel | — |
+| 3 | `app/j/` | You're invited to your hostel (invite code) · **F29: `?t=<token>`** "Join your hostel on Hostelzy" → opens the app's join form, install hint | +1: "This link has no invite code" (`app/j/index.html`) |
 | 4 | `app/privacy/` | Privacy policy | — |
 | 5 | `app/terms/` | Terms of use | — |
 | 6 | `app/delete-account/` | Delete your Hostelzy account | — |
+| 7 | `app/list/` | **W9** List your PG on Hostelzy. Free.: hostel name, your name, phone, area, rent from–to, For, Food, photos (1–3), Send → `self_list_request` | +1: sent state, one line "Thanks, <name>. We'll call you within 2 days." |
+| 8 | `app/list/poster.html` | **W10** Poster: headline "Get tenants from Hostelzy. Free listing.", the mark, QR to W9, one line "Scan to list your PG free" + the address; A4 / A5 toggle, Print | — |
 
-Pages 6 + states 1 = 7.
+Pages 8 + states 2 = 10.
 
 ## 6. Not counted (listed so nobody draws or builds them by mistake)
 
@@ -360,6 +380,14 @@ Pages 6 + states 1 = 7.
 - `wa` (F29 Part 1): the Notify form: title "Notify X", kicker "Residents · bed N", the note field, **Send** (`waMode = 'notify'`, `holds_sheets.dart` `WaSheet`); the WhatsApp form is as before.
 - `oMore` · residents (F29 Part 1): a resident without the app (no account on their stay): Notify muted, no tap, "Not on the app yet · Ask to join" under the buttons (`owner_manage_screen.dart`, keys `resNotify-<bed>`, `resNoApp-<bed>`).
 - `oRent` (F29 Part 1): a Paid row's WhatsApp sends the thanks with the month of the payment; Due / Late rows the reminder (`owner_rent_screen.dart` `rentWhatsApp`).
+- `myAdd` (F28 Part 2): Owner asked / Owner agreed (UPI box) / Verified / Paid / Still waiting (60 days) / Queued (cap) / Removed / partner (₹20 line). `me` row "Add a hostel · ₹200 when verified" vs "Your hostel · <name> · <step>"; `rewards` row "₹200 · <hostel> verified · Paid by UPI on the 5th / Queued for <Month> / Paid <date>".
+- `explore` end row and empty-state row "Can't find your PG? Add it ›" (F28 Part 2); `rStay` T20 button Add my hostel / Your hostel on Hostelzy; `signIn` titles "Sign in to add a hostel" / "Sign in to join your hostel".
+- `oToday` (F29 Part 2): the Joining tab only while non-empty. `joinReview` ID row: WhatsApp tick / No ID yet / Drive (`IdThumb` + Delete from my Drive).
+- `joinForm` (F29 Part 3): `IdCapture`: "Take a photo of your ID" → the photo with a draggable black bar and "Cover the first 8 digits" (Full copy on: no bar, "Full copy needed (police file)"), Retake / Upload → "Uploaded to <owner>'s Drive".
+- `drive` H50 not available: the one line "Not available yet", no button (consent without the scope / Google refused, or the SQL / functions missing).
+- `oMore` (F29 Part 3): Manage row **Tenant IDs**, subtitle "Google Drive · N files" / "Not connected".
+- `detail` / `explore` (F28 Part 4): a listed hostel whose rent is older than the freshness window: "Rent on request" (+ Ask on WhatsApp on the page); "Expected, not confirmed".
+- Console C14 (F28): To call "Nobody to call", To refresh "Nothing to refresh", Partners "No partners yet", and "Needs the F28 SQL." on every segment until the migration runs; C2 Payouts due "Nothing due." / "Needs the F28 SQL.".
 - `oPlan`: Free trial · Due · N days late · Checking · Paid · Not received (`plan.dart:23`).
 - `rPay`: Due · Waiting · Not received · Paid (`screens_resident.dart:236-248`).
 - `oStrike`: Strike 1 · 2 (deals hidden / deals back) · 3 removed (`fairplay.dart:479`).

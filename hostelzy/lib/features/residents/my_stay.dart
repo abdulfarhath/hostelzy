@@ -59,8 +59,8 @@ extension MyStayActions on AppState {
     final existing = myRentPay;
     if (existing != null) return payByUpi(existing);
     final st = myStay;
-    if (st == null || st.key == null) return toastMsg('Your stay isn’t on Hostelzy yet. Ask $stayOwner to add you.');
-    if (st.rent <= 0) return toastMsg('$stayOwner hasn’t set your rent on Hostelzy yet. Ask them on WhatsApp.');
+    if (st == null || st.key == null) return toastMsg('Stay not on Hostelzy yet');
+    if (st.rent <= 0) return toastMsg('Rent not set yet');
     // F24 #25: this month's electricity share goes on the same payment.
     final ok = await _write(() => data.startRent(hid: st.hid, stayKey: st.key!, amount: st.rent + myElectricity, note: rentNote));
     if (!ok) return;

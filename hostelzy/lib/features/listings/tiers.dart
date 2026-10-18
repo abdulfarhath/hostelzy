@@ -34,6 +34,21 @@ int tierCompare(Hostel a, Hostel b, int Function(Hostel) price, {bool byPrice = 
   return (a.listed ? 1 : 0).compareTo(b.listed ? 1 : 0);
 }
 
+/// F28 Part 4 (28-90): a listed hostel's rent is shown only while a person's
+/// confirmation is within 60 days; after that it is "Rent on request".
+const rentFreshDays = 60;
+bool rentFresh(Hostel h, {DateTime? now}) {
+  if (!h.listed) return true;
+  final at = h.rentConfirmedAt;
+  return at != null && (now ?? DateTime.now()).difference(at).inDays < rentFreshDays;
+}
+
+/// What the card and the page say for the rent: the range, or "Rent on request".
+String rentLine(Hostel h, {DateTime? now}) => rentFresh(h, now: now) ? rentRange(h) : 'Rent on request';
+
+/// F28 Part 4: priced listed hostels before "Rent on request" ones.
+int rentFreshCompare(Hostel a, Hostel b, {DateTime? now}) => (rentFresh(a, now: now) ? 0 : 1).compareTo(rentFresh(b, now: now) ? 0 : 1);
+
 /// "Around ₹7,000–9,000".
 String rentRange(Hostel h) => h.rentMax > h.rentMin ? 'Around ${fmt(h.rentMin)}–${fmt(h.rentMax).replaceFirst('₹', '')}' : 'Around ${fmt(h.rentMin)}';
 
@@ -83,19 +98,19 @@ extension TiersActions on AppState {
 
   /// "Tell me when verified": one push when the team verifies it.
   void tellWhenVerified(Hostel h) {
-    if (waitlist.contains(h.id)) return toastMsg('We’ll tell you when ${h.name} is verified.');
+    if (waitlist.contains(h.id)) return toastMsg('You get a notification when verified');
     if (!needSignIn('verify', () => tellWhenVerified(h))) return;
     if (!data.remote || isSeedHostel(h.id)) {
       update(() => waitlist.add(h.id));
-      return toastMsg('We’ll tell you when ${h.name} is verified.');
+      return toastMsg('You get a notification when verified');
     }
     update(() => waitlist.add(h.id));
-    data.joinWaitlist(h.id).then((_) => toastMsg('We’ll tell you when ${h.name} is verified.'), onError: (Object e) {
+    data.joinWaitlist(h.id).then((_) => toastMsg('You get a notification when verified'), onError: (Object e) {
       debugPrint('waitlist: $e');
       // Asked before (the row is there already): that's fine.
-      if ('$e'.contains('23505') || '$e'.contains('duplicate')) return toastMsg('We’ll tell you when ${h.name} is verified.');
+      if ('$e'.contains('23505') || '$e'.contains('duplicate')) return toastMsg('You get a notification when verified');
       update(() => waitlist.remove(h.id));
-      toastMsg('Couldn’t save that. Check your internet and try again.');
+      toastMsg('Couldn’t save. Check your internet.');
     });
   }
 
@@ -124,13 +139,13 @@ extension TiersActions on AppState {
         await data.sendClaim(hid, name, phone);
       } catch (e) {
         debugPrint('claim: $e');
-        if (!'$e'.contains('23505') && !'$e'.contains('duplicate')) return toastMsg('Couldn’t send it. Check your internet and try again.');
+        if (!'$e'.contains('23505') && !'$e'.contains('duplicate')) return toastMsg('Couldn’t send. Check your internet.');
       }
     }
     update(() {
       claimed.add(hid);
       sheet = null;
     });
-    toastMsg('Sent. The Hostelzy team will call you on ${phoneSpaced(phone)}.');
+    toastMsg('Sent · we call ${phoneSpaced(phone)}');
   }
 }

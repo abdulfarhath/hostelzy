@@ -355,6 +355,67 @@ abstract class HostelRepo {
   /// needs an account). Throws [UnsupportedError] on sample data, and until
   /// the server has the function.
   Future<void> notifyResident(String stayKey, String note);
+  /// W2 F28 Part 2: `add_hostel(p)` → {duplicate, hostel_id, name?}; the
+  /// adder's latest hostel (`my_added_hostel()`, null when none); "Send to
+  /// your owner" stamped; the adder's UPI id for the payout.
+  Future<Map<String, dynamic>> addHostel(Map<String, dynamic> p);
+  Future<Map<String, dynamic>?> myAddedHostel();
+  Future<void> askedOwner(String hid);
+  Future<void> setAdderUpi(String upi);
+
+  /// W2 F29 Part 2: Ask to join. The owner's link token for a free bed; what
+  /// a token is for (null when unknown); the tenant's form; the hostel's
+  /// filled requests (staff); approve / decline; "Ask again" (returns the
+  /// tenant's phone for the owner's WhatsApp text).
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''});
+  Future<Map<String, dynamic>?> joinRequestInfo(String token);
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId});
+  Future<List<Map<String, dynamic>>> joinRequests(String hid);
+  Future<void> decideJoin(String id, bool approve, {String note = ''});
+  Future<String> askIdAgain(String id);
+
+  /// W2 + W4 wiring: H49 "Delete from my Drive" dropped the file; the request
+  /// forgets the pointer (`clear_join_id`, staff only).
+  Future<void> clearJoinId(String id);
+  /// F29 Part 3: tenant IDs in the owner's own Google Drive. Null when the
+  /// server doesn't have it yet (SQL or the functions not deployed).
+  Future<DriveStatus?> driveStatus(String hid);
+
+  /// Connects with Google's server auth code (scope drive.file). Throws
+  /// [DriveFail] with the server's code: `not_ready`, `no_scope`,
+  /// `no_refresh`, `not_owner`…
+  Future<DriveStatus> driveConnect(String hid, String code);
+  Future<DriveStatus> driveDisconnect(String hid);
+
+  /// "Full copy needed (police file)": the tenant's masking bar is off.
+  Future<void> setFullCopy(String hid, bool v);
+
+  /// S94: does this join token's owner take IDs in Drive, and do they need
+  /// the full copy? Null when not (the tenant sends the ID on WhatsApp) or
+  /// before the server has it. Throws [DriveFail] (`bad_token`) when the
+  /// token isn't the caller's or has expired.
+  Future<({String hid, bool fullCopy})?> idTarget(String token);
+
+  /// The tenant's masked ID photo → the owner's Drive; returns the file id.
+  /// Nothing is kept on Hostelzy. Throws [DriveFail].
+  Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'});
+
+  /// Owner / managers: a short-lived link to the image and the Drive page.
+  Future<({String url, String open})> idView(String hid, String fileId);
+
+  /// "Delete from my Drive".
+  Future<void> idDelete(String hid, String fileId);
+}
+
+/// F29 Part 3: the hostel's Drive connection (H50).
+typedef DriveStatus = ({bool connected, int files, bool fullCopy});
+
+/// A Drive function said no: [code] as the function names it, and plain words.
+class DriveFail implements Exception {
+  const DriveFail(this.code, this.message);
+  final String code, message;
+  @override
+  String toString() => 'DriveFail($code): $message';
 }
 
 /// F24 item 29: one person on the Hostelzy team.

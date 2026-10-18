@@ -47,7 +47,7 @@ class LayoutRequestSheet extends StatelessWidget {
               Expanded(child: VGap(gap: 6, children: [const T('Length (ft)', w: 800, s: 13), Field(value: s.lReqWid, numeric: true, placeholder: '12', onChanged: (v) => s.update(() => s.lReqWid = v.replaceAll(RegExp(r'\D'), '')))])),
             ],
           ),
-          T('Free. The Hostelzy team draws it within 48 hours. Tenants keep seeing the current layout.', s: 12, c: p.mu, lh: 1.45),
+          T('Free · within 48 hours', s: 12, c: p.mu, lh: 1.45),
           Cta('Send request', height: 54, px: 16, fs: 15, onTap: s.sendLayoutRequest),
         ],
       ),
@@ -105,7 +105,7 @@ class AdminLayoutScreen extends StatelessWidget {
     final req = s.shapeReqFor(h.id, room.n);
     final lockedBy = s.edLockedBy;
     final ready = checks.every((c) => c.$1) && lockedBy == null;
-    void blocked() => s.toastMsg(lockedBy != null ? '${lockedBy.name} is editing this room. Try again when they’re done.' : 'Fix the checks first.');
+    void blocked() => s.toastMsg(lockedBy != null ? '${lockedBy.name} is editing this room' : 'Fix the checks first.');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -125,7 +125,7 @@ class AdminLayoutScreen extends StatelessWidget {
                     if (lockedBy != null)
                       T('${lockedBy.name} is editing this room', key: const ValueKey('edLocked'), s: 12, w: 800, c: p.ad, ell: true)
                     else
-                      T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live · edits make a new version', s: 12, c: p.mu),
+                      T(l.pending ? 'v${l.version} with the owner · v${l.version - 1} live' : 'v${l.version} live', s: 12, c: p.mu),
                   ],
                 ),
               ),
@@ -239,7 +239,7 @@ class AdminLayoutScreen extends StatelessWidget {
                             T(req.status == 'sent' ? 'Sent to ${h.owner} · waiting for them to publish' : 'Draw within 48 hours · ${hoursLeft(req.due, DateTime.now().millisecondsSinceEpoch)}', w: 800, s: 14, c: p.ad),
                             T('${h.owner} · ${req.shape}${req.w > 0 && req.h > 0 ? ' · ${req.w.round()} × ${req.h.round()} ft' : ''}', s: 12, c: p.mu),
                             if (req.note.isNotEmpty) T('“${req.note}”', s: 14, w: 600, lh: 1.4),
-                            if (req.photos.isNotEmpty) T('${req.photos.length} ${req.photos.length == 1 ? 'photo' : 'photos'} · in the team console', s: 12, c: p.mu),
+                            if (req.photos.isNotEmpty) T('${req.photos.length} ${req.photos.length == 1 ? 'photo' : 'photos'}', s: 12, c: p.mu),
                           ],
                         ),
                       ),

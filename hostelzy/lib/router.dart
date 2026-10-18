@@ -23,8 +23,9 @@ GoRouter appRouter(AppState s, WidgetBuilder shell) {
     routes: [
       GoRoute(path: '/', builder: (c, _) => shell(c)),
       for (final base in ['', '/hostelzy/app']) ...[
-        GoRoute(path: '$base/r', redirect: (_, st) => open(() => s.openEnquiryLink(code(st) ?? ''))),
-        GoRoute(path: '$base/j', redirect: (_, st) => open(() => s.openInviteLink(code(st) ?? ''))),
+        // W2: /r?h=<id>&claim=1 is the adder's claim link (F28); /j?t=<token> a join link (F29).
+        GoRoute(path: '$base/r', redirect: (_, st) => open(() => st.uri.queryParameters['h'] != null ? s.openClaimLink(st.uri.queryParameters['h']!) : s.openEnquiryLink(code(st) ?? ''))),
+        GoRoute(path: '$base/j', redirect: (_, st) => open(() => st.uri.queryParameters['t'] != null ? s.openJoinLink(st.uri.queryParameters['t']!) : s.openInviteLink(code(st) ?? ''))),
       ],
     ],
     // Any other link just opens the app where it was.

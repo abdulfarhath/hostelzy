@@ -140,7 +140,7 @@ extension SaveFoodActions on AppState {
       for (final e in answers.entries)
         if (mealOpen(hid, mealOfKey(e.key).$1, mealOfKey(e.key).$2)) e.key: e.value,
     };
-    if (open.isEmpty) return toastMsg('The count for that meal has closed. Your answer counts from the next meal.');
+    if (open.isEmpty) return toastMsg('Count closed for that meal');
     update(() => foodBoards[hid] = b.answer(open));
     if (data.remote) {
       try {
@@ -149,7 +149,7 @@ extension SaveFoodActions on AppState {
         debugPrint('answer meals: $e');
         update(() => foodBoards[hid] = b);
         return toastMsg(
-          '$e'.contains('has closed') ? 'The count for that meal has closed. Your answer counts from the next meal.' : 'Couldn’t save it. Check your internet and try again.',
+          '$e'.contains('has closed') ? 'Count closed for that meal' : 'Couldn’t save. Check your internet.',
         );
       }
       unawaited(loadFood(hid));
@@ -167,7 +167,7 @@ extension SaveFoodActions on AppState {
   /// Week plan: tap a meal to switch between eating and skip.
   Future<void> toggleMeal(String hid, DateTime d, String k) {
     if (!mealOpen(hid, d, k)) {
-      toastMsg('The count for ${mealWord(k).toLowerCase()} on ${dayName(d).split(' ').first} has closed.');
+      toastMsg('Count closed · ${mealWord(k).toLowerCase()} ${dayName(d).split(' ').first}');
       return Future.value();
     }
     return answerMeals(hid, {mealKey(d, k): !eatingAt(hid, d, k)});
@@ -220,11 +220,11 @@ extension SaveFoodActions on AppState {
       } catch (e) {
         debugPrint('cutoff: $e');
         update(() => foodBoards[h] = b);
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
       unawaited(loadFood(h));
     }
-    toastMsg('The count now closes $hours h before each meal. Residents see the new time.');
+    toastMsg('Closes $hours h before each meal');
   }
 
   /// A tap on "Dinner at 8 · Eating?" (or its Eating / Skip button).
