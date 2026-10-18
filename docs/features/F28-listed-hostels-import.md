@@ -95,7 +95,7 @@ site, auto-rent from portals, tenants adding reviews for a hostel they added, co
 | # | What Build 4 did | Why |
 |---|---|---|
 | 1 | The demo's listed sample hostel (Sri Balaji) counts as **confirmed today**, so the demo APK shows a range; the "Rent on request" state is covered by the flow test | Sample data only; no second sample hostel was added |
-| 2 | Card wording: **"Rent on request · not confirmed lately"**; page: "Rent on request" with "Nobody has confirmed the rent in the last 60 days. Ask Hostelzy on WhatsApp." | Plain words for the spec's state |
+| 2 | ~~Card "Rent on request · not confirmed lately"; page with a sentence~~ → **hub (F31 Rule A):** the card says only **"Rent on request"**; the page says "Rent on request" plus the button **Ask on WhatsApp** (the existing Ask Hostelzy number), no sentence | Hub decision, 2026-10-18 |
 | 3 | A stale listed hostel still answers the **Budget filter** by its old range (unchanged), and under Price ↑ it sorts after every priced card (fresh listed ones included), then by its old range among the stale ones | The number is kept back from the tenant, not thrown away |
 | 4 | The app **reads the server's view `listed_rent_visible`** (Build 3) when it exists: a listed hostel the view hides the rent of is treated as never confirmed (the server's clock decides); before the view exists the app applies the same 60-day rule to `rent_confirmed_at` itself | Hub, 2026-10-18 |
 

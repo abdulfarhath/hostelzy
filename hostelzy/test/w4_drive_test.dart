@@ -191,6 +191,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('listedCard-stale')));
     await tester.pump();
     expect(find.byKey(const ValueKey('rentOnRequest')), findsOneWidget);
+    expect(find.text('Rent on request'), findsOneWidget); // the card: those words only (F31)
     expect(find.textContaining('₹5,000'), findsNothing);
     // The demo's own listed hostel is confirmed today: it shows its range.
     await tester.ensureVisible(find.byKey(const ValueKey('listedCard-balaji')));
@@ -199,7 +200,10 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('listedCard-stale')));
     expect(s.screen, 'detail');
     expect(find.text('Rent on request'), findsOneWidget);
-    expect(find.textContaining('Nobody has confirmed the rent in the last 60 days'), findsOneWidget);
+    // The page: the words and the button, no sentence (F31).
+    expect(find.textContaining('confirmed'), findsNothing);
+    await _tap(tester, find.byKey(const ValueKey('rentAsk')));
+    expect(s.lastLink.toString(), contains('wa.me'));
     expect(find.textContaining('₹5,000'), findsNothing);
     _end(s);
   });

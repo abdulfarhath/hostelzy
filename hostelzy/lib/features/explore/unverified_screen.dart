@@ -81,7 +81,7 @@ class UnverifiedCard extends StatelessWidget {
             // F28 Part 4: the range only within 60 days of a person's confirmation.
             rentFresh(h)
                 ? Rich([sp(context, '${rentRange(h)}/mo', w: 800, c: p.tx), sp(context, ' · expected, not confirmed')], s: 14, c: p.mu)
-                : Rich([sp(context, 'Rent on request', w: 800, c: p.tx), sp(context, ' · not confirmed lately')], s: 14, c: p.mu, key: const ValueKey('rentOnRequest')),
+                : const T('Rent on request', w: 800, s: 14, key: ValueKey('rentOnRequest')),
           ],
         ),
       ),
@@ -150,8 +150,12 @@ class UnverifiedScreen extends StatelessWidget {
                           children: [
                             const Kicker('Rent per month'),
                             T(rentLine(h), w: 800, s: 24, key: const ValueKey('rentRange')),
-                            // F28 Part 4: after 60 days without a confirmation the number is kept back.
-                            T(rentFresh(h) ? 'Expected, not confirmed. The owner hasn’t joined Hostelzy yet.' : 'Nobody has confirmed the rent in the last 60 days. Ask Hostelzy on WhatsApp.', s: 13, c: p.mu, lh: 1.4),
+                            // F28 Part 4 (F31 Rule A): after 60 days without a confirmation the
+                            // number is kept back; the button, no sentence.
+                            if (rentFresh(h))
+                              T('Expected, not confirmed. The owner hasn’t joined Hostelzy yet.', s: 13, c: p.mu, lh: 1.4)
+                            else
+                              Padding(padding: const EdgeInsets.only(top: 8), child: OutlineCta('Ask on WhatsApp', key: const ValueKey('rentAsk'), icon: 'msg', onTap: () => s.askHostelzy(h))),
                           ],
                         ),
                       ),
