@@ -64,7 +64,7 @@ void main() {
 
     await _tap(tester, find.byKey(const ValueKey('me-Settings')));
     expect(s.screen, 'settings');
-    for (final g in ['YOU', 'NOTIFICATIONS', 'APP']) {
+    for (final g in ['ACCOUNT', 'NOTIFICATIONS', 'LANGUAGE', 'ABOUT']) { // F31 groups
       expect(find.text(g), findsOneWidget, reason: g);
     }
     expect(find.text('Holds and bookings'), findsOneWidget);

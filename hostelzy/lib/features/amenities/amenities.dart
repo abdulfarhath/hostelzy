@@ -169,7 +169,7 @@ extension AmenityActions on AppState {
         key = await data.saveAmenity(d);
       } catch (e) {
         debugPrint('amenity: $e');
-        return toastMsg(_serverWords(e) ?? 'Couldn’t save it. Check your internet and try again.');
+        return toastMsg(_serverWords(e) ?? 'Couldn’t save. Check your internet.');
       }
     }
     final saved = Amenity(id: key ?? (d.id == 'new' ? 'am${now}_${amenities.length}' : d.id), key: key, hid: d.hid, floor: d.floor, kind: d.kind, name: d.name, qty: d.qty, working: d.working, place: d.place, rooms: d.rooms, byResident: res, at: now);

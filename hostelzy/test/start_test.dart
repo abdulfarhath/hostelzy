@@ -73,7 +73,7 @@ void main() {
     for (final k in ['tenant', 'resident', 'owner']) {
       expect(find.byKey(ValueKey('role-$k')), findsOneWidget);
     }
-    expect(find.text('You can switch later in Me.'), findsOneWidget);
+    expect(find.text('You can switch later in Me.'), findsNothing); // F31
     r.dispose();
   });
 

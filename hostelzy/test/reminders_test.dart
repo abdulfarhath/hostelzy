@@ -160,14 +160,15 @@ void main() {
     await s.toggleHostelRem('rent');
     expect(rem.applied.where((r) => r.kind == 'meal' || r.kind == 'rent'), isEmpty);
 
-    // With water on, the Today card shows on Home with a + Glass button.
+    // F31: no glasses card on Home; glasses count from Me › Reminders.
     await s.toggleWater();
     s.tab('rHome');
     await tester.pump();
-    expect(find.text('0 of 8 glasses'), findsOneWidget);
-    await _tap(tester, find.text('Glass'));
+    expect(find.text('0 of 8 glasses'), findsNothing);
+    expect(s.glasses, 0);
+    await s.addGlass();
     await tester.pump();
-    expect(find.text('1 of 8 glasses'), findsOneWidget);
+    expect(s.glasses, 1);
     s.dispose();
   });
 

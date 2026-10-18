@@ -239,8 +239,8 @@ class PerksSheet extends StatelessWidget {
           ),
           T(
             trusted
-                ? 'You keep it with $trustedMonths months in Hostelzy hostels and rent paid on time. We never tell owners where you stayed before.'
-                : 'You get it after $trustedMonths months in Hostelzy hostels with rent paid on time${s.isMember ? ' (${s.monthsOnTime} of $trustedMonths so far)' : ''}. We never tell owners where you stayed before.',
+                ? '$trustedMonths months · rent on time'
+                : '$trustedMonths months · rent on time${s.isMember ? ' · ${s.monthsOnTime} of $trustedMonths so far' : ''}',
             s: 13,
             c: p.mu,
             lh: 1.45,

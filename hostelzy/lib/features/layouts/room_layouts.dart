@@ -151,7 +151,7 @@ extension RoomLayoutsActions on AppState {
       }, onError: (Object e) {
         debugPrint('working: $e');
         update(() => mark(!ok, ''));
-        toastMsg('$e'.contains('publish this room') ? 'Publish this room’s layout first, then mark it.' : 'Couldn’t save it. Check your internet and try again.');
+        toastMsg('$e'.contains('publish this room') ? 'Publish this layout first' : 'Couldn’t save. Check your internet.');
       });
       return;
     }

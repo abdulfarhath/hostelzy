@@ -149,7 +149,7 @@ extension SaveFoodActions on AppState {
         debugPrint('answer meals: $e');
         update(() => foodBoards[hid] = b);
         return toastMsg(
-          '$e'.contains('has closed') ? 'The count for that meal has closed. Your answer counts from the next meal.' : 'Couldn’t save it. Check your internet and try again.',
+          '$e'.contains('has closed') ? 'Count closed for that meal' : 'Couldn’t save. Check your internet.',
         );
       }
       unawaited(loadFood(hid));
@@ -167,7 +167,7 @@ extension SaveFoodActions on AppState {
   /// Week plan: tap a meal to switch between eating and skip.
   Future<void> toggleMeal(String hid, DateTime d, String k) {
     if (!mealOpen(hid, d, k)) {
-      toastMsg('The count for ${mealWord(k).toLowerCase()} on ${dayName(d).split(' ').first} has closed.');
+      toastMsg('Count closed · ${mealWord(k).toLowerCase()} ${dayName(d).split(' ').first}');
       return Future.value();
     }
     return answerMeals(hid, {mealKey(d, k): !eatingAt(hid, d, k)});

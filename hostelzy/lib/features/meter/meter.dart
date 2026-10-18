@@ -123,7 +123,7 @@ extension MeterActions on AppState {
         update(() => meterSaving = false);
         final m = '$e';
         if (m.contains('lower than last month')) return toastMsg(m.substring(m.indexOf('room')).split(RegExp(r'[,}\n]')).first.replaceFirst('room', 'Room'));
-        return toastMsg(meterOff || m.contains('save_meter') || m.contains('meter_readings') ? 'Electricity by meter starts after Hostelzy’s next server update.' : 'Couldn’t save it. Check your internet and try again.');
+        return toastMsg(meterOff || m.contains('save_meter') || m.contains('meter_readings') ? 'Meter: after the next server update' : 'Couldn’t save. Check your internet.');
       }
       update(() => meterSaving = false);
       await loadMeters();

@@ -89,7 +89,7 @@ void main() {
     expect(find.byKey(ValueKey('move-${n.id}')), findsOneWidget);
     await _tap(tester, find.descendant(of: find.byKey(ValueKey('move-${n.id}')), matching: find.text('Accept')));
     expect(s.myNotice!.status, 'accepted');
-    expect(s.toast, 'Accepted. Bed ${n.bed} shows free from $day.');
+    expect(s.toast, 'Accepted · bed ${n.bed} free from $day');
     await tester.pump(const Duration(seconds: 4));
     s.jump('move', 'resident');
     s.update(() => s.moveTab = 'vacate');

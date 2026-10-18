@@ -128,19 +128,19 @@ void main() {
     s.rateDraft![rateKey(true, r204.share)] = 9000;
     s.setRoomAc(r204, true);
     expect(s.acDraft![204], isFalse);
-    expect(s.toast, 'Room 204’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.');
+    expect(s.toast, 'Room 204: no AC in its layout');
 
     // The server says no too (another phone, an old app): its words come through.
     srv.ratesError = Exception('PostgrestException(message: room 302: an AC room needs an AC unit. Add it in the room\'s layout and publish, then make it AC)');
     s.saveRates();
     await tester.pump();
     await tester.pump();
-    expect(s.toast, 'Room 302’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.');
+    expect(s.toast, 'Room 302: no AC in its layout');
     srv.ratesError = Exception('only the owner changes rates and AC rooms');
     s.saveRates();
     await tester.pump();
     await tester.pump();
-    expect(s.toast, 'Only the owner can change rates and AC rooms.');
+    expect(s.toast, 'Owner only');
     await tester.pump(const Duration(seconds: 4));
     s.stopLive();
     s.dispose();

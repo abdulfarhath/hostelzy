@@ -100,15 +100,15 @@ extension FairPlayActions on AppState {
         await refreshListings();
         final now = strikes[c.hid] ?? 0;
         toastMsg(now > had
-            ? '${c.resident} now shows as came from the app. Case closed. That’s 3 fixes in 6 months, which counts as one warning (strike $now of 3).'
-            : '${c.resident} now shows as came from the app. Case closed, no strike.');
+            ? 'Case closed · strike $now of 3'
+            : 'Case closed · no strike');
       }, onError: (Object e) {
         final m = '$e';
         toastMsg(m.contains('48 hours are over')
-            ? 'The 48 hours are over. Reply instead and the Hostelzy team decides.'
+            ? '48 hours over · reply instead'
             : m.contains('closed')
             ? 'This case is already closed.'
-            : 'Couldn’t save it. Check your internet and try again.');
+            : 'Couldn’t save. Check your internet.');
       });
       return;
     }
@@ -202,8 +202,8 @@ extension FairPlayActions on AppState {
     toastMsg(a != 'yes'
         ? 'Thanks.'
         : onServer
-        ? 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'
-        : 'Thanks. Your ₹100 Member reward is unlocked for your next stay.');
+        ? 'Saved · ₹100 unlocks once confirmed'
+        : 'Saved · ₹100 unlocked');
   }
 
   /// Should Holds ask "Did you join?" (a real ended hold not answered yet;

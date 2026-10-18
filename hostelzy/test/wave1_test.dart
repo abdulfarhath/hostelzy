@@ -304,7 +304,7 @@ void main() {
     expect(m.level, 'member');
     // A bed that just turned free: the first hour is for Trusted tenants.
     final b = Bed(id: '101-C', letter: 'C', room: 101, floor: 1, spot: '', state: 'free', soon: '')..freedAt = DateTime.now().subtract(const Duration(minutes: 10));
-    expect(m.firstLookBlock(b), startsWith('Trusted tenants get the first hour on this bed. It opens to you at '));
+    expect(m.firstLookBlock(b), startsWith('Trusted tenants first · opens to you at '));
     b.freedAt = DateTime.now().subtract(const Duration(minutes: 61));
     expect(m.firstLookBlock(b), isNull);
     m.dispose();

@@ -214,7 +214,7 @@ void main() {
     await _settle(tester);
     expect(server.calls, contains('lock 205'));
     expect(find.byKey(const ValueKey('edLocked')), findsOneWidget);
-    expect(find.text('Lalitha is editing this room'), findsOneWidget);
+    expect(find.text('Lalitha is editing this room'), findsWidgets);
     await _tap(tester, find.byKey(const ValueKey('edPublish')));
     expect(s.toast, 'Lalitha is editing this room');
     expect(server.calls.where((c) => c.startsWith('publish')), isEmpty);
@@ -228,7 +228,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('edPublish')));
     await _settle(tester);
     expect(s.toast, 'Lalitha is editing this room');
-    expect(find.text('Lalitha is editing this room'), findsOneWidget);
+    expect(find.text('Lalitha is editing this room'), findsWidgets);
     // free again: publish goes through and the lock is let go
     server
       ..publishFails = null

@@ -208,7 +208,7 @@ void main() {
     s.setWorking(l, fan, false);
     await _settle();
     expect(fan.working, isTrue);
-    expect(s.toast, 'Publish this room’s layout first, then mark it.');
+    expect(s.toast, 'Publish this layout first');
     server.failWith = 'offline';
     s.setWorking(l, fan, false);
     await _settle();

@@ -68,7 +68,7 @@ extension RewardsActions on AppState {
     if (f == null || level == 'trusted') return null;
     final opens = f.add(const Duration(hours: 1));
     if (!DateTime.now().isBefore(opens)) return null;
-    return 'Trusted tenants get the first hour on this bed. It opens to you at ${clock(opens.hour * 60 + opens.minute)}.';
+    return 'Trusted tenants first · opens to you at ${clock(opens.hour * 60 + opens.minute)}';
   }
 
   void openPerks() => update(() => sheet = 'perks');
@@ -108,14 +108,14 @@ extension RewardsActions on AppState {
     } catch (e) {
       final m = '$e';
       toastMsg(m.contains('isn\'t valid') || m.contains('isn’t valid')
-          ? 'That code isn’t valid. Check it with your friend.'
+          ? 'Code not valid'
           : m.contains('own code')
-          ? 'That’s your own code. Share it with a friend instead.'
+          ? 'That’s your own code'
           : m.contains('already used')
           ? 'You already used a friend’s code.'
           : m.contains('first stay')
-          ? 'Codes are for your first stay through Hostelzy.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'First Hostelzy stay only'
+          : 'Couldn’t save. Check your internet.');
     }
   }
 

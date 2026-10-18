@@ -205,7 +205,7 @@ void main() {
     expect(s.menuOf('anjani')![todayIdx].b, isNot('Masala dosa'));
     await tap(tester, find.byKey(const ValueKey('menuSave')));
     expect((s.menuOf('anjani')![todayIdx].b, s.moreTab, s.menuDirty), ('Masala dosa', 'home', false));
-    expect(s.toast, 'Menu saved. Residents see it in their Food tab now.');
+    expect(s.toast, 'Menu saved');
     s.jump('rHome', 'resident');
     await tester.pump();
     expect(find.text('Masala dosa'), findsOneWidget);
@@ -466,7 +466,7 @@ void main() {
     o.setRoomAc(r204, true);
     await tester.pump();
     expect(o.acDraft![204], isFalse);
-    expect(o.toast, 'Room 204’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.');
+    expect(o.toast, 'Room 204: no AC in its layout');
     // With the AC unit in its published layout, it can.
     final l204 = o.layoutOf('anjani', 204)!;
     l204.items.add(LItem('ac1', 'ac', 1, 0, 3, 1));
@@ -717,7 +717,7 @@ void main() {
     s.jump('detail', 'tenant');
     await tester.pump();
     expect(find.text('90000 00101'), findsNothing);
-    expect(find.text('Hold a bed first'), findsOneWidget);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     s.update(() => s.bed = '204-D');
     s.placeHold('free');
     s.jump('detail', 'tenant');
@@ -2305,7 +2305,7 @@ void main() {
     final k0 = o.rateDraft!.keys.first;
     o.rateDraft![k0] = 0;
     o.saveRates();
-    expect(o.toast, startsWith('Set a price for'));
+    expect(o.toast, endsWith('price: ₹1,000 or more'));
     o.openRates();
     final cheapest = o.fromOf(hostelById('anjani'));
     for (final k in o.rateDraft!.keys.toList()) {
@@ -2610,7 +2610,7 @@ void main() {
     s.update(() => s.bed = o.id);
     s.placeHold('free');
     await Future<void>.delayed(Duration.zero);
-    expect(s.toast, 'Someone just took this bed. Pick another one.');
+    expect(s.toast, 'Bed just taken');
     expect(s.holds.length, 1);
     // A free hold, then the tenant releases it on the server (and its advance, if any).
     fake.holdError = null;
@@ -2619,7 +2619,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
     }
     expect(fake.calls.last, 'hold anjani bed-uuid-2 free 0');
-    expect(s.toast, contains('sees it in Hostelzy'));
+    expect(s.toast, 'Hold placed');
     final free = s.holds.firstWhere((h) => h.id == 'hold-uuid-2');
     s.releaseHold(free, msg: 'Hold released.');
     for (var i = 0; i < 4; i++) {
@@ -2671,7 +2671,7 @@ void main() {
     }
     expect(fake.calls.single, 'stay ${s.ownHid} bed-key Ravi Kumar 9876500002 7000 3000');
     expect((s.residents.single.name, s.sheet, r0.beds[i].state), ('Ravi Kumar', null, 'booked'));
-    expect(s.toast, 'Added. Ravi confirms by joining with your invite code.');
+    expect(s.toast, 'Added · waits for Ravi’s invite');
     // A tenant's free hold: the owner confirms it, or declines it (no advance is touched).
     final h = Hold(id: 'hold-x', hid: s.ownHid, bed: '101-A', room: 101, opt: 'free', start: DateTime.now().millisecondsSinceEpoch, status: 'waiting', ref: 'HZ-5020');
     s.update(() => s.holds = [h]);
@@ -2876,7 +2876,7 @@ void main() {
     for (var k = 0; k < 4; k++) {
       await Future<void>.delayed(Duration.zero);
     }
-    expect(s.toast, 'The 48 hours are over. Reply instead and the Hostelzy team decides.');
+    expect(s.toast, '48 hours over · reply instead');
     // A reply to a case the team sent back goes back to the team.
     final w = FairCase(id: 'FP-0202', hid: 'h1', title: 't', signal: 's', status: 'waiting', key: 'c4');
     s.update(() => s.fpReply = 'He moved in on the 3rd');
@@ -2945,7 +2945,7 @@ void main() {
     await tester.pump();
     expect(fake.calls.last, 'mgr h1 Sunil K 9876500013');
     expect(s.lastLink.toString(), contains('MGR-ABCD2345'));
-    expect(s.toast, 'WhatsApp opened with Sunil’s invite. They join once they open it and sign in.');
+    expect(s.toast, 'Invite sent on WhatsApp');
     expect(s.managers.last.joined, isFalse);
     // The manager opens the link and joins.
     s.update(() => s.inviteDraft = 'mgr-abcd2345');
@@ -2985,14 +2985,14 @@ void main() {
     fake.friendError = 'that code isn\'t valid';
     s.update(() => s.friendCode = 'ABCD-1234');
     await s.useFriendCode();
-    expect(s.toast, 'That code isn’t valid. Check it with your friend.');
+    expect(s.toast, 'Code not valid');
     fake.friendError = null;
     await s.useFriendCode();
     expect((fake.calls.last, s.referred), ('usecode ABCD-1234', true));
     expect(s.toast, 'Code saved · ${fmt(referralReward)} each');
     // "Yes, I joined" and "I've moved in" never grant a reward from the phone.
     s.answerJoined('yes');
-    expect((s.isMember, s.toast), (false, 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'));
+    expect((s.isMember, s.toast), (false, 'Saved · ₹100 unlocks once confirmed'));
     s.moveIn(Hold(id: 'x', hid: 'anjani', bed: '101-A', room: 101, opt: 'book', start: 0, status: 'booked'));
     expect((s.role, s.rewardUsed), ('tenant', false));
     // The server says: Member now, ₹100 balance; the owner's credit shows on their plan.
@@ -3286,7 +3286,7 @@ void main() {
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('inviteCode')), matching: find.byType(TextField)), 'vas-7q2');
     await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
-    expect(r.toast, 'That code isn’t valid any more. Ask your owner for the new one.');
+    expect(r.toast, 'Code no longer valid');
     await tester.pump(const Duration(seconds: 3));
     // Sample data never pretends to send it.
     r.data = const SampleRepo();
@@ -3457,7 +3457,7 @@ void main() {
     await go();
     final r = s.residents.first;
     expect((r.name, r.bed, r.status, r.note, r.confirmed, s.sheet), ('Kiran Kumar', free, 'Due', 'Moves in ${dayMon(appToday.add(const Duration(days: 1)))}', false, null));
-    expect(s.toast, 'Booked bed $free. Send them a welcome on WhatsApp.');
+    expect(s.toast, 'Booked bed $free');
     expect(s.findBed('anjani', free).b!.state, 'booked');
     // The same bed can't be added twice.
     s.openAddResident(bed: free);
@@ -3516,7 +3516,7 @@ void main() {
     await settle();
     expect(fake.calls.single, 'stay ${s.ownHid} bed-0 Ravi Kumar 9876500002 ${rents[0]} 3000');
     expect(fake.stayJoinedOn!.difference(DateTime.fromMillisecondsSinceEpoch(s.now)).inHours, inInclusiveRange(23, 24));
-    expect((s.sheet, s.toast), (null, 'Booked bed ${ids[0]}. Send them a welcome on WhatsApp.'));
+    expect((s.sheet, s.toast), (null, 'Booked bed ${ids[0]}'));
 
     // Like Residents › Add: joined 5 days ago.
     s.openAddResident(bed: ids[1]);
@@ -3530,7 +3530,7 @@ void main() {
     await settle();
     expect(fake.calls.last, 'stay ${s.ownHid} bed-1 Sai Teja 9876500003 ${rents[1]} 3000');
     expect(DateTime.fromMillisecondsSinceEpoch(s.now).difference(fake.stayJoinedOn!).inDays, 5);
-    expect(s.toast, 'Added. Sai confirms by joining with your invite code.');
+    expect(s.toast, 'Added · waits for Sai’s invite');
     s.stopLive();
     s.dispose();
   });

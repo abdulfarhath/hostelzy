@@ -42,7 +42,7 @@ extension MoveActions on AppState {
         return '${w[0].toUpperCase()}${w.substring(1)}.';
       }
     }
-    return 'Couldn’t save it. Check your internet and try again.';
+    return 'Couldn’t save. Check your internet.';
   }
 
   Future<bool> _moveWrite(Future<void> Function() f) async {
@@ -127,7 +127,7 @@ extension MoveActions on AppState {
     toastMsg(!accept
         ? '$who is told. Talk to them on WhatsApp.'
         : m.kind == 'vacate'
-        ? 'Accepted. Bed ${m.bed} shows free from ${dayMon(m.lastDay ?? appToday)}.'
+        ? 'Accepted · bed ${m.bed} free from ${dayMon(m.lastDay ?? appToday)}'
         : '$who moves to bed ${m.toBed}. New rent from next month.');
   }
 
@@ -192,7 +192,7 @@ extension MoveActions on AppState {
       update(() => refunds = [for (final x in refunds) x.stayKey == r.stayKey ? Refund(stayKey: x.stayKey, hid: x.hid, name: x.name, phone: x.phone, bed: x.bed, advance: x.advance, amt: x.amt, status: 'sent', utr: u, leftOn: x.leftOn, sentOn: appToday) : x]);
     }
     update(() => sheet = null);
-    toastMsg('Marked ${fmt(r.amt)} refunded. ${r.name.split(' ').first} is asked to confirm.');
+    toastMsg('${fmt(r.amt)} marked refunded');
   }
 
   /// Former resident: "Yes, I got it" / "Not received" (board `rRefund`).

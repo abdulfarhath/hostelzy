@@ -128,7 +128,7 @@ extension OnboardingActions on AppState {
           sheet = null;
         });
         whatsapp(ph, 'Hi $name, you’re invited to manage ${hostelById(hid).name} on Hostelzy. Open this link, sign in with Google, and you’re in: ${inviteLink(code)} (code $code, works once, for 7 days)');
-        toastMsg('WhatsApp opened with ${name.split(' ')[0]}’s invite. They join once they open it and sign in.');
+        toastMsg('Invite sent on WhatsApp');
       }, onError: (Object e) {
         toastMsg('$e'.contains('only the owner') ? 'Only the owner adds managers.' : 'Couldn’t invite. Check your internet.');
       });
@@ -300,7 +300,7 @@ extension OnboardingActions on AppState {
         return '${w[0].toUpperCase()}${w.substring(1)}.';
       }
     }
-    return 'Couldn’t save it. Check your internet and try again.';
+    return 'Couldn’t save. Check your internet.';
   }
 
   /// F24: saves the draft on the server (the team, in the real app) and loads

@@ -109,7 +109,6 @@ void main() {
     await _settle(tester);
     expect(server.calls.last, 'rate saisri b good');
     expect(s.rated, 'Good');
-    final owner = hostelById('saisri').owner;
     expect(s.toast, 'Saved');
     await tester.pump(const Duration(seconds: 4));
 
@@ -180,7 +179,7 @@ void main() {
     expect(server.calls.last, 'menu ${s.ownHid} Idli 0');
     expect((s.moreTab, s.menuDirty, s.phoneMenu), ('home', false, null));
     expect(s.menuOf(s.ownHid)![0].b, 'Idli 0');
-    expect(s.toast, 'Menu saved. Residents see it in their Food tab now.');
+    expect(s.toast, 'Menu saved');
     await tester.pump(const Duration(seconds: 4));
 
     // Open again: the saved week, with Saved greyed out until something changes.

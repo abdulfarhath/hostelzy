@@ -170,12 +170,12 @@ extension FoodActions on AppState {
       });
       toastMsg(
         !timesSaved
-            ? 'Menu saved. Meal times save once Hostelzy updates the server; residents keep the usual times till then.'
+            ? 'Menu saved · meal times after the next server update'
             : weekEmpty(week) && withTimes && times.isNotEmpty
-            ? 'Meal times saved. Residents’ meal reminders ring at them.'
+            ? 'Meal times saved'
             : weekEmpty(week)
-            ? 'Menu cleared. Residents see “no menu yet”.'
-            : 'Menu saved. Residents see it in their Food tab now.',
+            ? 'Menu cleared'
+            : 'Menu saved',
       );
     }
 

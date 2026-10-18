@@ -338,7 +338,7 @@ extension LayoutEditorActions on AppState {
           ..drawn = dayMon(appToday);
       }
     });
-    toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')} as new versions for the owner to approve.');
+    toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')}');
   }
 
   /// "All still correct": saved on the server for a real hostel (F24 item 9).

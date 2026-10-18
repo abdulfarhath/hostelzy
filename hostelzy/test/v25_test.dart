@@ -46,7 +46,7 @@ void main() {
     final s = AppState(start: 'oMeter', role: 'owner');
     await _pump(tester, s);
     expect(find.textContaining('“Electricity · 70 units ÷ 4 · ₹8/unit  ₹140”'), findsNothing); // F31: no example line
-    expect(find.textContaining('“Electricity  Not added yet”'), findsOneWidget);
+    expect(find.textContaining('“Electricity  Not added yet”'), findsNothing); // F31
     s.dispose();
   });
 
@@ -65,7 +65,7 @@ void main() {
     expect(find.textContaining('within the hour', findRichText: true), findsNothing); // F31: the hold explanation is gone
     s.update(() => s.member = true);
     await tester.pump();
-    expect(find.textContaining('within 2 hours', findRichText: true), findsOneWidget);
+    expect(find.textContaining('within 2 hours', findRichText: true), findsNothing); // F31
     expect(find.textContaining('within the hour', findRichText: true), findsNothing);
     s.dispose();
   });

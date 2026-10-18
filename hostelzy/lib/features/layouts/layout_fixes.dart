@@ -211,12 +211,12 @@ extension LayoutFixesActions on AppState {
         return toastMsg(m.contains('suggestions are off')
             ? 'Suggestions are off for this hostel.'
             : m.contains('3 fixes waiting')
-            ? 'You have 3 fixes waiting here. Send this one once $owner answers one.'
+            ? 'Limit: 3 fixes waiting'
             : m.contains('only residents')
-            ? 'Only residents of ${hostelById(hid).name} can fix its rooms.'
+            ? 'Residents only'
             : m.contains('has a resident') || m.contains('needs an AC') || m.contains('place ')
-            ? 'This layout doesn’t pass the checks. Look at the list above Send.'
-            : 'Couldn’t send it. Check your internet and try again.');
+            ? 'Fix the checks first'
+            : 'Couldn’t send. Check your internet.');
       }
       await refreshLive();
     } else {
@@ -399,8 +399,8 @@ extension LayoutFixesActions on AppState {
         return toastMsg(m.contains('suggestions are off')
             ? 'Suggestions are off for this hostel.'
             : m.contains('3 fixes waiting')
-            ? 'You have 3 fixes waiting here. Send this one once $owner answers one.'
-            : 'Couldn’t send it. Check your internet and try again.');
+            ? 'Limit: 3 fixes waiting'
+            : 'Couldn’t send. Check your internet.');
       }
       await refreshLive();
     } else {

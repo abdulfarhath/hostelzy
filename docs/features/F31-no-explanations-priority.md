@@ -408,6 +408,69 @@ come from the same rows as the Rent tab, so the strip and the tab always agree.
 | Couldn’t make the invite. Check your internet and try again. | Couldn’t invite. Check your internet. |
 | Enter your friend’s code, like ASHA-4K7Q. | Code needed, like ASHA-4K7Q |
 
+**Toasts, second pass** (texts inside `? :` ternaries and returned error strings, found by the test run):
+| Old | New |
+|---|---|
+| You have 3 fixes waiting here. Send this one once $owner answers one. | Limit: 3 fixes waiting |
+| Only residents of ${hostelById(hid).name} can fix its rooms. | Residents only |
+| This layout doesn’t pass the checks. Look at the list above Send. | Fix the checks first |
+| Couldn’t send it. Check your internet and try again. | Couldn’t send. Check your internet. |
+| Copied to rooms ${same.map((r) => r.label).join(', ')} as new versions for the owner to approve. | Copied to rooms ${same.map((r) => r.label).join(', ')} |
+| Accepted. Bed ${m.bed} shows free from ${dayMon(m.lastDay ?? appToday)}. | Accepted · bed ${m.bed} free from ${dayMon(m.lastDay ?? appToday)} |
+| Marked ${fmt(r.amt)} refunded. ${r.name.split(' ').first} is asked to confirm. | ${fmt(r.amt)} marked refunded |
+| You already reviewed this stay. Open your review to change it. | Already reviewed · open it to change |
+| Only residents with a confirmed stay can review. Ask your owner to confirm your stay. | Confirmed residents only |
+| You already replied to this review. Each review gets one reply. | Already replied |
+| Hostelzy hid this review, so it can’t be changed. | Hidden by Hostelzy |
+| This is your review. Change it instead of reporting it. | Your own review |
+| That code isn’t valid. Check it with your friend. | Code not valid |
+| That’s your own code. Share it with a friend instead. | That’s your own code |
+| Codes are for your first stay through Hostelzy. | First Hostelzy stay only |
+| Menu saved. Meal times save once Hostelzy updates the server; residents keep the usual times till then. | Menu saved · meal times after the next server update |
+| Meal times saved. Residents’ meal reminders ring at them. | Meal times saved |
+| Menu cleared. Residents see “no menu yet”. | Menu cleared |
+| Menu saved. Residents see it in their Food tab now. | Menu saved |
+| The count for ${mealWord(k).toLowerCase()} on ${dayName(d).split(' ').first} has closed. | Count closed · ${mealWord(k).toLowerCase()} ${dayName(d).split(' ').first} |
+| Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay. | Saved · ₹100 unlocks once confirmed |
+| Thanks. Your ₹100 Member reward is unlocked for your next stay. | Saved · ₹100 unlocked |
+| Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play. | Added · ${res.lateDays} days late · Fair Play check |
+| Booked bed ${res.bed}. Send them a welcome on WhatsApp. | Booked bed ${res.bed} |
+| Added. ${name.split(' ')[0]} confirms by joining with your invite code. | Added · waits for ${name.split(' ')[0]}’s invite |
+| Room $room’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC. | Room $room: no AC in its layout |
+| Only the owner can change rates and AC rooms. | Owner only |
+| Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy. Message the team. | Live hostel: ask the Hostelzy team |
+| Booked bed $bedLabel. Send them a welcome on WhatsApp. | Booked bed $bedLabel |
+| Someone just took this bed. Pick another one. | Bed just taken |
+| You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first. | Limit: ${AppState.maxHolds} holds |
+| Couldn’t place the hold. Check your internet and try again. | Couldn’t hold. Check your internet. |
+| That owner link isn’t valid any more. Ask Hostelzy for a new one. | Link no longer valid |
+| This hostel already has an owner account. Ask Hostelzy. | Already has an owner account |
+| Couldn’t join. Check your internet and try again. | Couldn’t join. Check your internet. |
+| That code isn’t valid any more. Ask your owner for the new one. | Code no longer valid |
+| You already asked. Your owner will approve it. | Already asked · waiting for approval |
+| Add your name and 10-digit phone in Settings first. | Name and phone needed in Settings |
+| Not saved: room $ac’s layout has no AC unit. Add it in the layout and publish first. | Not saved: room $ac has no AC in its layout |
+| WhatsApp opened with ${name.split(' ')[0]}’s invite. They join once they open it and sign in. | Invite sent on WhatsApp |
+| Trusted tenants get the first hour on this bed. It opens to you at ${clock(opens.hour * 60 + opens.minute)}. | Trusted tenants first · opens to you at ${clock(opens.hour * 60 + opens.minute)} |
+| Publish this room’s layout first, then mark it. | Publish this layout first |
+| Couldn’t save it. Check your internet and try again.' (every ternary / returned copy) | Couldn’t save. Check your internet. |
+| ${c.resident} now shows as came from the app. Case closed. That’s 3 fixes in 6 months… (strike $now of 3). | Case closed · strike $now of 3 |
+| ${c.resident} now shows as came from the app. Case closed, no strike. | Case closed · no strike |
+| The 48 hours are over. Reply instead and the Hostelzy team decides. | 48 hours over · reply instead |
+| The count for that meal has closed. Your answer counts from the next meal. | Count closed for that meal |
+| ${lockedBy.name} is editing this room. Try again when they’re done. | ${lockedBy.name} is editing this room |
+| Electricity by meter starts after Hostelzy’s next server update. | Meter: after the next server update |
+| Room ${r.label}’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC. | Room ${r.label}: no AC in its layout |
+| Added (came through Hostelzy) / as joined before Hostelzy. $first confirms by joining with your invite code. | Added · came through Hostelzy / joined before Hostelzy · waits for $first’s invite |
+| Enter your friend’s code, like ASHA-4K7Q. | Code needed, like ASHA-4K7Q |
+| Couldn’t make the invite. Check your internet and try again. | Couldn’t invite. Check your internet. |
+
+**Two more Rule A lines found after the audit table was written:** Trusted-tenant sheet (`stay_tools_screens.dart:242`)
+"You keep it with 6 months in Hostelzy hostels and rent paid on time. We never tell owners where you stayed before." /
+"You get it after 6 months… (2 of 6 so far)…" → "6 months · rent on time" / "6 months · rent on time · 2 of 6 so far";
+bed first-look line (`rewards.dart:71`) "Trusted tenants get the first hour on this bed. It opens to you at 4:05 pm." →
+"Trusted tenants first · opens to you at 4:05 pm".
+
 **Push bodies (new migration `supabase/migrations/20261018120000_f31_push_copy.sql`, bundles regenerated with `tools/sql-bundle.sh`).**
 | Function | Old body | New body |
 |---|---|---|

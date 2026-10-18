@@ -142,7 +142,7 @@ void main() {
     // Today's breakfast closed at 4:30 am: locked.
     await _tap(tester, find.byKey(const ValueKey('plan-0-b')));
     expect(s.eatingAt('anjani', today, 'b'), isTrue);
-    expect(s.toast, 'The count for breakfast on Thu has closed.');
+    expect(s.toast, 'Count closed · breakfast Thu');
     // Friday breakfast: tap to skip, tap again to eat.
     final fri = DateTime(2026, 10, 2);
     await _tap(tester, find.byKey(const ValueKey('plan-1-b')));

@@ -252,7 +252,7 @@ void main() {
     await _settle(tester);
     expect(server.calls, ['menu ${s.ownHid}', 'times ${s.ownHid} 07:00-09:30 12:30-14:00 20:00-22:15']);
     expect(s.mealTimes[s.ownHid]!['b'], (420, 570));
-    expect(s.toast, 'Meal times saved. Residents’ meal reminders ring at them.');
+    expect(s.toast, 'Meal times saved');
     s.dispose();
   });
 
@@ -270,7 +270,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('menuSave')));
     await _settle(tester);
     expect(server.calls, ['menu ${s.ownHid}']);
-    expect(s.toast, 'Menu saved. Meal times save once Hostelzy updates the server; residents keep the usual times till then.');
+    expect(s.toast, 'Menu saved · meal times after the next server update');
     expect(s.mealTimes[s.ownHid], isNull);
     s.dispose();
   });

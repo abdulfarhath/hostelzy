@@ -138,7 +138,7 @@ void main() {
     final s = AppState(start: 'detail', role: 'tenant');
     await _pump(tester, s);
     expect(find.text('Ask on WhatsApp'), findsNothing);
-    expect(find.text('Hold a bed first'), findsOneWidget);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     s.dispose();
   });
 
@@ -198,7 +198,7 @@ void main() {
     s.update(() => s.rvStars = 5);
     s.postReview();
     await tester.runAsync(_settle);
-    expect(s.toast, 'You already reviewed this stay. Open your review to change it.');
+    expect(s.toast, 'Already reviewed · open it to change');
     s.stopLive();
     s.dispose();
   });

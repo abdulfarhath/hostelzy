@@ -105,7 +105,7 @@ class AdminLayoutScreen extends StatelessWidget {
     final req = s.shapeReqFor(h.id, room.n);
     final lockedBy = s.edLockedBy;
     final ready = checks.every((c) => c.$1) && lockedBy == null;
-    void blocked() => s.toastMsg(lockedBy != null ? '${lockedBy.name} is editing this room. Try again when they’re done.' : 'Fix the checks first.');
+    void blocked() => s.toastMsg(lockedBy != null ? '${lockedBy.name} is editing this room' : 'Fix the checks first.');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

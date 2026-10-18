@@ -89,10 +89,10 @@ extension ResidentsActions on AppState {
       resF = 'All';
     });
     toastMsg(res.lateDays > 0
-        ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
+        ? 'Added · ${res.lateDays} days late · Fair Play check'
         : future
-        ? 'Booked bed ${res.bed}. Send them a welcome on WhatsApp.'
-        : 'Added. ${name.split(' ')[0]} confirms by joining with your invite code.');
+        ? 'Booked bed ${res.bed}'
+        : 'Added · waits for ${name.split(' ')[0]}’s invite');
   }
 
   /// Invite QR sign-ups signed in with Google; approving counts them.
@@ -153,7 +153,7 @@ extension ResidentsActions on AppState {
     return l != null && l.ac == null;
   }
 
-  String acMissingMsg(Room r) => 'Room ${r.label}’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.';
+  String acMissingMsg(Room r) => 'Room ${r.label}: no AC in its layout';
 
   void saveRates() {
     final rs = rooms[ownHid]!;
@@ -179,10 +179,10 @@ extension ResidentsActions on AppState {
           final m = '$e';
           final room = RegExp(r'room (\S+): an AC room needs an AC unit').firstMatch(m)?.group(1);
           toastMsg(room != null
-              ? 'Room $room’s layout has no AC unit. Add it in the room’s layout and publish, then make the room AC.'
+              ? 'Room $room: no AC in its layout'
               : m.contains('only the owner')
-              ? 'Only the owner can change rates and AC rooms.'
-              : 'Couldn’t save it. Check your internet and try again.');
+              ? 'Owner only'
+              : 'Couldn’t save. Check your internet.');
           return false;
         }
         await refreshLive();
@@ -357,8 +357,8 @@ extension ResidentsActions on AppState {
       debugPrint('add stay: $e');
       // F24 #18: the server's reason when "before Hostelzy" isn't allowed.
       toastMsg('$e'.contains('joined before Hostelzy')
-          ? 'Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy. Message the team.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'Live hostel: ask the Hostelzy team'
+          : 'Couldn’t save. Check your internet.');
       return false;
     }
     await refreshLive();
@@ -369,10 +369,10 @@ extension ResidentsActions on AppState {
     });
     final first = name.split(' ')[0];
     toastMsg(res.lateDays > 0
-        ? 'Added, ${res.lateDays} days after moving in: that’s past the 3-day limit and goes to Fair Play.'
+        ? 'Added · ${res.lateDays} days late · Fair Play check'
         : booking
-        ? 'Booked bed $bedLabel. Send them a welcome on WhatsApp.'
-        : 'Added${res.via == 'hz' ? ' (came through Hostelzy)' : res.via == 'before' ? ' as joined before Hostelzy' : ''}. $first confirms by joining with your invite code.');
+        ? 'Booked bed $bedLabel'
+        : 'Added${res.via == 'hz' ? ' · came through Hostelzy' : res.via == 'before' ? ' · joined before Hostelzy' : ''} · waits for $first’s invite');
     return true;
   }
 
@@ -422,12 +422,12 @@ extension ResidentsActions on AppState {
     } catch (e) {
       final m = '$e';
       return toastMsg(m.contains('not free any more')
-          ? 'Someone just took this bed. Pick another one.'
+          ? 'Bed just taken'
           : m.contains('2 beds at a time')
-          ? 'You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.'
+          ? 'Limit: ${AppState.maxHolds} holds'
           : m.contains('Trusted tenants get the first hour')
           ? '${m.substring(m.indexOf('Trusted tenants')).split(RegExp(r'[,}\n]')).first.trim()}.'
-          : 'Couldn’t place the hold. Check your internet and try again.');
+          : 'Couldn’t hold. Check your internet.');
     }
     await refreshLive();
     update(() {

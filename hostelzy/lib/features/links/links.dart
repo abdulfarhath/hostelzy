@@ -87,10 +87,10 @@ extension LinksActions on AppState {
         update(() => joining = false);
         final m = '$e';
         toastMsg(m.contains('valid any more')
-            ? 'That owner link isn’t valid any more. Ask Hostelzy for a new one.'
+            ? 'Link no longer valid'
             : m.contains('already has an owner')
-            ? 'This hostel already has an owner account. Ask Hostelzy.'
-            : 'Couldn’t join. Check your internet and try again.');
+            ? 'Already has an owner account'
+            : 'Couldn’t join. Check your internet.');
       }
       return;
     }
@@ -115,7 +115,7 @@ extension LinksActions on AppState {
         toastMsg('Invites: sample data');
       } catch (e) {
         update(() => joining = false);
-        toastMsg('$e'.contains('valid any more') ? 'That manager code isn’t valid any more. Ask the owner for a new one.' : 'Couldn’t join. Check your internet and try again.');
+        toastMsg('$e'.contains('valid any more') ? 'That manager code isn’t valid any more. Ask the owner for a new one.' : 'Couldn’t join. Check your internet.');
       }
       return;
     }
@@ -134,12 +134,12 @@ extension LinksActions on AppState {
       update(() => joining = false);
       final m = '$e';
       toastMsg(m.contains('valid any more')
-          ? 'That code isn’t valid any more. Ask your owner for the new one.'
+          ? 'Code no longer valid'
           : m.contains('already asked')
-          ? 'You already asked. Your owner will approve it.'
+          ? 'Already asked · waiting for approval'
           : m.contains('name and 10-digit')
-          ? 'Add your name and 10-digit phone in Settings first.'
-          : 'Couldn’t send it. Check your internet and try again.');
+          ? 'Name and phone needed in Settings'
+          : 'Couldn’t send. Check your internet.');
     }
   }
 

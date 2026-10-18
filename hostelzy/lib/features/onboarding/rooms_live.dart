@@ -83,8 +83,8 @@ extension RoomsLiveActions on AppState {
       toastMsg(m.contains('has someone in it') && i >= 0
           ? 'Not saved: ${m.substring(i, m.indexOf('in it', i) + 5)}.'
           : ac != null
-          ? 'Not saved: room $ac’s layout has no AC unit. Add it in the layout and publish first.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'Not saved: room $ac has no AC in its layout'
+          : 'Couldn’t save. Check your internet.');
     }
   }
 

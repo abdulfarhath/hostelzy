@@ -62,7 +62,7 @@ void main() {
     s.hid = 'anjani';
     await _pump(tester, s);
     await tester.ensureVisible(find.byKey(const ValueKey('ownerContact')));
-    expect(find.text('Hold a bed first'), findsOneWidget);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     expect(find.text('Ask on WhatsApp'), findsNothing);
     // Locked: tapping does nothing.
     await _tap(tester, find.byKey(const ValueKey('contact-WhatsApp')));
@@ -86,7 +86,7 @@ void main() {
     // The hold ends: locked again.
     s.releaseHold(h);
     await tester.pump();
-    expect(find.text('Hold a bed first'), findsOneWidget);
+    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
     expect(s.contactHold('anjani'), isNull);
     s.dispose();
   });

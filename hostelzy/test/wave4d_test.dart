@@ -227,7 +227,7 @@ void main() {
     final server = _Server()..hostels = [_hostel('real1', [_card(8000, at: null)])];
     final s = await _owner(tester, server);
     await tester.ensureVisible(find.byKey(const ValueKey('ratesCard')));
-    expect(find.text('Not confirmed yet'), findsOneWidget);
+    expect(find.text('Not confirmed yet'), findsWidgets); // F31: the free-beds card says the same
     s.update(() => s.managerOf.add('real1'));
     await tester.pump();
     expect(find.byKey(const ValueKey('ratesCard')), findsNothing);

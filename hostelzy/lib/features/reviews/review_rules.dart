@@ -77,18 +77,18 @@ extension ReviewRules on AppState {
       debugPrint('review: $e');
       final m = '$e';
       toastMsg(m.contains('already reviewed') || m.contains('reviews_one_per_stay')
-          ? 'You already reviewed this stay. Open your review to change it.'
+          ? 'Already reviewed · open it to change'
           : m.contains('reviews open after 30 days')
           ? 'Reviews open after 30 days of your stay.'
           : m.contains('confirmed stay')
-          ? 'Only residents with a confirmed stay can review. Ask your owner to confirm your stay.'
+          ? 'Confirmed residents only'
           : m.contains('already replied')
-          ? 'You already replied to this review. Each review gets one reply.'
+          ? 'Already replied'
           : m.contains('hidden by Hostelzy')
-          ? 'Hostelzy hid this review, so it can’t be changed.'
+          ? 'Hidden by Hostelzy'
           : m.contains('edit your own review')
-          ? 'This is your review. Change it instead of reporting it.'
-          : 'Couldn’t save it. Check your internet and try again.');
+          ? 'Your own review'
+          : 'Couldn’t save. Check your internet.');
       return false;
     }
   }
