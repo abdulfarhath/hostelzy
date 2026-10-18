@@ -140,3 +140,5 @@ hub moved 35 archive boards to git only (461 boards on the canvas). W8 = delete-
 Every chat stopped at ~16:00 UTC on the shared 5-hour limit (reset 20:30). Done before the stop: wave 0 on main, wave 1 pushed
 (not merged), W3 DONE, canvas v25 live, F31 boards ready. Builds 2, 4, 5 had pushed nothing. All resumed at 20:32 with
 "push WIP every 30 minutes". Hub on Opus 5.5 (founder switched it); check-in trigger now re-creates chats as `claude-opus-5-5`.
+
+Waves 1–5 merged, apk-109, prototype/v7
