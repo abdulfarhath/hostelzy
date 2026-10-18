@@ -60,7 +60,7 @@ drawn, extras). S36 money strip "Due today ₹X · Late ₹Y ›", tabs Holds ·
 open and below the list, headcount card near the bottom. S23 rent → next meal → food week → Give notice · Swap bed · Raise
 complaint → 30-day review card. Manage in the spec order with new Meals and Tenant IDs rows. Settings: Account · Notifications
 (labels only) · Language · About (version line) · Delete account last. Counted screens 188 → **187** if SCREENS agrees.
-Waiting for Build 5's table to re-check.
+Re-checked against Build 5's audit table (`feature/w5-clean` @ c10bb1d) on 2026-10-18: wordings mirrored on 56 boards, see `docs/design/v26/README.md`.
 
 ## Not in the spec
 Build 5 and Design 3 list extras here; the hub decides within the day.

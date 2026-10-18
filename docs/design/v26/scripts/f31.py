@@ -100,12 +100,12 @@ a('gateMt.dc.html', ('We’re making Hostelzy better.', 'Back by 6:30 pm.'))
 a('r-filters.dc.html', 'Hide listed hostels the team hasn’t visited yet')
 a('r-detail.dc.html r-detailDark.dc.html',
   'Green = with Hostelzy.',
-  ('Same price for every bed of a type. Food included.', 'Food included. Electricity extra, by meter. Confirmed by the owner · 3 Oct'))
+  ('Same price for every bed of a type. Food included.', 'Food included · Electricity extra, by meter · Confirmed by the owner · 3 Oct'))   # Build 5: hostel_screen:287
 a('f24-detailOwner.dc.html f26-detailScroll.dc.html f27-hostelChip.dc.html', 'Talking through Hostelzy keeps your deal')
 a('f24-detailOwner.dc.html', 'No contact before a hold.')
 a('reviews.dc.html', 'Only people who stayed here can review.')
-a('f12-Compare.dc.html', 'Comparing the two free beds.')
-a('r-holdSheet.dc.html r-holdSheetMember.dc.html', 'Go and see it first')
+a('f12-Compare.dc.html', ('Comparing the two free beds.', 'Both ₹8,200 a month'))   # Build 5: layout_map:665
+a('r-holdSheet.dc.html r-holdSheetMember.dc.html', 'Go and see it first', 'Sure already')   # Build 5: holds_sheets:70/72
 a('r-signin.dc.html', 'Then your name and phone number.', 'So Srinivas knows who’s coming.')
 a('r-notify.dc.html', 'Turn on notifications so Srinivas’s reply reaches you')
 a('payAdv.dc.html', 'Hostelzy never holds your money.', ('Your price ₹5,800 is fixed', '₹2,000 back when you leave.'))
@@ -115,14 +115,15 @@ a('f09-MoveIn.dc.html', 'Ramesh gives you ₹100 off.')
 a('me.dc.html', ('Owner’s phone needed · ₹200', '₹200 when it’s verified'))
 a('me.dc.html w1-meRefund.dc.html f28-meYourHostel.dc.html add-meOwner.dc.html', 'Language, notifications, log out')
 a('add-meOwner.dc.html', 'Ask the Hostelzy team')
+a('settings.dc.html settings-dark.dc.html add-lang.dc.html w1-editName.dc.html w2-waSheet.dc.html w1-notifSwitches.dc.html', '3 days before')   # Build 5: settings:107-111, switch labels only
 a('settings.dc.html settings-dark.dc.html add-lang.dc.html w1-editName.dc.html w2-waSheet.dc.html', 'Owner replies, hold ending')
 a('w1-notifSwitches.dc.html', 'When the owner confirms or replies', 'In areas you searched.', 'Saved to your account.')
 a('w1-editName.dc.html', 'Owners see this name on your holds')
 a('w2-waSheet.dc.html', 'Only if you chat on a different number')
 a('add-lang.dc.html', 'Words not checked yet show in English.', ('Telugu and Hindi come once', 'Telugu and Hindi · not available yet'))
 a('swap.dc.html', 'New rent starts next month.')
-a('review.dc.html', 'Shown with your first name')
-a('exitReview.dc.html', 'Shown as “Former resident”.')
+a('review.dc.html', ('Shown with your first name', 'Shown as Rahul · verified resident'))   # Build 5: reviews:296
+a('exitReview.dc.html', ('Shown as “Former resident”.', 'Shown as Former resident · verified stay'))   # Build 5: reviews:373
 a('hold.dc.html', 'Go and see it. Tell Srinivas', 'You sent the UPI reference. It says Booked',
   ('Srinivas didn’t see this payment.', 'Srinivas didn’t see this payment.'))
 a('rent.dc.html rent-dark.dc.html',
@@ -132,7 +133,10 @@ a('w3-noticeGiven.dc.html', ('Sent to Srinivas. They accept it', 'Sent to Sriniv
   ('Advance minus ₹1,000 maintenance', 'Advance minus ₹1,000 maintenance, within 7 days of leaving.'))
 a('r-today.dc.html r-todayDark.dc.html f29-todayJoining.dc.html f29-joinReview.dc.html f29-joinReviewDark.dc.html '
   'f29-joinReviewTick.dc.html f29-joinReviewDrive.dc.html f26-todayEmpty.dc.html', '33 of 40 beds have a resident.')
-a('r-today.dc.html r-todayDark.dc.html f29-todayJoining.dc.html', ('Reply in 47 h · pinned until you answer', 'Reply in 47 h'))
+a('r-today.dc.html r-todayDark.dc.html f29-todayJoining.dc.html f29-joinReview.dc.html f29-joinReviewDark.dc.html f29-joinReviewTick.dc.html '
+  'f29-joinReviewDrive.dc.html', ('Reply in 47 h · pinned until you answer', '47 h left'))   # Build 5: Fair Play card :462
+a('r-today.dc.html r-todayDark.dc.html f23-Today.dc.html', ('Hostelzy tenant · booking code HZ-4830', 'Code HZ-4830'))   # Build 5: owner_today:55
+a('r-today.dc.html r-todayDark.dc.html', ('Hostelzy tenant · booking code HZ-4833', 'Code HZ-4833'))
 a('f26-todayEmpty.dc.html', 'New holds, payments and fixes show up here.')
 a('f19-Today.dc.html', 'Not on this list = not from Hostelzy.')
 a('w1-oTodayMoves.dc.html', 'Accept frees the bed from the last day.')
@@ -145,6 +149,7 @@ a('invite.dc.html', 'Residents scan or type this code', ('Make a new code (the o
 a('oLayouts.dc.html', 'You edit and publish your own layouts.')
 a('oRooms.dc.html', 'Add or remove rooms and floors.')
 a('oLayout.dc.html oLayout-dark.dc.html w2-layoutWrong.dc.html', 'Tenants see “Not working”. A complaint is raised.')
+a('oLayout.dc.html oLayout-dark.dc.html', ('Hostelzy drew a new version · check and publish', 'Hostelzy drew a new version'))   # Build 5: owner_today:308
 a('w2-layoutWrong.dc.html', ('2 residents answered “No” in the 30-day review.', '2 residents answered “No” in the 30-day review.'))
 a('oEditor.dc.html', ('Rectangle · drag walls to resize, 1 ft steps. Changing', 'Rectangle'), 'Never draw gates, CCTV or exits.',
   'Pick Custom and send a photo and a sketch.')
@@ -153,7 +158,7 @@ a('oPhotos.dc.html', 'Drag to reorder. The first is the cover.', 'Daylight, from
 a('oPublished.dc.html', 'Tenants see this layout in the Room tab right away.')
 a('deals.dc.html', ('Pick up to 3. Hostels with a deal', '2 of 3 on'), 'From the exit maintenance')
 a('rates.dc.html', 'Advances and rent go straight here.')
-a('menu.dc.html', ('Not set. Residents’ meal reminders use the usual times', 'Not set'), 'Residents and tenants see it after you tap Save.',
+a('menu.dc.html', ('Not set. Residents’ meal reminders use the usual times', 'Not set · 7:30 · 12:30 · 8:00'),   # Build 5: owner_manage:665 'Residents and tenants see it after you tap Save.',
   'Fill Monday, then copy it to the other days.', ('No menu yet. Tenants see', 'No menu yet.'))
 a('w4-oMenuWeek.dc.html', 'Today is highlighted. Tap a day to edit it.', ('Sunday dinner is not set. Tenants see', 'Sunday dinner not set.'))
 a('rules.dc.html f24-oLaundry.dc.html', 'Tenants see these under House rules')
@@ -188,14 +193,15 @@ a('f19-Compare.dc.html f19-Reject.dc.html f19-Mute.dc.html f19-CompareDark.dc.ht
 a('f19-Reject.dc.html', 'The current layout stays live.')
 a('f19-Mute.dc.html', 'Unmute any time in Manage', 'You won’t get Rahul’s layout fixes')
 a('f19-Push.dc.html', ('Rahul (lives in 204) suggested a fix for Room 207', 'Layout fix for Room 207 · Rahul, 204'))
-a('f20-Main.dc.html f20-MainDark.dc.html', '*Reminders ring from this phone, even offline.')
-a('f20-Water.dc.html f20-Add.dc.html', 'Reminders ring from this phone, even offline.')
+a('f20-Main.dc.html f20-MainDark.dc.html', '*Reminders ring from this phone, even offline.', ('When Srinivas sets one', 'Not set', '*'))   # Build 5: reminders:311
+a('f20-Water.dc.html f20-Add.dc.html', 'Reminders ring from this phone, even offline.', ('When Srinivas sets one', 'Not set', '*'))
 a('f20-Notify.dc.html f20-NotifyDark.dc.html', 'The app icon shows on every one.', ('5 of 8 today. Tap Done', '5 of 8 today'))
 a('f23-DetailDark.dc.html', 'Shared by everyone on that floor.')
 a('f23-Room.dc.html f23-Floor.dc.html f23-Add.dc.html f24-roomLayersOn.dc.html w1-acRepair.dc.html w1-notifyReady.dc.html',
-  'Same price for every bed here')
+  ('Same price for every bed here', '₹8,000 a month'))   # Build 5: layout_map:581
 a('f23-Floor.dc.html', 'Residents can add or fix this list.')
-a('f23-Owner.dc.html f24-oShape.dc.html f24-oShapeReq.dc.html', 'Broken things also show on Today as a repair.')
+a('f23-Owner.dc.html f24-oShape.dc.html f24-oShapeReq.dc.html', 'Broken things also show on Today as a repair.',
+  ('Keep it, or correct it.', 'Washing machine marked Not working · Rahul V. · 1 Oct'))   # Build 5: amenities:376
 a('f24-oShape.dc.html', 'Not on the list, or no time? Tap Custom.')
 a('f24-oShapeReq.dc.html', ('Free. The Hostelzy team draws it within 48 hours.', 'Free · within 48 hours'))
 a('f24-oShapeBack.dc.html', ('You asked on 2 Oct, 10:12. Drawn in 26 hours.', 'Asked 2 Oct, 10:12 · drawn in 26 hours'))
@@ -206,36 +212,38 @@ a('add-meOwner.dc.html', 'Looking for a bed, or live in a PG?')
 a('f24-oMeter.dc.html', 'Type each room’s meter now.', 'Residents see “Electricity · 70 units · ₹140”')
 a('f24-oRefund.dc.html', ('Rahul confirms in the app.', 'Due by 8 Nov'))
 a('f24-mgrJoin.dc.html', 'Manager codes start with MGR.', ('You’re a manager at Anjani Residency now.', 'You’re a manager at Anjani Residency now.'))
-a('f24-trustedPerks.dc.html', 'You keep it with 6 months in Hostelzy hostels')
+a('f24-trustedPerks.dc.html', 'You keep it with 6 months in Hostelzy hostels', ('When a bed turns free, you can hold it 1 hour', '1 hour before everyone else'))
 a('f24-rRefund.dc.html', 'Check your bank app for the UPI reference above.')
 a('teamSheet.dc.html', 'For the Hostelzy team only.', 'The founder adds team accounts.')
-a('aHome.dc.html', 'On a visit: basics, rooms floor by floor', 'Lead → Visited → Signed up', 'Payments and Fair Play cases are in the team console.',
+a('aHome.dc.html', 'On a visit: basics, rooms floor by floor', 'Lead → Visited → Signed up',
+  ('Payments and Fair Play cases are in the team console.', 'Team console · farhath.me/hostelzy/app/console'),   # Build 5: team_screens:96
   'Draw and move beds, fans, AC, windows', 'Who helps with visits, layouts and payments')
 a('aTeam.dc.html', 'Visits: add hostels and residents.')
 a('aAdd2.dc.html', 'Floors can have different rooms.')
 a('f14-Photos.dc.html', 'Taken by Hostelzy, in daylight, from the door.')
 a('f14-Residents.dc.html', 'Owner adds the rest within 3 days', 'Residents here before Hostelzy count as Before Hostelzy')
 a('f24-aAddOwner.dc.html', 'The owner runs the hostel from their own phone.', 'Srinivas opens the link on his phone', 'Linked shows here as soon as he signs in')
-a('aAdd6.dc.html aAdd6-dark.dc.html', ('Optional: 4 residents added. Goes live with', 'Optional · 4 residents added'))
+a('aAdd6.dc.html aAdd6-dark.dc.html', ('Optional: 4 residents added. Goes live with', 'Optional: 4 residents added · Visited by Hostelzy · 2 Oct 2026 · 30-day free trial'))   # Build 5: add_hostel:827
 a('cSignin.dc.html', 'Not on the team? Use the Hostelzy app instead.')
-a('cSignin.dc.html cNotTeam.dc.html', 'Onboarding, payments, Fair Play and layout help.')
+a('cSignin.dc.html cNotTeam.dc.html', ('Onboarding, payments, Fair Play and layout help.', 'Hostelzy team Google accounts only'))   # Build 5: console:56
 a('cOnb.dc.html cOnb-dark.dc.html', 'The rest (rooms, rates, photos, residents) is done on the visit')
 a('cPay.dc.html', ('Pay to 9059790014@axl · match every UTR', 'Pay to 9059790014@axl'))
 a('cCases.dc.html', 'A report never strikes an owner by itself.')
 a('f24-cLayoutHelp.dc.html', 'The owner checks it and publishes.')
 a('f24-cRewards.dc.html', 'Every grant, spend and reversal.')
 a('f24-cLayoutFixes.dc.html', 'Owners decide first. After 7 days')
-a('w1-cStrikes.dc.html', 'Strikes: 1 warning · 2 deals hidden')
+a('w1-cStrikes.dc.html', ('Strikes: 1 warning · 2 deals hidden', '1 warning · 2 deals hidden 30 days · 3 removed'))   # Build 5: console:299
 a('w2-cReported.dc.html', 'Hide a review only if it breaks the rules')
 a('w3-cLayoutEditor.dc.html', 'The owner’s app places the beds, fans and windows')
 a('w1-cError.dc.html', 'Still stuck? Send this message to the founder')
 a('f26-c14.dc.html', 'Shown as UNVERIFIED with an expected rent range.')
 a('f26-c15.dc.html f28-c15-addedBy.dc.html', 'Owners who tapped “Claim this hostel”.')
 a('f28-c14-torefresh.dc.html', 'After 60 days a listed hostel shows')
-a('wHome.dc.html', 'Hostelzy is an Android app for tenants, residents and hostel owners')
+a('wHome.dc.html', 'Hostelzy is an Android app for tenants, residents and hostel owners', ('The test build is an APK file from GitHub.', 'Android APK · test build'))
 a('wR.dc.html', 'Hostelzy doesn’t take enquiries any more')
 a('wJ.dc.html wJ-dark.dc.html', 'Pay rent by UPI, see the food menu and raise complaints')
-a('wJ.dc.html wJ-dark.dc.html w3-wJNoCode.dc.html', ('Then open Hostelzy, sign in and pick', 'Then open Hostelzy, sign in and pick I live in a Hostelzy PG.'))
+a('wJ.dc.html wJ-dark.dc.html w3-wJNoCode.dc.html', ('Then open Hostelzy, sign in and pick', 'In the app: I live in a Hostelzy PG'))   # Build 5: app/j:23
+a('w3-wJNoCode.dc.html', ('This link has no invite code. Ask your hostel owner', 'This link has no invite code.'))
 a('f28-wList.dc.html', 'Tenants in Hyderabad find PGs on Hostelzy.', ('We’ll call you within 2 days to confirm. Nothing is listed', 'We’ll call you within 2 days to confirm.'))
 a('f28-wListSent.dc.html', ('We call +91 98490 11223. Nothing is listed', 'We call +91 98490 11223.'))
 a('w1-holdsEnded.dc.html', 'Ended and released holds stay here for 7 days.')
@@ -244,7 +252,7 @@ a('w3-stayNotYet.dc.html', ('Your stay isn’t on Hostelzy yet. Once Srinivas ad
 a('w1-bedSheetLeaving.dc.html', 'Tap “Rahul moved out” on the day he leaves.')
 a('w1-oPriceFixed.dc.html', 'Ravi’s price and deal stay the same')
 a('w1-dealsPaused.dc.html', 'This hostel’s deals are paused for a while.', ('Everyone pays the walk-in price while deals are paused.', 'Advance ₹3,000.'),
-  ('Same price for every bed of a type. Food included.', 'Food included. Electricity extra, by meter.'))
+  ('Same price for every bed of a type. Food included.', 'Food included · Electricity extra, by meter'))
 a('w1-acRepair.dc.html', ('AC under repair. Complaint raised 1 Oct.', 'AC under repair · complaint raised 1 Oct'))
 a('w1-walkInHold.dc.html', 'Someone at the gate? A walk-in hold')
 a('w1-walkInHeld.dc.html', 'Tenants see this bed as “On hold” until the hour ends.')
@@ -252,7 +260,7 @@ a('w1-didJoin.dc.html', ('Your hold on bed 102-C ended on 30 Sep. One tap', 'You
 a('w1-notifyReady.dc.html', 'Layouts are drawn by the owner, or by Hostelzy after a visit', 'The owner hasn’t published this room’s layout yet.')
 a('w2-ownerOnly.dc.html', 'You manage Anjani Residency: beds, residents')
 a('w2-qrScan.dc.html w3-scanOff.dc.html w3-scanError.dc.html', 'Point it at the QR on the Hostelzy poster')
-a('w3-scanOff.dc.html', 'Allow it in your phone’s Settings')
+a('w3-scanOff.dc.html', ('Allow it in your phone’s Settings', 'Camera blocked in Settings'))   # Build 5: session_screens:552
 a('w3-scanError.dc.html', 'Type the code from the poster instead.')
 a('w2-exploreNoMatch.dc.html', 'Try a higher budget or any room type.')
 a('exploreEmpty.dc.html w1-mapEmpty.dc.html', 'We add hostels area by area')
@@ -302,7 +310,7 @@ def apply_rule_a():
         for it in items:
             try:
                 if isinstance(it, tuple):
-                    rt(f, it[0], it[1])
+                    rt(f, it[0], it[1], many=len(it) > 2)
                 elif it.startswith('*'):      # '*text' = remove every copy
                     rm(f, it[1:], many=True)
                 else:
@@ -435,7 +443,7 @@ def action(label, icon):
 def review_card():
     return ('<div style="margin: 14px 16px 0; padding: 14px; border: 2px solid var(--tx); display: grid; grid-template-columns: minmax(0, 1fr) auto; '
             'gap: 10px; align-items: center;"><span style="display: grid; gap: 2px;">' + KICK.format('30-day review') +
-            '<b style="font-size: 18px;">How is your stay?</b>' + MU13.format('Open till 2 Nov') + '</span>'
+            '<b style="font-size: 18px;">How is your stay so far?</b>' + MU13.format('Open till 2 Nov') + '</span>'
             '<button style="height: 44px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; '
             'font-weight: 800; font-size: 15px; border: 2px solid var(--tx);">Review' + CHEV + '</button></div>')
 
@@ -485,7 +493,9 @@ def reorder_manage(f):
         lab = [c for c in d.els if c.tag == 'b' and c.start > k.start and c.end < k.end][0].text
         rows[lab] = d.outer(k)
     base = rows['Food menu']
-    rows['Meals'] = manage_row(base, 'Meals', 'Dinner · 34 of 40 eating', MEAL_ICON)
+    rows['Meals'] = manage_row(base, 'Meals', 'Closes 3 h before each meal', MEAL_ICON)
+    rows['Food menu'] = rows['Food menu'].replace('>This week set<', '>This week<')
+    rows['Team'] = rows['Team'].replace('>Just you<', '>None yet<')
     rows['Tenant IDs'] = manage_row(base, 'Tenant IDs', 'Drive not connected', ID_ICON)
     missing = [x for x in MANAGE_ORDER if x not in rows]
     if missing:
