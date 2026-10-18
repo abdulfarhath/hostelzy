@@ -38,4 +38,5 @@ None. Client-side counter only. Sign-in is the existing Google flow (`afterSignI
 Nothing. Anything extra Build finds goes here and waits for the hub.
 
 ## Design
-Board `[T34] signInWall` light + dark, variant of `[S8]` with the hint line. Red CTA, square corners, 2 px rules.
+**Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes): **[T34]** signInWall light + dark (logo, "Sign in to see all N hostels", "Free. One tap with Google.", the 3 hostels, red Continue with Google, Not now) · [variant of S8] first-visit hint line with a dismiss ×. Rule A (F31) applied: no other helper lines.
+
