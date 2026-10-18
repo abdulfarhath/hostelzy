@@ -12,5 +12,4 @@ select to_regproc('public.go_live') is not null as onboarding,
        to_regproc('public.fill_join_request') is not null as ask_to_join,
        to_regproc('public.list_draft') is not null as import_queue,
        to_regclass('public.owner_drive') is not null as tenant_ids_drive,
-       to_regproc('public.clear_join_id') is not null as w2_w4_wired,
-       to_regproc('public.notify_resident') is not null as notify_resident;
+       to_regproc('public.clear_join_id') is not null as w2_w4_wired;
