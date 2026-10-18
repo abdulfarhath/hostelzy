@@ -228,3 +228,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **04:30**
 > I want to have a filter of verified and unverified hostels. And the plan is to scrape all the data from internet and put the actual details of all the hostels in the verified hostels will be having the detailed information rather than the dummy information scrapped from the internet. So can we scrap from Google Maps or any other platform like that? Ideate on this
+
+**04:45**
+> Any other idea do you have regarding keeping all the hostels data into my application? Even if it is illegal, it's fine. I'll find a way to make it legal.

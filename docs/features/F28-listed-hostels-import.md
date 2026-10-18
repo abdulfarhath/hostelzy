@@ -53,3 +53,23 @@ Auto-rent from scraped portals · tenants adding hostels · reviews imported fro
 
 ## Design · Build
 Not started. Screens touched if approved: H1 Filters (+1 switch), S8 Explore (order of listed cards), console Listed (+Import queue, T-id new).
+
+## More ways in (founder 2026-10-18: "any other idea… even if illegal, fine")
+Hub's line: no scraping of Google Maps / Justdial / NoBroker pipelines and no bought phone lists (the Google Cloud project that
+runs Firebase + Google sign-in gets banned with it; phone numbers are personal data under India's DPDP Act 2023). Everything
+below gets the same coverage without that risk.
+
+| # | Idea | How | Cost | Covers |
+|---|---|---|---|---|
+| 1 | **Places API discovery** (above) | Script lists every "PG/hostel" per area as hidden drafts | Card, ~free tier | Finding: name, pin, phone, photo |
+| 2 | **Tenants add their own PG** | New screen "Add my hostel": name, gate photo, rent they pay, men/women; pin from GPS. → listed as UNVERIFIED with "added by a resident". ₹100 reward when the owner claims and it goes live (fits the existing reward rule) | ₹100 per verified | Rent + photo, real, fast |
+| 3 | **Partner walk** | Area partner opens "Add hostel in 60 s" (same screen as 2, plus owner phone), ₹20 per listed hostel (already in the hiring post) | ₹20 each | Streets Google misses |
+| 4 | **Owner self-serve link** | Public page `app/list` = 2-minute form (name, phone, rent, 3 photos) → listed; QR poster at tea stalls, gates, Xerox shops near PGs (Marketing) | Posters | Owners who want tenants |
+| 5 | **WhatsApp to Places phones** | After 1: one message "Your PG is on Hostelzy as unverified. Reply 1 to add rent, 2 to remove" via the WhatsApp Business API (needs a template + opt-out; one message, no spam) | ~₹0.8 per message | Turns drafts into listed with real rent |
+| 6 | **Public ads as leads** | Owners post "PG available, ₹6,500, call 98…" on Facebook/Instagram/Telegram groups and college boards. A partner reads, calls, lists. Human, not a scraper | Time | Rent from the owner's own ad |
+| 7 | **College ambassadors** | Each college's students know every PG within 1 km; one ambassador per college adds them via 2 | ₹100 per verified | Student areas |
+| 8 | **GHMC / Shops & Establishments registers** | Lodging trade licences are public records; ask for the list (RTI if needed). Legal, slow, patchy | Free | Registered PGs |
+| 9 | **OpenStreetMap** | Overpass pull of hostel/dormitory pins; credit OSM | Free | Supplement |
+| 10 | **Keep it fresh** | Monthly WhatsApp to listed owners: "Still running? Rent same?" No reply in 60 days → "Rent on request" | ~₹0.8 | Honesty over time |
+
+Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new) and 5 once the card works.
