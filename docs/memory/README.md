@@ -43,7 +43,9 @@ Read, in order: this file → `founder-messages.md` (their words) → `../HANDOV
    accounts, keys, SQL runs and store listings go to the founder.
 8. **As little work as possible for the founder (2026-10-18).** One-time setup steps only, batched; everything repeatable
    (SQL, functions, APK, pages) ships itself from `main`. Never hand them a recurring step.
-9. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
+9. **No explanations anywhere, priority order (2026-10-18).** Airbnb/Zoho style: no helper text, labels name the action;
+   dashboards show what the user came for first; the water offer was "random shit" on top of Home.
+10. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
    Hostelzy price, ₹100 reward) and a confirmed Paid. Navy `#1f3a5f` = ✓ VERIFIED. Grey outline = UNVERIFIED.
 9. Never touch the site root `index.html` (their old prototype page).
 
