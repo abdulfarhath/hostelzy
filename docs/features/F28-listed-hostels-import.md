@@ -81,7 +81,7 @@ Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new)
 - **#2 refined (founder):** the tenant adds a few details about their own PG; the **owner must agree** to be verified on
   Hostelzy; only then the tenant is paid, **about ₹200** (founder's number, tentative; Finance checks it against the
   ₹1,000/month rewards cap, Q2).
-  Flow: tenant "Add my hostel" (name, gate photo, rent they pay, sharing, food, men/women, owner phone optional) → UNVERIFIED
+  Flow: tenant "Add my hostel" (name, gate photo, rent they pay, sharing, food, men/women, **owner phone required**) → UNVERIFIED
   card "added by a resident" → owner is asked (claim in app or WhatsApp #5) → owner agrees + team verifies → live →
   tenant's ₹200 credited; 60 days with no owner answer → the card stays UNVERIFIED, no payout.
 - **₹20 explained:** Finance plan §3/Q5 and the hiring post: a sales partner earns ₹20 per valid tenant hold (a hold the
@@ -104,3 +104,12 @@ Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new)
 ## Open money question → Finance
 ₹200 per tenant-added hostel once the owner is verified, vs the ₹1,000/month cap on Hostelzy-funded rewards (Q2): either
 5 payouts a month, or a separate cap. Founder decides the amount.
+
+## Founder round 3 (2026-10-18 05:10): tenant-add rules
+- **Owner's phone is required** when a tenant adds a hostel (no phone → can't submit). Without it we can't reach the owner.
+- **Paid only if the hostel gets verified.** It is the tenant's job to get their owner to agree: the app gives them a
+  share button ("Send to your owner" → WhatsApp message with the claim link) and shows the state: Added → Owner asked →
+  Owner agreed → Verified → ₹200 (amount tentative).
+- Hub adds (product details, not money): one tenant can add only the hostel they live in (one at a time); the owner's
+  number is never shown to other tenants (same contact rule as F26); duplicate of an existing hostel → the tenant is told
+  "already on Hostelzy" and can ask the owner to verify instead; no payout for duplicates; the 60-day no-answer rule stays.
