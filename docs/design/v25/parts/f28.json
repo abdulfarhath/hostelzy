@@ -24,7 +24,7 @@
   "f28-myAdd.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[S93] myAdd · Your hostel on Hostelzy: the card as tenants see it, 5 steps (Added ✓), Send to your owner (WhatsApp), honest pay line · New (F28)",
+   "title": "[S93] myAdd · Your hostel on Hostelzy: the card as tenants see it, 5 steps (Added ✓), Send to your owner (WhatsApp), one honest line (F31 Rule A) · New (F28)",
    "x": 940,
    "y": 57907
   },
@@ -38,14 +38,14 @@
   "f28-myAddAsked.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[variant of S93] myAdd · Owner asked: sent, no reply, Ask again after 3 days · New (F28)",
+   "title": "[variant of S93] myAdd · Owner asked: sent, no reply, Ask again (after 3 days) · New (F28)",
    "x": 1410,
    "y": 58871
   },
   "f28-myAddAgreed.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[variant of S93] myAdd · Owner agreed: team visits within 7 days, UPI ID asked once · New (F28)",
+   "title": "[variant of S93] myAdd · Owner agreed: visit date, UPI ID asked once · New (F28)",
    "x": 1880,
    "y": 58871
   },
@@ -66,7 +66,7 @@
   "f28-myAddWaiting.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[variant of S93] myAdd · Still waiting (60 days): steps stop at Owner asked, no payout, Ask again · New (F28)",
+   "title": "[variant of S93] myAdd · Still waiting (60 days): steps stop at Owner asked, Ask again · New (F28)",
    "x": 3290,
    "y": 58871
   },
@@ -79,7 +79,7 @@
   },
   "f28-wList.dc.html": {
    "w": 390,
-   "h": 1360,
+   "h": 1300,
    "title": "[W8] app/list/ · List your PG on Hostelzy, free: name, your name, phone, area, rent from–to, for, food, photos → Send to Hostelzy; “We’ll call you within 2 days” · New (F28)",
    "x": 4230,
    "y": 57907
@@ -89,7 +89,7 @@
    "h": 900,
    "title": "[variant of W8] app/list/ · Sent: “We’ll call you within 2 days to confirm”, 3 steps, no “Listed!” · New (F28)",
    "x": 4230,
-   "y": 59387
+   "y": 59327
   },
   "f28-wPoster.dc.html": {
    "w": 794,
@@ -108,7 +108,7 @@
   "f28-explore.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[variant of S8] explore · First-visit hint line, verified cards then listed ones, end row “Can’t find your PG? Add it” · New (F28)",
+   "title": "[variant of S8] explore · First-visit line “Verified first · then listed”, verified cards then listed ones, end row “Can’t find your PG? Add it” · New (F28)",
    "x": 5574,
    "y": 57907
   },
@@ -122,7 +122,7 @@
   "w3-stayNotYet.dc.html": {
    "w": 390,
    "h": 844,
-   "title": "[T20] rStay · Not on Hostelzy yet: Add my hostel button · Updated (F28)",
+   "title": "[T20] rStay · “Not on Hostelzy yet” + Add my hostel (F31 Rule A: ≤ 6 words + one button) · Updated (F28)",
    "x": 4230,
    "y": 29520
   },

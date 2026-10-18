@@ -41,4 +41,10 @@ Not drawn (not in the Design section): S9 map with the switch, A5 poster, the te
 Note for SCREENS: the canvas already has a board titled `[W8] delete-account/` (`wDel.dc.html`); the spec fixes
 **W8 = app/list/** and **W9 = poster**. Build/hub to renumber the delete-account page when SCREENS.md §5 is updated.
 
+## F31 Rule A (hub, 2026-10-18) applied to every board here
+No helper or explainer lines under controls, rows or cards; subtitles are values or states; empty states ≤ 6 words +
+one button; sheets and web pages without intro paragraphs. S93's five steps are labels + ticks with dates, plus the one
+honest line "Paid when the owner agrees and Hostelzy verifies" (shown until the owner agrees). The S8 first-visit line is
+the state "Verified first · then listed" with a ×. The C14 call script and the OSM credit line stay (content, not explanation).
+
 **Design approved** (Design 2, 2026-10-18).

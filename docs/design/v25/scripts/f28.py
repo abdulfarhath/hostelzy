@@ -123,12 +123,11 @@ def photo_row(n_done=1):
             out += '<span style="width: 60px; height: 60px; position: relative; %s"><span style="position: absolute; left: 4px; bottom: 3px; font-size: 10px; color: var(--mu);">gate</span></span>' % PHOTO
         else:
             out += '<button aria-label="Add a photo" style="width: 60px; height: 60px; display: grid; place-items: center; border: 2px dashed var(--dv); color: var(--tx);">' + ico('camera', 20) + '</button>'
-    return out + '<span style="align-self: center; font-size: 12px; color: var(--mu); line-height: 1.4;">1 to 3 photos.<br>Camera or gallery.</span></div>'
+    return out + '<span style="align-self: center; font-size: 12px; color: var(--mu);">%d of 3</span></div>' % n_done
 def pin_block(area='Madhapur'):
     return ('<div style="height: 72px; position: relative; background: repeating-linear-gradient(0deg, var(--sf) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, var(--sf) 0 1px, var(--bg) 1px 24px); border: 2px solid var(--tx);">'
             '<span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); color: var(--ad);">' + ico('pin', 30) + '</span>'
-            '<span style="position: absolute; left: 8px; top: 6px; font-size: 12px; font-weight: 800;">' + area + ' · from the pin</span>'
-            '<span style="position: absolute; left: 8px; bottom: 6px; font-size: 12px; color: var(--mu);">Drag the pin to the gate</span>'
+            '<span style="position: absolute; left: 8px; top: 6px; font-size: 12px; font-weight: 800;">' + area + '</span>'
             '<button style="position: absolute; right: 6px; bottom: 6px; height: 30px; padding: 0 10px; display: flex; gap: 6px; align-items: center; background: var(--bg); border: 1px solid var(--dv); font-size: 12px; font-weight: 800;">' + ico('pin', 14) + 'Use my location</button></div>')
 
 def add_hostel(partner=False, dark=False):
@@ -136,25 +135,24 @@ def add_hostel(partner=False, dark=False):
     if partner:
         rent = ('<div style="display: grid; gap: 6px;">' + label('Rent per month') + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">' + inp('₹6,500', 'From', 44) + inp('₹8,500', 'To', 44) + '</div></div>')
         code = inp('HZ-PART-1', 'Partner code', 44)
-        kicker = 'Partner · ₹20 per checked hostel'
+        kicker = 'Partner · ₹20 per hostel'
     else:
-        rent = ('<div style="display: grid; gap: 6px;">' + label('What do you pay?') + '<div style="display: flex; align-items: center; gap: 8px;">' + inp('₹7,500', '₹ per month', 44, ' max-width: 150px;') + mu('a month, for your bed', 13) + '</div></div>')
+        rent = ('<div style="display: grid; gap: 6px;">' + label('What do you pay?') + '<div style="display: flex; align-items: center; gap: 8px;">' + inp('₹7,500', '₹ per month', 44, ' max-width: 150px;') + mu('a month', 13) + '</div></div>')
         code = ''
-        kicker = 'Free · ₹200 when it’s verified'
+        kicker = '₹200 when verified'
     body = (header(kicker, 'Add a hostel')
         + '<div style="flex-grow: 1; overflow: hidden; border-top: 2px solid var(--tx); padding: 8px 16px; display: grid; gap: 7px; align-content: start;">'
         + '<div style="display: grid; gap: 6px;">' + label('Who are you?') + ('<div style="display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px;">' + who + code + '</div>' if code else who) + '</div>'
         + field('Hostel name', 'Sri Balaji Men’s PG', 'Name on the gate', 44)
         + '<div style="display: grid; gap: 6px;">' + label('Gate photo') + photo_row() + '</div>'
-        + '<div style="display: grid; gap: 6px;">' + label('Where is it?') + pin_block() + '</div>'
+        + '<div style="display: grid; gap: 6px;">' + label('Pin') + pin_block() + '</div>'
         + '<div style="display: grid; grid-template-columns: 1fr; gap: 6px;">' + label('For') + seg(['Men', 'Women', 'Co-living'], 'Men', 38) + '</div>'
         + rent
         + '<div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;"><div style="display: grid; gap: 6px;">' + label('Sharing') + seg(['1', '2', '3', '4+'], '2', 38) + '</div><div style="display: grid; gap: 6px; padding-bottom: 6px;">' + label('Food included') + switch(True) + '</div></div>'
         + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">' + field('Owner’s name · required', 'Venkat Rao', '', 44) + field('Owner’s phone · required', '+91 98490 11223', '', 44) + '</div>'
         + '</div>'
-        + '<div style="flex: none; border-top: 2px solid var(--tx); padding: 8px 16px 14px; display: grid; gap: 6px;">'
-        + mu('Code remembered on this phone. Only the Hostelzy team sees the owner’s number.' if partner else 'Only the Hostelzy team sees the owner’s number. Already on Hostelzy? We’ll tell you, and you can ask the owner to verify it.', 12)
-        + btn('Add this hostel', 'red', 'arrow', 50)
+        + '<div style="flex: none; border-top: 2px solid var(--tx); padding: 10px 16px 16px; display: grid; gap: 6px;">'
+        + btn('Add this hostel', 'red', 'arrow', 52)
         + '</div>')
     return page(body, dark=dark)
 
@@ -200,54 +198,54 @@ def my_card(verified=False):
             '%s</div>') % (PHOTO, VER if verified else UNV,
                             mu('Men · Madhapur · ₹7,500/mo · 2 sharing · food included', 13) if not verified else mu('Men · Madhapur · 9 free · from ₹7,500/mo', 13))
 def my_add(state='added', dark=False):
-    # state: added | asked | agreed | verified | paid | waiting | queued
-    wa = 'Opens WhatsApp with: “Your PG Sri Balaji Men’s PG is on Hostelzy. Agree to get it verified (free): hostelzy.in/app/r/?h=4821&claim=1”'
-    honest = 'Paid only when the owner agrees and Hostelzy verifies the hostel.'
+    # state: added | asked | agreed | verified | paid | waiting | queued   (F31 Rule A: labels + ticks, values/states only)
+    honest = 'Paid when the owner agrees and Hostelzy verifies'
     kicker = 'Added by you · 18 Oct'
     verified_card = state in ('verified', 'paid', 'queued')
+    status = ''
     if state == 'added':
-        st = steps(1, {1: 'Today, 4:12 pm', 2: 'Send the link to Venkat Rao'})
-        cta = btn('Send to your owner', 'red', 'msg'); note = wa
+        st = steps(1, {1: '18 Oct, 4:12 pm'})
+        cta = btn('Send to your owner', 'red', 'msg')
     elif state == 'asked':
-        st = steps(2, {1: '18 Oct', 2: 'Sent 18 Oct · no reply yet', 3: 'Venkat Rao taps the link and claims the hostel'})
-        cta = btn('Ask again', 'red', 'msg'); note = '3 days since you sent it. Ask again sends the same link.'
+        st = steps(2, {1: '18 Oct', 2: 'Sent 18 Oct · no reply yet'})
+        cta = btn('Ask again', 'red', 'msg')
     elif state == 'agreed':
-        st = steps(3, {1: '18 Oct', 2: '18 Oct', 3: 'Venkat Rao agreed · 22 Oct', 4: 'Our team visits within 7 days'})
-        cta = ('<div style="display: grid; gap: 6px;">' + label('Where should we pay the ₹200?') + '<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">' + inp('ravi.teja@upi', 'UPI ID') + '<button style="height: 48px; padding: 0 16px; font-weight: 800; font-size: 15px; background: var(--tx); color: var(--bg);">Save</button></div></div>')
-        note = 'Asked once. We pay by UPI on the 5th of the month after the hostel is verified.'
+        st = steps(3, {1: '18 Oct', 2: '18 Oct', 3: 'Venkat Rao · 22 Oct', 4: 'Visit by 29 Oct'})
+        cta = ('<div style="display: grid; gap: 6px;">' + label('UPI ID for the ₹200') + '<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">' + inp('ravi.teja@upi', 'UPI ID') + '<button style="height: 48px; padding: 0 16px; font-weight: 800; font-size: 15px; background: var(--tx); color: var(--bg);">Save</button></div></div>')
     elif state == 'verified':
-        st = steps(4, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: 'Checked by the Hostelzy team · 27 Oct', 5: '₹200 to ravi.teja@upi on 5 Nov'})
-        cta = btn('See the hostel', 'out', 'arrow'); note = 'Tenants now see beds, prices and the owner’s deal. Your ₹200 is paid by UPI on the 5th.'
+        st = steps(4, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: '27 Oct', 5: '₹200 to ravi.teja@upi · 5 Nov'})
+        cta = btn('See the hostel', 'out', 'arrow')
     elif state == 'paid':
-        st = steps(5, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: '27 Oct', 5: '<span style="color: var(--gn); font-weight: 800;">₹200 paid · 5 Nov · UPI ravi.teja@upi</span>'})
-        cta = btn('See Stay Rewards', 'out', 'gift'); note = 'Thanks for adding your hostel. Know another PG? One at a time: add the next one now.'
+        st = steps(5, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: '27 Oct', 5: '<span style="color: var(--gn); font-weight: 800;">₹200 · 5 Nov · ravi.teja@upi</span>'})
+        cta = btn('See Stay Rewards', 'out', 'gift')
     elif state == 'waiting':
-        kicker = 'Added by you · 18 Oct · 60 days ago'
+        kicker = 'Added by you · 18 Oct · 60 days'
         st = steps(2, {1: '18 Oct', 2: 'Sent 18 Oct, 21 Oct, 2 Nov · no reply'}, stopped=True)
-        cta = btn('Ask again', 'out', 'msg'); note = 'Still waiting. You can ask again. The hostel stays UNVERIFIED and nothing is paid until the owner agrees.'
+        cta = btn('Ask again', 'out', 'msg'); status = 'Still waiting'
     elif state == 'queued':
-        st = steps(4, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: '27 Oct', 5: 'Queued · pays 5 Dec'})
-        cta = btn('See the hostel', 'out', 'arrow'); note = 'This month’s ₹2,000 reward pool is used up (10 hostels). Your ₹200 is queued and pays by UPI on 5 Dec.'
+        st = steps(4, {1: '18 Oct', 2: '18 Oct', 3: '22 Oct', 4: '27 Oct', 5: 'Queued · ₹2,000 monthly cap reached · 5 Dec'})
+        cta = btn('See the hostel', 'out', 'arrow')
     body = (header(kicker, 'Your hostel on Hostelzy')
         + '<div style="flex-grow: 1; overflow: hidden; border-top: 2px solid var(--tx); padding: 12px 16px; display: grid; gap: 10px; align-content: start;">'
         + my_card(verified_card)
-        + kick('As tenants see it' if not verified_card else 'Live for tenants')
+        + kick('As tenants see it' if not verified_card else 'Live')
         + st
+        + (('<b style="font-size: 15px;">%s</b>' % status) if status else '')
         + '</div>'
         + '<div style="flex: none; border-top: 2px solid var(--tx); padding: 10px 16px 14px; display: grid; gap: 8px;">'
-        + cta + mu(note, 12)
-        + (mu(honest, 12, ' font-weight: 600; color: var(--tx);') if state in ('added', 'asked', 'waiting') else '')
+        + cta
+        + (mu(honest, 12, ' font-weight: 600; color: var(--tx);') if state in ('added', 'asked', 'waiting', 'agreed') else '')
         + '</div>')
     return page(body, dark=dark)
 
 x = slot(390)
-wr('f28-myAdd.dc.html', my_add('added'), '[S93] myAdd · Your hostel on Hostelzy: the card as tenants see it, 5 steps (Added ✓), Send to your owner (WhatsApp), honest pay line · New (F28)', 390, 844, (x, Y0))
+wr('f28-myAdd.dc.html', my_add('added'), '[S93] myAdd · Your hostel on Hostelzy: the card as tenants see it, 5 steps (Added ✓), Send to your owner (WhatsApp), one honest line (F31 Rule A) · New (F28)', 390, 844, (x, Y0))
 wr('f28-myAdd-dark.dc.html', my_add('added', dark=True), '[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)', 390, 844, (x, Y0 + 844 + VGAP))
-variants = [('asked', 'f28-myAddAsked.dc.html', '[variant of S93] myAdd · Owner asked: sent, no reply, Ask again after 3 days · New (F28)'),
-            ('agreed', 'f28-myAddAgreed.dc.html', '[variant of S93] myAdd · Owner agreed: team visits within 7 days, UPI ID asked once · New (F28)'),
+variants = [('asked', 'f28-myAddAsked.dc.html', '[variant of S93] myAdd · Owner asked: sent, no reply, Ask again (after 3 days) · New (F28)'),
+            ('agreed', 'f28-myAddAgreed.dc.html', '[variant of S93] myAdd · Owner agreed: visit date, UPI ID asked once · New (F28)'),
             ('verified', 'f28-myAddVerified.dc.html', '[variant of S93] myAdd · Verified: card goes VERIFIED, ₹200 due on the 5th · New (F28)'),
             ('paid', 'f28-myAddPaid.dc.html', '[variant of S93] myAdd · ₹200 paid by UPI · New (F28)'),
-            ('waiting', 'f28-myAddWaiting.dc.html', '[variant of S93] myAdd · Still waiting (60 days): steps stop at Owner asked, no payout, Ask again · New (F28)'),
+            ('waiting', 'f28-myAddWaiting.dc.html', '[variant of S93] myAdd · Still waiting (60 days): steps stop at Owner asked, Ask again · New (F28)'),
             ('queued', 'f28-myAddQueued.dc.html', '[variant of S93] myAdd · Queued: monthly ₹2,000 cap reached, pays next month · New (F28)')]
 for st, f, t in variants:
     xv = slot(390)
@@ -263,7 +261,7 @@ def wbtn(t, red=True):
     st = 'background: var(--ac); color: #fff; border: 2px solid var(--ac);' if red else 'background: transparent; color: var(--tx); border: 2px solid var(--tx);'
     return '<a href="#" style="display: block; text-align: center; text-decoration: none; font-weight: 800; padding: 14px 16px; margin: 10px 0; %s">%s</a>' % (st, t)
 form = ('<h1 style="font-size: 30px; line-height: 1.15; font-weight: 900; letter-spacing: -.02em; margin: 0 0 6px;">List your PG on Hostelzy, free</h1>'
-        '<p style="margin: 0 0 16px; font-size: 17px; line-height: 1.45;">Tenants in Hyderabad find PGs on Hostelzy. No fees, no commission.</p>'
+        '<p style="margin: 0 0 16px; font-size: 17px; line-height: 1.45;">Free · Hyderabad</p>'
         '<div style="display: grid; gap: 12px;">'
         + field('Hostel name', 'Sri Balaji Men’s PG', 'Name on the gate')
         + field('Your name', 'Venkat Rao')
@@ -275,20 +273,20 @@ form = ('<h1 style="font-size: 30px; line-height: 1.15; font-weight: 900; letter
         + '<div style="display: grid; gap: 6px;">' + label('Photos') + photo_row(0) + '</div>'
         + '</div>'
         + wbtn('Send to Hostelzy')
-        + '<p style="color: var(--mu); font-size: 14px; margin: 0 0 12px; line-height: 1.5;">We’ll call you within 2 days to confirm. Your PG goes on the app after that call, as a listing; it shows as verified once our team visits.</p>'
-        + '<p style="color: var(--mu); font-size: 13px; margin: 0;">Up to 3 requests per phone a day. By sending you agree to the <a href="#" style="color: var(--mu); font-weight: 700;">terms</a>.</p>')
+        + '<p style="color: var(--mu); font-size: 14px; margin: 0 0 12px; line-height: 1.5;">We’ll call you within 2 days to confirm.</p>'
+        + '<p style="color: var(--mu); font-size: 13px; margin: 0;">By sending you agree to the <a href="#" style="color: var(--mu); font-weight: 700;">terms</a>.</p>')
 x = slot(390)
-wr('f28-wList.dc.html', webpage(form, 1360), '[W8] app/list/ · List your PG on Hostelzy, free: name, your name, phone, area, rent from–to, for, food, photos → Send to Hostelzy; “We’ll call you within 2 days” · New (F28)', 390, 1360, (x, Y0))
+wr('f28-wList.dc.html', webpage(form, 1300), '[W8] app/list/ · List your PG on Hostelzy, free: name, your name, phone, area, rent from–to, for, food, photos → Send to Hostelzy; “We’ll call you within 2 days” · New (F28)', 390, 1300, (x, Y0))
 sent = ('<h1 style="font-size: 30px; line-height: 1.15; font-weight: 900; letter-spacing: -.02em; margin: 0 0 6px;">Thanks, Venkat</h1>'
         '<p style="margin: 0 0 16px; font-size: 17px; line-height: 1.45;">We’ll call you on +91 98490 11223 within 2 days to confirm Sri Balaji Men’s PG.</p>'
         '<div style="border-top: 2px solid var(--tx);">'
         + ''.join('<div style="display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hl);"><b style="width: 28px; height: 28px; display: grid; place-items: center; %s font-size: 13px;">%s</b><span style="display: grid; gap: 1px;"><b style="font-size: 15px;">%s</b><span style="font-size: 13px; color: var(--mu);">%s</span></span></div>'
                   % (('background: var(--tx); color: var(--bg);' if i == 0 else 'border: 1px solid var(--dv); color: var(--mu);'), (ico('check', 14) if i == 0 else str(i + 1)), a, b)
-                  for i, (a, b) in enumerate([('Request sent', 'Today, 4:12 pm'), ('We call you', 'Within 2 days, from a Hostelzy number'), ('Your PG is on the app', 'Listed with your rent range. Verified after a visit.')]))
+                  for i, (a, b) in enumerate([('Request sent', 'Today, 4:12 pm'), ('We call you', 'Within 2 days'), ('Your PG is on the app', 'After the call')]))
         + '</div>'
         + wbtn('Get the app (Android test build)', False)
-        + '<p style="color: var(--mu); font-size: 14px; margin: 0 0 12px; line-height: 1.5;">Nothing is live yet. Missed our call? WhatsApp us from the link below.</p>')
-wr('f28-wListSent.dc.html', webpage(sent, 900), '[variant of W8] app/list/ · Sent: “We’ll call you within 2 days to confirm”, 3 steps, no “Listed!” · New (F28)', 390, 900, (x, Y0 + 1360 + VGAP))
+        + '<p style="color: var(--mu); font-size: 14px; margin: 0 0 12px; line-height: 1.5;">Nothing is live yet.</p>')
+wr('f28-wListSent.dc.html', webpage(sent, 900), '[variant of W8] app/list/ · Sent: “We’ll call you within 2 days to confirm”, 3 steps, no “Listed!” · New (F28)', 390, 900, (x, Y0 + 1300 + VGAP))
 
 # ================= W9 poster (A4 794×1123)
 def qr(n=25, px=300, seed=28):
@@ -334,24 +332,24 @@ wr('f28-wPoster.dc.html', page(poster, 794, 1123), '[W9] app/list/poster.html ·
 s = rd('r-filters.dc.html')
 old = '<div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 600;">Food included<span style="width: 44px; height: 24px; flex: none; border: 2px solid var(--tx); display: flex; justify-content: flex-start; padding: 2px; background: transparent;"><span style="width: 16px; height: 16px; background: var(--tx);"></span></span></div>'
 assert s.count(old) == 1, 'food row'
-s = s.replace(old, old + switch_row('Verified only', False, 'Hides UNVERIFIED hostels. Off: verified first, then listed'))
+s = s.replace(old, old + switch_row('Verified only', False))
 wr('r-filters.dc.html', s, '[H1] filters sheet · For, Room, Budget (Any), Food included, Verified only (off) · Updated (F28)', 390, 844, (CANVAS['boards']['r-filters.dc.html']['x'], CANVAS['boards']['r-filters.dc.html']['y']))
 
 # ================= S8 explore variant: first-visit hint, verified then listed, end row
 s = rd('f26-exploreUnv.dc.html')
 a = '<div style="flex-grow: 1; overflow: hidden; border-top: 2px solid var(--dv); padding-top: 14px;">'
-hint = ('<div style="margin: 0 16px 12px; padding: 10px 12px; background: var(--sf); display: grid; grid-template-columns: minmax(0, 1fr) 20px; gap: 10px; align-items: start; font-size: 13px; line-height: 1.4;">'
-        '<span><b>Verified first, then listed.</b> Listed hostels are on the map but not checked yet. Want only verified? Filters › Verified only.</span>'
+hint = ('<div style="margin: 0 16px 12px; padding: 8px 12px; background: var(--sf); display: grid; grid-template-columns: minmax(0, 1fr) 20px; gap: 10px; align-items: center; font-size: 13px; line-height: 1.4;">'
+        '<span><b>Verified first</b> · then listed</span>'
         '<button aria-label="Hide this hint" style="width: 20px; height: 20px; display: grid; place-items: center; color: var(--mu);">' + ico('x', 14) + '</button></div>')
 s = rep(s, a, a.replace('padding-top: 14px', 'padding-top: 12px') + hint)
 s = s.replace('height: 150px; position: relative;', 'height: 104px; position: relative;', 2)
 s = rep(s, 'Hyderabad · 18 beds free now · 12 verified · 84 listed', 'Madhapur · 18 beds free now · 12 verified · 84 listed')
 endrow = ('<button style="margin: 0 16px; width: calc(100% - 32px); padding: 12px 14px; border: 2px solid var(--tx); display: flex; justify-content: space-between; align-items: center; gap: 10px;">'
-          '<span style="display: grid; gap: 1px;"><b style="font-size: 15px;">Can’t find your PG? <span style="color: var(--ad);">Add it</span></b>' + mu('Owner’s phone needed · ₹200 when it’s verified', 12) + '</span>' + ico('plus', 18) + '</button>')
+          '<span style="display: grid; gap: 1px;"><b style="font-size: 15px;">Can’t find your PG? <span style="color: var(--ad);">Add it</span></b>' + mu('₹200 when verified', 12) + '</span>' + ico('plus', 18) + '</button>')
 i = s.rindex('</div>', 0, s.index('<nav'))
 s = s[:i] + endrow + s[i:]
 x = slot(390)
-wr('f28-explore.dc.html', s, '[variant of S8] explore · First-visit hint line, verified cards then listed ones, end row “Can’t find your PG? Add it” · New (F28)', 390, 844, (x, Y0))
+wr('f28-explore.dc.html', s, '[variant of S8] explore · First-visit line “Verified first · then listed”, verified cards then listed ones, end row “Can’t find your PG? Add it” · New (F28)', 390, 844, (x, Y0))
 
 # ================= S79 me: Add a hostel row (updated in place)
 s = rd('me.dc.html')
@@ -359,16 +357,15 @@ k = '<b style="font-size: 16px;">Reminders</b>'
 i = s.rindex('<button style="width: 100%; display: grid; grid-template-columns: 36px', 0, s.index(k))
 row = ('<button style="width: 100%; display: grid; grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--hl);">'
        '<span style="width: 36px; height: 36px; display: grid; place-items: center; background: var(--sf);">' + ico('plus') + '</span>'
-       '<span style="display: grid; gap: 1px;"><b style="font-size: 16px;">Add a hostel</b><span style="font-size: 13px; color: var(--mu);">Your PG not on Hostelzy? ₹200 when it’s verified</span></span>' + ico('chev', 16) + '</button>')
+       '<span style="display: grid; gap: 1px;"><b style="font-size: 16px;">Add a hostel</b><span style="font-size: 13px; color: var(--mu);">₹200 when verified</span></span>' + ico('chev', 16) + '</button>')
 s = s[:i] + row + s[i:]
 wr('me.dc.html', s, '[S79] me · Add a hostel row (becomes “Your hostel” → S93 once one exists); no Saved / Holds rows; Log out in red · Updated (F28)', 390, 844, (CANVAS['boards']['me.dc.html']['x'], CANVAS['boards']['me.dc.html']['y']))
 
 # ================= T20 rStay not yet: Add my hostel button (updated in place)
 s = rd('w3-stayNotYet.dc.html')
 old = '<span style="font-size: 14px; color: var(--mu); line-height: 1.45;">Your stay isn’t on Hostelzy yet. Once Srinivas adds you, it shows here.</span></div>'
-s = rep(s, old, '<span style="font-size: 14px; color: var(--mu); line-height: 1.45;">Your stay isn’t on Hostelzy yet. Once Srinivas adds you, it shows here.</span>'
-              '<div style="margin-top: 12px; display: grid; gap: 6px;">' + btn('Add my hostel', 'red', 'plus', 48, 14) + mu('Is your PG not on Hostelzy at all? Add it with your owner’s number. ₹200 when it’s verified.', 12) + '</div></div>')
-wr('w3-stayNotYet.dc.html', s, '[T20] rStay · Not on Hostelzy yet: Add my hostel button · Updated (F28)', 390, 844, (CANVAS['boards']['w3-stayNotYet.dc.html']['x'], CANVAS['boards']['w3-stayNotYet.dc.html']['y']))
+s = rep(s, old, '<b style="font-size: 16px;">Not on Hostelzy yet</b><div style="margin-top: 12px;">' + btn('Add my hostel', 'red', 'plus', 48, 14) + '</div></div>')
+wr('w3-stayNotYet.dc.html', s, '[T20] rStay · “Not on Hostelzy yet” + Add my hostel (F31 Rule A: ≤ 6 words + one button) · Updated (F28)', 390, 844, (CANVAS['boards']['w3-stayNotYet.dc.html']['x'], CANVAS['boards']['w3-stayNotYet.dc.html']['y']))
 
 # ================= S22 rewards variant: ₹200 / ₹20 rows
 s = rd('rewards.dc.html')
@@ -384,13 +381,13 @@ def rrow(ic, t, sub, amt, done=True):
     return ('<div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--hl);">%s<span style="display: grid; gap: 1px;"><b style="font-size: 15px;">%s</b><span style="font-size: 13px; color: var(--mu);">%s</span></span><b style="font-size: 16px; color: var(--gn);">%s</b></div>' % (dot, t, sub, amt))
 earned = ('<div style="padding: 20px 16px 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">' + kick('Hostels you added') + '<span style="font-size: 12px; font-weight: 800; color: var(--mu);">Paid by UPI on the 5th</span></div>'
           '<div style="border-top: 2px solid var(--tx);">'
-          + rrow('home', 'Sri Balaji Men’s PG verified', '₹200 · added by you · paid 5 Nov to ravi.teja@upi', '₹200')
-          + rrow('home', 'Lakshmi Ladies Hostel listed', '₹20 · partner HZ-PART-1 · team checked 20 Oct · pays 5 Nov', '₹20', False)
+          + rrow('home', 'Sri Balaji Men’s PG verified', 'Paid 5 Nov · ravi.teja@upi', '₹200')
+          + rrow('home', 'Lakshmi Ladies Hostel listed', 'Partner HZ-PART-1 · checked 20 Oct · pays 5 Nov', '₹20', False)
           + '</div>'
           '<div style="padding: 20px 16px 6px;">' + kick('How to earn') + '</div>'
           '<div style="border-top: 2px solid var(--tx);">'
           + rrow('check', 'Move in through Hostelzy', '₹100 credit · done 14 Mar', '').replace('<b style="font-size: 16px; color: var(--gn);"></b>', '')
-          + rrow('plus', 'Add a hostel that gets verified', '₹200 once the owner agrees and the team verifies it · one at a time', '', False).replace('<b style="font-size: 16px; color: var(--gn);"></b>', '')
+          + rrow('plus', 'Add a hostel', '₹200 when verified · one at a time', '', False).replace('<b style="font-size: 16px; color: var(--gn);"></b>', '')
           + '</div>')
 s = s[:a] + earned + s[b:]
 i = s.index('<div style="padding: 12px 16px;">'); j = s.index('</div>', i) + 6
@@ -436,7 +433,7 @@ main_new = ('<main style="min-width: 0; padding: 20px 24px; display: grid; gap: 
             + main_old[main_old.index('<div style="display: grid; gap: 12px; align-content: start;">'):-7] + '</div></main>')
 s = s.replace(main_old, main_new)
 s = rep(s, old_h2, H2 % 'Listed · 72 unverified · 12 live')
-s = rep(s, 'Shown as UNVERIFIED with an expected rent range. No beds, holds or owner contact until the team visits.', 'Shown as UNVERIFIED with a rent range. No beds, holds or owner contact until the team visits. Rent shows for 60 days after a human confirmed it, then “Rent on request”.')
+s = rep(s, '<span style="font-size: 13px; color: var(--mu); line-height: 1.45;">Shown as UNVERIFIED with an expected rent range. No beds, holds or owner contact until the team visits.</span>', '')
 s = s.replace(TD % '4', TD % '4', 1)
 # source column: add to the table head + rows
 s = rep(s, TH % 'Photos', TH % 'Source' + TH % 'Photos')
@@ -458,18 +455,16 @@ tocall = (segrow('To call')
     '<div style="display: grid; gap: 12px; align-content: start;">'
     + H2 % 'Sri Venkateswara PG'
     + '<span style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">' + tag('Draft', 'mu') + tag('Places', 'mu') + mu('Madhapur · seen 12 Oct · 3 photos', 13) + '</span>'
-    + '<a href="#" style="display: flex; gap: 8px; align-items: center; font-size: 18px; font-weight: 800; color: var(--tx); text-decoration: none;">' + ico('phone', 18) + '+91 98660 23410 <span style="font-size: 12px; font-weight: 600; color: var(--mu);">tap to call</span></a>'
+    + '<a href="#" style="display: flex; gap: 8px; align-items: center; font-size: 18px; font-weight: 800; color: var(--tx); text-decoration: none;">' + ico('phone', 18) + '+91 98660 23410</a>'
     + '<div style="border: 2px solid var(--tx); padding: 12px; display: grid; gap: 8px;">' + kick('Call script')
     + ''.join('<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; font-size: 14px; line-height: 1.4;"><b style="color: var(--mu);">%d</b><span>%s</span></div>' % (i + 1, l) for i, l in enumerate(script_lines))
     + '</div>'
     + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">' + field('Rent from (₹)', '7,000') + field('Rent to (₹)', '9,000') + '</div>'
     + '<div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;"><div style="display: grid; gap: 6px;">' + label('For') + seg(['Men', 'Women', 'Co-living'], 'Men', 44) + '</div><div style="display: grid; gap: 6px; padding-bottom: 10px;">' + label('Food') + switch(True) + '</div></div>'
     + '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">' + btn('List', 'red', 'check', 48, 14) + btn('Not a PG / Closed', 'out', 'x', 48, 14) + btn('Call later', 'mu', 'clock', 48, 14) + '</div>'
-    + mu('List → UNVERIFIED listing with rent confirmed today. Not a PG / Closed → removed. Call later keeps it here.', 12)
     + '</div>'
     '<div style="display: grid; gap: 12px; align-content: start;">'
     + H2 % 'To call · 48 drafts'
-    + mu('From the Places and OpenStreetMap imports and the web form. Export CSV (name, phone, area, id) for the WhatsApp run.', 13)
     + table(['Hostel', 'Area', 'Source', 'Phone', 'Seen', ''], [
         ['<b>Sri Venkateswara PG</b>', 'Madhapur', 'Places', '+91 98660 23410', '12 Oct', cbtns(cbtn('Open', 'ink'))],
         ['<b>Kavya Ladies Hostel</b>', 'Kondapur', 'Web form', '+91 99590 77812', 'Today', cbtns(cbtn('Open'))],
@@ -477,7 +472,7 @@ tocall = (segrow('To call')
         ['<b>Royal Comforts PG</b>', 'Hitec City', 'Places', '+91 90520 11240', '12 Oct · call later', cbtns(cbtn('Open'))],
         ['<b>Padma Nilayam</b>', 'Ameerpet', 'Places', '+91 98480 60011', '9 Oct', cbtns(cbtn('Open'))],
       ], 0)
-    + mu('Map data © OpenStreetMap contributors · Places data refreshed every 30 days, dropped if the place is gone.', 12)
+    + mu('Map data © OpenStreetMap contributors', 12)
     + '</div></div>')
 x = slot(1440)
 wr('f28-c14ToCall.dc.html', console(tocall), '[variant of C14] console · Listed › To call: drafts from Places / OSM / web, phone, 6-line call script, rent + for + food, List / Not a PG / Call later, Export CSV · New (F28)', 1440, 900, (x, Y0))
@@ -486,7 +481,6 @@ wr('f28-c14ToCall.dc.html', console(tocall), '[variant of C14] console · Listed
 torefresh = (segrow('To refresh')
     + '<div style="display: grid; gap: 12px; align-content: start;">'
     + H2 % 'To refresh · 9 listed hostels past 50 days'
-    + mu('Rent confirmed more than 50 days ago. At 60 days the app shows “Rent on request” and the card sorts after priced ones. Export CSV for the monthly “Still running? Rent same?” WhatsApp run.', 13)
     + table(['Hostel', 'Area', 'Rent range', 'Confirmed', 'Shows as', ''], [
         ['<b>Sri Balaji Men’s PG</b>', 'Madhapur', '₹7,000–9,000', '52 days ago · resident', '₹7,000–9,000 · 8 days left', cbtns(cbtn('Rent confirmed today', 'ink'), cbtn('Closed'))],
         ['<b>Lakshmi Ladies Hostel</b>', 'Kondapur', '₹6,500–8,500', '58 days ago · team call', '₹6,500–8,500 · 2 days left', cbtns(cbtn('Rent confirmed today', 'ink'), cbtn('Closed'))],
@@ -502,9 +496,8 @@ partners = (segrow('Partners')
     + '<div style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 24px; align-content: start;">'
     '<div style="display: grid; gap: 12px; align-content: start;">'
     + H2 % 'Add a partner'
-    + mu('A partner adds hostels from the app with a code. ₹20 per hostel once you tick Checked on its row in Listed.', 13)
     + field('Name', 'Kiran Kumar') + field('Phone (WhatsApp)', '+91 98491 55020') + field('UPI ID', 'kiran.k@upi')
-    + '<div style="display: grid; gap: 6px;">' + label('Code') + '<div style="height: 48px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; border: 2px solid var(--dv); font-size: 15px; font-weight: 800;">HZ-PART-4' + mu('made for you', 12) + '</div></div>'
+    + '<div style="display: grid; gap: 6px;">' + label('Code') + '<div style="height: 48px; padding: 0 12px; display: flex; align-items: center; border: 2px solid var(--dv); font-size: 15px; font-weight: 800;">HZ-PART-4</div></div>'
     + btn('Add partner', 'red', 'plus')
     + '</div>'
     '<div style="display: grid; gap: 12px; align-content: start;">'
@@ -514,7 +507,6 @@ partners = (segrow('Partners')
         ['<b>HZ-PART-2</b>', 'Sneha M.', '+91 99080 44551', '3', '1', '<b style="color: var(--gn);">₹20</b>', switch(True), cbtns(cbtn('Pause'))],
         ['<b>HZ-PART-3</b>', 'Imran Sheikh', '+91 90000 73311', '0', '0', '₹0', switch(True), cbtns(cbtn('Pause'))],
       ])
-    + mu('₹20 per partner-listed hostel after the team check. Monthly cap ₹2,000 across ₹200 resident and ₹20 partner rewards; beyond it rows queue for next month. Payouts list in Payments.', 12)
     + '</div></div>')
 x = slot(1440)
 wr('f28-c14Partners.dc.html', console(partners), '[variant of C14] console · Listed › Partners: add partner (code made for them), list with listed / checked counts, ₹ due, Active · New (F28)', 1440, 900, (x, Y0))
@@ -525,8 +517,7 @@ s = rep(s, '<span style="font-size: 12px; color: var(--mu);">Madhapur · unverif
         '<span style="font-size: 12px; color: var(--mu);">Madhapur · unverified</span><br><span style="font-size: 12px; font-weight: 600;">added by Ravi T. (resident) · owner phone matches <span style="color: var(--gn);">✓</span></span>')
 s = rep(s, '<span style="font-size: 12px; color: var(--mu);">Kondapur · unverified</span>',
         '<span style="font-size: 12px; color: var(--mu);">Kondapur · unverified</span><br><span style="font-size: 12px; font-weight: 600;">added by partner HZ-PART-1 · owner phone <span style="color: var(--ad);">✗ different</span></span>')
-s = rep(s, 'Owners who tapped “Claim this hostel”. Call to check, then Done starts onboarding. Not the owner closes it.',
-        'Owners who tapped “Claim this hostel” (or opened a tenant’s claim link). Call to check, then Done starts onboarding. Not the owner closes it. For a hostel someone added, Done ticks “Owner agreed” on their S93; going live pays their ₹200.')
+s = rep(s, '<span style="font-size: 14px; color: var(--mu); line-height: 1.45;">Owners who tapped “Claim this hostel”. Call to check, then Done starts onboarding. Not the owner closes it.</span>', '')
 s = rep(s, 'Today, 9:40 am', 'Today, 9:40 am<br><span style="font-size: 12px; color: var(--mu);">via claim link</span>')
 x = slot(1440)
 wr('f28-c15.dc.html', s, '[variant of C15] console · Claims: “added by Ravi (resident) · owner phone matches ✓”, partner line with ✗ · New (F28)', 1440, 900, (x, Y0))
