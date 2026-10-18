@@ -231,3 +231,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **06:40**
 > Use Fable 5.1 Max for designing, building and everything.
+
+**06:45**
+> Hire as many chats and agents as possible. It's up to you. Use the Claude tokens at max as you need, but make sure the work gets completed as soon as possible.
