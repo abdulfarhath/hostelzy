@@ -334,5 +334,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   Home = rent, next meal, week food, actions, review. The water-reminder offer sheet is removed; reminders live in
   Me › Reminders. Supersedes F26 revert #6 (the "₹100 reward" sentence goes). Spec: `features/F31-no-explanations-priority.md`.
 
+- **2026-10-18 (hub, wave 3 extras):** import keeps `removed_at` / `call_after` / `source_photos`; an owner's phone leaves the
+  public `hostels` row by trigger (`hostel_leads`, read through `hostel_owner_phone`); drafts can be listed without a photo;
+  web photos in a private `self-list` bucket; gender and area are import hints the call confirms. **Scripts verify TLS**
+  certificates by default; `PGSSL_NO_VERIFY=1` is a local-test opt-out only.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
