@@ -249,3 +249,9 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **20:31 UTC**
 > I hit my usage limit while you were working, but it has reset now. Please continue from where you left off.
+
+**21:08 UTC**
+> use opus everywhere,
+
+**21:20 UTC**
+> what's the update

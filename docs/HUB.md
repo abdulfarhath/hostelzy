@@ -142,3 +142,12 @@ Every chat stopped at ~16:00 UTC on the shared 5-hour limit (reset 20:30). Done 
 "push WIP every 30 minutes". Hub on Opus 5.5 (founder switched it); check-in trigger now re-creates chats as `claude-opus-5-5`.
 
 Waves 1–5 merged, apk-109, prototype/v7
+
+### 2026-10-18 22:05 UTC: build done, canvas last
+Waves 1–5 on main (#152, #155), **apk-109**, prototype v7 published (same link; jump buttons for Add a hostel, Your hostel,
+Owner Today). Opus integrator session_01HRvCnvNd2SomrwZ5kJ8byL finished. Canvas v26 (F31 + T35–T37 + W9 sent, 191 counted)
+by **Hostelzy · Design (Opus, canvas v26)** session_01PAbVAmknLzWS949EfMgjtb; hub publishes it, then sends the founder one message.
+
+### 2026-10-18 23:05 UTC: the autonomous run is done
+apk-109 (waves 1–5) · prototype v7 · canvas v26 (191 counted = SCREENS). Founder told in one message; check-in trigger disabled.
+Founder's one-time steps: FOUNDER-TODO 0 (DB URL + access token + run 2 workflows), 0c (Places key, needs card), 0d (Drive scope + 3 secrets).

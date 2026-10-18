@@ -81,6 +81,10 @@ yourself (QUESTIONS.md), never test, notify me once everything is done; I expect
 F29, F30 are final; waves 1–4 in `docs/IDEAS.md`; Build + Design run them; the hub publishes the canvas and the prototype
 at the end and sends ONE message with the APK release page, the canvas, the prototype, QUESTIONS.md and the one-time setup list.
 
+## 5c. 2026-10-18 result
+Waves 1–5 (F28 hostels in, F29 owner less typing, F30 guest wall, F31 no explanations) merged → **apk-109**; prototype v7; canvas
+v26 (191). Next: founder tests apk-109 and does FOUNDER-TODO 0 / 0c / 0d once; changes come from their testing.
+
 ## 6. Open threads (pick these up without being asked)
 | # | Thread | Next step |
 |---|---|---|
