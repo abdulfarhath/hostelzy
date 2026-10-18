@@ -3226,252 +3226,252 @@
   },
   "f30-wall.dc.html": {
    "x": 0,
-   "y": 57971,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[T34] signInWall · Sign in to see all N hostels: 3 free hostels, Continue with Google, Not now · New (F30)"
   },
   "f30-wallDark.dc.html": {
    "x": 470,
-   "y": 57971,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[dark] signInWall · Sign in wall (dark) · New (F30)"
   },
   "f30-exploreHint.dc.html": {
    "x": 940,
-   "y": 57971,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of S8] explore · First visit: “3 hostels free to open, then sign in (free)”, once · New (F30)"
   },
-  "f28-exploreEnd.dc.html": {
-   "x": 1410,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S8] explore · End of the list: last listed card, “Can’t find your PG? Add it” · New (F28)"
-  },
-  "f28-meYourHostel.dc.html": {
-   "x": 1880,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S79] me · “Your hostel · Owner asked” row → S93 · New (F28)"
-  },
-  "f28-rewardsAdded.dc.html": {
-   "x": 2350,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S22] rewards · “₹200 · <hostel> verified · paid by UPI on the 5th”, ₹20 partner row · New (F28)"
-  },
-  "f28-addHostel.dc.html": {
-   "x": 2820,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[S92] addHostel · Add a hostel: name, gate photo, pin, for, what you pay, sharing, food, owner’s name + phone, I live here · New (F28)"
-  },
-  "f28-addHostelDark.dc.html": {
-   "x": 3290,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[dark] addHostel · Add a hostel (dark) · New (F28)"
-  },
-  "f28-addHostelPartner.dc.html": {
-   "x": 3760,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S92] addHostel · Partner: rent range + partner code · New (F28)"
-  },
-  "f28-myAdd.dc.html": {
-   "x": 4230,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[S93] myAdd · Your hostel on Hostelzy: the card, 5 steps, Send to your owner · New (F28)"
-  },
-  "f28-myAddDark.dc.html": {
-   "x": 4700,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)"
-  },
-  "f28-myAddAsked.dc.html": {
-   "x": 5170,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Owner asked: Ask again after 3 days · New (F28)"
-  },
-  "f28-myAddAgreed.dc.html": {
-   "x": 5640,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · New (F28)"
-  },
-  "f28-myAddVerified.dc.html": {
-   "x": 6110,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · New (F28)"
-  },
-  "f28-myAddPaid.dc.html": {
-   "x": 6580,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Paid: ₹200 by UPI · New (F28)"
-  },
-  "f28-myAddWaiting.dc.html": {
-   "x": 7050,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · New (F28)"
-  },
-  "f28-myAddQueued.dc.html": {
-   "x": 7520,
-   "y": 57971,
-   "w": 390,
-   "h": 844,
-   "title": "[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · New (F28)"
-  },
   "f29-askJoin.dc.html": {
-   "x": 0,
-   "y": 59235,
+   "x": 1410,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[H48] askJoin sheet · Ask to join: free bed, fee, advance, moves in, name, Send on WhatsApp · New (F29)"
   },
   "f29-joinForm.dc.html": {
-   "x": 470,
-   "y": 59235,
+   "x": 1880,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[S94] joinForm · Join <hostel>: name, phone, moves in, ID (Send ID on WhatsApp), Send to owner · New (F29)"
   },
   "f29-joinFormDark.dc.html": {
-   "x": 940,
-   "y": 59235,
+   "x": 2350,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[dark] joinForm · Join <hostel> (dark) · New (F29)"
   },
   "f29-joinFormDone.dc.html": {
-   "x": 1410,
-   "y": 59235,
+   "x": 2820,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of S94] joinForm · Done: “Sent · <owner> will approve · we’ll notify you” · New (F29)"
   },
   "f29-todayJoining.dc.html": {
-   "x": 1880,
-   "y": 59235,
+   "x": 3290,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of S36] oToday · Joining tab (only when non-empty): “Ravi wants to join · bed 203-B · moves in 1 Nov” → H49 · New (F29)"
   },
   "f29-joinReview.dc.html": {
-   "x": 2350,
-   "y": 59235,
+   "x": 3760,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[H49] joinReview sheet · Ravi wants to join: details, ID received on WhatsApp (tick), Approve / Ask again / Decline · New (F29)"
   },
   "f29-joinReviewDark.dc.html": {
-   "x": 2820,
-   "y": 59235,
+   "x": 4230,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[dark] joinReview · Ravi wants to join (dark) · New (F29)"
   },
   "f29-joinReviewTick.dc.html": {
-   "x": 3290,
-   "y": 59235,
+   "x": 4700,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of H49] joinReview · ID received on WhatsApp ✓ · New (F29)"
   },
   "f29-joinReviewDrive.dc.html": {
-   "x": 3760,
-   "y": 59235,
+   "x": 5170,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of H49] joinReview · ID in the owner’s Drive: masked image, Open in Drive, Delete from my Drive · New (F29)"
   },
   "f29-drive.dc.html": {
-   "x": 4230,
-   "y": 59235,
+   "x": 5640,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[H50] drive sheet · Tenant IDs in your Drive: Connect Google Drive, Full copy needed switch · New (F29)"
   },
   "f29-driveConnected.dc.html": {
-   "x": 4700,
-   "y": 59235,
+   "x": 6110,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of H50] drive · Connected · 12 files, Disconnect · New (F29)"
   },
   "f29-driveNA.dc.html": {
-   "x": 5170,
-   "y": 59235,
+   "x": 6580,
+   "y": 60251,
    "w": 390,
    "h": 844,
    "title": "[variant of H50] drive · Not available yet (Drive scope not approved) · New (F29)"
   },
+  "f28-exploreEnd.dc.html": {
+   "x": 0,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S8] explore · End of the list: last listed card, “Can’t find your PG? Add it” · New (F28)"
+  },
+  "f28-meYourHostel.dc.html": {
+   "x": 470,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] me · “Your hostel · Owner asked” row → S93 · New (F28)"
+  },
+  "f28-rewardsAdded.dc.html": {
+   "x": 940,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S22] rewards · “₹200 · <hostel> verified · paid by UPI on the 5th”, ₹20 partner row · New (F28)"
+  },
+  "f28-addHostel.dc.html": {
+   "x": 1410,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[S92] addHostel · Add a hostel: name, gate photo, pin, for, what you pay, sharing, food, owner’s name + phone, I live here · New (F28)"
+  },
+  "f28-addHostelDark.dc.html": {
+   "x": 1880,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] addHostel · Add a hostel (dark) · New (F28)"
+  },
+  "f28-addHostelPartner.dc.html": {
+   "x": 2350,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S92] addHostel · Partner: rent range + partner code · New (F28)"
+  },
+  "f28-myAdd.dc.html": {
+   "x": 2820,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[S93] myAdd · Your hostel on Hostelzy: the card, 5 steps, Send to your owner · New (F28)"
+  },
+  "f28-myAddDark.dc.html": {
+   "x": 3290,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)"
+  },
+  "f28-myAddAsked.dc.html": {
+   "x": 3760,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner asked: Ask again after 3 days · New (F28)"
+  },
+  "f28-myAddAgreed.dc.html": {
+   "x": 4230,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · New (F28)"
+  },
+  "f28-myAddVerified.dc.html": {
+   "x": 4700,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · New (F28)"
+  },
+  "f28-myAddPaid.dc.html": {
+   "x": 5170,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Paid: ₹200 by UPI · New (F28)"
+  },
+  "f28-myAddWaiting.dc.html": {
+   "x": 5640,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · New (F28)"
+  },
+  "f28-myAddQueued.dc.html": {
+   "x": 6110,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · New (F28)"
+  },
   "f28-wList.dc.html": {
    "x": 0,
-   "y": 60499,
+   "y": 62779,
    "w": 390,
    "h": 1240,
    "title": "[W9] app/list/ · List your PG on Hostelzy, free: form, “We’ll call you within 2 days to confirm” · New (F28)"
   },
   "f28-wListSent.dc.html": {
    "x": 470,
-   "y": 60499,
+   "y": 62779,
    "w": 390,
    "h": 900,
    "title": "[variant of W9] app/list/ · Sent: “We’ll call you within 2 days to confirm” · New (F28)"
   },
   "f28-wPoster.dc.html": {
    "x": 940,
-   "y": 60499,
+   "y": 62779,
    "w": 794,
    "h": 1123,
    "title": "[W10] app/list/poster.html · A4 poster: “Get tenants from Hostelzy. Free listing.”, QR to app/list/ · New (F28)"
   },
   "f28-c14-tocall.dc.html": {
    "x": 1814,
-   "y": 60499,
+   "y": 62779,
    "w": 1440,
    "h": 900,
    "title": "[variant of C14] console · Listed › To call: drafts from Places / OSM / web, call script, List / Not a PG / Call later, Export CSV · New (F28)"
   },
   "f28-c14-torefresh.dc.html": {
    "x": 3334,
-   "y": 60499,
+   "y": 62779,
    "w": 1440,
    "h": 900,
    "title": "[variant of C14] console · Listed › To refresh: listed past 50 days, Rent confirmed today / Closed, Export CSV · New (F28)"
   },
   "f28-c14-partners.dc.html": {
    "x": 4854,
-   "y": 60499,
+   "y": 62779,
    "w": 1440,
    "h": 900,
    "title": "[variant of C14] console · Listed › Partners: add partner (code), list, listed count, ₹ due · New (F28)"
   },
   "f28-c15-addedBy.dc.html": {
    "x": 6374,
-   "y": 60499,
+   "y": 62779,
    "w": 1440,
    "h": 900,
    "title": "[variant of C15] console · Claims: “added by Ravi (resident) · owner phone matches ✓ / ✗” · New (F28)"
@@ -3807,29 +3807,29 @@
    "x": 0,
    "y": 56407
   },
-  "r25A": {
-   "kind": "title1",
-   "maxW": 8000,
-   "text": "F30 · F28 (app): sign-in wall, Add a hostel, Your hostel on Hostelzy · founder GO 18 Oct",
-   "w": 240,
-   "x": 0,
-   "y": 57671
-  },
   "r25B": {
    "kind": "title1",
    "maxW": 8000,
-   "text": "F29: Ask to join, join form, join review, Tenant IDs in your Drive",
+   "text": "F30 + F29 (Design 1): sign-in wall, Ask to join, join form, join review, Tenant IDs in your Drive · founder GO 18 Oct",
    "w": 240,
    "x": 0,
-   "y": 58935
+   "y": 59951
+  },
+  "r25A": {
+   "kind": "title1",
+   "maxW": 8000,
+   "text": "F28 app (Design 1): Add a hostel, Your hostel on Hostelzy, Explore, Me, Rewards",
+   "w": 240,
+   "x": 0,
+   "y": 61215
   },
   "r25C": {
    "kind": "title1",
    "maxW": 8000,
-   "text": "F28 web + console: app/list/, poster, Listed segments, Claims",
+   "text": "F28 web + console (Design 1): app/list/, poster, Listed segments, Claims",
    "w": 240,
    "x": 0,
-   "y": 60199
+   "y": 62479
   }
  },
  "order": [
@@ -4296,6 +4296,18 @@
   "f30-wall.dc.html",
   "f30-wallDark.dc.html",
   "f30-exploreHint.dc.html",
+  "f29-askJoin.dc.html",
+  "f29-joinForm.dc.html",
+  "f29-joinFormDark.dc.html",
+  "f29-joinFormDone.dc.html",
+  "f29-todayJoining.dc.html",
+  "f29-joinReview.dc.html",
+  "f29-joinReviewDark.dc.html",
+  "f29-joinReviewTick.dc.html",
+  "f29-joinReviewDrive.dc.html",
+  "f29-drive.dc.html",
+  "f29-driveConnected.dc.html",
+  "f29-driveNA.dc.html",
   "f28-exploreEnd.dc.html",
   "f28-meYourHostel.dc.html",
   "f28-rewardsAdded.dc.html",
@@ -4310,18 +4322,6 @@
   "f28-myAddPaid.dc.html",
   "f28-myAddWaiting.dc.html",
   "f28-myAddQueued.dc.html",
-  "f29-askJoin.dc.html",
-  "f29-joinForm.dc.html",
-  "f29-joinFormDark.dc.html",
-  "f29-joinFormDone.dc.html",
-  "f29-todayJoining.dc.html",
-  "f29-joinReview.dc.html",
-  "f29-joinReviewDark.dc.html",
-  "f29-joinReviewTick.dc.html",
-  "f29-joinReviewDrive.dc.html",
-  "f29-drive.dc.html",
-  "f29-driveConnected.dc.html",
-  "f29-driveNA.dc.html",
   "f28-wList.dc.html",
   "f28-wListSent.dc.html",
   "f28-wPoster.dc.html",

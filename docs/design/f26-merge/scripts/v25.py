@@ -95,14 +95,14 @@ wall = ('<div style="flex-grow: 1; padding: 8px 20px 28px; display: flex; flex-d
         '<span style="font-size: 16px; color: var(--mu); line-height: 1.5;">Free. One tap with Google.</span>'
         '<div style="display: grid; gap: 4px; padding: 12px; border: 2px solid var(--tx); width: 100%;">' + kick('Your 3 free hostels') + '<span style="font-size: 15px; line-height: 1.5;">Anjani Residency, Sai Sri Ladies Hostel, Orchid Grand Men’s PG</span></div></div>'
         '<div style="flex-grow: 1;"></div>' + gbtn + '<div style="height: 10px;"></div>' + btn('Not now', 'out', None, 52, 15) + '</div>')
-new('f30-wall.dc.html', '[T34] signInWall · Sign in to see all N hostels: 3 free hostels, Continue with Google, Not now · New (F30)', single('x', ph(wall)), 'A')
-new('f30-wallDark.dc.html', '[dark] signInWall · Sign in wall (dark) · New (F30)', single('x', ph(wall), True), 'A')
+new('f30-wall.dc.html', '[T34] signInWall · Sign in to see all N hostels: 3 free hostels, Continue with Google, Not now · New (F30)', single('x', ph(wall)), 'B')
+new('f30-wallDark.dc.html', '[dark] signInWall · Sign in wall (dark) · New (F30)', single('x', ph(wall), True), 'B')
 # S8 hint-line variant
 ex = rd('r-explore.dc.html')
 k = ex.index('Find a bed</b></div>') + len('Find a bed</b></div>')
 hint = ('<div style="margin: 0 16px 10px; padding: 8px 10px; background: var(--sf); display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px;"><span>3 hostels free to open, then sign in (free)</span>'
         '<button aria-label="Dismiss" style="width: 28px; height: 28px; flex: none; display: grid; place-items: center;">' + ico('x', 14) + '</button></div>')
-new('f30-exploreHint.dc.html', '[variant of S8] explore · First visit: “3 hostels free to open, then sign in (free)”, once · New (F30)', single('x', pdiv(ex[:k] + hint + ex[k:])), 'A')
+new('f30-exploreHint.dc.html', '[variant of S8] explore · First visit: “3 hostels free to open, then sign in (free)”, once · New (F30)', single('x', pdiv(ex[:k] + hint + ex[k:])), 'B')
 
 # ======================================================================= F28
 ENDROW = ('<div style="margin: 4px 16px 16px; padding: 14px; border: 2px solid var(--tx); display: flex; justify-content: space-between; align-items: center; gap: 12px;">'
@@ -117,26 +117,24 @@ s = s[:k] + '<a href="#" style="font-size: 15px; font-weight: 800; color: var(--
 upd('exploreEmpty.dc.html', s, B['exploreEmpty.dc.html']['title'].replace(' · Redesigned', '') + ' · “Can’t find your PG? Add it” · Updated (F28)')
 # H1: Verified only switch
 s = rd('r-filters.dc.html'); k = s.index('Food included'); e = s.index('</span></span></div>', k) + len('</span></span></div>')
-s = s[:e] + switch('Verified only', False, 'Hide listed hostels the team hasn’t visited yet') + s[e:]
+s = s[:e] + switch('Verified only', False) + s[e:]
 upd('r-filters.dc.html', s, '[H1] filters sheet · For, Room, Budget (Any), Food included, Verified only · Updated (F28)')
 # S79 Me: Add a hostel row (+ Your hostel variant)
 me = rd('me.dc.html'); k = me.index('<b style="font-size: 16px;">Stay Rewards</b>'); a = me.rindex('<button style="width: 100%', 0, k); b = me.index('</button>', k) + 9
 row = me[a:b]; row = re.sub(r'<svg.*?</svg>', ico('plus'), row, count=1, flags=re.S)
-r1 = row.replace('>Stay Rewards<', '>Add a hostel<').replace('>Not a member yet<', '>Owner’s phone needed · ₹200 when it’s verified<')
+r1 = row.replace('>Stay Rewards<', '>Add a hostel<').replace('>Not a member yet<', '><')
 r2 = row.replace('>Stay Rewards<', '>Your hostel<').replace('>Not a member yet<', '>Sri Balaji Men’s PG · Owner asked<')
 upd('me.dc.html', me[:a] + r1 + me[a:], B['me.dc.html']['title'].replace(' · Updated (F26)', '') + '; Add a hostel row · Updated (F28)')
 new('f28-meYourHostel.dc.html', '[variant of S79] me · “Your hostel · Owner asked” row → S93 · New (F28)', single('x', pdiv(me[:a] + r2 + me[a:])), 'A')
 # T20: Add my hostel
-s = rd('w3-stayNotYet.dc.html'); s = re.sub(r'<button aria-label="Back".*?</button>', '', s, count=1, flags=re.S)
-k = s.index('it shows here.</span>') + len('it shows here.</span>')
-s = s[:k] + btn('Add my hostel', 'red', 'plus', 50, 15) + s[k:]
-upd('w3-stayNotYet.dc.html', s, '[T20] rStay · Your stay isn’t on Hostelzy yet · Add my hostel · Updated (F28)')
+s = ph(hdr('Anjani Residency', 'My stay') + scrollg('<span style="font-size: 16px; line-height: 1.45;">Your stay isn’t on Hostelzy yet</span>' + btn('Add my hostel', 'red', 'plus', 50, 15), '20px 16px', 12), navsel(NAV_R, 'My stay'))
+upd('w3-stayNotYet.dc.html', single('x', s), '[T20] rStay · Your stay isn’t on Hostelzy yet · Add my hostel · Updated (F28)')
 # S22 Rewards variant
 s = rd('rewards.dc.html'); k = s.index('>How to earn<'); j = s.rindex('<div', 0, k)
 def rrow(amt, t, sub):
     return ('<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--hl);"><b style="height: 32px; display: grid; place-items: center; background: var(--gb); color: var(--gn); font-size: 13px;">%s</b><span style="display: grid; gap: 1px;"><b style="font-size: 15px;">%s</b><span style="font-size: 13px; color: var(--mu);">%s</span></span></div>') % (amt, t, sub)
 block = ('<div style="padding: 16px 16px 6px;">' + kick('Hostels you added') + '</div><div style="border-top: 2px solid var(--tx);">'
-         + rrow('₹200', 'Sri Balaji Men’s PG verified', '₹200 · paid by UPI on the 5th · ravi@okaxis') + rrow('₹20', 'Lakshmi Ladies Hostel listed (partner)', '₹20 · after the team check · monthly cap ₹2,000') + '</div>')
+         + rrow('₹200', 'Sri Balaji Men’s PG verified', '₹200 · paid by UPI on the 5th · ravi@okaxis') + rrow('₹20', 'Lakshmi Ladies Hostel listed (partner)', '₹20 · after the team check') + '</div>')
 new('f28-rewardsAdded.dc.html', '[variant of S22] rewards · “₹200 · <hostel> verified · paid by UPI on the 5th”, ₹20 partner row · New (F28)', single('x', pdiv(s[:j] + block + s[j:])), 'A')
 
 # S92 Add a hostel
@@ -148,10 +146,10 @@ def addform(partner=False):
     who = '<div style="display: grid; gap: 8px;">' + radio('I live here', not partner) + radio('I’m a Hostelzy partner', partner) + '</div>'
     rent = two(fld('Rent from · ₹/month', '6,500', '₹'), fld('Rent to', '9,000', '₹')) if partner else two(fld('What do you pay? · ₹/month', '7,000', '₹'), '<div style="display: grid; gap: 6px;">' + lab('Sharing') + '<div style="display: flex; gap: 6px;">' + ''.join(chip(t, t == '3', 46) for t in ['1', '2', '3', '4+']) + '</div></div>')
     extra = fld('Partner code', 'HZ-PART-1') if partner else ''
-    body = (backhead('2 minutes · owner’s phone needed', 'Add a hostel')
+    body = (backhead('Hyderabad', 'Add a hostel')
             + scrollg(fld('Hostel name', 'Sri Balaji Men’s PG') + photos + pin + '<div style="display: grid; gap: 6px;">' + lab('For') + seg(['Men', 'Women', 'Co-living'], 'Men') + '</div>' + rent
                       + switch('Food included', True) + two(fld('Owner’s name *', 'Venkat Rao'), fld('Owner’s phone *', '98490 11223', '+91')) + who + extra, '10px 16px', 10)
-            + bottombar(btn('Add', 'red', 'arrow'), mut('Owner’s phone is never shown to tenants. ' + ('₹20 after the team checks the listing.' if partner else '₹200 when the owner agrees and Hostelzy verifies the hostel.'), 12)))
+            + bottombar(btn('Add', 'red', 'arrow')))
     return ph(body)
 new('f28-addHostel.dc.html', '[S92] addHostel · Add a hostel: name, gate photo, pin, for, what you pay, sharing, food, owner’s name + phone, I live here · New (F28)', single('x', addform()), 'A')
 new('f28-addHostelDark.dc.html', '[dark] addHostel · Add a hostel (dark) · New (F28)', single('x', addform(), True), 'A')
@@ -176,15 +174,15 @@ def myadd(done, action, line='', fifth='₹200 paid', muted_from=None, fifth_sub
             + scrollg('<div style="display: grid; gap: 4px;">' + kick('As tenants see it') + mycard + '</div>' + steps5(done, fifth, muted_from, fifth_sub) + (GREEN(chipt) if chipt else '') + (('<div style="padding: 10px 12px; background: var(--sf); font-size: 14px; line-height: 1.45;">%s</div>' % line) if line else ''), '12px 16px', 12)
             + bottombar(*action, HONEST))
     return ph(body, navsel(NAV_T, 'Me'))
-main93 = myadd(1, [btn('Send to your owner', 'red', 'msg')], 'WhatsApp opens with “Your PG Sri Balaji Men’s PG is on Hostelzy. Agree to get it verified (free): farhath.me/hostelzy/app/r/?h=…&claim=1”.')
+main93 = myadd(1, [btn('Send to your owner', 'red', 'msg')])
 new('f28-myAdd.dc.html', '[S93] myAdd · Your hostel on Hostelzy: the card, 5 steps, Send to your owner · New (F28)', single('x', main93), 'A')
 new('f28-myAddDark.dc.html', '[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)', single('x', main93, True), 'A')
-new('f28-myAddAsked.dc.html', '[variant of S93] myAdd · Owner asked: Ask again after 3 days · New (F28)', single('x', myadd(2, [obtn('Ask again · from 21 Oct', 'msg', 'out', 52, True)], 'Asked on 18 Oct. Your owner got the link on WhatsApp.')), 'A')
-new('f28-myAddAgreed.dc.html', '[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · New (F28)', single('x', myadd(3, [two(fld('Your UPI id for the ₹200', 'ravi@okaxis'), '<div style="display: grid; align-content: end;">' + obtn('Save', None, 'red', 46) + '</div>')], 'Venkat Rao agreed on 20 Oct. Hostelzy visits and verifies next.')), 'A')
-new('f28-myAddVerified.dc.html', '[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · New (F28)', single('x', myadd(4, [], 'Verified on 2 Nov. ₹200 goes to ravi@okaxis on 5 Nov.', fifth_sub='by UPI on the 5th')), 'A')
+new('f28-myAddAsked.dc.html', '[variant of S93] myAdd · Owner asked: Ask again after 3 days · New (F28)', single('x', myadd(2, [obtn('Ask again · from 21 Oct', 'msg', 'out', 52, True)], 'Asked 18 Oct')), 'A')
+new('f28-myAddAgreed.dc.html', '[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · New (F28)', single('x', myadd(3, [two(fld('Your UPI id for the ₹200', 'ravi@okaxis'), '<div style="display: grid; align-content: end;">' + obtn('Save', None, 'red', 46) + '</div>')], 'Venkat Rao agreed · 20 Oct')), 'A')
+new('f28-myAddVerified.dc.html', '[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · New (F28)', single('x', myadd(4, [], 'Verified 2 Nov · ₹200 to ravi@okaxis on 5 Nov', fifth_sub='by UPI on the 5th')), 'A')
 new('f28-myAddPaid.dc.html', '[variant of S93] myAdd · Paid: ₹200 by UPI · New (F28)', single('x', myadd(5, [], '', chipt='₹200 paid by UPI · 5 Nov · ravi@okaxis')), 'A')
-new('f28-myAddWaiting.dc.html', '[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · New (F28)', single('x', myadd(2, [obtn('Ask again', 'msg', 'out', 52)], '<b>Still waiting.</b> You can ask again. The card stays UNVERIFIED; no payout until the owner agrees.', muted_from=2)), 'A')
-new('f28-myAddQueued.dc.html', '[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · New (F28)', single('x', myadd(4, [], 'This month’s ₹2,000 cap for added hostels is reached. Your ₹200 is queued for 5 Dec.', fifth='₹200 queued', fifth_sub='next month')), 'A')
+new('f28-myAddWaiting.dc.html', '[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · New (F28)', single('x', myadd(2, [obtn('Ask again', 'msg', 'out', 52)], '<b>Still waiting.</b> You can ask again.', muted_from=2)), 'A')
+new('f28-myAddQueued.dc.html', '[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · New (F28)', single('x', myadd(4, [], 'Monthly cap reached · ₹200 queued for 5 Dec', fifth='₹200 queued', fifth_sub='next month')), 'A')
 
 # ======================================================================= F29
 # S38 Rent: Call + WhatsApp on the Paid row too
@@ -193,7 +191,6 @@ for n in ['oRent.dc.html', 'oRent-dark.dc.html']:
     pair = s[a:b].replace('aria-label="WhatsApp reminder"', 'aria-label="WhatsApp"')
     s = s.replace('<span style="width: 44px;"></span></div></div>', pair + '</div></div>', 1)
     assert 'width: 44px;"></span>' not in s
-    s = s.replace('anjani@okhdfc.”</span>', 'anjani@okhdfc.”</span><span style="font-size: 13px; line-height: 1.45;">Paid rows: “Hi Arjun, thanks, October rent received. – Anjani Residency”</span>', 1)
     upd(n, s, B[n]['title'].replace('Call + WhatsApp', 'Call + WhatsApp on every row').replace(' · Updated (F26)', '') + ' · Updated (F29)')
 # S40 Residents: Call · WhatsApp · Notify on every row; Ask to join
 s = rd('residents.dc.html')
@@ -211,14 +208,14 @@ RES = pdiv(rd('residents.dc.html'))
 # H48 Ask to join
 beds = '<div style="display: grid; gap: 6px;">' + lab('Free bed') + '<div style="display: flex; gap: 6px; flex-wrap: wrap;">' + ''.join(chip(b_, b_ == '203-B', 40) for b_ in ['102-C', '201-B', '202-A', '203-B', '301-C']) + '</div></div>'
 h48rows = ['<div style="padding: 14px 16px 0; display: grid; gap: 10px;">' + beds + two(fld('Monthly fee', '8,000', '₹'), fld('Advance', '3,000', '₹')) + two(fld('Moves in', 'Today, 18 Oct'), fld('First name (optional)', 'Ravi'))
-           + '<div style="padding: 10px 12px; border: 2px dashed var(--dv); display: grid; gap: 4px;">' + kick('WhatsApp opens with') + '<span style="font-size: 13px; line-height: 1.45;">“Hi! Join Anjani Residency on Hostelzy for bed 203-B. Fill your details here (2 min): farhath.me/hostelzy/app/j/?t=…”</span></div></div>']
-new('f29-askJoin.dc.html', '[H48] askJoin sheet · Ask to join: free bed, fee, advance, moves in, name, Send on WhatsApp · New (F29)', single('x', add_sheet(RES, sheet(kick('Anjani Residency'), 'Ask to join', h48rows, [btn('Send on WhatsApp', 'red', 'msg')], 'The link works once, for 7 days, for this bed. The bed isn’t held.'))), 'B')
+           + '</div>']
+new('f29-askJoin.dc.html', '[H48] askJoin sheet · Ask to join: free bed, fee, advance, moves in, name, Send on WhatsApp · New (F29)', single('x', add_sheet(RES, sheet(kick('Anjani Residency'), 'Ask to join', h48rows, [btn('Send on WhatsApp', 'red', 'msg')]))), 'B')
 # S94 Join form (tenant) + done
 idsec = ('<div style="display: grid; gap: 8px; padding: 12px; border: 2px solid var(--tx);">' + kick('ID') + '<b style="font-size: 15px; line-height: 1.35;">Take a photo of your Aadhaar (or any government ID)</b>'
-         + btn('Send ID on WhatsApp', 'out', 'msg', 48, 15) + mut('Opens WhatsApp to Srinivas with “Here is my ID for bed 203-B”. You attach the photo yourself; it never touches Hostelzy.', 12) + '</div>')
+         + btn('Send ID on WhatsApp', 'out', 'msg', 48, 15) + '</div>')
 jf = (backhead('Bed 203-B · ₹8,000/month · advance ₹3,000', 'Join Anjani Residency')
       + scrollg(fld('Your name', 'Ravi Teja') + fld('Phone · from your account', '90000 00001', '+91') + fld('Moves in', '1 Nov 2026') + idsec, '12px 16px', 10)
-      + bottombar(btn('Send to owner', 'red', 'arrow'), mut('Srinivas approves, then you’re in.', 12)))
+      + bottombar(btn('Send to owner', 'red', 'arrow')))
 new('f29-joinForm.dc.html', '[S94] joinForm · Join <hostel>: name, phone, moves in, ID (Send ID on WhatsApp), Send to owner · New (F29)', single('x', ph(jf)), 'B')
 new('f29-joinFormDark.dc.html', '[dark] joinForm · Join <hostel> (dark) · New (F29)', single('x', ph(jf), True), 'B')
 done = (backhead('Bed 203-B · ₹8,000/month', 'Join Anjani Residency')
@@ -229,7 +226,7 @@ new('f29-joinFormDone.dc.html', '[variant of S94] joinForm · Done: “Sent · <
 t = rd('r-today.dc.html')
 a = t.index('<div style="margin: 0 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid var(--tx);">'); b = t.index('Fixes</span></button></div>', a) + len('Fixes</span></button></div>')
 def gtab(n, cnt, on): return '<button style="padding: 8px 2px; display: grid; justify-items: center; gap: 1px; %s"><b style="font-size: 18px; line-height: 1.1;">%s</b><span style="font-size: 11px; font-weight: 600;">%s</span></button>' % ('background: var(--tx); color: var(--bg);' if on else 'color: var(--tx);', cnt, n)
-tabs4 = '<div style="margin: 0 16px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid var(--tx);">' + gtab('Holds', 2, False) + gtab('Payments', 1, False) + gtab('Fixes', 1, False) + gtab('Joining', 1, True) + '</div>'
+tabs4 = '<div style="margin: 0 16px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid var(--tx);">' + gtab('Holds', 2, False) + gtab('Payments', 1, False) + gtab('Joining', 1, True) + gtab('Fixes', 1, False) + '</div>'
 m = t.rindex('<div', 0, t.index('>This month<'))
 joincard = ('<div style="border-top: 0;"><div style="padding: 12px 16px; border-bottom: 1px solid var(--hl); display: grid; grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 10px; align-items: center;"><span style="width: 36px; height: 36px; display: grid; place-items: center; background: var(--sf);">' + ico('plusU')
             + '</span><span style="display: grid; gap: 1px;"><b style="font-size: 15px;">Ravi wants to join</b><span style="font-size: 12px; color: var(--mu);">Bed 203-B · moves in 1 Nov · ₹8,000/month · ID on WhatsApp</span></span>' + ico('chev', 16) + '</div></div>')
@@ -245,7 +242,7 @@ def idrow(kind):
     on = kind == 'tick'
     box = '<span style="width: 26px; height: 26px; flex: none; border: 2px solid var(--tx); display: grid; place-items: center; %s">%s</span>' % ('background: var(--tx); color: var(--bg);' if on else '', ico('check', 16) if on else '')
     return ('<div style="padding: 14px 16px 0;"><label style="display: flex; gap: 12px; align-items: center; padding: 12px; border: 2px solid var(--tx);">' + box + '<span style="display: grid; gap: 1px;"><b style="font-size: 15px;">ID received on WhatsApp' + (' ✓' if on else '') + '</b><span style="font-size: 12px; color: var(--mu);">'
-            + ('Ticked 18 Oct · Hostelzy stores only this tick' if on else 'Tick when Ravi’s photo arrives on WhatsApp. Hostelzy never stores the ID.') + '</span></span></label></div>')
+            + ('Ticked 18 Oct' if on else '') + '</span></span></label></div>')
 def h49(kind):
     rows = ['<div style="border-top: 0;">' + srow('Name', 'Ravi Teja') + srow('Phone', '+91 90000 00001') + srow('Moves in', '1 Nov 2026') + srow('Monthly fee', '₹8,000') + srow('Advance', '₹3,000') + '</div>' + idrow(kind)]
     return add_sheet(TJ, sheet(kick('Bed 203-B · moves in 1 Nov'), 'Ravi wants to join', rows, [btn('Approve', 'red', 'check'), two(obtn('Ask again', 'bell', 'out', 48), obtn('Decline', 'x', 'out', 48))]))
@@ -256,12 +253,12 @@ new('f29-joinReviewDrive.dc.html', '[variant of H49] joinReview · ID in the own
 # H50 Tenant IDs in your Drive (over Manage)
 MAN = pdiv(rd('r-manage.dc.html'))
 def h50(state):
-    lead = '<div style="padding: 14px 16px 0; display: grid; gap: 10px;"><span style="font-size: 15px; line-height: 1.45;"><b>Keep tenant IDs in your own Google Drive.</b> Hostelzy never stores them.</span>'
+    lead = '<div style="padding: 14px 16px 0; display: grid; gap: 10px;">'
     if state == 'connected':
         lead += '<div style="padding: 10px 12px; border: 2px solid var(--tx); display: grid; gap: 2px;"><b style="font-size: 15px;">Connected · 12 files</b><span style="font-size: 12px; color: var(--mu);">Hostelzy / Anjani Residency / Tenant IDs</span></div>'
     elif state == 'na':
-        lead += '<div style="padding: 10px 12px; background: var(--ab); color: var(--ad); font-size: 14px; line-height: 1.45;"><b>Not available yet.</b> Google hasn’t approved Hostelzy’s Drive permission. Until then tenants send their ID to you on WhatsApp.</div>'
-    lead += switch('Full copy needed (police file)', False, 'Off: the tenant covers the first 8 digits before it’s saved') + mut('Hostelzy sees only the files it made (Google’s “drive.file” permission). Disconnect any time; the files stay in your Drive.', 12) + '</div>'
+        lead += '<div style="padding: 10px 12px; background: var(--ab); color: var(--ad); font-size: 15px; font-weight: 800;">Not available yet</div>'
+    lead += switch('Full copy needed (police file)', False) + '</div>'
     b_ = btn('Disconnect', 'out', 'x') if state == 'connected' else (obtn('Connect Google Drive', 'folder', 'red', 52, state == 'na', 15))
     return add_sheet(MAN, sheet(kick('Manage · Tenant IDs'), 'Tenant IDs in your Drive', [lead], [b_]))
 new('f29-drive.dc.html', '[H50] drive sheet · Tenant IDs in your Drive: Connect Google Drive, Full copy needed switch · New (F29)', single('x', h50('off')), 'B')
@@ -281,14 +278,14 @@ PW = '<p style="color: var(--mu); font-size: 14px; margin: 0 0 12px;">%s</p>'
 CTA = '<a href="#" style="display: block; text-align: center; text-decoration: none; font-weight: 800; padding: 14px 16px; margin: 10px 0; background: var(--ac); color: #fff; border: 2px solid var(--ac);">%s</a>'
 def wf(l, v=''):
     return '<label style="display: grid; gap: 6px; font-size: 13px; font-weight: 800; margin: 0 0 12px;">%s<input value="%s" style="height: 46px; padding: 0 12px; border: 2px solid var(--tx); background: var(--bg); font: inherit; font-size: 16px; width: 100%%; min-width: 0;"></label>' % (l, v)
-listform = (H1W % 'List your PG on Hostelzy, free' + PW % 'Tenants in Hyderabad find PGs on Hostelzy. Tell us about yours; we’ll call you within 2 days to confirm.'
+listform = (H1W % 'List your PG on Hostelzy, free'
             + wf('Hostel name') + wf('Your name') + wf('Phone (WhatsApp)') + wf('Area', '') + two(wf('Rent from · ₹/month'), wf('Rent to'))
             + '<div style="display: grid; gap: 6px; margin: 0 0 12px; font-size: 13px; font-weight: 800;">For' + seg(['Men', 'Women', 'Co-living'], '', 14) + '</div>'
             + '<div style="display: grid; gap: 6px; margin: 0 0 12px; font-size: 13px; font-weight: 800;">Food included' + seg(['Yes', 'No'], '', 14) + '</div>'
             + '<div style="display: grid; gap: 6px; margin: 0 0 4px; font-size: 13px; font-weight: 800;">Photos · 1 to 3<div style="height: 72px; border: 2px dashed var(--dv); display: grid; place-items: center; color: var(--mu); font-size: 14px;">Add photos</div></div>'
-            + CTA % 'Send' + PW % 'We’ll call you within 2 days to confirm. Nothing is listed until we’ve spoken to you. Max 3 requests per phone a day.')
+            + CTA % 'Send' + PW % 'We’ll call you within 2 days to confirm.')
 new('f28-wList.dc.html', '[W9] app/list/ · List your PG on Hostelzy, free: form, “We’ll call you within 2 days to confirm” · New (F28)', webpage('List your PG on Hostelzy', listform, 1240), 'C', 390, 1240)
-sent = (H1W % 'Thanks. We’ll call you within 2 days to confirm.' + '<div style="border: 2px solid var(--tx); background: var(--sf); padding: 16px; margin: 18px 0;"><div style="color: var(--mu); font-size: 14px;">Sent</div><div style="font-size: 22px; font-weight: 900;">Sri Balaji Men’s PG · Madhapur</div><p style="color: var(--mu); font-size: 14px; margin: 8px 0 0;">We call +91 98490 11223. Nothing is listed until we’ve spoken to you.</p></div>'
+sent = (H1W % 'Thanks. We’ll call you within 2 days to confirm.' + '<div style="border: 2px solid var(--tx); background: var(--sf); padding: 16px; margin: 18px 0;"><div style="color: var(--mu); font-size: 14px;">Sent</div><div style="font-size: 22px; font-weight: 900;">Sri Balaji Men’s PG · Madhapur</div><p style="color: var(--mu); font-size: 14px; margin: 8px 0 0;">We call +91 98490 11223.</p></div>'
         + '<a href="#" style="display: block; text-align: center; text-decoration: none; font-weight: 800; padding: 14px 16px; margin: 10px 0; background: transparent; color: var(--tx); border: 2px solid var(--tx);">Get the app (Android test build)</a>')
 new('f28-wListSent.dc.html', '[variant of W9] app/list/ · Sent: “We’ll call you within 2 days to confirm” · New (F28)', webpage('List your PG: sent', sent, 900), 'C', 390, 900)
 # W10 poster A4 (794 × 1123)
@@ -299,7 +296,7 @@ a = poster_s.index('<div data-hz'); b = poster_s.rindex('</div>\n</x-dc>') + 6
 poster = ('<div data-hz="" data-theme="{{theme}}" style="width: 794px; height: 1123px; box-sizing: border-box; padding: 56px; background: #ffffff; color: #201e1d; font-family: Archivo, system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px;">'
           '<div style="display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 3px solid #201e1d;"><span style="width: 22px; height: 22px; background: #ec3013; display: inline-block;"></span><span style="font-weight: 900; font-size: 34px; letter-spacing: -.02em;">Hostelzy</span><span style="flex: 1;"></span><span style="font-size: 18px; color: #605d5d;">PG owners · Hyderabad</span></div>'
           '<b style="font-size: 72px; line-height: 1; letter-spacing: -.03em; color: #ec3013;">Get tenants from Hostelzy. Free listing.</b>'
-          '<div style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 36px; align-items: center;">' + qr + '<div style="display: grid; gap: 18px; font-size: 24px; line-height: 1.35;"><b style="font-size: 28px;">Scan to list your PG</b><span>2 minutes: name, phone, area, rent.</span><span>We call you within 2 days to confirm.</span><span>Tenants see your PG as unverified until we visit. Verified is free too.</span></div></div>'
+          '<div style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 36px; align-items: center;">' + qr + '<div style="display: grid; gap: 18px; font-size: 24px; line-height: 1.35;"><b style="font-size: 28px;">Scan to list your PG</b><span>We call you within 2 days to confirm.</span></div></div>'
           '<div style="margin-top: auto; padding-top: 18px; border-top: 3px solid #201e1d; display: flex; justify-content: space-between; align-items: baseline; font-size: 22px;"><b>farhath.me/hostelzy/app/list</b><span style="color: #605d5d;">WhatsApp +91 90597 90014</span></div></div>')
 poster_s = poster_s[:a] + poster + poster_s[b:]
 poster_s = poster_s.replace('"$preview": {"width": 390, "height": 900}', '"$preview": {"width": 794, "height": 1123}')
@@ -335,7 +332,7 @@ cvar('To refresh', '[variant of C14] console · Listed › To refresh: listed pa
      ctable(['Hostel', 'Area', 'Rent range', 'Confirmed', ''], [
          ['<b>Sri Balaji Men’s PG</b>', 'Madhapur', '₹7,000–9,000', '54 days ago', '<span style="display: flex; gap: 6px;">' + sbtn('Rent confirmed today', 'ink') + sbtn('Closed') + '</span>'],
          ['<b>Lakshmi Ladies Hostel</b>', 'Kondapur', '₹6,500–8,500', '61 days ago · shows “Rent on request”', '<span style="display: flex; gap: 6px;">' + sbtn('Rent confirmed today', 'ink') + sbtn('Closed') + '</span>'],
-     ]) + '<span style="font-size: 13px; color: var(--mu);">After 60 days a listed hostel shows “Rent on request” and sorts after priced ones.</span>')
+     ]))
 pform = ('<div style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 24px; align-items: start;"><div style="display: grid; gap: 12px;">' + fld('Name', 'Priya Sharma') + fld('Phone', '98765 43210', '+91') + fld('UPI id', 'priya@okicici') + fld('Code (made for them)', 'HZ-PART-2') + btn('Add partner', 'red', 'plus') + '</div>'
          + ctable(['Partner', 'Code', 'Listed', '₹ due', 'Active'], [['<b>Anil Kumar</b><br><span style="font-size: 12px; color: var(--mu);">+91 98490 77001 · anil@okaxis</span>', 'HZ-PART-1', '14 · 11 checked', '₹220 · pay on the 5th', mseg(['On', 'Off'], 'On')]]) + '</div>')
 cvar('Partners', '[variant of C14] console · Listed › Partners: add partner (code), list, listed count, ₹ due · New (F28)', 'Partners · 1', '', pform)
@@ -353,10 +350,10 @@ for k in drop:
     shutil.move(O + k, SP + 'dropped25/' + k); del B[k]; c['order'].remove(k)
 for nk in ('arch_old', 'arch_f25'): c['notes'].pop(nk, None)
 arch_min_y = min(v['y'] for v in B.values() if 'archive' in v.get('title', ''))
-mains = [v for v in B.values() if 'archive' not in v.get('title', '')]
-y = max(v['y'] + v['h'] for v in mains) + 420
-titles = {'A': 'F30 · F28 (app): sign-in wall, Add a hostel, Your hostel on Hostelzy · founder GO 18 Oct', 'B': 'F29: Ask to join, join form, join review, Tenant IDs in your Drive', 'C': 'F28 web + console: app/list/, poster, Listed segments, Claims'}
-for row in 'ABC':
+mains = [v for v in B.values() if 'archive' not in v.get('title', '') and v.get('title', '') not in [n[1] for n in NEW]]
+y = max(v['y'] + v['h'] for v in mains) + 2700
+titles = {'B': 'F30 + F29 (Design 1): sign-in wall, Ask to join, join form, join review, Tenant IDs in your Drive · founder GO 18 Oct', 'A': 'F28 app (Design 1): Add a hostel, Your hostel on Hostelzy, Explore, Me, Rewards', 'C': 'F28 web + console (Design 1): app/list/, poster, Listed segments, Claims'}
+for row in 'BAC':
     items = [n for n in NEW if n[4] == row]
     x = 0; hmax = max(n[3] for n in items)
     c['notes']['r25' + row] = {'kind': 'title1', 'maxW': 8000, 'text': titles[row], 'w': 240, 'x': 0, 'y': y - 300}
