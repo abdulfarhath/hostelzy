@@ -1,0 +1,1522 @@
+{
+ "boards": {
+  "aAdd2.dc.html": {
+   "x": 1880,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S68] aAdd · 2 · Rooms, floor by floor · Updated (F31)"
+  },
+  "aAdd6-dark.dc.html": {
+   "x": 7630,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] aAdd · 7 · Go-live checklist (dark) · Updated (F31)"
+  },
+  "aAdd6.dc.html": {
+   "x": 4230,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S73] aAdd · 7 · Go-live checklist: owner account, bed status · Updated (F31)"
+  },
+  "aHome.dc.html": {
+   "x": 470,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S66] aHome · Team tools · Updated (F31)"
+  },
+  "aTeam.dc.html": {
+   "x": 940,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S78] aTeam · Team members · Updated (F31)"
+  },
+  "about-dark.dc.html": {
+   "x": 5170,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] phone · About you (dark) · Updated (F31)"
+  },
+  "about.dc.html": {
+   "x": 1410,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S3] phone · Two fields · Updated (F31)"
+  },
+  "add-addMgr.dc.html": {
+   "x": 1410,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H26] manager sheet · Add a manager · Updated (F31)"
+  },
+  "add-addR.dc.html": {
+   "x": 470,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H20] addR sheet · Add a resident, number checked · Updated (F31)"
+  },
+  "add-addRoom.dc.html": {
+   "x": 940,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H25] addRoom sheet · Add a room · Updated (F31)"
+  },
+  "add-lang.dc.html": {
+   "x": 2350,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H37] lang sheet · Settings › Language · Updated (F31)"
+  },
+  "add-meOwner.dc.html": {
+   "x": 3290,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] me (owner) · Looking for a bed? Switch role · Updated (F31)"
+  },
+  "add-rank.dc.html": {
+   "x": 1880,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H31] rank sheet · How the ranking works · Updated (F31)"
+  },
+  "add-utr.dc.html": {
+   "x": 0,
+   "y": 15280,
+   "w": 390,
+   "h": 844,
+   "title": "[H22] utr sheet · Owner plan: I’ve paid, UPI reference · Updated (F31)"
+  },
+  "beds-dark.dc.html": {
+   "x": 5170,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] oBeds · Beds (dark) · Updated (F26); Rooms and rates › · Updated (F31)"
+  },
+  "beds.dc.html": {
+   "x": 1880,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[S37] oBeds · Building view only; tap a bed → bed sheet, a room → its layout · Updated (F26); Rooms and rates › · Updated (F31)"
+  },
+  "cCases.dc.html": {
+   "x": 6080,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C3] console · Fair Play · Cases + tenant reports, numbered strikes · Updated (F31)"
+  },
+  "cNotTeam.dc.html": {
+   "x": 1520,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C10] console · “isn’t a team account” · Updated (F31)"
+  },
+  "cOnb-dark.dc.html": {
+   "x": 13680,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[dark] console · Onboarding · Main view (dark) · Updated (F31)"
+  },
+  "cOnb.dc.html": {
+   "x": 3040,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C1] console · Onboarding · Main view: tracker + add hostel · Updated (F31)"
+  },
+  "cPay.dc.html": {
+   "x": 4560,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C2] console · Payments · Owner payments · Updated (F31)"
+  },
+  "cSignin.dc.html": {
+   "x": 0,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C10] console · Sign in with Google · Updated (F31)"
+  },
+  "case.dc.html": {
+   "x": 4230,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S63] oCase · What happened, 47 h to reply · Updated (F31)"
+  },
+  "deals.dc.html": {
+   "x": 470,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S43] oMore · Deals · Up to 3, switches · Updated (F31)"
+  },
+  "delBlocked.dc.html": {
+   "x": 5170,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[T30] delAcc · Open hold first · Updated (F31)"
+  },
+  "delConfirm.dc.html": {
+   "x": 5640,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[S84] delConfirm · Confirm with Google · Updated (F31)"
+  },
+  "delDone.dc.html": {
+   "x": 6110,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[S85] delDone · Account deleted · Updated (F31)"
+  },
+  "exitReview.dc.html": {
+   "x": 3760,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[S34] rExit · Did you get ₹2,000 back? Yes / Only part / Not yet · Updated (F31)"
+  },
+  "exploreEmpty.dc.html": {
+   "x": 1410,
+   "y": 2528,
+   "w": 390,
+   "h": 844,
+   "title": "[T4] explore · No hostels in this area yet · “Can’t find your PG? Add it” · Updated (F31)"
+  },
+  "f07-Report.dc.html": {
+   "x": 1410,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[H8] report sheet · Tell us what happened · Updated (F31)"
+  },
+  "f07-Strike.dc.html": {
+   "x": 4700,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S64] oStrike · Strike notices · Updated (F31)"
+  },
+  "f09-MoveIn.dc.html": {
+   "x": 1880,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[S21] moveIn · ₹100 reward at move-in · Updated (F31)"
+  },
+  "f09-Owner.dc.html": {
+   "x": 940,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[H21] trusted sheet · Trusted tenant · Updated (F31)"
+  },
+  "f12-Admin.dc.html": {
+   "x": 6110,
+   "y": 17808,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of S57] aLayout · Layout editor: send to owner · Updated (F31)"
+  },
+  "f12-Compare.dc.html": {
+   "x": 470,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[S19] compare · Compare two beds · Updated (F31)"
+  },
+  "f14-Photos.dc.html": {
+   "x": 2820,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S70] aAdd · 4 · Photos · Updated (F31)"
+  },
+  "f14-Residents.dc.html": {
+   "x": 3290,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S71] aAdd · 5 · Residents · Updated (F31)"
+  },
+  "f14-Switcher.dc.html": {
+   "x": 1410,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[H24] switch sheet · Your hostels · Updated (F31)"
+  },
+  "f19-After.dc.html": {
+   "x": 4700,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S31] F19 · Resident: waiting / approved / not approved (tweak) · Updated (F31)"
+  },
+  "f19-Checked.dc.html": {
+   "x": 5170,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S17] F19 · Tenant: “Checked by 3 residents” · Updated (F31)"
+  },
+  "f19-Compare.dc.html": {
+   "x": 6580,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[S59] F19 · Owner: compare side by side · Updated (F31)"
+  },
+  "f19-CompareDark.dc.html": {
+   "x": 8460,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] F19 · 9 in dark mode · Updated (F31)"
+  },
+  "f19-Edit.dc.html": {
+   "x": 1880,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[S32] F19 · Resident: editor in suggestion mode · Updated (F31)"
+  },
+  "f19-EditCheck.dc.html": {
+   "x": 2350,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S32] F19 · Resident: a check fails · Updated (F31)"
+  },
+  "f19-EditDark.dc.html": {
+   "x": 3760,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] F19 · 2 in dark mode · Updated (F31)"
+  },
+  "f19-Limit.dc.html": {
+   "x": 3290,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H14] F19 · Limit: 3 fixes waiting · Updated (F31)"
+  },
+  "f19-Lock.dc.html": {
+   "x": 0,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H13] fix sheet · Only residents can send a fix · Book a bed to join. · Book a bed / See beds · Updated (F31)"
+  },
+  "f19-LockDark.dc.html": {
+   "x": 940,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] F19 · 0 in dark mode · Updated (F31)"
+  },
+  "f19-Main.dc.html": {
+   "x": 1410,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[S31] F19 · Resident: any room in their hostel → Edit room · Updated (F31)"
+  },
+  "f19-Mute.dc.html": {
+   "x": 7520,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H30] F19 · Owner: mute a resident · Updated (F31)"
+  },
+  "f19-Push.dc.html": {
+   "x": 5640,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[not counted · push notification (system)] F19 · Owner: push · Updated (F31)"
+  },
+  "f19-QuickFix.dc.html": {
+   "x": 2820,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H16] F19 · Quick fix: wrong place / missing / broken / not in this room · Updated (F31)"
+  },
+  "f19-Reject.dc.html": {
+   "x": 7050,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H29] F19 · Owner: reject with a reason · Updated (F31)"
+  },
+  "f19-Send.dc.html": {
+   "x": 4230,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[H15] F19 · Resident: send to owner, optional photo · Updated (F31)"
+  },
+  "f19-Today.dc.html": {
+   "x": 6110,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] F19 · Owner: Today card + broken item as a repair · Updated (F31)"
+  },
+  "f19-Try.dc.html": {
+   "x": 470,
+   "y": 11432,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S32] F19 · Visitor try mode: only Send is locked · Updated (F31)"
+  },
+  "f20-Add.dc.html": {
+   "x": 1880,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[H40] F20 · Add a reminder · Updated (F31)"
+  },
+  "f20-Main.dc.html": {
+   "x": 0,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[S81] F20 · Me → Reminders: water, my reminders, hostel (tweak: notifications off) · Updated (F31)"
+  },
+  "f20-MainDark.dc.html": {
+   "x": 940,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] F20 · 1 in dark mode · Updated (F31)"
+  },
+  "f20-Me.dc.html": {
+   "x": 470,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] F20 · Me: Reminders row · F31 order · Updated (F31)"
+  },
+  "f20-Notify.dc.html": {
+   "x": 2350,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[not counted · notifications (system)] F20 · Notifications with Done / Snooze · Updated (F31)"
+  },
+  "f20-NotifyDark.dc.html": {
+   "x": 2820,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[not counted · notifications (system, dark)] F20 · 4 in dark mode · Updated (F31)"
+  },
+  "f20-Water.dc.html": {
+   "x": 1410,
+   "y": 12752,
+   "w": 390,
+   "h": 844,
+   "title": "[H39] F20 · Water settings · Updated (F31)"
+  },
+  "f23-Add.dc.html": {
+   "x": 1880,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[H43] F23 · 4 · Add: icon → where? → count → working? → Save · Updated (F31)"
+  },
+  "f23-DetailDark.dc.html": {
+   "x": 470,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] F23 · 1 in dark mode · Updated (F31)"
+  },
+  "f23-Floor.dc.html": {
+   "x": 1410,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[H42] F23 · 3 · Floor sheet: counts and status · Updated (F31)"
+  },
+  "f23-Owner.dc.html": {
+   "x": 2350,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[S54] F23 · 5 · Owner: Layouts → Floor 2 → Shared things · Updated (F31)"
+  },
+  "f23-Room.dc.html": {
+   "x": 940,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[S17] detail · Room · Edit this layout → try mode · Updated (F31)"
+  },
+  "f23-Today.dc.html": {
+   "x": 3290,
+   "y": 14016,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] F23 · 7 · Owner Today: Broken item, Fixed · money strip first · Updated (F31)"
+  },
+  "f24-aAddOwner.dc.html": {
+   "x": 3760,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[S72] aAdd · 6 · Owner account: link the owner’s login · Updated (F31)"
+  },
+  "f24-cLayoutFixes.dc.html": {
+   "x": 10640,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C7] console · Layout fixes (one board; replaces f19-Console) · Updated (F31)"
+  },
+  "f24-cLayoutHelp.dc.html": {
+   "x": 7600,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C4] console · Layout help · owner shape requests, 48 h, Send to owner · Updated (F31)"
+  },
+  "f24-cRewards.dc.html": {
+   "x": 9120,
+   "y": 19128,
+   "w": 1440,
+   "h": 900,
+   "title": "[C6] console · Rewards · ledger with Reverse · Updated (F31)"
+  },
+  "f24-detailOwner.dc.html": {
+   "x": 5170,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · Owner contact locked before a hold · Updated (F31)"
+  },
+  "f24-mgrJoin.dc.html": {
+   "x": 2350,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S5] roleGate · Manager joins with the code from WhatsApp · Updated (F31)"
+  },
+  "f24-oCasePhoto.dc.html": {
+   "x": 2820,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S63] oCase · Photo proof from the tenant, photo in your reply · Updated (F31)"
+  },
+  "f24-oLaundry.dc.html": {
+   "x": 1410,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[H34] oMore · House rules › Laundry day · Updated (F31)"
+  },
+  "f24-oMeter.dc.html": {
+   "x": 940,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[S52] oRent › Electricity · meter per room, split per resident · Updated (F31)"
+  },
+  "f24-oRefund.dc.html": {
+   "x": 1880,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[H33] oMore · Residents › Left › Refund · Updated (F31)"
+  },
+  "f24-oShape.dc.html": {
+   "x": 3290,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[S56] oLayouts › Create a layout · shape picker (L / T / U / custom) · Updated (F31)"
+  },
+  "f24-oShapeBack.dc.html": {
+   "x": 4230,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[T28] oLayout · Hostelzy drew it · Publish · Updated (F31)"
+  },
+  "f24-oShapeReq.dc.html": {
+   "x": 3760,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[H23] oLayouts › Ask Hostelzy · request, done in 48 h · Updated (F31)"
+  },
+  "f24-oTodayCards.dc.html": {
+   "x": 470,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] oToday · “Still 7 free beds?” every 3 days, layouts every 3 months · Updated (F31)"
+  },
+  "f24-rRefund.dc.html": {
+   "x": 6580,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[S35] rMoveOut · Refund tracked: owner marks, you confirm · Updated (F31)"
+  },
+  "f24-roomLayersOn.dc.html": {
+   "x": 4700,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S17] detail · Room · layers on: fan ring and AC airflow · Updated (F31)"
+  },
+  "f24-trustedPerks.dc.html": {
+   "x": 5640,
+   "y": 16544,
+   "w": 390,
+   "h": 844,
+   "title": "[H9] rewards › Trusted tenant perks · Updated (F31)"
+  },
+  "f26-c14.dc.html": {
+   "x": 7990,
+   "y": 55387,
+   "w": 1440,
+   "h": 900,
+   "title": "[C14] console · Listed: segments Listed · To call · To refresh · Partners; list a hostel, List it / Take off · Updated (F31)"
+  },
+  "f26-c15.dc.html": {
+   "x": 9510,
+   "y": 55387,
+   "w": 1440,
+   "h": 900,
+   "title": "[C15] console · Claims: Call / WhatsApp / Done / Not the owner · Updated (F31)"
+  },
+  "f26-contactOpen.dc.html": {
+   "x": 3290,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · After a hold: number, WhatsApp (HZ code) + Call · Updated (F31)"
+  },
+  "f26-detailBig.dc.html": {
+   "x": 2820,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · 80+ beds: See all 38 rooms › · Updated (F31)"
+  },
+  "f26-detailScroll.dc.html": {
+   "x": 2350,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · Scrolled: Building view inline, week table, contact locked · Updated (F31)"
+  },
+  "f26-h45.dc.html": {
+   "x": 6580,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[H45] complaint sheet · Something wrong in your room?: category, text, photo, Send to owner · Updated (F31)"
+  },
+  "f26-h46.dc.html": {
+   "x": 7050,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[H46] complaints sheet · Your complaints: Sent / Being fixed / Fixed · Updated (F31)"
+  },
+  "f26-h47.dc.html": {
+   "x": 7520,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[H47] claim sheet · Are you the owner? name, phone, Send to Hostelzy · Updated (F31)"
+  },
+  "f26-holdsDeclined.dc.html": {
+   "x": 4230,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S11] holds · Declined: contact locks again · Updated (F31)"
+  },
+  "f26-holdsKept.dc.html": {
+   "x": 3760,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S11] holds · Kept: WhatsApp + Call · Updated (F31)"
+  },
+  "f26-homeDark.dc.html": {
+   "x": 4700,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] rHome · Home in the F31 order (dark) · Updated (F31)"
+  },
+  "f26-myStay.dc.html": {
+   "x": 5170,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[S89] myStay · My stay tab: bed, move, notice, refund, review, layout fix, Help · Updated (F31)"
+  },
+  "f26-savedHolds.dc.html": {
+   "x": 0,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[S88] savedHolds · Saved & Holds (resident in Find a bed): one tab, two segments · Updated (F31)"
+  },
+  "f26-todayEmpty.dc.html": {
+   "x": 940,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[T33] oToday · Nothing needs you now (no strip, no tabs when all zero) · Updated (F31)"
+  },
+  "f26-tryMode.dc.html": {
+   "x": 6110,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S32] rFix · Try mode: Edit room · Room N, play freely, nothing is saved; Publish → H13 · Updated (F31)"
+  },
+  "f26-unverified.dc.html": {
+   "x": 470,
+   "y": 55387,
+   "w": 390,
+   "h": 844,
+   "title": "[T32] detail · Unverified listing: rent range, Tell me when verified, Claim · Updated (F31)"
+  },
+  "f27-hostelChip.dc.html": {
+   "x": 1410,
+   "y": 56707,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · “Cooks to count · 412 plates saved” under the food table · Updated (F31)"
+  },
+  "f27-push.dc.html": {
+   "x": 1880,
+   "y": 56707,
+   "w": 390,
+   "h": 844,
+   "title": "[not counted · system notification] Dinner at 8 · Eating? with Eating / Skip · Updated (F31)"
+  },
+  "f27-saved.dc.html": {
+   "x": 940,
+   "y": 56707,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S22] rewards · Plates saved: you, your hostel, Hostelzy · Updated (F31)"
+  },
+  "f27-week.dc.html": {
+   "x": 0,
+   "y": 56707,
+   "w": 390,
+   "h": 844,
+   "title": "[S90] mealPlan · Week plan: 7 days × breakfast, lunch, dinner, Skip all weekend · Updated (F31)"
+  },
+  "f28-c15-addedBy.dc.html": {
+   "x": 6374,
+   "y": 62779,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C15] console · Claims: “added by Ravi (resident) · owner phone matches ✓ / ✗” · Updated (F31)"
+  },
+  "f28-meYourHostel.dc.html": {
+   "x": 470,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] me · “Your hostel · Owner asked” row → S93 · Updated (F31)"
+  },
+  "f28-myAdd.dc.html": {
+   "x": 2820,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[S93] myAdd · Your hostel on Hostelzy: the card, 5 steps, Send to your owner · Updated (F31)"
+  },
+  "f28-myAddAgreed.dc.html": {
+   "x": 4230,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · Updated (F31)"
+  },
+  "f28-myAddAsked.dc.html": {
+   "x": 3760,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner asked: Ask again after 3 days · Updated (F31)"
+  },
+  "f28-myAddDark.dc.html": {
+   "x": 3290,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] myAdd · Your hostel on Hostelzy (dark) · Updated (F31)"
+  },
+  "f28-myAddPaid.dc.html": {
+   "x": 5170,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Paid: ₹200 by UPI · Updated (F31)"
+  },
+  "f28-myAddQueued.dc.html": {
+   "x": 6110,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · Updated (F31)"
+  },
+  "f28-myAddVerified.dc.html": {
+   "x": 4700,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · Updated (F31)"
+  },
+  "f28-myAddWaiting.dc.html": {
+   "x": 5640,
+   "y": 61515,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · Updated (F31)"
+  },
+  "f29-drive.dc.html": {
+   "x": 5640,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[H50] drive sheet · Tenant IDs in your Drive: Connect Google Drive, Full copy needed switch · F31 order: Residents · Rates and UPI · Layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · Reviews · Tenant IDs · Team · Plan · Updated (F31)"
+  },
+  "f29-driveConnected.dc.html": {
+   "x": 6110,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H50] drive · Connected · 12 files, Disconnect · F31 order: Residents · Rates and UPI · Layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · Reviews · Tenant IDs · Team · Plan · Updated (F31)"
+  },
+  "f29-driveNA.dc.html": {
+   "x": 6580,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H50] drive · Not available yet (Drive scope not approved) · F31 order: Residents · Rates and UPI · Layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · Reviews · Tenant IDs · Team · Plan · Updated (F31)"
+  },
+  "f29-joinReview.dc.html": {
+   "x": 3760,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[H49] joinReview sheet · Ravi wants to join: details, ID received on WhatsApp (tick), Approve / Ask again / Decline · Updated (F31)"
+  },
+  "f29-joinReviewDark.dc.html": {
+   "x": 4230,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] joinReview · Ravi wants to join (dark) · Updated (F31)"
+  },
+  "f29-joinReviewDrive.dc.html": {
+   "x": 5170,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H49] joinReview · ID in the owner’s Drive: masked image, Open in Drive, Delete from my Drive · Updated (F31)"
+  },
+  "f29-joinReviewTick.dc.html": {
+   "x": 4700,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H49] joinReview · ID received on WhatsApp ✓ · Updated (F31)"
+  },
+  "f29-todayJoining.dc.html": {
+   "x": 3290,
+   "y": 60251,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] oToday · Joining tab (only when non-empty): “Ravi wants to join · bed 203-B · moves in 1 Nov” → H49 · Updated (F31)"
+  },
+  "gateMt.dc.html": {
+   "x": 4230,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S86] gate · Maintenance · Updated (F31)"
+  },
+  "gateOwn.dc.html": {
+   "x": 2820,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S6] roleGate · Owner: request a visit · Updated (F31)"
+  },
+  "gateRes.dc.html": {
+   "x": 2350,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S5] roleGate · Resident: join with a code · Updated (F31)"
+  },
+  "gateUp.dc.html": {
+   "x": 3760,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[T31] gate · Update needed · Updated (F31)"
+  },
+  "hold.dc.html": {
+   "x": 4230,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[S20] hold · One status card (tweak: Held / Waiting / Booked / Not received / Ended) · Updated (F31)"
+  },
+  "holdsEmpty.dc.html": {
+   "x": 470,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[T7] holds · No holds yet · Updated (F31)"
+  },
+  "invite.dc.html": {
+   "x": 4230,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[S47] oInvite · Code, share, approve · Updated (F31)"
+  },
+  "me.dc.html": {
+   "x": 3290,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[S79] me · No Saved / Holds rows; Log out in red; Add a hostel row · Updated (F31)"
+  },
+  "menu.dc.html": {
+   "x": 1880,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S45] oMore · Food menu · Save menu (all 7 days), empty for a new hostel (tweak) · Updated (F31)"
+  },
+  "oEditor.dc.html": {
+   "x": 1410,
+   "y": 8848,
+   "w": 1440,
+   "h": 900,
+   "title": "[S57] oEditor (owner) · Layout editor: shape picker, Publish, no admin heading · Updated (F31)"
+  },
+  "oLayout-dark.dc.html": {
+   "x": 4810,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] oLayout · Room layout (dark) · Updated (F31)"
+  },
+  "oLayout.dc.html": {
+   "x": 940,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[S55] oLayout · Room 204 layout · Updated (F31)"
+  },
+  "oLayouts.dc.html": {
+   "x": 0,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[S53] oLayouts · Room layouts · Updated (F31)"
+  },
+  "oPhotos.dc.html": {
+   "x": 3400,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[S49] oPhotos · Upload, order, cover, retry · Updated (F31)"
+  },
+  "oPublished.dc.html": {
+   "x": 2930,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[S58] oPublished · Live for tenants · Updated (F31)"
+  },
+  "oRent-dark.dc.html": {
+   "x": 5640,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] oRent · Rent (dark) · Updated (F31)"
+  },
+  "oRent.dc.html": {
+   "x": 2820,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[S38] oRent · Paid green, Late red, Due plain; Call + WhatsApp on every row · Updated (F31)"
+  },
+  "oReviews.dc.html": {
+   "x": 2820,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S61] oRank · Reviews and ranking in one place · Updated (F31)"
+  },
+  "oRooms.dc.html": {
+   "x": 470,
+   "y": 8848,
+   "w": 390,
+   "h": 844,
+   "title": "[S51] oRooms · Rooms, uneven floors · Updated (F31)"
+  },
+  "payAdv.dc.html": {
+   "x": 3290,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[H7] payAdv sheet · One amount, one action · Updated (F31)"
+  },
+  "permN.dc.html": {
+   "x": 3290,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S82] perm · Notifications, asked after the first hold · Updated (F31)"
+  },
+  "plan-dark.dc.html": {
+   "x": 5640,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] oPlan · Your plan (dark) · Updated (F31)"
+  },
+  "plan.dc.html": {
+   "x": 3290,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S65] oPlan + oInvoice · One screen (tweak: trial / due / checking / paid / late) · deals pause from day 15 · Updated (F31)"
+  },
+  "r-detail.dc.html": {
+   "x": 4230,
+   "y": 2528,
+   "w": 390,
+   "h": 844,
+   "title": "[S13] detail · ✓ VERIFIED (navy) + “checked” line; no tag boxes · Updated (F31)"
+  },
+  "r-detailDark.dc.html": {
+   "x": 6580,
+   "y": 2528,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] detail · Hostel page (dark) · Updated (F31)"
+  },
+  "r-holdSheet.dc.html": {
+   "x": 1410,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[H4] hold sheet · Hold free · 1 hour or Pay ₹3,000 to book · Updated (F31)"
+  },
+  "r-holdSheetMember.dc.html": {
+   "x": 4700,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H4] hold sheet · Member: Hold free · 2 hours (DECISIONS: 2 h for Members) · Updated (F31)"
+  },
+  "r-home.dc.html": {
+   "x": 0,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[S23] rHome · Rent → next meal → food week → 3 actions (notice, swap, fix) → 30-day review; no water card · Updated (F31)"
+  },
+  "r-manage.dc.html": {
+   "x": 0,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S39] oMore · One vertical list (F21) · F31 order: Residents · Rates and UPI · Layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · Reviews · Tenant IDs · Team · Plan · Updated (F31)"
+  },
+  "r-notify.dc.html": {
+   "x": 2350,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[H5] perm sheet · Notifications after the first hold · Updated (F31)"
+  },
+  "r-offline.dc.html": {
+   "x": 2350,
+   "y": 2528,
+   "w": 390,
+   "h": 844,
+   "title": "[T2] explore · You’re offline · Retry · Updated (F31)"
+  },
+  "r-signin.dc.html": {
+   "x": 1880,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[H3] sign-in sheet · Sign in at the first hold · Updated (F31)"
+  },
+  "r-today.dc.html": {
+   "x": 0,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[S36] oToday · Money strip (Due today · Late → Rent), then Holds · Payments · Joining · Fixes; Fair Play only while a case is open; This month; headcount near the bottom · Updated (F31)"
+  },
+  "r-todayDark.dc.html": {
+   "x": 4700,
+   "y": 7584,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] oToday · Today in the F31 order (dark) · Updated (F31)"
+  },
+  "r-utr.dc.html": {
+   "x": 3760,
+   "y": 3792,
+   "w": 390,
+   "h": 844,
+   "title": "[H12] payUtr sheet · UPI reference, plain words · Updated (F31)"
+  },
+  "rates.dc.html": {
+   "x": 940,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S44] oMore · Rates and UPI · One table, one UPI ID · Updated (F31)"
+  },
+  "rent-dark.dc.html": {
+   "x": 4700,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] rPay · Rent (dark) · Updated (F31)"
+  },
+  "rent.dc.html": {
+   "x": 470,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[S26] rPay · One amount, one action (tweak: Due / Waiting / Paid) · Updated (F31)"
+  },
+  "review.dc.html": {
+   "x": 3290,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[S33] rReview · 30-day review: 5 categories, one line · Updated (F31)"
+  },
+  "reviews.dc.html": {
+   "x": 5170,
+   "y": 2528,
+   "w": 390,
+   "h": 844,
+   "title": "[S15] reviews · Summary, then verified stays · Updated (F31)"
+  },
+  "role.dc.html": {
+   "x": 1880,
+   "y": 1264,
+   "w": 390,
+   "h": 844,
+   "title": "[S4] role · Three rows · Updated (F31)"
+  },
+  "rules.dc.html": {
+   "x": 2350,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S46] oMore · House rules · Plain fields · Updated (F31)"
+  },
+  "savedEmpty.dc.html": {
+   "x": 2820,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[T8] saved · Nothing saved yet · Updated (F31)"
+  },
+  "settings-dark.dc.html": {
+   "x": 4230,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] settings · Settings (dark) · Updated (F31)"
+  },
+  "settings.dc.html": {
+   "x": 3760,
+   "y": 5056,
+   "w": 390,
+   "h": 844,
+   "title": "[S80] settings · Grouped, one Log out, theme here · Updated (F31)"
+  },
+  "swap.dc.html": {
+   "x": 2820,
+   "y": 6320,
+   "w": 390,
+   "h": 844,
+   "title": "[S30] move · swap · Free beds with the rent difference · Updated (F31)"
+  },
+  "team.dc.html": {
+   "x": 5170,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[S48] oTeam · You and your managers · Updated (F31)"
+  },
+  "teamSheet.dc.html": {
+   "x": 0,
+   "y": 17808,
+   "w": 390,
+   "h": 844,
+   "title": "[H36] team sheet · Settings → Hostelzy team · Updated (F31)"
+  },
+  "w1-aboutEmpty.dc.html": {
+   "x": 1410,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S3] about you · Name empty, Google name as a hint (#23) · Updated (F31)"
+  },
+  "w1-acRepair.dc.html": {
+   "x": 2350,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S17] room · AC under repair (#7) · Updated (F31)"
+  },
+  "w1-bedSheetLeaving.dc.html": {
+   "x": 2820,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H18] bed sheet · Free from 31 Oct, “Rahul moved out” · Updated (F31)"
+  },
+  "w1-cError.dc.html": {
+   "x": 4810,
+   "y": 25560,
+   "w": 1440,
+   "h": 900,
+   "title": "[C12] console · Couldn’t start, try again · Updated (F31)"
+  },
+  "w1-cStrikes.dc.html": {
+   "x": 5170,
+   "y": 26880,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C3] console · Fair Play case: strikes, photos, rules, Did you join?, signals (#18) · Updated (F31)"
+  },
+  "w1-dealsPaused.dc.html": {
+   "x": 1880,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S13] detail · Deals paused, walk-in prices (#21) · Updated (F31)"
+  },
+  "w1-didJoin.dc.html": {
+   "x": 3760,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S11] holds · Did you join? Yes / Not yet / Still deciding (#14) · Updated (F31)"
+  },
+  "w1-editName.dc.html": {
+   "x": 940,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[H38] settings · Change your name (#23) · Updated (F31)"
+  },
+  "w1-holdsEnded.dc.html": {
+   "x": 940,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S11] holds · Ended and released · Updated (F31)"
+  },
+  "w1-mapEmpty.dc.html": {
+   "x": 470,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[T6] map · No hostels in this area yet · Updated (F31)"
+  },
+  "w1-meRefund.dc.html": {
+   "x": 1410,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] me · Your refund on top after moving out · Updated (F31)"
+  },
+  "w1-notifSwitches.dc.html": {
+   "x": 4700,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S80] settings · Notification switches, New free beds (#22) · Updated (F31)"
+  },
+  "w1-notifyReady.dc.html": {
+   "x": 4230,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of T15] room · Layout coming soon: we’ll tell you (#27) · Updated (F31)"
+  },
+  "w1-oPriceFixed.dc.html": {
+   "x": 0,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H18] bed sheet · Booked: price fixed, deal kept (#13) · Updated (F31)"
+  },
+  "w1-oTodayMoves.dc.html": {
+   "x": 2350,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] oToday · Notice, move and refund cards · Updated (F31)"
+  },
+  "w1-rNotYet.dc.html": {
+   "x": 1880,
+   "y": 25560,
+   "w": 390,
+   "h": 844,
+   "title": "[T18] rent · Your stay isn’t on Hostelzy yet · Updated (F31)"
+  },
+  "w1-walkInHeld.dc.html": {
+   "x": 3290,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H18] bed sheet · Held for a walk-in, 52 min left (#8) · Updated (F31)"
+  },
+  "w1-walkInHold.dc.html": {
+   "x": 2820,
+   "y": 26880,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H18] bed sheet · Hold for a walk-in (#8) · Updated (F31)"
+  },
+  "w2-cReported.dc.html": {
+   "x": 5640,
+   "y": 28200,
+   "w": 1440,
+   "h": 900,
+   "title": "[C8] console · Reported reviews · Updated (F31)"
+  },
+  "w2-exploreNoMatch.dc.html": {
+   "x": 4230,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[T5] explore · Nothing matches the filters · Updated (F31)"
+  },
+  "w2-layoutWrong.dc.html": {
+   "x": 5170,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S55] oLayout · Residents say this layout is wrong · Updated (F31)"
+  },
+  "w2-oTodayRates.dc.html": {
+   "x": 2820,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] oToday · Are your rates still right? + strike card · Updated (F31)"
+  },
+  "w2-ownerOnly.dc.html": {
+   "x": 470,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[T29] manage · Owner only (what a manager sees) · Updated (F31)"
+  },
+  "w2-qrCamera.dc.html": {
+   "x": 1880,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[H11] join · Use your camera? · Updated (F31)"
+  },
+  "w2-qrScan.dc.html": {
+   "x": 2350,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[S7] join · Scan the QR · Updated (F31)"
+  },
+  "w2-reportAbuse.dc.html": {
+   "x": 940,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[H32] oReviews · Report this review · Updated (F31)"
+  },
+  "w2-waSheet.dc.html": {
+   "x": 0,
+   "y": 28200,
+   "w": 390,
+   "h": 844,
+   "title": "[H35] settings · Your WhatsApp number (owner) · Updated (F31)"
+  },
+  "w3-cLayoutEditor.dc.html": {
+   "x": 7520,
+   "y": 29520,
+   "w": 1440,
+   "h": 900,
+   "title": "[C5] console · Layout help › draw the walls · Updated (F31)"
+  },
+  "w3-noticeGiven.dc.html": {
+   "x": 4700,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T21] move · Notice given · Updated (F31)"
+  },
+  "w3-oLayoutDrawing.dc.html": {
+   "x": 7050,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T27] oLayout · Hostelzy is drawing it · Updated (F31)"
+  },
+  "w3-oLayoutNone.dc.html": {
+   "x": 6580,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T26] oLayout · No layout yet · Updated (F31)"
+  },
+  "w3-oRules.dc.html": {
+   "x": 0,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[S62] oRules · Fair Play rules (full) · Updated (F31)"
+  },
+  "w3-rRoomNoLayout.dc.html": {
+   "x": 5170,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T22] rRoom · No layout yet · Updated (F31)"
+  },
+  "w3-roomError.dc.html": {
+   "x": 2350,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T14] room · Couldn’t load this room · Updated (F31)"
+  },
+  "w3-scanError.dc.html": {
+   "x": 3290,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T17] scan · Camera didn’t start · Updated (F31)"
+  },
+  "w3-scanOff.dc.html": {
+   "x": 2820,
+   "y": 29520,
+   "w": 390,
+   "h": 844,
+   "title": "[T16] scan · Camera off · Updated (F31)"
+  },
+  "w3-wJNoCode.dc.html": {
+   "x": 11030,
+   "y": 29520,
+   "w": 390,
+   "h": 900,
+   "title": "[W5] j/ · No invite code · Updated (F31)"
+  },
+  "w4-building.dc.html": {
+   "x": 0,
+   "y": 30840,
+   "w": 390,
+   "h": 844,
+   "title": "[S87] building · Whole building page: from the hostel page and 80+ bed hostels (no longer a picker tab) · Updated (F31)"
+  },
+  "w4-oMenuWeek.dc.html": {
+   "x": 6110,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S45] oMore · Food menu · By day · Week (owner) · Updated (F31)"
+  },
+  "w4-planMore.dc.html": {
+   "x": 6580,
+   "y": 10168,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S65] oPlan · All plans + Past invoices · Updated (F31)"
+  },
+  "wHome.dc.html": {
+   "x": 0,
+   "y": 20448,
+   "w": 390,
+   "h": 844,
+   "title": "[W1] app/ · Get the app · Updated (F31)"
+  },
+  "wJ-dark.dc.html": {
+   "x": 2820,
+   "y": 20448,
+   "w": 390,
+   "h": 900,
+   "title": "[dark] j/ · Invite link (dark) · Updated (F31)"
+  },
+  "wJ.dc.html": {
+   "x": 940,
+   "y": 20448,
+   "w": 390,
+   "h": 900,
+   "title": "[W4] j/ · Invite link: Open in Hostelzy · Updated (F31)"
+  },
+  "wR.dc.html": {
+   "x": 470,
+   "y": 20448,
+   "w": 390,
+   "h": 900,
+   "title": "[W2] r/ · Find this hostel on Hostelzy (old links; no enquiries) · Updated (F31)"
+  }
+ },
+ "retire": [
+  "f20-Offer.dc.html",
+  "f20-Home.dc.html",
+  "f20-HomeDark.dc.html",
+  "f20-HomeTenant.dc.html"
+ ]
+}
