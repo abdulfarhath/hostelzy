@@ -165,7 +165,10 @@ where hostel_id = 'f2700000-0000-0000-0000-000000000001' and day = extract(isodo
 select public.food_pushes();
 do $$
 begin
-  if extract(hour from now() at time zone 'Asia/Kolkata') between 7 and 21 then
+  -- 21:10–23:59 IST: "2 h 50 min from now" is tomorrow, a different menu day; the headcount can't be checked then (Build 3, 2026-10-18).
+  if split_part(current_setting('hz.at'), ' ', 1)::date <> (now() at time zone 'Asia/Kolkata')::date then
+    raise notice 'headcount check skipped: dinner would be tomorrow at this hour';
+  elsif extract(hour from now() at time zone 'Asia/Kolkata') between 7 and 21 then
     perform test.rows($q$select count(*) from public.push_outbox where data ->> 'screen' = 'oMeals' and title like 'Dinner headcount: % of 2'$q$, 2);
   else
     perform test.rows($q$select count(*) from public.push_outbox where data ->> 'screen' = 'oMeals'$q$, 0);

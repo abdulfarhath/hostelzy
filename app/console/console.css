@@ -58,3 +58,12 @@ button { cursor: pointer; background: transparent; border: 0; }
 .note { padding: 0 16px; font-size: 12px; color: var(--mu); line-height: 1.45; }
 .empty { padding: 16px; color: var(--mu); font-size: 14px; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--tx); color: var(--bg); padding: 12px 16px; font-weight: 700; }
+/* F28 wave 3: To call rows, the OSM credit. */
+.foot { padding: 10px 24px; font-size: 12px; color: var(--mu); border-top: 2px solid var(--dv); }
+.row .script { font-size: 13px; margin-top: 4px; } .row .script summary { cursor: pointer; font-weight: 800; }
+.row .script ol { margin: 6px 0 0; padding-left: 20px; } .row .script li { margin: 3px 0; line-height: 1.4; }
+.row .fields { display: grid; grid-template-columns: 120px 120px 1fr 160px; gap: 8px; margin-top: 8px; align-items: center; }
+.row .fields input { height: 38px; padding: 0 10px; border: 2px solid var(--tx); background: var(--bg); font-size: 14px; width: 100%; }
+.row .fields .seg button { padding: 8px 4px; }
+.row .foodseg { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; }
+@media (max-width: 900px) { .row .fields { grid-template-columns: 1fr 1fr; } }

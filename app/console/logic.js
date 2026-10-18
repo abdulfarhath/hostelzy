@@ -207,3 +207,64 @@ export function listWords(message) {
   }
   return 'Couldn’t save: ' + m;
 }
+
+// ---------------------------------------------------------------- F28 wave 3: To call · To refresh · Partners · Claims line
+
+/** Where a draft or claim came from, in words. */
+export const SOURCE_WORDS = { places: 'Google Places', osm: 'OpenStreetMap', web: 'Web form', resident: 'Resident', partner: 'Partner', team: 'Team' };
+
+/** F28 28-21: the 6-line call script for a draft (who we are, free listing, rent, for, food, verified?). */
+export function callScript(h) {
+  const name = h?.name || 'your PG';
+  return [
+    `Hi, I'm calling from Hostelzy, a free app where tenants in Hyderabad find PGs. Is this ${name}?`,
+    'Listing is free. Tenants see your name, area and photos, and call you only after they hold a bed.',
+    'What is your rent a month, lowest to highest?',
+    'Is it for men, women, or both (co-living)?',
+    'Is food included?',
+    'Want us to verify you (a free visit)? Then tenants see your beds and can hold one.',
+  ];
+}
+
+/** CSV text (RFC 4180 quoting) for Export CSV: header row + one row per object, in `cols` order. */
+export function csv(rows, cols) {
+  const cell = (v) => {
+    const s = v == null ? '' : String(v);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [cols.join(','), ...(rows ?? []).map((r) => cols.map((c) => cell(r[c])).join(','))].join('\r\n') + '\r\n';
+}
+
+/** To refresh: "rent confirmed 55 days ago" / "rent never confirmed". */
+export function rentAgeLine(iso, now = Date.now()) {
+  if (!iso) return 'rent never confirmed';
+  const d = Math.floor((now - new Date(iso).getTime()) / 86400000);
+  return d <= 0 ? 'rent confirmed today' : `rent confirmed ${d} ${d === 1 ? 'day' : 'days'} ago`;
+}
+
+/** To call: "Call later · after 21 Oct" when the row was put off, else ''. */
+export const callLaterLabel = (callAfter, now = Date.now()) => (callAfter && new Date(callAfter).getTime() > now ? `Call later · after ${dayMon(callAfter)}` : '');
+
+/** F28 Part 2 step 5, console › Claims: "added by Ravi (resident) · owner phone matches ✓". */
+export function claimAddedLine(a) {
+  if (!a) return '';
+  const who = a.source === 'resident' || a.source === 'partner' ? `added by ${a.adder || 'someone'} (${a.source})`
+    : a.source === 'web' ? `added by ${a.adder || 'the owner'} (web form)`
+    : a.source === 'places' ? 'found on Google Places'
+    : a.source === 'osm' ? 'from OpenStreetMap'
+    : 'added by the team';
+  return `${who} · owner phone matches ${a.phone_match ? '✓' : '✗'}`;
+}
+
+/** Partners: "3 listed · ₹60 due". */
+export const partnerLine = (p) => `${p.listed ?? 0} listed · ${rupees(p.due ?? 0)} due`;
+
+/** Why a wave-3 RPC said no, in plain words (missing SQL included). */
+export function w3Words(message) {
+  const m = String(message || '');
+  if (/does not exist|could not find|schema cache/i.test(m)) return 'Needs the F28 SQL.';
+  for (const k of ['add the expected rent range', 'pick Men, Women or Co-living', 'already verified', 'isn\'t on Hostelzy', 'isn\'t listed with a rent', 'pause it in Hostels', 'only the Hostelzy team']) {
+    if (m.includes(k)) return `Not done: ${k}.`;
+  }
+  return 'Couldn’t save: ' + m;
+}
