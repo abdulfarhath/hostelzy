@@ -240,3 +240,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **07:05**
 > Continue
+
+**07:35**
+> Change all running agents and chats to opus 5.5
