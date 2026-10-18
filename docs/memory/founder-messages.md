@@ -228,3 +228,15 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **06:30**
 > start designing and building everything. You should never require my input. Keep the tasks as milestones and keep building one after the other. If there is any decision making thing, take your own decisions as of now and put them in decisions.md. And if there are any questions, answer them yourself as of now. Put them in questions.md. And never test anything. I'll be the one who will be testing everything. So after you build everything, if there are any changes to be made, I'll be changing them. Otherwise, the one you have done will be finalized forever. So most of the time I'll be depending on you only for decisions. I'll not make any decisions as of now. So until the entire build process is done, I don't want you to ask me anything. You notify me once everything is done. What I'm expecting is a new design and also a new APK and other things that you have mentioned. Keep going, you can do it.
+
+**06:40**
+> Use Fable 5.1 Max for designing, building and everything.
+
+**06:45**
+> Hire as many chats and agents as possible. It's up to you. Use the Claude tokens at max as you need, but make sure the work gets completed as soon as possible.
+
+**06:55**
+> For example, near the drink water notification, there is a explanation saying this thing does this thing. So take reference of big applications like Airbnb, they never give explanations. Zoho never gives any explanation for any button or anything. So I don't need any explanations anywhere. I want everything to look simple, neat and clean. And also in the owner's dashboard, we are showing if food is eaten or not on the top instead of what matters to the owner. So everything should be displayed as per the priority. The drink water should be somewhere else. It should not be on the top. So as per the priority, as per what user likes to see on their dashboard is what needs to be there when they first see, when they first use the application, not some random shit. Keep this in mind and think of design and build. Add this into the application.
+
+**07:05**
+> Continue

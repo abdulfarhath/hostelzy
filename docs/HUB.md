@@ -10,8 +10,12 @@ One hub, two standing chats, three on-demand chats. Only the chats with work run
 | Chat (title in the sidebar) | Session | Runs | Does | Writes to |
 |---|---|---|---|---|
 | **Hostelzy · Hub** | session_01KGJ32QudaatuZ4vkirbgAS | Always | Founder's single contact: ideas → specs, decisions, status, approvals, publishing pages | `docs/` (not marketing, finance, brand) |
-| **Hostelzy · Build** | session_01VYdxL9M4tryAVSw5paPAtw | Standing | Builds exactly the spec, prototype first, merges after the founder approves, APK | `hostelzy/`, `supabase/`, `app/`, `tools/`, SCREENS, BOARD status, FOUNDER-TODO steps |
+| **Hostelzy · Build** (Build 1 + integrator) | session_01VYdxL9M4tryAVSw5paPAtw | Standing | Builds exactly the spec; 2026-10-18 run: waves 0–1, tools/outreach, integrates waves 2–4, SCREENS/BOARD, merges, prototype/v7 | `hostelzy/`, `supabase/`, `app/`, `tools/`, SCREENS, BOARD status, FOUNDER-TODO steps |
 | **Hostelzy · Design** | session_01VKwqzkiTRrHcK6K1kpurt6 | Standing | Canvas 1:1 with the app; new boards from the spec before Build starts | `docs/design/`, feature files' Design section, canvas count line |
+| **Hostelzy · Build 2** (wave 2) | session_01QkhjRxJds7AVmuDKVsTZNM | 2026-10-18 run | F28 Part 2 + F29 Part 2 on `feature/w2-add-join` | app + SQL |
+| **Hostelzy · Build 3** (wave 3) | session_01Xg9Wc1vxrQ6AyXdceS336L | 2026-10-18 run | F28 Part 3: import scripts, workflow, console C14/C15, W8/W9 on `feature/w3-import` | tools/import, app/console, app/list, SQL |
+| **Hostelzy · Build 4** (wave 4) | session_01F5gdrWLJ9YR47oEBeroLu5 | 2026-10-18 run | F29 Part 3 Drive + F28 Part 4 freshness on `feature/w4-drive-fresh` | supabase/functions, features/drive, SQL |
+| **Hostelzy · Design 2** (F28 boards) | session_01DiPSUmg1b2dDZh7YsUU5AU | 2026-10-18 run | F28 boards on `design/f28-boards`; Design 1 assembles canvas.json | docs/design/v25 |
 | **Hostelzy · Marketing** | not created yet | On demand | Owner pitch, hostel collection sheet, tenant growth, reels, launch plan | `docs/marketing/` |
 | **Hostelzy · Finance** | not created yet | On demand | Budget, pricing, rewards caps, bills | `docs/finance/` |
 | **Hostelzy · Brand** | not created yet | On demand | Logo assets, Play Store pack, brand guide | `docs/brand/` |
@@ -20,6 +24,7 @@ How a feature flows: founder idea (hub) → spec `docs/features/Fnn-*.md` + DECI
 → code + prototype (Build) → founder approves in the prototype (hub relays) → merge + APK (Build) → canvas v+1 (Design, hub publishes).
 
 Rules of the structure:
+- **Model (founder, 2026-10-18): every Hostelzy chat runs Fable 5.1 at Max effort.** Hub, Build and Design are on it now. A new chat is created with `model: claude-fable-5-1`; the effort level is set by the founder in the chat's model menu (the hub cannot set it from here).
 - Child chats can't message the hub on this account; the hub reads their branches and session state instead. Each child
   ends its turn with a pushed commit whose message says what is done.
 - On-demand chats are created with `create_session` when a task needs them, given one task, and left idle after.
@@ -58,6 +63,9 @@ Check-in routine paused: nothing left for the chats. Waiting on the founder: SQL
 ## 2026-10-05: handover to a new Claude account
 The sessions above belong to the old account and are retired. The new account's hub creates fresh chats
 (see `HANDOVER.md` §3) and replaces the table at the top with their session IDs.
+
+## 2026-10-18 · SQL ships itself
+- **#144 merged:** the "Supabase SQL" GitHub action applies `docs/sql/run-all-pending.sql` on every merge that changes SQL (and checks `docs/sql/check.sql`); the founder's only step is FOUNDER-TODO **0** (two secrets, run twice, never again). Waves 1–4 (F30, F28, F29) are being built next, one PR each.
 
 ## 2026-10-17 release
 | What | Where |
@@ -115,3 +123,8 @@ Source of truth for the canvas: `docs/design/main-canvas/` on design/f26-merge @
 | Supabase functions deploy | 🔴 401 Invalid access token on both pushes: the founder's SUPABASE_ACCESS_TOKEN expired. FOUNDER-TODO step 0b |
 | Founder | Run run-all-pending.sql once (4zo1, 4ze26, 4zf27); re-create the token; test apk-105 |
 Build and Design: idle; nothing queued. Next feature waits on the founder's ideas.
+
+### 2026-10-18 15:00 UTC: the autonomous run, parallel
+Founder: "Hire as many chats and agents as possible… use the tokens at max… finish as soon as possible." Build 2/3/4 and Design 2
+created (Fable 5.1). Build 1 integrates in order 0 → 1 → 2 → 3 → 4 and builds prototype/v7. Hub check-in trigger hourly
+(trig_01RkB8B5qD75UzBnM3HRkehP) decides "Not in the spec" items, publishes canvas v25 and the prototype, then sends the founder one message.

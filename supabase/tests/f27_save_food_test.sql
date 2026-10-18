@@ -123,8 +123,12 @@ select test.act('authenticated', 'fb-f27-owner');
 select public.set_meal_cutoff('f2700000-0000-0000-0000-000000000001', 3);
 
 -- ------------------------------------------------------------ pushes
--- internal helpers (revoked from users): run as the database owner
+-- internal helpers (revoked from users): run as the database owner, with no
+-- signed-in user, like the cron job (test.act's claims outlive `reset role`;
+-- with the owner still "signed in", push_filter would drop the owner's own
+-- headcount push as "your own action").
 reset role;
+select set_config('request.jwt.claims', '{}', false);
 select test.eq(to_char(public.meal_ask_at('2026-10-06 17:00+05:30') at time zone 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI'), '2026-10-06 16:00');
 -- breakfast at 7:30 closes 4:30 am: asked at 9 pm the evening before, not at 3:30 am
 select test.eq(to_char(public.meal_ask_at('2026-10-07 04:30+05:30') at time zone 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI'), '2026-10-06 21:00');

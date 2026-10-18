@@ -1,0 +1,37 @@
+name: Supabase SQL
+
+# Applies every pending migration to the real project when SQL changes on
+# main (or by hand): one file, docs/sql/run-all-pending.sql, safe to run
+# again. Needs the GitHub secret SUPABASE_DB_URL (the Session pooler URI,
+# IPv4; docs/FOUNDER-TODO.md step 0); without it this does nothing.
+# The URL is a password: it is only ever read from the secret, never printed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'docs/sql/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - if: env.SUPABASE_DB_URL == ''
+        run: echo "No SUPABASE_DB_URL secret yet; nothing applied."
+      - name: Apply docs/sql/run-all-pending.sql
+        if: env.SUPABASE_DB_URL != ''
+        run: psql "$SUPABASE_DB_URL" -q -v ON_ERROR_STOP=1 -f docs/sql/run-all-pending.sql
+      - name: Check it worked (every column true)
+        if: env.SUPABASE_DB_URL != ''
+        run: |
+          out=$(psql "$SUPABASE_DB_URL" -Atq -v ON_ERROR_STOP=1 -f docs/sql/check.sql)
+          echo "check: $out"
+          case "$out" in *f*) echo "A check came back false; see docs/sql/README.md."; exit 1;; esac

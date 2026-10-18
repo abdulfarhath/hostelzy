@@ -47,6 +47,9 @@ The founder talks **only to the hub** (sidebar title `Hostelzy · Hub`; Build an
 - **Honest.** No fake numbers, no "Paid / Verified / Sent" unless it really happened, no "OTP"
   wording until SMS OTP exists, no sample data in the real build.
 - **Simple.** One job per screen, plain words, light + dark, works on 360-px phones.
+- **No explanations, priority order (founder, 2026-10-18).** No helper sentences under buttons, rows or cards; labels name
+  the action; subtitles are values or states; empty states ≤ 6 words + one button; no tips or "i" icons. Every dashboard
+  shows what that user came for first (`docs/features/F31-no-explanations-priority.md`).
 - **Never touch** the site root `index.html` (farhath.me/hostelzy/ stays the old prototype, founder
   decision). Public app pages live in `app/` (farhath.me/hostelzy/app/).
 - **Secrets.** Never commit or paste the Supabase service_role key or private keys.

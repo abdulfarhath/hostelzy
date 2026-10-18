@@ -53,6 +53,7 @@ Kept out by Build until confirmed: Building view, owner corridor floor plan, men
 | F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | 🔨 Building | 1–4 |
 | F29 Ask to join · ID in the owner's Drive · contact buttons for all | 🔨 Building | 1, 2, 4 |
 | SQL + functions ship themselves (CI) | 🔨 Building | 0 |
+| F31 No explanations · priority order (whole app) | 🔨 Building | 5 |
 Full register: `docs/IDEAS.md`. Hub answers: `docs/QUESTIONS.md`.
 
 ## Ideas (not planned yet)

@@ -18,7 +18,7 @@ Older entries that were later replaced are marked **(replaced)**.
 | Ranking | Rank #N with reasons, never a score. Reviews 50%, hold reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
 | Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05); **guests see 3 hostels, then sign in** (F30, 2026-10-18). Never gates, CCTV, exits or residents' names |
 | Listings | Two tiers: **UNVERIFIED** (team-listed: photos, name, rent range, no beds/holds) and **✓ VERIFIED** (full checklist: rooms, a price for every type, linked owner, 8 photos, team visit). Availability confirmed every 3 days |
-| Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
+| Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. **No explanations anywhere; everything in priority order** (F31, 2026-10-18). Design = app 1:1 (`SCREENS.md`) |
 | Web | Public pages at farhath.me/hostelzy/app/ until hostelzy.in. The site root farhath.me/hostelzy/ stays the old prototype |
 | Brand | Name Hostelzy. Logo B3-a2 "Full room" |
 | Approvals | Standing approval: chats decide and merge. Founder only for accounts, keys, payments and changes to money amounts. **2026-10-18 run: full delegation, prototype-first suspended, the founder tests the final APK** (see the log) |
@@ -326,6 +326,13 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   image or number**: it goes to the owner's own Google Drive (scope `drive.file`, Hostelzy keeps only the file id), or the
   tenant sends it on WhatsApp and the owner ticks "ID received". Masked by default (first 8 digits covered); the owner can
   require a full copy. Join tokens are single-use, 7 days.
+
+- **2026-10-18 (founder): no explanations anywhere; priority order.** Like Airbnb and Zoho: no helper sentences under
+  buttons, rows or cards; labels name the action; subtitles are values or states only; empty states ≤ 6 words + one
+  button; no tips, "i" icons or intro paragraphs. Dashboards show what the user came for first: owner Today = money strip,
+  then Holds · Payments · Joining · Fixes, Fair Play only when a case is open, meals headcount near the bottom; resident
+  Home = rent, next meal, week food, actions, review. The water-reminder offer sheet is removed; reminders live in
+  Me › Reminders. Supersedes F26 revert #6 (the "₹100 reward" sentence goes). Spec: `features/F31-no-explanations-priority.md`.
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

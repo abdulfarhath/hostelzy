@@ -31,6 +31,10 @@ aircraft manual (chapter = feature, section = part). Status: 🟢 Liked, waiting
 | 30-10-00 | Count hostel pages opened per device; 4th → "Sign in to see all N hostels, free" | Design + Build | — | 🟢 |
 | 30-11-00 | List, map, prices stay free; shared links count | Build | 30-10 | 🟡 founder yes/no |
 | 30-12-00 | Replaces the 2026-10-05 "free for everyone" rule (sign-in only, never a hold) | Hub → DECISIONS | founder approval | 🟡 |
+| **31-00-00** | **No explanations · priority order (F31, founder 2026-10-18)** | | | |
+| 31-10-00 | Rule A: remove every helper/explainer line; labels name the action; subtitles = values/states | Build 5 + Design 3 | — | 🔨 |
+| 31-20-00 | Rule B: owner Today reordered (money strip, needs-you tabs, Fair Play only when open, meals near the bottom); resident Home; Manage; Me; Settings | Build 5 + Design 3 | — | 🔨 |
+| 31-30-00 | Water-reminder offer sheet removed; reminders only in Me › Reminders | Build 5 | — | 🔨 |
 | **90-00-00** | **Older ideas from the first prototype (not planned)** | | | |
 | 90-10-00 | Compare hostels side by side | — | — | ⏸ |
 | 90-20-00 | "Make an offer" on rent | — | — | ⏸ |
