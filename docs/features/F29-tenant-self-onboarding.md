@@ -104,5 +104,12 @@ one-time: Drive scope on the consent screen (wave 4). Everything ships with the 
 - Build lists extras here; the hub decides within the day. Known later items: OneDrive, OCR masking, police verification form export.
 
 ## Design
-Boards H48, S94 (+ done variant), H49 (+ Drive and WhatsApp variants), H50 (+ not-available variant), S36 Joining tab variant,
-S38/S40 with buttons on every row. Light + dark for S94 and H49.
+**Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Sample: bed 203-B · ₹8,000/month (room 203's rate) · advance ₹3,000 · Ravi Teja · owner Srinivas.
+- **[H48]** askJoin over Residents: free-bed chips, Monthly fee, Advance, Moves in, First name (optional), Send on WhatsApp.
+- **[S94]** joinForm light + dark: name, phone (+91, from the account), moves in, ID box "Take a photo of your Aadhaar (or any government ID)" with Send ID on WhatsApp (the Drive camera path is wave 4, not drawn), Send to owner. [variant] done: "Sent · Srinivas will approve · we'll notify you" + the values.
+- **[H49]** joinReview over Today › Joining: name, phone, moves in, fee, advance, ID row as a checkbox "ID received on WhatsApp" (main), ✓ ticked variant, Drive variant with the masked image, Open in Drive, Delete from my Drive; Approve (red) / Ask again / Decline. Dark of the main.
+- **[H50]** drive over Manage: "Full copy needed (police file)" switch, Connect Google Drive (red); variants Connected · 12 files + Disconnect, and "Not available yet" (button disabled).
+- [variant of S36] Today with the Joining tab (Holds · Payments · Joining · Fixes per F31 Rule B) and the card "Ravi wants to join · Bed 203-B · moves in 1 Nov".
+- S38 (+ dark): Call · WhatsApp on the Paid row too. S40: Call · WhatsApp · Notify on every row (Notify disabled + "Not on the app yet · Ask to join ›" for a resident without the app), red Add resident · Ask to join in the beds notice.
+Rule A (F31) applied: no helper lines, no sheet intros. Not drawn: S39 Manage "Tenant IDs" row (not in the hub's list), W3 `app/j/` join-token copy (Build's wording).
+

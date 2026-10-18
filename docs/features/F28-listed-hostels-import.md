@@ -47,7 +47,7 @@ Rules (hub decisions, money ones marked ₹ for the founder to change later):
 | 28-80 | **OSM import** `tools/import/osm.mjs` | Overpass query for `tourism=hostel`, `amenity=dormitory`, `building=dormitory` in Hyderabad; same draft rows with `source = 'osm'`; credit line "Map data © OpenStreetMap contributors" in the console footer |
 | | Workflow `.github/workflows/import-hostels.yml` | `workflow_dispatch` + monthly; runs both scripts with `SUPABASE_DB_URL` (same secret as the SQL autorun). Never prints keys |
 | 28-21 | **Console › Listed › To call** segment (C14) | Drafts from Places/OSM/web: name, area, phone (tap to call), the call script (6 lines: who we are, free listing, rent range, men/women, food, "want to be verified?"), fields rent range + For + Food, buttons **List** (→ `listed`, `rent_confirmed_at = now()`), **Not a PG / Closed** (→ removed), **Call later**. **Export CSV** (name, phone, area, id) for the founder's WhatsApp run |
-| 28-50 | **Owner self-serve** web page **W8 `app/list/`** | "List your PG on Hostelzy, free": hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → RPC `self_list_request` (anon, max 3 per phone per day) → draft with `source = 'web'` → To call. Page says "We'll call you within 2 days to confirm" (honest; no "Listed!"). **W9 `app/list/poster.html`**: printable A4/A5 poster with the QR to W8, red headline "Get tenants from Hostelzy. Free listing.", for tea stalls, gates, Xerox shops |
+| 28-50 | **Owner self-serve** web page **W9 `app/list/`** | "List your PG on Hostelzy, free": hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → RPC `self_list_request` (anon, max 3 per phone per day) → draft with `source = 'web'` → To call. Page says "We'll call you within 2 days to confirm" (honest; no "Listed!"). **W10 `app/list/poster.html`**: printable A4/A5 poster with the QR to W8, red headline "Get tenants from Hostelzy. Free listing.", for tea stalls, gates, Xerox shops |
 | 28-60 | **WhatsApp sender** `tools/outreach/send.mjs` (founder runs it) | Reads the CSV from C14, sends one personalised message per number through `whatsapp-web.js` from a **separate SIM**: QR login, warm-up note, ≤ 25 messages/hour with random 60–180 s gaps, ≤ 150/day, skips numbers already messaged (local `sent.json`), stops on any reply (the founder answers by hand), text: "Hi, this is <founder> from Hostelzy, a free app where tenants find PGs in Hyderabad. <Hostel> is listed as unverified. Reply 1 to add your rent and get verified, 2 to remove it. – Hostelzy" with "Reply STOP to never hear from us". README with the limits and the ban risk in plain words. Not in the app; not counted |
 
 ## Part 4 · Keep it honest over time (28-90, wave 4)
@@ -70,8 +70,8 @@ Rules (hub decisions, money ones marked ₹ for the founder to change later):
 | S22 `rewards` (variant) | ₹200 / ₹20 rows | — |
 | C14 `#listed` (changed) | Segments: Listed · To call · To refresh · Partners; Export CSV | console view, variants |
 | C15 `#claims` (variant) | "added by Ravi (resident)" line | — |
-| **W8** `app/list/` (new web page) | List your PG | + sent state (variant) |
-| **W9** `app/list/poster.html` (new web page) | Poster with QR | A4 and A5 |
+| **W9** `app/list/` (new web page) | List your PG | + sent state (variant) |
+| **W10** `app/list/poster.html` (new web page) | Poster with QR | A4 and A5 |
 
 ## Server
 Migration `f28_add_hostels.sql` (rerun-safe): `hostels.source` (team|resident|partner|places|osm|web), `added_by`,
@@ -85,7 +85,7 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 ## Build notes
 - Wave 1: Part 1. Wave 2: Part 2 (S92, S93, entry points, rewards, C14 Partners, C15 line). Wave 3: Part 3. Wave 4: Part 4.
 - Demo (sample data): one hostel "added by you" at step "Owner asked", one partner code `HZ-PART-1`.
-- SCREENS: +2 screens (S92, S93), +2 web pages (W8, W9). Changed H1, S8, S9, S79, T20, S22, C14, C15.
+- SCREENS: +2 screens (S92, S93), +2 web pages (W9, W10; W8 is already app/delete-account). Changed H1, S8, S9, S79, T20, S22, C14, C15.
 
 ## Build · Part 1 (wave 1, branch `feature/w1-filter-wall-contacts`, PR #W1, 2026-10-18)
 - **H1 switch** `features/explore/explore_sheets.dart` (`SearchSheet`): **Verified only** under Food included (key
@@ -108,5 +108,29 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
 
 ## Design
-Boards S92 (+ partner variant), S93 (+ 5 state variants), W8 (+ sent), W9, H1 with the switch, S8 with the end row,
-S79 row, T20 button, S22 variant, C14 segments (To call, To refresh, Partners), C15 variant. Light + dark for S92, S93.
+**Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Note: the hub later assigned these boards to Design 2 (`design/f28-boards`); the set below already exists, see `docs/design/main-canvas/README.md` § v25.
+- **[S92]** addHostel light + dark: name, gate photo (1–3), pin (drag to fix, area from the pin), For, "What do you pay? · ₹/month", Sharing 1/2/3/4+, Food included, Owner's name + phone (required), I live here / I'm a Hostelzy partner, Add. [variant] partner: rent from–to + partner code.
+- **[S93]** myAdd light + dark: the card as tenants see it (UNVERIFIED, "Around ₹7,000/mo · expected, not confirmed"), the 5 steps Added ✓ → Owner asked → Owner agreed → Verified → ₹200 paid, Send to your owner (red), the honest line. Variants: Owner asked (Ask again · from 21 Oct), Owner agreed (UPI id + Save), Verified (₹200 on the 5th), Paid (green chip), Still waiting (60 days: "Still waiting. You can ask again."), Queued (monthly cap: "₹200 queued for 5 Dec").
+- H1 Filters: **Verified only** switch under Food included. S8: [variant] end of the list "Can't find your PG? Add it"; verified cards already sort before listed ones. T4 exploreEmpty: "Can't find your PG? Add it ›". S79 Me: **Add a hostel** row first (Rule B), [variant] "Your hostel · Sri Balaji Men's PG · Owner asked". T20: "Your stay isn't on Hostelzy yet" + **Add my hostel**. [variant of S22] Rewards: "₹200 · Sri Balaji Men's PG verified · paid by UPI on the 5th", "₹20 · Lakshmi Ladies Hostel listed (partner) · after the team check".
+- **Web:** `app/list/` form + sent state, A4 poster "Get tenants from Hostelzy. Free listing." with the QR. **Ids on the canvas: W9 = app/list/, W10 = poster**, because W8 is already `app/delete-account/` there (Design numbered the two web states W3/W5 on 2026-10-03). Hub to settle: change the spec's W8/W9, or realign web ids to the SCREENS table.
+- **Console:** C14 Listed gets the segments Listed · To call · To refresh · Partners; [variants] To call (drafts with phone, the 6-line call script, rent from–to, For, Food, List / Not a PG · Closed / Call later, Export CSV, OSM credit), To refresh (past 50 days, Rent confirmed today / Closed, Export CSV), Partners (add partner with code, list, listed count, ₹ due). [variant of C15] Claims: "added by Ravi (resident) · owner phone matches ✓ / ✗".
+Rule A (F31) applied: no helper lines. Not drawn: S9 map pins with the switch (screenshot boards).
+
+
+## Id fix (hub, 2026-10-18 15:50)
+W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page is **W9** and the poster **W10** everywhere (spec, boards, SCREENS).
+
+## Hub decisions on Build 3's "Not in the spec" (2026-10-18 15:55)
+| # | Item | Decision |
+|---|---|---|
+| 1 | `removed_at`, `call_after`, `source_photos` columns | ✅ Keep |
+| 2 | Owner phone moved to `hostel_leads` by trigger; `hostel_owner_phone(h)` | ✅ Keep; Build 2 dedupes through it |
+| 3 | `list_draft` needs no photo | ✅ Keep; the card shows the Places photo or the neutral placeholder; `list_hostel` (F26) unchanged |
+| 4 | Private `self-list` bucket for web photos | ✅ Keep (3 files, ≤ 5 MB, images only; team copies into hostel photos when listing) |
+| 5 | Web dedupe by name + area; Indian mobile check | ✅ Keep |
+| 6 | Gender from the name, hotels/lodges skipped, nearest area | ✅ Keep as a hint; the call confirms |
+| 7 | A gone Google place keeps a listed/live row | ✅ Keep |
+| 8 | Partner RPC names | ✅ Build 2 defines exactly `new_partner(p_name, p_phone, p_upi)` and `partners_due()` |
+| 9 | Drafts and removed rows hidden from Listed | ✅ Keep |
+| 10 | F31 Rule A applied | ✅ |
+| 11 | TLS **without** certificate verification for the DB connection | ❌ Change: verify the certificate by default (Node's CA store + Supabase's CA; the pooler presents a public cert). `PGSSL_NO_VERIFY=1` is an explicit opt-out for local tests only, and the script prints one line when it is on |
