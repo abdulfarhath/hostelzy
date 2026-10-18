@@ -96,10 +96,10 @@ Other folders: `supabase/migrations/` (schema, RLS, RPCs, jobs; applied in file-
 2. Add `supabase/tests/<name>_test.sql` (use `test.act`, `test.rows`, `test.eq`, `test.fails`, `test.blocked`;
    unique fixture ids) and append it to `supabase/tests/run.sh`.
 3. Run `tools/sql-bundle.sh` and `tools/sql-bundle.sh --full` and commit both files in `docs/sql/`
-   (`run.sh` checks that `run-all-pending.sql` runs twice on one database). Add a FOUNDER-TODO step in run
-   order: "re-run `docs/sql/run-all-pending.sql`", plus what it does and what the app does until it runs.
-4. The app must keep working before the founder runs it: catch the missing function/column
-   (`_missingFn` in `supabase_repo.dart`) and fall back or say it couldn't save.
+   (`run.sh` checks that `run-all-pending.sql` runs twice on one database). Add a column to `docs/sql/check.sql`
+   when the migration adds something worth checking. No FOUNDER-TODO step: the merge applies it (§7).
+4. The app must keep working until the SQL has landed (an APK can reach a phone before the action ran): catch
+   the missing function/column (`_missingFn` in `supabase_repo.dart`) and fall back or say it couldn't save.
 
 ## 6. Demo vs real builds
 
@@ -123,7 +123,12 @@ Other folders: `supabase/migrations/` (schema, RLS, RPCs, jobs; applied in file-
 - Push to `main` → `android-apk.yml` builds both APKs and publishes GitHub release `apk-<run number>`
   (give the founder the release page, never the .apk link). `supabase-functions.yml` deploys
   `send-push` when its code changes. `android-aab.yml` (manual) makes the Play Store AAB.
-- The founder runs SQL by hand (FOUNDER-TODO); nothing deploys migrations automatically.
+- **SQL ships itself.** `supabase-sql.yml` runs on every push to `main` that touches `supabase/migrations/**` or
+  `docs/sql/**` (and by hand): it applies `docs/sql/run-all-pending.sql` (one transaction, safe to run again) to the
+  real project through the `SUPABASE_DB_URL` secret (the Session pooler URI, IPv4; never printed), then runs
+  `docs/sql/check.sql` and fails if any column is false. Without the secret it does nothing and says so. The founder
+  sets the secret once (FOUNDER-TODO step 0) and never pastes SQL again; `supabase-functions.yml` deploys `send-push`
+  the same way with `SUPABASE_ACCESS_TOKEN`.
 
 ## 8. Rules
 
