@@ -234,3 +234,9 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **06:45**
 > Hire as many chats and agents as possible. It's up to you. Use the Claude tokens at max as you need, but make sure the work gets completed as soon as possible.
+
+**06:55**
+> For example, near the drink water notification, there is a explanation saying this thing does this thing. So take reference of big applications like Airbnb, they never give explanations. Zoho never gives any explanation for any button or anything. So I don't need any explanations anywhere. I want everything to look simple, neat and clean. And also in the owner's dashboard, we are showing if food is eaten or not on the top instead of what matters to the owner. So everything should be displayed as per the priority. The drink water should be somewhere else. It should not be on the top. So as per the priority, as per what user likes to see on their dashboard is what needs to be there when they first see, when they first use the application, not some random shit. Keep this in mind and think of design and build. Add this into the application.
+
+**07:05**
+> Continue
