@@ -256,6 +256,182 @@ push bodies in `supabase/migrations`, the pages in `app/`, the console, the te/h
 | Console `:355` | "The owner’s app places the beds, fans and windows inside these walls; they check it and publish." | Remove |
 | Console `:39/242/280` | "Not set up yet…", "Signals show once SQL step 4zf1 has run." | Keep (honest server state) |
 
+### Build 5 · done (2026-10-18, branch `feature/w5-clean`, integrated by Build 1)
+Everything in the audit table above is applied, plus the orders below. `flutter analyze` clean, `flutter test` green (see
+`docs/handover/w5-build.md` for the check log). No SCREENS/BOARD edits (integrator: retire the sheet below, recount).
+
+**Retired:** App sheet **#41 `waterOffer`** ("Want water reminders?", Shared) and `maybeOfferReminders()` / `acceptOffer()` /
+`remOffered` (the `rem.offered` snapshot key is ignored on load). `TodayCard` (glasses / "rings next") is gone from S23 Home and S8
+Explore; Me › Reminders keeps its own glasses and next-ring rows. `WaterOfferSheet` and `TodayCard` classes deleted.
+
+**New orders (Rule B)**
+| Screen | Order from the top, as built |
+|---|---|
+| S36 Owner Today | Header · Plan banner (only when the plan is late; unchanged) · **Money strip** `Due today ₹X · Late ₹Y` (tap → Rent; hidden when both are 0; red when anything is late) · **Holds · Payments · Fixes** tabs (Joining comes with Build 2's tab) · **Fair Play card only while a case is open** (strike count folded into its title) · This month (beds taken · free · rent pending · % full) · **Headcount card** · Still N free beds? · Confirm layouts · rates card |
+| S23 Resident Home | Header · Rent card ("Paid" when paid) · Next meal card · Food this week · the 3 actions (Pay rent · Raise complaint · Message owner) · 30-day review card ("How is your stay so far?") |
+| S8 Explore | No TodayCard, no offer; otherwise unchanged |
+| Owner Manage | Residents · Rates and UPI · Room layouts · Meals · Photos · Deals · Complaints · Food menu · House rules · Reviews and ranking (not in the F31 list; kept, see Not in the spec) · Team · Your plan |
+| S79 Me | Name + phone · (Your refund, when open) · Stay Rewards · Reminders · Settings · Help on WhatsApp · Log out · Switch role › · version |
+| Settings | **Account** (Name · Phone · WhatsApp) · **Notifications** (switch labels only) · **Language** (Language · Look) · **About** (Privacy · Terms · Fair Play rules · Hostelzy team · version line) · Log out · **Delete account last** |
+
+**Money strip rule.** "Due today" = every resident whose rent is `Due` (unpaid, not yet late); "Late" = rent `Overdue`. Both sums
+come from the same rows as the Rent tab, so the strip and the tab always agree.
+
+**Toasts shortened (Rule A, ≤ 6 words = the result).** 153 `toastMsg` texts:
+| Old | New |
+|---|---|
+| Awake hours need at least an hour. | Awake hours: at least an hour |
+| You can keep $maxMyRems reminders. Delete one first. | Limit: $maxMyRems reminders |
+| That’s outside your awake hours ($awakeLabel). Change them under Drink water first. | Outside awake hours ($awakeLabel) |
+| Only residents can fix room layouts. Ask your owner for your invite code. | Residents only |
+| This room has no layout yet. The owner draws it first. | No layout yet |
+| Nothing changed yet. Move things to where they really are. | Nothing changed yet |
+| Sent to $owner. You get a notification when they decide. | Sent to $owner |
+| Rejected. The current layout stays live. ${f.author.split(' ').first} can send a new fix. | Rejected |
+| Back to the earlier version. Tenants see it again. | Back to the earlier version |
+| That photo didn’t open. Try another one. | That photo didn’t open |
+| Enter the room size in feet (6 to 60). | Room size: 6 to 60 ft |
+| ${by.name} is editing this room. Try again when they’re done. | ${by.name} is editing this room |
+| $who is editing this room. Try again when they’re done. | $who is editing this room |
+| Couldn’t save it. Check your internet and try again. | Couldn’t save. Check your internet. |
+| Tap a bed or an item first. | Tap a bed or an item first |
+| All ${room.share} beds are placed. A new bed changes the sharing: the owner confirms the price first. | All ${room.share} beds are placed |
+| No room left for another bed inside the walls. | No room for another bed |
+| Bed $bedId has a resident. It can’t be deleted. | Bed $bedId has a resident |
+| Tap an AC, window, door, washroom or pillar to turn it. | Tap an item to turn it |
+| Bed ${room.label}-$other is now the upper bunk over ${room.label}-$lower. | ${room.label}-$other is now the upper bunk |
+| Thanks. Your layouts are confirmed for the next 3 months. | Layouts confirmed for 3 months |
+| Sent to ${hostelById(l.hid).owner}. They check it and publish. | Sent to ${hostelById(l.hid).owner} |
+| We’ll tell you when room $label’s layout is ready. | You get a notification when it’s ready |
+| Only one free bed in this room. | Only one free bed here |
+| Room ${l.room} layout approved. Tenants see it now. | Room ${l.room} layout approved |
+| Say what’s different, or add a photo. | Add a note or a photo |
+| Couldn’t send it. Check your internet and try again. | Couldn’t send. Check your internet. |
+| Sent. The Hostelzy team draws it within 48 hours. You get a notification. | Sent · within 48 hours |
+| Add a name and a 10-digit number. | Name and 10-digit number needed |
+| Saved. $name shows as Active after the founder adds their Google account and they open team tools. | Saved · $name |
+| Invite pending. This demo has no server, so nothing is sent. | Invite pending · sample data |
+| Message the Hostelzy team on WhatsApp to book a visit. | Book a visit on WhatsApp |
+| Sign in with your Hostelzy team Google account first. | Team Google account needed |
+| ${l.name} is live. The 30-day trial starts today. | ${l.name} is live · trial started |
+| Notice sent. $stayOwner accepts it in Hostelzy. | Notice sent to $stayOwner |
+| Bed ${b.id} is listed as free from ${dayMon(day)}. | Bed ${b.id} free from ${dayMon(day)} |
+| UPI reference saved. Hostelzy checks it against the bank record. | UPI reference saved |
+| Your first invoice isn’t out yet. You pay once it arrives. | No invoice yet |
+| Your owner hasn’t added you yet. Reviews open once you’re a resident here. | Not a resident here yet |
+| Tap the stars to rate your stay. | Tap the stars first |
+| Review posted as $meShort · verified resident. | Review posted as $meShort |
+| Tell us if you got your advance back. | Advance back? Pick one |
+| You already replied to this review. Each review gets one reply. | Already replied |
+| Pick up to $maxDeals. Remove one first. | Limit: $maxDeals deals |
+| Reviews open after 30 days of your stay, on ${dayMon(on)}. | Reviews open on ${dayMon(on)} |
+| Sent to the Hostelzy team. They hide it if it breaks the rules. | Sent to the Hostelzy team |
+| Code saved. You and $who each get ${fmt(referralReward)} after your first month at a Hostelzy hostel. | Code saved · ${fmt(referralReward)} each |
+| Thanks. $stayOwner sees how many said $v, not who. | Saved |
+| The count for that meal has closed. Your answer counts from the next meal. | Count closed for that meal |
+| The count now closes $hours h before each meal. Residents see the new time. | Closes $hours h before each meal |
+| Only residents of this hostel can change this list. | Residents only |
+| That’s 20 changes today. Try again tomorrow. | Limit: 20 changes a day |
+| Couldn’t save your name. Check your internet and try again. | Couldn’t save. Check your internet. |
+| Google sign-in works in the Android app. Use Hostelzy on this phone for now. | Google sign-in: Android app only |
+| Mobile numbers start with 6, 7, 8 or 9. | Numbers start with 6, 7, 8 or 9 |
+| Notifications allowed. Sign in with Google to get them. | Notifications on · sign in to get them |
+| Notifications allowed. This demo has no server, so nothing is sent. | Notifications on · sample data |
+| Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy. | Notifications off in phone settings |
+| Saved. Notifications work in the Android app. | Saved |
+| Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app. | Couldn’t turn on notifications |
+| To change your number, log out and sign in with the new one. | Log out to change your number |
+| Telugu and Hindi come once a native speaker has checked the words. | Telugu and Hindi: not yet |
+| Fair Play rules accepted. Welcome to Hostelzy. | Fair Play rules accepted |
+| ${c.resident} now shows as came from the app. Case closed, no strike. | Case closed · no strike |
+| Write what happened, or fix the resident. | Add your reply or a fix |
+| Photos open from the server in the real app. This is sample data. | Photo: sample data |
+| Couldn’t open the photo. Check your internet and try again. | Couldn’t open. Check your internet. |
+| Couldn’t save your answer. Check your internet and try again. | Couldn’t save. Check your internet. |
+| Reports are about a hostel you held a bed at. Hold one first. | Hold a bed there first |
+| Report sent to the Hostelzy team. The owner never sees your name. | Report sent |
+| Report saved for the Hostelzy team. The owner never sees your name. | Report saved |
+| Bed ${hold.bed} has been taken. See other beds. | Bed ${hold.bed} has been taken |
+| Couldn’t release it. Check your internet and try again. | Couldn’t release. Check your internet. |
+| Sharing isn’t available here. The text is copied. | Copied |
+| Message and call the owner after you hold a bed | Hold a bed first |
+| That mobile number doesn’t look right (10 digits, 6–9 first). | 10 digits, starting 6 to 9 |
+| Add a ${r.share} sharing AC price first. | ${r.share} sharing AC price needed |
+| Add a ${r.share} sharing non-AC price first. | ${r.share} sharing non-AC price needed |
+| Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more). | ${r.share} sharing price: ₹1,000 or more |
+| You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first. | Limit: ${AppState.maxHolds} holds |
+| Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed. | Hold placed on this phone |
+| Bed $bedLabel isn’t on the server. Pull down to refresh and try again. | Bed $bedLabel not on the server |
+| Hold confirmed. The tenant sees it in Hostelzy. | Hold confirmed |
+| Hold confirmed. Let $first know on WhatsApp. | Hold confirmed |
+| This bed isn’t on the server. Pull down to refresh and try again. | Bed not on the server |
+| Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification. | Hold placed |
+| Your owner hasn’t added you yet. Complaints open once you’re a resident here. | Not a resident here yet |
+| Your stay isn’t on Hostelzy yet. Ask $stayOwner to add you. | Stay not on Hostelzy yet |
+| $stayOwner hasn’t set your rent on Hostelzy yet. Ask them on WhatsApp. | Rent not set yet |
+| This is a sample listing, so it has no real UPI ID. Don’t pay it. | Sample listing · no real UPI |
+| Saved. ${h.owner} confirms once they see the money. | Sent to ${h.owner} |
+| $c isn’t in this account. Sign in with the account that sent or got it. | $c: another account |
+| New code $c. The old link and poster stop working. | New code $c |
+| Couldn’t get your invite code. Check your internet. | Couldn’t load. Check your internet. |
+| Enter the invite code from your owner, like ANJ-7Q2. | Invite code needed, like ANJ-7Q2 |
+| Sign in with Google to join with a code. | Sign in with Google first |
+| Invites work in the real Hostelzy app. This is sample data. | Invites: sample data |
+| You’re a manager at $h now. Pick “I run a PG” to start. | Manager at $h |
+| Asked to join $h. Your owner approves it, then your stay opens here. | Asked to join $h |
+| Open your phone camera and point it at the poster. It opens the invite link. | Scan the poster with your camera |
+| That QR isn’t a Hostelzy invite. Scan the poster at your PG. | Not a Hostelzy invite |
+| This is a sample listing, so there’s no real number yet. | Sample listing · no number |
+| Deals can be picked in Manage → Deals once the hostel is live. | Deals: after go-live |
+| Add a price for $nrShare sharing ${nrAc ? 'AC' : 'Non-AC'} in Manage → Rates first. | $nrShare sharing ${nrAc ? 'AC' : 'Non-AC'} price needed |
+| Floor $floor can’t be removed: room ${blocked.map((r) => r.label).join(', ')} ${blocked.length == 1 ? 'has' : 'have'} a resident or hold. | Room ${blocked.map((r) => r.label).join(', ')}: resident or hold |
+| Thanks. Tenants see your free beds as confirmed today. | Free beds confirmed today |
+| Thanks. Tenants see your rates as confirmed today. | Rates confirmed today |
+| Invite pending. The manager joins by signing in with this number. | Invite pending |
+| Pin moved to where you are. Check it sits on the gate. | Pin moved to you |
+| Move the map so the pin sits on the gate, or use your location. | Put the pin on the gate |
+| Couldn’t save ${r.name}. Check your internet and try again. | Couldn’t save ${r.name} |
+| Sample data: the owner shows as linked. | Owner linked · sample data |
+| Couldn’t check. Check your internet and try again. | Couldn’t check. Check your internet. |
+| ${d.name} is live. The 30-day trial starts today. | ${d.name} is live · trial started |
+| ${d.name.trim()} is live. The 30-day trial starts today. | ${d.name.trim()} is live · trial started |
+| Room ${x.room}: the reading is lower than last month’s (${grouped(last)}). | Room ${x.room}: lower than ${grouped(last)} |
+| Added to $month rent for ${rows.length} room${rows.length == 1 ? '' : 's'}. Residents see their share on their rent. | Added to $month rent · ${rows.length} room${rows.length == 1 ? '' : 's'} |
+| We’ll tell you when ${h.name} is verified. | You get a notification when verified |
+| Couldn’t save that. Check your internet and try again. | Couldn’t save. Check your internet. |
+| Sent. The Hostelzy team will call you on ${phoneSpaced(phone)}. | Sent · we call ${phoneSpaced(phone)} |
+| UPI ID saved. Tenants pay you here. | UPI ID saved |
+| That file isn’t a photo. Pick another. | Not a photo |
+| Photos upload in the real Hostelzy app. This is sample data. | Photos: sample data |
+| Couldn’t save the new order. Check your internet. | Couldn’t save. Check your internet. |
+| Only the owner adds managers. | Only the owner adds managers |
+| Couldn’t make the invite. Check your internet and try again. | Couldn’t invite. Check your internet. |
+| Enter your friend’s code, like ASHA-4K7Q. | Code needed, like ASHA-4K7Q |
+
+**Push bodies (new migration `supabase/migrations/20261018120000_f31_push_copy.sql`, bundles regenerated with `tools/sql-bundle.sh`).**
+| Function | Old body | New body |
+|---|---|---|
+| `send_layout_fix` | "Compare it with the current layout and decide." | "Room N" |
+| `decide_layout_fix` | "Room N is live for tenants now. Thanks for helping." / "Thanks for telling them about Room N." | "Room N is live" / "Room N" |
+| `send_shape_drawing` | "Check it and publish. Tenants see it straight away." | "Room N · ready to publish" |
+| `save_meter` | "70 units ÷ 4 · ₹8/unit. It’s on your rent in Hostelzy." | "70 units ÷ 4 · ₹8/unit" |
+| `decide_signup` | "Your owner approved you. Open Hostelzy to see your stay." | "Your stay is open" |
+| `join_with_invite` | "Approve them in Manage → Residents" | "Manage → Residents" |
+The migration ships itself from `main` (DECISIONS 2026-10-18); no founder step.
+
+**Web + console:** `app/index.html`, `app/r/`, `app/j/`, `app/console/console.js` per the audit table. `app/delete-account/` untouched
+(store-required page).
+
+**Tests:** 46 assertions updated to the new texts / orders (each marked `// F31` in the test), the two offer-sheet tests replaced by
+one "no offer sheet on the 3rd app open" test, the Headcount position test now expects it under This month.
+
+**Side effects the spec forces**
+- S-strike notice (`oStrike`) was reachable only from the Fair Play card on Today; with the card shown only while a case is open,
+  an owner with a strike and no open case has no way to open `oStrike` from the app (the push still deep-links). Hub to decide
+  where it lives (suggest: a "Fair Play" row under Manage › Your plan, or the strike count on the plan screen).
+- Hold-option cards in the hold sheet lose their subtitles ("Go and see it first" / "Sure already"); the tick lines stay.
+- Settings kicker names changed to the spec's words: "You" → "Account", "App" split into "Language" and "About".
+
 ## Design (Design 3, boards)
 Apply Rule A to **every** board (remove the helper lines; keep values/states) and Rule B to S36, S23, Manage, Me, Settings;
 retire the waterOffer board (archive row). Ship `docs/design/v26/project/*.dc.html` (changed boards, same file names) +
@@ -264,3 +440,12 @@ on branch `design/f31-clean`. When Build 5's table lands, re-check the boards ag
 
 ## Not in the spec
 Build 5 and Design 3 list extras here; the hub decides within the day.
+
+### Build 5 extras (hub to decide)
+- **Owner Manage keeps "Reviews and ranking"** (between House rules and Team): it is not in the F31 Manage list but removing a row
+  is not in the spec either. Say the word and it goes.
+- **Tenant IDs (F29) row** is Build 2's; the order above leaves its slot between House rules and Team.
+- **Plan banner** stays above the money strip (the spec doesn't mention it; it only shows when the plan is late).
+- **"Help on WhatsApp"** stays last in Me (not in the F31 Me order; not removed).
+- **Delete-account "Why are you leaving?" field** lost its placeholder ("Helps us improve"); the field itself stays.
+- Toast wording is Build 5's: the table above is the full list; change any line freely.

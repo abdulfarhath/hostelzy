@@ -138,7 +138,7 @@ void main() {
     final s = AppState(start: 'detail', role: 'tenant');
     await _pump(tester, s);
     expect(find.text('Ask on WhatsApp'), findsNothing);
-    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Hold a bed first'), findsOneWidget);
     s.dispose();
   });
 
@@ -158,7 +158,7 @@ void main() {
     expect(find.text('Opens 21 Oct · after 30 days'), findsOneWidget);
     await _tap(tester, find.text('Review your stay'));
     expect(s.screen, 'rStay');
-    expect(s.toast, 'Reviews open after 30 days of your stay, on 21 Oct.');
+    expect(s.toast, 'Reviews open on 21 Oct');
     // the server says the same if the phone's clock is off
     s.update(() => s.rvStars = 4);
     server.failWith = 'reviews open after 30 days of your stay, on 21 Oct';
@@ -256,7 +256,7 @@ void main() {
       s.replyText = 'Again';
     });
     s.postReply(r);
-    expect((r.reply, s.toast), ('Thanks, fixed', 'You already replied to this review. Each review gets one reply.'));
+    expect((r.reply, s.toast), ('Thanks, fixed', 'Already replied'));
     s.update(() => s.replyFor = null);
     await tester.pump();
     await _tap(tester, find.byKey(ValueKey('report-${r.id}')));
@@ -267,7 +267,7 @@ void main() {
     await _tap(tester, find.text('Abusive or rude words'));
     await _tap(tester, find.text('Send to Hostelzy'));
     expect(s.sheet, isNull);
-    expect(s.toast, 'Sent to the Hostelzy team. They hide it if it breaks the rules.');
+    expect(s.toast, 'Sent to the Hostelzy team');
     await tester.pump();
     expect(find.text('Reported to Hostelzy'), findsOneWidget);
     s.dispose();
@@ -288,7 +288,7 @@ void main() {
     s.update(() => s.replyText = 'Late reply');
     s.postReply(r2);
     await _settle();
-    expect(s.toast, 'You already replied to this review. Each review gets one reply.');
+    expect(s.toast, 'Already replied');
     s.stopLive();
     s.dispose();
   });

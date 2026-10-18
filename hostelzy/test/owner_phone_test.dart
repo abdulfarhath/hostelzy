@@ -107,7 +107,7 @@ void main() {
     // Nothing held or asked: nothing asked for, the number stays hidden.
     expect(server.asked, isEmpty);
     // F26 #7: locked, and no enquiry to unlock it.
-    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Hold a bed first'), findsOneWidget);
     expect(find.text('Ask on WhatsApp'), findsNothing);
     s.dispose();
   });

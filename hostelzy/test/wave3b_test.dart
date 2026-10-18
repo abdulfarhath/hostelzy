@@ -231,8 +231,8 @@ void main() {
     expect(s.dealsHidden('real1'), isTrue);
     expect(s.dealsOf('real1').on, isEmpty);
     expect(s.strikeLine('real1'), 'Deals hidden until ${dayMon(soon)}');
-    expect(find.text('Fair Play: strike 2 of 3'), findsOneWidget);
-    expect(find.text('Deals hidden until ${dayMon(soon)}'), findsOneWidget);
+    // F31: the strike card is no longer pinned on Today (Fair Play shows only while a case is open).
+    expect(find.text('Fair Play: strike 2 of 3'), findsNothing);
     s.go('oStrike');
     await _settle(tester);
     expect(find.text('Strike 2 of 3: deals hidden for 30 days'), findsOneWidget);

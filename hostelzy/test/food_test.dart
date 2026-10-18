@@ -110,7 +110,7 @@ void main() {
     expect(server.calls.last, 'rate saisri b good');
     expect(s.rated, 'Good');
     final owner = hostelById('saisri').owner;
-    expect(s.toast, 'Thanks. $owner sees how many said Good, not who.');
+    expect(s.toast, 'Saved');
     await tester.pump(const Duration(seconds: 4));
 
     // Offline: the answer goes back and says so.
@@ -118,7 +118,7 @@ void main() {
     unawaited(s.rateMeal('b', 'Poor'));
     await _settle(tester);
     expect(s.rated, 'Good');
-    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(s.toast, 'Couldn’t save. Check your internet.');
     await tester.pump(const Duration(seconds: 4));
 
     // The owner changes the menu; it shows the next time Home opens.
@@ -139,7 +139,7 @@ void main() {
     await tester.pump();
     await _settle(tester);
     await tester.pump();
-    expect(find.text('$owner hasn’t put the menu on Hostelzy yet.'), findsOneWidget);
+    expect(find.text('No menu yet'), findsOneWidget);
     expect(find.byKey(const ValueKey('homeWeek')), findsNothing);
     expect(find.text('How was breakfast?'), findsNothing);
     s.dispose();
@@ -170,7 +170,7 @@ void main() {
     server.down = true;
     await _tap(tester, find.byKey(const ValueKey('menuSave')));
     await _settle(tester);
-    expect((s.moreTab, s.menuDirty, s.toast), ('menu', true, 'Couldn’t save it. Check your internet and try again.'));
+    expect((s.moreTab, s.menuDirty, s.toast), ('menu', true, 'Couldn’t save. Check your internet.'));
     await tester.pump(const Duration(seconds: 4));
 
     server.down = false;
@@ -252,7 +252,7 @@ void main() {
     await _tap(tester, find.text('Food menu'));
     await _settle(tester);
     await tester.pump();
-    expect(find.text('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('menuEmpty')), findsOneWidget);
     expect(find.text('What’s for breakfast?'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('menuSave')));
     expect(server.calls, isEmpty);

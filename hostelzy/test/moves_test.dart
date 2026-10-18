@@ -161,7 +161,7 @@ void main() {
     expect(find.text('Your refund'), findsOneWidget);
     expect(find.text('Padmavathi marked it refunded · 1 Oct'.toUpperCase()), findsOneWidget);
     expect(find.text('To +91 98765 00001 · UPI ref. 4021 8834 1297'), findsOneWidget);
-    for (final t in ['Advance', 'Kept on leaving', 'Due by', 'Did ₹4,000 reach your bank?', 'Yes, I got ₹4,000', 'Not received']) {
+    for (final t in ['Advance', 'Kept on leaving', 'Due by', 'Yes, I got ₹4,000', 'Not received']) {
       expect(find.text(t), findsOneWidget, reason: t);
     }
     await _tap(tester, find.byKey(const ValueKey('refundNo')));

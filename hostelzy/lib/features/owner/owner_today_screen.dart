@@ -416,12 +416,12 @@ class _NeedsYouNowState extends State<NeedsYouNow> {
             child: Dashed(
               color: p.dv,
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              child: VGap(
+              child: const VGap(
                 gap: 6,
                 stretch: false,
                 children: [
-                  const Ic('check', size: 24),
-                  const T('Nothing needs you now', w: 800, s: 18),
+                  Ic('check', size: 24),
+                  T('Nothing needs you now', w: 800, s: 18),
                 ],
               ),
             ),

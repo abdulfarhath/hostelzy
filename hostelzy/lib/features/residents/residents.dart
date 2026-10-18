@@ -378,7 +378,6 @@ extension ResidentsActions on AppState {
 
   /// S2: the owner confirms a tenant's free hold.
   void confirmHoldReq(HoldRequest r) {
-    final first = r.name.split(' ')[0];
     if (r.hold != null && onServer) {
       _write(() => data.setHoldStatus(r.hold!, 'held')).then((ok) {
         if (ok) toastMsg('Hold confirmed');

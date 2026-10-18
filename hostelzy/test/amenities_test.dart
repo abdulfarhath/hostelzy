@@ -54,7 +54,7 @@ void main() {
     expect(find.textContaining('Added by a resident'), findsOneWidget);
     // A tenant can't change it.
     expect(find.byKey(const ValueKey('amAddBtn')), findsNothing);
-    expect(find.textContaining('keep this list up to date'), findsOneWidget);
+    expect(find.textContaining('keep this list up to date'), findsNothing); // F31
     s.dispose();
   });
 
@@ -94,7 +94,7 @@ void main() {
     await _pump(tester, s);
     s.openFloorSheet('anjani', 2);
     await tester.pump();
-    expect(find.text('Residents can add or fix this list. Srinivas sees every change.'), findsOneWidget);
+    expect(find.text('Residents can add or fix this list. Srinivas sees every change.'), findsNothing); // F31
     await _tap(tester, find.byKey(const ValueKey('amAddBtn')));
     expect(s.sheet, 'amAdd');
     expect(find.text('Pick what it is'), findsOneWidget);
@@ -127,7 +127,7 @@ void main() {
     expect(s.amOwnerTab, 'things');
     await _tap(tester, find.byKey(const ValueKey('ownFloor-2')));
     expect(find.byKey(const ValueKey('residentChanged')), findsOneWidget);
-    expect(find.text('Broken things also show on Today as a repair.'), findsOneWidget);
+    expect(find.text('Broken things also show on Today as a repair.'), findsNothing); // F31
 
     // Add a geyser: it goes in the room washrooms of rooms with an attached bath.
     await _tap(tester, find.byKey(const ValueKey('ownAddThing')));

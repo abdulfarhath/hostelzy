@@ -169,7 +169,7 @@ void main() {
     await _pump(tester, s);
     expect(s.langChoices, [('en', 'English')]);
     await _tap(tester, find.text('Language'));
-    expect((s.sheet, s.toast), (null, 'Telugu and Hindi come once a native speaker has checked the words.'));
+    expect((s.sheet, s.toast), (null, 'Telugu and Hindi: not yet'));
     await tester.pump(const Duration(seconds: 3));
     // A pack with strings (a test stand-in, not real Telugu): the picker shows it as beta.
     s.update(() => s.langs = {'te': const LangPack('te', 'తెలుగు', {'Help': 'TE:Help'})});

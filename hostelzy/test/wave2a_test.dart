@@ -212,7 +212,7 @@ void main() {
     server.failWith = 'offline';
     s.setWorking(l, fan, false);
     await _settle();
-    expect((fan.working, s.toast), (true, 'Couldn’t save it. Check your internet and try again.'));
+    expect((fan.working, s.toast), (true, 'Couldn’t save. Check your internet.'));
     s.stopLive();
     s.dispose();
   });

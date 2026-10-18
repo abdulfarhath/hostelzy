@@ -181,7 +181,7 @@ void main() {
     expect(find.byKey(const ValueKey('pinMark')), findsOneWidget);
     // The area's centre is never saved by itself.
     await _tap(tester, find.byKey(const ValueKey('pinSave')));
-    expect((s.screen, d.pin, s.toast), ('aPin', null, 'Move the map so the pin sits on the gate, or use your location.'));
+    expect((s.screen, d.pin, s.toast), ('aPin', null, 'Put the pin on the gate'));
     await tester.pump(const Duration(seconds: 4));
     await _tap(tester, find.byKey(const ValueKey('pinLocate')));
     expect(loc.exactAsked, isTrue);
@@ -239,7 +239,7 @@ void main() {
     await _tap(tester, find.text('Food menu'));
     await _settle(tester);
     expect(find.byKey(const ValueKey('mealTimes')), findsOneWidget);
-    expect(find.textContaining('Not set. Residents’ meal reminders use the usual times'), findsOneWidget);
+    expect(find.text('Not set · 7:30 · 12:30 · 8:00'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('mealTimesSet')));
     expect(s.timesDraft['b'], (450, 570));
     await _tap(tester, find.byKey(const ValueKey('mt-b-s-')));

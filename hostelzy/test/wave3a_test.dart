@@ -123,7 +123,7 @@ void main() {
     // Room 204's published layout has no AC unit: it can't be made AC.
     await _tap(tester, find.byKey(const ValueKey('manage-Rates and UPI')));
     expect(s.moreTab, 'rates');
-    expect(find.textContaining('An AC room needs an AC unit in its layout.'), findsOneWidget);
+    expect(find.textContaining('An AC room needs an AC unit in its layout.'), findsNothing); // F31
     final r204 = s.rooms['anjani']!.firstWhere((r) => r.n == 204);
     s.rateDraft![rateKey(true, r204.share)] = 9000;
     s.setRoomAc(r204, true);
@@ -184,7 +184,7 @@ void main() {
     // How the ranking works says so plainly.
     s.update(() => s.sheet = 'rank');
     await tester.pump();
-    expect(find.byKey(const ValueKey('rankFeatured')), findsOneWidget);
+    expect(find.byKey(const ValueKey('rankFeatured')), findsNothing); // F31: no explanation line
     s.dispose();
   });
 

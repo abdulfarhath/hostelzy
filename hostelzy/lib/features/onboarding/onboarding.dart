@@ -130,7 +130,7 @@ extension OnboardingActions on AppState {
         whatsapp(ph, 'Hi $name, you’re invited to manage ${hostelById(hid).name} on Hostelzy. Open this link, sign in with Google, and you’re in: ${inviteLink(code)} (code $code, works once, for 7 days)');
         toastMsg('WhatsApp opened with ${name.split(' ')[0]}’s invite. They join once they open it and sign in.');
       }, onError: (Object e) {
-        toastMsg('$e'.contains('only the owner') ? 'Only the owner adds managers.' : 'Couldn’t make the invite. Check your internet and try again.');
+        toastMsg('$e'.contains('only the owner') ? 'Only the owner adds managers.' : 'Couldn’t invite. Check your internet.');
       });
       return;
     }

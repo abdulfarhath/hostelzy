@@ -129,12 +129,12 @@ class ResidentHomeScreen extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                 decoration: box(w: 1, c: p.dv),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Ic('star', size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(child: const T('How is your stay so far?', w: 800, s: 14, lh: 1.35)),
-                    const Ic('chev', size: 18),
+                    Ic('star', size: 18),
+                    SizedBox(width: 10),
+                    Expanded(child: T('How is your stay so far?', w: 800, s: 14, lh: 1.35)),
+                    Ic('chev', size: 18),
                   ],
                 ),
               ),

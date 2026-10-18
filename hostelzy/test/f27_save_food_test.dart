@@ -119,7 +119,7 @@ void main() {
     expect(_text(tester, const ValueKey('nextMealCloses')), startsWith('Closes at 4:30 am'));
     await s.setEating('anjani', today, 'n', false);
     expect(s.eatingAt('anjani', today, 'n'), isTrue);
-    expect(s.toast, 'The count for that meal has closed. Your answer counts from the next meal.');
+    expect(s.toast, 'Count closed for that meal');
     _done();
   });
 
@@ -174,8 +174,9 @@ void main() {
     expect(find.text('Closes 5:00 pm'), findsOneWidget);
     expect(_text(tester, const ValueKey('headcount')), '34 of 40 eating');
     expect(find.text('6 skipping · cook for 34'), findsOneWidget);
-    // Above the Today groups.
-    expect(tester.getTopLeft(card).dy, lessThan(tester.getTopLeft(find.text('Holds').first).dy));
+    // F31 Rule B: below the Today tabs and This month.
+    expect(tester.getTopLeft(card).dy, greaterThan(tester.getTopLeft(find.text('Holds').first).dy));
+    expect(tester.getTopLeft(card).dy, greaterThan(tester.getTopLeft(find.text('This month'.toUpperCase())).dy));
 
     await _tap(tester, card);
     expect(s.screen, 'oMeals');
@@ -190,7 +191,7 @@ void main() {
 
     await _tap(tester, find.text('4 h'));
     expect(s.foodOf('anjani')!.cutoff, 4);
-    expect(s.toast, 'The count now closes 4 h before each meal. Residents see the new time.');
+    expect(s.toast, 'Closes 4 h before each meal');
     expect(find.text('Open · closes 4:00 pm'), findsOneWidget);
 
     // From Manage too.
@@ -221,7 +222,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('eatBtn')));
     await tester.pump();
     expect(s.eatingAt('anjani', today, 'n'), isFalse);
-    expect(s.toast, 'The count for that meal has closed. Your answer counts from the next meal.');
+    expect(s.toast, 'Count closed for that meal');
 
     // Before the SQL runs: no card, no Meals row, no chip.
     srv.board = null;
@@ -290,7 +291,7 @@ void main() {
     expect(find.text('23 plates'), findsOneWidget);
     expect(find.text('Anjani Residency saved'), findsOneWidget);
     expect(find.text('9,870'), findsOneWidget);
-    expect(find.text('1 skip = 1 plate the kitchen didn’t cook. No ranking of people: nobody is judged for eating.'), findsOneWidget);
+    expect(find.text('1 skip = 1 plate the kitchen didn’t cook. No ranking of people: nobody is judged for eating.'), findsNothing); // F31
     // Green only on the numbers.
     final p = PalScope.of(tester.element(find.byKey(const ValueKey('platesSaved'))));
     expect(tester.widget<Container>(find.byKey(const ValueKey('platesSaved'))).color, p.gb);

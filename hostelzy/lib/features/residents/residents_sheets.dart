@@ -127,14 +127,7 @@ class AddResidentSheet extends StatelessWidget {
                   children: [
                     Container(width: 24, height: 24, alignment: Alignment.center, decoration: box(bg: s.rBefore ? p.tx : transparent, w: 2, c: p.tx), child: s.rBefore ? Ic('check', size: 16, color: p.bg) : null),
                     const SizedBox(width: 10),
-                    Expanded(
-                      child: VGap(
-                        gap: 2,
-                        children: [
-                          const T('Lived here before Hostelzy', w: 800, s: 14),
-                        ],
-                      ),
-                    ),
+                    const Expanded(child: T('Lived here before Hostelzy', w: 800, s: 14)),
                   ],
                 ),
               ),

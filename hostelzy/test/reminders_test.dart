@@ -61,7 +61,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('me-Reminders')));
     expect(s.screen, 'reminders');
     expect(find.text('Every 30 min · 8 am – 10 pm'), findsOneWidget);
-    expect(find.text('Reminders ring from this phone, even offline. Nothing rings outside your awake hours.'), findsOneWidget);
+    expect(find.text('Reminders ring from this phone, even offline. Nothing rings outside your awake hours.'), findsNothing); // F31
     // A tenant has no hostel reminders.
     expect(find.textContaining('From Anjani'), findsNothing);
 
@@ -117,7 +117,7 @@ void main() {
     s.remName = 'Late';
     s.remAt = 23 * 60 + 30;
     await s.saveRem();
-    expect(s.toast, 'That’s outside your awake hours (8 am – 10 pm). Change them under Drink water first.');
+    expect(s.toast, 'Outside awake hours (8 am – 10 pm)');
     s.update(() => s.sheet = null);
     await tester.pump();
 
@@ -155,7 +155,7 @@ void main() {
     // Breakfast (7:30) is before the default awake hours (8 am), so it isn't promised.
     expect(find.text('From the food menu · lunch 12:30, dinner 8:00'), findsOneWidget);
     expect(find.text('3 days before and on the day · next 14 Oct'), findsOneWidget);
-    expect(find.text('When Srinivas sets one'), findsOneWidget);
+    expect(find.text('Not set'), findsOneWidget);
     await s.toggleHostelRem('meals');
     await s.toggleHostelRem('rent');
     expect(rem.applied.where((r) => r.kind == 'meal' || r.kind == 'rent'), isEmpty);

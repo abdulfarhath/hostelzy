@@ -61,7 +61,7 @@ void main() {
     expect(find.text('About you'), findsWidgets);
     expect(find.text('Owners use this to call or WhatsApp you.'), findsOneWidget);
     expect(find.text('NOT VERIFIED'), findsOneWidget);
-    expect(find.text('We’ll check it by SMS later. Until then owners see “not verified”.'), findsOneWidget);
+    expect(find.text('We’ll check it by SMS later. Until then owners see “not verified”.'), findsNothing); // F31: the NOT VERIFIED tag is the state
     s.dispose();
 
     final r = AppState(start: 'role');
@@ -106,7 +106,7 @@ void main() {
     final s = AppState(start: 'perm');
     await _pump(tester, s);
     expect(find.text('Turn on notifications?'), findsOneWidget);
-    expect(find.text('Your phone asks next. Change it any time in Settings.'), findsOneWidget);
+    expect(find.text('Your phone asks next. Change it any time in Settings.'), findsNothing); // F31
     expect(find.textContaining('camera'), findsNothing);
     expect(find.textContaining('later update'), findsNothing);
     s.dispose();

@@ -55,7 +55,7 @@ void main() {
     expect(find.byKey(const ValueKey('me-Saved')), findsNothing);
     expect(find.byKey(const ValueKey('me-Holds')), findsNothing);
     expect(find.text('Not a member yet'), findsOneWidget);
-    expect(find.text('Language, notifications, log out'), findsOneWidget);
+    expect(find.text('Language, notifications, log out'), findsNothing); // F31: no subtitle
     expect(find.byKey(const ValueKey('me-logout')), findsOneWidget);
     expect(tester.widget<Text>(find.text('Log out')).style?.color, Pal.light.ad);
     await _tap(tester, find.byKey(const ValueKey('switchRole')));
@@ -156,7 +156,7 @@ void main() {
     expect(b.sheet, 'payAdv');
     expect(find.text('Pay to Srinivas'), findsOneWidget);
     expect(find.text('Pay with a UPI app'), findsOneWidget);
-    expect(find.text('Hostelzy never holds your money. It goes straight to the owner.'), findsOneWidget);
+    expect(find.text('Hostelzy never holds your money. It goes straight to the owner.'), findsNothing); // F31
     b.update(() => b.sheet = null);
     await tester.pump();
     expect(find.text('PAY TO BOOK'), findsOneWidget);
@@ -214,7 +214,7 @@ void main() {
     expect((s.mode, s.room), ('room', 304));
     expect(find.text('Room 304'), findsOneWidget);
     expect(find.byKey(const ValueKey('bedFacts')), findsOneWidget);
-    expect(find.text('Same price for every bed here'), findsOneWidget);
+    expect(find.text('Same price for every bed here'), findsNothing); // F31: the rent value shows instead
     expect(find.text('Compare with another bed ›'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('roomContinue')));
     expect(s.sheet, 'hold');
@@ -232,8 +232,7 @@ void main() {
     }
     expect(find.text('Exit review · Stayed 8 months · left Aug 2026'), findsOneWidget);
     expect(find.textContaining('Srinivas replied: ', findRichText: true), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Only people who stayed here can review. Owners can reply, not delete.'), 200);
-    expect(find.text('Only people who stayed here can review. Owners can reply, not delete.'), findsOneWidget);
+    expect(find.text('Only people who stayed here can review. Owners can reply, not delete.'), findsNothing); // F31
     s.dispose();
   });
 

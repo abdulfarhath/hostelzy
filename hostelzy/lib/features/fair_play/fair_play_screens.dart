@@ -352,7 +352,7 @@ class OwnerCaseScreen extends StatelessWidget {
                   ),
                 ),
                 Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: T(c.title, w: 800, s: 17, lh: 1.3)),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: const Kicker('From Hostelzy records')),
+                const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 4), child: Kicker('From Hostelzy records')),
                 for (final e in c.events)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),

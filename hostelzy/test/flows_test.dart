@@ -78,7 +78,7 @@ void main() {
     // No Google sign-in in tests: it says so, and the local fallback works.
     await tap(tester, find.text('Continue with Google'));
     await tester.pump();
-    expect(s.toast, 'Google sign-in works in the Android app. Use Hostelzy on this phone for now.');
+    expect(s.toast, 'Google sign-in: Android app only');
     await tester.pump(const Duration(seconds: 3)); // toast gone
     await tap(tester, find.text('Use on this phone only'));
     expect(find.text('About you'), findsOneWidget);
@@ -434,7 +434,7 @@ void main() {
     expect(find.text('Not offered'), findsOneWidget);
     expect(find.text('₹10,800'), findsOneWidget);
     expect(find.text('₹11,000 walk in'), findsOneWidget);
-    expect(find.text('Same price for every bed of a type. Food included. Electricity extra, by meter.'), findsOneWidget);
+    expect(find.text('Food included · Electricity extra, by meter'), findsOneWidget);
 
     // Picker: AC filter skips non-AC rooms.
     await tap(tester, find.text('Pick a bed'));
@@ -717,7 +717,7 @@ void main() {
     s.jump('detail', 'tenant');
     await tester.pump();
     expect(find.text('90000 00101'), findsNothing);
-    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Hold a bed first'), findsOneWidget);
     s.update(() => s.bed = '204-D');
     s.placeHold('free');
     s.jump('detail', 'tenant');
@@ -898,7 +898,7 @@ void main() {
     expect(find.text('Room 304'), findsOneWidget);
     expect(find.text('Sample layout'), findsOneWidget);
     // F22: fan reach and AC airflow are always drawn; never priced by position.
-    expect(find.text('Same price for every bed here'), findsOneWidget);
+    expect(find.text('Same price for every bed here'), findsNothing); // F31
     expect(find.text('Bed A · free'), findsOneWidget);
     expect(find.textContaining('Corner bed · walls on two sides'), findsOneWidget);
     // Tap bed B (free soon) like a seat: its facts show.
@@ -1173,7 +1173,7 @@ void main() {
     await tester.pump();
     // F18: Indian mobiles start with 6–9.
     await tap(tester, find.text('Continue'));
-    expect((l.screen, l.toast), ('phone', 'Mobile numbers start with 6, 7, 8 or 9.'));
+    expect((l.screen, l.toast), ('phone', 'Numbers start with 6, 7, 8 or 9'));
     await tester.enterText(find.byType(TextField).last, '9000000001');
     await tester.pump(const Duration(seconds: 3));
     // F13: no SMS codes yet; the number is typed and stays not verified.
@@ -1308,7 +1308,7 @@ void main() {
     // No push on this device (tests, web): turning one on says so honestly.
     await tap(tester, find.text('New free beds'));
     await tester.pump();
-    expect((s.screen, s.toast), ('settings', 'Saved. Notifications work in the Android app.'));
+    expect((s.screen, s.toast), ('settings', 'Saved'));
     await tester.pump(const Duration(seconds: 3));
     // Privacy policy opens the web page.
     await tap(tester, find.text('Privacy policy'));
@@ -1907,10 +1907,10 @@ void main() {
       if (allow) {
         expect((s.osPushAllowed, s.notif['rent'], s.notif['beds']), (true, true, false));
         // Not signed in with Google: allowed, but nothing to send to yet.
-        expect((s.pushToken, s.toast), (null, 'Notifications allowed. Sign in with Google to get them.'));
+        expect((s.pushToken, s.toast), (null, 'Notifications on · sign in to get them'));
       } else {
         expect((s.osPushAllowed, s.notifOn('rent')), (false, false));
-        expect(s.toast, 'Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
+        expect(s.toast, 'Notifications off in phone settings');
       }
       await tester.pump(const Duration(seconds: 3));
       s.dispose();
@@ -1941,7 +1941,7 @@ void main() {
     await tester.pump();
     expect((s.screen, s.account?.email), ('phone', 'asha@gmail.com'));
     expect(find.text('asha@gmail.com'.toUpperCase()), findsOneWidget);
-    expect(find.textContaining('“not verified”'), findsOneWidget);
+    expect(find.textContaining('“not verified”'), findsNothing); // F31: the NOT VERIFIED tag is the state
     // F24 item 23: never pre-filled; the Google name is only the hint.
     expect(s.myName, '');
     expect(find.text('Asha K'), findsOneWidget);
@@ -2085,11 +2085,11 @@ void main() {
     // No WhatsApp, calls or UPI to sample numbers / IDs.
     s.lastLink = null;
     s.whatsapp(ownerPhones['anjani']!, 'Hi');
-    expect((s.lastLink, s.toast), (null, 'This is a sample listing, so there’s no real number yet.'));
+    expect((s.lastLink, s.toast), (null, 'Sample listing · no number'));
     s.call(ownerPhones['saisri']!);
     expect(s.lastLink, isNull);
     s.payByUpi(Payment(id: 'x', kind: 'advance', hid: 'anjani', who: 'You', what: 'Advance', bed: '204-D', amt: 3000, note: 'HZ'));
-    expect((s.lastLink, s.toast), (null, 'This is a sample listing, so it has no real UPI ID. Don’t pay it.'));
+    expect((s.lastLink, s.toast), (null, 'Sample listing · no real UPI'));
     await tester.pump(const Duration(seconds: 3));
     s.dispose();
     AppState.samples = true;
@@ -2207,7 +2207,7 @@ void main() {
     final room = s.rooms['anjani']!.last;
     s.layouts['anjani']!.remove(room.n);
     await pumpApp(tester, s);
-    expect(find.text('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.'), findsOneWidget);
+    expect(find.text('You edit and publish your own layouts. Want help? The Hostelzy team can draw one for you.'), findsNothing); // F31
     await tap(tester, find.text('No layout 1'));
     expect(find.text('Room ${room.label}'), findsOneWidget);
     // No layout yet → Create a layout.
@@ -2216,7 +2216,7 @@ void main() {
     expect(find.text('Create a layout'), findsOneWidget);
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '3');
     await tap(tester, find.text('Start drawing'));
-    expect(s.toast, 'Enter the room size in feet (6 to 60).');
+    expect(s.toast, 'Room size: 6 to 60 ft');
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('clLen')), matching: find.byType(TextField)), '16');
     await tester.pump(const Duration(seconds: 3));
     await tap(tester, find.text('Start drawing'));
@@ -2271,7 +2271,7 @@ void main() {
       });
       s.placeHold('free');
     }
-    expect((s.activeHolds, free[2].state, s.toast), (2, 'free', 'You can hold 2 beds at a time. Release one in Holds first.'));
+    expect((s.activeHolds, free[2].state, s.toast), (2, 'free', 'Limit: 2 holds'));
     // The owner releasing the bed updates the tenant's hold record too (F9).
     s.ownerReleaseBed('nest42', free[0]);
     expect((free[0].state, s.holds.firstWhere((h) => h.bed == free[0].id).status), ('free', 'released'));
@@ -2316,7 +2316,7 @@ void main() {
     // No passcode exists any more (B7).
     o.update(() => o.account = null);
     await o.checkTeam();
-    expect(o.toast, 'Sign in with your Hostelzy team Google account first.');
+    expect(o.toast, 'Team Google account needed');
     o.dispose();
   });
 
@@ -2341,7 +2341,7 @@ void main() {
     await tap(tester, find.byKey(const ValueKey('manage-Photos')));
     expect(s.screen, 'oPhotos');
     expect(find.text('0 of 8 minimum'), findsOneWidget);
-    expect(find.text('Drag to reorder. The first is the cover.'), findsOneWidget);
+    expect(find.text('Drag to reorder. The first is the cover.'), findsNothing); // F31
     // Add → crop (square, cover) → Use: uploads a compressed JPEG.
     await tap(tester, find.byKey(const ValueKey('addPhoto')));
     expect((s.screen, s.cropCover, s.cropLabel), ('oCrop', true, 'Front'));
@@ -2391,7 +2391,7 @@ void main() {
     await tap(tester, find.byKey(const ValueKey('addPhoto')));
     await tap(tester, find.byKey(const ValueKey('useCrop')));
     await tester.pump();
-    expect(demo.toast, 'Photos upload in the real Hostelzy app. This is sample data.');
+    expect(demo.toast, 'Photos: sample data');
     expect(demo.photosOf[demo.ownHid] ?? const [], isEmpty);
     await tester.pump(const Duration(seconds: 3));
 
@@ -2500,7 +2500,7 @@ void main() {
     s.update(() => s.sheet = null);
     r.go('/hostelzy/app/r?c=HZ-9999');
     await tester.pumpAndSettle();
-    expect((s.screen, s.toast), ('oToday', 'HZ-9999 isn’t in this account. Sign in with the account that sent or got it.'));
+    expect((s.screen, s.toast), ('oToday', 'HZ-9999: another account'));
     r.go('/r?c=nonsense');
     await tester.pumpAndSettle();
     expect(s.toast, 'That link has no booking code.');
@@ -2546,7 +2546,7 @@ void main() {
     // Complaints need a stay on the server.
     s.update(() => s.cText = 'No water');
     await s.raiseComplaint();
-    expect(s.toast, 'Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
+    expect(s.toast, 'Not a resident here yet');
     s.update(() => s.myHostel = 'h1');
     await s.raiseComplaint();
     expect((fake.calls.last, s.cText), ('complaint h1 Wi-Fi No water', ''));
@@ -2558,7 +2558,7 @@ void main() {
     fake.fail = true;
     s.update(() => s.payUtr = '999999999999');
     await s.sendPayUtr();
-    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(s.toast, 'Couldn’t save. Check your internet.');
     expect(s.payments.single.utr, isNot('999999999999'));
     s.stopLive();
     s.dispose();
@@ -2676,7 +2676,7 @@ void main() {
     final h = Hold(id: 'hold-x', hid: s.ownHid, bed: '101-A', room: 101, opt: 'free', start: DateTime.now().millisecondsSinceEpoch, status: 'waiting', ref: 'HZ-5020');
     s.update(() => s.holds = [h]);
     final req = allRequests(s).single;
-    expect((req.name, req.note), ('Hostelzy tenant', 'Code HZ-5020 · placed in the Hostelzy app'));
+    expect((req.name, req.note), ('Hostelzy tenant', 'Code HZ-5020'));
     s.confirmHoldReq(req);
     await Future<void>.delayed(Duration.zero);
     expect(fake.calls.last, 'holdstatus hold-x held');
@@ -2735,14 +2735,14 @@ void main() {
     expect(fake.calls.last, startsWith('rules'));
     s.setOwnerUpi('imran@okaxis', 'Imran');
     await Future<void>.delayed(const Duration(milliseconds: 1300));
-    expect((fake.calls.last, s.toast), ('upi ${s.ownHid} imran@okaxis Imran', 'UPI ID saved. Tenants pay you here.'));
+    expect((fake.calls.last, s.toast), ('upi ${s.ownHid} imran@okaxis Imran', 'UPI ID saved'));
     // Offline: nothing changes on the phone and it says so.
     fake.fail = true;
     s.update(() => s.dealDraft = {'exit'});
     s.publishDeals();
     await Future<void>.delayed(Duration.zero);
     expect(s.deals[s.ownHid]!.on, {'monthly'});
-    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(s.toast, 'Couldn’t save. Check your internet.');
     s.stopLive();
     s.dispose();
   });
@@ -2765,7 +2765,7 @@ void main() {
     expect(s.invoices, isEmpty); // no sample invoices on the server
     s.update(() => s.utrDraft = '123456789012');
     s.sendUtr();
-    expect(s.toast, 'Your first invoice isn’t out yet. You pay once it arrives.');
+    expect(s.toast, 'No invoice yet');
     expect(fake.calls, isEmpty);
     // The invoice arrives: its amount is the server's; the UTR goes to the server.
     fake.rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-owner', invoices: [
@@ -2776,7 +2776,7 @@ void main() {
     s.sendUtr();
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UPI reference saved. Hostelzy checks it against the bank record.'));
+    expect((fake.calls.single, s.screen, s.toast), ('invutr inv-1 123456789012', 'oPayStatus', 'UPI reference saved'));
     // The team marks it paid in the team console (F25: not in the app).
     s.stopLive();
     s.dispose();
@@ -2807,7 +2807,7 @@ void main() {
     s.update(() => s.rvStars = 4);
     s.postReview();
     await Future<void>.delayed(Duration.zero);
-    expect(s.toast, 'Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
+    expect(s.toast, 'Not a resident here yet');
     expect(fake.calls, isEmpty);
     // A confirmed resident: posted to their hostel, then the hostels are fetched again.
     fake.rows = liveFromRows(holds: [], enquiries: [], payments: [], complaints: [], me: 'fb-teja', stays: [
@@ -2826,7 +2826,7 @@ void main() {
     }
     expect(fake.calls.single, 'review h1 ${s.meShort} stay 4 Good food 1 Mostly null null');
     expect(fake.listingsFetched, 1);
-    expect((s.toast, s.rvStars), ('Review posted as ${s.meShort} · verified resident.', 0));
+    expect((s.toast, s.rvStars), ('Review posted as ${s.meShort}', 0));
     // Exit review
     s.update(() {
       s.exAdv = 'part';
@@ -2870,7 +2870,7 @@ void main() {
     for (var k = 0; k < 4; k++) {
       await Future<void>.delayed(Duration.zero);
     }
-    expect((fake.calls.last, s.toast), ('fix c1', 'Late Larry now shows as came from the app. Case closed, no strike.'));
+    expect((fake.calls.last, s.toast), ('fix c1', 'Case closed · no strike'));
     fake.fixError = 'the 48 hours are over; reply instead';
     s.fixCase(c1);
     for (var k = 0; k < 4; k++) {
@@ -2893,12 +2893,12 @@ void main() {
       s.holds = [];
     });
     s.sendReport();
-    expect(s.toast, 'Reports are about a hostel you held a bed at. Hold one first.');
+    expect(s.toast, 'Hold a bed there first');
     s.update(() => s.holds = [Hold(id: 'x', hid: 'h1', bed: '101-A', room: 101, opt: 'free', start: 0, status: 'released')]);
     s.sendReport();
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    expect((fake.calls.last, s.toast), ('report h1 Owner asked me to skip the app ', 'Report sent to the Hostelzy team. The owner never sees your name.'));
+    expect((fake.calls.last, s.toast), ('report h1 Owner asked me to skip the app ', 'Report sent'));
     s.stopLive();
     s.dispose();
   });
@@ -2951,7 +2951,7 @@ void main() {
     s.update(() => s.inviteDraft = 'mgr-abcd2345');
     await s.joinInvite();
     expect(fake.calls.last, 'joinmgr MGR-ABCD2345');
-    expect(s.toast, 'You’re a manager at Sai PG now. Pick “I run a PG” to start.');
+    expect(s.toast, 'Manager at Sai PG');
     expect(s.screen, 'role');
     s.stopLive();
     s.dispose();
@@ -2981,7 +2981,7 @@ void main() {
     expect((s.referralCode, fake.calls.where((c) => c == 'refcode').length), ('ASHA-4K7Q', 1));
     s.update(() => s.friendCode = 'nope');
     await s.useFriendCode();
-    expect(s.toast, 'Enter your friend’s code, like ASHA-4K7Q.');
+    expect(s.toast, 'Code needed, like ASHA-4K7Q');
     fake.friendError = 'that code isn\'t valid';
     s.update(() => s.friendCode = 'ABCD-1234');
     await s.useFriendCode();
@@ -2989,7 +2989,7 @@ void main() {
     fake.friendError = null;
     await s.useFriendCode();
     expect((fake.calls.last, s.referred), ('usecode ABCD-1234', true));
-    expect(s.toast, 'Code saved. You and Ravi each get ${fmt(referralReward)} after your first month at a Hostelzy hostel.');
+    expect(s.toast, 'Code saved · ${fmt(referralReward)} each');
     // "Yes, I joined" and "I've moved in" never grant a reward from the phone.
     s.answerJoined('yes');
     expect((s.isMember, s.toast), (false, 'Thanks. Your ₹100 Member reward unlocks once your owner confirms your stay.'));
@@ -3027,7 +3027,7 @@ void main() {
     expect(t.sheet, 'fixLock');
     expect(find.text('Only residents can send a fix'), findsOneWidget);
     expect(find.text('Book a bed to join.'), findsOneWidget);
-    expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsOneWidget);
+    expect(find.textContaining('Ask your owner for your invite code.', findRichText: true), findsNothing); // F31
     // Leaving discards the try.
     t.update(() => t.sheet = null);
     t.leaveFixEditor();
@@ -3050,7 +3050,7 @@ void main() {
     final v0 = live.version;
     // Nothing changed yet: not sent.
     await tap(tester, find.text('Send to owner'));
-    expect(r.toast, 'Nothing changed yet. Move things to where they really are.');
+    expect(r.toast, 'Nothing changed yet');
     // Move the fan one foot and mark it not working; the live layout doesn't change.
     final fan = r.fixLayout!.of('fan').first;
     r.edSelect(fan.id);
@@ -3077,7 +3077,7 @@ void main() {
     await tap(tester, find.text('Send to owner').last);
     await tester.pump();
     expect((r.screen, r.sheet), ('rRoom', null));
-    expect(r.toast, 'Sent to $owner. You get a notification when they decide.');
+    expect(r.toast, 'Sent to $owner');
     expect(find.text('Waiting for $owner'), findsOneWidget);
     expect(r.fixDrafts.containsKey('anjani|203'), isFalse);
     final mine = r.myFixFor('anjani', 203)!;
@@ -3129,7 +3129,7 @@ void main() {
     await tap(tester, find.text('It was moved back'));
     await tap(tester, find.text('Reject the fix'));
     expect((f2.status, f2.reason), ('rejected', 'It was moved back'));
-    expect(o.toast, 'Rejected. The current layout stays live. Teja can send a new fix.');
+    expect(o.toast, 'Rejected');
     expect(v0, isNonZero);
     o.dispose();
   });
@@ -3241,7 +3241,7 @@ void main() {
     s.approveSignup(s.signups.single);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    expect(s.toast, 'Couldn’t save it. Check your internet and try again.');
+    expect(s.toast, 'Couldn’t save. Check your internet.');
     expect(fake.calls.length, 2);
     s.stopLive();
     s.dispose();
@@ -3258,7 +3258,7 @@ void main() {
     expect(find.text('farhath.me/hostelzy/app/j/?c=VAS-7Q2'), findsOneWidget);
     await tap(tester, find.text('Make a new code (the old one stops working)'));
     await tester.pump();
-    expect((o.inviteCode, o.toast), ('VAS-K9P', 'New code VAS-K9P. The old link and poster stop working.'));
+    expect((o.inviteCode, o.toast), ('VAS-K9P', 'New code VAS-K9P'));
     o.dispose();
 
     // Resident gate: the code from the invite link is filled in; joining needs Google.
@@ -3273,13 +3273,13 @@ void main() {
     await pumpApp(tester, r);
     expect(find.byKey(const ValueKey('inviteCode')), findsOneWidget);
     await tap(tester, find.byKey(const ValueKey('joinGo')));
-    expect(r.toast, 'Sign in with Google to join with a code.');
+    expect(r.toast, 'Sign in with Google first');
     await tester.pump(const Duration(seconds: 3));
     r.update(() => r.account = (uid: 'fb-kiran', name: 'Kiran Rao', email: 'k@gmail.com'));
     await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
     expect(od.joined, ('VAS-K9P', 'Kiran Rao', '9876543210'));
-    expect((r.toast, r.pendingInvite), ('Asked to join Vasavi Boys Hostel. Your owner approves it, then your stay opens here.', null));
+    expect((r.toast, r.pendingInvite), ('Asked to join Vasavi Boys Hostel', null));
     await tester.pump(const Duration(seconds: 3));
     // A retired code: the server's reason, in plain words.
     od.joinError = 'P0001: that invite code isn\'t valid any more; ask your owner for the new one';
@@ -3292,7 +3292,7 @@ void main() {
     r.data = const SampleRepo();
     await tap(tester, find.byKey(const ValueKey('joinGo')));
     await tester.pump();
-    expect(r.toast, 'Invites work in the real Hostelzy app. This is sample data.');
+    expect(r.toast, 'Invites: sample data');
     await tester.pump(const Duration(seconds: 3));
     r.dispose();
   });
@@ -3349,7 +3349,7 @@ void main() {
     // A failed save is said out loud, never silent.
     d2.failTokens = true;
     expect(await again.syncPushToken(force: true), isFalse);
-    expect(again.toast, 'Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app.');
+    expect(again.toast, 'Couldn’t turn on notifications');
     // Not signed in: no prompt, nothing saved.
     final anon = AppState(start: 'role', role: 'tenant');
     anon.push = _FakePush(true);
@@ -3444,7 +3444,7 @@ void main() {
     await tester.enterText(find.descendant(of: find.byKey(const ValueKey('addPhone')), matching: find.byType(EditableText)), '1234567890');
     await tester.pump();
     await go();
-    expect(s.toast, 'That mobile number doesn’t look right (10 digits, 6–9 first).');
+    expect(s.toast, '10 digits, starting 6 to 9');
 
     // A future date is a booking (demo): Due, "Moves in …", the welcome toast.
     final free = s.rooms['anjani']!.expand((r) => r.beds).firstWhere((b) => b.state == 'free').id;

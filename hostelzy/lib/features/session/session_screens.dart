@@ -416,7 +416,7 @@ class RoleGateScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           color: p.sf,
-          child: Row(children: [Expanded(child: const T('Manager at a PG?', w: 800, s: 14)), const Ic('chev', size: 18)]),
+          child: const Row(children: [Expanded(child: T('Manager at a PG?', w: 800, s: 14)), Ic('chev', size: 18)]),
         ),
       ));
       foot = [

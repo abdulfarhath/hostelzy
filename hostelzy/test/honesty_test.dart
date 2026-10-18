@@ -72,7 +72,7 @@ void main() {
     expect(find.textContaining('Anjani'), findsNothing);
     expect(find.textContaining('Srinivas'), findsNothing);
     expect(find.textContaining('board'.toUpperCase()), findsNothing);
-    expect(find.text('${h.owner} hasn’t put the menu on Hostelzy yet.'), findsOneWidget);
+    expect(find.text('No menu yet'), findsOneWidget);
     expect(find.text('Food this week'.toUpperCase()), findsOneWidget); // F26 #13
 
     // Pay rent: the real amount; paying starts this month's rent on the server first.

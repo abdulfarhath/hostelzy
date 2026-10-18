@@ -62,7 +62,7 @@ void main() {
     s.hid = 'anjani';
     await _pump(tester, s);
     await tester.ensureVisible(find.byKey(const ValueKey('ownerContact')));
-    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Hold a bed first'), findsOneWidget);
     expect(find.text('Ask on WhatsApp'), findsNothing);
     // Locked: tapping does nothing.
     await _tap(tester, find.byKey(const ValueKey('contact-WhatsApp')));
@@ -86,7 +86,7 @@ void main() {
     // The hold ends: locked again.
     s.releaseHold(h);
     await tester.pump();
-    expect(find.text('Message and call the owner after you hold a bed'), findsOneWidget);
+    expect(find.text('Hold a bed first'), findsOneWidget);
     expect(s.contactHold('anjani'), isNull);
     s.dispose();
   });
@@ -199,7 +199,7 @@ void main() {
     await _tap(tester, card);
     expect(find.byKey(const ValueKey('unverifiedPage')), findsOneWidget);
     expect(find.text('Around ₹7,000–9,000'), findsOneWidget);
-    expect(find.text('Expected, not confirmed. The owner hasn’t joined Hostelzy yet.'), findsOneWidget);
+    expect(find.text('Expected, not confirmed'), findsOneWidget);
     expect(find.text('Pick a bed'), findsNothing);
     expect(find.byKey(const ValueKey('ownerContact')), findsNothing);
 

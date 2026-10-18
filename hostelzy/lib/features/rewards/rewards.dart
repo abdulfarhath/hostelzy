@@ -97,9 +97,9 @@ extension RewardsActions on AppState {
   /// S6: a new tenant enters a friend's code before their first stay.
   Future<void> useFriendCode() async {
     final c = friendCode.trim().toUpperCase();
-    if (!RegExp(r'^[A-Z]{3,5}-[A-Z0-9]{4}$').hasMatch(c)) return toastMsg('Enter your friend’s code, like ASHA-4K7Q.');
+    if (!RegExp(r'^[A-Z]{3,5}-[A-Z0-9]{4}$').hasMatch(c)) return toastMsg('Code needed, like ASHA-4K7Q');
     try {
-      final who = await data.useReferralCode(c);
+      await data.useReferralCode(c);
       update(() {
         referred = true;
         friendCode = '';
