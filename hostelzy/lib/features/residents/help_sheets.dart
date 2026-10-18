@@ -56,7 +56,6 @@ class ComplaintSheet extends StatelessWidget {
               Expanded(child: Cta('Send to owner', height: 54, px: 16, fs: 15, onTap: send)),
             ],
           ),
-          T('${s.stayOwner == 'your owner' ? 'Your owner' : s.stayOwner} sees it in Hostelzy. You’ll see here when it’s fixed.', s: 13, c: p.mu, lh: 1.4),
         ],
       ),
     );

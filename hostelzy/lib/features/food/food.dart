@@ -206,7 +206,7 @@ extension FoodActions on AppState {
       } catch (e) {
         debugPrint('rate: $e');
         update(() => rated = before);
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
     } else {
       update(() {
@@ -215,7 +215,7 @@ extension FoodActions on AppState {
         c[v.toLowerCase()] = (c[v.toLowerCase()] ?? 0) + 1;
       });
     }
-    toastMsg('Thanks. $stayOwner sees how many said $v, not who.');
+    toastMsg('Saved');
   }
 
   /// Owner: this week's rating counts for their hostel.

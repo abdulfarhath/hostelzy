@@ -171,43 +171,14 @@ void main() {
     s.dispose();
   });
 
-  testWidgets('F20: the first-time offer shows once after sign-in, only where reminders ring', (tester) async {
-    // Where reminders can't ring (web, desktop, tests): no offer.
-    final web = AppState(start: 'explore', role: 'tenant');
-    await web.startReminders(NoReminders());
-    await _pump(tester, web);
-    await tester.pump();
-    expect(web.sheet, isNull);
-    web.dispose();
-  });
-
-  testWidgets('F20: the offer, accepted, turns water on and never comes back', (tester) async {
+  // F31: the first-time water offer sheet is retired; reminders live in Me › Reminders only.
+  testWidgets('F31: no offer sheet on the 3rd app open', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
-    final rem = NoReminders(available: true);
-    await s.startReminders(rem);
-    // F21 W2: not on first arrival; from the 3rd app open.
-    s.opens = 2;
+    await s.startReminders(NoReminders(available: true));
+    s.opens = 3;
     await _pump(tester, s);
     await tester.pump();
     expect(s.sheet, isNull);
-    s.opens = 3;
-    s.maybeOfferReminders(); // what Explore does each time it shows
-    await tester.pump();
-    expect(s.sheet, 'waterOffer');
-    expect(find.text('Want water reminders?'), findsOneWidget);
-    expect(find.text('Change it any time in Me → Reminders. Runs on this phone.'), findsOneWidget);
-    await _tap(tester, find.text('Turn on water reminders'));
-    await tester.pump();
-    expect((s.sheet, s.water.on, rem.applied.length), (null, true, 28));
-    // Explore shows the Today card; the offer never comes back.
-    expect(find.text('0 of 8 glasses'), findsOneWidget);
-    s.tab('me');
-    await tester.pump();
-    s.tab('explore');
-    await tester.pump();
-    await tester.pump();
-    expect(s.sheet, isNull);
-    expect(s.snapshot()['rem']['offered'], isTrue);
     s.dispose();
   });
 

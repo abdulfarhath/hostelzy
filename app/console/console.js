@@ -53,10 +53,10 @@ async function start() {
   const signInView = (msg) => mount(el('div', { class: 'signin' }, el('div', { class: 'card' },
     word(),
     el('h1', { style: 'font-size:30px;margin:0' }, 'Team console'),
-    el('p', { class: 'mu', style: 'margin:0' }, 'Onboarding, payments, Fair Play and layout help. Only Hostelzy team Google accounts can sign in.'),
+    el('p', { class: 'mu', style: 'margin:0' }, 'Hostelzy team Google accounts only'),
     el('button', { class: 'google', onclick: () => fa.signInWithPopup(auth, new fa.GoogleAuthProvider()).catch((e) => toast(e.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : 'Couldn’t sign in: ' + e.code)) },
       el('span', { class: 'g' }, 'G'), 'Continue with Google'),
-    el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, msg ?? 'Not on the team? Use the Hostelzy app instead.'))));
+    msg ? el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, msg) : '')));
 
   fa.onAuthStateChanged(auth, async (u) => {
     if (!u) return signInView();
@@ -145,8 +145,7 @@ const VIEWS = {
           el('label', {}, 'Area'), seg(['Ameerpet', 'SR Nagar', 'Madhapur'], 'area'),
           el('label', {}, 'For'), seg(['Men', 'Women', 'Co-living'], 'gender'),
           el('label', {}, 'Visit on'), el('input', { type: 'datetime-local', oninput: (e) => (f.visit = e.target.value) }),
-          el('button', { class: 'btn primary cta', onclick: create }, 'Create draft hostel', '✓'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'The rest (rooms, rates, photos, residents) is done on the visit, in the app’s team mode.'))),
+          el('button', { class: 'btn primary cta', onclick: create }, 'Create draft hostel', '✓')))),
     ];
   },
 
@@ -175,7 +174,7 @@ const VIEWS = {
     return [
       el('div', { class: 'title' }, el('h1', {}, 'Owner payments'), el('span', { class: 'mu', style: 'font-size:13px' }, `Pay to ${hostelzyUpi} · match every UTR in the bank app. Never trust screenshots.`)),
       el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Invoice', 'Amount', 'UTR', 'Due', 'Status', 'Action'].map((h) => el('div', {}, h))),
-        invs.length ? invs.map(row) : el('p', { class: 'empty' }, 'No invoices yet. They start when a hostel’s 30-day trial ends.')),
+        invs.length ? invs.map(row) : el('p', { class: 'empty' }, 'No invoices yet')),
     ];
   },
 
@@ -214,7 +213,7 @@ const VIEWS = {
         const up = await db.storage.from('case-photos').upload(path, f, { contentType: 'image/jpeg' });
         if (up.error) return toast('Couldn’t upload: ' + up.error.message);
         ok(await db.from('fair_cases').update({ tenant_photo: path }).eq('id', c.id));
-        toast('Photo added. The owner sees it with the case.');
+        toast('Photo added');
         again();
       } }));
     const drawDetail = async () => {
@@ -296,13 +295,12 @@ const VIEWS = {
           el('button', { class: 'btn full', onclick: () => act('close') }, 'Close · no issue', '✓'),
           el('button', { class: 'btn full', onclick: () => act('ask') }, 'Ask for more', '…'),
           strikeBtn),
-        el('p', { class: 'note' }, 'Strikes: 1 warning · 2 deals hidden for 30 days · 3 removed from Hostelzy. 3 fixes within 48 hours in 6 months = 1 warning (counted by the server). No fines.')),
+        el('p', { class: 'note' }, '1 warning · 2 deals hidden 30 days · 3 removed')),
       el('section', {},
         el('h2', {}, 'Tenant reports'),
         el('div', { class: 'list' }, reportRows),
         el('h2', {}, sel ? `Signals · ${sel.hostels?.name ?? ''}` : 'Signals'),
         signals,
-        el('p', { class: 'note' }, 'Owners draw and publish their own layouts. When one asks us to draw a room, it shows in Layout help, due within 48 hours.'),
         el('div', { style: 'padding:0 16px 16px' }, el('a', { class: 'btn', href: '#layout' }, 'Open Layout help ›'))))];
   },
 
@@ -332,14 +330,14 @@ const VIEWS = {
         for (let x = 1; x < d.w; x++) s.append(svg('line', { x1: x * k, y1: 0, x2: x * k, y2: d.h * k, stroke: 'var(--hl)' }));
         for (let y = 1; y < d.h; y++) s.append(svg('line', { x1: 0, y1: y * k, x2: d.w * k, y2: y * k, stroke: 'var(--hl)' }));
         if (o) s.append(svg('polygon', { points: o.map(([x, y]) => `${x * k},${y * k}`).join(' '), fill: 'none', stroke: 'var(--tx)', 'stroke-width': 2 }));
-        preview.replaceChildren(s, o ? '' : el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, 'Type the corners clockwise from the top-left, in feet: 0,0 14,0 14,8 10,12 0,12'));
+        preview.replaceChildren(s, o ? '' : el('p', { class: 'mu', style: 'margin:0;font-size:12px' }, '0,0 14,0 14,8 10,12 0,12'));
       };
       const num = (k) => el('input', { inputmode: 'numeric', value: String(d[k]), oninput: (e) => { d[k] = Math.max(6, Math.min(60, Number(e.target.value) || 0)); draw(); } });
       const seg = el('div', { class: 'seg', style: 'grid-auto-flow:row;grid-template-columns:repeat(4,1fr)' }, SHAPES.map((sh) => el('button', { class: d.shape === sh ? 'on' : '', onclick: (e) => { d.shape = sh; [...seg.children].forEach((b) => b.classList.toggle('on', b === e.target)); pts.style.display = sh === 'Custom' ? '' : 'none'; draw(); } }, sh)));
       const pts = el('input', { value: d.pts, placeholder: '0,0 14,0 14,8 10,12 0,12', style: d.shape === 'Custom' ? '' : 'display:none', oninput: (e) => { d.pts = e.target.value; draw(); } });
       const send = async () => {
         const o = walls();
-        if (d.shape === 'Custom' && !o) return toast('Type at least 3 corners inside the room.');
+        if (d.shape === 'Custom' && !o) return toast('At least 3 corners');
         ok(await db.rpc('send_shape_drawing', { p_id: q.id, p_drawing: { w: d.w, h: d.h, shape: d.shape, ...(o ? { outline: o } : {}) } }));
         toast(`Sent to ${q.hostels?.owner_name || 'the owner'}. They check it and publish.`);
         again();
@@ -352,7 +350,6 @@ const VIEWS = {
         pts, preview,
         el('button', { class: 'btn primary cta', onclick: send }, 'Send to owner', '✓'),
         el('button', { class: 'btn full', onclick: () => drawDetail() }, 'Back to the request'),
-        el('p', { class: 'note' }, 'The owner’s app places the beds, fans and windows inside these walls; they check it and publish.'),
       );
     };
     const drawDetail = async () => {

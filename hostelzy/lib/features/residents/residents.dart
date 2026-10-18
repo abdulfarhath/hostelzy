@@ -67,7 +67,7 @@ extension ResidentsActions on AppState {
     final name = rName.trim();
     if (name.length < 2) return toastMsg('Add the resident’s name.');
     if (rPhone.length != 10) return toastMsg('Add their 10-digit WhatsApp number.');
-    if (!AppState.validPhone(rPhone)) return toastMsg('That mobile number doesn’t look right (10 digits, 6–9 first).');
+    if (!AppState.validPhone(rPhone)) return toastMsg('10 digits, starting 6 to 9');
     final f = rBed == null ? null : findBed(ownHid, rBed);
     if (f?.b == null) return toastMsg('Pick a bed.');
     if (f!.b!.state == 'booked' && residents.any((x) => x.bed == rBed)) return toastMsg('Bed $rBed is already taken.');
@@ -139,8 +139,8 @@ extension ResidentsActions on AppState {
   }
 
   void setRoomAc(Room r, bool ac) {
-    if (ac && rateDraft![rateKey(true, r.share)] == null) return toastMsg('Add a ${r.share} sharing AC price first.');
-    if (!ac && rateDraft![rateKey(false, r.share)] == null) return toastMsg('Add a ${r.share} sharing non-AC price first.');
+    if (ac && rateDraft![rateKey(true, r.share)] == null) return toastMsg('${r.share} sharing AC price needed');
+    if (!ac && rateDraft![rateKey(false, r.share)] == null) return toastMsg('${r.share} sharing non-AC price needed');
     // F24 item 19: an AC room needs an AC unit in its layout (DECISIONS 2026-10-02).
     if (ac && !r.ac && acMissing(ownHid, r)) return toastMsg(acMissingMsg(r));
     update(() => acDraft![r.n] = ac);
@@ -160,7 +160,7 @@ extension ResidentsActions on AppState {
     // F18 (D8): no ₹0 or blank prices on a room type that has rooms.
     for (final r in rs) {
       final v = rateDraft![rateKey(acDraft![r.n]!, r.share)];
-      if (v == null || v < 1000) return toastMsg('Set a price for ${r.share} sharing ${acDraft![r.n]! ? 'AC' : 'non-AC'} (₹1,000 or more).');
+      if (v == null || v < 1000) return toastMsg('${r.share} sharing price: ₹1,000 or more');
     }
     // F24 item 19: checked again on saving (and by the server).
     final noUnit = rs.where((r) => acDraft![r.n]! && !r.ac && acMissing(ownHid, r)).firstOrNull;
@@ -295,7 +295,7 @@ extension ResidentsActions on AppState {
     // F21 W2: guests sign in here, then the hold goes ahead.
     final opt = how ?? holdOpt;
     if (!needSignIn(opt == 'book' ? 'book' : 'hold', () => placeHold(opt))) return;
-    if (activeHolds >= AppState.maxHolds) return toastMsg('You can hold ${AppState.maxHolds} beds at a time. Release one in Holds first.');
+    if (activeHolds >= AppState.maxHolds) return toastMsg('Limit: ${AppState.maxHolds} holds');
     // F24 #16: a bed that just turned free is for Trusted tenants for an hour.
     final first = onServer ? firstLookBlock(b) : null;
     if (first != null) return toastMsg(first);
@@ -333,7 +333,7 @@ extension ResidentsActions on AppState {
       payId = pay?.id;
     });
     if (pay == null) {
-      toastMsg('Hold placed on this phone. Tell ${h0.owner} on WhatsApp so they keep the bed.');
+      toastMsg('Hold placed on this phone');
       askPushAfterHold();
     }
   }
@@ -347,7 +347,7 @@ extension ResidentsActions on AppState {
   Future<bool> addStayLive(String name, String phone, String bedLabel, int rent, int advance, DateTime joinedOn, {bool booking = false, bool before = false}) async {
     final b = findBed(ownHid, bedLabel).b;
     if (b?.key == null) {
-      toastMsg('Bed $bedLabel isn’t on the server. Pull down to refresh and try again.');
+      toastMsg('Bed $bedLabel not on the server');
       return false;
     }
     ({String via, int lateDays})? res;
@@ -381,7 +381,7 @@ extension ResidentsActions on AppState {
     final first = r.name.split(' ')[0];
     if (r.hold != null && onServer) {
       _write(() => data.setHoldStatus(r.hold!, 'held')).then((ok) {
-        if (ok) toastMsg('Hold confirmed. The tenant sees it in Hostelzy.');
+        if (ok) toastMsg('Hold confirmed');
       });
       return;
     }
@@ -390,7 +390,7 @@ extension ResidentsActions on AppState {
     } else {
       update(() => reqs = reqs.where((x) => x.id != r.id).toList());
     }
-    toastMsg('Hold confirmed. Let $first know on WhatsApp.');
+    toastMsg('Hold confirmed');
   }
 
   /// S2: the owner declines a hold request; the bed is free again.
@@ -415,7 +415,7 @@ extension ResidentsActions on AppState {
   /// and a booking starts its advance payment; then the lists are refetched.
   Future<void> _placeHoldLive(Bed b, String opt, int advance, List<String> perks, Hostel h0) async {
     final key = b.key;
-    if (key == null) return toastMsg('This bed isn’t on the server. Pull down to refresh and try again.');
+    if (key == null) return toastMsg('Bed not on the server');
     final hostel = hid;
     final ({String id, String ref, String? payId}) res;
     try {
@@ -448,7 +448,7 @@ extension ResidentsActions on AppState {
       payId = res.payId;
     });
     if (res.payId == null) {
-      toastMsg('Hold placed. ${h0.owner} sees it in Hostelzy and gets a notification.');
+      toastMsg('Hold placed');
       unawaited(askPushAfterHold());
     }
   }
@@ -460,7 +460,7 @@ extension ResidentsActions on AppState {
     final photo = cPhoto;
     if (onServer) {
       final h = myHostel;
-      if (h == null) return toastMsg('Your owner hasn’t added you yet. Complaints open once you’re a resident here.');
+      if (h == null) return toastMsg('Not a resident here yet');
       final uid = account?.uid;
       final ok = await _write(() async {
         // F21 W3: the photo goes up first, then the complaint points at it.
@@ -489,7 +489,7 @@ extension ResidentsActions on AppState {
     final raw = await picker.pick();
     if (raw == null) return;
     final jpg = prepPhoto(raw, 'free');
-    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    if (jpg == null) return toastMsg('That photo didn’t open');
     update(() => cPhoto = jpg);
   }
 
@@ -505,7 +505,7 @@ extension ResidentsActions on AppState {
     final path = c.photo;
     if (path == null) return;
     final url = await data.complaintPhotoUrl(path);
-    if (url == null) return toastMsg('Couldn’t open the photo. Check your internet and try again.');
+    if (url == null) return toastMsg('Couldn’t open. Check your internet.');
     unawaited(openLink(Uri.parse(url), 'the photo'));
   }
 

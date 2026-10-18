@@ -105,7 +105,7 @@ class HoldsScreen extends StatelessWidget {
                 gap: 8,
                 children: [
                   T('Did you join ${hostelById(s.endedHold?.hid ?? 'anjani').name}?', w: 800, s: 17),
-                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended. One tap helps us keep owners fair.${s.onServer ? ' If you joined, your ₹100 Member reward unlocks once the owner confirms your stay.' : ' A yes unlocks your ₹100 Member reward.'}', s: 13, c: p.mu, lh: 1.4),
+                  T('Your hold on bed ${s.endedHold?.bed ?? '102-B'} ended.', s: 13, c: p.mu, lh: 1.4),
                   // F07 / F24 item 14: Yes / Not yet / Still deciding.
                   Cta('Yes, I joined', icon: 'check', height: 46, px: 14, fs: 14, onTap: () => s.answerJoined('yes')),
                   Row(
@@ -115,7 +115,6 @@ class HoldsScreen extends StatelessWidget {
                       Expanded(child: OutlineCta('Still deciding', icon: 'clock', height: 46, fs: 14, onTap: () => s.answerJoined('deciding'))),
                     ],
                   ),
-                  if (s.onServer) T('Only the Hostelzy team sees your answer, never the owner.', s: 12, c: p.mu, lh: 1.4),
                   Tap(onTap: () => s.update(() => s.sheet = 'report'), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: T('The owner asked me to skip the app ›', s: 13, w: 800, c: p.ad))),
                 ],
               ),
@@ -168,7 +167,7 @@ class HoldScreen extends StatelessWidget {
     void wa() => s.waOwner(hold);
     void again() {
       final b = s.findBed(hold.hid, hold.bed).b;
-      if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken. See other beds.');
+      if (b == null || b.state != 'free') return s.toastMsg('Bed ${hold.bed} has been taken');
       s.update(() => s.hid = hold.hid);
       s.openPicker();
       s.update(() {

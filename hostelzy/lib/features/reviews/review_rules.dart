@@ -42,7 +42,7 @@ extension ReviewRules on AppState {
   /// Opens the 30-day review; the resident's own review comes back to edit.
   void openReview() {
     final on = reviewOpensOn;
-    if (on != null) return toastMsg('Reviews open after 30 days of your stay, on ${dayMon(on)}.');
+    if (on != null) return toastMsg('Reviews open on ${dayMon(on)}');
     final r = myReview('30-day');
     update(() {
       if (r == null) return;
@@ -143,6 +143,6 @@ extension ReviewRules on AppState {
       revReportFor = null;
       revReportWhy = null;
     });
-    toastMsg('Sent to the Hostelzy team. They hide it if it breaks the rules.');
+    toastMsg('Sent to the Hostelzy team');
   }
 }

@@ -101,17 +101,17 @@ extension RoomLayoutsActions on AppState {
           await refreshListings();
           return toastMsg('Room $label’s layout is ready now.');
         }
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
     }
     update(() => layoutWaitSet.add(k));
-    toastMsg('We’ll tell you when room $label’s layout is ready.');
+    toastMsg('You get a notification when it’s ready');
   }
 
   void openCompare() {
     final r = rooms[hid]!.firstWhere((x) => x.n == room);
     final free = r.beds.where(AppState._open).map((b) => b.letter).toList();
-    if (free.length < 2) return toastMsg('Only one free bed in this room.');
+    if (free.length < 2) return toastMsg('Only one free bed here');
     final sel = bed != null && free.contains(bed!.split('-').last) ? bed!.split('-').last : free.first;
     cmpA = sel;
     cmpB = free.firstWhere((x) => x != sel);
@@ -175,7 +175,7 @@ extension RoomLayoutsActions on AppState {
         ..live = true
         ..published = null;
     });
-    toastMsg('Room ${l.room} layout approved. Tenants see it now.');
+    toastMsg('Room ${l.room} layout approved');
   }
 
   /// F24: the open "Ask Hostelzy to draw it" request for a room, if any.
@@ -212,7 +212,7 @@ extension RoomLayoutsActions on AppState {
     final raw = await picker.pick();
     if (raw == null) return;
     final jpg = prepPhoto(raw, 'free');
-    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    if (jpg == null) return toastMsg('That photo didn’t open');
     update(() => lReqPhotos = [...lReqPhotos, jpg]);
   }
 
@@ -221,7 +221,7 @@ extension RoomLayoutsActions on AppState {
   Future<void> sendLayoutRequest() async {
     final hid = ownHid, n = lRoom;
     final note = lReqText.trim();
-    if (note.isEmpty && lReqPhotos.isEmpty) return toastMsg('Say what’s different, or add a photo.');
+    if (note.isEmpty && lReqPhotos.isEmpty) return toastMsg('Add a note or a photo');
     final w = double.tryParse(lReqLen) ?? 0, h = double.tryParse(lReqWid) ?? 0;
     final photos = List.of(lReqPhotos);
     if (onServer) {
@@ -230,7 +230,7 @@ extension RoomLayoutsActions on AppState {
         await data.requestShape(hid, n, shape: lReqShape, note: note, w: w, h: h, photos: paths);
       } catch (e) {
         debugPrint('shape request: $e');
-        return toastMsg('Couldn’t send it. Check your internet and try again.');
+        return toastMsg('Couldn’t send. Check your internet.');
       }
       await loadShapeRequests(hid);
     } else {
@@ -247,7 +247,7 @@ extension RoomLayoutsActions on AppState {
       sheet = null;
       lReqPhotos = [];
     });
-    toastMsg('Sent. The Hostelzy team draws it within 48 hours. You get a notification.');
+    toastMsg('Sent · within 48 hours');
   }
 
   /// F24 board oShapeBack: the team's drawing as a layout for room [n] (beds

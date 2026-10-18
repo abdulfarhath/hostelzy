@@ -161,10 +161,6 @@ class OwnerRulesScreen extends StatelessWidget {
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Kicker('If a rule is broken'), T('No fines', s: 12, w: 800)]),
                 ),
                 const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: StrikeLadder()),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: T('You always get 48 hours to explain. Fix a mistake in that time and there is no strike. 3 fixes in 6 months = 1 warning.', s: 12, c: p.mu, lh: 1.4),
-                ),
                 if (s.fairAccepted) const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 16), child: T('Accepted when you joined Hostelzy.', s: 13, w: 800)),
               ],
             ),
@@ -299,7 +295,6 @@ class ReportSheet extends StatelessWidget {
             children: [
               Padding(padding: const EdgeInsets.only(top: 1), child: Ic('shield', size: 16, color: p.mu)),
               const SizedBox(width: 8),
-              Expanded(child: T('The owner never sees your name. We check our own records first, and you keep your deal and reward either way.', s: 12, c: p.mu, lh: 1.45)),
             ],
           ),
           Cta('Send report', height: 54, px: 16, fs: 15, onTap: s.sendReport),
@@ -357,7 +352,7 @@ class OwnerCaseScreen extends StatelessWidget {
                   ),
                 ),
                 Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: T(c.title, w: 800, s: 17, lh: 1.3)),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: T('What happened, from Hostelzy records:', s: 13, c: p.mu)),
+                Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: const Kicker('From Hostelzy records')),
                 for (final e in c.events)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -396,7 +391,6 @@ class OwnerCaseScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(child: T('Shown only to you and the Hostelzy team.', s: 13, c: p.mu, lh: 1.45)),
                       ],
                     ),
                   ),
@@ -421,7 +415,7 @@ class OwnerCaseScreen extends StatelessWidget {
                 ],
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: T('You have $n strike${n == 1 ? '' : 's'}. ${open && c.resident != null ? 'A mistake fixed within 48 hours closes the case with no strike; 3 fixes in 6 months = 1 warning.' : '3 fixes in 6 months = 1 warning.'}', s: 13, c: p.mu, lh: 1.4),
+                  child: T('You have $n strike${n == 1 ? '' : 's'}', s: 13, c: p.mu, lh: 1.4),
                 ),
               ],
             ),
@@ -502,13 +496,6 @@ class StrikeScreen extends StatelessWidget {
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(c.$1, w: 800, s: 15), if (c.$2.isNotEmpty) T(c.$2, s: 12, c: p.mu)]),
                         ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Strikes come from a decided case, or from 3 fixes in 6 months (one warning). Each case gets 48 hours for your side. No fines, ever.', s: 12, c: p.mu, lh: 1.45))],
                   ),
                 ),
               ],

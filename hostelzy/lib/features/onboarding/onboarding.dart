@@ -68,12 +68,12 @@ extension OnboardingActions on AppState {
       _write(() => data.confirmBeds(hid)).then((ok) {
         if (!ok) return;
         update(() => confirmed[hid] = 0);
-        toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+        toastMsg('Free beds confirmed today');
       });
       return;
     }
     update(() => confirmed[hid] = 0);
-    toastMsg('Thanks. Tenants see your free beds as confirmed today.');
+    toastMsg('Free beds confirmed today');
   }
 
   /// F03: days since the owner last confirmed the rates; null when unknown.
@@ -102,7 +102,7 @@ extension OnboardingActions on AppState {
         ratesConfirmedAt[hid] = appToday;
         ratesNeverConfirmed.remove(hid);
       });
-      toastMsg('Thanks. Tenants see your rates as confirmed today.');
+      toastMsg('Rates confirmed today');
     }
 
     if (onServer && !isSeedHostel(hid)) {
@@ -116,7 +116,7 @@ extension OnboardingActions on AppState {
 
   void addManager() {
     final ph = mgrPhone.replaceAll(RegExp(r'\D'), '');
-    if (mgrName.trim().isEmpty || ph.length != 10) return toastMsg('Add a name and a 10-digit number.');
+    if (mgrName.trim().isEmpty || ph.length != 10) return toastMsg('Name and 10-digit number needed');
     if (onServer) {
       // S8: a one-time code from the server, sent to the manager on WhatsApp.
       final name = mgrName.trim(), hid = ownHid;
@@ -141,7 +141,7 @@ extension OnboardingActions on AppState {
       sheet = null;
     });
     // No backend yet: the invite is pending until the manager signs in.
-    toastMsg('Invite pending. The manager joins by signing in with this number.');
+    toastMsg('Invite pending');
   }
 
   /// Residents step: "Type one" or "Paste a list" (name, phone, bed per line).
@@ -266,7 +266,7 @@ extension OnboardingActions on AppState {
         pinTouched = true;
         pinFocus++;
       });
-      return toastMsg('Pin moved to where you are. Check it sits on the gate.');
+      return toastMsg('Pin moved to you');
     }
     toastMsg(switch (fail) {
       LocateFail.off => 'Location is switched off on this phone. Move the map instead.',
@@ -280,7 +280,7 @@ extension OnboardingActions on AppState {
   /// their location, so it's never just the area's centre.
   void savePin() {
     final c = pinNow;
-    if (!pinTouched || c == null) return toastMsg('Move the map so the pin sits on the gate, or use your location.');
+    if (!pinTouched || c == null) return toastMsg('Put the pin on the gate');
     update(() {
       draft
         ..pin = c
@@ -339,7 +339,7 @@ extension OnboardingActions on AppState {
         draft.savedResidents.add(k);
       } catch (e) {
         debugPrint('draft resident: $e');
-        toastMsg('Couldn’t save ${r.name}. Check your internet and try again.');
+        toastMsg('Couldn’t save ${r.name}');
         return false;
       }
     }
@@ -375,7 +375,7 @@ extension OnboardingActions on AppState {
     if (d.ownerPhone.length != 10) return toastMsg('Enter the owner’s 10-digit phone.');
     if (!onServer) {
       update(() => d.ownerLinked = true);
-      return toastMsg('Sample data: the owner shows as linked.');
+      return toastMsg('Owner linked · sample data');
     }
     if (!await saveDraftLive()) return;
     try {
@@ -397,7 +397,7 @@ extension OnboardingActions on AppState {
       update(() => draft.ownerLinked = ok);
       toastMsg(ok ? '${draft.ownerName.trim()} is linked.' : 'Not yet. Ask ${draft.ownerName.trim()} to open the link and sign in.');
     } catch (e) {
-      toastMsg('Couldn’t check. Check your internet and try again.');
+      toastMsg('Couldn’t check. Check your internet.');
     }
   }
 
@@ -475,7 +475,7 @@ extension OnboardingActions on AppState {
       trackTab = 3;
       hist = [];
     });
-    toastMsg('${d.name} is live. The 30-day trial starts today.');
+    toastMsg('${d.name} is live · trial started');
   }
 
   /// F24: saves once more, then the server checks and puts it live (with the
@@ -491,7 +491,7 @@ extension OnboardingActions on AppState {
         trackTab = 3;
         hist = [];
       });
-      toastMsg('${d.name.trim()} is live. The 30-day trial starts today.');
+      toastMsg('${d.name.trim()} is live · trial started');
       await loadTeam();
     } catch (e) {
       debugPrint('go live: $e');

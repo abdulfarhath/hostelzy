@@ -46,7 +46,7 @@ extension OnPhoneActions on AppState {
         await data.saveName(a.uid, n);
       } catch (e) {
         debugPrint('Name: $e');
-        toastMsg('Couldn’t save your name. Check your internet and try again.');
+        toastMsg('Couldn’t save. Check your internet.');
         return;
       }
     }
@@ -76,7 +76,7 @@ extension OnPhoneActions on AppState {
         await data.saveWhatsApp(a.uid, n == myPhone ? '' : n);
       } catch (e) {
         debugPrint('WhatsApp number: $e');
-        return toastMsg('Couldn’t save it. Check your internet and try again.');
+        return toastMsg('Couldn’t save. Check your internet.');
       }
     }
     update(() {

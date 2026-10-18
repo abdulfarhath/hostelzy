@@ -65,13 +65,13 @@ extension MoveActions on AppState {
     if (onServer) {
       if (!await _moveWrite(() => data.giveNotice(day, vReason ?? ''))) return;
       update(() => notice = true);
-      return toastMsg('Notice sent. $stayOwner accepts it in Hostelzy.');
+      return toastMsg('Notice sent to $stayOwner');
     }
     update(() {
       notice = true;
       moves = [MoveReq(id: 'n${_nowMs()}', hid: stayHostel.id, stayKey: '', kind: 'vacate', status: 'open', name: meName, bed: myStay?.bed ?? '', lastDay: day, reason: vReason ?? '', at: _nowMs()), ...moves.where((m) => m.kind != 'vacate')];
     });
-    toastMsg('Notice sent. $stayOwner accepts it in Hostelzy.');
+    toastMsg('Notice sent to $stayOwner');
   }
 
   int _nowMs() => DateTime.now().millisecondsSinceEpoch;
@@ -142,7 +142,7 @@ extension MoveActions on AppState {
       b.soon = dayMon(day);
       sheet = null;
     });
-    toastMsg('Bed ${b.id} is listed as free from ${dayMon(day)}.');
+    toastMsg('Bed ${b.id} free from ${dayMon(day)}');
   }
 
   /// Owner: they moved out today; the refund is due in 7 days.

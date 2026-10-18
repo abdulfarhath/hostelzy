@@ -147,7 +147,7 @@ class UnverifiedScreen extends StatelessWidget {
                           children: [
                             const Kicker('Rent per month'),
                             T(rentRange(h), w: 800, s: 24, key: const ValueKey('rentRange')),
-                            T('Expected, not confirmed. The owner hasn’t joined Hostelzy yet.', s: 13, c: p.mu, lh: 1.4),
+                            T('Expected, not confirmed', s: 13, c: p.mu, lh: 1.4),
                           ],
                         ),
                       ),
@@ -217,7 +217,6 @@ class ClaimSheet extends StatelessWidget {
           Field(key: const ValueKey('claimPhone'), value: s.claimPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => s.claimPhone = v.replaceAll(RegExp(r'\D'), ''))),
           const SizedBox(height: 4),
           Cta('Send to Hostelzy', key: const ValueKey('sendClaim'), height: 54, px: 16, fs: 15, onTap: s.sendClaim),
-          T('Only the Hostelzy team sees this.', s: 12, c: p.mu),
         ],
       ),
     );

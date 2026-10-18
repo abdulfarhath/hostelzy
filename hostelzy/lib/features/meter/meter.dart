@@ -110,7 +110,7 @@ extension MeterActions on AppState {
     if (rows.isEmpty) return toastMsg('Type at least one room’s meter.');
     for (final x in rows) {
       final last = meterOf(x.room, last: true)?.reading;
-      if (last != null && x.reading < last) return toastMsg('Room ${x.room}: the reading is lower than last month’s (${grouped(last)}).');
+      if (last != null && x.reading < last) return toastMsg('Room ${x.room}: lower than ${grouped(last)}');
     }
     final month = monthYear(appToday).split(' ').first;
     if (onServer) {
@@ -137,7 +137,7 @@ extension MeterActions on AppState {
       });
     }
     back();
-    toastMsg('Added to $month rent for ${rows.length} room${rows.length == 1 ? '' : 's'}. Residents see their share on their rent.');
+    toastMsg('Added to $month rent · ${rows.length} room${rows.length == 1 ? '' : 's'}');
   }
 
   /// Rooms with a reading typed, and all rooms.

@@ -24,7 +24,6 @@ class AddResidentSheet extends StatelessWidget {
     // A bed picked from the bed sheet is always shown, even past the first 12.
     final shown = [...free.take(12), if (s.rBed != null && !missing.contains(s.rBed) && !free.take(12).contains(s.rBed)) s.rBed!];
     final m = s.matchFor(s.rPhone, s.rJoinAt);
-    final who = s.rName.trim().isEmpty ? 'They' : s.rName.trim().split(' ')[0];
     Widget label(String t) => T(t, w: 800, s: 13);
     final terms = hostelById(s.ownHid).terms;
     final fee = int.tryParse(s.rFee) ?? 0, adv = int.tryParse(s.rAdv) ?? 0;
@@ -133,7 +132,6 @@ class AddResidentSheet extends StatelessWidget {
                         gap: 2,
                         children: [
                           const T('Lived here before Hostelzy', w: 800, s: 14),
-                          T('Only until ${hostelById(s.ownHid).name} goes live. After that, the Hostelzy team marks it.', s: 12, c: p.mu, lh: 1.4),
                         ],
                       ),
                     ),
@@ -156,7 +154,6 @@ class AddResidentSheet extends StatelessWidget {
               color: p.sf,
               child: const T('Came from the Hostelzy app? Use the phone number they booked with, so it counts.', s: 13, lh: 1.45),
             ),
-          T(s.onServer ? '$who confirms by joining with your invite code. They count as a resident once they confirm.' : '$who confirms the details in the app. They count as a resident once they confirm.', s: 12, c: p.mu, lh: 1.4),
           Cta(s.rFuture ? 'Book the bed' : 'Add resident', key: const ValueKey('addGo'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.addResident),
         ],
       ),

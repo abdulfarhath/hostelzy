@@ -20,7 +20,7 @@ extension TeamModeActions on AppState {
 
   /// Asks Firebase whether this Google account is on the Hostelzy team.
   Future<void> checkTeam() async {
-    if (account == null) return toastMsg('Sign in with your Hostelzy team Google account first.');
+    if (account == null) return toastMsg('Team Google account needed');
     if (teamChecking) return;
     update(() => teamChecking = true);
     final ok = await signIn.isTeam();
@@ -76,7 +76,7 @@ extension TeamModeActions on AppState {
       if (l.stage == 3) {
         await data.goLive(hid);
         await refreshListings();
-        toastMsg('${l.name} is live. The 30-day trial starts today.');
+        toastMsg('${l.name} is live · trial started');
       } else {
         await data.setLeadStage(hid, l.stage + 1);
       }

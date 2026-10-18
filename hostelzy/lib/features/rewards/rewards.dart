@@ -104,7 +104,7 @@ extension RewardsActions on AppState {
         referred = true;
         friendCode = '';
       });
-      toastMsg('Code saved. You and $who each get ${fmt(referralReward)} after your first month at a Hostelzy hostel.');
+      toastMsg('Code saved · ${fmt(referralReward)} each');
     } catch (e) {
       final m = '$e';
       toastMsg(m.contains('isn\'t valid') || m.contains('isn’t valid')

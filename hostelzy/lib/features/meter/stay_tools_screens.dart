@@ -42,7 +42,6 @@ class OwnerMeterScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Expanded(child: T('Type each room’s meter now. We split it between the residents in the room.', s: 13, c: p.mu, lh: 1.45)),
                       const SizedBox(width: 10),
                       SizedBox(
                         width: 120,
@@ -89,10 +88,6 @@ class OwnerMeterScreen extends StatelessWidget {
                     );
                   }(),
                 if (rooms.isEmpty) Padding(padding: const EdgeInsets.all(16), child: T('Add your rooms first (Beds › Edit rooms).', s: 14, c: p.mu)),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: T('Residents see “Electricity · 70 units ÷ 4 · ₹8/unit  ₹140” on their $month rent (the room’s units split by the residents in it). Rooms not added show “Electricity  Not added yet”.', s: 13, c: p.mu, lh: 1.45),
-                ),
               ],
             ),
           ),
@@ -196,7 +191,6 @@ class LaundrySheet extends StatelessWidget {
           ),
           const T('Machine free', w: 800, s: 13),
           Seg(opts: [for (final x in laundrySlots) (x, x)], cur: s.laundrySlotDraft, onPick: (v) => s.update(() => s.laundrySlotDraft = v), pad: const EdgeInsets.symmetric(vertical: 10, horizontal: 4), center: true),
-          T('Residents who turn on the Laundry reminder get it at 8 pm the evening before.', s: 13, c: p.mu, lh: 1.45),
           Cta('Save laundry day', key: const ValueKey('laundrySave'), icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveLaundry),
         ],
       ),
@@ -214,7 +208,7 @@ class PerksSheet extends StatelessWidget {
     final p = PalScope.of(context);
     final trusted = s.level == 'trusted';
     const perks = [
-      ('bell', 'First look at new free beds', 'When a bed turns free, you can hold it 1 hour before everyone else'),
+      ('bell', 'First look at new free beds', '1 hour before everyone else'),
       ('clock', '2-hour holds', 'Instead of 1 hour'),
       ('check', 'Owners see “Trusted tenant”', 'On your hold request'),
     ];

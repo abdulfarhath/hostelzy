@@ -91,7 +91,7 @@ class RateCard extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: T(deal.on.contains('monthly') ? 'Green: ${fmt(monthlyOff)} a month off with your Hostelzy deal, ${deal.targetText}.' : 'Hostelzy price is the walk-in price until you add a monthly deal.', s: 13, c: p.mu),
+          child: T(deal.on.contains('monthly') ? '${fmt(monthlyOff)} a month off · ${deal.targetText}' : 'No monthly deal yet', s: 13, c: p.mu),
         ),
         // F17: where tenants pay the owner.
         const UpiCard(),
@@ -155,10 +155,6 @@ class RateCard extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: T('An AC room needs an AC unit in its layout. If a room’s layout has none, add it there and publish first, then make the room AC.', s: 13, c: p.mu, lh: 1.4),
         ),
       ],
     );

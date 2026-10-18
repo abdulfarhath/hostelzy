@@ -87,7 +87,7 @@ class OwnerDeals extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
-                child: Row(children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Always on: exit rules written at booking. Costs you nothing.', s: 13, c: p.mu))]),
+                child: Row(children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('Always on · ₹0', s: 13, c: p.mu))]),
               ),
             ],
           ),

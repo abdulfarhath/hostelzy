@@ -192,7 +192,6 @@ class WeekPlanScreen extends StatelessWidget {
                       child: VGap(
                         gap: 12,
                         children: [
-                          T('Tap a meal to switch between eating and skip. Everything is “eating” unless you skip.', s: 13, c: p.mu, lh: 1.45),
                           Column(
                             key: const ValueKey('planGrid'),
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -442,10 +441,6 @@ class OwnerMealsScreen extends StatelessWidget {
                           dividers: true,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                        child: T('Residents can change their answer until then. After it, the answer is locked and the count is final.', s: 13, c: p.mu, lh: 1.4),
-                      ),
                     ],
                   ),
                 ),
@@ -491,10 +486,6 @@ class PlatesSavedCard extends StatelessWidget {
               line('Hostelzy saved', b.saved.hostelzy),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: T('1 skip = 1 plate the kitchen didn’t cook. No ranking of people: nobody is judged for eating.', s: 12, c: p.mu, lh: 1.4),
         ),
       ],
     );

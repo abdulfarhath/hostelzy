@@ -191,7 +191,6 @@ class PhoneScreen extends StatelessWidget {
               const SizedBox(height: 6),
               // F24 item 23: never pre-filled; the Google name is only the hint.
               Field(key: const ValueKey('myName'), value: s.myName, placeholder: (s.account?.name ?? '').trim().isEmpty ? 'Full name' : s.account!.name, onChanged: (v) => s.update(() => s.myName = v)),
-              if (s.account != null) ...[const SizedBox(height: 4), T('Type the name owners should see.', s: 12, c: p.mu)],
               const SizedBox(height: 16),
               Row(children: [const Expanded(child: T('Mobile number', w: 800, s: 13)), Container(padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7), decoration: box(w: 1, c: p.dv), child: T('NOT VERIFIED', w: 800, s: 11, c: p.mu, ls: .05))]),
               const SizedBox(height: 6),
@@ -215,7 +214,6 @@ class PhoneScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (!phoneOtpLogin) ...[const SizedBox(height: 6), T('We’ll check it by SMS later. Until then owners see “not verified”.', s: 13, c: p.mu, lh: 1.4)],
             const Spacer(),
             Cta(phoneOtpLogin ? 'Send code' : 'Continue', onTap: () => phoneOtpLogin ? (s.phone.length != 10 ? s.toastMsg('Enter all 10 digits.') : s.sendCode()) : s.savePhone(), iconSize: 20, bg: s.phone.length == 10 ? null : p.tk, fg: s.phone.length == 10 ? null : p.mu),
             const SizedBox(height: 12),
@@ -358,7 +356,6 @@ class RoleScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Padding(padding: const EdgeInsets.all(16), child: T('You can switch later in Me.', s: 13, c: p.mu)),
         ],
       ),
     );
@@ -405,7 +402,6 @@ class RoleGateScreen extends StatelessWidget {
           decoration: box(w: 2, c: p.tx),
           child: VGap(gap: 8, children: [
             const T('Your owner link from Hostelzy', w: 800, s: 15),
-            T('Sign in once with it and your PG opens here, set up the way we did it on the visit.', s: 13, c: p.mu, lh: 1.4),
             Cta(s.joining ? 'Linking…' : 'Run my PG on Hostelzy', key: const ValueKey('ownerJoinGo'), height: 50, px: 14, fs: 15, onTap: s.joinInvite),
           ]),
         ));
@@ -420,7 +416,7 @@ class RoleGateScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           color: p.sf,
-          child: Row(children: [Expanded(child: VGap(gap: 2, children: [const T('Manager at a PG?', w: 800, s: 14), T('Join it with the MGR- code your owner sent you.', s: 13, c: p.mu, lh: 1.4)])), const Ic('chev', size: 18)]),
+          child: Row(children: [Expanded(child: const T('Manager at a PG?', w: 800, s: 14)), const Ic('chev', size: 18)]),
         ),
       ));
       foot = [
@@ -441,7 +437,6 @@ class RoleGateScreen extends StatelessWidget {
             Cta(s.joining ? 'Sending…' : 'Join', key: const ValueKey('joinGo'), height: 54, px: 16, fs: 15, expand: false, onTap: s.joinInvite),
           ],
         ),
-        if (mgr) T('Manager codes start with MGR. The owner sends it on WhatsApp; it works once, for 7 days.', key: const ValueKey('mgrHint'), s: 13, c: p.mu, lh: 1.45),
         if (!mgr) ...[
         // F14: the in-app scanner reads the poster's QR (the j/ invite link).
         OutlineCta('Scan the QR', key: const ValueKey('scanQr'), icon: 'qr', onTap: s.openScan),
@@ -549,7 +544,7 @@ class ScanScreen extends StatelessWidget {
         children: [
           Ic('lock', size: 24, color: p.tx),
           T(denied ? 'The camera is off for Hostelzy' : 'The camera didn’t start', w: 800, s: 17, align: TextAlign.center),
-          T(denied ? 'Allow it in your phone’s Settings → Apps → Hostelzy → Permissions, or type the code.' : 'Type the code from the poster instead.', s: 13, c: p.mu, lh: 1.45, align: TextAlign.center),
+          if (denied) T('Camera blocked in your phone’s Settings', s: 13, c: p.mu, lh: 1.45, align: TextAlign.center),
         ],
       ),
     );

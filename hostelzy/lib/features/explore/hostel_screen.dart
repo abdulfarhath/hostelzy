@@ -284,7 +284,7 @@ class DetailScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: T('Same price for every bed of a type.${h.food ? ' Food included.' : ''} Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}.', s: 13, c: p.mu, lh: 1.4),
+                  child: T([if (h.food) 'Food included', 'Electricity ${h.terms.electricityExtra ? 'extra, by meter' : 'included'}'].join(' · '), s: 13, c: p.mu, lh: 1.4),
                 ),
                 // F03 (F24 Wave 4d): when the owner last stood by these prices; nothing when unknown.
                 if (s.ratesConfirmedAt[h.id] case final at?)
@@ -481,7 +481,6 @@ class HostelBuilding extends StatelessWidget {
               ),
             ),
           ),
-          T('Big hostels open the building on its own page, so this page stays short.', s: 12, c: p.mu, lh: 1.45),
         ],
       ),
     );

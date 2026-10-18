@@ -157,8 +157,8 @@ extension AmenityActions on AppState {
     if (d.kind == 'other' && d.name.trim().length < 2) return toastMsg('Type what it is.');
     if (d.inRooms && d.rooms.isEmpty) return toastMsg('Pick the rooms that have it.');
     final res = !amenityStaff(d.hid);
-    if (res && !isResidentOf(d.hid)) return toastMsg('Only residents of this hostel can change this list.');
-    if (res && !onServer && (amEditsToday[d.hid] ?? 0) >= 20) return toastMsg('That’s 20 changes today. Try again tomorrow.');
+    if (res && !isResidentOf(d.hid)) return toastMsg('Residents only');
+    if (res && !onServer && (amEditsToday[d.hid] ?? 0) >= 20) return toastMsg('Limit: 20 changes a day');
     d
       ..byResident = res
       ..at = now
