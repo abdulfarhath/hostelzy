@@ -22,11 +22,22 @@ class Refund {
 }
 
 class Resident {
-  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt, this.lateDays = 0, this.key});
+  Resident({required this.name, required this.bed, required this.amt, required this.status, required this.note, this.phone = '', this.via = 'before', this.since = '', this.ref, this.confirmed = true, this.advance = 3000, this.joinAt, this.lateDays = 0, this.key, this.uid, this.paidOn});
   final String name, bed;
 
   /// S2: the stay's id on the server (null on sample data).
   final String? key;
+
+  /// F29: their Hostelzy account (`stays.user_id`); null = not on the app yet,
+  /// so the owner's Notify is off for them.
+  final String? uid;
+
+  /// F29: when the last rent payment came in (the "August rent received"
+  /// thanks); null when nothing is paid.
+  final DateTime? paidOn;
+
+  /// F29: they have the app, so a push reaches them.
+  bool get onApp => uid != null;
   final int amt;
   String status, note;
 
@@ -55,7 +66,7 @@ class Resident {
 
   /// hz | direct | before | wait
   String get tag => confirmed ? via : 'wait';
-  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt, lateDays: lateDays, key: key);
+  Resident copy() => Resident(name: name, bed: bed, amt: amt, status: status, note: note, phone: phone, via: via, since: since, ref: ref, confirmed: confirmed, advance: advance, joinAt: joinAt, lateDays: lateDays, key: key, uid: uid, paidOn: paidOn);
 }
 
 /// F06: how far back a phone's enquiry, hold or booking counts towards
@@ -73,15 +84,17 @@ const residentJoined = '14 Mar';
 
 const residentJoinDay = 14;
 
+/// F29 (sample data): the residents who have the app: the demo's own resident
+/// and those who came through Hostelzy. The others are "not on the app yet".
 List<Resident> seedResidents() => [
-  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay), phone: '9000000001', since: 'Since Mar 2026'),
-  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9000000010', since: 'Since Jun 2026'),
-  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000000011', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712'),
+  Resident(name: 'Rahul Varma', bed: '204-B', amt: 8020, status: 'Due', note: dueNote(hostels[0].terms, residentJoinDay), phone: '9000000001', since: 'Since Mar 2026', uid: 'sample-rahul'),
+  Resident(name: 'Arjun Reddy', bed: '204-A', amt: 8020, status: 'Paid', note: 'Paid 29 Sep', phone: '9000000010', since: 'Since Jun 2026', paidOn: DateTime(2026, 9, 29)),
+  Resident(name: 'Sai Kiran', bed: '204-C', amt: 8020, status: 'Paid', note: 'Paid 30 Sep', phone: '9000000011', via: 'hz', since: 'Joined 20 Sep', ref: 'HZ-4712', uid: 'sample-sai', paidOn: DateTime(2026, 9, 30)),
   Resident(name: 'Mohammed Faiz', bed: '101-A', amt: 7600, status: 'Overdue', note: '12 days late', phone: '9000000012', since: 'Since Nov 2025'),
-  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9000000013', via: 'direct', since: 'Joined 18 Sep'),
+  Resident(name: 'Teja Naidu', bed: '102-B', amt: 8700, status: 'Paid', note: 'Paid 1 Oct', phone: '9000000013', via: 'direct', since: 'Joined 18 Sep', paidOn: DateTime(2026, 10)),
   Resident(name: 'Pranav Shetty', bed: '203-A', amt: 8700, status: 'Overdue', note: '4 days late', phone: '9000000014', since: 'Since Feb 2026'),
-  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9000000015', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790'),
-  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9000000016', since: 'Since Jan 2026'),
+  Resident(name: 'Nikhil Goud', bed: '301-B', amt: 10100, status: 'Due', note: dueNote(hostels[0].terms, 22), phone: '9000000015', via: 'hz', since: 'Joined 28 Sep', ref: 'HZ-4790', uid: 'sample-nikhil'),
+  Resident(name: 'Harsha Vardhan', bed: '302-B', amt: 9000, status: 'Paid', note: 'Paid 28 Sep', phone: '9000000016', since: 'Since Jan 2026', paidOn: DateTime(2026, 9, 28)),
   // The rest of the first import (grandfathered, "Before Hostelzy").
   for (final (n, b, a, ph, since) in const [
     ('Suresh Babu', '101-C', 7600, '9000000017', 'Since Nov 2025'),
@@ -97,9 +110,9 @@ List<Resident> seedResidents() => [
     ('Sunil Naik', '303-C', 7900, '9000000027', 'Since Apr 2026'),
     ('Ramesh Goud', '304-C', 9000, '9000000028', 'Since May 2026'),
   ])
-    Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since),
+    Resident(name: n, bed: b, amt: a, status: 'Paid', note: 'Paid 1 Oct', phone: ph, since: since, paidOn: DateTime(2026, 10)),
   // Added by the owner today, waiting for the resident's WhatsApp code.
-  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9000000029', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false),
+  Resident(name: 'Ravi Teja', bed: '303-D', amt: 7900, status: 'Paid', note: 'Paid at move-in', phone: '9000000029', via: 'hz', since: 'Added today', ref: 'HZ-4821', confirmed: false, uid: 'sample-ravi', paidOn: DateTime(2026, 10)),
 ];
 
 /// F06 board 6: people who scanned the owner's invite QR and verified their

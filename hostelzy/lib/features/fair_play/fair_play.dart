@@ -113,7 +113,7 @@ extension FairPlayActions on AppState {
       return;
     }
     update(() {
-      residents = [for (final r in residents) r.name == c.resident ? Resident(name: r.name, bed: r.bed, amt: r.amt, status: r.status, note: r.note, phone: r.phone, via: 'hz', since: r.since, ref: r.ref, confirmed: r.confirmed, advance: r.advance, joinAt: r.joinAt) : r];
+      residents = [for (final r in residents) r.name == c.resident ? Resident(name: r.name, bed: r.bed, amt: r.amt, status: r.status, note: r.note, phone: r.phone, via: 'hz', since: r.since, ref: r.ref, confirmed: r.confirmed, advance: r.advance, joinAt: r.joinAt, key: r.key, uid: r.uid, paidOn: r.paidOn) : r];
       c.status = 'closed';
       c.result = 'Fixed by the owner within 48 h · no strike';
       ownerFixes++;

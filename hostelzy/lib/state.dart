@@ -253,6 +253,9 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     fairAccepted = m['fairAccepted'] as bool? ?? false;
     pushAsked = m['pushAsked'] as bool? ?? false;
     camAsked = m['camAsked'] as bool? ?? false;
+    // F30: the verified hostels a guest opened on this phone, and the Explore hint.
+    guestHostels = [for (final id in (m['guestHostels'] as List? ?? const [])) if (id is String) id];
+    guestHintOff = m['guestHint'] as bool? ?? false;
     for (final e in ((m['notif'] as Map?) ?? const {}).entries) {
       if (notif.containsKey(e.key) && e.value is bool) notif[e.key as String] = e.value as bool;
     }
@@ -347,6 +350,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
 
   void openWA(String to, String msg, {String phone = ''}) => update(() {
     sheet = 'wa';
+    waMode = 'wa';
     waTo = to;
     waPhone = phone;
     waMsg = msg;

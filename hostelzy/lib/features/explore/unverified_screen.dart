@@ -5,6 +5,7 @@ import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../photos/photos_screens.dart';
+import '../session/guest_screens.dart' show SignInWallScreen;
 import 'hostel_screen.dart' show DetailScreen;
 
 // F26 #21: UNVERIFIED (team-listed) hostels: the badge, the Explore card, the
@@ -28,12 +29,8 @@ class UnverifiedBadge extends StatelessWidget {
   }
 }
 
-void _open(AppState s, Hostel h) => s.update(() {
-  s.hist = [...s.hist, s.screen];
-  s.screen = 'detail';
-  s.sheet = null;
-  s.hid = h.id;
-});
+// F30: through the one opener (a listed page never counts or walls).
+void _open(AppState s, Hostel h) => s.openHostel(h.id);
 
 /// Explore card for a listed hostel: photo, name + UNVERIFIED, where, and the
 /// expected rent range. No free beds, deals or rank.
@@ -190,11 +187,17 @@ class UnverifiedScreen extends StatelessWidget {
   }
 }
 
-/// The hostel page: T32 for a listed (UNVERIFIED) hostel, else the full page.
+/// The hostel page: T32 for a listed (UNVERIFIED) hostel; F30: T34 (the
+/// sign-in wall) for a guest's 4th verified hostel; else the full page.
 class HostelPage extends StatelessWidget {
   const HostelPage({super.key});
   @override
-  Widget build(BuildContext context) => hostelById(AppScope.of(context).hid).listed ? const UnverifiedScreen() : const DetailScreen();
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final h = hostelById(s.hid);
+    if (h.listed) return const UnverifiedScreen();
+    return s.wallFor(h) ? const SignInWallScreen() : const DetailScreen();
+  }
 }
 
 /// H44: "Are you the owner? Claim this hostel": name and phone; the team

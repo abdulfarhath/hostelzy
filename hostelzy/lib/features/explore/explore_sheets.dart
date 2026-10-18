@@ -59,6 +59,25 @@ class SearchSheet extends StatelessWidget {
               ],
             ),
           ),
+          // F28 Part 1: Verified only (off by default): UNVERIFIED hostels hidden.
+          Tap(
+            key: const ValueKey('verifiedToggle'),
+            onTap: () => s.update(() => s.fVerified = !s.fVerified),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const T('Verified only', s: 15, w: 800),
+                Container(
+                  width: 44,
+                  height: 24,
+                  padding: const EdgeInsets.all(2),
+                  decoration: box(bg: s.fVerified ? p.ac : transparent, w: 2, c: p.tx),
+                  alignment: s.fVerified ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(width: 16, height: 16, color: s.fVerified ? p.ai : p.tx),
+                ),
+              ],
+            ),
+          ),
           Row(
             children: [
               Tap(key: const ValueKey('clearAll'), onTap: s.clearFilters, child: const Padding(padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4), child: T('Clear all', w: 800, s: 15, underline: true))),

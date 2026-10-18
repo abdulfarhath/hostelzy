@@ -1,10 +1,22 @@
 part of '../../state.dart';
 
+/// F30: verified hostel pages a guest can open on one phone before the
+/// sign-in wall (T34). UNVERIFIED pages (T32) are always free.
+const guestFreeHostels = 3;
+
 // F21 W2: look around first. Sign-in is asked at the first hold or enquiry.
+// F30: and after 3 verified hostel pages on this phone.
 mixin _GuestData {
 
   /// App opens on this phone; the water-reminder offer waits for the 3rd.
   int opens = 0;
+
+  /// F30: the verified hostels this guest opened on this phone (ids, oldest
+  /// first); kept across restarts. Re-opening one of them is free.
+  List<String> guestHostels = [];
+
+  /// F30: the Explore hint "3 hostels free to open…" was dismissed.
+  bool guestHintOff = false;
 
   /// What a guest was doing when sign-in was asked: hold | book | enquiry, or the
   /// role picked on Welcome (owner | resident).
@@ -95,6 +107,8 @@ extension GuestActions on AppState {
     if (then == null) return false;
     afterSignIn = null;
     signedIn = true;
+    // F30: signed in, so no limit; the guest count is over.
+    guestHostels = [];
     if (then == 'owner' || then == 'resident') {
       pickRole(then);
       return true;
@@ -113,7 +127,7 @@ extension GuestActions on AppState {
   }
 
   /// Filters set beyond the defaults (sort is not a filter).
-  int get filterCount => [fG != 'Any', fS != 'Any', fR != 'Any', fB != 'Any', fFood, fDeals].where((x) => x).length + fAm.length;
+  int get filterCount => [fG != 'Any', fS != 'Any', fR != 'Any', fB != 'Any', fFood, fDeals, fVerified].where((x) => x).length + fAm.length;
 
   void clearFilters() => update(() {
     fG = 'Any';
@@ -122,8 +136,59 @@ extension GuestActions on AppState {
     fB = 'Any';
     fFood = false;
     fDeals = false;
+    fVerified = false;
     fAm = {};
   });
+
+  // F30: guests see 3 verified hostels, then sign in.
+
+  /// True when this phone may show [h]'s page: signed in, an UNVERIFIED page,
+  /// one of the hostels already opened here, or still under the 3.
+  bool canOpenHostel(Hostel h) => signedIn || h.listed || guestHostels.contains(h.id) || guestHostels.length < guestFreeHostels;
+
+  /// T34 instead of the page: a guest's 4th verified hostel.
+  bool wallFor(Hostel h) => !canOpenHostel(h);
+
+  /// Counts a verified hostel page a guest opens (inside an [update]).
+  void _countGuestHostel(String id) {
+    if (signedIn || guestHostels.contains(id)) return;
+    final h = hostels.where((x) => x.id == id).firstOrNull;
+    if (h == null || h.listed || guestHostels.length >= guestFreeHostels) return;
+    guestHostels = [...guestHostels, id];
+  }
+
+  /// Opens a hostel's page (S13; T32 when it is UNVERIFIED; T34 when a guest
+  /// has used their 3) from a card, the map, Saved or a link.
+  void openHostel(String id) => update(() {
+    _countGuestHostel(id);
+    hist = [...hist, screen];
+    screen = 'detail';
+    sheet = null;
+    hid = id;
+    dealAc = null;
+    rulesOpen = false;
+  });
+
+  /// T34 "Continue with Google": after sign-in the user lands back on the
+  /// hostel they tried to open. Builds without Google sign-in (the demo APK)
+  /// take the existing sample path (About you on this phone).
+  void wallContinue() {
+    afterSignIn = 'wall';
+    _afterAct = null;
+    _afterHist = [...hist];
+    _afterScreen = 'detail';
+    if (signIn.available) {
+      unawaited(continueWithGoogle());
+    } else {
+      continueOnPhone();
+    }
+  }
+
+  /// T34 "Not now": back to Explore.
+  void wallNotNow() => tab('explore');
+
+  /// S8: the × on "3 hostels free to open, then sign in (free)".
+  void dismissGuestHint() => update(() => guestHintOff = true);
 
   /// F22 Area 1: the nearest area that has hostels (for "Try Hitec City").
   String? get nearbyArea {
@@ -165,8 +230,9 @@ extension GuestActions on AppState {
     _whereDone();
   });
 
-  /// Where? → a hostel: its page.
+  /// Where? → a hostel: its page (F30: counts for a guest).
   void pickWhereHostel(String id) => update(() {
+    _countGuestHostel(id);
     hid = id;
     dealAc = null;
     rulesOpen = false;

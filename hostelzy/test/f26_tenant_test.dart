@@ -153,7 +153,8 @@ void main() {
   testWidgets('F26 #2: one featured (80+ bed) hostel pinned on top, tagged Featured, then the sort', (tester) async {
     final s = AppState(start: 'explore', role: 'tenant');
     final plain = filtered(s).map((h) => h.id).toList();
-    final last = plain.last;
+    // F28 Part 1: the listed (UNVERIFIED) hostel is last and can't be featured; pin the last verified one.
+    final last = plain.lastWhere((id) => !hostelById(id).listed);
     s.flags = {for (final id in plain.take(2)) id: (beds: 0, featured: false, dealsPaused: false), last: (beds: 96, featured: true, dealsPaused: false)};
     await _pump(tester, s);
     final ids = filtered(s).map((h) => h.id).toList();

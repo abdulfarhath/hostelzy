@@ -20,11 +20,12 @@ mixin _TiersData {
 }
 
 /// The price band a rent falls in, ₹2,000 wide: ₹5,000–7,000, ₹7,000–9,000…
-/// Inside one band verified hostels come first (DECISIONS 2026-10-06).
+/// (F26 #21's Price ↑ interleave; F28 Part 1 puts every verified hostel
+/// first instead, so Explore no longer compares bands.)
 int priceBand(int rent) => rent <= 1000 ? 0 : (rent - 1000) ~/ 2000;
 
-/// Explore's tier step: verified before listed inside a price band.
-/// [byPrice]: compare the bands first (Price ↑); otherwise only the tier.
+/// Explore's tier step: verified before listed. [byPrice]: compare the
+/// price bands first (the F26 #21 rule); false (F28 Part 1): only the tier.
 int tierCompare(Hostel a, Hostel b, int Function(Hostel) price, {bool byPrice = true}) {
   if (byPrice) {
     final d = priceBand(price(a)).compareTo(priceBand(price(b)));
