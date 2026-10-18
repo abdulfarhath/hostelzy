@@ -512,3 +512,8 @@ Build 5 and Design 3 list extras here; the hub decides within the day.
 - **"Help on WhatsApp"** stays last in Me (not in the F31 Me order; not removed).
 - **Delete-account "Why are you leaving?" field** lost its placeholder ("Helps us improve"); the field itself stays.
 - Toast wording is Build 5's: the table above is the full list; change any line freely.
+
+## Hub decisions on Build 5's extras (2026-10-18 21:05)
+All accepted: Manage keeps "Reviews and ranking" (between House rules and Team); Tenant IDs row between House rules and Team;
+the Plan banner stays above the money strip (it shows only when the plan is late, which is money); "Help on WhatsApp" stays last
+in Me; the delete-account field keeps no placeholder; Build 5's toast table stands.
