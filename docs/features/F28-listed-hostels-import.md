@@ -86,9 +86,32 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 - Wave 1: Part 1. Wave 2: Part 2 (S92, S93, entry points, rewards, C14 Partners, C15 line). Wave 3: Part 3. Wave 4: Part 4.
 - Demo (sample data): one hostel "added by you" at step "Owner asked", one partner code `HZ-PART-1`.
 - SCREENS: +2 screens (S92, S93), +2 web pages (W9, W10; W8 is already app/delete-account). Changed H1, S8, S9, S79, T20, S22, C14, C15.
+- **28-60 built early (Build 1, 2026-10-18):** `tools/outreach/send.mjs` (whatsapp-web.js 1.34.7 pinned, QR login with
+  `LocalAuth`, ≤ 25/hour with random 60–180 s gaps, ≤ 150/day, `sent.json` never-twice record incl. numbers not on
+  WhatsApp, stops on the first reply from a messaged number, "STOP" marks the number final, `--dry` prints without sending),
+  the pure rules in `tools/outreach/lib.mjs` (tested by `supabase/functions/tests/outreach.test.ts`: message word for
+  word, CSV parsing, limits, gaps, never twice, STOP), `tools/outreach/README.md` (limits, the ban risk in plain words,
+  separate SIM, how to run). The CSV comes from C14 › To call › Export CSV (wave 3); until then any CSV with
+  name, phone, area, id columns works. Not in the app; not counted.
+
+## Build · Part 1 (wave 1, branch `feature/w1-filter-wall-contacts`, PR #W1, 2026-10-18)
+- **H1 switch** `features/explore/explore_sheets.dart` (`SearchSheet`): **Verified only** under Food included (key
+  `verifiedToggle`), the same switch as Food included; field `fVerified` (`features/reviews/reviews.dart`), counted in
+  `filterCount` and reset by `clearFilters` (`features/session/guest.dart`); "Show N hostels" follows it.
+- **S8 order** `features/explore/explore_screen.dart`: `filtered()` drops listed hostels when the switch is on;
+  `listingTierStep` → `tierCompare(…, byPrice: false)`: every verified hostel first, then the UNVERIFIED ones, each tier in the
+  picked sort (the F26 #21 ₹2,000-band interleave under Price ↑ is gone; `priceBand` / `byPrice` stay in
+  `features/listings/tiers.dart`, Explore no longer uses them). The header's `tierLine` is unchanged.
+- **S9 pins** `features/map/map_screen.dart`: the pins already come from `filtered()`, so the switch applies; each pin got a
+  key `pin-<id>` for the test.
+- **Tests** `hostelzy/test/f28_verified_filter_test.dart` (3): the switch (position, default, count, hidden cards, header,
+  Clear all); verified first then listed in every sort (price order inside the verified tier, nearest, rating); the pins.
+  Updated: `f26_holds_listings_test` (#21: the band asserts → tier first), `f26_tenant_test` (#2: the pinned candidate is the
+  last verified hostel, the listed one is last now). No SQL.
 
 ## Not in the spec
-Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
+- Part 1: the pin key `pin-<id>` (test hook only). `priceBand` kept in place (no removals). decided.
+- Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
 
 ## Design
@@ -118,6 +141,20 @@ W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page i
 | 9 | Drafts and removed rows hidden from Listed | ✅ Keep |
 | 10 | F31 Rule A applied | ✅ |
 | 11 | TLS **without** certificate verification for the DB connection | ❌ Change: verify the certificate by default (Node's CA store + Supabase's CA; the pooler presents a public cert). `PGSSL_NO_VERIFY=1` is an explicit opt-out for local tests only, and the script prints one line when it is on |
+
+## Hub decisions on Build 4's Part 4 extras (2026-10-18 20:45)
+| # | Decision |
+|---|---|
+| 1 | ✅ Demo's listed sample counts as confirmed today |
+| 2 | ❌ Change (F31 Rule A): card says **"Rent on request"** only; hostel page says **"Rent on request"** + the button **"Ask on WhatsApp"**, no sentence |
+| 3 | ✅ Stale rent still answers the Budget filter; sorts after priced cards |
+| 4 | ✅ App reads `listed_rent_visible`, falls back to the 60-day rule |
+
+## Hub decisions on Build 2's wave 2 extras (2026-10-18 20:50)
+F28 #1–4, #6–9 accepted as built (partner_code, owner_asked_at, `reward_payouts` + `payouts_due()` + `mark_payout_paid()`,
+`check_partner_hostel(h)` (integrator wires it to the C14 Partners "checked" tick and lists `payouts_due()` in console
+Payments), adder photos, adder-only owner phone, S22 row, Rule A, no Realtime for these tables).
+#5 accepted with one copy change (Rule A): the partner line in S93 reads **"₹20 when checked"**.
 
 ## Build (wave 3 · Build 3, 2026-10-18, branch `feature/w3-import`, not merged: the original Build chat integrates waves 0→4)
 Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C15 line) and the Part 4 console segment. Handover: `docs/handover/w3-build.md`.

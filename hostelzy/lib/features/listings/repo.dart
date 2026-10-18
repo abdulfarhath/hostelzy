@@ -349,6 +349,12 @@ abstract class HostelRepo {
   /// F26 #21: per area, verified (live) and listed (unverified) hostels for
   /// the Explore header; null before its SQL runs.
   Future<Map<String, ({int verified, int listed})>?> areaCounts();
+
+  /// F29 Part 1: the owner's Notify: a short [note] pushed to the resident of
+  /// stay [stayKey] (RPC `notify_resident`: the hostel's staff only; the stay
+  /// needs an account). Throws [UnsupportedError] on sample data, and until
+  /// the server has the function.
+  Future<void> notifyResident(String stayKey, String note);
 }
 
 /// F24 item 29: one person on the Hostelzy team.

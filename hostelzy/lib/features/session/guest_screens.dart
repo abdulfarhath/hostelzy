@@ -6,6 +6,44 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 
 // F21 W2: one "Where?" field, sign-in at the first hold, notifications after it.
+// F30: the sign-in wall after 3 verified hostel pages (T34).
+
+/// F30 (T34 `signInWall`): shown instead of the hostel page when a guest
+/// opens their 4th verified hostel on this phone. The Hostelzy mark, the
+/// title with the live verified count, the 3 hostels already opened, red
+/// **Continue with Google** (the sample sign-in path in builds without
+/// Google), **Not now** back to Explore. No helper lines (F31 Rule A).
+class SignInWallScreen extends StatelessWidget {
+  const SignInWallScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final n = s.tierCounts(null).verified;
+    final names = [for (final id in s.guestHostels) if (hostels.any((h) => h.id == id)) hostelById(id).name];
+    return FillScroll(
+      key: const ValueKey('signInWall'),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 48, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Align(alignment: Alignment.centerLeft, child: BrandMark(size: 64)),
+            const SizedBox(height: 14),
+            T('Sign in to see all $n hostels', key: const ValueKey('wallTitle'), w: 800, s: 34, lh: 1.02, ls: -.025),
+            const SizedBox(height: 14),
+            T('Your $guestFreeHostels free hostels: ${names.join(', ')}.', key: const ValueKey('wallHostels'), s: 16, c: p.mu, lh: 1.5),
+            const Spacer(),
+            const SizedBox(height: 24),
+            Cta('Continue with Google', key: const ValueKey('wallGoogle'), onTap: s.wallContinue, iconSize: 20),
+            const SizedBox(height: 10),
+            OutlineCta('Not now', key: const ValueKey('wallNotNow'), icon: 'x', onTap: s.wallNotNow),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 /// One typed field for landmarks, areas and hostels (Explore and the Map).
 class WhereScreen extends StatelessWidget {

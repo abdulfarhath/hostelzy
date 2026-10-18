@@ -653,7 +653,8 @@ class _Sheet extends StatelessWidget {
         'book' => 'Sign in to book this bed',
         _ => 'Sign in to hold this bed',
       },
-      'wa' => 'Message ${s.waTo ?? 'on WhatsApp'}',
+      // F29 Part 1: the Notify form of the same sheet.
+      'wa' => s.waMode == 'notify' ? 'Notify ${s.waTo ?? ''}' : 'Message ${s.waTo ?? 'on WhatsApp'}',
       'claim' => 'Claim ${hostelById(s.claimHid ?? s.hid).name}',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
@@ -721,6 +722,7 @@ class _Sheet extends StatelessWidget {
       'laundry' => 'House rules',
       'perks' => 'Stay Rewards',
       'complaint' || 'complaints' => 'Help · ${s.stayHostel.name}',
+      'wa' => s.waMode == 'notify' && s.noteTo != null ? 'Residents · bed ${s.noteTo!.bed}' : null,
       _ => null,
     };
     final body = switch (s.sheet) {

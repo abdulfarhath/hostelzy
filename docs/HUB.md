@@ -26,7 +26,7 @@ How a feature flows: founder idea (hub) → spec `docs/features/Fnn-*.md` + DECI
 → code + prototype (Build) → founder approves in the prototype (hub relays) → merge + APK (Build) → canvas v+1 (Design, hub publishes).
 
 Rules of the structure:
-- **Model (founder, 2026-10-18): every Hostelzy chat runs Fable 5.1 at Max effort.** Hub, Build and Design are on it now. A new chat is created with `model: claude-fable-5-1`; the effort level is set by the founder in the chat's model menu (the hub cannot set it from here).
+- **Model (founder, 2026-10-18 16:00): every Hostelzy chat runs Opus 5.5 (`claude-opus-5-5`) at Max effort** (was Fable 5.1 earlier that day). New chats are created with `model: claude-opus-5-5`. A running chat's model and effort can only be switched in that chat's model menu by the founder; the hub never restarts a mid-work chat for a model change.
 - Child chats can't message the hub on this account; the hub reads their branches and session state instead. Each child
   ends its turn with a pushed commit whose message says what is done.
 - On-demand chats are created with `create_session` when a task needs them, given one task, and left idle after.
@@ -135,3 +135,8 @@ created (Fable 5.1). Build 1 integrates in order 0 → 1 → 2 → 3 → 4 → 5
 Design 1's v25 (F28 + F29 + F30 boards, 188 counted) is on https://claude.ai/artifact/WfdWH9dH8f9wxKmjoGgVLU. Design 2's parallel F28 set
 (design/f28-boards) was not needed and stays in git. The artifact's 512 cap counts the Design type's ~21 files and the 6 assets, so the
 hub moved 35 archive boards to git only (461 boards on the canvas). W8 = delete-account; F28's pages are W9/W10.
+
+### 2026-10-18 20:35 UTC: usage limit hit and reset
+Every chat stopped at ~16:00 UTC on the shared 5-hour limit (reset 20:30). Done before the stop: wave 0 on main, wave 1 pushed
+(not merged), W3 DONE, canvas v25 live, F31 boards ready. Builds 2, 4, 5 had pushed nothing. All resumed at 20:32 with
+"push WIP every 30 minutes". Hub on Opus 5.5 (founder switched it); check-in trigger now re-creates chats as `claude-opus-5-5`.

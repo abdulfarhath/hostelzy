@@ -98,6 +98,21 @@ class WaSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = PalScope.of(context);
+    // F29 Part 1: the same sheet in its Notify form (the owner's short note,
+    // pushed to one resident): the note and Send, nothing else.
+    if (s.waMode == 'notify') {
+      return Padding(
+        key: const ValueKey('notifyForm'),
+        padding: const EdgeInsets.all(16),
+        child: VGap(
+          gap: 12,
+          children: [
+            Field(key: const ValueKey('noteField'), value: s.noteDraft, placeholder: 'Your note', maxLines: 3, height: null, onChanged: (v) => s.update(() => s.noteDraft = v)),
+            Cta('Send', key: const ValueKey('noteSend'), icon: 'bell', height: 54, px: 16, fs: 15, opacity: s.noteDraft.trim().isEmpty ? .4 : 1, onTap: s.sendNote),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: VGap(

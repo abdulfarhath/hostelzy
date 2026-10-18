@@ -677,6 +677,18 @@ class SupabaseRepo implements HostelRepo {
   Future<void> sendClaim(String hid, String name, String phone) => db.from('claim_requests').insert({'hostel_id': hid, 'name': name, 'phone': phone});
 
   @override
+  Future<void> notifyResident(String stayKey, String note) async {
+    try {
+      await db.rpc('notify_resident', params: {'p_stay': stayKey, 'p_note': note});
+    } on PostgrestException catch (e) {
+      // F29 Part 1 ships without SQL: until `notify_resident` is on the
+      // server the owner is told to use WhatsApp instead.
+      if (_missingFn(e)) throw UnsupportedError('notify_resident is not on the server yet');
+      rethrow;
+    }
+  }
+
+  @override
   Future<Map<String, ({int verified, int listed})>?> areaCounts() async {
     try {
       return {

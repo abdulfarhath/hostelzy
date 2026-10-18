@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelzy/data.dart' show RoomLayout;
 import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
-import 'package:hostelzy/features/owner/owner_rent_screen.dart' show rentReminder;
+import 'package:hostelzy/features/owner/owner_rent_screen.dart' show rentReminder, rentThanks, rentWhatsApp;
 import 'package:hostelzy/features/owner/owner_today_screen.dart' show allRequests;
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/kit.dart';
@@ -205,7 +205,9 @@ void main() {
     await _tap(tester, find.byKey(ValueKey('rentCall-${due.bed}')));
     expect(s.lastLink.toString(), 'tel:+91${due.phone}');
     expect(rentReminder(s, due), contains('is due ${due.note.substring(4)}'));
-    expect(find.byKey(ValueKey('rentWa-${paid.bed}')), findsNothing);
+    // F29 Part 1: a paid row has the buttons too, with a thanks instead of the reminder.
+    expect(find.byKey(ValueKey('rentWa-${paid.bed}')), findsOneWidget);
+    expect(rentWhatsApp(s, paid), rentThanks(s, paid));
     s.dispose();
   });
 

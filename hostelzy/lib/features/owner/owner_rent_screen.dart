@@ -28,9 +28,18 @@ String rentReminder(AppState s, Resident r) {
   return 'Hi ${r.name.split(' ').first}, $month rent ${fmt(r.amt)} for bed ${r.bed} $when. Pay in the Hostelzy app${upi.isEmpty ? '' : ' or by UPI to $upi'}.';
 }
 
+/// F29 Part 1: the thanks for a paid row, with the month the rent came in
+/// ("Hi Ravi, thanks, August rent received. – Anjani Residency").
+String rentThanks(AppState s, Resident r) => 'Hi ${r.name.split(' ').first}, thanks, ${monthNames[(r.paidOn ?? appToday).month - 1]} rent received. – ${hostelById(s.ownHid).name}';
+
+/// F29 Part 1: the WhatsApp text for a Rent row by status: Paid → the
+/// thanks; Due / Late (and Waiting) → today's reminder.
+String rentWhatsApp(AppState s, Resident r) => r.status == 'Paid' ? rentThanks(s, r) : rentReminder(s, r);
+
 /// F22 Area 3 (board `oRent`): what came in and what's still to come, then
 /// one row per resident with a status tag (F26 #20: Paid green, Late red, Due
-/// plain) and Call + WhatsApp on every unpaid row.
+/// plain) and Call + WhatsApp on every row (F29 Part 1: paid rows too, with
+/// a thanks instead of the reminder).
 class OwnerRentScreen extends StatelessWidget {
   const OwnerRentScreen({super.key});
   @override
@@ -132,28 +141,26 @@ class OwnerRentScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Tag(word(r.status), key: ValueKey('rentTag-${r.bed}'), bg: rentTag(p, r.status).bg, fg: rentTag(p, r.status).fg, border: rentTag(p, r.status).border),
                         const SizedBox(width: 10),
-                        if (r.status != 'Paid') ...[
-                          Tap(
-                            key: ValueKey('rentCall-${r.bed}'),
-                            onTap: () => s.call(r.phone),
-                            child: Semantics(
-                              button: true,
-                              label: 'Call ${r.name}',
-                              child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const Ic('phone', size: 18)),
-                            ),
+                        // F29 Part 1: Call · WhatsApp on every row; the text follows the status.
+                        Tap(
+                          key: ValueKey('rentCall-${r.bed}'),
+                          onTap: () => s.call(r.phone),
+                          child: Semantics(
+                            button: true,
+                            label: 'Call ${r.name}',
+                            child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: box(w: 2, c: p.tx), child: const Ic('phone', size: 18)),
                           ),
-                          const SizedBox(width: 6),
-                          Tap(
-                            key: ValueKey('rentWa-${r.bed}'),
-                            onTap: () => r.phone.isEmpty ? s.toastMsg('No number for ${r.name} yet.') : s.whatsapp(r.phone, rentReminder(s, r)),
-                            child: Semantics(
-                              button: true,
-                              label: 'WhatsApp reminder to ${r.name}',
-                              child: Container(width: 44, height: 44, alignment: Alignment.center, color: p.tx, child: Ic('msg', size: 18, color: p.bg)),
-                            ),
+                        ),
+                        const SizedBox(width: 6),
+                        Tap(
+                          key: ValueKey('rentWa-${r.bed}'),
+                          onTap: () => r.phone.isEmpty ? s.toastMsg('No number for ${r.name} yet.') : s.whatsapp(r.phone, rentWhatsApp(s, r)),
+                          child: Semantics(
+                            button: true,
+                            label: r.status == 'Paid' ? 'WhatsApp ${r.name}' : 'WhatsApp reminder to ${r.name}',
+                            child: Container(width: 44, height: 44, alignment: Alignment.center, color: p.tx, child: Ic('msg', size: 18, color: p.bg)),
                           ),
-                        ] else
-                          const SizedBox(width: 94),
+                        ),
                       ],
                     ),
                   ),

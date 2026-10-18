@@ -78,6 +78,8 @@ extension LoginActions on AppState {
     if (_finishSignIn()) return;
     update(() {
       signedIn = true;
+      // F30: signed in, so no limit; the guest count is over.
+      guestHostels = [];
       hist = [...hist, screen];
       screen = 'role';
     });

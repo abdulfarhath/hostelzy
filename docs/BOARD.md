@@ -49,9 +49,9 @@ Kept out by Build until confirmed: Building view, owner corridor floor plan, men
 ## Building now (founder go 2026-10-18: "start designing and building everything, never require my input")
 | Feature | Stage | Wave |
 |---|---|---|
-| F30 Guests see 3 hostels, then sign in | 🔨 Building | 1 |
-| F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | 🔨 Building | 1–4 |
-| F29 Ask to join · ID in the owner's Drive · contact buttons for all | 🔨 Building | 1, 2, 4 |
+| F30 Guests see 3 hostels, then sign in | 🔨 Building · **Wave 1 built (PR #W1)**: T34 wall, S8 hint, counter on the phone | 1 |
+| F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | 🔨 Building · **Part 1 · Wave 1 built (PR #W1)**: Verified only switch, verified first in every sort, pins | 1–4 |
+| F29 Ask to join · ID in the owner's Drive · contact buttons for all | 🔨 Building · **Part 1 · Wave 1 built (PR #W1)**: Call · WhatsApp on every Rent row, Call · WhatsApp · Notify on every resident row (Notify's SQL: see the feature file) | 1, 2, 4 |
 | SQL + functions ship themselves (CI) | 🔨 Building | 0 |
 | F31 No explanations · priority order (whole app) | 🔨 Building | 5 |
 Full register: `docs/IDEAS.md`. Hub answers: `docs/QUESTIONS.md`.

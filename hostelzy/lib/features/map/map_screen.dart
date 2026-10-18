@@ -94,6 +94,7 @@ class MapScreen extends StatelessWidget {
                       child: () {
                         final sel = ho.id == mh?.id;
                         return Tap(
+                          key: ValueKey('pin-${ho.id}'),
                           onTap: () => s.update(() => s.mapSel = ho.id),
                           child: Center(
                             child: Container(
@@ -225,14 +226,8 @@ class MapCard extends StatelessWidget {
                       Rich([sp(context, '${fmt(cost.fee)}/mo', w: 800), sp(context, ' · ${fmt(cost.move)} to move in')], s: 14),
                     ],
                     const SizedBox(height: 8),
-                    Cta('View', key: const ValueKey('mapView'), height: 40, px: 14, fs: 14, onTap: () => s.update(() {
-                      s.hist = [...s.hist, s.screen];
-                      s.screen = 'detail';
-                      s.sheet = null;
-                      s.hid = h.id;
-                      s.dealAc = null;
-                      s.rulesOpen = false;
-                    })),
+                    // F30: a guest's opens are counted; the 4th verified hostel shows T34.
+                    Cta('View', key: const ValueKey('mapView'), height: 40, px: 14, fs: 14, onTap: () => s.openHostel(h.id)),
                   ],
                 ),
               ),
