@@ -20,6 +20,7 @@ How a feature flows: founder idea (hub) → spec `docs/features/Fnn-*.md` + DECI
 → code + prototype (Build) → founder approves in the prototype (hub relays) → merge + APK (Build) → canvas v+1 (Design, hub publishes).
 
 Rules of the structure:
+- **Model (founder, 2026-10-18): every Hostelzy chat runs Fable 5.1 at Max effort.** Hub, Build and Design are on it now. A new chat is created with `model: claude-fable-5-1`; the effort level is set by the founder in the chat's model menu (the hub cannot set it from here).
 - Child chats can't message the hub on this account; the hub reads their branches and session state instead. Each child
   ends its turn with a pushed commit whose message says what is done.
 - On-demand chats are created with `create_session` when a task needs them, given one task, and left idle after.
