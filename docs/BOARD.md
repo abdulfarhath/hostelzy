@@ -46,8 +46,16 @@ Standing approval: chats approve and merge themselves (CLAUDE.md). Update this t
 Money questions Q1–Q9 with recommendations: `docs/finance/plan.md` §0. Marketing M1–M3: `docs/marketing/README.md`.
 Kept out by Build until confirmed: Building view, owner corridor floor plan, menu week table (dropped in the F22 redesign).
 
+## Building now (founder go 2026-10-18: "start designing and building everything, never require my input")
+| Feature | Stage | Wave |
+|---|---|---|
+| F30 Guests see 3 hostels, then sign in | 🔨 Building | 1 |
+| F28 Every hostel in (filter · add a hostel · Places/OSM import · owner link · freshness) | 🔨 Building | 1–4 |
+| F29 Ask to join · ID in the owner's Drive · contact buttons for all | 🔨 Building | 1, 2, 4 |
+| SQL + functions ship themselves (CI) | 🔨 Building | 0 |
+Full register: `docs/IDEAS.md`. Hub answers: `docs/QUESTIONS.md`.
+
 ## Ideas (not planned yet)
-Full numbered register with status and build order: `docs/IDEAS.md`.
 - **F30 Guests see 3 hostels, then sign in** (founder 2026-10-18, ideating): `features/F30-guest-limit-sign-in.md`.
 - **F29 Tenant adds their own ID + contact buttons for all** (founder 2026-10-18, ideating): `features/F29-tenant-self-onboarding.md`.
 - **F28 Verified filter + listed-hostel import** (founder 2026-10-18, ideating): `features/F28-listed-hostels-import.md`.

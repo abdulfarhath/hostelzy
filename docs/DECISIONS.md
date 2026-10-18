@@ -16,12 +16,12 @@ Older entries that were later replaced are marked **(replaced)**.
 | Fair Play | Owner adds every resident; phone matched within 60 days → Via Hostelzy / Direct. 3 strikes: warning / deals hidden 30 days / removed. Fixing a wrong "Direct" within 48 h = no strike; 3 fixes in 6 months = 1 warning. No move-off fee |
 | Owner phone | Shown to a tenant only with a **live hold** or a stay (F26 #7). Message and Call buttons are off before that |
 | Ranking | Rank #N with reasons, never a score. Reviews 50%, hold reply speed 15%, fresh availability 15%, complaints resolved 10%, listing complete 10%. Featured spot for 80+ bed hostels |
-| Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05). Never gates, CCTV, exits or residents' names |
+| Layouts | **Owners draw and publish their own layouts** (the team helps on request, 48 h). An AC room needs an AC unit. Fan/AC coverage only when the layer is on. Residents can suggest fixes, the owner approves. **Every layout and the building view are open to everyone, no hold needed** (founder, 2026-10-05); **guests see 3 hostels, then sign in** (F30, 2026-10-18). Never gates, CCTV, exits or residents' names |
 | Listings | Two tiers: **UNVERIFIED** (team-listed: photos, name, rent range, no beds/holds) and **✓ VERIFIED** (full checklist: rooms, a price for every type, linked owner, 8 photos, team visit). Availability confirmed every 3 days |
 | Design | One job per screen, plain words, Archivo, red `#ec3013` for actions, green only for savings. Design = app 1:1 (`SCREENS.md`) |
 | Web | Public pages at farhath.me/hostelzy/app/ until hostelzy.in. The site root farhath.me/hostelzy/ stays the old prototype |
 | Brand | Name Hostelzy. Logo B3-a2 "Full room" |
-| Approvals | Standing approval: chats decide and merge. Founder only for accounts, keys, SQL runs, payments and changes to money amounts |
+| Approvals | Standing approval: chats decide and merge. Founder only for accounts, keys, payments and changes to money amounts. **2026-10-18 run: full delegation, prototype-first suspended, the founder tests the final APK** (see the log) |
 
 
 ## 2026-10-01
@@ -305,6 +305,27 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   Edge Functions ship themselves from `main` through GitHub Actions (secrets set once). The founder gets **one-time setup
   steps only**, batched into one short list in `FOUNDER-TODO.md`, and is asked at most once for each. Never "run this SQL"
   again after the one-time secrets are in place.
+
+- **2026-10-18 (founder): full delegation until the build is done.** "Never require my input. Take your own decisions and put
+  them in DECISIONS.md; answer questions yourself in QUESTIONS.md; never test anything, I test at the end; notify me once
+  everything is done." The hub decides product **and, for this run, money details**, marked ₹ so the founder can change them
+  after testing. **Prototype-first is suspended for this run**: Build merges to `main` when `tools/check.sh` is green; the
+  founder tests the final APK. "Only what the spec says" still holds; extras go to "Not in the spec" and the hub decides.
+- **2026-10-18 (hub): F30 guest limit.** Guests open 3 hostel pages per device, then a sign-in wall (Google one-tap, "Not now"
+  goes back). Explore list, map, prices, filters and UNVERIFIED pages stay free. **Replaces** part of the 2026-10-05 rule:
+  layouts still never need a hold; after 3 hostels they need a sign-in.
+- **2026-10-18 (hub): F28.** Verified-only switch in Filters; verified cards before listed ones. Anyone signed in can add a
+  hostel (owner's phone required); it is UNVERIFIED until the owner claims it and the team verifies. ₹ **₹200** to a resident
+  whose added hostel goes live (founder's number); ₹ **₹20** to a partner per listed hostel after the team check; ₹ **₹2,000
+  a month cap** for both, queued beyond it. Finding hostels: Places API (`place_id` kept, the rest refreshed every 30 days),
+  OpenStreetMap, the owner self-serve page, the founder's own WhatsApp outreach from a separate SIM. **No scraping** of
+  Google Maps or portals, no bought phone lists. GHMC licences dropped (founder). Rent on a listed hostel shows only within
+  60 days of a human confirmation, else "Rent on request".
+- **2026-10-18 (hub): F29.** Call · WhatsApp · Notify on every resident row. "Ask to join": the owner picks a bed and a date,
+  sends a WhatsApp link; the tenant fills name, phone, date and ID; the owner approves. **Hostelzy never stores a tenant's ID
+  image or number**: it goes to the owner's own Google Drive (scope `drive.file`, Hostelzy keeps only the file id), or the
+  tenant sends it on WhatsApp and the owner ticks "ID received". Masked by default (first 8 digits covered); the owner can
+  require a full copy. Join tokens are single-use, 7 days.
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

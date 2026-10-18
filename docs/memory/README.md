@@ -73,6 +73,12 @@ Read, in order: this file → `founder-messages.md` (their words) → `../HANDOV
 | 2026-10-06 05:22 | Founder found unrequested changes in the prototype → audit (`F26-CHANGE-LIST.md`), 12 reverts ordered, "only what the spec says" rule |
 | 2026-10-06 05:30 | Second account move. Repo prepared: `HANDOVER.md`, this memory, Build and Design notes on their branches |
 
+## 5b. 2026-10-18: the autonomous build run
+Founder: "start designing and building everything, never require my input, decide yourself (DECISIONS.md), answer questions
+yourself (QUESTIONS.md), never test, notify me once everything is done; I expect a new design and a new APK." Specs F28,
+F29, F30 are final; waves 1–4 in `docs/IDEAS.md`; Build + Design run them; the hub publishes the canvas and the prototype
+at the end and sends ONE message with the APK release page, the canvas, the prototype, QUESTIONS.md and the one-time setup list.
+
 ## 6. Open threads (pick these up without being asked)
 | # | Thread | Next step |
 |---|---|---|

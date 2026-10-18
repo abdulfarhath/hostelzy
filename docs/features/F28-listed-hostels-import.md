@@ -1,118 +1,96 @@
-# F28 · Verified filter + listed-hostel import (ideating, 2026-10-18)
+# F28 · Every Hyderabad hostel in: Verified filter, tenants and partners add hostels, Places import, owner link
 
-**Founder (2026-10-18):** "a filter of verified and unverified hostels. Scrape all the data from the internet and put the
-actual details of all the hostels; verified hostels have the detailed information rather than the dummy information
-scraped from the internet. Can we scrape from Google Maps or any other platform? Ideate on this."
+**Stage:** Ideas (founder, 2026-10-18) → **Spec final (hub, 2026-10-18, under the founder's delegation)** → Design → Build
+(28-10 wave 1 · 28-30/31/40 wave 2 · 28-20/21/50/60/80 wave 3 · 28-90 wave 4).
 
-## What exists already (F26 #21, on main since apk-104)
-- `hostels.status = 'listed'` = UNVERIFIED tier: name, gender, area, pin, photos, `rent_min`–`rent_max`. No rooms, beds,
-  holds or owner contact. Tenants see the UNVERIFIED badge, "Tell me when verified", "Are you the owner? Claim this hostel".
-- Console › Listed: the team lists a hostel by hand (`list_hostel` RPC); Explore header counts "N verified · M listed".
-- Missing: a **Verified only** filter, and a **bulk way to get hostels in**.
+**Founder (2026-10-18):** a Verified / Unverified filter; get the details of every hostel into the app, with verified hostels
+showing the real detailed information and the rest as unverified; tenants add their own PG (owner's phone required, paid
+~₹200 only when the owner agrees and the hostel gets verified); partners add hostels; owner self-serve link; the founder
+messages owners on WhatsApp himself; OpenStreetMap as a supplement; keep rents fresh. No scraping of Google Maps or portals.
+Dropped: GHMC. Later: college ambassadors.
 
-## Ideas
+## What exists (F26 #21)
+`hostels.status = 'listed'` = UNVERIFIED tier (name, gender, area, pin, photos, `rent_min`–`rent_max`; no beds, holds or
+contact), console › Listed (C14) and › Claims (C15), `list_hostel` RPC, `claim_requests`, `verify_waitlist` ("Tell me when
+verified"), Explore header "N verified · M listed", `area_counts()`.
 
-### A. The filter (small, 1 screen touched)
-Filters sheet (H1) gets one more switch under Food included: **Verified only** (off by default). Chip row stays as is.
-Explore list shows the UNVERIFIED cards after the verified ones when the switch is off. Hostel count line unchanged.
+## Part 1 · Verified-only filter (28-10, wave 1)
+| Where | Change |
+|---|---|
+| H1 Filters sheet | New switch at the bottom, under Food included: **Verified only** (off by default). Count in the "n" of the filter row like the others |
+| S8 Explore | Order: verified cards first (today's sort), UNVERIFIED cards after them, in the same sort. With the switch on, UNVERIFIED cards are hidden and the header still says "N verified · M listed" |
+| S9 Map | Same switch applies to pins |
 
-### B. Where listed hostels come from (the big question)
-| Source | What we get | Legal / cost | Verdict |
-|---|---|---|---|
-| **Google Places API** (Text Search "PG hostel in Kukatpally", Nearby Search) | Name, pin, address, phone, rating, 1–10 photos, opening hours. No rent | Allowed. Needs a card on Google Cloud (founder's card issue). Free monthly tier per SKU, then paid. **Rule:** only `place_id` may be stored for ever; other fields max 30 days → we store place_id + pin + our own typed name/photo, refresh the rest | ✅ Best legal source for *finding* hostels |
-| **Scraping Google Maps pages** | Same as above | Breaks Google's Terms; account/IP bans; data can't be kept | ❌ No |
-| **Justdial / Sulekha / NoBroker / Housing / 99acres / MagicBricks pages** | Names, phones, sometimes rent (often stale or bait) | Their terms forbid scraping; rent is the least reliable field | ❌ Not as a pipeline. ✅ OK as a *human* reading list while calling owners |
-| **OpenStreetMap (Overpass)** | Pins for `tourism=hostel` / `amenity=dormitory` | Free, open licence (credit OSM) | 🟡 Thin for Hyderabad PGs; use as a supplement |
-| **Owners themselves** ("Claim this hostel", WhatsApp list, partners) | Real rent, real photos | Free, and it is the verification path anyway | ✅ The only source for rent and beds |
-
-**Honesty rule applies:** a listed hostel never shows a rent we did not confirm with a person. Scraped/API data gives
-name, pin, phone, photo; rent range comes from a call or stays "Rent on request".
-
-### C. The pipeline I'd build (if the founder says yes)
-1. `tools/import-places.ts` (team-only script, run by the hub/Build, not in the app): for each of ~25 Hyderabad areas run
-   Places Text Search for "PG" / "hostel" / "paying guest", dedupe by `place_id`, write `hostels` rows as `status='draft'`
-   with `source='google_places'`, `place_id`, pin, phone, up to 3 photo URLs. Nothing public yet.
-2. Console › Listed gets an **Import queue**: team opens each draft, calls the number (script on screen), fills
-   rent_min/rent_max and gender, taps **List** → `listed`. Rows without a call stay draft (invisible).
-3. Owner claim → verification → `live` as today.
-4. Refresh job (pg_cron, weekly) re-fetches Places fields for listed rows, honours the 30-day rule, drops closed ones.
-
-Volume: Hyderabad has thousands of PGs on Google Maps (I'll confirm with one Places query per area before promising a number).
-At 3 min per call, 20 hostels a day per person.
-
-### D. Not in this spec (ideas kept)
-Auto-rent from scraped portals · tenants adding hostels · reviews imported from Google (not allowed to store).
-
-## Questions for the founder (yes / no)
-| # | Question | My pick |
+## Part 2 · Anyone adds a hostel (28-30, 28-31, 28-40, wave 2)
+| Step | Who | What |
 |---|---|---|
-| 1 | Use Google Places API (needs your card on Google Cloud; free tier likely enough for one city) | Yes |
-| 2 | Rent on listed hostels only after a phone call; otherwise "Rent on request" | Yes |
-| 3 | Verified-only filter as a switch in Filters (not a chip in the row) | Yes |
-| 4 | Who calls owners: you + 1 partner at ₹20 per listed hostel? (money → Finance) | Ask Finance |
+| 1 | Tenant / resident / partner (signed in) | **S92 `addHostel`** "Add a hostel": hostel name · gate photo (camera/gallery, 1–3) · pin (GPS, drag to fix; area from the pin) · For: Men / Women / Co-living · Rent: "What do you pay?" ₹/month (one number; partners enter a range) · Sharing: 1/2/3/4+ · Food included yes/no · **Owner's name + phone (required)** · "I live here" (default) or "I'm a Hostelzy partner" (needs a partner code) · **Add** |
+| 2 | App | Dedupe: same phone or same name within 150 m of an existing hostel → "Already on Hostelzy: <name>. Ask your owner to verify it instead" with the share button; no new row. Else the hostel is created as `listed` (UNVERIFIED) with `source = 'resident'` or `'partner'`, `added_by`, the rent as `rent_min = rent_max = paid rent` (partners: range) and `rent_confirmed_at = now()` |
+| 3 | Adder | **S93 `myAdd`** "Your hostel on Hostelzy": the card as tenants see it, the 5 steps **Added ✓ → Owner asked → Owner agreed → Verified → ₹200 paid**, big button **Send to your owner** (WhatsApp from the tenant's phone: "Your PG <name> is on Hostelzy. Agree to get it verified (free): <claim link>"), "Ask again" after 3 days, and the honest line "Paid only when the owner agrees and Hostelzy verifies the hostel" |
+| 4 | Owner | Claim link `app/r/?h=<id>&claim=1` → the UNVERIFIED page (T32) with the existing **Claim this hostel** sheet H47 pre-opened; submitting = **owner agreed** (step 3 ticks) |
+| 5 | Team | Console › Claims (C15): the claim shows "added by Ravi (resident) · owner phone matches ✓/✗". Team verifies as today (visit, checklist) → `live` |
+| 6 | App | On `live`: `reward_ledger` entry **₹200 `hostel_added`** for the adder (resident path) or **₹20 `hostel_listed`** for the partner at step 2 (partner path, once the team ticks "checked" on the row in C14). Rewards (S22) shows it as "₹200 · <hostel> verified · paid by UPI on the 5th"; console › Payments (C2) lists payouts due with the adder's UPI id (asked once in S93 after the owner agrees) |
 
-## Design · Build
-Not started. Screens touched if approved: H1 Filters (+1 switch), S8 Explore (order of listed cards), console Listed (+Import queue, T-id new).
+Rules (hub decisions, money ones marked ₹ for the founder to change later):
+- ₹ **₹200** per hostel added by a resident, paid once, when the hostel goes `live`; **₹20** per partner-listed hostel after the team check.
+- ₹ Monthly cap for these two together: **₹2,000** (10 hostels). Beyond the cap the reward is queued for next month and S93 says so honestly.
+- One resident can have one hostel "in progress" at a time; a partner any number. No reward for duplicates or for a hostel the team removes.
+- Owner never answers: after 60 days the card stays UNVERIFIED, the steps stop at "Owner asked", no payout (S93 says "Still waiting. You can ask again").
+- Owner's phone is never shown to anyone but the team (contact rule of F26 #7 stands).
+- Entry points: Explore "Can't find your PG? **Add it**" row at the end of the list and in the empty state (T? exploreEmpty); Me (S79) row **Add a hostel** (or **Your hostel** → S93 when one exists); resident My stay empty state T20 "Your stay isn't on Hostelzy yet" → **Add my hostel**.
+- Partners: table `partners` (code, name, phone, upi, active); the team makes codes in the console (C14 gets a **Partners** segment: add partner, list, listed count, ₹ due). A partner code is typed once in S92 and remembered on the device.
 
-## More ways in (founder 2026-10-18: "any other idea… even if illegal, fine")
-Hub's line: no scraping of Google Maps / Justdial / NoBroker pipelines and no bought phone lists (the Google Cloud project that
-runs Firebase + Google sign-in gets banned with it; phone numbers are personal data under India's DPDP Act 2023). Everything
-below gets the same coverage without that risk.
+## Part 3 · Finding hostels at scale (28-20, 28-21, 28-50, 28-60, 28-80, wave 3)
+| # | Piece | What |
+|---|---|---|
+| 28-20 | **Places import** `tools/import/places.mjs` | For each area in `tools/import/areas.json` (~25 Hyderabad areas with a centre and radius) run Places API (New) Text Search for "PG hostel", "paying guest", "hostel for men", "hostel for women"; dedupe by `place_id` and by name+150 m against `hostels`; insert `hostels` rows as **`status = 'draft'`, `source = 'places'`**, `place_id`, name, pin, area, phone, up to 3 photo URLs, `source_seen_at`. Needs `GOOGLE_PLACES_KEY` (GitHub secret, founder one-time; without it the workflow prints "No key yet" and exits 0). Stores only what Google allows long-term (place_id for ever; the rest is refreshed every 30 days by the same job and dropped if the place is gone) |
+| 28-80 | **OSM import** `tools/import/osm.mjs` | Overpass query for `tourism=hostel`, `amenity=dormitory`, `building=dormitory` in Hyderabad; same draft rows with `source = 'osm'`; credit line "Map data © OpenStreetMap contributors" in the console footer |
+| | Workflow `.github/workflows/import-hostels.yml` | `workflow_dispatch` + monthly; runs both scripts with `SUPABASE_DB_URL` (same secret as the SQL autorun). Never prints keys |
+| 28-21 | **Console › Listed › To call** segment (C14) | Drafts from Places/OSM/web: name, area, phone (tap to call), the call script (6 lines: who we are, free listing, rent range, men/women, food, "want to be verified?"), fields rent range + For + Food, buttons **List** (→ `listed`, `rent_confirmed_at = now()`), **Not a PG / Closed** (→ removed), **Call later**. **Export CSV** (name, phone, area, id) for the founder's WhatsApp run |
+| 28-50 | **Owner self-serve** web page **W8 `app/list/`** | "List your PG on Hostelzy, free": hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → RPC `self_list_request` (anon, max 3 per phone per day) → draft with `source = 'web'` → To call. Page says "We'll call you within 2 days to confirm" (honest; no "Listed!"). **W9 `app/list/poster.html`**: printable A4/A5 poster with the QR to W8, red headline "Get tenants from Hostelzy. Free listing.", for tea stalls, gates, Xerox shops |
+| 28-60 | **WhatsApp sender** `tools/outreach/send.mjs` (founder runs it) | Reads the CSV from C14, sends one personalised message per number through `whatsapp-web.js` from a **separate SIM**: QR login, warm-up note, ≤ 25 messages/hour with random 60–180 s gaps, ≤ 150/day, skips numbers already messaged (local `sent.json`), stops on any reply (the founder answers by hand), text: "Hi, this is <founder> from Hostelzy, a free app where tenants find PGs in Hyderabad. <Hostel> is listed as unverified. Reply 1 to add your rent and get verified, 2 to remove it. – Hostelzy" with "Reply STOP to never hear from us". README with the limits and the ban risk in plain words. Not in the app; not counted |
 
-| # | Idea | How | Cost | Covers |
-|---|---|---|---|---|
-| 1 | **Places API discovery** (above) | Script lists every "PG/hostel" per area as hidden drafts | Card, ~free tier | Finding: name, pin, phone, photo |
-| 2 | **Tenants add their own PG** | New screen "Add my hostel": name, gate photo, rent they pay, men/women; pin from GPS. → listed as UNVERIFIED with "added by a resident". ₹100 reward when the owner claims and it goes live (fits the existing reward rule) | ₹100 per verified | Rent + photo, real, fast |
-| 3 | **Partner walk** | Area partner opens "Add hostel in 60 s" (same screen as 2, plus owner phone), ₹20 per listed hostel (already in the hiring post) | ₹20 each | Streets Google misses |
-| 4 | **Owner self-serve link** | Public page `app/list` = 2-minute form (name, phone, rent, 3 photos) → listed; QR poster at tea stalls, gates, Xerox shops near PGs (Marketing) | Posters | Owners who want tenants |
-| 5 | **WhatsApp to Places phones** | After 1: one message "Your PG is on Hostelzy as unverified. Reply 1 to add rent, 2 to remove" via the WhatsApp Business API (needs a template + opt-out; one message, no spam) | ~₹0.8 per message | Turns drafts into listed with real rent |
-| 6 | **Public ads as leads** | Owners post "PG available, ₹6,500, call 98…" on Facebook/Instagram/Telegram groups and college boards. A partner reads, calls, lists. Human, not a scraper | Time | Rent from the owner's own ad |
-| 7 | **College ambassadors** | Each college's students know every PG within 1 km; one ambassador per college adds them via 2 | ₹100 per verified | Student areas |
-| 8 | **GHMC / Shops & Establishments registers** | Lodging trade licences are public records; ask for the list (RTI if needed). Legal, slow, patchy | Free | Registered PGs |
-| 9 | **OpenStreetMap** | Overpass pull of hostel/dormitory pins; credit OSM | Free | Supplement |
-| 10 | **Keep it fresh** | Monthly WhatsApp to listed owners: "Still running? Rent same?" No reply in 60 days → "Rent on request" | ~₹0.8 | Honesty over time |
+## Part 4 · Keep it honest over time (28-90, wave 4)
+| Piece | What |
+|---|---|
+| `rent_confirmed_at` | Set when a human confirmed the rent (List button, Add a hostel, owner claim with rent, console "Rent confirmed today") |
+| App | A listed hostel shows its rent range only when `rent_confirmed_at` is within **60 days**; else **"Rent on request"** and the card sorts after priced ones |
+| Console | C14 segment **To refresh**: listed hostels past 50 days, Export CSV (the founder's monthly "Still running? Rent same?" WhatsApp run), per row **Rent confirmed today** / **Closed** |
+| pg_cron | Nightly: nothing to compute; the 60-day rule is a view. Weekly: drafts from Places older than 30 days are re-fetched by the import workflow (above) |
 
-Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new) and 5 once the card works.
+## Screens
+| Id | Screen | Notes |
+|---|---|---|
+| H1 `search` (changed) | Verified only switch | — |
+| S8 `explore`, S9 `map` (changed) | Order and filter | Explore end-of-list row "Can't find your PG? Add it" |
+| **S92** `addHostel` (new) | Add a hostel | light + dark; partner variant (range + code) |
+| **S93** `myAdd` (new) | Your hostel on Hostelzy | 5 steps; variants: Owner asked / Owner agreed / Verified / Paid / Still waiting (60 days) / Queued (cap) |
+| S79 `me` (changed) | Add a hostel / Your hostel row | — |
+| T20 (S89 empty) (changed) | Add my hostel button | — |
+| S22 `rewards` (variant) | ₹200 / ₹20 rows | — |
+| C14 `#listed` (changed) | Segments: Listed · To call · To refresh · Partners; Export CSV | console view, variants |
+| C15 `#claims` (variant) | "added by Ravi (resident)" line | — |
+| **W8** `app/list/` (new web page) | List your PG | + sent state (variant) |
+| **W9** `app/list/poster.html` (new web page) | Poster with QR | A4 and A5 |
 
-## Founder round 2 (2026-10-18 05:00)
-- Keeps: 1 Places discovery · 2 tenants add (refined below) · 3 partner walk · 4 owner link · 5 WhatsApp (founder does it
-  himself from his own number with an open-source tool, not from the app) · 6 public ads as leads · 8 GHMC (explained) ·
-  9 OSM · 10 freshness. **7 college ambassadors: last, not now.** Nothing designed or built yet.
-- **#2 refined (founder):** the tenant adds a few details about their own PG; the **owner must agree** to be verified on
-  Hostelzy; only then the tenant is paid, **about ₹200** (founder's number, tentative; Finance checks it against the
-  ₹1,000/month rewards cap, Q2).
-  Flow: tenant "Add my hostel" (name, gate photo, rent they pay, sharing, food, men/women, **owner phone required**) → UNVERIFIED
-  card "added by a resident" → owner is asked (claim in app or WhatsApp #5) → owner agrees + team verifies → live →
-  tenant's ₹200 credited; 60 days with no owner answer → the card stays UNVERIFIED, no payout.
-- **₹20 explained:** Finance plan §3/Q5 and the hiring post: a sales partner earns ₹20 per valid tenant hold (a hold the
-  owner confirmed) + ₹200 per owner who starts paying; all partners' hold pay capped at ₹1,000/month until revenue ≥ ₹10k.
-  The "partner walk" (#3) adds a third line: ₹20 per hostel the partner lists that passes a team check (name, pin,
-  phone, photo, rent from the owner). Partners = the commission-only people from `docs/finance/hiring-post.md`.
-- **#5 WhatsApp from the founder's number:** possible with open-source tools (open-wa / wa-automate-nodejs,
-  whatsapp-web.js, Baileys): they drive WhatsApp Web from a laptop after a QR scan, free. Unofficial → WhatsApp can ban the
-  number. Safe practice: a separate SIM (never the founder's main number), warm it up a week, ≤ 20–30 messages/hour with
-  random gaps, ≤ ~150/day, message only business numbers from Places, personalised with the hostel name, one message, offer
-  "reply STOP", stop and answer by hand when they reply. SMS from a personal SIM: TRAI flags bulk sends, SIM gets blocked
-  around 100/day; WhatsApp is the better channel. Hub can write a small sender (`tools/outreach/`) that reads the drafts and
-  sends with these limits built in; the founder runs it on his laptop.
-- **#8 GHMC in depth:** lodging houses need a GHMC trade licence (D&O licence, 1973 bye-laws, Schedule P trades); PGs often
-  also register under the Telangana Shops & Establishments Act with the Labour department. Neither list is published online;
-  GHMC's portal only lets an owner apply/renew. Route: RTI to GHMC (each zone) for "trade licences in the lodging / hostel
-  category with trade name, address, licence year"; ~30 days, often partial, many PGs run without any licence. Verdict: free,
-  slow, patchy; worth one RTI, not a pipeline.
+## Server
+Migration `f28_add_hostels.sql` (rerun-safe): `hostels.source` (team|resident|partner|places|osm|web), `added_by`,
+`place_id`, `source_seen_at`, `rent_confirmed_at`, `owner_phone_hint` (team-only column, RLS), `partners`,
+`self_list_requests` (anon RPC with rate limit), `add_hostel(...)` RPC (signed in; dedupe; one in-progress per resident),
+`my_added_hostel()`, `set_adder_upi(upi)`, reward kinds `hostel_added` (₹200) / `hostel_listed` (₹20) with the ₹2,000
+monthly cap in `reward_ledger` (queued rows carry `pay_month`), console RPCs `list_draft(id, rent_min, rent_max, gender,
+food)`, `draft_not_pg(id)`, `rent_confirmed(id)`, `new_partner(...)`, view `listed_rent_visible`. Bundles regenerated;
+ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (needs the card) — the app works without it.
 
-## Open money question → Finance
-₹200 per tenant-added hostel once the owner is verified, vs the ₹1,000/month cap on Hostelzy-funded rewards (Q2): either
-5 payouts a month, or a separate cap. Founder decides the amount.
+## Build notes
+- Wave 1: Part 1. Wave 2: Part 2 (S92, S93, entry points, rewards, C14 Partners, C15 line). Wave 3: Part 3. Wave 4: Part 4.
+- Demo (sample data): one hostel "added by you" at step "Owner asked", one partner code `HZ-PART-1`.
+- SCREENS: +2 screens (S92, S93), +2 web pages (W8, W9). Changed H1, S8, S9, S79, T20, S22, C14, C15.
 
-## Founder round 3 (2026-10-18 05:10): tenant-add rules
-- **Owner's phone is required** when a tenant adds a hostel (no phone → can't submit). Without it we can't reach the owner.
-- **Paid only if the hostel gets verified.** It is the tenant's job to get their owner to agree: the app gives them a
-  share button ("Send to your owner" → WhatsApp message with the claim link) and shows the state: Added → Owner asked →
-  Owner agreed → Verified → ₹200 (amount tentative).
-- Hub adds (product details, not money): one tenant can add only the hostel they live in (one at a time); the owner's
-  number is never shown to other tenants (same contact rule as F26); duplicate of an existing hostel → the tenant is told
-  "already on Hostelzy" and can ask the owner to verify instead; no payout for duplicates; the 60-day no-answer rule stays.
+## Not in the spec
+Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
+site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
 
-## Founder round 4 (2026-10-18 05:15)
-- **#8 GHMC dropped** (founder: no PG in Hyderabad registers; everyone runs without it). Not pursued, no RTI.
+## Design
+Boards S92 (+ partner variant), S93 (+ 5 state variants), W8 (+ sent), W9, H1 with the switch, S8 with the end row,
+S79 row, T20 button, S22 variant, C14 segments (To call, To refresh, Partners), C15 variant. Light + dark for S92, S93.

@@ -2,7 +2,7 @@
 
 Founder asked 2026-10-18: "What are all our ideas? What are all we gonna build now?" One row per idea, numbered like an
 aircraft manual (chapter = feature, section = part). Status: 🟢 Liked, waiting for "spec it" · 🟡 Open question · ⏸ Later ·
-🔴 Dropped · 🔨 Building · ✅ Built. Nothing below is in Build yet; the last block is the hub's proposed build order.
+🔴 Dropped · 🔨 Building · ✅ Built. **2026-10-18 06:30: the founder said "start designing and building everything".** Waves 1–4 below are in progress; specs: F28, F29, F30.
 
 | No. | Idea | Who does it | Depends on | Status |
 |---|---|---|---|---|
