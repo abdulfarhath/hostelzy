@@ -249,3 +249,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **05:40**
 > we are showing the room layout to the tenant, right? I want it to have a limited access. When the user first opens our application without logging in, he should be able to see two or three hostels layouts and building layouts. And after that, it should ask him for login if he wants to see other hostels information. So this is how I'll be incorporating all the users into the application. I'll be making them, forcing them to login into the application. Is this idea fine, or is there any improvement needed?
+
+**05:50**
+> What are all our ideas? What are all we gonna build now? Put it in a tabular format, in aerospace ST100 format.
