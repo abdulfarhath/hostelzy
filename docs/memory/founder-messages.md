@@ -237,3 +237,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **05:10**
 > We need the hostel owner's contact for sure from the tenant who adds his hostel. Otherwise, we can't contact him, right? If and only if the hostel gets verified, only then the tenant gets paid. So it's all tenant's responsibility to make sure that his hostel will be verified on Hostel Z.
+
+**05:15**
+> The GHMC idea is fail. I don't like it. Because no hostel in Hyderabad is doing that registration thing. Everyone runs it without any registration.

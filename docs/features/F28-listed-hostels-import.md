@@ -113,3 +113,6 @@ Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new)
 - Hub adds (product details, not money): one tenant can add only the hostel they live in (one at a time); the owner's
   number is never shown to other tenants (same contact rule as F26); duplicate of an existing hostel → the tenant is told
   "already on Hostelzy" and can ask the owner to verify instead; no payout for duplicates; the 60-day no-answer rule stays.
+
+## Founder round 4 (2026-10-18 05:15)
+- **#8 GHMC dropped** (founder: no PG in Hyderabad registers; everyone runs without it). Not pursued, no RTI.
