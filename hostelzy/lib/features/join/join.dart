@@ -109,6 +109,9 @@ extension JoinActions on AppState {
   /// Owner: requests waiting for a decision at this hostel.
   List<JoinReq> get joinReqs => (_joinReqs ??= AppState.samples && !onServer ? _seedJoinReqs() : []).where((r) => r.hid == ownHid || !onServer).toList();
 
+  /// Tests and the demo: replace the list (an empty one hides the Joining tab).
+  set joinReqs(List<JoinReq> v) => _joinReqs = v;
+
   /// Demo: one pending join request (F29 build note).
   List<JoinReq> _seedJoinReqs() {
     final free = [for (final r in rooms['anjani'] ?? const <Room>[]) for (final b in r.beds) if (b.state == 'free' && !b.mine) b].firstOrNull;

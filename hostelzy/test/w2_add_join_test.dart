@@ -334,7 +334,6 @@ void main() {
     testWidgets('H48: Manage › Residents › Ask to join → a free bed, prefilled fee and advance, WhatsApp link', (tester) async {
       final s = AppState(start: 'oMore', role: 'owner', moreTab: 'residents');
       await _pump(tester, s);
-      expect(find.byKey(const ValueKey('resAdd')), findsOneWidget);
       await _tap(tester, find.byKey(const ValueKey('askJoin')));
       expect(s.sheet, 'askJoin');
       expect(find.text('Ask to join'), findsWidgets);

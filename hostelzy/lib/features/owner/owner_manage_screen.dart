@@ -507,16 +507,10 @@ class _Residents extends StatelessWidget {
             ],
           ),
         ),
-        // W2 (F29 Part 2): Ask to join, next to Add a resident.
+        // W2 (F29 Part 2): Ask to join (the "+" tab and the beds card stay the Add a resident entries).
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: Row(
-            children: [
-              Expanded(child: OutlineCta('Add a resident', key: const ValueKey('resAdd'), icon: 'plus', height: 46, fs: 14, onTap: s.openAddResident)),
-              const SizedBox(width: 8),
-              Expanded(child: Cta('Ask to join', key: const ValueKey('askJoin'), icon: 'msg', height: 46, px: 14, fs: 14, onTap: s.openAskJoin)),
-            ],
-          ),
+          child: Cta('Ask to join', key: const ValueKey('askJoin'), icon: 'msg', height: 46, px: 14, fs: 14, onTap: s.openAskJoin),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,

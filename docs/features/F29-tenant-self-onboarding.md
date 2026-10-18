@@ -70,3 +70,28 @@ Build lists extras here; the hub decides within the day. Known later items: OneD
 ## Design
 Boards H48, S94 (+ done variant), H49 (+ Drive and WhatsApp variants), H50 (+ not-available variant), S36 Joining tab variant,
 S38/S40 with buttons on every row. Light + dark for S94 and H49.
+
+## Build (wave 2 · Build 2, 2026-10-18, branch `feature/w2-add-join`, not merged: the original Build chat integrates waves 0→4)
+Part 2 (29-10 + 29-23) with the WhatsApp ID path; the Drive option is hidden until `owner_drive` (wave 4) exists. Handover
+with Build 4's three wiring points: `docs/handover/w2-build.md` §4.
+
+| Piece | Where | State |
+|---|---|---|
+| **H48** `askJoin` | `hostelzy/lib/features/join/join_screens.dart` (`AskJoinSheet`), state `join.dart` | Built. Manage › Residents › **Ask to join** (red, under the search; Add a resident stays on the "+" tab and the beds card): free bed chips (from the hostel's beds), fee prefilled from the room's rate, advance from the terms, moves in (Today / Tomorrow / In 3 days / In a week / In 2 weeks), optional first name, **Send on WhatsApp** → `new_join_request` → WhatsApp opens with "Hi Ravi! Join <hostel> on Hostelzy for bed 203. Fill your details here (2 min): `app/j/?t=<token>`". Toast "Link made · bed 203 · 7 days" |
+| **S94** `joinForm` | `join_screens.dart` (`JoinFormScreen`) | Built. Link → sign in ("Sign in to join your hostel") → "Join <hostel>" with kicker "Bed 203 · ₹6,500/month": advance (value), name, phone (from the account, editable), moving in (prefilled, editable), **Your ID · Aadhaar or any government ID** → **Send ID on WhatsApp** ("Here is my ID for bed 203" to the owner) → tick "Sent on WhatsApp to <owner>" → **Send to owner** (`fill_join_request`, `id_received = whatsapp | none`). Done state on the same screen: "Sent · <owner> will approve · we'll notify you". Closed states: "This bed was just taken, ask your owner." / link not valid / already in |
+| **H49** `joinReview` | `join_screens.dart` (`JoinReviewSheet`) | Built. Today › **Joining** card "Ravi wants to join" (Bed 203 · moves in 1 Nov · ID sent on WhatsApp) → **Review** → name, phone, date, bed, fee; ID row: WhatsApp → checkbox **ID received on WhatsApp**, none → "No ID yet", drive → placeholder row (wave 4); **Approve** (red; needs the tick) / **Ask again** (`ask_id_again`: push + WhatsApp "Please re-send your ID…") / **Decline** |
+| S36 Joining tab | `owner_today_screen.dart` (`needGroupsOf`, items `join-<id>`) | Built: **Holds · Payments · Joining · Fixes**, Joining only while non-empty (hub order) |
+| Approve path | `join.dart` `approveJoin` → `decide_join` (server) / `_newResident` (demo) | Built: the same path as the owner's Add a resident (`stays` row → `hz_match`, Fair Play late check, bed booked, Member reward trigger); pushes "You're in. Welcome to <hostel>" |
+| W3 `app/j/` | `app/j/index.html` | Built: `?t=` shows "Join your hostel on Hostelzy", opens `hostelzy://app/j?t=…` (auto after 0.4 s), install hint; `?c=` invite codes unchanged |
+| SQL | `supabase/migrations/20261018110000_f29_join.sql`, test `supabase/tests/f29_join_test.sql` | Built, rerun-safe: `join_requests` (+ RLS: staff / team / the tenant's own row), `new_join_request`, `join_request_info(token)`, `fill_join_request`, `decide_join`, `ask_id_again`, `expire_join_tokens()` + pg_cron hourly. `drive` is `false` until Build 4 |
+| Demo | `join.dart` `_seedJoinReqs` | One pending request: Ravi Teja, the first free bed at Anjani, ID sent on WhatsApp (no image: the Drive path is wave 4) |
+| Tests | `hostelzy/test/w2_add_join_test.dart` (F29 group, 4 flows) | Green |
+
+### Not in the spec (wave 2, F29, for the hub)
+1. **`join_request_info(token)`** RPC: the tenant must read what the link is for before filling it; RLS can't match a token. It returns the owner's WhatsApp number **only while the request is open or to the tenant who filled it**, so "Send ID on WhatsApp" has someone to send to (the owner invited them from that number).
+2. No new **Add a resident** button: Manage › Residents never had one (the "+" tab and the "taken beds have no resident" card open the sheet), so **Ask to join** sits alone under the search. Tests pin the single "Add a resident" text.
+3. Approve needs the **ID received** tick on the WhatsApp path (or a Drive file); with no ID yet the owner is told "No ID yet. Ask again." Decline takes no note in the app (the RPC accepts one).
+4. The Drive option is stubbed as "no row" in the app (`JoinInfo.drive` from the RPC's constant `false`); the three wiring points for Build 4 are in the handover.
+5. **Rule A (F31, hub message)**: no intro paragraphs in H48/H49, S94's explainer lines removed, toasts ≤ 6 words. Approve/Decline/Ask again pushes carry a fact only.
+6. Demo request has no sample ID image (the spec's placeholder image belongs to the Drive variant, wave 4).
+7. `join_requests` is not in the Realtime publication (see F28 note 9); the Joining tab reloads on open and after each decision.
