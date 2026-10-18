@@ -2,7 +2,7 @@
 // only accounts with the `team` claim get in. Data comes from Supabase with
 // the same Row Level Security as the app: is_team() opens the team's rows.
 import { firebaseConfig, supabaseUrl, supabaseAnonKey, hostelzyUpi } from './config.js';
-import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords, rentRangeError, rentRangeLabel, listedPhotoPath, listWords, SOURCE_WORDS, callScript, csv, rentAgeLine, callLaterLabel, claimAddedLine, partnerLine, w3Words } from './logic.js';
+import { columns, fmtUtr, invoiceTag, waLink, rupees, CASE_TABS, slugOf, dayMon, waitedDays, fixStatus, layoutChanges, quickLine, SHAPES, shapeOutline, parsePoints, hoursLeft, helpStatus, joinSummary, strikeWords, strikeButton, standingLine, reportLine, casePhotoPath, goLiveWords, rentRangeError, rentRangeLabel, listedPhotoPath, listWords, SOURCE_WORDS, callScript, csv, rentAgeLine, callLaterLabel, claimAddedLine, partnerLine, w3Words, partnerHostels, PAYOUT_WORDS, utrError } from './logic.js';
 
 const app = document.getElementById('app');
 /** The signed-in team member (for their own storage paths). */
@@ -173,7 +173,27 @@ const VIEWS = {
           : i.status === 'paid' ? el('span', { class: 'mu', style: 'font-size:13px' }, 'Paid')
           : wa ? el('a', { class: 'btn sm', href: wa, target: '_blank', rel: 'noopener' }, 'Remind on WhatsApp') : el('span', { class: 'mu', style: 'font-size:13px' }, 'No owner phone')));
     };
+    // F28: ₹200 / ₹20 payouts not paid yet; Paid asks the UTR (mark_payout_paid).
+    const dueQ = await db.rpc('payouts_due');
+    const due = dueQ.data ?? [];
+    const paid = async (p) => {
+      const utr = prompt(`UTR for ${rupees(p.amount)} to ${p.who || 'this person'}`);
+      if (utr == null) return;
+      const bad = utrError(utr);
+      if (bad) return toast(bad);
+      const { error } = await db.rpc('mark_payout_paid', { p_ledger: p.ledger_id, p_utr: utr.replace(/\s/g, '') });
+      if (error) return toast(w3Words(error.message));
+      toast('Marked paid.');
+      again();
+    };
+    const payoutRow = (p) => el('div', { class: 'tr' },
+      el('div', {}, p.who || '—'), el('div', {}, PAYOUT_WORDS[p.kind] ?? p.kind), el('div', {}, p.hostel ?? ''), el('div', {}, rupees(p.amount)),
+      el('div', {}, p.upi || 'No UPI id'), el('div', {}, dayMon(p.pay_month)),
+      el('div', {}, el('button', { class: 'btn sm primary', onclick: () => paid(p) }, 'Paid')));
     return [
+      el('div', { class: 'title' }, el('h1', {}, 'Payouts due'), el('span', { class: 'mu', style: 'font-size:13px' }, `${due.length}`)),
+      el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Who', 'For', 'Hostel', 'Amount', 'UPI', 'Month', 'Action'].map((h) => el('div', {}, h))),
+        dueQ.error ? el('p', { class: 'empty' }, w3Words(dueQ.error.message)) : due.length ? due.map(payoutRow) : el('p', { class: 'empty' }, 'Nothing due.')),
       el('div', { class: 'title' }, el('h1', {}, 'Owner payments'), el('span', { class: 'mu', style: 'font-size:13px' }, `Pay to ${hostelzyUpi} · match every UTR in the bank app. Never trust screenshots.`)),
       el('div', { class: 'table' }, el('div', { class: 'tr head' }, ['Hostel', 'Invoice', 'Amount', 'UTR', 'Due', 'Status', 'Action'].map((h) => el('div', {}, h))),
         invs.length ? invs.map(row) : el('p', { class: 'empty' }, 'No invoices yet')),
@@ -625,6 +645,15 @@ const VIEWS = {
       // Build 2's SQL: new_partner(name, phone, upi) → the code; partners_due() → listed count and ₹ due.
       const q = await db.rpc('partners_due');
       const rows = q.data ?? [];
+      // Their listed hostels; Checked ✓ = check_partner_hostel (₹20 ledger row, once).
+      const [pHostels, pLedger] = await Promise.all([
+        db.from('hostels').select('id, name, area, status, source, partner_code').eq('source', 'partner').order('name').then(({ data }) => data ?? []),
+        db.from('reward_ledger').select('hostel_id, kind').eq('kind', 'hostel_listed').then(({ data }) => data ?? []),
+      ]);
+      const hostelRows = (code) => partnerHostels(pHostels, pLedger, code).map((h) => el('span', { class: 's', style: 'display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap' },
+        `${h.name} · ${h.area}`,
+        h.checked ? el('span', { class: 'tag neutral' }, 'Checked')
+          : el('button', { class: 'btn sm primary', onclick: () => rpc('check_partner_hostel', { p_hostel: h.id }, 'Checked. ₹20 due.') }, 'Checked ✓')));
       const f = { name: '', phone: '', upi: '' };
       const add = async () => {
         if (f.name.trim().length < 2) return toast('Enter the partner’s name.');
@@ -638,7 +667,8 @@ const VIEWS = {
         el('div', { class: 'board' },
           el('div', { class: 'list', style: 'margin:0 24px' }, q.error ? el('p', { class: 'empty' }, w3Words(q.error.message)) : rows.length ? rows.map((p) => el('div', { class: 'row' },
             el('span', { class: 't' }, `${p.name} · ${p.code}`, el('span', { class: 'tag ' + (p.active === false ? 'neutral' : 'solid') }, p.active === false ? 'Inactive' : 'Active')),
-            el('span', { class: 's' }, [p.phone ? `+91 ${p.phone}` : null, p.upi || 'no UPI id yet', partnerLine(p)].filter(Boolean).join(' · ')))) : el('p', { class: 'empty' }, 'No partners yet.')),
+            el('span', { class: 's' }, [p.phone ? `+91 ${p.phone}` : null, p.upi || 'no UPI id yet', partnerLine(p)].filter(Boolean).join(' · ')),
+            ...hostelRows(p.code))) : el('p', { class: 'empty' }, 'No partners yet.')),
           el('aside', { class: 'add' },
             el('h2', {}, 'Add partner'),
             el('label', {}, 'Name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Suresh' }),

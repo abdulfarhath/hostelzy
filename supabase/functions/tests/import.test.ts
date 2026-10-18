@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 // @ts-ignore plain JS module served by GitHub Pages
-import { callScript, csv, rentAgeLine, callLaterLabel, claimAddedLine, partnerLine, w3Words, SOURCE_WORDS } from '../../../app/console/logic.js';
+import { callScript, csv, rentAgeLine, callLaterLabel, claimAddedLine, partnerLine, w3Words, SOURCE_WORDS, partnerHostels, PAYOUT_WORDS, utrError } from '../../../app/console/logic.js';
 
 test('F28 To call: the 6-line call script names the hostel', () => {
   const s = callScript({ name: 'Sri Balaji PG' });
@@ -50,4 +50,19 @@ test('F28 Partners line and plain words', () => {
   assert.equal(w3Words('ERROR: add the expected rent range'), 'Not done: add the expected rent range.');
   assert.equal(w3Words("this hostel is verified: pause it in Hostels"), 'Not done: pause it in Hostels.');
   assert.equal(w3Words('boom'), 'Couldn’t save: boom');
+});
+
+test('C14 partner hostels and C2 payouts', () => {
+  const hs = [
+    { id: 'a', source: 'partner', partner_code: 'P1' },
+    { id: 'b', source: 'partner', partner_code: 'P1' },
+    { id: 'c', source: 'partner', partner_code: 'P2' },
+    { id: 'd', source: 'team', partner_code: null },
+  ];
+  const ledger = [{ kind: 'hostel_listed', hostel_id: 'a' }, { kind: 'hostel_added', hostel_id: 'b' }];
+  assert.deepEqual(partnerHostels(hs, ledger, 'P1').map((h) => [h.id, h.checked]), [['a', true], ['b', false]]);
+  assert.deepEqual(partnerHostels(null, null, 'P1'), []);
+  assert.equal(PAYOUT_WORDS.hostel_listed, 'Partner listing');
+  assert.equal(utrError('4021 1234 5678'), '');
+  assert.equal(utrError('12345'), 'Enter the 12-digit UTR.');
 });

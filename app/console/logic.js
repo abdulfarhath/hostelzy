@@ -268,3 +268,15 @@ export function w3Words(message) {
   }
   return 'Couldn’t save: ' + m;
 }
+
+/** C14 › Partners: one partner's listed hostels, each with checked = a ₹20 ledger row exists. */
+export const partnerHostels = (hostels, ledger, code) => {
+  const done = new Set((ledger ?? []).filter((l) => l.kind === 'hostel_listed').map((l) => l.hostel_id));
+  return (hostels ?? []).filter((h) => h.source === 'partner' && h.partner_code === code).map((h) => ({ ...h, checked: done.has(h.id) }));
+};
+
+/** C2 › Payouts due: what the row is for, in plain words. */
+export const PAYOUT_WORDS = { hostel_added: 'Added a hostel', hostel_listed: 'Partner listing' };
+
+/** A UPI UTR is 12 digits; '' when it is, else the toast. */
+export const utrError = (utr) => (/^\d{12}$/.test(String(utr ?? '').replace(/\s/g, '')) ? '' : 'Enter the 12-digit UTR.');
