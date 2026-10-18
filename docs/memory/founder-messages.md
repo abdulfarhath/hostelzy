@@ -213,3 +213,15 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **21:05**
 > approved, merge it and build the apk
+
+
+## 2026-10-18
+
+**03:5x**
+> whats happening
+
+**04:0x**
+> where do you think we need to improve
+
+**04:10**
+> structure all the chats

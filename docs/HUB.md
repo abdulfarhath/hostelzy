@@ -1,9 +1,32 @@
 # Hostelzy hub
 
-The founder talks to one chat only: **Hostelzy app review** (the hub). New account? See `docs/START-HERE.md` §6. The hub hands out tasks, checks every
-2 hours, nudges anyone who stops, and reports milestones. Each chat follows CLAUDE.md for its role.
-Started 2026-10-03.
+The founder talks to one chat only: **Hostelzy · Hub**. The hub hands out tasks, reads the other chats' branches and
+`get_session`, nudges anyone who stops, and reports milestones. Each chat follows CLAUDE.md for its role.
+Started 2026-10-03; re-homed on the current account 2026-10-17.
 
+## Chat structure (founder, 2026-10-18: "structure all the chats")
+One hub, two standing chats, three on-demand chats. Only the chats with work run (shared weekly limit).
+
+| Chat (title in the sidebar) | Session | Runs | Does | Writes to |
+|---|---|---|---|---|
+| **Hostelzy · Hub** | session_01KGJ32QudaatuZ4vkirbgAS | Always | Founder's single contact: ideas → specs, decisions, status, approvals, publishing pages | `docs/` (not marketing, finance, brand) |
+| **Hostelzy · Build** | session_01VYdxL9M4tryAVSw5paPAtw | Standing | Builds exactly the spec, prototype first, merges after the founder approves, APK | `hostelzy/`, `supabase/`, `app/`, `tools/`, SCREENS, BOARD status, FOUNDER-TODO steps |
+| **Hostelzy · Design** | session_01VKwqzkiTRrHcK6K1kpurt6 | Standing | Canvas 1:1 with the app; new boards from the spec before Build starts | `docs/design/`, feature files' Design section, canvas count line |
+| **Hostelzy · Marketing** | not created yet | On demand | Owner pitch, hostel collection sheet, tenant growth, reels, launch plan | `docs/marketing/` |
+| **Hostelzy · Finance** | not created yet | On demand | Budget, pricing, rewards caps, bills | `docs/finance/` |
+| **Hostelzy · Brand** | not created yet | On demand | Logo assets, Play Store pack, brand guide | `docs/brand/` |
+
+How a feature flows: founder idea (hub) → spec `docs/features/Fnn-*.md` + DECISIONS (hub) → boards on the canvas (Design)
+→ code + prototype (Build) → founder approves in the prototype (hub relays) → merge + APK (Build) → canvas v+1 (Design, hub publishes).
+
+Rules of the structure:
+- Child chats can't message the hub on this account; the hub reads their branches and session state instead. Each child
+  ends its turn with a pushed commit whose message says what is done.
+- On-demand chats are created with `create_session` when a task needs them, given one task, and left idle after.
+- Old chats from earlier accounts (Marketing, Finance, Brand of 2026-10-03; "ctx hub") are retired; their work is in `docs/`.
+- Session IDs above are the only live ones. Replace this table when a chat is recreated.
+
+## 2026-10-03 team (first account, retired)
 | Chat | Session | Role | First tasks |
 |---|---|---|---|
 | Hub (Ideas & status) | session_01A5To8Q2sCiWqGnd2nK3BMy | Founder's single contact; specs, decisions, status | Gap audit (`AUDIT-2026-10-03.md`) |
