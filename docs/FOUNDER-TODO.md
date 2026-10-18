@@ -30,6 +30,14 @@ One step per line. Tick them off. Updated 2026-10-02 by the Ideas chat.
    **Import hostels** → Run workflow. Without it the import still runs OpenStreetMap and prints "No key yet". Cost: Text
    Search (New) is billed per request; one full run is about 260 searches (32 areas × 4 terms × up to 2 pages) plus one
    Place Details call per draft older than 30 days; the $200 monthly free credit covers a monthly run.
+0d. **Google Cloud consent screen: add the drive.file scope + the OAuth client for the app** (F29 Part 3, tenant IDs in the
+   owner's Drive). Google Cloud → the Hostelzy project (same as Google sign-in) → **APIs & Services › OAuth consent screen › Data
+   access › Add scope** → `https://www.googleapis.com/auth/drive.file` → Save. Then **Library → Google Drive API → Enable**. Then
+   **Credentials → the Web client** (the one `google-services.json` / `GOOGLE_WEB_CLIENT_ID` uses): copy its **Client ID** and
+   **Client secret**. Then Supabase → Edge Functions → **Secrets**: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, and
+   `DRIVE_TOKEN_KEY` = any long random string (e.g. `openssl rand -hex 32`; never change it after the first owner connects, or their
+   tokens can't be read). Until this is done the app says "Not available yet" in Manage › Tenant IDs and tenants send their ID on
+   WhatsApp. (While the consent screen is in "Testing", only test users can connect; publish it for everyone.)
 1. **Test the newest APK** from https://github.com/abdulfarhath/hostelzy/releases (real app `hostelzy.apk`; `hostelzy-demo.apk` has sample data). Send the hub ✅ / ❌ with screenshots.
 2. ~~Google login in the demo APK~~ (done 2026-10-02; in the app via PR #38).
 3. ~~Server rules (B5)~~ (done 2026-10-02).
