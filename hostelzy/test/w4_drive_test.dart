@@ -227,6 +227,7 @@ void main() {
       expect(find.text('Connected · 0 files'), findsOneWidget);
       expect(s.toast, 'Google Drive connected');
       expect(find.text('Full copy needed (police file)'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3)); // the toast sits over the sheet's bottom
       await _tap(tester, find.byKey(const ValueKey('fullCopy')));
       await tester.pump();
       expect(s.driveStatus?.fullCopy, isTrue);
@@ -257,6 +258,7 @@ void main() {
     await tester.pump();
     expect(srv.calls.last, 'connect anjani 4/abc');
     expect(find.text('Connected · 0 files'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3)); // let the toast go
     await _tap(tester, find.byKey(const ValueKey('fullCopy')));
     await tester.pump();
     expect(srv.calls.last, 'fullCopy anjani true');

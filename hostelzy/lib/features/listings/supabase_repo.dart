@@ -420,10 +420,26 @@ class SupabaseRepo implements HostelRepo {
       }
     }
 
-    // Perf: the four reads don't depend on each other, so they go together
-    // (one round trip of waiting instead of four in a row).
-    final got = await Future.wait<Object>([hostelRows(), standingRows(), checkRows(), checkerRows()]);
+    // F28 Part 4: the server's own 60-day rule (view `listed_rent_visible`,
+    // wave 3). A listed hostel it hides the rent of counts as never confirmed
+    // here, so the server's clock decides. Before the view exists: the column.
+    Future<Set<String>> staleRows() async {
+      try {
+        return {for (final r in await db.from('listed_rent_visible').select('id, rent_visible').eq('status', 'listed')) if (r['rent_visible'] != true) r['id'] as String};
+      } on PostgrestException catch (e) {
+        debugPrint('listed_rent_visible: ${e.message}');
+        return {};
+      }
+    }
+
+    // Perf: the five reads don't depend on each other, so they go together
+    // (one round trip of waiting instead of five in a row).
+    final got = await Future.wait<Object>([hostelRows(), standingRows(), checkRows(), checkerRows(), staleRows()]);
     final rows = got[0] as List<Map<String, dynamic>>;
+    for (final id in got[4] as Set<String>) {
+      final r = rows.where((r) => r['id'] == id).firstOrNull;
+      if (r != null) r['rent_confirmed_at'] = null;
+    }
     final (st, standing) = got[1] as (List, Map<String, Standing>);
     // F19: "Checked by N residents · date" per room.
     final ck = got[2] as List<Object?>;

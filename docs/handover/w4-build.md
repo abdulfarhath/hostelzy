@@ -12,8 +12,8 @@ and any file of Build 2 / Build 3 (not on `main` yet).
 | SQL | `supabase/migrations/20261018140000_f29_drive.sql` · `supabase/tests/f29_drive_test.sql` (+ `run.sh` line) | `owner_drive` (refresh token encrypted with pgcrypto + the server secret, folder id, `full_copy`, file count; **no RLS policy at all**, only the service role reads it) · RPCs `drive_status(h)`, `set_full_copy(h, v)` (owner + managers), `drive_role(h)`, `id_upload_target(p_token)` (tenant) · service-role `drive_put`, `drive_token`, `drive_forget`, `drive_file_added` · stub hook `join_hostel_for_token(text)` (see §2.3) · `hostels.rent_confirmed_at` (`add column if not exists`) |
 | Edge Functions | `supabase/functions/_shared/drive.ts` · `drive-connect/` · `id-upload/` · `id-view/` · `tests/drive.test.ts` (10 tests) · `.github/workflows/supabase-functions.yml` (3 deploy lines, `--no-verify-jwt`) | `drive-connect` (owner JWT + Google server auth code → refresh token, scope check `drive.file`, folder `Hostelzy / <hostel> / Tenant IDs`, `drive_put`; `action: 'disconnect'` revokes at Google + `drive_forget`) · `id-upload` (tenant JWT + join token + base64 image → Drive `files.create` in the owner's folder with the owner's token → `{ file_id }`; image in memory only, logs carry only an error code) · `id-view` (owner/manager JWT → `{ url, until, open }`: a 10-minute signed link back to the function that streams the bytes, plus the file's Drive page; `action: 'delete'` → `files.delete`; `GET ?t=` serves the image) |
 | App · state + repo | `hostelzy/lib/features/drive/drive.dart` (part of `state.dart`: `_DriveData`, `DriveActions`) · `drive_auth.dart` (`DriveAuth`, `GoogleDriveAuth` via `google_sign_in` `authorizeServer([drive.file])`, `NoDriveAuth`) · `features/listings/repo.dart` (`DriveStatus`, `DriveFail`, `driveStatus`, `driveConnect`, `driveDisconnect`, `setFullCopy`, `idTarget`, `idUpload`, `idView`, `idDelete`) · `supabase_repo.dart` (`db.functions.invoke`, the user's Firebase token goes along) · `sample_repo.dart` (in-memory demo) · `sign_in.dart` (`ensureGoogleReady()` shared by sign-in and the Drive consent) · `main.dart` (`state.driveAuth`) | |
-| App · UI | `features/drive/drive_sheets.dart` (**H50** `DriveSheet`) · `owner_manage_screen.dart` (Manage › **Tenant IDs** row, after Residents) · `ui/shell.dart` (sheet `drive`: title "Tenant IDs in your Drive", kicker "<hostel> · Manage") · `features/drive/id_capture.dart` (`IdCapture`, `CameraPicker`, `maskImage`, `defaultMaskBar`) · `features/drive/id_thumb.dart` (`IdThumb`) | H50 states: Checking… · **Not available yet** (server / scope wording + Try again) · not connected (Connect Google Drive; managers: "Only the owner connects") · connected ("Connected · N files", Full copy switch, Disconnect) |
-| App · F28 Part 4 | `data/hostels.dart` (`Hostel.rentConfirmedAt`) · `features/listings/rows.dart` · `features/listings/tiers.dart` (`rentFresh`, `rentLine`, `rentFreshCompare`, `rentFreshDays = 60`) · `features/explore/explore_screen.dart` (first sort step) · `features/explore/unverified_screen.dart` (card + T32 page "Rent on request") | |
+| App · UI | `features/drive/drive_sheets.dart` (**H50** `DriveSheet`) · `owner_manage_screen.dart` (Manage › **Tenant IDs** row, after Residents) · `ui/shell.dart` (sheet `drive`: title "Tenant IDs in your Drive", kicker "<hostel> · Manage") · `features/drive/id_capture.dart` (`IdCapture`, `CameraPicker`, `maskImage`, `defaultMaskBar`) · `features/drive/id_thumb.dart` (`IdThumb`) | **F31 Rule A from the start.** H50 = one status line + the button + the switch: "Checking…" · **"Not available yet"** (one line, no button; `driveUnavailable` = `server` or `scope`) · "Not connected" + **Connect Google Drive** (owner; a manager sees the line only) · "Connected · N files" + **Full copy needed (police file)** switch + **Disconnect** (owner) |
+| App · F28 Part 4 | `data/hostels.dart` (`Hostel.rentConfirmedAt`) · `features/listings/rows.dart` · `features/listings/tiers.dart` (`rentFresh`, `rentLine`, `rentFreshCompare`, `rentFreshDays = 60`) · `features/explore/explore_screen.dart` (first sort step) · `features/explore/unverified_screen.dart` (card + T32 page "Rent on request") · `supabase_repo.dart` `listings()` reads Build 3's view **`listed_rent_visible`** (hub, 2026-10-18): a listed row with `rent_visible = false` is treated as never confirmed; without the view (not on `main` yet) the same 60-day rule runs on `rent_confirmed_at` in the app | |
 | Tests | `hostelzy/test/w4_drive_test.dart` (10: 28-90 unit + Explore flow; H50 demo light + dark, real-server flow, "Not available yet" ×4, manager; `maskImage`; IdCapture light + dark, full copy, refusals, server-asked fullCopy; IdThumb) | |
 | Docs | Build sections + "Not in the spec" in `docs/features/F29-tenant-self-onboarding.md` (Part 3) and `F28-listed-hostels-import.md` (Part 4); this file | |
 
@@ -40,8 +40,8 @@ if (req.idReceived == 'drive' && req.idFileId != null) IdThumb(hid: s.ownHid, fi
 // "Delete from my Drive" (H49 button):
 await s.data.idDelete(s.ownHid, req.idFileId!);   // files.delete + the count; then clear id_file_id on join_requests (wave 2 RPC)
 ```
-`IdThumb` shows "Loading the ID…", the image (through the 10-minute link; the owner's browser-free), "Not available yet." or the
-honest fallback "Couldn't load the ID here. Tap to open it in Drive." On sample data it draws "Sample ID (drawn)".
+`IdThumb` shows "Loading…", the image (through the 10-minute link; no Google sign-in needed in the app), "Not available yet" or the
+fallback "Open in Drive" (tap opens the file). On sample data it draws "Sample ID (drawn)".
 Move-out: wave 2 / the integrator drops the pointer (`id_file_id = null`); the file stays the owner's (DECISIONS).
 
 ### 2.3 SQL hook `join_hostel_for_token(text)` (wave 2's `join_requests`)
@@ -67,17 +67,15 @@ Then: `tools/sql-bundle.sh` + `--full`, and `supabase-functions.yml` deploys the
 ## 3. SCREENS rows for H50 (verbatim, for `docs/SCREENS.md` § 2 Owner sheets)
 
 ```
-| 50 | `drive` | Tenant IDs in your Drive (F29 Part 3): "Keep tenant IDs in your own Google Drive. Hostelzy never stores them." · Connect Google Drive (owner; managers "Only the owner connects") · Connected · N files · switch **Full copy needed (police file)** · Disconnect (revokes at Google; files stay) | `features/drive/drive_sheets.dart` (`DriveSheet`) | Manage › Tenant IDs (`features/drive/drive.dart` `openDrive`) |
+| 50 | `drive` | Tenant IDs in your Drive (F29 Part 3, F31 Rule A): status line "Not connected" / "Connected · N files" · **Connect Google Drive** or **Disconnect** (owner only; a manager sees the line and the switch) · switch **Full copy needed (police file)** (connected only) | `features/drive/drive_sheets.dart` (`DriveSheet`) | Manage › Tenant IDs (`features/drive/drive.dart` `openDrive`) |
 ```
-Status variant (§ 7, not counted): **H50 not available** — "Not available yet" box with "Google hasn't allowed Drive access for
-Hostelzy yet…" (consent screen without the scope / Google refused) or "Hostelzy's server doesn't have Google Drive yet…" (SQL or
-functions missing), plus **Try again**. Changed: **S40 / Manage** gets the row **Tenant IDs** ("In your own Google Drive" ·
-"Google Drive · N files" · "Not connected · IDs come on WhatsApp"). Sheets +1 (Owner 17 → 18).
+Status variant (§ 7, not counted): **H50 not available** — the one line "Not available yet", no button (consent screen without the
+scope / Google refused, or the SQL / functions missing). Changed: **Manage** gets the row **Tenant IDs** (subtitle = state:
+"Google Drive · N files" · "Not connected"). Sheets +1 (Owner 17 → 18).
 
 Widgets for Design (inside wave 2's boards, no board of their own): S94 ID row = `IdCapture` (button "Take a photo of your ID" →
-photo with a draggable black bar, guide "Cover the first 8 digits", Retake / Upload → "Uploaded to <owner>'s Google Drive. Nothing is
-kept on Hostelzy."; with Full copy on: no bar, guide "<owner> needs the full copy (police file). Check the photo is sharp.").
-H49 ID row = `IdThumb` (170 px framed image, tap opens Drive).
+the photo with a draggable black bar and the label "Cover the first 8 digits" (Full copy on: no bar, label "Full copy needed (police
+file)"), Retake / Upload → "Uploaded to <owner>'s Drive"). H49 ID row = `IdThumb` (170 px framed image, tap opens Drive).
 
 ## 4. FOUNDER-TODO one-time line (verbatim; the integrator adds it under "Now")
 
@@ -101,5 +99,6 @@ H49 ID row = `IdThumb` (170 px framed image, tap opens Drive).
   own HMAC ticket (10 minutes). The GET link is what the app's image widget loads.
 - `GoogleDriveAuth` asks Google for a **server auth code** with `drive.file` on the phone (`google_sign_in` 7 `authorizeServer`);
   the code is exchanged on the server, so the refresh token never exists on the phone.
-- "Not in the spec" decisions are in the two feature files (9 for Part 3, 3 for Part 4).
+- "Not in the spec" decisions are in the two feature files (10 for Part 3, 4 for Part 4). F31 Rule A (no explanations) was applied
+  on the hub's note of 2026-10-18 before the branch was finished: every removed line is listed in the F29 file (#10).
 - `tools/check.sh` on the branch: analyze clean, all Flutter tests, SQL incl. the bundle twice, 30 function tests.
