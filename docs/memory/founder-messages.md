@@ -252,3 +252,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **21:08 UTC**
 > use opus everywhere,
+
+**21:20 UTC**
+> what's the update

@@ -144,3 +144,8 @@ Every chat stopped at ~16:00 UTC on the shared 5-hour limit (reset 20:30). Done 
 ### 2026-10-18 21:10 UTC: Opus everywhere (founder)
 Build 1 (Fable) hands integration to a new Opus 5.5 chat ("HANDOFF to Opus" commit + docs/handover/integration-opus.md).
 Builds 2–5, Designs 2–3 are finished and stay idle. Any new chat is `claude-opus-5-5`.
+
+### 2026-10-18 21:21 UTC: Opus integrator
+All five waves are merged on `integration/w2-5` (407 Flutter tests, SQL suite green). Build 1 handed off ("HANDOFF to Opus",
+docs/handover/integration-opus.md). **Hostelzy · Build (Opus integrator)** session_01HRvCnvNd2SomrwZ5kJ8byL finishes: notify_resident SQL,
+check.sh, SCREENS/BOARD, PR → main, prototype/v7. Wave 1 is on main (apk-107/108).
