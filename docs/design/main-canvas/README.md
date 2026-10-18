@@ -40,3 +40,5 @@ Updated in place: H1 (Verified only switch) · T4 exploreEmpty ("Add it" link) �
 **Web ids:** the specs say W8 `app/list/` and W9 poster, but the canvas already uses W8 for `app/delete-account/` (Design numbered the two web states W3 and W5 on 2026-10-03). Here **W9 = app/list/, W10 = poster**. Hub to decide: change the two spec ids, or realign web ids to the SCREENS table (W1–W6 pages, states as variants).
 
 Not drawn (not in the hub's list): S39 Manage "Tenant IDs" row (Rule B puts it in the Manage order), S9 map pins with the Verified switch (screenshot boards), W3/W4 `app/j/` join-token copy (Build's wording), the S94 Drive-camera path and the masking guide (wave 4).
+
+**Real room on the artifact (hub, 2026-10-18):** the 512-file cap also counts the Design type's ~21 files and the 6 map assets, so a canvas holds about **480 project files**. To publish v25 the hub moved 35 more archive boards (`z-f20-*`, `z-f21b-*`, `z-f23-*`) to git only; the published index is `docs/design/v25/project/canvas.json` (461 boards). This folder keeps the full set as the git mirror.
