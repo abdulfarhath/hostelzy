@@ -729,6 +729,47 @@ class SupabaseRepo implements HostelRepo {
       return r == null ? null : (r as Map).cast<String, dynamic>();
     } on PostgrestException catch (e) {
       // Before the F28 SQL has run there is nothing to show.
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<void> askedOwner(String hid) => db.rpc('asked_owner', params: {'p_hostel': hid});
+  @override
+  Future<void> setAdderUpi(String upi) => db.rpc('set_adder_upi', params: {'p_upi': upi});
+
+  // ---------------------------------------------------------------- W2 F29 Part 2
+  @override
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''}) async =>
+      await db.rpc('new_join_request', params: {'p_bed': bedKey, 'p_fee': fee, 'p_advance': advance, 'p_moves_in': _ymd(movesIn), 'p_name': name}) as String;
+
+  @override
+  Future<Map<String, dynamic>?> joinRequestInfo(String token) async {
+    final r = await db.rpc('join_request_info', params: {'p_token': token});
+    return r == null ? null : (r as Map).cast<String, dynamic>();
+  }
+
+  @override
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async =>
+      (await db.rpc('fill_join_request', params: {'p_token': token, 'p_name': name, 'p_phone': phone, 'p_date': _ymd(date), 'p_id_received': idReceived, 'p_id_file_id': idFileId}) as Map).cast<String, dynamic>();
+
+  @override
+  Future<List<Map<String, dynamic>>> joinRequests(String hid) async {
+    try {
+      return await db.from('join_requests').select('*, beds(letter, rooms(number, label))').eq('hostel_id', hid).eq('status', 'filled').order('filled_at');
+    } on PostgrestException catch (e) {
+      // Before the F29 SQL has run the Joining tab just stays empty.
+      if (!_missingFn(e) && e.code != '42P01' && e.code != 'PGRST205') rethrow;
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> decideJoin(String id, bool approve, {String note = ''}) => db.rpc('decide_join', params: {'p_id': id, 'p_approve': approve, 'p_note': note});
+  @override
+  Future<String> askIdAgain(String id) async => await db.rpc('ask_id_again', params: {'p_id': id}) as String;
+
   // ------------------------------------------------------------ F29 Part 3: Drive
 
   static DriveStatus _driveRow(Map<String, dynamic> r) => (connected: r['connected'] as bool? ?? false, files: (r['files'] as num?)?.toInt() ?? 0, fullCopy: r['full_copy'] as bool? ?? false);
@@ -768,33 +809,6 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<void> askedOwner(String hid) => db.rpc('asked_owner', params: {'p_hostel': hid});
-  @override
-  Future<void> setAdderUpi(String upi) => db.rpc('set_adder_upi', params: {'p_upi': upi});
-
-  // ---------------------------------------------------------------- W2 F29 Part 2
-  @override
-  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''}) async =>
-      await db.rpc('new_join_request', params: {'p_bed': bedKey, 'p_fee': fee, 'p_advance': advance, 'p_moves_in': _ymd(movesIn), 'p_name': name}) as String;
-
-  @override
-  Future<Map<String, dynamic>?> joinRequestInfo(String token) async {
-    final r = await db.rpc('join_request_info', params: {'p_token': token});
-    return r == null ? null : (r as Map).cast<String, dynamic>();
-  }
-
-  @override
-  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async =>
-      (await db.rpc('fill_join_request', params: {'p_token': token, 'p_name': name, 'p_phone': phone, 'p_date': _ymd(date), 'p_id_received': idReceived, 'p_id_file_id': idFileId}) as Map).cast<String, dynamic>();
-
-  @override
-  Future<List<Map<String, dynamic>>> joinRequests(String hid) async {
-    try {
-      return await db.from('join_requests').select('*, beds(letter, rooms(number, label))').eq('hostel_id', hid).eq('status', 'filled').order('filled_at');
-    } on PostgrestException catch (e) {
-      // Before the F29 SQL has run the Joining tab just stays empty.
-      if (!_missingFn(e) && e.code != '42P01' && e.code != 'PGRST205') rethrow;
-      return const [];
   Future<DriveStatus> driveConnect(String hid, String code) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'code': code}));
   @override
   Future<DriveStatus> driveDisconnect(String hid) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'action': 'disconnect'}));
@@ -814,9 +828,6 @@ class SupabaseRepo implements HostelRepo {
   }
 
   @override
-  Future<void> decideJoin(String id, bool approve, {String note = ''}) => db.rpc('decide_join', params: {'p_id': id, 'p_approve': approve, 'p_note': note});
-  @override
-  Future<String> askIdAgain(String id) async => await db.rpc('ask_id_again', params: {'p_id': id}) as String;
   Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'}) async =>
       (await _driveFn('id-upload', {'token': token, 'image': base64Encode(bytes), 'mime': mime}))['file_id'] as String;
   @override
