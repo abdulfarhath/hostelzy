@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&display=swap">
 <link rel="stylesheet" href="../style.css">
 <style>
-  /* W8 (F28 28-50): the app's look (Archivo, #ec3013, 2px rules, square corners), works at 360 px. */
+  /* W9 (F28 28-50): the app's look (Archivo, #ec3013, 2px rules, square corners), works at 360 px. */
   form { display: grid; gap: 14px; margin-top: 18px; }
   label { font-weight: 800; font-size: 14px; display: grid; gap: 6px; }
   label small { font-weight: 400; color: var(--mu); }
@@ -26,9 +26,6 @@
   button.cta { width: 100%; font: inherit; font-size: 17px; cursor: pointer; }
   button.cta[disabled] { opacity: .6; cursor: default; }
   .err { color: var(--ac); font-weight: 700; min-height: 1.4em; margin: 0; }
-  .steps { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
-  .steps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: baseline; }
-  .steps b { width: 28px; height: 28px; display: grid; place-items: center; background: var(--tx); color: var(--bg); font-size: 13px; }
   .sent h1 span { color: var(--ac); }
 </style>
 </head>
@@ -38,12 +35,11 @@
 
 <section id="form">
 <h1>List your PG on Hostelzy. Free.</h1>
-<p>Hostelzy is a free app where tenants in Hyderabad find PGs and hostels. Fill this in, and <b>we call you within 2 days</b> to confirm the details before anything is shown.</p>
 
 <form id="f" novalidate>
   <label>Hostel name <input type="text" name="hostel_name" maxlength="80" placeholder="Sri Balaji Men’s PG" required></label>
   <label>Your name <input type="text" name="name" maxlength="80" placeholder="Balaji" required autocomplete="name"></label>
-  <label>Phone <small>we call this number; tenants never see it</small><input type="tel" name="phone" inputmode="numeric" maxlength="13" placeholder="98765 43210" required autocomplete="tel"></label>
+  <label>Phone<input type="tel" name="phone" inputmode="numeric" maxlength="13" placeholder="98765 43210" required autocomplete="tel"></label>
   <label>Area <input type="text" name="area" maxlength="40" placeholder="Madhapur" required list="areas"></label>
   <datalist id="areas"></datalist>
   <label>Rent a month, from – to (₹)
@@ -58,24 +54,16 @@
   <label>Food included
     <span class="seg" data-k="food"><button type="button" data-v="true">Yes</button><button type="button" class="on" data-v="false">No</button></span>
   </label>
-  <label>Photos <small>1 to 3: the gate, a room</small>
+  <label>Photos (1–3)
     <span class="photos" id="photos"><label class="pick" title="Add a photo">+<input type="file" id="pick" accept="image/*" multiple></label></span>
   </label>
   <p class="err" id="err"></p>
-  <button class="cta" id="send" type="submit">Send · we’ll call you</button>
-  <p class="mu">Free, no contract. Your PG shows as UNVERIFIED (name, area, photos, rent range) only after our call. Tenants see your number only after they hold a bed through the app. <a href="../privacy/">Privacy</a></p>
+  <button class="cta" id="send" type="submit">Send</button>
 </form>
 </section>
 
 <section id="sent" class="sent" hidden>
 <h1>Thanks, <span id="who"></span>. We’ll call you within 2 days.</h1>
-<p>Nothing is shown yet. One of us calls your number to confirm the rent and the details, then your PG goes on Hostelzy as UNVERIFIED, free.</p>
-<ol class="steps">
-  <li><b>1</b><span>We call you (within 2 days).</span></li>
-  <li><b>2</b><span>Your PG is listed as UNVERIFIED: name, area, photos, rent range.</span></li>
-  <li><b>3</b><span>Want tenants to hold beds? We visit once, free, and verify you.</span></li>
-</ol>
-<p class="mu" style="margin-top:18px">Didn’t hear from us in 2 days? <a href="https://wa.me/919059790014">WhatsApp us</a>.</p>
 </section>
 
 <footer><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="https://wa.me/919059790014">WhatsApp us</a></footer>
@@ -150,13 +138,13 @@
         hostel_name: d.hostel_name.trim(), name: d.name.trim(), phone, area: d.area.trim(),
         rent_min: min, rent_max: max, gender: pick.gender, food: pick.food === 'true', photos: paths,
       } });
-      if (error) throw new Error(/3 requests/.test(error.message) ? 'That’s 3 requests today from this number. We’ll call you.' : /does not exist|schema cache/.test(error.message) ? 'The form isn’t open yet. WhatsApp us instead.' : error.message);
+      if (error) throw new Error(/3 requests/.test(error.message) ? '3 requests today already. We’ll call you.' : /does not exist|schema cache/.test(error.message) ? 'Not open yet.' : error.message);
       $('#who').textContent = d.name.trim().split(' ')[0];
       $('#form').hidden = true; $('#sent').hidden = false;
       window.scrollTo(0, 0);
     } catch (x) {
-      err.textContent = x.message || 'Couldn’t send. Try again, or WhatsApp us.';
-      send.disabled = false; send.textContent = 'Send · we’ll call you';
+      err.textContent = x.message || 'Couldn’t send.';
+      send.disabled = false; send.textContent = 'Send';
     }
   });
 </script>

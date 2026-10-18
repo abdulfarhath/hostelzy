@@ -578,7 +578,7 @@ const VIEWS = {
           const bad = rentRangeError(f.min, f.max);
           if (bad) return toast(bad);
           if (!confirm(`Show ${h.name} to tenants as UNVERIFIED with ${rentRangeLabel(Number(f.min), Number(f.max))}?`)) return;
-          await rpc('list_draft', { p_id: h.id, p_rent_min: Number(f.min), p_rent_max: Number(f.max), p_gender: f.gender, p_food: f.food === 'Yes' }, `${h.name} is listed (UNVERIFIED).`);
+          await rpc('list_draft', { p_id: h.id, p_rent_min: Number(f.min), p_rent_max: Number(f.max), p_gender: f.gender, p_food: f.food === 'Yes' }, 'Listed as UNVERIFIED.');
         };
         const notPg = async () => {
           if (!confirm(`Remove ${h.name}? It never comes back from the import.`)) return;
@@ -597,12 +597,12 @@ const VIEWS = {
           el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, ...callBtns(h.phone, h.name),
             el('button', { class: 'btn sm primary', onclick: listIt }, 'List'),
             el('button', { class: 'btn sm', onclick: notPg }, 'Not a PG / Closed'),
-            el('button', { class: 'btn sm', onclick: () => rpc('call_later', { p_id: h.id }, 'Back in the list in 3 days.') }, 'Call later')));
+            el('button', { class: 'btn sm', onclick: () => rpc('call_later', { p_id: h.id }, 'Call later: 3 days.') }, 'Call later')));
       };
       return [
         title('Listed', [`${rows.length} to call`, exportCsv(rows, 'hostelzy-to-call.csv')]),
         segRow({ tocall: rows.length }),
-        el('div', { class: 'list', style: 'margin:0 24px' }, note ? el('p', { class: 'empty' }, note) : rows.length ? rows.map(row) : el('p', { class: 'empty' }, 'Nobody to call. The import (Actions › Import hostels) and the web form add hostels here.')),
+        el('div', { class: 'list', style: 'margin:0 24px' }, note ? el('p', { class: 'empty' }, note) : rows.length ? rows.map(row) : el('p', { class: 'empty' }, 'Nobody to call.')),
       ];
     }
 
@@ -610,18 +610,17 @@ const VIEWS = {
       const { rows, note } = await list('to_refresh');
       const closed = async (h) => {
         if (!confirm(`Take ${h.name} off Explore for good?`)) return;
-        await rpc('draft_not_pg', { p_id: h.id }, `${h.name} is closed.`);
+        await rpc('draft_not_pg', { p_id: h.id }, 'Closed.');
       };
       return [
         title('Listed', [`${rows.length} to refresh`, exportCsv(rows, 'hostelzy-to-refresh.csv')]),
         segRow({ refresh: rows.length }),
-        el('p', { class: 'mu', style: 'margin:0 24px 10px;font-size:13px' }, 'Listed hostels whose rent nobody confirmed in 50 days. After 60 days tenants see “Rent on request”.'),
         el('div', { class: 'list', style: 'margin:0 24px' }, note ? el('p', { class: 'empty' }, note) : rows.length ? rows.map((h) => el('div', { class: 'row' },
           el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.rent_confirmed_at ? 'neutral' : 'red') }, rentAgeLine(h.rent_confirmed_at))),
           el('span', { class: 's' }, [`${h.gender} · ${rentRangeLabel(h.rent_min, h.rent_max)}`, h.phone ? `+91 ${h.phone}` : 'no phone'].join(' · ')),
           el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, ...callBtns(h.phone, h.name),
-            el('button', { class: 'btn sm primary', onclick: () => rpc('rent_confirmed', { p_id: h.id }, `${h.name}: rent confirmed today.`) }, 'Rent confirmed today'),
-            el('button', { class: 'btn sm', onclick: () => closed(h) }, 'Closed')))) : el('p', { class: 'empty' }, 'Every listed rent was confirmed in the last 50 days.')),
+            el('button', { class: 'btn sm primary', onclick: () => rpc('rent_confirmed', { p_id: h.id }, 'Rent confirmed.') }, 'Rent confirmed today'),
+            el('button', { class: 'btn sm', onclick: () => closed(h) }, 'Closed')))) : el('p', { class: 'empty' }, 'Nothing to refresh.')),
       ];
     }
 
@@ -634,7 +633,7 @@ const VIEWS = {
         if (f.name.trim().length < 2) return toast('Enter the partner’s name.');
         if (f.phone.replace(/\D/g, '').length !== 10) return toast('Enter their 10-digit phone.');
         const code = await rpc('new_partner', { p_name: f.name.trim(), p_phone: f.phone.replace(/\D/g, ''), p_upi: f.upi.trim() });
-        if (code) toast(`Partner code ${typeof code === 'string' ? code : JSON.stringify(code)}. They type it once in Add a hostel.`);
+        if (code) toast(`Partner code ${typeof code === 'string' ? code : JSON.stringify(code)}`);
       };
       return [
         title('Listed', `${rows.length} partners`),
@@ -642,10 +641,9 @@ const VIEWS = {
         el('div', { class: 'board' },
           el('div', { class: 'list', style: 'margin:0 24px' }, q.error ? el('p', { class: 'empty' }, w3Words(q.error.message)) : rows.length ? rows.map((p) => el('div', { class: 'row' },
             el('span', { class: 't' }, `${p.name} · ${p.code}`, el('span', { class: 'tag ' + (p.active === false ? 'neutral' : 'solid') }, p.active === false ? 'Inactive' : 'Active')),
-            el('span', { class: 's' }, [p.phone ? `+91 ${p.phone}` : null, p.upi || 'no UPI id yet', partnerLine(p)].filter(Boolean).join(' · ')))) : el('p', { class: 'empty' }, 'No partners yet. Add one on the right; they get a code for Add a hostel.')),
+            el('span', { class: 's' }, [p.phone ? `+91 ${p.phone}` : null, p.upi || 'no UPI id yet', partnerLine(p)].filter(Boolean).join(' · ')))) : el('p', { class: 'empty' }, 'No partners yet.')),
           el('aside', { class: 'add' },
             el('h2', {}, 'Add partner'),
-            el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, '₹20 per listed hostel after the team check, paid by UPI on the 5th.'),
             el('label', {}, 'Name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Suresh' }),
             el('label', {}, 'Phone'), el('input', { inputmode: 'numeric', oninput: (e) => (f.phone = e.target.value), placeholder: '98765 43210' }),
             el('label', {}, 'UPI id'), el('input', { oninput: (e) => (f.upi = e.target.value), placeholder: 'suresh@upi' }),
@@ -677,7 +675,7 @@ const VIEWS = {
       const bad = rentRangeError(f.min, f.max);
       if (bad) return toast(bad);
       if (await save(null, { name: f.name.trim(), area: f.area.trim(), gender: f.gender, rent_min: Number(f.min), rent_max: Number(f.max) })) {
-        toast(`${f.name.trim()} saved. Add a photo, then List it.`);
+        toast('Saved.');
         again();
       }
     };
@@ -696,7 +694,7 @@ const VIEWS = {
     const list = async (h) => {
       if (!confirm(`Show ${h.name} to tenants as UNVERIFIED?`)) return;
       if (await save(h.id, { name: h.name, rent_min: h.rent_min, rent_max: h.rent_max, list: true })) {
-        toast(`${h.name} is listed (UNVERIFIED).`);
+        toast('Listed as UNVERIFIED.');
         again();
       }
     };
@@ -713,17 +711,15 @@ const VIEWS = {
           el('span', { class: 't' }, `${h.name} · ${h.area}`, el('span', { class: 'tag ' + (h.status === 'listed' ? 'solid' : 'neutral') }, h.status === 'listed' ? 'Unverified' : 'Not shown')),
           el('span', { class: 's' }, `${h.gender} · ${rentRangeLabel(h.rent_min, h.rent_max)} · ${count(photos, h.id)} photos · ${count(waits, h.id)} waiting for “verified”`),
           el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' }, upload(h),
-            h.status === 'listed' ? el('button', { class: 'btn sm', onclick: () => unlist(h) }, 'Take off') : el('button', { class: 'btn sm primary', onclick: () => list(h) }, 'List it')))) : el('p', { class: 'empty' }, 'Nothing listed yet. Add a hostel on the right.')),
+            h.status === 'listed' ? el('button', { class: 'btn sm', onclick: () => unlist(h) }, 'Take off') : el('button', { class: 'btn sm primary', onclick: () => list(h) }, 'List it')))) : el('p', { class: 'empty' }, 'Nothing listed yet.')),
         el('aside', { class: 'add' },
           el('h2', {}, 'List a hostel'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Tenants see it as UNVERIFIED: photos, name, area and the rent range. No beds, holds or owner contact until you verify it (Hostels › Go live).'),
           el('label', {}, 'Hostel name'), el('input', { oninput: (e) => (f.name = e.target.value), placeholder: 'Sri Balaji Men’s PG' }),
           el('label', {}, 'Area'), el('input', { oninput: (e) => (f.area = e.target.value), placeholder: 'Madhapur' }),
           el('label', {}, 'For'), segOf(['Men', 'Women', 'Co-living'], f, 'gender'),
           el('label', {}, 'Expected rent, lowest (₹ a month)'), el('input', { inputmode: 'numeric', oninput: (e) => (f.min = e.target.value.replace(/\D/g, '')), placeholder: '7000' }),
           el('label', {}, 'Expected rent, highest'), el('input', { inputmode: 'numeric', oninput: (e) => (f.max = e.target.value.replace(/\D/g, '')), placeholder: '9000' }),
-          el('button', { class: 'btn primary cta', onclick: create }, 'Save', '✓'),
-          el('p', { class: 'mu', style: 'font-size:12px;margin:0' }, 'Then add at least one photo and press List it.'))),
+          el('button', { class: 'btn primary cta', onclick: create }, 'Save', '✓'))),
     ];
   },
 
@@ -741,7 +737,7 @@ const VIEWS = {
       el('div', { class: 'title' }, el('h1', {}, 'Claims'), el('span', { class: 'mu', style: 'font-size:13px' }, `${rows.length} waiting for a call`)),
       el('div', { class: 'list', style: 'margin:0 24px' }, rows.length ? rows.map((c) => el('div', { class: 'row' },
         el('span', { class: 't' }, `${c.hostels?.name ?? ''} · ${c.hostels?.area ?? ''}`, el('span', { class: 'tag neutral' }, dayMon(c.created_at))),
-        el('span', { class: 's' }, `${c.name} · ${c.phone} · says they own it. Call, check, then send an owner invite from the app’s team mode.`),
+        el('span', { class: 's' }, `${c.name} · ${c.phone}`),
         adders[c.id] ? el('span', { class: 's' }, claimAddedLine(adders[c.id])) : null,
         el('span', { class: 's', style: 'display:flex;gap:8px;margin-top:6px' },
           el('a', { class: 'btn sm', href: `tel:+91${c.phone}` }, 'Call'),

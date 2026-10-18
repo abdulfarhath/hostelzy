@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800;900&display=swap">
 <style>
-  /* W9 (F28 28-50): a printable poster for tea stalls, PG gates and Xerox shops. A4 by default, A5 with one tap. */
+  /* W10 (F28 28-50): a printable poster for tea stalls, PG gates and Xerox shops. A4 by default, A5 with one tap. */
   :root { --bg: #f3f2f2; --tx: #201e1d; --mu: #605d5d; --ac: #ec3013; --dv: rgba(32, 30, 29, .4); }
   * { box-sizing: border-box; border-radius: 0; }
   body { margin: 0; background: #d9d7d7; color: var(--tx); font: 400 16px/1.4 Archivo, system-ui, sans-serif; }
@@ -21,10 +21,8 @@
   .brand { display: flex; align-items: center; gap: 5mm; }
   .brand img { width: 18mm; height: 18mm; }
   .brand span { font-size: 11mm; font-weight: 900; letter-spacing: -.02em; }
-  .mid { display: grid; grid-template-rows: auto auto 1fr auto; gap: 6mm; align-content: start; }
+  .mid { display: grid; grid-template-rows: auto 1fr; gap: 10mm; align-content: start; }
   h1 { font-size: 22mm; line-height: .95; font-weight: 900; letter-spacing: -.03em; color: var(--ac); margin: 0; }
-  .lines { font-size: 8mm; font-weight: 700; line-height: 1.25; margin: 0; padding: 0; list-style: none; display: grid; gap: 2mm; }
-  .lines li::before { content: '■ '; color: var(--ac); }
   .qrbox { display: grid; grid-template-columns: auto 1fr; gap: 8mm; align-items: center; align-self: center; }
   .qr { width: 78mm; height: 78mm; border: 2px solid var(--tx); background: #fff; padding: 3mm; display: grid; place-items: center; }
   .qr svg { width: 100%; height: 100%; }
@@ -35,7 +33,7 @@
   /* A5: everything scales to the smaller sheet. */
   body.a5 .sheet { width: 148mm; height: 210mm; padding: 11mm; gap: 5mm; }
   body.a5 .brand img { width: 12mm; height: 12mm; } body.a5 .brand span { font-size: 8mm; }
-  body.a5 h1 { font-size: 15.5mm; } body.a5 .lines { font-size: 5.6mm; }
+  body.a5 h1 { font-size: 15.5mm; }
   body.a5 .qr { width: 56mm; height: 56mm; } body.a5 .scan { font-size: 6.4mm; } body.a5 .scan small { font-size: 4mm; }
   body.a5 .foot { font-size: 3.7mm; }
   @media print {
@@ -57,22 +55,17 @@
   <div class="brand"><img src="mark.svg" alt=""><span>hostelzy</span></div>
   <div class="mid">
     <h1>Get tenants from Hostelzy. Free listing.</h1>
-    <ul class="lines">
-      <li>Tenants in Hyderabad find PGs in the app</li>
-      <li>Your rent, photos and area: free, no contract</li>
-      <li>We call you to confirm. Nothing to pay.</li>
-    </ul>
     <div class="qrbox">
       <div class="qr" id="qr"></div>
-      <div class="scan">Scan to list your PG<small id="url">farhath.me/hostelzy/app/list/</small></div>
+      <div class="scan">Scan to list your PG free<small id="url">farhath.me/hostelzy/app/list/</small></div>
     </div>
   </div>
-  <div class="foot"><span>Owners: WhatsApp 90597 90014</span><b>farhath.me/hostelzy</b></div>
+  <div class="foot"><b>farhath.me/hostelzy</b></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
-  // The QR points at W8 (this folder's index page); the URL is printed beside it in case a phone can't scan.
+  // The QR points at W9 (this folder's index page); the URL is printed beside it in case a phone can't scan.
   const url = location.protocol === 'https:' ? new URL('./', location.href).href : 'https://farhath.me/hostelzy/app/list/';
   document.getElementById('url').textContent = url.replace(/^https?:\/\//, '');
   try {

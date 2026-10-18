@@ -262,7 +262,7 @@ export const partnerLine = (p) => `${p.listed ?? 0} listed · ${rupees(p.due ?? 
 /** Why a wave-3 RPC said no, in plain words (missing SQL included). */
 export function w3Words(message) {
   const m = String(message || '');
-  if (/does not exist|could not find|schema cache/i.test(m)) return 'This needs the F28 SQL (it ships with the SQL autorun). Nothing changed.';
+  if (/does not exist|could not find|schema cache/i.test(m)) return 'Needs the F28 SQL.';
   for (const k of ['add the expected rent range', 'pick Men, Women or Co-living', 'already verified', 'isn\'t on Hostelzy', 'isn\'t listed with a rent', 'pause it in Hostels', 'only the Hostelzy team']) {
     if (m.includes(k)) return `Not done: ${k}.`;
   }

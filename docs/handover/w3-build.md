@@ -11,7 +11,7 @@ section lists each piece and the "Not in the spec" items (10) for the hub.
 | Workflow | `.github/workflows/import-hostels.yml` (`workflow_dispatch` + `17 3 1 * *`) |
 | SQL | `supabase/migrations/20261018120000_f28_import.sql` (rerun-safe), `supabase/tests/f28_import_test.sql` (+ line in `tests/run.sh`) |
 | Console | `app/console/console.js` (`listed` rewritten with 4 segments, `claims` line, footer credit), `logic.js` (wave-3 helpers), `console.css`, `supabase/functions/tests/import.test.ts` |
-| Web | `app/list/index.html` (W8), `app/list/poster.html` (W9), `app/list/mark.svg` (copy of `hostelzy/assets/brand/mark-light.svg`) |
+| Web | `app/list/index.html` (W9), `app/list/poster.html` (W10), `app/list/mark.svg` (copy of `hostelzy/assets/brand/mark-light.svg`) |
 | Docs | F28 feature file Build section, this file |
 
 Not touched on purpose: `docs/SCREENS.md`, `docs/BOARD.md`, `docs/FOUNDER-TODO.md`, the SQL bundle (`docs/sql/`), anything in `hostelzy/`.
@@ -42,14 +42,14 @@ Not touched on purpose: `docs/SCREENS.md`, `docs/BOARD.md`, `docs/FOUNDER-TODO.m
 | 15 | `#claims` | Claims (F26 #21, F28): owners' claims, Call / WhatsApp / Done / Not the owner; line "added by Ravi (resident) · owner phone matches ✓/✗" | `console.js` (`claims`) |
 ```
 Status variants (§7, not counted): C14 To call "Nobody to call", To refresh "Every listed rent was confirmed in the last
-50 days", Partners "No partners yet", and "This needs the F28 SQL" on every segment until the migration runs.
+50 days", Partners "No partners yet", and "Needs the F28 SQL." on every segment until the migration runs.
 
 §5 Web pages: add
 ```
-| 7 | `app/list/` | **W8** List your PG on Hostelzy, free: hostel name, your name, phone, area, rent from–to, For, Food, 1–3 photos → `self_list_request`; "we call you within 2 days" | +1: sent state "Thanks, <name>. We'll call you within 2 days." (3 steps) |
-| 8 | `app/list/poster.html` | **W9** Poster: "Get tenants from Hostelzy. Free listing.", 3 lines, QR to W8, WhatsApp number; A4 / A5 toggle, Print | — |
+| 7 | `app/list/` | **W9** List your PG on Hostelzy. Free.: hostel name, your name, phone, area, rent from–to, For, Food, photos (1–3), Send → `self_list_request` | +1: sent state, one line "Thanks, <name>. We'll call you within 2 days." |
+| 8 | `app/list/poster.html` | **W10** Poster: headline "Get tenants from Hostelzy. Free listing.", the mark, QR to W9, one line "Scan to list your PG free" + the address; A4 / A5 toggle, Print | — |
 ```
-Totals: web pages 8 + states 2 = 10 (was 7). The overall count line in `BOARD.md` moves by +3 (W8, W8 sent, W9).
+Totals: web pages 8 + states 2 = 10 (was 7). The overall count line in `BOARD.md` moves by +3 (W9, W9 sent, W10).
 
 ## 4. FOUNDER-TODO line (one-time, verbatim)
 ```
@@ -69,17 +69,23 @@ Totals: web pages 8 + states 2 = 10 (was 7). The overall count line in `BOARD.md
   (the DB test needs the migrations applied; without the variable only the pure tests run).
 - Import for real: `SUPABASE_DB_URL=… GOOGLE_PLACES_KEY=… node places.mjs`; `IMPORT_AREAS=Madhapur,Kondapur` limits a run,
   `IMPORT_PAGES=1` halves the cost. `node osm.mjs` needs only the DB URL.
-- Console: open `app/console/` on farhath.me (GitHub Pages) → Listed. W8: `app/list/`. W9: `app/list/poster.html` → Print.
+- Console: open `app/console/` on farhath.me (GitHub Pages) → Listed. W9: `app/list/`. W10: `app/list/poster.html` → Print.
 
 ## 6. Decisions I took (also under "Not in the spec" in the feature file)
 `removed_at` / `call_after` / `source_photos` columns; phone-hint trigger; no photo needed for `list_draft`; `self-list`
 bucket; web dedupe by name + area; import gender from the name; a gone place keeps a listed/live row; import drafts hidden
 from the Listed segment; TLS without certificate verification for the DB connection.
 
-## 7. Test-only fix on main's tests
+## 7. F31 Rule A (hub, 2026-10-18, applied)
+No helper sentences in the console segments, W9 or W10: removed the Listed aside's two grey lines (F26 copy), the To refresh
+intro line, the Partners aside's ₹20 line, the Claims "says they own it…" sentence; toasts are results ("Saved.", "Listed as
+UNVERIFIED.", "Removed.", "Closed.", "Rent confirmed.", "Call later: 3 days."); empty states ≤ 6 words. W9 = fields + Send +
+"Thanks, <name>. We'll call you within 2 days." W10 = headline, mark, QR, "Scan to list your PG free" + address.
+
+## 8. Test-only fix on main's tests
 `supabase/tests/f27_save_food_test.sql` failed on `main` too between 21:10 and 23:59 IST ("dinner 2 h 50 min from now" lands
 on tomorrow's menu day). The headcount assertion is now skipped in that window with a notice; nothing in F27's SQL changed.
 `tests/f28_import_test.sql` scopes its To refresh assertions to its own fixtures.
 
-## 8. Checks at hand-off
+## 9. Checks at hand-off
 `tools/check.sh`: analyze clean, 375 Flutter tests, 42 SQL files passed incl. the bundle twice, 25 function tests.

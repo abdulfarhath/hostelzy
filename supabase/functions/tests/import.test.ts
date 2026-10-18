@@ -46,7 +46,7 @@ test('F28 Partners line and plain words', () => {
   assert.equal(partnerLine({ listed: 3, due: 60 }), '3 listed · ₹60 due');
   assert.equal(partnerLine({}), '0 listed · ₹0 due');
   assert.equal(SOURCE_WORDS.osm, 'OpenStreetMap');
-  assert.equal(w3Words('Could not find the function public.call_list(p_kind) in the schema cache'), 'This needs the F28 SQL (it ships with the SQL autorun). Nothing changed.');
+  assert.equal(w3Words('Could not find the function public.call_list(p_kind) in the schema cache'), 'Needs the F28 SQL.');
   assert.equal(w3Words('ERROR: add the expected rent range'), 'Not done: add the expected rent range.');
   assert.equal(w3Words("this hostel is verified: pause it in Hostels"), 'Not done: pause it in Hostels.');
   assert.equal(w3Words('boom'), 'Couldn’t save: boom');

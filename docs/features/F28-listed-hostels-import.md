@@ -105,8 +105,8 @@ Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C
 | Workflow | `.github/workflows/import-hostels.yml` | Built. `workflow_dispatch` + monthly (1st, 08:47 IST); plain message and exit 0 without `SUPABASE_DB_URL` / `GOOGLE_PLACES_KEY` |
 | 28-21 C14 segments | `app/console/console.js` (`listed`), `logic.js`, `console.css` | Built: **Listed · To call · To refresh · Partners**. To call: call script (6 lines), rent + For + Food, List / Not a PG / Closed / Call later, owner's web photos, Export CSV `name,phone,area,id`. To refresh: > 50 days, Export CSV, Rent confirmed today / Closed. Partners: add partner → `new_partner`, list from `partners_due()` (Build 2's SQL; honest message until it exists) |
 | C15 line | `app/console/console.js` (`claims`) | Built: "added by Ravi (resident) · owner phone matches ✓/✗" from `claim_adders()` |
-| 28-50 W8 | `app/list/index.html` (+ `mark.svg`) | Built: form → photos to the private `self-list` bucket → `self_list_request` → "We'll call you within 2 days" (sent state). No "Listed!" |
-| 28-50 W9 | `app/list/poster.html` | Built: A4 / A5 toggle, print, QR to W8, red headline "Get tenants from Hostelzy. Free listing.", Archivo, brand mark |
+| 28-50 W9 | `app/list/index.html` (+ `mark.svg`) | Built: form → photos to the private `self-list` bucket → `self_list_request` → "We'll call you within 2 days" (sent state). No "Listed!" |
+| 28-50 W10 | `app/list/poster.html` | Built: A4 / A5 toggle, print, QR to W9, red headline "Get tenants from Hostelzy. Free listing.", Archivo, brand mark |
 | SQL | `supabase/migrations/20261018120000_f28_import.sql`, test `supabase/tests/f28_import_test.sql` | Built, rerun-safe: the 6 `hostels` columns (`add column if not exists`, same as Build 2), `self_list_requests`, `self_list_request()` (anon, 3 per phone a day), `list_draft`, `draft_not_pg`, `rent_confirmed`, `call_later`, `call_list()`, `claim_adders()`, `hostel_owner_phone()`, view `listed_rent_visible` (60 days) |
 | Checks | `tools/check.sh` | Green on the branch (analyze, Flutter tests, SQL incl. F28, 25 function tests incl. `import.test.ts`); `tools/import/test.mjs` 3/3 against the local DB. SQL bundle **not** regenerated (integrator) |
 
@@ -120,4 +120,5 @@ Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C
 7. A gone Google place that is already `listed`/`live` keeps its row (a human confirmed it) and loses only the Google fields; only drafts are deleted.
 8. Partners segment calls Build 2's `new_partner(p_name, p_phone, p_upi)` → code and `partners_due()` → `(code, name, phone, upi, active, listed, due)`; the integrator aligns the names.
 9. The Listed segment no longer shows import/web drafts (they live in To call) nor removed rows.
-10. The import connects with `SUPABASE_DB_URL` over TLS without certificate verification (`rejectUnauthorized: false`), like `psql sslmode=require`.
+10. **F31 Rule A applied** (hub message, 2026-10-18): no helper sentences in C14/C15, W9, W10; the F26 Listed aside's two grey lines and the Claims "says they own it" sentence went too (see `docs/handover/w3-build.md` §7).
+11. The import connects with `SUPABASE_DB_URL` over TLS without certificate verification (`rejectUnauthorized: false`), like `psql sslmode=require`.
