@@ -1,7 +1,7 @@
 // F28 wave 3: what places.mjs and osm.mjs share. Node 22, `pg` only.
 // Connects with SUPABASE_DB_URL (the same GitHub secret as the SQL autorun);
 // never prints it, never prints a key.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
@@ -78,8 +78,16 @@ export async function connect() {
     console.log('No database secret yet (SUPABASE_DB_URL): nothing imported.');
     process.exit(0);
   }
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url) || process.env.PGSSL === 'disable';
-  const client = new pg.Client({ connectionString: url, ssl: local ? false : { rejectUnauthorized: false }, statement_timeout: 60000 });
+  // TLS is verified against Node's CA store (Supabase's pooler presents a public
+  // certificate). A direct host that needs Supabase's own root: put it in
+  // tools/import/supabase-ca.pem (dashboard → Database → SSL → Download
+  // certificate). PGSSL_NO_VERIFY=1 is the only opt-out, for local tests.
+  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url) || /[?&]host=\//.test(url);
+  let ssl = true;
+  if (local) ssl = false;
+  else if (process.env.PGSSL_NO_VERIFY === '1') { ssl = { rejectUnauthorized: false }; console.log('PGSSL_NO_VERIFY=1: the database certificate is not checked.'); }
+  else if (existsSync(join(here, 'supabase-ca.pem'))) ssl = { ca: readFileSync(join(here, 'supabase-ca.pem'), 'utf8') };
+  const client = new pg.Client({ connectionString: url, ssl, statement_timeout: 60000 });
   await client.connect();
   const { rows } = await client.query("select 1 from information_schema.columns where table_schema = 'public' and table_name = 'hostels' and column_name = 'place_id'");
   if (!rows.length) {

@@ -121,4 +121,4 @@ Items 28-20, 28-21, 28-50, 28-80, the whole console side of F28 (C14 segments, C
 8. Partners segment calls Build 2's `new_partner(p_name, p_phone, p_upi)` → code and `partners_due()` → `(code, name, phone, upi, active, listed, due)`; the integrator aligns the names.
 9. The Listed segment no longer shows import/web drafts (they live in To call) nor removed rows.
 10. **F31 Rule A applied** (hub message, 2026-10-18): no helper sentences in C14/C15, W9, W10; the F26 Listed aside's two grey lines and the Claims "says they own it" sentence went too (see `docs/handover/w3-build.md` §7).
-11. The import connects with `SUPABASE_DB_URL` over TLS without certificate verification (`rejectUnauthorized: false`), like `psql sslmode=require`.
+11. ~~TLS without certificate verification~~ → **hub: verify by default.** Done: Node's CA store, optional `tools/import/supabase-ca.pem` for a direct host, `PGSSL_NO_VERIFY=1` the only opt-out (local tests, prints one line). Items 1–10 accepted by the hub (2026-10-18).

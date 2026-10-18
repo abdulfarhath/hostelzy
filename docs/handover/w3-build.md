@@ -67,14 +67,16 @@ Totals: web pages 8 + states 2 = 10 (was 7). The overall count line in `BOARD.md
 - SQL: `tools/check.sh` (full) or `supabase/tests/run.sh` with `PGHOST=/var/tmp/hzpg PGPORT=54329`.
 - Import tests: `cd tools/import && npm install && SUPABASE_DB_URL='postgres://postgres@localhost/<testdb>?host=/var/tmp/hzpg&port=54329' node --test test.mjs`
   (the DB test needs the migrations applied; without the variable only the pure tests run).
-- Import for real: `SUPABASE_DB_URL=… GOOGLE_PLACES_KEY=… node places.mjs`; `IMPORT_AREAS=Madhapur,Kondapur` limits a run,
+- Import for real: `SUPABASE_DB_URL=… GOOGLE_PLACES_KEY=… node places.mjs` (TLS verified; `PGSSL_NO_VERIFY=1` only for local tests); `IMPORT_AREAS=Madhapur,Kondapur` limits a run,
   `IMPORT_PAGES=1` halves the cost. `node osm.mjs` needs only the DB URL.
 - Console: open `app/console/` on farhath.me (GitHub Pages) → Listed. W9: `app/list/`. W10: `app/list/poster.html` → Print.
 
 ## 6. Decisions I took (also under "Not in the spec" in the feature file)
 `removed_at` / `call_after` / `source_photos` columns; phone-hint trigger; no photo needed for `list_draft`; `self-list`
 bucket; web dedupe by name + area; import gender from the name; a gone place keeps a listed/live row; import drafts hidden
-from the Listed segment; TLS without certificate verification for the DB connection.
+from the Listed segment. Hub (2026-10-18): items 1–10 accepted; #11 changed → the import **verifies TLS by default**
+(Node's CA store; a direct host that needs Supabase's root reads `tools/import/supabase-ca.pem`, downloaded from the
+dashboard → Database → SSL); `PGSSL_NO_VERIFY=1` is the only opt-out, for local tests, and prints one line.
 
 ## 7. F31 Rule A (hub, 2026-10-18, applied)
 No helper sentences in the console segments, W9 or W10: removed the Listed aside's two grey lines (F26 copy), the To refresh
