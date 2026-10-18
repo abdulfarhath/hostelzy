@@ -1,0 +1,5 @@
+{
+  "@@locale": "te",
+  "@@reviewed": false,
+  "@@note": "Telugu, keyed by the English text on screen. Only strings a person has written or checked go here: never machine translation. Empty file = English everywhere. Set @@reviewed to true once a native speaker has checked it (the picker then drops 'beta'). The list to translate is docs/i18n/te-review.md."
+}
