@@ -225,33 +225,3 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **04:10**
 > structure all the chats
-
-**04:30**
-> I want to have a filter of verified and unverified hostels. And the plan is to scrape all the data from internet and put the actual details of all the hostels in the verified hostels will be having the detailed information rather than the dummy information scrapped from the internet. So can we scrap from Google Maps or any other platform like that? Ideate on this
-
-**04:45**
-> Any other idea do you have regarding keeping all the hostels data into my application? Even if it is illegal, it's fine. I'll find a way to make it legal.
-
-**05:00**
-> I didn't understand the 20 rupees thing. Explain it to me. And also, for the second idea you have given to me, the tenants add their own PG. The tenant should be able to add few details specifically regarding his PG and should have an approval from the hostel owner. So hostel owner should agree to be verified on their on hostel Z. So that's when I'll be paying the person who added his hostel maybe around rupees 200. What is his partner work idea? The idea regarding WhatsApp to places phones is really good. So I'll do it myself, not from the app. I think there is a GitHub repository named Open WhatsApp or something, which does auto messaging and auto SMS sending without requiring any payment. So I'll be using such tools and doing automation of messaging everyone from my number. Check if it is possible. College ambassadors will be the last idea. Not now, we will not implement it now. Explain in depth regarding the GHMC lodging licenses. And I have liked all other ideas, and let's now discuss and think of implementing them. We are not designing or implementing anything now.
-
-**05:10**
-> We need the hostel owner's contact for sure from the tenant who adds his hostel. Otherwise, we can't contact him, right? If and only if the hostel gets verified, only then the tenant gets paid. So it's all tenant's responsibility to make sure that his hostel will be verified on Hostel Z.
-
-**05:15**
-> The GHMC idea is fail. I don't like it. Because no hostel in Hyderabad is doing that registration thing. Everyone runs it without any registration.
-
-**05:20**
-> And one more thing to add, as I have said earlier, the Aadhaar card is to be taken of the tenant who has been added. So this should be uploaded by the tenant itself. So hostel owner should not have a mess of adding things by himself. He will be sharing, he will be clicking a button, something like we had notify, message, call, right? So in the same way, there should be a button for those who are not authorized in the application, the tenants. So when clicked on it, a link to be shared in the WhatsApp to the tenant by owner's number. So where the tenant will be adding the picture of his Aadhaar card, which will be verified and approved by the owner. Then he will get it into the application. Here I am reducing the work of owner of maintaining all the Aadhaar cards and other proofs. And also in the tenant section, you have kept a notification, notify, message, call, etc. to the only people who did not pay, but it should be there to everyone. Just ideate on this, keep it with you. We are not designing or building anything right now.
-
-**05:30**
-> The first thing that comes here is DPDP, and I don't want to store any data because I am in a pre-launch stage where I can't put a lot of money into it. So we will be linking some data storage application of owner's thing into our application like Google Drive, Outlook or whatever, where the data will automatically be stored. We will not be storing any data of any PII of the tenant. So is there any way where we can link the Google Drive or something and automatically put it into the owner's Google Drive or somewhere, and also be able to fetch it and put show it into our application? Is there such a possibility? If there is no option to fetch it and put it into application whenever it is needed, it is not mandatory. Let's put it optional. If they are getting stored, that's more than enough. We don't need to worry about it. You.
-
-**05:40**
-> we are showing the room layout to the tenant, right? I want it to have a limited access. When the user first opens our application without logging in, he should be able to see two or three hostels layouts and building layouts. And after that, it should ask him for login if he wants to see other hostels information. So this is how I'll be incorporating all the users into the application. I'll be making them, forcing them to login into the application. Is this idea fine, or is there any improvement needed?
-
-**05:50**
-> What are all our ideas? What are all we gonna build now? Put it in a tabular format, in aerospace ST100 format.
-
-**06:00**
-> I want you to make sure that I should have less work. So like, you are asking me to put SQL queries in Supabase, right? So don't do such things. I should be doing things very less. You should be giving me only one file which I will be running only once, and everything should be done. So less amount of work for me, please. I have a lot of other works to do.
