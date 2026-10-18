@@ -45,3 +45,25 @@ Police verification form export · Rent agreement e-sign · Tenant's own copy of
 | 1 | Masked Aadhaar (last 4 digits visible) is enough for the owner? | Yes |
 | 2 | Delete the ID 30 days after move-out? | Yes |
 | 3 | Any government ID allowed, Aadhaar default? | Yes |
+
+## Founder round 2 (2026-10-18 05:30): no PII storage, use the owner's own cloud
+Founder: pre-launch, no money for DPDP exposure. Store nothing of the tenant's ID on Hostelzy; put it straight into the
+owner's Google Drive (or Outlook/OneDrive). Showing it back in the app is optional.
+
+**Possible: yes.** Design:
+| Piece | How |
+|---|---|
+| Owner connects Drive once | Owners already sign in with Google. One extra consent screen with the `drive.file` scope (the app can only see files it created; a non-sensitive scope, no Google audit). The app makes `Hostelzy / <hostel name> / Tenant IDs` in the owner's Drive. Owner can disconnect any time |
+| Tenant uploads | The tenant's link opens our page; the photo goes to a Supabase Edge Function that uploads it **on the owner's behalf** into that folder and returns the Drive file id. The image passes through in memory only; nothing written to our storage or database |
+| What Hostelzy keeps | The owner's Google refresh token (encrypted, it is the owner's own data) and per resident: `drive_file_id` + "ID received on <date>". No image, no Aadhaar number |
+| Showing it in the app | Yes, optional: the app asks our function for a short-lived view link via the owner's token and shows the image; the owner can also just open Drive. Only the owner's staff can call it |
+| Masking | The tenant's phone blurs the first 8 digits **before** upload (on the device), so even the owner's Drive holds a masked copy by default; owner can switch masking off for their hostel if the police need the full copy |
+| Deleting | The file is the owner's; we only drop our pointer at move-out. Optional "Delete from my Drive" button |
+| Other clouds | OneDrive/Outlook via Microsoft Graph works the same way; v2. Zero-tech fallback: tenant sends the ID to the owner on WhatsApp, owner taps "ID received ✓" in the app and we store only that tick |
+
+Honest DPDP note for the founder: we already hold tenant names, phones and rent, which is personal data too, so DPDP applies to
+Hostelzy regardless; keeping ID images out of our systems removes the most sensitive part and that is the right move now.
+Hostelzy acts as the owner's processor for the upload in transit; the owner is the data fiduciary for the file.
+
+Cost: Google Drive API is free at this scale. Needs the Google Cloud project's OAuth consent screen to list the Drive scope
+(founder step, 5 minutes, no card).
