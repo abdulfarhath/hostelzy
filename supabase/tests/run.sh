@@ -51,6 +51,7 @@ $P -d $DB -f tests/f27_save_food_test.sql
 $P -d $DB -f tests/f28_add_hostels_test.sql
 $P -d $DB -f tests/f29_join_test.sql
 $P -d $DB -f tests/f28_import_test.sql
+$P -d $DB -f tests/w24_wiring_test.sql
 $P -d $DB -f tests/f29_drive_test.sql
 
 # Rerun safety: the founder's one-file bundle (docs/sql/run-all-pending.sql) must succeed twice on the

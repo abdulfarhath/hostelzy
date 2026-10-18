@@ -4,6 +4,8 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../drive/id_capture.dart';
+import '../drive/id_thumb.dart';
 
 // F29 Part 2: H48 "Ask to join" (owner), S94 "Join <hostel>" (tenant),
 // H49 "<name> wants to join" (owner).
@@ -165,8 +167,8 @@ class JoinFormScreen extends StatelessWidget {
                     gap: 8,
                     children: [
                       label('Your ID · Aadhaar or any government ID'),
-                      // Wave 4 (Build 4): when i.drive is true, a camera button here masks the first 8 digits
-                      // on the phone and uploads to the owner's Drive; the WhatsApp button stays as the other way.
+                      // W4 (F29 Part 3): the owner takes IDs in Drive → IdCapture masks the first 8 digits on
+                      // the phone and uploads there; Send ID on WhatsApp stays as the other way.
                       if (s.jId == 'whatsapp')
                         Container(
                           key: const ValueKey('idSentTick'),
@@ -174,8 +176,20 @@ class JoinFormScreen extends StatelessWidget {
                           decoration: box(w: 2, c: p.tx),
                           child: Row(children: [Container(width: 24, height: 24, alignment: Alignment.center, color: p.tx, child: Ic('check', size: 16, color: p.bg)), const SizedBox(width: 10), Expanded(child: T('Sent on WhatsApp to ${i.owner}', w: 800, s: 14)), Tap(onTap: s.sendIdOnWhatsApp, child: T('Again', s: 13, w: 700, c: p.ad, underline: true))]),
                         )
-                      else
-                        OutlineCta('Send ID on WhatsApp', key: const ValueKey('sendIdWa'), icon: 'msg', onTap: s.sendIdOnWhatsApp),
+                      else ...[
+                        if (i.drive)
+                          IdCapture(
+                            key: const ValueKey('idCapture'),
+                            token: i.token,
+                            fullCopy: null,
+                            ownerName: i.owner,
+                            onUploaded: (id) => s.update(() {
+                              s.jId = 'drive';
+                              s.jIdFileId = id;
+                            }),
+                          ),
+                        if (s.jId != 'drive') OutlineCta('Send ID on WhatsApp', key: const ValueKey('sendIdWa'), icon: 'msg', onTap: s.sendIdOnWhatsApp),
+                      ],
                     ],
                   ),
                 ],
@@ -216,8 +230,18 @@ class JoinReviewSheet extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: switch (r.idReceived) {
-            // Wave 4 (Build 4): the masked image from the owner's Drive, tap to open in Drive.
-            'drive' => Container(key: const ValueKey('idDrive'), padding: const EdgeInsets.all(12), decoration: box(w: 2, c: p.tx), child: const Row(children: [Ic('doc', size: 18), SizedBox(width: 10), Expanded(child: T('ID in your Google Drive', w: 800, s: 14))])),
+            // W4 (F29 Part 3): the masked image from the owner's Drive (tap opens it in Drive), "Delete from my Drive".
+            'drive' => Column(
+                key: const ValueKey('idDrive'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (r.idFileId != null)
+                    IdThumb(hid: s.ownHid, fileId: r.idFileId!)
+                  else
+                    Container(padding: const EdgeInsets.all(12), decoration: box(w: 2, c: p.tx), child: const Row(children: [Ic('doc', size: 18), SizedBox(width: 10), Expanded(child: T('ID in your Google Drive', w: 800, s: 14))])),
+                  if (r.idFileId != null) Tap(key: const ValueKey('idDeleteDrive'), onTap: () => s.deleteJoinId(r), child: const Padding(padding: EdgeInsets.only(top: 10), child: T('Delete from my Drive', s: 13, w: 800, underline: true))),
+                ],
+              ),
             'whatsapp' => Tap(
                 key: const ValueKey('idTick'),
                 onTap: () => s.update(() => s.idTick = !s.idTick),

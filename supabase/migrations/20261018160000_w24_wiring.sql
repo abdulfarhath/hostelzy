@@ -8,6 +8,9 @@
 -- 2. join_request_info(token): `drive` is true once the owner connected Drive
 --    (an owner_drive row), so S94 shows the camera path instead of WhatsApp
 --    (wave 2 left it false until wave 4 existed).
+-- 3. clear_join_id(id): H49 "Delete from my Drive" deleted the file in the
+--    owner's Drive (Edge Function id-view, action delete); the request forgets
+--    the pointer and goes back to "No ID yet". Staff of the hostel only.
 
 create or replace function public.join_hostel_for_token(p_token text) returns uuid
 language sql stable security definer set search_path = ''
@@ -42,3 +45,16 @@ as $$
 $$;
 revoke execute on function public.join_request_info(text) from public, anon;
 grant execute on function public.join_request_info(text) to authenticated;
+
+create or replace function public.clear_join_id(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare j record;
+begin
+  select * into j from public.join_requests where id = p_id;
+  if j.id is null then raise exception 'no such request'; end if;
+  if not public.is_staff(j.hostel_id) then raise exception 'only this hostel''s owner or managers'; end if;
+  update public.join_requests set id_received = 'none', id_file_id = null where id = p_id;
+end $$;
+revoke all on function public.clear_join_id(uuid) from public, anon;
+grant execute on function public.clear_join_id(uuid) to authenticated;

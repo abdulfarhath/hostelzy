@@ -769,6 +769,8 @@ class SupabaseRepo implements HostelRepo {
   Future<void> decideJoin(String id, bool approve, {String note = ''}) => db.rpc('decide_join', params: {'p_id': id, 'p_approve': approve, 'p_note': note});
   @override
   Future<String> askIdAgain(String id) async => await db.rpc('ask_id_again', params: {'p_id': id}) as String;
+  @override
+  Future<void> clearJoinId(String id) => db.rpc('clear_join_id', params: {'p_id': id});
 
   // ------------------------------------------------------------ F29 Part 3: Drive
 

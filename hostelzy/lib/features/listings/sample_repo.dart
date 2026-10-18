@@ -303,6 +303,8 @@ class SampleRepo implements HostelRepo {
   @override
   Future<String> askIdAgain(String id) async => '';
   @override
+  Future<void> clearJoinId(String id) async {}
+  @override
   Future<DriveStatus?> driveStatus(String hid) async => _drive[hid] ?? (connected: false, files: 0, fullCopy: false);
   @override
   Future<DriveStatus> driveConnect(String hid, String code) async => _drive[hid] = (connected: true, files: 0, fullCopy: false);

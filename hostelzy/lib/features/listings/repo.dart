@@ -373,6 +373,10 @@ abstract class HostelRepo {
   Future<List<Map<String, dynamic>>> joinRequests(String hid);
   Future<void> decideJoin(String id, bool approve, {String note = ''});
   Future<String> askIdAgain(String id);
+
+  /// W2 + W4 wiring: H49 "Delete from my Drive" dropped the file; the request
+  /// forgets the pointer (`clear_join_id`, staff only).
+  Future<void> clearJoinId(String id);
   /// F29 Part 3: tenant IDs in the owner's own Google Drive. Null when the
   /// server doesn't have it yet (SQL or the functions not deployed).
   Future<DriveStatus?> driveStatus(String hid);

@@ -23,7 +23,9 @@ class JoinReq {
   final int fee, advance, at;
   final DateTime movesIn, date;
   String idReceived;
-  final String? idFileId;
+
+  /// The Drive file id (W4); null again after "Delete from my Drive".
+  String? idFileId;
 
   factory JoinReq.fromRow(Map<String, dynamic> r) {
     final b = r['beds'] as Map<String, dynamic>?;
@@ -99,6 +101,9 @@ mixin _JoinData {
   String jName = '', jPhone = '', jId = 'none';
   DateTime? jDate;
   bool jSent = false;
+
+  /// W4 (F29 Part 3): the Drive file id once the ID photo went to the owner's Drive.
+  String? jIdFileId;
 
   /// The last token this owner made (tests and "Link made").
   String? lastJoinToken;
@@ -201,6 +206,7 @@ extension JoinActions on AppState {
       jPhone = myPhone;
       jDate = info!.movesIn;
       jId = info.mine ? 'whatsapp' : 'none';
+      jIdFileId = null;
       jSent = info.status == 'filled' && info.mine;
       if (role == 'owner') role = 'tenant';
       inFindBed = false;
@@ -230,7 +236,7 @@ extension JoinActions on AppState {
     if (data.remote && i.id != 'demo') {
       update(() => joinBusy = true);
       try {
-        await data.fillJoinRequest(token: i.token, name: name, phone: phone, date: date, idReceived: jId);
+        await data.fillJoinRequest(token: i.token, name: name, phone: phone, date: date, idReceived: jId, idFileId: jIdFileId);
       } catch (e) {
         debugPrint('join form: $e');
         update(() => joinBusy = false);
@@ -242,7 +248,7 @@ extension JoinActions on AppState {
             : 'Couldn’t send it. Check your internet and try again.');
       }
     } else {
-      _joinReqs = [...joinReqs, JoinReq(id: 'j${DateTime.now().millisecondsSinceEpoch}', hid: i.hid, bed: i.bed, fee: i.fee, advance: i.advance, movesIn: i.movesIn, name: name, phone: phone, date: date, idReceived: jId, token: i.token, at: DateTime.now().millisecondsSinceEpoch)];
+      _joinReqs = [...joinReqs, JoinReq(id: 'j${DateTime.now().millisecondsSinceEpoch}', hid: i.hid, bed: i.bed, fee: i.fee, advance: i.advance, movesIn: i.movesIn, name: name, phone: phone, date: date, idReceived: jId, idFileId: jIdFileId, token: i.token, at: DateTime.now().millisecondsSinceEpoch)];
     }
     update(() {
       joinBusy = false;
@@ -269,6 +275,25 @@ extension JoinActions on AppState {
     idTick = false;
     sheet = 'joinReview';
   });
+
+  /// H49 "Delete from my Drive" (W4): the file is the owner's; the request
+  /// forgets the pointer and goes back to "No ID yet".
+  Future<void> deleteJoinId(JoinReq r) async {
+    final id = r.idFileId;
+    if (id == null) return;
+    if (onServer) {
+      final ok = await _write(() async {
+        await data.idDelete(ownHid, id);
+        await data.clearJoinId(r.id);
+      });
+      if (!ok) return;
+    }
+    update(() {
+      r.idFileId = null;
+      r.idReceived = 'none';
+    });
+    toastMsg('Deleted from your Drive.');
+  }
 
   /// H49 Approve: the stay is made the way "Add a resident" makes it.
   Future<void> approveJoin() async {
