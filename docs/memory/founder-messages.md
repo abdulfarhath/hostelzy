@@ -231,3 +231,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **04:45**
 > Any other idea do you have regarding keeping all the hostels data into my application? Even if it is illegal, it's fine. I'll find a way to make it legal.
+
+**05:00**
+> I didn't understand the 20 rupees thing. Explain it to me. And also, for the second idea you have given to me, the tenants add their own PG. The tenant should be able to add few details specifically regarding his PG and should have an approval from the hostel owner. So hostel owner should agree to be verified on their on hostel Z. So that's when I'll be paying the person who added his hostel maybe around rupees 200. What is his partner work idea? The idea regarding WhatsApp to places phones is really good. So I'll do it myself, not from the app. I think there is a GitHub repository named Open WhatsApp or something, which does auto messaging and auto SMS sending without requiring any payment. So I'll be using such tools and doing automation of messaging everyone from my number. Check if it is possible. College ambassadors will be the last idea. Not now, we will not implement it now. Explain in depth regarding the GHMC lodging licenses. And I have liked all other ideas, and let's now discuss and think of implementing them. We are not designing or implementing anything now.

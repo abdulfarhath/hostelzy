@@ -73,3 +73,34 @@ below gets the same coverage without that risk.
 | 10 | **Keep it fresh** | Monthly WhatsApp to listed owners: "Still running? Rent same?" No reply in 60 days → "Rent on request" | ~₹0.8 | Honesty over time |
 
 Recommended mix for month 1: 1 + 3 + 4, with 2 in the app (one screen, S-id new) and 5 once the card works.
+
+## Founder round 2 (2026-10-18 05:00)
+- Keeps: 1 Places discovery · 2 tenants add (refined below) · 3 partner walk · 4 owner link · 5 WhatsApp (founder does it
+  himself from his own number with an open-source tool, not from the app) · 6 public ads as leads · 8 GHMC (explained) ·
+  9 OSM · 10 freshness. **7 college ambassadors: last, not now.** Nothing designed or built yet.
+- **#2 refined (founder):** the tenant adds a few details about their own PG; the **owner must agree** to be verified on
+  Hostelzy; only then the tenant is paid, **about ₹200** (founder's number, tentative; Finance checks it against the
+  ₹1,000/month rewards cap, Q2).
+  Flow: tenant "Add my hostel" (name, gate photo, rent they pay, sharing, food, men/women, owner phone optional) → UNVERIFIED
+  card "added by a resident" → owner is asked (claim in app or WhatsApp #5) → owner agrees + team verifies → live →
+  tenant's ₹200 credited; 60 days with no owner answer → the card stays UNVERIFIED, no payout.
+- **₹20 explained:** Finance plan §3/Q5 and the hiring post: a sales partner earns ₹20 per valid tenant hold (a hold the
+  owner confirmed) + ₹200 per owner who starts paying; all partners' hold pay capped at ₹1,000/month until revenue ≥ ₹10k.
+  The "partner walk" (#3) adds a third line: ₹20 per hostel the partner lists that passes a team check (name, pin,
+  phone, photo, rent from the owner). Partners = the commission-only people from `docs/finance/hiring-post.md`.
+- **#5 WhatsApp from the founder's number:** possible with open-source tools (open-wa / wa-automate-nodejs,
+  whatsapp-web.js, Baileys): they drive WhatsApp Web from a laptop after a QR scan, free. Unofficial → WhatsApp can ban the
+  number. Safe practice: a separate SIM (never the founder's main number), warm it up a week, ≤ 20–30 messages/hour with
+  random gaps, ≤ ~150/day, message only business numbers from Places, personalised with the hostel name, one message, offer
+  "reply STOP", stop and answer by hand when they reply. SMS from a personal SIM: TRAI flags bulk sends, SIM gets blocked
+  around 100/day; WhatsApp is the better channel. Hub can write a small sender (`tools/outreach/`) that reads the drafts and
+  sends with these limits built in; the founder runs it on his laptop.
+- **#8 GHMC in depth:** lodging houses need a GHMC trade licence (D&O licence, 1973 bye-laws, Schedule P trades); PGs often
+  also register under the Telangana Shops & Establishments Act with the Labour department. Neither list is published online;
+  GHMC's portal only lets an owner apply/renew. Route: RTI to GHMC (each zone) for "trade licences in the lodging / hostel
+  category with trade name, address, licence year"; ~30 days, often partial, many PGs run without any licence. Verdict: free,
+  slow, patchy; worth one RTI, not a pipeline.
+
+## Open money question → Finance
+₹200 per tenant-added hostel once the owner is verified, vs the ₹1,000/month cap on Hostelzy-funded rewards (Q2): either
+5 payouts a month, or a separate cap. Founder decides the amount.
