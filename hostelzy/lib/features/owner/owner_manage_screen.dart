@@ -624,7 +624,8 @@ class _Residents extends StatelessWidget {
                         _ContactBtn('Call', key: ValueKey('resCall-${r.bed}'), icon: 'phone', onTap: () => s.call(r.phone)),
                         _ContactBtn('WhatsApp', key: ValueKey('resWa-${r.bed}'), icon: 'msg', onTap: () => s.openWA(r.name, 'Hi, this is ${s.meName.isNotEmpty ? s.meName : hostelById(s.ownHid).owner} from ${hostelById(s.ownHid).name}.', phone: r.phone)),
                         _ContactBtn('Notify', key: ValueKey('resNotify-${r.bed}'), icon: 'bell', onTap: r.onApp ? () => s.openNotify(r) : null),
-                        if (!r.onApp) T('Not on the app yet · Ask to join', key: ValueKey('resNoApp-${r.bed}'), s: 12, c: p.mu),
+                        // W1 → W2 (F29 Part 2): the text opens H48 Ask to join for this bed.
+                        if (!r.onApp) Tap(onTap: () => s.openAskJoin(bed: r.bed), child: T('Not on the app yet · Ask to join', key: ValueKey('resNoApp-${r.bed}'), s: 12, c: p.mu)),
                       ],
                     ),
                   ),
