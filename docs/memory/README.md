@@ -41,7 +41,9 @@ Read, in order: this file → `founder-messages.md` (their words) → `../HANDOV
 6. **Parallel work.** The hub runs Build and Design (and Marketing, Finance, Brand when needed) as separate chats and keeps them moving.
 7. **Take your own decisions** on product details and record them in `DECISIONS.md` with the date. Only money amounts,
    accounts, keys, SQL runs and store listings go to the founder.
-8. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
+8. **As little work as possible for the founder (2026-10-18).** One-time setup steps only, batched; everything repeatable
+   (SQL, functions, APK, pages) ships itself from `main`. Never hand them a recurring step.
+9. Colours: red `#ec3013` is the only action colour (no orange). **Green `#1f7a3d` means money saved** (Hostelzy deals,
    Hostelzy price, ₹100 reward) and a confirmed Paid. Navy `#1f3a5f` = ✓ VERIFIED. Grey outline = UNVERIFIED.
 9. Never touch the site root `index.html` (their old prototype page).
 

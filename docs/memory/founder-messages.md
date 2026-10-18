@@ -252,3 +252,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **05:50**
 > What are all our ideas? What are all we gonna build now? Put it in a tabular format, in aerospace ST100 format.
+
+**06:00**
+> I want you to make sure that I should have less work. So like, you are asking me to put SQL queries in Supabase, right? So don't do such things. I should be doing things very less. You should be giving me only one file which I will be running only once, and everything should be done. So less amount of work for me, please. I have a lot of other works to do.

@@ -301,5 +301,10 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
 - **2026-10-17 (founder):** Prototype v6 (F26 with the 12 reverts + F27 Save food) **approved**: "approved, merge it and
   build the apk". F26 (`f26/integration`) and F27 (PR #140) go to `main`; the push publishes the next `apk-N` release.
 
+- **2026-10-18 (founder): the founder does as little as possible.** Anything repeatable is automated: SQL migrations and
+  Edge Functions ship themselves from `main` through GitHub Actions (secrets set once). The founder gets **one-time setup
+  steps only**, batched into one short list in `FOUNDER-TODO.md`, and is asked at most once for each. Never "run this SQL"
+  again after the one-time secrets are in place.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
