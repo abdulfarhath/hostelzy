@@ -102,3 +102,4 @@ file)"), Retake / Upload → "Uploaded to <owner>'s Drive"). H49 ID row = `IdThu
 - "Not in the spec" decisions are in the two feature files (10 for Part 3, 4 for Part 4). F31 Rule A (no explanations) was applied
   on the hub's note of 2026-10-18 before the branch was finished: every removed line is listed in the F29 file (#10).
 - `tools/check.sh` on the branch (final tree, 2026-10-18): analyze clean · 385 Flutter tests · 42 SQL test files incl. `run-all-pending.sql` twice · 30 function tests (20 + 10 Drive).
+- Hub's decisions on the extras (2026-10-18): F29 Part 3 #1–10 accepted; F28 Part 4 #1, #3, #4 accepted, #2 changed to the F31 copy (card "Rent on request"; page "Rent on request" + Ask on WhatsApp), applied in the last commit, check.sh green again.
