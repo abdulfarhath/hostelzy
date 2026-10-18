@@ -167,7 +167,7 @@ extension JoinActions on AppState {
     });
     final who = d.name.trim().isEmpty ? 'Hi!' : 'Hi ${d.name.trim().split(' ').first}!';
     whatsapp('', '$who Join ${h.name} on Hostelzy for bed ${d.bed}. Fill your details here (2 min): ${joinLink(token)}');
-    toastMsg('Link made for bed ${d.bed}. It works for 7 days.');
+    toastMsg('Link made · bed ${d.bed} · 7 days');
   }
 
   /// Deep link `app/j/?t=<token>`: sign in, then S94.
@@ -247,7 +247,7 @@ extension JoinActions on AppState {
       if (myName.isEmpty) myName = name;
       if (this.phone.isEmpty) this.phone = phone;
     });
-    toastMsg('Sent. ${i.owner} approves it in Hostelzy; we’ll notify you.');
+    toastMsg('Sent to ${i.owner}.');
   }
 
   /// Owner Today: the filled requests from the server (staff only).
@@ -271,8 +271,8 @@ extension JoinActions on AppState {
   Future<void> approveJoin() async {
     final r = reviewReq;
     if (r == null) return;
-    if (r.idReceived == 'whatsapp' && !idTick) return toastMsg('Tick “ID received on WhatsApp” first, or ask again.');
-    if (r.idReceived == 'none') return toastMsg('${r.first} hasn’t sent an ID yet. Ask again, or wait.');
+    if (r.idReceived == 'whatsapp' && !idTick) return toastMsg('Tick “ID received” first.');
+    if (r.idReceived == 'none') return toastMsg('No ID yet. Ask again.');
     if (onServer) {
       final ok = await _write(() => data.decideJoin(r.id, true));
       if (!ok) return;
@@ -281,7 +281,7 @@ extension JoinActions on AppState {
         sheet = null;
         reviewReq = null;
       });
-      return toastMsg('${r.first} is in bed ${r.bed}. They get a notification.');
+      return toastMsg('${r.first} is in · bed ${r.bed}');
     }
     final f = findBed(ownHid, r.bed);
     if (f.b == null || (f.b!.state == 'booked' && residents.any((x) => x.bed == r.bed))) return toastMsg('Bed ${r.bed} is taken.');
@@ -297,7 +297,7 @@ extension JoinActions on AppState {
       reviewReq = null;
       resF = 'All';
     });
-    toastMsg('${r.first} is in bed ${r.bed}. They get a notification.');
+    toastMsg('${r.first} is in · bed ${r.bed}');
   }
 
   /// H49 Decline.
@@ -315,7 +315,7 @@ extension JoinActions on AppState {
       sheet = null;
       reviewReq = null;
     });
-    toastMsg('Declined. ${r.first} gets a notification.');
+    toastMsg('Declined.');
   }
 
   /// H49 Ask again: a push to the tenant and the WhatsApp text from the owner.

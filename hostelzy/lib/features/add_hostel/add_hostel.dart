@@ -254,7 +254,7 @@ extension AddHostelActions on AppState {
         hist = [homeTab];
         sheet = null;
       });
-      toastMsg('$name is on Hostelzy as unverified. Now send it to your owner.');
+      toastMsg('Added as unverified.');
     } catch (e) {
       debugPrint('add hostel: $e');
       update(() => addBusy = false);
@@ -262,7 +262,7 @@ extension AddHostelActions on AppState {
       toastMsg(m.contains('partner code')
           ? 'That partner code isn’t valid. Check it with the Hostelzy team.'
           : m.contains('in progress')
-          ? 'You already have a hostel in progress. Finish that one first (Me › Your hostel).'
+          ? 'One hostel at a time. See Me › Your hostel.'
           : m.contains('pin')
           ? 'The pin isn’t in Hyderabad. Move it to the gate.'
           : 'Couldn’t add it. Check your internet and try again.');
@@ -278,7 +278,7 @@ extension AddHostelActions on AppState {
     // The demo seed never blocks trying Add a hostel in the demo APK.
     if (code.isEmpty && myAdd != null && !myAdd!.verified && myAdd!.id != 'balaji') {
       update(() => addBusy = false);
-      return toastMsg('You already have a hostel in progress. Finish that one first (Me › Your hostel).');
+      return toastMsg('One hostel at a time. See Me › Your hostel.');
     }
     String key(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     final dup = hostels.where((h) => (ownerPhones[h.id] == phone) || (key(h.name) == key(name) && kmBetween(posOf(h), addDraft.pin!) <= .15)).firstOrNull;
@@ -304,7 +304,7 @@ extension AddHostelActions on AppState {
       hist = [homeTab];
       sheet = null;
     });
-    toastMsg('$name is on Hostelzy as unverified. Now send it to your owner.');
+    toastMsg('Added as unverified.');
   }
 
   /// The duplicate's claim link, for the adder to pass to their owner.
@@ -362,7 +362,7 @@ extension AddHostelActions on AppState {
       a.upi = u;
       adderUpiDraft = '';
     });
-    toastMsg('Saved. Hostelzy pays ${fmt(a.rewardDue)} to $u once ${a.name} is verified.');
+    toastMsg('UPI id saved.');
   }
 
   /// Deep link `app/r/?h=<id>&claim=1` (the adder's message to the owner): the

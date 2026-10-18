@@ -140,7 +140,6 @@ class AddPgScreen extends StatelessWidget {
                           Expanded(child: Field(key: const ValueKey('addOwnerPhone'), value: d.ownerPhone, numeric: true, placeholder: '10 digits', onChanged: (v) => s.update(() => d.ownerPhone = digits(v, 10)))),
                         ],
                       ),
-                      T('Only the Hostelzy team sees the number. We send nothing to the owner; you do, on WhatsApp.', s: 12, c: p.mu, lh: 1.4),
                     ],
                   ),
                   VGap(
@@ -164,9 +163,6 @@ class AddPgScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  T(d.partner
-                      ? 'Hostelzy pays ${fmt(partnerReward)} per listed hostel after the team checks it, by UPI. Monthly cap ${fmt(addRewardCap)} for all adders together.'
-                      : 'Paid ${fmt(addReward)} only when the owner agrees and Hostelzy verifies the hostel. One hostel at a time.', s: 12, c: p.mu, lh: 1.45),
                 ],
               ),
             ),
@@ -244,8 +240,7 @@ class MyAddScreen extends StatelessWidget {
               child: VGap(
                 gap: 10,
                 children: [
-                  const T('You haven’t added a hostel yet.', w: 800, s: 18),
-                  T('Add your PG so tenants can find it. Paid ${fmt(addReward)} when the owner agrees and Hostelzy verifies it.', s: 14, c: p.mu, lh: 1.45),
+                  const T('No hostel added yet', w: 800, s: 18),
                   Cta('Add a hostel', key: const ValueKey('myAddEmptyAdd'), icon: 'plus', height: 52, px: 16, fs: 15, onTap: s.openAddPg),
                 ],
               ),
@@ -264,11 +259,11 @@ class MyAddScreen extends StatelessWidget {
                     const Kicker('Where it stands'),
                     _Steps(a),
                     if (a.removed)
-                      T('The Hostelzy team removed this hostel, so there is no payout.', s: 13, c: p.ad, w: 800, lh: 1.4)
+                      T('Removed by the Hostelzy team · no payout', s: 13, c: p.ad, w: 800, lh: 1.4)
                     else if (a.stillWaiting)
-                      T('Still waiting. The owner hasn’t answered in 60 days. You can ask again.', key: const ValueKey('stillWaiting'), s: 13, c: p.mu, lh: 1.4)
+                      T('Still waiting · 60 days · you can ask again', key: const ValueKey('stillWaiting'), s: 13, c: p.mu, lh: 1.4)
                     else if (a.queued && a.payMonth != null)
-                      T('${fmt(a.rewardDue)} is yours, queued for ${monthYear(a.payMonth!)}: this month’s rewards reached the ${fmt(addRewardCap)} cap.', key: const ValueKey('queued'), s: 13, c: p.mu, lh: 1.4),
+                      T('${fmt(a.rewardDue)} queued for ${monthYear(a.payMonth!)} · ${fmt(addRewardCap)} monthly cap reached', key: const ValueKey('queued'), s: 13, c: p.mu, lh: 1.4),
                     if (a.step >= 3 && a.paidAt == null && !a.removed)
                       Container(
                         key: const ValueKey('upiBox'),
@@ -277,7 +272,7 @@ class MyAddScreen extends StatelessWidget {
                         child: VGap(
                           gap: 8,
                           children: [
-                            T(a.upi.isEmpty ? 'Where should Hostelzy pay the ${fmt(a.rewardDue)}?' : 'Paid by UPI to ${a.upi}', w: 800, s: 14),
+                            T(a.upi.isEmpty ? 'UPI id for the ${fmt(a.rewardDue)}' : 'Paid by UPI to ${a.upi}', w: 800, s: 14),
                             if (a.upi.isEmpty)
                               Row(
                                 children: [
@@ -291,9 +286,8 @@ class MyAddScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                    T(a.partner
-                        ? 'Paid ${fmt(partnerReward)} after the Hostelzy team checks the listing. Nothing for duplicates or for a hostel the team removes.'
-                        : 'Paid only when the owner agrees and Hostelzy verifies the hostel.', key: const ValueKey('honestLine'), s: 13, c: p.mu, lh: 1.45),
+                    // The one honest line the spec asks for (F28 Part 2 step 3).
+                    T(a.partner ? 'Paid ${fmt(partnerReward)} after the Hostelzy team checks the listing.' : 'Paid only when the owner agrees and Hostelzy verifies the hostel.', key: const ValueKey('honestLine'), s: 13, c: p.mu, lh: 1.45),
                   ],
                 ),
               ),
@@ -307,13 +301,7 @@ class MyAddScreen extends StatelessWidget {
                   ? Cta('Send to your owner', key: const ValueKey('sendToOwner'), icon: 'msg', height: 54, px: 16, fs: 15, onTap: s.sendToOwner)
                   : a.canAskAgain
                   ? Cta('Ask again', key: const ValueKey('askAgain'), icon: 'msg', height: 54, px: 16, fs: 15, onTap: s.sendToOwner)
-                  : VGap(
-                      gap: 6,
-                      children: [
-                        OutlineCta('Sent on WhatsApp · ask again in ${3 - DateTime.now().difference(a.ownerAskedAt!).inDays} days', key: const ValueKey('askedWait'), icon: 'check', fs: 14, onTap: s.sendToOwner),
-                        T('Sent ${dayMon(a.ownerAskedAt!)}. The owner opens the link and taps Claim this hostel.', s: 12, c: p.mu, lh: 1.4),
-                      ],
-                    ),
+                  : OutlineCta('Sent ${dayMon(a.ownerAskedAt!)} · ask again in ${3 - DateTime.now().difference(a.ownerAskedAt!).inDays} days', key: const ValueKey('askedWait'), icon: 'check', fs: 14, onTap: s.sendToOwner),
             ),
         ],
       ],
@@ -375,11 +363,11 @@ class _Steps extends StatelessWidget {
     final p = PalScope.of(context);
     final amt = fmt(a.rewardDue);
     final steps = <(String, String)>[
-      ('Added', 'On Hostelzy as unverified since ${dayMon(a.createdAt)}'),
-      ('Owner asked', a.ownerAskedAt == null ? 'Send the link to ${a.ownerName.isEmpty ? 'your owner' : a.ownerName.split(' ').first} on WhatsApp' : 'Sent ${dayMon(a.ownerAskedAt!)}'),
-      ('Owner agreed', a.ownerAgreedAt == null ? 'The owner taps Claim this hostel' : 'Claimed ${dayMon(a.ownerAgreedAt!)}'),
-      ('Verified', a.liveAt == null ? 'The Hostelzy team visits and checks it' : 'Verified ${dayMon(a.liveAt!)}'),
-      ('$amt paid', a.paidAt != null ? 'Paid ${dayMon(a.paidAt!)} by UPI' : a.queued && a.payMonth != null ? 'Queued for ${monthYear(a.payMonth!)} (monthly cap)' : a.verified ? 'By UPI on the 5th${a.upi.isEmpty ? ' · add your UPI id below' : ''}' : 'By UPI, after verification'),
+      ('Added', 'Unverified · ${dayMon(a.createdAt)}'),
+      ('Owner asked', a.ownerAskedAt == null ? 'Not sent yet' : 'Sent ${dayMon(a.ownerAskedAt!)}'),
+      ('Owner agreed', a.ownerAgreedAt == null ? (a.ownerAskedAt == null ? 'Not yet' : 'Waiting for ${a.ownerName.isEmpty ? 'the owner' : a.ownerName.split(' ').first}') : 'Claimed ${dayMon(a.ownerAgreedAt!)}'),
+      ('Verified', a.liveAt == null ? 'Not yet' : 'Verified ${dayMon(a.liveAt!)}'),
+      ('$amt paid', a.paidAt != null ? 'Paid ${dayMon(a.paidAt!)} by UPI' : a.queued && a.payMonth != null ? 'Queued for ${monthYear(a.payMonth!)} · monthly cap' : a.verified ? 'By UPI on the 5th${a.upi.isEmpty ? ' · no UPI id yet' : ''}' : 'Not yet'),
     ];
     return Container(
       decoration: BoxDecoration(border: Border(top: bs(2, p.tx))),

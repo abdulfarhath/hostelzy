@@ -44,12 +44,12 @@ select test.fails($$select public.add_hostel(pg_temp.p())$$, 'in progress');
 reset role;
 select set_config('hz.f28a', (select id::text from public.hostels where added_by = 'fb-f28-adder'), false);
 -- what was stored: listed, resident source, rent confirmed, masked hint, team-only phone
-select test.eq((select status || ' ' || source || ' ' || rent_min || '-' || rent_max || ' ' || owner_phone_hint || ' ' || (rent_confirmed_at is not null) from public.hostels where id = current_setting('hz.f28a')::uuid), 'listed resident 7500-7500 98xxxxxx20 true');
+select test.eq((select status || ' ' || source || ' ' || rent_min || '-' || rent_max || ' ' || owner_phone_hint || ' ' || (rent_confirmed_at is not null) from public.hostels where id = current_setting('hz.f28a')::uuid), 'listed resident 7500-7500  true');
 select test.eq((select owner_phone from public.hostel_leads where hostel_id = current_setting('hz.f28a')::uuid), '9876528020');
 select test.eq((select array_to_string(tags, ',') from public.hostels where id = current_setting('hz.f28a')::uuid), '3 sharing,Food included');
 -- the public sees the listed hostel but never the owner's full number
 select test.act('anon', null);
-select test.rows($$select count(*) from public.hostels where id = current_setting('hz.f28a')::uuid and owner_phone_hint = '98xxxxxx20'$$, 1);
+select test.rows($$select count(*) from public.hostels where id = current_setting('hz.f28a')::uuid and owner_phone_hint = ''$$, 1);
 select test.blocked($$select owner_phone from public.hostel_leads where hostel_id = current_setting('hz.f28a')::uuid$$);
 
 -- ------------------------------------------------------------ the adder's photos (up to 3), nobody else's

@@ -36,7 +36,6 @@ class AskJoinSheet extends StatelessWidget {
       child: VGap(
         gap: 12,
         children: [
-          T('They fill their own details and ID. You only approve. Nothing to type.', s: 14, c: p.mu, lh: 1.45),
           VGap(
             gap: 6,
             children: [
@@ -60,7 +59,6 @@ class AskJoinSheet extends StatelessWidget {
             ],
           ),
           VGap(gap: 6, children: [label('Their first name (optional)'), Field(key: const ValueKey('joinName'), value: d.name, placeholder: 'For the message', onChanged: (v) => s.update(() => d.name = v))]),
-          T('WhatsApp opens on your phone with the link. The link works for 7 days, for this bed only. The bed isn’t held; first approved wins.', s: 12, c: p.mu, lh: 1.4),
           Cta(s.joinBusy ? 'Making the link…' : 'Send on WhatsApp', key: const ValueKey('askJoinSend'), icon: 'msg', height: 54, px: 16, fs: 15, opacity: s.joinBusy ? .5 : 1, onTap: s.joinBusy ? null : s.sendAskJoin),
         ],
       ),
@@ -100,8 +98,8 @@ class JoinFormScreen extends StatelessWidget {
                 children: [
                   const Ic('check', size: 28),
                   const T('Sent', w: 800, s: 22),
-                  T('${i.owner} will approve · we’ll notify you.', s: 14, c: p.mu, lh: 1.45),
-                  T(s.jId == 'whatsapp' ? 'Your ID went to ${i.owner} on WhatsApp. Hostelzy never keeps it.' : 'Send your ID to ${i.owner} on WhatsApp when you can. Hostelzy never keeps it.', s: 13, c: p.mu, lh: 1.45),
+                  T('${i.owner} will approve · we’ll notify you', s: 14, c: p.mu, lh: 1.45),
+                  if (s.jId != 'whatsapp') OutlineCta('Send ID on WhatsApp', key: const ValueKey('sendIdWaDone'), icon: 'msg', height: 46, fs: 14, onTap: s.sendIdOnWhatsApp),
                 ],
               ),
             ),
@@ -141,11 +139,7 @@ class JoinFormScreen extends StatelessWidget {
               child: VGap(
                 gap: 14,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    color: p.sf,
-                    child: T('${i.owner} invited you. Advance ${fmt(i.advance)}, then ${fmt(i.fee)} a month. Your details go to ${i.owner} only.', s: 14, lh: 1.45),
-                  ),
+                  KV('Advance', fmt(i.advance), keyWidth: 110),
                   VGap(gap: 6, children: [label('Your name'), Field(key: const ValueKey('jName'), value: s.jName, placeholder: i.nameHint.isEmpty ? 'Full name' : i.nameHint, onChanged: (v) => s.update(() => s.jName = v))]),
                   VGap(
                     gap: 6,
@@ -170,8 +164,7 @@ class JoinFormScreen extends StatelessWidget {
                   VGap(
                     gap: 8,
                     children: [
-                      label('Your ID'),
-                      T('Take a photo of your Aadhaar (or any government ID) and send it to ${i.owner}. Hostelzy never stores your ID.', s: 13, c: p.mu, lh: 1.45),
+                      label('Your ID · Aadhaar or any government ID'),
                       // Wave 4 (Build 4): when i.drive is true, a camera button here masks the first 8 digits
                       // on the phone and uploads to the owner's Drive; the WhatsApp button stays as the other way.
                       if (s.jId == 'whatsapp')
@@ -235,12 +228,12 @@ class JoinReviewSheet extends StatelessWidget {
                     children: [
                       Container(width: 24, height: 24, alignment: Alignment.center, decoration: box(bg: s.idTick ? p.tx : transparent, w: 2, c: p.tx), child: s.idTick ? Ic('check', size: 16, color: p.bg) : null),
                       const SizedBox(width: 10),
-                      Expanded(child: VGap(gap: 2, children: [const T('ID received on WhatsApp', w: 800, s: 14), T('${r.first} sent it to your WhatsApp. Hostelzy never stores it.', s: 12, c: p.mu, lh: 1.4)])),
+                      const Expanded(child: T('ID received on WhatsApp', w: 800, s: 14)),
                     ],
                   ),
                 ),
               ),
-            _ => Container(key: const ValueKey('idNone'), padding: const EdgeInsets.all(12), color: p.sf, child: T('${r.first} hasn’t sent an ID yet. Ask again, or approve once it reaches you on WhatsApp.', s: 13, lh: 1.4)),
+            _ => Container(key: const ValueKey('idNone'), padding: const EdgeInsets.all(12), color: p.sf, child: const T('No ID yet', w: 800, s: 14)),
           },
         ),
         Padding(
@@ -256,7 +249,6 @@ class JoinReviewSheet extends StatelessWidget {
                   Expanded(child: OutlineCta('Decline', key: const ValueKey('joinDecline'), icon: 'x', height: 48, fs: 14, onTap: s.declineJoin)),
                 ],
               ),
-              T('Approve adds ${r.first} as a resident of bed ${r.bed}, like Add a resident, and tells them.', s: 12, c: p.mu, lh: 1.4),
             ],
           ),
         ),

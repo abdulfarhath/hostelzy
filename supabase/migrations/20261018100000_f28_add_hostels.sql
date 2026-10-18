@@ -3,7 +3,8 @@
 --   hostels.added_by          the adder's uid (resident / partner path)
 --   hostels.place_id, source_seen_at   kept for the Places import (wave 3)
 --   hostels.rent_confirmed_at a human confirmed the rent (wave 4 shows it only within 60 days)
---   hostels.owner_phone_hint  a MASKED hint ("98xxxxxx01"); the full number is team-only in hostel_leads.owner_phone
+--   hostels.owner_phone_hint  '' for added hostels: the owner's number goes straight to hostel_leads.owner_phone
+--                             (team-only); hostel_owner_phone(h) (Build 3's, stubbed here) reads it wherever it is
 --   hostels.partner_code      which partner listed it (₹20 after the team check)
 --   hostels.owner_asked_at    when the adder sent the claim link to the owner ("Ask again" after 3 days)
 --   partners                  code, name, phone, upi, active (team makes codes in the console)
@@ -230,6 +231,22 @@ drop policy if exists "hz adder upload photos" on storage.objects;
 create policy "hz adder upload photos" on storage.objects for insert
   with check (bucket_id = 'hostel-photos' and public.is_adder(public.photo_hostel(name)));
 
+-- The owner's phone wherever the team has it (the draft hint, the lead row or
+-- the owner's profile). Same body as Build 3's 20261018120000_f28_import.sql,
+-- which runs after this and wins; here so add_hostel() works on its own.
+-- Definer-only: no grant to app roles.
+create or replace function public.hostel_owner_phone(h uuid) returns text
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(
+    nullif(regexp_replace((select coalesce(x.owner_phone_hint, '') from public.hostels x where x.id = h), '\D', '', 'g'), ''),
+    nullif((select regexp_replace(l.owner_phone, '\D', '', 'g') from public.hostel_leads l where l.hostel_id = h), ''),
+    nullif((select regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') from public.hostel_staff st join public.profiles p on p.id = st.user_id
+            where st.hostel_id = h and st.role = 'owner' order by p.created_at limit 1), ''),
+    '')
+$$;
+revoke execute on function public.hostel_owner_phone(uuid) from public, anon, authenticated;
+
 -- Metres between two points (haversine).
 create or replace function public.metres_between(lat1 double precision, lng1 double precision, lat2 double precision, lng2 double precision) returns double precision
 language sql immutable set search_path = ''
@@ -278,9 +295,7 @@ begin
   v_key := regexp_replace(lower(v_name), '[^a-z0-9]', '', 'g');
   select h.id, h.name into dup from public.hostels h
   where h.status in ('listed', 'live') and (
-    exists (select 1 from public.hostel_leads l where l.hostel_id = h.id and regexp_replace(l.owner_phone, '\D', '', 'g') = v_phone)
-    or exists (select 1 from public.hostel_staff st join public.profiles pr on pr.id = st.user_id
-               where st.hostel_id = h.id and st.role = 'owner' and regexp_replace(coalesce(pr.phone, ''), '\D', '', 'g') = v_phone)
+    public.hostel_owner_phone(h.id) = v_phone
     or (regexp_replace(lower(h.name), '[^a-z0-9]', '', 'g') = v_key and h.lat is not null and h.lng is not null
         and public.metres_between(h.lat, h.lng, v_lat, v_lng) <= 150))
   order by h.status = 'live' desc, h.created_at
@@ -295,7 +310,7 @@ begin
   end loop;
   insert into public.hostels (slug, name, gender, area, lat, lng, status, source, added_by, rent_min, rent_max, rent_confirmed_at, owner_name, owner_phone_hint, partner_code, food, tags)
   values (v_slug, v_name, v_gender, v_area, v_lat, v_lng, 'listed', case when v_code is null then 'resident' else 'partner' end, me, v_min, v_max, now(),
-    v_owner, left(v_phone, 2) || 'xxxxxx' || right(v_phone, 2), v_code, v_food,
+    v_owner, '', v_code, v_food,
     array[v_share || case when v_share = 4 then '+ sharing' else ' sharing' end] || case when v_food then array['Food included'] else '{}'::text[] end)
   returning id into hid;
   -- The owner's full number: team-only (hostel_leads has RLS "team only").

@@ -22,7 +22,7 @@ class MeScreen extends StatelessWidget {
       if (!isOwner) ('Stay Rewards', const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'Not a member yet', () => s.go('rewards')),
       // W2 (F28 Part 2): Add a hostel, or Your hostel once one exists.
       if (!isOwner && s.myAdd != null) ('Your hostel', '${s.myAdd!.name} · ${const ['', 'added', 'owner asked', 'owner agreed', 'verified', 'paid'][s.myAdd!.step]}', s.openMyAdd)
-      else if (!isOwner) ('Add a hostel', 'Your PG isn’t here? Add it, ${fmt(addReward)} when verified', s.openAddPg),
+      else if (!isOwner) ('Add a hostel', '${fmt(addReward)} when verified', s.openAddPg),
       ('Reminders', s.remSummary[0].toUpperCase() + s.remSummary.substring(1), s.openReminders),
       ('Settings', 'Language, notifications, log out', () => s.go('settings')),
       ('Help on WhatsApp', 'Ask the Hostelzy team', () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),

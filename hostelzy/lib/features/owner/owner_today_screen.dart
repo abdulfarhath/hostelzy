@@ -191,7 +191,7 @@ typedef NeedItem = ({String key, String icon, String title, String sub, String r
 const needGroups = [('holds', 'Holds'), ('payments', 'Payments'), ('fixes', 'Fixes')];
 
 /// W2 (F29 Part 2): plus Joining, only while someone is waiting to join.
-List<(String, String)> needGroupsOf(Map<String, List<NeedItem>> m) => [...needGroups, if ((m['joining'] ?? const []).isNotEmpty) ('joining', 'Joining')];
+List<(String, String)> needGroupsOf(Map<String, List<NeedItem>> m) => [needGroups[0], needGroups[1], if ((m['joining'] ?? const []).isNotEmpty) ('joining', 'Joining'), needGroups[2]];
 
 /// F26 #18 owner Today: what needs the owner in three tabs with counts.
 /// Holds (hold requests, then notices and bed moves), Payments (payments to

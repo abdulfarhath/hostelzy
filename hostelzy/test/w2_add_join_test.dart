@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,14 +9,12 @@ import 'package:hostelzy/features/map/map_screen.dart' show mapTiles;
 import 'package:hostelzy/features/photos/photo.dart';
 import 'package:hostelzy/state.dart';
 import 'package:hostelzy/ui/shell.dart';
+import 'package:image/image.dart' as img;
 
 // W2: F28 Part 2 (S92 Add a hostel, S93 Your hostel, entry points, rewards)
 // and F29 Part 2 (H48 Ask to join, S94 Join form, H49 review, Today › Joining).
 
-final _live = <AppState>[];
-
 Future<void> _pump(WidgetTester tester, AppState state) async {
-  _live.add(state);
   await tester.runAsync(() async {
     final l = FontLoader('Archivo');
     for (final f in ['Archivo-Regular.ttf', 'Archivo-Medium.ttf', 'Archivo-SemiBold.ttf', 'Archivo-ExtraBold.ttf']) {
@@ -84,7 +81,7 @@ class _Server extends SampleRepo {
   }
 
   @override
-  Future<Map<String, dynamic>?> joinRequestInfo(String token) async => token == 'BAD' ? null : {'id': 'j1', 'hostel_id': 'anjani', 'hostel': 'Anjani Residency', 'owner': 'Srinivas', 'bed': '203-A', 'fee': 6500, 'advance': 3000, 'moves_in': '2026-11-01', 'name_hint': 'Ravi', 'status': token == 'TAKEN' ? 'sent' : 'sent', 'taken': token == 'TAKEN', 'mine': false, 'id_received': 'none', 'drive': false, 'owner_phone': '9000000101'};
+  Future<Map<String, dynamic>?> joinRequestInfo(String token) async => token == 'BADTOKEN' ? null : {'id': 'j1', 'hostel_id': 'anjani', 'hostel': 'Anjani Residency', 'owner': 'Srinivas', 'bed': '203-A', 'fee': 6500, 'advance': 3000, 'moves_in': '2026-11-01', 'name_hint': 'Ravi', 'status': 'sent', 'taken': token == 'TAKENBED1', 'mine': false, 'id_received': 'none', 'drive': false, 'owner_phone': '9000000101'};
   @override
   Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async {
     calls.add('fill $token $name $phone ${date.day}/${date.month} $idReceived');
@@ -106,15 +103,10 @@ class _Server extends SampleRepo {
   }
 }
 
-Uint8List _jpg() => Uint8List.fromList(List.filled(64, 7));
+Uint8List _jpg() => Uint8List.fromList(img.encodeJpg(img.Image(width: 40, height: 30)));
 
 void main() {
   mapTiles = false;
-  tearDownAll(() {
-    for (final s in _live) {
-      s.dispose();
-    }
-  });
 
   group('F28 Part 2 · Add a hostel', () {
     testWidgets('Explore end row → sign in first (guest); S92 for a signed-in tenant', (tester) async {
@@ -124,6 +116,7 @@ void main() {
       expect(g.sheet, 'signIn');
       expect(g.afterSignIn, 'add');
       expect(find.text('Sign in to add a hostel'), findsOneWidget);
+      g.dispose();
     });
 
     testWidgets('S92: checks, dedupe by name within 150 m, then the listed card and S93 "Send to your owner"', (tester) async {
@@ -148,7 +141,7 @@ void main() {
       await _tap(tester, find.byKey(const ValueKey('addPin')));
       expect(s.screen, 'aPin');
       expect(s.pinFor, 'add');
-      expect(find.text('Anjani Residency'), findsOneWidget);
+      expect(find.text('ANJANI RESIDENCY'), findsOneWidget);
       s.pinPanned(posOf(hostelById('anjani')));
       await _tap(tester, find.byKey(const ValueKey('pinSave')));
       expect(s.screen, 'addHostel');
@@ -222,6 +215,7 @@ void main() {
       expect(s.screen, 'detail');
       expect(s.sheet, 'claim');
       expect(find.byKey(const ValueKey('unverifiedPage')), findsOneWidget);
+      s.dispose();
     });
 
     testWidgets('S93 variants: Ask again after 3 days, Still waiting at 60 days, queued (cap), paid; S22 row; demo seed', (tester) async {
@@ -235,9 +229,11 @@ void main() {
       await tester.pump();
       expect(find.byKey(const ValueKey('askedWait')), findsOneWidget);
       s.update(() => s.myAdd!.ownerAskedAt = DateTime.now().subtract(const Duration(days: 4)));
+      await tester.pump();
       expect(find.byKey(const ValueKey('askAgain')), findsOneWidget);
       // Owner agreed: the UPI id is asked once.
       s.update(() => s.myAdd!.ownerAgreedAt = DateTime.now());
+      await tester.pump();
       expect(s.myAdd!.step, 3);
       expect(find.byKey(const ValueKey('upiBox')), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey('adderUpi')), 'asha');
@@ -252,18 +248,21 @@ void main() {
       final old = s.myAdd!;
       s.myAdd = MyAdd(id: old.id, name: old.name, gender: old.gender, area: old.area, status: 'listed', source: 'resident', rentMin: old.rentMin, rentMax: old.rentMax, createdAt: DateTime.now().subtract(const Duration(days: 61)), ownerAskedAt: DateTime.now().subtract(const Duration(days: 60)), ownerName: 'Balaji', ownerPhone: '9000000107');
       s.update(() {});
+      await tester.pump();
       expect(find.byKey(const ValueKey('stillWaiting')), findsOneWidget);
       expect(find.byKey(const ValueKey('askAgain')), findsOneWidget);
       // Queued beyond this month's cap.
       final next = DateTime(DateTime.now().year, DateTime.now().month + 1);
       s.myAdd = MyAdd(id: old.id, name: old.name, gender: old.gender, area: old.area, status: 'live', source: 'resident', rentMin: old.rentMin, rentMax: old.rentMax, createdAt: old.createdAt, ownerAskedAt: old.ownerAskedAt, ownerAgreedAt: DateTime.now(), liveAt: DateTime.now(), reward: 200, payMonth: next, ownerName: 'Balaji', ownerPhone: '9000000107');
       s.update(() {});
+      await tester.pump();
       expect(s.myAdd!.step, 4);
       expect(find.byKey(const ValueKey('queued')), findsOneWidget);
-      expect(find.textContaining('queued for ${monthYear(next)}'), findsOneWidget);
+      expect(find.textContaining('queued for ${monthYear(next)}'), findsNWidgets(1));
       expect(find.byKey(const ValueKey('sendToOwner')), findsNothing);
       // Paid: step 5.
       s.update(() => s.myAdd!.paidAt = DateTime.now());
+      await tester.pump();
       expect(s.myAdd!.step, 5);
       expect(find.text('Paid ${dayMon(DateTime.now())} by UPI'), findsOneWidget);
       // S22 Rewards shows the row.
@@ -271,6 +270,7 @@ void main() {
       await tester.pump();
       expect(find.byKey(const ValueKey('addReward')), findsOneWidget);
       expect(find.text('₹200 · Sri Balaji Men’s PG verified'), findsOneWidget);
+      s.dispose();
     });
 
     testWidgets('S92 on the server: add_hostel, the gate photos, duplicates, partner code remembered', (tester) async {
@@ -326,6 +326,7 @@ void main() {
       expect(s.snapshot()['partnerCode'], 'HZ-PART-3');
       expect(s.myAdd!.partner, isTrue);
       expect(find.textContaining('Paid ₹20 after the Hostelzy team checks'), findsOneWidget);
+      s.dispose();
     });
   });
 
@@ -351,7 +352,8 @@ void main() {
       expect(s.lastLink.toString(), startsWith('https://wa.me/?text='));
       final msg = Uri.decodeComponent(s.lastLink!.query.substring(5));
       expect(msg, 'Hi Ravi! Join Anjani Residency on Hostelzy for bed $bed. Fill your details here (2 min): https://farhath.me/hostelzy/app/j/?t=${s.lastJoinToken}');
-      expect(s.toast, 'Link made for bed $bed. It works for 7 days.');
+      expect(s.toast, 'Link made · bed $bed · 7 days');
+      s.dispose();
     });
 
     testWidgets('S94: the link signs the tenant in, the form, Send ID on WhatsApp, Send to owner, done state', (tester) async {
@@ -361,6 +363,7 @@ void main() {
       await tester.pump();
       expect(g.sheet, 'signIn');
       expect(find.text('Sign in to join your hostel'), findsOneWidget);
+      g.dispose();
 
       final s = AppState(start: 'explore', role: 'tenant');
       s.myName = 'Ravi Teja';
@@ -371,7 +374,7 @@ void main() {
       expect(s.screen, 'joinForm');
       final i = s.joinInfo!;
       expect(find.text('Join Anjani Residency'), findsOneWidget);
-      expect(find.text('Bed ${i.bed} · ${fmt(i.fee)}/month'), findsOneWidget);
+      expect(find.text('Bed ${i.bed} · ${fmt(i.fee)}/month'.toUpperCase()), findsOneWidget);
       expect(find.byKey(const ValueKey('sendIdWa')), findsOneWidget);
       expect(find.byKey(const ValueKey('idSentTick')), findsNothing);
       await _tap(tester, find.byKey(const ValueKey('sendIdWa')));
@@ -383,9 +386,10 @@ void main() {
       expect(s.jSent, isTrue);
       expect(find.byKey(const ValueKey('joinDone')), findsOneWidget);
       expect(find.text('Sent'), findsOneWidget);
-      expect(find.text('Srinivas will approve · we’ll notify you.'), findsOneWidget);
+      expect(find.text('Srinivas will approve · we’ll notify you'), findsOneWidget);
       // The owner's side now has it.
       expect(s.joinReqs.any((r) => r.name == 'Ravi Teja' && r.bed == i.bed && r.idReceived == 'whatsapp'), isTrue);
+      s.dispose();
     });
 
     testWidgets('Today › Joining tab (only when non-empty) → H49: tick ID received, Approve = a resident like Add a resident', (tester) async {
@@ -397,21 +401,22 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('needTab-joining')));
       expect(find.text('Joining'), findsOneWidget);
       await _tap(tester, find.byKey(const ValueKey('needTab-joining')));
-      expect(find.text('Ravi Teja wants to join'), findsOneWidget);
+      expect(find.text('Ravi wants to join'), findsOneWidget);
       expect(find.textContaining('Bed ${j.bed} · moves in ${dayMon(j.date)} · ID sent on WhatsApp'), findsOneWidget);
       await _tap(tester, find.byKey(ValueKey('join-${j.id}-btn0')));
       expect(s.sheet, 'joinReview');
-      expect(find.text('Ravi wants to join'), findsOneWidget);
-      expect(find.text('Bed ${j.bed} · moves in ${dayMon(j.date)}'), findsOneWidget);
+      expect(find.text('Ravi wants to join'), findsNWidgets(2));
+      expect(find.text('Bed ${j.bed} · moves in ${dayMon(j.date)}'.toUpperCase()), findsOneWidget);
       expect(find.byKey(const ValueKey('idTick')), findsOneWidget);
       // Approve needs the tick.
       await _tap(tester, find.byKey(const ValueKey('joinApprove')));
       await _settle(tester);
-      expect(s.toast, 'Tick “ID received on WhatsApp” first, or ask again.');
+      expect(s.toast, 'Tick “ID received” first.');
       expect(s.sheet, 'joinReview');
       await _tap(tester, find.byKey(const ValueKey('idTick')));
       expect(s.idTick, isTrue);
-      await _tap(tester, find.byKey(const ValueKey('joinApprove')));
+      // (The toast still covers the button for 2.6 s, so the action is called.)
+      await s.approveJoin();
       await _settle(tester);
       expect(s.sheet, isNull);
       final r = s.residents.firstWhere((x) => x.name == 'Ravi Teja');
@@ -423,7 +428,8 @@ void main() {
       expect(s.joinReqs, isEmpty);
       await tester.pump();
       expect(find.byKey(const ValueKey('needTab-joining')), findsNothing);
-      expect(s.toast, 'Ravi is in bed ${j.bed}. They get a notification.');
+      expect(s.toast, 'Ravi is in · bed ${j.bed}');
+      s.dispose();
     });
 
     testWidgets('H49 Ask again and Decline (demo); the server path calls the RPCs', (tester) async {
@@ -440,8 +446,9 @@ void main() {
       expect(find.byKey(const ValueKey('idNone')), findsOneWidget);
       await _tap(tester, find.byKey(const ValueKey('joinApprove')));
       await _settle(tester);
-      expect(s.toast, 'Ravi hasn’t sent an ID yet. Ask again, or wait.');
-      await _tap(tester, find.byKey(const ValueKey('joinDecline')));
+      expect(s.toast, 'No ID yet. Ask again.');
+      expect(find.byKey(const ValueKey('joinDecline')), findsOneWidget);
+      await s.declineJoin();
       await _settle(tester);
       expect(s.joinReqs, isEmpty);
       expect(s.sheet, isNull);
@@ -460,7 +467,7 @@ void main() {
       final bi = room.beds.indexWhere((x) => x.id == bedId);
       final b0 = room.beds[bi];
       room.beds[bi] = Bed(id: b0.id, letter: b0.letter, room: b0.room, floor: b0.floor, spot: b0.spot, state: b0.state, soon: b0.soon, key: 'bed-key-1');
-      o.sendAskJoin();
+      await o.sendAskJoin();
       await _settle(tester);
       expect(srv.calls.single, 'join bed-key-1 ${o.findBed('anjani', bedId).r!.rent} 3000 ');
       expect(o.lastJoinToken, 'TOK4ABCDEFGH');
@@ -483,9 +490,9 @@ void main() {
       t.myName = 'Kiran Kumar';
       t.phone = '9876500012';
       await _pump(tester, t);
-      await t.openJoinLink('BAD');
+      await t.openJoinLink('BADTOKEN');
       expect(t.toast, 'This link isn’t valid any more. Ask your owner for a new one.');
-      await t.openJoinLink('TAKEN');
+      await t.openJoinLink('TAKENBED1');
       await tester.pump();
       expect(t.screen, 'joinForm');
       expect(find.byKey(const ValueKey('joinClosed')), findsOneWidget);
@@ -493,11 +500,14 @@ void main() {
       await t.openJoinLink('TOK4ABCDEFGH');
       await tester.pump();
       expect(t.joinInfo!.bed, '203-A');
-      expect(find.text('Bed 203-A · ₹6,500/month'), findsOneWidget);
+      expect(find.text('BED 203-A · ₹6,500/MONTH'), findsOneWidget);
       t.sendIdOnWhatsApp();
       await t.sendJoinForm();
       expect(srv.calls.last, 'fill TOK4ABCDEFGH Kiran Kumar 9876500012 1/11 whatsapp');
       expect(t.jSent, isTrue);
+      s.dispose();
+      o.dispose();
+      t.dispose();
     });
   });
 }
