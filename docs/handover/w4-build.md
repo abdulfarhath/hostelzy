@@ -101,4 +101,4 @@ file)"), Retake / Upload → "Uploaded to <owner>'s Drive"). H49 ID row = `IdThu
   the code is exchanged on the server, so the refresh token never exists on the phone.
 - "Not in the spec" decisions are in the two feature files (10 for Part 3, 4 for Part 4). F31 Rule A (no explanations) was applied
   on the hub's note of 2026-10-18 before the branch was finished: every removed line is listed in the F29 file (#10).
-- `tools/check.sh` on the branch: analyze clean, all Flutter tests, SQL incl. the bundle twice, 30 function tests.
+- `tools/check.sh` on the branch (final tree, 2026-10-18): analyze clean · 385 Flutter tests · 42 SQL test files incl. `run-all-pending.sql` twice · 30 function tests (20 + 10 Drive).
