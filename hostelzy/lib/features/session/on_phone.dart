@@ -117,6 +117,8 @@ extension OnPhoneActions on AppState {
     'pushAsked': pushAsked,
     'camAsked': camAsked,
     'opens': opens,
+    // W2 (F28): the partner code typed once in Add a hostel.
+    'partnerCode': partnerCodeSaved,
     // F24 item 22: the Settings switches and searched areas (also on the profile).
     'notif': notif,
     'areas': searchedAreas,

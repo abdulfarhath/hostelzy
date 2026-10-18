@@ -274,4 +274,25 @@ class SampleRepo implements HostelRepo {
   Future<void> sendClaim(String hid, String name, String phone) async {}
   @override
   Future<Map<String, ({int verified, int listed})>?> areaCounts() async => null;
+  // W2: sample data keeps these on the phone (AppState does the demo paths itself).
+  @override
+  Future<Map<String, dynamic>> addHostel(Map<String, dynamic> p) async => throw UnsupportedError('sample data');
+  @override
+  Future<Map<String, dynamic>?> myAddedHostel() async => null;
+  @override
+  Future<void> askedOwner(String hid) async {}
+  @override
+  Future<void> setAdderUpi(String upi) async {}
+  @override
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''}) async => throw UnsupportedError('sample data');
+  @override
+  Future<Map<String, dynamic>?> joinRequestInfo(String token) async => null;
+  @override
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId}) async => throw UnsupportedError('sample data');
+  @override
+  Future<List<Map<String, dynamic>>> joinRequests(String hid) async => const [];
+  @override
+  Future<void> decideJoin(String id, bool approve, {String note = ''}) async {}
+  @override
+  Future<String> askIdAgain(String id) async => '';
 }

@@ -117,6 +117,8 @@ class SignInSheet extends StatelessWidget {
           T(switch (s.afterSignIn) {
             'verify' => 'So we know who to tell. We ask only once.',
             'claim' => 'So the Hostelzy team knows who to call. We ask only once.',
+            'add' => 'So we know who added it and who to pay. We ask only once.',
+            'join' => 'So your owner knows it’s you. We ask only once.',
             _ => 'So $owner knows who’s coming. We ask only once.',
           }, s: 15, c: p.mu, lh: 1.45),
           GoogleButton(s.signingIn ? 'Opening Google…' : 'Continue with Google', busy: s.signingIn, onTap: s.continueWithGoogle),

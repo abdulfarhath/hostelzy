@@ -236,7 +236,17 @@ class StayScreen extends StatelessWidget {
           if (st == null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: T('Your stay isn’t on Hostelzy yet. Once ${s.stayOwner} adds you, it shows here.', s: 14, c: p.mu, lh: 1.45),
+              child: VGap(
+                gap: 10,
+                children: [
+                  T('Your stay isn’t on Hostelzy yet. Once ${s.stayOwner} adds you, it shows here.', s: 14, c: p.mu, lh: 1.45),
+                  // W2 (F28 Part 2): add the hostel yourself.
+                  if (s.myAdd != null)
+                    OutlineCta('Your hostel on Hostelzy', key: const ValueKey('addMyHostel'), icon: 'chev', onTap: s.openMyAdd)
+                  else
+                    Cta('Add my hostel', key: const ValueKey('addMyHostel'), icon: 'plus', height: 52, px: 16, fs: 15, onTap: s.openAddPg),
+                ],
+              ),
             )
           else
             Container(

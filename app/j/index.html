@@ -11,7 +11,13 @@
 <body>
 <main>
 <header><span></span><a href="../">Hostelzy</a></header>
-<h1>You're invited to your hostel on Hostelzy</h1>
+<h1 id="h1">You're invited to your hostel on Hostelzy</h1>
+<!-- W2 (F29 Part 2): ?t=<token> is an owner's "Ask to join" link: fill your details in the app. -->
+<div class="box" id="join" hidden>
+  <div class="mu">Ask to join</div>
+  <p>Your owner asked you to join their hostel on Hostelzy. Open the app, sign in with Google and fill your name, phone and move-in date (2 minutes). Your ID goes to your owner on WhatsApp, never to Hostelzy.</p>
+  <p class="mu">The link works for 7 days, for one bed.</p>
+</div>
 <div class="box" id="box" hidden>
   <div class="mu">Invite code</div>
   <div class="code" id="code"></div>
@@ -20,10 +26,21 @@
 <p id="none" class="mu" hidden>This link has no invite code. Ask your hostel owner for the full link.</p>
 <a class="cta" id="open" href="#" hidden>Open in Hostelzy</a>
 <a class="cta ghost" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
-<p class="mu">Then open Hostelzy, sign in and pick <b>I live in a Hostelzy PG</b>. Keep this code: your hostel uses it to link your account to your bed.</p>
+<p class="mu" id="hint">Then open Hostelzy, sign in and pick <b>I live in a Hostelzy PG</b>. Keep this code: your hostel uses it to link your account to your bed.</p>
 <script>
-  const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
-  if (/^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$/.test(c)) {
+  const q = new URLSearchParams(location.search);
+  const c = (q.get('c') || '').toUpperCase();
+  const t = (q.get('t') || '').toUpperCase();
+  if (/^[A-Z0-9-]{6,24}$/.test(t)) {
+    document.getElementById('h1').textContent = 'Join your hostel on Hostelzy';
+    document.getElementById('join').hidden = false;
+    document.getElementById('hint').textContent = 'No app yet? Get it below, open the link again, and the form opens.';
+    const o = document.getElementById('open');
+    o.href = 'hostelzy://app/j?t=' + encodeURIComponent(t);
+    o.hidden = false;
+    // Installed: the app takes the link straight away.
+    setTimeout(() => { location.href = o.href; }, 400);
+  } else if (/^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$/.test(c)) {
     document.getElementById('code').textContent = c;
     document.getElementById('box').hidden = false;
     const o = document.getElementById('open');

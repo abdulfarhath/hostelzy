@@ -4,6 +4,7 @@ import '../../data.dart';
 import '../../state.dart';
 import '../../ui/common.dart';
 import '../../ui/kit.dart';
+import '../add_hostel/add_hostel_screens.dart' show AddItRow;
 import '../photos/photos_screens.dart';
 import '../reminders/reminders_screens.dart';
 import 'unverified_screen.dart';
@@ -233,6 +234,8 @@ class ExploreScreen extends StatelessWidget {
                   ),
                 // F21 W2: the rank shows once, on the best-ranked card.
                 for (final h in results) h.listed ? UnverifiedCard(h) : HostelCard(h, pinned: h == pinned, first: h.id == top),
+                // W2 (F28 Part 2): "Can't find your PG? Add it" at the end of the list.
+                if (results.isNotEmpty) const AddItRow(),
                 // F18 design "Empty": no hostels live yet (or none in the area picked).
                 if (browsable.isEmpty || (results.isEmpty && s.mapArea != null))
                   // F22 Area 1: what to do next, not just "nothing here".
@@ -250,6 +253,9 @@ class ExploreScreen extends StatelessWidget {
                           Cta('Try $a', key: const ValueKey('tryArea'), height: 50, px: 16, fs: 15, expand: false, onTap: () => s.pickWhereArea(a))
                         else
                           OutlineCta('Pick another area', icon: 'pin', onTap: s.openWhere),
+                        // W2 (F28 Part 2): the empty state's "Add it" row.
+                        const SizedBox(height: 18),
+                        const AddItRow(),
                       ],
                     ),
                   )
