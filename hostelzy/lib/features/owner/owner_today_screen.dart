@@ -51,8 +51,8 @@ String occCounts(AppState s) {
 List<HoldRequest> allRequests(AppState s) => [
   for (final h in s.holds.where((h) => h.hid == s.ownHid && h.status == 'waiting'))
     s.onServer
-        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecsOf(h), start: h.start, note: 'Code ${h.ref ?? ''} · placed in the Hostelzy app', hold: h.id, trusted: h.trusted)
-        : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: 'Placed from the Hostelzy app', hold: h.id, trusted: s.level == 'trusted'),
+        ? HoldRequest(id: h.id, name: 'Hostelzy tenant', bed: h.bed, type: 'Free hold', secs: s.holdSecsOf(h), start: h.start, note: 'Code ${h.ref ?? ''}', hold: h.id, trusted: h.trusted)
+        : HoldRequest(id: h.id, name: s.meName.isEmpty ? 'Hostelzy user' : s.meName, bed: h.bed, type: 'Free hold', secs: s.holdSecs, start: h.start, note: '', hold: h.id, trusted: s.level == 'trusted'),
   if (s.ownHid == 'anjani' && !s.onServer) ...s.reqs,
 ];
 
@@ -101,13 +101,13 @@ class OwnerTodayScreen extends StatelessWidget {
             ),
           ),
           const PlanBanner(),
-          const _FairPlayCard(),
-          // F27-3: tonight's headcount, under the Fair Play pin.
-          OnShow(() => s.loadFood(s.ownHid), child: const HeadcountCard()),
+          // F31 Rule B: money first, then what needs the owner, Fair Play only
+          // while a case is open, this month, the headcount, then the cards.
+          const MoneyStrip(),
           // W2 (F29 Part 2): filled join requests for the Joining tab.
           OnShow(s.loadJoins, child: const SizedBox.shrink()),
-          // F21 W3: one list of what needs the owner, soonest first.
           const NeedsYouNow(),
+          const _FairPlayCard(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('This month')),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -138,11 +138,44 @@ class OwnerTodayScreen extends StatelessWidget {
               ],
             ),
           ),
+          // F27-3: tonight's headcount (F31: after This month).
+          OnShow(() => s.loadFood(s.ownHid), child: const Padding(padding: EdgeInsets.only(top: 16), child: HeadcountCard())),
           const FreeBedsCard(),
           const ConfirmLayoutsCard(),
           const RatesConfirmCard(),
           const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+}
+
+/// F31 Rule B: "Due today ₹X · Late ₹Y", tap → Rent. Hidden when both are 0.
+/// Due today = rent not paid and not late yet; Late = rent past its day.
+class MoneyStrip extends StatelessWidget {
+  const MoneyStrip({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final p = PalScope.of(context);
+    final due = s.residents.where((r) => r.status == 'Due').fold<int>(0, (a, r) => a + r.amt);
+    final late = s.residents.where((r) => r.status == 'Overdue').fold<int>(0, (a, r) => a + r.amt);
+    if (due == 0 && late == 0) return const SizedBox.shrink();
+    return Tap(
+      key: const ValueKey('moneyStrip'),
+      onTap: () => s.tab('oRent'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 2),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: box(bg: late > 0 ? p.ab : p.sf, w: 2, c: late > 0 ? p.ad : p.tx),
+        child: Row(
+          children: [
+            Ic('wallet', size: 20, color: late > 0 ? p.ad : p.tx),
+            const SizedBox(width: 10),
+            Expanded(child: T([if (due > 0) 'Due today ${fmt(due)}', if (late > 0) 'Late ${fmt(late)}'].join(' · '), key: const ValueKey('moneyLine'), w: 800, s: 16, c: late > 0 ? p.ad : p.tx)),
+            Ic('chev', size: 18, color: late > 0 ? p.ad : p.tx),
+          ],
+        ),
       ),
     );
   }
@@ -177,7 +210,7 @@ class _Occupancy extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          T('${o.full} of ${o.total} beds have a resident. Holds don’t count.', s: 12, c: p.mu, lh: 1.35),
+          T('${o.full} of ${o.total} beds', s: 12, c: p.mu, lh: 1.35),
         ],
       ),
     );
@@ -302,7 +335,7 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
           key: 'newLayout-${r.n}',
           icon: 'room',
           title: 'New layout for Room ${r.label}',
-          sub: 'Drawn by Hostelzy · check it, then publish',
+          sub: 'Drawn by Hostelzy',
           right: '',
           urgent: false,
           btns: <(String, String, VoidCallback)>[('Check', 'arrow', () => s.ownerLayout(r.n))],
@@ -403,13 +436,12 @@ class _NeedsYouNowState extends State<NeedsYouNow> {
             child: Dashed(
               color: p.dv,
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              child: VGap(
+              child: const VGap(
                 gap: 6,
                 stretch: false,
                 children: [
-                  const Ic('check', size: 24),
-                  const T('Nothing needs you now', w: 800, s: 18),
-                  T('New holds, payments and fixes show up here.', s: 13, c: p.mu, lh: 1.45),
+                  Ic('check', size: 24),
+                  T('Nothing needs you now', w: 800, s: 18),
                 ],
               ),
             ),
@@ -463,7 +495,7 @@ class _NeedsYouNowState extends State<NeedsYouNow> {
   }
 }
 
-/// F07: an open Fair Play case or a strike, at the top of owner Today.
+/// F07: an open Fair Play case (F31: only while one is open, under the tabs).
 class _FairPlayCard extends StatelessWidget {
   const _FairPlayCard();
   @override
@@ -472,9 +504,9 @@ class _FairPlayCard extends StatelessWidget {
     final p = PalScope.of(context);
     final c = s.ownerCase;
     final n = s.strikes[s.ownHid] ?? 0;
-    if (c == null && n == 0) return const SizedBox();
+    if (c == null) return const SizedBox();
     return Tap(
-      onTap: () => s.go(c != null ? 'oCase' : 'oStrike'),
+      onTap: () => s.go('oCase'),
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         padding: const EdgeInsets.all(12),
@@ -482,14 +514,12 @@ class _FairPlayCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Ic(c != null ? 'clock' : 'flag', size: 20, color: p.ad),
+            Ic('clock', size: 20, color: p.ad),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: c != null
-                    ? [T('Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title}. Your reply is with the founder.' : '${c.title}. 47 h left to explain or fix it.', s: 13, lh: 1.4)]
-                    : [T('Fair Play: strike $n of 3', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(s.strikeLine(s.ownHid), s: 13)],
+                children: [T(n > 0 ? 'Fair Play check ${c.id} · strike $n of 3' : 'Fair Play check ${c.id}', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(c.status == 'decide' ? '${c.title} · with the founder' : '${c.title} · 47 h left', s: 13, lh: 1.4)],
               ),
             ),
             Ic('chev', size: 18, color: p.ad),

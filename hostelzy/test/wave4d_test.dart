@@ -205,7 +205,7 @@ void main() {
     final card = find.byKey(const ValueKey('ratesCard'));
     await tester.ensureVisible(card);
     expect(find.text('Are your rates still right?'), findsOneWidget);
-    expect(find.text('Last confirmed 25 Aug. Tenants see the date you last confirmed them.'), findsOneWidget);
+    expect(find.text('Last confirmed 25 Aug'), findsOneWidget);
     expect(find.text('2 sharing non-AC · ₹8,000'), findsOneWidget);
 
     // Offline: nothing changes.
@@ -227,7 +227,7 @@ void main() {
     final server = _Server()..hostels = [_hostel('real1', [_card(8000, at: null)])];
     final s = await _owner(tester, server);
     await tester.ensureVisible(find.byKey(const ValueKey('ratesCard')));
-    expect(find.text('Not confirmed yet. Tenants see the date you last confirmed them.'), findsOneWidget);
+    expect(find.text('Not confirmed yet'), findsWidgets); // F31: the free-beds card says the same
     s.update(() => s.managerOf.add('real1'));
     await tester.pump();
     expect(find.byKey(const ValueKey('ratesCard')), findsNothing);

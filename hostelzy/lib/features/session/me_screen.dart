@@ -25,8 +25,8 @@ class MeScreen extends StatelessWidget {
       if (!isOwner && s.myAdd != null) ('Your hostel', '${s.myAdd!.name} · ${const ['', 'added', 'owner asked', 'owner agreed', 'verified', 'paid'][s.myAdd!.step]}', s.openMyAdd)
       else if (!isOwner) ('Add a hostel', '${fmt(addReward)} when verified', s.openAddPg),
       ('Reminders', s.remSummary[0].toUpperCase() + s.remSummary.substring(1), s.openReminders),
-      ('Settings', 'Language, notifications, log out', () => s.go('settings')),
-      ('Help on WhatsApp', 'Ask the Hostelzy team', () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
+      ('Settings', '', () => s.go('settings')),
+      ('Help on WhatsApp', '', () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
     ];
     Widget row((String, String, VoidCallback) r) => Tap(
       key: ValueKey('me-${r.$1}'),
@@ -36,7 +36,7 @@ class MeScreen extends StatelessWidget {
         decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
         child: Row(
           children: [
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(r.$1, s: 16, w: 800), T(r.$2, s: 13, c: p.mu)])),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(r.$1, s: 16, w: 800), if (r.$2.isNotEmpty) T(r.$2, s: 13, c: p.mu)])),
             Ic('chev', size: 18, color: p.mu),
           ],
         ),
@@ -90,10 +90,8 @@ class MeScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Row(
-              children: [
-                Expanded(child: T(isOwner ? 'Looking for a bed, or live in a PG?' : 'Live in a PG or run one?', s: 14, c: p.mu)),
-                Tap(key: const ValueKey('switchRole'), onTap: () => s.tab('role'), child: T('Switch role ›', s: 14, w: 800, c: p.ad)),
-              ],
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [Tap(key: const ValueKey('switchRole'), onTap: () => s.tab('role'), child: T('Switch role ›', s: 14, w: 800, c: p.ad))],
             ),
           ),
           Padding(

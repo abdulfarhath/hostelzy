@@ -142,7 +142,7 @@ extension SyncActions on AppState {
       return true;
     } catch (e) {
       debugPrint('write: $e');
-      toastMsg('Couldn’t save it. Check your internet and try again.');
+      toastMsg('Couldn’t save. Check your internet.');
       return false;
     }
   }
@@ -225,7 +225,7 @@ extension SyncActions on AppState {
     final hid = ownHid;
     _upiWait = Timer(const Duration(milliseconds: 1200), () {
       _write(() => data.saveUpi(hid, id, name)).then((ok) {
-        if (ok) toastMsg('UPI ID saved. Tenants pay you here.');
+        if (ok) toastMsg('UPI ID saved');
       });
     });
   }

@@ -165,7 +165,7 @@ extension ReviewsActions on AppState {
   Future<bool> _postReviewLive({required String kind, required int stars, String body = '', Map<String, int> cats = const {}, String? layout, String? advance, String? again}) async {
     final hid = myHostel;
     if (hid == null) {
-      toastMsg('Your owner hasn’t added you yet. Reviews open once you’re a resident here.');
+      toastMsg('Not a resident here yet');
       return false;
     }
     final ok = await _reviewWrite(() => data.postReview(hid: hid, name: meShort, kind: kind, stars: stars, body: body, cats: cats, layout: layout, advance: advance, again: again));
@@ -210,7 +210,7 @@ extension ReviewsActions on AppState {
   }
 
   void postReview() {
-    if (rvStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    if (rvStars == 0) return toastMsg('Tap the stars first');
     // F24 4a: one review per stay; posting again changes it.
     final mine = myReview('30-day');
     if (mine != null) {
@@ -232,7 +232,7 @@ extension ReviewsActions on AppState {
           rvText = '';
         });
         back();
-        toastMsg('Review posted as $meShort · verified resident.');
+        toastMsg('Review posted as $meShort');
       });
       return;
     }
@@ -246,14 +246,14 @@ extension ReviewsActions on AppState {
       rvText = '';
     });
     back();
-    toastMsg('Review posted as $meShort · verified resident.');
+    toastMsg('Review posted as $meShort');
   }
 
   /// Exit review: the advance answer feeds the "advance returned" record.
   void postExitReview() {
     final adv = exAdv;
-    if (adv == null) return toastMsg('Tell us if you got your advance back.');
-    if (exStars == 0) return toastMsg('Tap the stars to rate your stay.');
+    if (adv == null) return toastMsg('Advance back? Pick one');
+    if (exStars == 0) return toastMsg('Tap the stars first');
     final mine = myReview('exit');
     if (mine != null) {
       _editReview(mine, stars: exStars, body: exText.trim(), advance: adv, again: exAgain, clear: () {
@@ -292,7 +292,7 @@ extension ReviewsActions on AppState {
   }
 
   void postReply(Review r) {
-    if (r.reply != null) return toastMsg('You already replied to this review. Each review gets one reply.');
+    if (r.reply != null) return toastMsg('Already replied');
     if (replyText.trim().isEmpty) return toastMsg('Write a reply first.');
     if (onServer) {
       final text = replyText.trim();
@@ -363,7 +363,7 @@ extension ReviewsActions on AppState {
     if (cur.contains(id)) {
       update(() => cur.remove(id));
     } else if (cur.length >= maxDeals) {
-      toastMsg('Pick up to $maxDeals. Remove one first.');
+      toastMsg('Limit: $maxDeals deals');
     } else {
       update(() => cur.add(id));
     }

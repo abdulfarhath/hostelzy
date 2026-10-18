@@ -34,7 +34,7 @@ extension LinksActions on AppState {
     final c = code.trim().toUpperCase();
     if (!RegExp(r'^HZ-[0-9]{3,8}$').hasMatch(c)) return toastMsg('That link has no booking code.');
     final e = enquiries.where((x) => x.ref == c).firstOrNull;
-    if (!signedIn || e == null) return toastMsg('$c isn’t in this account. Sign in with the account that sent or got it.');
+    if (!signedIn || e == null) return toastMsg('$c: another account');
     update(() {
       hist = [];
       if (role == 'owner') {
@@ -52,18 +52,18 @@ extension LinksActions on AppState {
     try {
       final c = await data.inviteCode(ownHid, renew: renew);
       update(() => inviteCode = c ?? (AppState.samples ? 'ANJ-7Q2' : null));
-      if (renew && c != null) toastMsg('New code $c. The old link and poster stop working.');
+      if (renew && c != null) toastMsg('New code $c');
     } catch (e) {
       debugPrint('invite: $e');
-      toastMsg('Couldn’t get your invite code. Check your internet.');
+      toastMsg('Couldn’t load. Check your internet.');
     }
   }
 
   /// C: a signed-in resident asks to join with a code; the owner approves.
   Future<void> joinInvite() async {
     final c = (inviteDraft.trim().isEmpty ? pendingInvite ?? '' : inviteDraft).trim().toUpperCase();
-    if (!RegExp(r'^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$').hasMatch(c)) return toastMsg('Enter the invite code from your owner, like ANJ-7Q2.');
-    if (account == null) return toastMsg('Sign in with Google to join with a code.');
+    if (!RegExp(r'^[A-Z0-9]{2,6}-[A-Z0-9]{2,8}$').hasMatch(c)) return toastMsg('Invite code needed, like ANJ-7Q2');
+    if (account == null) return toastMsg('Sign in with Google first');
     if (joining) return;
     update(() => joining = true);
     // F24: the owner's one-time code from the Hostelzy team links their account.
@@ -82,15 +82,15 @@ extension LinksActions on AppState {
         toastMsg('You run $h on Hostelzy now.');
       } on UnsupportedError {
         update(() => joining = false);
-        toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+        toastMsg('Invites: sample data');
       } catch (e) {
         update(() => joining = false);
         final m = '$e';
         toastMsg(m.contains('valid any more')
-            ? 'That owner link isn’t valid any more. Ask Hostelzy for a new one.'
+            ? 'Link no longer valid'
             : m.contains('already has an owner')
-            ? 'This hostel already has an owner account. Ask Hostelzy.'
-            : 'Couldn’t join. Check your internet and try again.');
+            ? 'Already has an owner account'
+            : 'Couldn’t join. Check your internet.');
       }
       return;
     }
@@ -109,13 +109,13 @@ extension LinksActions on AppState {
           screen = 'role';
           hist = [];
         });
-        toastMsg('You’re a manager at $h now. Pick “I run a PG” to start.');
+        toastMsg('Manager at $h');
       } on UnsupportedError {
         update(() => joining = false);
-        toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+        toastMsg('Invites: sample data');
       } catch (e) {
         update(() => joining = false);
-        toastMsg('$e'.contains('valid any more') ? 'That manager code isn’t valid any more. Ask the owner for a new one.' : 'Couldn’t join. Check your internet and try again.');
+        toastMsg('$e'.contains('valid any more') ? 'That manager code isn’t valid any more. Ask the owner for a new one.' : 'Couldn’t join. Check your internet.');
       }
       return;
     }
@@ -126,27 +126,27 @@ extension LinksActions on AppState {
         pendingInvite = null;
         inviteDraft = '';
       });
-      toastMsg('Asked to join $h. Your owner approves it, then your stay opens here.');
+      toastMsg('Asked to join $h');
     } on UnsupportedError {
       update(() => joining = false);
-      toastMsg('Invites work in the real Hostelzy app. This is sample data.');
+      toastMsg('Invites: sample data');
     } catch (e) {
       update(() => joining = false);
       final m = '$e';
       toastMsg(m.contains('valid any more')
-          ? 'That code isn’t valid any more. Ask your owner for the new one.'
+          ? 'Code no longer valid'
           : m.contains('already asked')
-          ? 'You already asked. Your owner will approve it.'
+          ? 'Already asked · waiting for approval'
           : m.contains('name and 10-digit')
-          ? 'Add your name and 10-digit phone in Settings first.'
-          : 'Couldn’t send it. Check your internet and try again.');
+          ? 'Name and phone needed in Settings'
+          : 'Couldn’t send. Check your internet.');
     }
   }
 
   /// F14 "Scan the QR" (Join your PG): the camera explainer the first time,
   /// then the scanner. Without an in-app camera it says how to use the phone's.
   void openScan() {
-    if (!scanner.available) return toastMsg('Open your phone camera and point it at the poster. It opens the invite link.');
+    if (!scanner.available) return toastMsg('Scan the poster with your camera');
     if (!camAsked) return update(() => sheet = 'scanCam');
     _scanBad = null;
     go('scan');
@@ -167,7 +167,7 @@ extension LinksActions on AppState {
     if (screen != 'scan') return;
     final c = inviteCodeFromQr(raw);
     if (c == null) {
-      if (_scanBad != raw) toastMsg('That QR isn’t a Hostelzy invite. Scan the poster at your PG.');
+      if (_scanBad != raw) toastMsg('Not a Hostelzy invite');
       _scanBad = raw;
       return;
     }
@@ -212,7 +212,7 @@ extension LinksActions on AppState {
   /// sample number; it says so instead.
   bool _fakeContact(String phone) {
     if (AppState.samples || !AppState.isSampleNumber(phone)) return false;
-    toastMsg('This is a sample listing, so there’s no real number yet.');
+    toastMsg('Sample listing · no number');
     return true;
   }
   void directions(Hostel h) => openLink(Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${posOf(h).$1},${posOf(h).$2}'), 'Maps');

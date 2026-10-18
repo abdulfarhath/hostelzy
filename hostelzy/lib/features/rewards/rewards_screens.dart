@@ -221,13 +221,6 @@ class MoveInScreen extends StatelessWidget {
                   ),
                 ),
                 if (reward > 0) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('${h.owner} gives you ${fmt(reward)} off. Hostelzy credits that ${fmt(reward)} on ${h.owner}’s next Hostelzy invoice, so the hostel loses nothing.', s: 12, c: p.mu, lh: 1.45))],
-                    ),
-                  ),
                   const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 6), child: Kicker('Your reward')),
                   Container(
                     decoration: BoxDecoration(border: Border(top: bs(2, p.dv))),
@@ -283,7 +276,6 @@ class TrustedSheet extends StatelessWidget {
           check('6 months in Hostelzy hostels'),
           check('Rent paid on time every month'),
           check('Signed in to Hostelzy'),
-          Padding(padding: const EdgeInsets.only(top: 10), child: T('Hostelzy checks this from real stays. We don’t share which hostels $first stayed at before.', s: 13, c: p.mu, lh: 1.45)),
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Cta('Confirm hold', icon: 'check', height: 54, px: 16, fs: 15, onTap: () {

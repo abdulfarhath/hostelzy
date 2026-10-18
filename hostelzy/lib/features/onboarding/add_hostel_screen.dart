@@ -431,7 +431,7 @@ class _Rates extends StatelessWidget {
                   ),
                 ],
               ),
-              OutlineCta('Pick deals now (optional, up to 3)', icon: 'chev', height: 46, fs: 14, onTap: () => s.toastMsg('Deals can be picked in Manage → Deals once the hostel is live.')),
+              OutlineCta('Pick deals now (optional, up to 3)', icon: 'chev', height: 46, fs: 14, onTap: () => s.toastMsg('Deals: after go-live')),
             ],
           ),
         ),
@@ -474,7 +474,6 @@ class _Photos extends StatelessWidget {
             T('${s.draftPhotos} of ${HostelDraft.minPhotos} photos', key: const ValueKey('draftPhotoCount'), w: 800, s: 22),
             T('Take them on the visit: ${d.photoSlots.join(', ')}.', s: 14, c: p.mu, lh: 1.45),
             Cta('Add photos', key: const ValueKey('draftPhotos'), icon: 'camera', height: 50, px: 14, fs: 15, onTap: s.openDraftPhotos),
-            T('They upload to this hostel now; the owner can change them later in Manage › Photos.', s: 12, c: p.mu),
           ],
         ),
       );
@@ -542,7 +541,6 @@ class _Photos extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: Row(
             children: [
-              Expanded(child: T('Taken by Hostelzy, in daylight, from the door. Tick each one once it is in the hostel’s Drive folder.', s: 13, c: p.mu, lh: 1.4)),
               const SizedBox(width: 8),
               T('${d.photoCount} of ${HostelDraft.minPhotos} minimum', w: 800, s: 14, c: d.photoCount >= HostelDraft.minPhotos ? p.tx : p.ad),
             ],
@@ -643,7 +641,6 @@ class _Residents extends StatelessWidget {
             children: [
               Kicker('${d.takenBeds} of ${d.bedCount} beds have a resident'),
               const SizedBox(height: 2),
-              T('The owner adds the rest within 3 days.', s: 12, c: p.mu),
             ],
           ),
         ),
@@ -681,10 +678,6 @@ class _Residents extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: T('Residents here before Hostelzy count as “Joined before Hostelzy”. They confirm their stay in the app by joining with your invite code.', s: 12, c: p.mu, lh: 1.45),
         ),
       ],
     );
@@ -736,7 +729,6 @@ class _OwnerAccount extends StatelessWidget {
             Cta(d.ownerCode.isEmpty ? 'Send sign-in link on WhatsApp' : 'Send the link again', key: const ValueKey('ownerLink'), icon: 'msg', height: 50, px: 14, fs: 15, onTap: s.sendOwnerLink),
             if (d.ownerCode.isNotEmpty) OutlineCta('Check again', key: const ValueKey('ownerCheck'), icon: 'check', height: 46, fs: 14, onTap: s.checkOwnerLinked),
           ],
-          T('You can go on and come back: go live needs the owner linked.', s: 12, c: p.mu),
         ],
       ),
     );
@@ -824,7 +816,7 @@ class _GoLive extends StatelessWidget {
           const SizedBox(height: 12),
           T('Optional: ${d.residents.length} residents added', s: 13, c: p.mu),
           const SizedBox(height: 12),
-          T('Goes live with “Visited by Hostelzy · ${dayMon(appToday)} ${appToday.year}”. The 30-day free trial starts today.', s: 13, c: p.mu, lh: 1.45),
+          T('Visited by Hostelzy · ${dayMon(appToday)} ${appToday.year} · 30-day free trial', s: 13, c: p.mu, lh: 1.45),
         ],
       ),
     );

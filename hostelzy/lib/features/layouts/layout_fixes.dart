@@ -93,7 +93,7 @@ extension LayoutFixesActions on AppState {
   /// The resident's room screen (board 1) for [room] at their hostel.
   void openFixRoom(int room) {
     final hid = homeHid;
-    if (hid == null) return toastMsg('Only residents can fix room layouts. Ask your owner for your invite code.');
+    if (hid == null) return toastMsg('Residents only');
     update(() {
       fixHid = hid;
       fixRoom = room;
@@ -113,7 +113,7 @@ extension LayoutFixesActions on AppState {
     });
     // F19 extras: a visitor tries the editor (nothing is saved); only Send is locked.
     final trying = !livesAt(hid);
-    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('This room has no layout yet. The owner draws it first.');
+    if (live == null) return trying ? update(() => sheet = 'fixLock') : toastMsg('No layout yet');
     if (!trying && mutedAt(hid)) return toastMsg('Suggestions are off for this hostel.');
     final open = myWaiting(hid);
     if (!trying && open.length >= 3 && !open.any((f) => f.room == room && !f.quick)) return update(() => sheet = 'fixLimit');
@@ -187,7 +187,7 @@ extension LayoutFixesActions on AppState {
     if (fixTry) return update(() => sheet = 'fixLock');
     final bad = fixChecks(l, room).where((c) => !c.$1).firstOrNull;
     if (bad != null) return toastMsg('${bad.$2}. Fix it before sending.');
-    if (layoutDiff(live.snap(), l.snap()).lines.isEmpty) return toastMsg('Nothing changed yet. Move things to where they really are.');
+    if (layoutDiff(live.snap(), l.snap()).lines.isEmpty) return toastMsg('Nothing changed yet');
     update(() {
       fixNote = '';
       sheet = 'fixSend';
@@ -211,12 +211,12 @@ extension LayoutFixesActions on AppState {
         return toastMsg(m.contains('suggestions are off')
             ? 'Suggestions are off for this hostel.'
             : m.contains('3 fixes waiting')
-            ? 'You have 3 fixes waiting here. Send this one once $owner answers one.'
+            ? 'Limit: 3 fixes waiting'
             : m.contains('only residents')
-            ? 'Only residents of ${hostelById(hid).name} can fix its rooms.'
+            ? 'Residents only'
             : m.contains('has a resident') || m.contains('needs an AC') || m.contains('place ')
-            ? 'This layout doesn’t pass the checks. Look at the list above Send.'
-            : 'Couldn’t send it. Check your internet and try again.');
+            ? 'Fix the checks first'
+            : 'Couldn’t send. Check your internet.');
       }
       await refreshLive();
     } else {
@@ -237,7 +237,7 @@ extension LayoutFixesActions on AppState {
       hist = hist.where((x) => x != 'rFix').toList();
       screen = 'rRoom';
     });
-    toastMsg('Sent to $owner. You get a notification when they decide.');
+    toastMsg('Sent to $owner');
   }
 
   /// "Withdraw it": the fix stops waiting; tenants still see the live layout.
@@ -322,7 +322,7 @@ extension LayoutFixesActions on AppState {
       hist = hist.where((x) => x != 'oFix').toList();
       screen = hist.isNotEmpty ? hist.removeLast() : 'oToday';
     });
-    toastMsg('Rejected. The current layout stays live. ${f.author.split(' ').first} can send a new fix.');
+    toastMsg('Rejected');
   }
 
   /// "Undo publish · go back to vN" after approving a fix.
@@ -333,7 +333,7 @@ extension LayoutFixesActions on AppState {
       if (!await _write(() => data.undoLayoutPublish(ownHid, lRoom))) return;
       await refreshListings();
       update(() => screen = 'oToday');
-      return toastMsg('Back to the earlier version. Tenants see it again.');
+      return toastMsg('Back to the earlier version');
     }
     final f = fixes.where((x) => x.hid == ownHid && x.room == lRoom && x.status == 'approved').lastOrNull;
     if (f != null) {
@@ -380,7 +380,7 @@ extension LayoutFixesActions on AppState {
     final raw = await picker.pick();
     if (raw == null) return;
     final jpg = prepPhoto(raw, 'free');
-    if (jpg == null) return toastMsg('That photo didn’t open. Try another one.');
+    if (jpg == null) return toastMsg('That photo didn’t open');
     update(() => fixPhoto = jpg);
   }
 
@@ -399,8 +399,8 @@ extension LayoutFixesActions on AppState {
         return toastMsg(m.contains('suggestions are off')
             ? 'Suggestions are off for this hostel.'
             : m.contains('3 fixes waiting')
-            ? 'You have 3 fixes waiting here. Send this one once $owner answers one.'
-            : 'Couldn’t send it. Check your internet and try again.');
+            ? 'Limit: 3 fixes waiting'
+            : 'Couldn’t send. Check your internet.');
       }
       await refreshLive();
     } else {

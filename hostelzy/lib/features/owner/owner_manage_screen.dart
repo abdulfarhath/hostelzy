@@ -254,7 +254,6 @@ class _MenuWeek extends StatelessWidget {
             child: VGap(
               gap: 6,
               children: [
-                T('Today is highlighted. Tap a day to edit it. Residents and tenants see the same week.', s: 12, c: p.mu, lh: 1.45),
                 if (empty)
                   T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuWeekNote'), s: 12, c: p.ad, w: 600, lh: 1.45)
                 else if (unset.isNotEmpty)
@@ -294,11 +293,11 @@ class _MenuDay extends StatelessWidget {
               key: const ValueKey('mealVotes'),
               padding: const EdgeInsets.all(12),
               decoration: box(w: 2, c: p.tx),
-              child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600), T('Counts only. Hostelzy never shows who said what.', s: 12, c: p.mu)]),
+              child: VGap(gap: 4, children: [const Kicker('Residents this week'), for (final v in votes) T(v, s: 14, w: 600)]),
             ),
           const _MealTimes(),
           if (s.menuOf(s.ownHid) == null && !s.menuDirty)
-            T('No menu yet. Tenants see “Menu not added yet” on your hostel page until you save one.', key: const ValueKey('menuEmpty'), s: 13, c: p.mu, lh: 1.4),
+            T('No menu yet', key: const ValueKey('menuEmpty'), s: 13, c: p.mu, lh: 1.4),
           Row(
             children: [
               for (var i = 0; i < 7; i++) ...[
@@ -354,7 +353,6 @@ class _HouseRules extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: VGap(
@@ -378,7 +376,6 @@ class _HouseRules extends StatelessWidget {
             ),
           // F24 #26 (board `oLaundry`).
           const LaundryRow(),
-          T('Tenants see these under House rules › on your hostel page.', s: 13, c: p.mu),
         ],
       ),
     );
@@ -404,25 +401,28 @@ class _ManageList extends StatelessWidget {
     final fixes = s.fixesWaiting.length;
     final inv = s.invoice;
     void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : t == 'menu' ? s.openMenu() : s.update(() => s.moreTab = t);
+    // F31 Rule B order: Residents · Rates and UPI · Layouts · Meals · Photos ·
+    // Deals · Complaints · Food menu · House rules · Team · Plan.
     final rows = <(String, String, String, int, VoidCallback)>[
       ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
-      // F29 Part 3: tenant IDs in the owner's own Google Drive (H50).
-      ('lock', 'Tenant IDs', switch (s.driveStatus) { null => '', (connected: true, :final files, fullCopy: _) => 'Google Drive · $files file${files == 1 ? '' : 's'}', _ => 'Not connected' }, 0, s.openDrive),
-      ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
       // F24 item 17 (F14): deals, rates and the plan are the owner's.
-      if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
       if (!s.managerHere) ('wallet', 'Rates and UPI', '$types room type${types == 1 ? '' : 's'}${upi.isEmpty ? ' · no UPI ID yet' : ' · $upi'}', 0, () => section('rates')),
-      ('utensils', 'Food menu', 'Breakfast, lunch and dinner, by day', 0, () => section('menu')),
-      // F27-4: Save food, once the server has it (FOUNDER-TODO 4zf27).
-      if (s.foodOf(h.id) case final b?) ('plate', 'Meals', 'Who’s eating · the count closes ${b.cutoff} h before each meal', 0, s.openMeals),
-      ('doc', 'House rules', s.rules.isEmpty ? 'None yet' : '${s.rules.first.k} ${s.rules.first.v}', 0, () => section('rules')),
-      ('camera', 'Photos', photos == null ? 'Your hostel’s photos' : '$photos photo${photos == 1 ? '' : 's'}', 0, s.openPhotos),
       ('grid', 'Room layouts', '$live live${fixes > 0 ? ' · $fixes fix${fixes == 1 ? '' : 'es'} to check' : ''}', fixes, () {
         s.go('oLayouts');
         s.loadShapeRequests(s.ownHid);
       }),
+      // F27-4: Save food, once the server has it (FOUNDER-TODO 4zf27).
+      if (s.foodOf(h.id) case final b?) ('plate', 'Meals', 'Closes ${b.cutoff} h before each meal', 0, s.openMeals),
+      ('camera', 'Photos', photos == null || photos == 0 ? 'None yet' : '$photos photo${photos == 1 ? '' : 's'}', 0, s.openPhotos),
+      if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),
+      ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
+      ('utensils', 'Food menu', s.menuOf(h.id) == null ? 'None yet' : 'This week', 0, () => section('menu')),
+      ('doc', 'House rules', s.rules.isEmpty ? 'None yet' : '${s.rules.first.k} ${s.rules.first.v}', 0, () => section('rules')),
+      // F29 Part 3: tenant IDs in the owner's own Google Drive (H50).
+      ('lock', 'Tenant IDs', switch (s.driveStatus) { null => '', (connected: true, :final files, fullCopy: _) => 'Google Drive · $files file${files == 1 ? '' : 's'}', _ => 'Not connected' }, 0, s.openDrive),
+      // Not in the F31 list; kept where it was relative to Team (hub to decide).
       ('chart', 'Reviews and ranking', '${h.reviews == 0 ? 'No reviews yet' : jsNum(h.rating)} · #${s.rankOf(h.id)} near ${s.lm}', 0, () => s.go('oRank')),
-      ('user', 'Team', 'Managers who help you run it', 0, () => s.go('oTeam')),
+      ('user', 'Team', s.managers.isEmpty ? 'None yet' : '${s.managers.length} manager${s.managers.length == 1 ? '' : 's'}', 0, () => s.go('oTeam')),
       if (!s.managerHere) ('shield', 'Your plan', s.trialLeft > 0 ? 'Trial · ${s.trialLeft} days left' : switch (inv.status) { 'paid' => 'Paid', 'checking' => 'Checking your payment', 'missing' => 'Payment not found', _ => inv.late > 0 ? '${inv.late} days late' : 'Due' }, inv.late > 0 ? 1 : 0, () => s.go('oPlan')),
     ];
     return Scroll(
@@ -716,7 +716,7 @@ class _MealTimes extends StatelessWidget {
         children: [
           const Kicker('Meal times'),
           if (t.isEmpty) ...[
-            T('Not set. Residents’ meal reminders use the usual times: breakfast 7:30, lunch 12:30, dinner 8:00.', s: 13, c: p.mu, lh: 1.4),
+            T('Not set · 7:30 · 12:30 · 8:00', s: 13, c: p.mu, lh: 1.4),
             OutlineCta('Set meal times', key: const ValueKey('mealTimesSet'), icon: 'clock', height: 46, fs: 14, onTap: s.startMealTimes),
           ] else ...[
             for (final m in meals)
@@ -733,7 +733,6 @@ class _MealTimes extends StatelessWidget {
                   ),
                 ],
               ),
-            T('Residents’ meal reminders ring at the start time.', s: 12, c: p.mu),
             Tap(key: const ValueKey('mealTimesClear'), onTap: s.clearMealTimes, child: T('Use the usual times', s: 13, w: 700, c: p.ad, underline: true)),
           ],
         ],

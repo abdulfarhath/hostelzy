@@ -177,11 +177,6 @@ class RemindersScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (!s.rem.available)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: T('Reminders ring in the Android app. You can set them up here.', s: 13, c: p.mu),
-                  ),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: box(w: 2, c: p.tx),
@@ -257,11 +252,6 @@ class RemindersScreen extends StatelessWidget {
                   ),
                 ),
                 section('My reminders', action: '+ Add', onAction: s.openAddRem),
-                if (s.myRems.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: T('Add your own, like medicine at 9 pm or a call home on Sundays.', s: 13, c: p.mu),
-                  ),
                 for (final r in s.myRems)
                   row(
                     icon: _icon(r.name),
@@ -308,12 +298,8 @@ class RemindersScreen extends StatelessWidget {
                       ),
                     )
                   else
-                    row(icon: 'clock', title: 'Laundry day', sub: 'When ${h.owner.isEmpty ? 'your owner' : h.owner} sets one', opacity: .45),
+                    row(icon: 'clock', title: 'Laundry day', sub: 'Not set', opacity: .45),
                 ],
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: T('Reminders ring from this phone, even offline. Nothing rings outside your awake hours.', s: 12, c: p.mu),
-                ),
               ],
             ),
           ),
@@ -502,82 +488,3 @@ class AddReminderSheet extends StatelessWidget {
   }
 }
 
-/// First-time offer, once after sign-in.
-class WaterOfferSheet extends StatelessWidget {
-  const WaterOfferSheet({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: VGap(
-        gap: 12,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                color: p.tx,
-                alignment: Alignment.center,
-                child: Ic('drop', size: 24, color: p.bg),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(child: T('A friendly nudge every 30 minutes, 8 am to 10 pm. You can add your own reminders too, like medicine or lunch.', s: 15, lh: 1.4)),
-            ],
-          ),
-          Cta('Turn on water reminders', height: 54, fs: 15, onTap: s.acceptOffer),
-          OutlineCta('Not now', icon: 'x', onTap: () => s.update(() => s.sheet = null)),
-          T('Change it any time in Me → Reminders. Runs on this phone.', s: 12, c: p.mu),
-        ],
-      ),
-    );
-  }
-}
-
-/// Home / Explore: glasses today and what rings next. Only while something is on.
-class TodayCard extends StatelessWidget {
-  const TodayCard({super.key, this.margin = const EdgeInsets.fromLTRB(16, 0, 16, 16)});
-  final EdgeInsets margin;
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context);
-    final p = PalScope.of(context);
-    final mine = s.nextMine();
-    final glass = s.nextGlass();
-    if (!s.water.on && mine == null) return const SizedBox.shrink();
-    final next = mine != null && s.role == 'resident' ? 'Next: ${mine.$1} at ${clock(mine.$2, short: true)}' : (glass != null ? 'Next glass at ${clock(glass)}' : (mine != null ? 'Next: ${mine.$1} at ${clock(mine.$2, short: true)}' : 'No more today'));
-    return Container(
-      margin: margin,
-      padding: const EdgeInsets.all(12),
-      decoration: box(w: 2, c: p.tx),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            color: p.tx,
-            alignment: Alignment.center,
-            child: Ic('drop', size: 20, color: p.bg),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Tap(
-              onTap: s.openReminders,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  T(s.water.on ? '${s.glasses} of ${s.water.goal} glasses' : 'Reminders', w: 800, s: 15),
-                  T(next, s: 12, c: p.mu),
-                ],
-              ),
-            ),
-          ),
-          if (s.water.on) ...[const SizedBox(width: 12), Cta('Glass', icon: 'plus', height: 40, px: 12, fs: 13, iconSize: 14, expand: false, gap: 8, bg: p.tx, fg: p.bg, onTap: s.addGlass)],
-        ],
-      ),
-    );
-  }
-}

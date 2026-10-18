@@ -207,7 +207,7 @@ class _OwnerPlanScreenState extends State<OwnerPlanScreen> {
                             child: QrImageView(data: upi.toString(), size: 175, padding: EdgeInsets.zero, backgroundColor: const Color(0xFFFFFFFF), eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF201E1D)), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF201E1D))),
                           ),
                           const SizedBox(height: 10),
-                          Rich([sp(context, 'Scan with any UPI app. The amount and the note '), sp(context, inv.ref, w: 800, c: p.tx), sp(context, ' are filled in.')], s: 13, c: p.mu, align: TextAlign.center),
+                          Rich([sp(context, 'UPI note '), sp(context, inv.ref, w: 800, c: p.tx)], s: 13, c: p.mu, align: TextAlign.center),
                         ],
                       ),
                     ),
@@ -243,7 +243,7 @@ class _OwnerPlanScreenState extends State<OwnerPlanScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                  child: Rich([sp(context, '$planIncluded '), sp(context, 'Hostelzy never touches your tenants’ money.', w: 800, c: p.tx)], s: 13, c: p.mu, lh: 1.45),
+                  child: T(planIncluded, s: 13, c: p.mu, lh: 1.45),
                 ),
               ],
             ),
@@ -369,7 +369,6 @@ class UtrSheet extends StatelessWidget {
             children: [
               Ic('shield', size: 16, color: p.mu),
               const SizedBox(width: 8),
-              Expanded(child: T('We match the UPI reference with our bank record, usually within a day. No screenshots needed.', s: 12, c: p.mu, lh: 1.45)),
             ],
           ),
           Cta('Send UPI reference', icon: 'check', height: 54, px: 16, fs: 15, opacity: ok ? 1 : .4, onTap: s.sendUtr),

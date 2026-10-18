@@ -187,7 +187,7 @@ void main() {
     s.addResident();
     await _settle(tester);
     expect(server.calls, contains('stay real1 Old Timer before'));
-    expect(s.toast, 'Added as joined before Hostelzy. Old confirms by joining with your invite code.');
+    expect(s.toast, 'Added · joined before Hostelzy · waits for Old’s invite');
 
     // The hostel went live meanwhile: the server says no, in plain words.
     server.stayError = 'after go-live, only the Hostelzy team marks a resident as joined before Hostelzy';
@@ -200,7 +200,7 @@ void main() {
     s.pickResidentBed('101-B');
     s.addResident();
     await _settle(tester);
-    expect(s.toast, 'Your hostel is live now, so only the Hostelzy team can mark someone as joined before Hostelzy. Message the team.');
+    expect(s.toast, 'Live hostel: ask the Hostelzy team');
 
     // A live hostel: no choice on the sheet; residents are Direct or from the app.
     final live = _Server()..hostels = [_hostel('real1')];
@@ -231,8 +231,8 @@ void main() {
     expect(s.dealsHidden('real1'), isTrue);
     expect(s.dealsOf('real1').on, isEmpty);
     expect(s.strikeLine('real1'), 'Deals hidden until ${dayMon(soon)}');
-    expect(find.text('Fair Play: strike 2 of 3'), findsOneWidget);
-    expect(find.text('Deals hidden until ${dayMon(soon)}'), findsOneWidget);
+    // F31: the strike card is no longer pinned on Today (Fair Play shows only while a case is open).
+    expect(find.text('Fair Play: strike 2 of 3'), findsNothing);
     s.go('oStrike');
     await _settle(tester);
     expect(find.text('Strike 2 of 3: deals hidden for 30 days'), findsOneWidget);
@@ -283,7 +283,7 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await _settle(tester);
     expect(server.calls, contains('fix case-1'));
-    expect(s.toast, 'Teja now shows as came from the app. Case closed. That’s 3 fixes in 6 months, which counts as one warning (strike 1 of 3).');
+    expect(s.toast, 'Case closed · strike 1 of 3');
     expect(s.strikeFromFixes('real1'), isTrue);
     s.go('oStrike');
     await _settle(tester);

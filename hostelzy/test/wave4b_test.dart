@@ -188,7 +188,7 @@ void main() {
     expect(server.calls, contains('wait 204'));
     expect(find.byKey(const ValueKey('layoutWaiting')), findsOneWidget);
     expect(find.text('We’ll tell you'), findsOneWidget);
-    expect(s.toast, 'We’ll tell you when room 204’s layout is ready.');
+    expect(s.toast, 'You get a notification when it’s ready');
     // the server's list came in too
     expect(s.waitingForLayout(_m, 205), isTrue);
     s.stopLive();
@@ -214,9 +214,9 @@ void main() {
     await _settle(tester);
     expect(server.calls, contains('lock 205'));
     expect(find.byKey(const ValueKey('edLocked')), findsOneWidget);
-    expect(find.text('Lalitha is editing this room'), findsOneWidget);
+    expect(find.text('Lalitha is editing this room'), findsWidgets);
     await _tap(tester, find.byKey(const ValueKey('edPublish')));
-    expect(s.toast, 'Lalitha is editing this room. Try again when they’re done.');
+    expect(s.toast, 'Lalitha is editing this room');
     expect(server.calls.where((c) => c.startsWith('publish')), isEmpty);
     // she is done: Check again takes it
     server.lock = (name: 'Raju', mine: true);
@@ -227,8 +227,8 @@ void main() {
     server.publishFails = 'PostgrestException(message: Lalitha is editing this room. Try again when they\'re done., code: P0001)';
     await _tap(tester, find.byKey(const ValueKey('edPublish')));
     await _settle(tester);
-    expect(s.toast, 'Lalitha is editing this room. Try again when they’re done.');
-    expect(find.text('Lalitha is editing this room'), findsOneWidget);
+    expect(s.toast, 'Lalitha is editing this room');
+    expect(find.text('Lalitha is editing this room'), findsWidgets);
     // free again: publish goes through and the lock is let go
     server
       ..publishFails = null
@@ -287,7 +287,7 @@ void main() {
     expect((s.screen, s.camAsked), ('scan', true));
     // another app's QR: said so, still scanning
     await _tap(tester, find.byKey(const ValueKey('fakeQr')));
-    expect(s.toast, 'That QR isn’t a Hostelzy invite. Scan the poster at your PG.');
+    expect(s.toast, 'Not a Hostelzy invite');
     expect(s.screen, 'scan');
     // the poster's QR
     cam.code = 'https://abdulfarhath.github.io/hostelzy/app/j/?c=ANJ-7Q2';
@@ -295,7 +295,7 @@ void main() {
     await _settle(tester);
     expect(s.screen, 'roleGate');
     expect(server.calls, contains('join ANJ-7Q2'));
-    expect(s.toast, 'Asked to join Lotus Women PG. Your owner approves it, then your stay opens here.');
+    expect(s.toast, 'Asked to join Lotus Women PG');
     // next time: straight to the camera
     await _tap(tester, find.byKey(const ValueKey('scanQr')));
     expect((s.sheet, s.screen), (null, 'scan'));
@@ -309,7 +309,7 @@ void main() {
     final s = AppState(start: 'roleGate', role: 'tenant');
     await _pump(tester, s);
     await _tap(tester, find.byKey(const ValueKey('scanQr')));
-    expect(s.toast, 'Open your phone camera and point it at the poster. It opens the invite link.');
+    expect(s.toast, 'Scan the poster with your camera');
     s.dispose();
   });
 

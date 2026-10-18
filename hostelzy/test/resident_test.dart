@@ -169,7 +169,7 @@ void main() {
     await _pump(tester, e);
     expect(find.text('Did you get your ₹2,000 back?'), findsOneWidget);
     await _tap(tester, find.text('Post review'));
-    expect(e.toast, 'Tell us if you got your advance back.');
+    expect(e.toast, 'Advance back? Pick one');
     await tester.pump(const Duration(seconds: 3));
     await _tap(tester, find.byKey(const ValueKey('exAdv-all')));
     await _tap(tester, find.bySemanticsLabel('Overall 4 stars'));

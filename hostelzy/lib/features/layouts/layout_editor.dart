@@ -142,7 +142,7 @@ extension LayoutEditorActions on AppState {
 
   void edNudge(RoomLayout l, double dx, double dy) {
     final r = _selRect(l);
-    if (r == null) return toastMsg('Tap a bed or an item first.');
+    if (r == null) return toastMsg('Tap a bed or an item first');
     _remember(l);
     var ok = true;
     update(() => ok = _place(l, r.topLeft + Offset(dx, dy)));
@@ -152,11 +152,11 @@ extension LayoutEditorActions on AppState {
   void edAdd(RoomLayout l, Room room, String kind) {
     if (kind == 'bed') {
       final missing = room.beds.map((b) => b.letter).where((x) => !l.beds.containsKey(x)).firstOrNull;
-      if (missing == null) return toastMsg('All ${room.share} beds are placed. A new bed changes the sharing: the owner confirms the price first.');
+      if (missing == null) return toastMsg('All ${room.share} beds are placed');
       final at = Offset(((l.w - bedW) / 2).roundToDouble(), ((l.h - bedH) / 2).roundToDouble());
       // F24: a shaped room puts it at the nearest free spot inside the walls.
       final spot = l.fits(at & const Size(bedW, bedH)) ? at : l.nearestFit(at, const Size(bedW, bedH), avoid: [for (final k in l.beds.keys) l.bedRect(k)]);
-      if (spot == null) return toastMsg('No room left for another bed inside the walls.');
+      if (spot == null) return toastMsg('No room for another bed');
       _remember(l);
       update(() {
         l.beds[missing] = spot;
@@ -189,10 +189,10 @@ extension LayoutEditorActions on AppState {
 
   void edDelete(RoomLayout l, Room room) {
     final id = edSel;
-    if (id == null) return toastMsg('Tap a bed or an item first.');
+    if (id == null) return toastMsg('Tap a bed or an item first');
     if (id.startsWith('bed:')) {
       final bedId = '${room.label}-${id.substring(4)}';
-      if (residents.any((r) => r.bed == bedId) || findBed(l.hid, bedId).b?.state == 'booked') return toastMsg('Bed $bedId has a resident. It can’t be deleted.');
+      if (residents.any((r) => r.bed == bedId) || findBed(l.hid, bedId).b?.state == 'booked') return toastMsg('Bed $bedId has a resident');
     }
     _remember(l);
     update(() {
@@ -213,7 +213,7 @@ extension LayoutEditorActions on AppState {
   void edRotate(RoomLayout l) {
     final id = edSel;
     final i = id == null ? null : l.items.where((x) => x.id == id).firstOrNull;
-    if (i == null) return toastMsg('Tap an AC, window, door, washroom or pillar to turn it.');
+    if (i == null) return toastMsg('Tap an item to turn it');
     _remember(l);
     update(() {
       if (const ['ac', 'window', 'door'].contains(i.kind)) {
@@ -318,7 +318,7 @@ extension LayoutEditorActions on AppState {
       l.bunks[other] = lower;
       l.beds[other] = l.beds[lower]!;
     });
-    toastMsg('Bed ${room.label}-$other is now the upper bunk over ${room.label}-$lower.');
+    toastMsg('${room.label}-$other is now the upper bunk');
   }
 
   /// Copy this layout to the other rooms of the same type (same sharing, AC
@@ -338,7 +338,7 @@ extension LayoutEditorActions on AppState {
           ..drawn = dayMon(appToday);
       }
     });
-    toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')} as new versions for the owner to approve.');
+    toastMsg('Copied to rooms ${same.map((r) => r.label).join(', ')}');
   }
 
   /// "All still correct": saved on the server for a real hostel (F24 item 9).
@@ -347,12 +347,12 @@ extension LayoutEditorActions on AppState {
       _write(() => data.confirmLayouts(hid)).then((ok) {
         if (!ok) return;
         update(() => layoutConfirmed[hid] = 0);
-        toastMsg('Thanks. Your layouts are confirmed for the next 3 months.');
+        toastMsg('Layouts confirmed for 3 months');
       });
       return;
     }
     update(() => layoutConfirmed[hid] = 0);
-    toastMsg('Thanks. Your layouts are confirmed for the next 3 months.');
+    toastMsg('Layouts confirmed for 3 months');
   }
 
   void edMirror(RoomLayout l, {bool vertical = false}) {
@@ -384,7 +384,7 @@ extension LayoutEditorActions on AppState {
             ..published = null;
         }
       });
-      return toastMsg('Sent to ${hostelById(l.hid).owner}. They check it and publish.');
+      return toastMsg('Sent to ${hostelById(l.hid).owner}');
     }
     update(() {
       l

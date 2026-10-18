@@ -6,7 +6,6 @@ import '../../ui/common.dart';
 import '../../ui/kit.dart';
 import '../add_hostel/add_hostel_screens.dart' show AddItRow;
 import '../photos/photos_screens.dart';
-import '../reminders/reminders_screens.dart';
 import 'unverified_screen.dart';
 
 // ------------------------------------------------------------ derived values
@@ -176,8 +175,6 @@ class ExploreScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // F20: the reminders offer, from the 3rd app open (F21 W2).
-          OnShow(s.maybeOfferReminders, child: const SizedBox.shrink()),
           if (!s.signedIn)
             Container(
               color: p.sf,
@@ -204,7 +201,6 @@ class ExploreScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                if (s.showToday) const TodayCard(margin: EdgeInsets.zero),
                 WhereBar(onTap: s.openWhere, onPin: () => openMapNearMe(s)),
               ],
             ),

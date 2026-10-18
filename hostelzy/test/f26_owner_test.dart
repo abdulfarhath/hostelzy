@@ -114,7 +114,7 @@ void main() {
     await _pump(tester, s);
     expect(find.byKey(const ValueKey('needsNothing')), findsOneWidget);
     expect(find.text('Nothing needs you now'), findsOneWidget);
-    expect(find.text('New holds, payments and fixes show up here.'), findsOneWidget);
+    expect(find.text('New holds, payments and fixes show up here.'), findsNothing); // F31: no explanation under the empty state
     for (final g in ['holds', 'payments', 'fixes']) {
       expect(_count(tester, g), '0');
     }
@@ -129,12 +129,10 @@ void main() {
     expect(_count(tester, 'fixes'), '1');
     expect(find.byKey(ValueKey('broken-${a.id}')), findsOneWidget);
 
-    // A strike pins the Fair Play card above the tabs.
+    // F31: a strike alone no longer pins a card; the Fair Play card shows only while a case is open, under the tabs.
     s.update(() => s.strikes[s.ownHid] = 1);
     await tester.pump();
-    final fp = find.text('Fair Play: strike 1 of 3');
-    expect(fp, findsOneWidget);
-    expect(tester.getTopLeft(fp).dy, lessThan(tester.getTopLeft(find.byKey(const ValueKey('needTab-holds'))).dy));
+    expect(find.text('Fair Play: strike 1 of 3'), findsNothing);
     s.dispose();
   });
 
@@ -162,7 +160,7 @@ void main() {
     await _pump(tester, s);
     expect(find.byKey(const ValueKey('buildingView')), findsOneWidget);
     expect(find.text('Rooms'), findsNothing);
-    expect(find.text('Tap a bed for its bed sheet. Tap a room number for its layout.'), findsOneWidget);
+    expect(find.text('Tap a bed for its bed sheet. Tap a room number for its layout.'), findsNothing); // F31
     final res = s.residents.firstWhere((r) => r.bed.startsWith('2'));
     await _tap(tester, find.byKey(ValueKey('bBed-${res.bed}')));
     expect((s.sheet, s.obed), ('bed', res.bed));

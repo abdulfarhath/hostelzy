@@ -135,10 +135,6 @@ class RentPayScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     child: T('Advance ${fmt(advance)} · ${fmt(math.max(0, advance - terms.maintenance))} back when you leave', s: 14),
                   ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: T('You pay $owner directly. Hostelzy never holds the money.', s: 12, c: p.mu, lh: 1.4),
-                ),
               ],
             ),
           ),

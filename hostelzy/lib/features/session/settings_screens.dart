@@ -78,11 +78,12 @@ class SettingsScreen extends StatelessWidget {
     final p = PalScope.of(context);
     final name = s.meName.isNotEmpty ? s.meName : (s.role == 'owner' ? hostelById(s.ownHid).owner : 'Add your name');
     final phone = s.myPhone.isEmpty ? 'Add your number' : '+91 ${phoneSpaced(s.myPhone)}';
-    Widget toggle(String k, String t, String sub) => Tap(
+    // F31 Rule A: switch labels only.
+    Widget toggle(String k, String t) => Tap(
       onTap: () => s.toggleNotif(k),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T(t, w: 800, s: 15), T(sub, s: 12, c: p.mu)])), SquareSwitch(on: s.notifOn(k))]),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        child: Row(children: [Expanded(child: T(t, w: 800, s: 15)), SquareSwitch(on: s.notifOn(k))]),
       ),
     );
     Widget group(String label, List<Widget> rows) => Column(
@@ -102,37 +103,39 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // F22 Area 1: You · Notifications · App, then Log out and Delete account.
-                group('You', [
+                // F31 Rule B: Account · Notifications · Language · About · Log out · Delete account last.
+                group('Account', [
                   _Row('Name', value: name, onTap: s.editName),
-                  _Row('Phone', value: phone, onTap: () => s.toastMsg('To change your number, log out and sign in with the new one.')),
+                  _Row('Phone', value: phone, onTap: () => s.toastMsg('Log out to change your number')),
                   // F24 Wave 4c: owners may chat on another number than they take calls on.
                   if (s.role == 'owner') _Row('WhatsApp', value: s.myWa.isEmpty ? 'Same as phone' : '+91 ${phoneSpaced(s.myWa)}', onTap: s.editWa),
                 ]),
                 group('Notifications', [
-                  toggle('hold', 'Holds and bookings', 'When the owner confirms or replies'),
-                  toggle('rent', 'Rent reminders', '3 days before'),
-                  toggle('beds', 'New free beds', 'In areas you searched. “Tell me when verified” alerts always come'),
+                  toggle('hold', 'Holds and bookings'),
+                  toggle('rent', 'Rent reminders'),
+                  toggle('beds', 'New free beds'),
                   // F27: "Dinner at 8 · Eating?" for residents, the headcount for owners.
-                  if (s.role == 'resident') toggle('food', 'Meals', '“Eating?” 1 hour before each meal’s count closes'),
-                  if (s.role == 'owner') toggle('food', 'Meals', 'The headcount when each meal’s count closes'),
+                  if (s.role == 'resident' || s.role == 'owner') toggle('food', 'Meals'),
                 ]),
-                group('App', [
-                  _Row('Language', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi come once a native speaker has checked the words.')),
+                group('Language', [
+                  _Row('Language', value: s.langChoices.firstWhere((l) => l.$1 == s.lang, orElse: () => ('en', 'English')).$2, onTap: () => s.langChoices.length > 1 ? s.update(() => s.sheet = 'lang') : s.toastMsg('Telugu and Hindi: not yet')),
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
                     child: Row(children: [const Expanded(child: T('Look', s: 15, w: 600)), Expanded(flex: 2, child: Seg(opts: const [('light', 'Light'), ('dark', 'Dark'), ('system', 'Auto')], cur: s.theme, onPick: (v) => s.update(() => s.theme = v), center: true, pad: const EdgeInsets.symmetric(vertical: 9, horizontal: 6)))]),
                   ),
+                ]),
+                group('About', [
                   _Row('Privacy policy', onTap: () => s.openLink(Uri.parse(privacyUrl), 'the browser')),
                   _Row('Terms', onTap: () => s.openLink(Uri.parse(termsUrl), 'the browser')),
                   if (s.role == 'owner') _Row('Fair Play rules', onTap: () => s.go('oRules')),
                   _Row('Hostelzy team', value: s.teamUnlocked ? 'Unlocked' : null, onTap: s.openTeam),
+                  Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild)${isStaging ? ' · STAGING' : ''} · Made in Hyderabad', s: 12, c: p.mu)),
                 ]),
                 const SizedBox(height: 18),
                 Container(decoration: BoxDecoration(border: Border(top: bs(2, p.dv))), child: _Row('Log out', onTap: s.logOut)),
                 _Row('Delete account', red: true, onTap: () => s.go('delAcc')),
-                Padding(padding: const EdgeInsets.all(16), child: T('Hostelzy $appVersion ($appBuild)${isStaging ? ' · STAGING' : ''} · Made in Hyderabad', s: 12, c: p.mu)),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -168,7 +171,6 @@ class DeleteAccountScreen extends StatelessWidget {
               children: [Ic('lock', size: 20, color: p.ad), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('You can’t delete your account yet', w: 800, s: 14, c: p.ad), const SizedBox(height: 2), T(block.body, s: 13, lh: 1.4)]))],
             ),
           ),
-          Padding(padding: const EdgeInsets.all(16), child: T('Once it’s settled, come back to Settings → Delete account.', s: 13, c: p.mu, lh: 1.5)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -204,14 +206,9 @@ class DeleteAccountScreen extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Ic('shield', size: 16, color: p.mu), const SizedBox(width: 8), Expanded(child: T('We keep only what the law or the hostel needs, without your name or phone on it.', s: 12, c: p.mu, lh: 1.45))]),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: VGap(gap: 6, children: [const T('Why are you leaving? (optional)', w: 800, s: 13), Field(value: s.delReason, placeholder: '', onChanged: (v) => s.update(() => s.delReason = v))]),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: VGap(gap: 6, children: [const T('Why are you leaving? (optional)', w: 800, s: 13), Field(value: s.delReason, placeholder: 'Helps us improve', onChanged: (v) => s.update(() => s.delReason = v))]),
-                ),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), child: T('You can also ask for deletion on the web: $deleteAccountUrl', s: 12, c: p.mu)),
               ],
             ),
           ),
@@ -355,8 +352,7 @@ class PermissionScreen extends StatelessWidget {
             const SizedBox(height: 8),
             OutlineCta(no, icon: 'x', onTap: s.back),
             const SizedBox(height: 10),
-            T('Your phone asks next. Change it any time in Settings.', s: 13, c: p.mu),
-          ],
+            ],
         ),
       ),
     );
@@ -400,7 +396,6 @@ class NameSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     final now = s.meName;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
@@ -409,7 +404,6 @@ class NameSheet extends StatelessWidget {
         children: [
           const T('Your name', w: 800, s: 13),
           Field(key: const ValueKey('nameEdit'), value: s.nameDraft, placeholder: now.isEmpty ? 'Full name' : now, onChanged: (v) => s.update(() => s.nameDraft = v)),
-          T('Owners see this name on your holds, enquiries and stay.', s: 12, c: p.mu, lh: 1.4),
           Cta('Save name', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveName),
         ],
       ),
@@ -423,7 +417,6 @@ class WaNumberSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final p = PalScope.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: VGap(
@@ -431,7 +424,6 @@ class WaNumberSheet extends StatelessWidget {
         children: [
           const T('WhatsApp number', w: 800, s: 13),
           Field(key: const ValueKey('waEdit'), value: s.waDraft, placeholder: s.myPhone.isEmpty ? '10-digit number' : phoneSpaced(s.myPhone), numeric: true, onChanged: (v) => s.update(() => s.waDraft = v)),
-          T('Only if you chat on a different number than you take calls on. Tenants who held a bed and your residents message you here.', s: 12, c: p.mu, lh: 1.4),
           Cta('Save WhatsApp number', icon: 'check', height: 54, px: 16, fs: 15, onTap: s.saveWa),
           if (s.myWa.isNotEmpty) OutlineCta('Use my phone number', height: 50, onTap: () => s.saveWa(clear: true)),
         ],

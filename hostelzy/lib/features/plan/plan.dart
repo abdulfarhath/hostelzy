@@ -101,11 +101,11 @@ extension PlanActions on AppState {
           sheet = null;
           screen = 'oPayStatus';
         });
-        toastMsg('UPI reference saved. Hostelzy checks it against the bank record.');
+        toastMsg('UPI reference saved');
       });
       return;
     }
-    if (onServer) return toastMsg('Your first invoice isn’t out yet. You pay once it arrives.');
+    if (onServer) return toastMsg('No invoice yet');
     update(() {
       invoice
         ..amt = invoiceAmt
@@ -115,7 +115,7 @@ extension PlanActions on AppState {
       sheet = null;
       screen = 'oPayStatus';
     });
-    toastMsg('UPI reference saved. Hostelzy checks it against the bank record.');
+    toastMsg('UPI reference saved');
   }
 
   /// "I've paid": the UTR sheet, prefilled when fixing a UTR we couldn't find.

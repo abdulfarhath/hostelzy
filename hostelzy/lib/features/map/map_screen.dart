@@ -169,7 +169,6 @@ class MapScreen extends StatelessWidget {
                     children: [
                       T('No hostels ${s.mapArea != null ? 'in ${s.mapArea}' : 'here'} yet', w: 800, s: 16),
                       const SizedBox(height: 4),
-                      T('We add hostels area by area, after we visit each one. Try a nearby area.', s: 13, c: p.mu),
                       const SizedBox(height: 10),
                       if (s.nearbyArea case final a?) Cta('Try $a', height: 46, px: 14, fs: 14, onTap: () => s.pickWhereArea(a)) else OutlineCta('Pick another area', icon: 'pin', height: 46, fs: 14, onTap: s.openWhere),
                     ],

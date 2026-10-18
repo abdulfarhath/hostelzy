@@ -41,7 +41,7 @@ extension LoginActions on AppState {
 
   Future<void> continueWithGoogle() async {
     if (signingIn) return;
-    if (!signIn.available) return toastMsg('Google sign-in works in the Android app. Use Hostelzy on this phone for now.');
+    if (!signIn.available) return toastMsg('Google sign-in: Android app only');
     update(() => signingIn = true);
     final (a, fail) = await signIn.google();
     update(() => signingIn = false);
@@ -72,7 +72,7 @@ extension LoginActions on AppState {
   void savePhone() {
     if (myName.trim().length < 2) return toastMsg('Enter your name.');
     if (phone.length != 10) return toastMsg('Enter all 10 digits.');
-    if (!AppState.validPhone(phone)) return toastMsg('Mobile numbers start with 6, 7, 8 or 9.');
+    if (!AppState.validPhone(phone)) return toastMsg('Numbers start with 6, 7, 8 or 9');
     myName = myName.trim();
     // F21 W2: a guest goes back to the hold or enquiry that asked for sign-in.
     if (_finishSignIn()) return;
@@ -108,15 +108,15 @@ extension LoginActions on AppState {
           notif.updateAll((k, v) => k == 'beds' ? v : true);
         });
         unawaited(saveNotify());
-        if (account == null) return toastMsg('Notifications allowed. Sign in with Google to get them.');
-        if (!data.remote) return toastMsg('Notifications allowed. This demo has no server, so nothing is sent.');
+        if (account == null) return toastMsg('Notifications on · sign in to get them');
+        if (!data.remote) return toastMsg('Notifications on · sample data');
         if (await syncPushToken(force: true)) toastMsg('Notifications are on for this phone.');
       case PushAsk.denied:
         update(() => osPushAllowed = false);
-        toastMsg('Notifications are off. Turn them on in your phone’s settings → Apps → Hostelzy.');
+        toastMsg('Notifications off in phone settings');
       case PushAsk.unavailable:
         update(() => notif.updateAll((k, v) => k == 'beds' ? v : true));
-        toastMsg('Saved. Notifications work in the Android app.');
+        toastMsg('Saved');
     }
   }
 
@@ -137,7 +137,7 @@ extension LoginActions on AppState {
       return true;
     } catch (e) {
       debugPrint('Push token: $e');
-      toastMsg('Couldn’t turn on notifications for this phone. Check your internet; we’ll try again when you open the app.');
+      toastMsg('Couldn’t turn on notifications');
       return false;
     }
   }
