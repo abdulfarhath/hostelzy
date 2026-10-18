@@ -114,6 +114,14 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 - Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
 
+**Part 4, decided by Build 4 (2026-10-18, wave 4):**
+| # | What Build 4 did | Why |
+|---|---|---|
+| 1 | The demo's listed sample hostel (Sri Balaji) counts as **confirmed today**, so the demo APK shows a range; the "Rent on request" state is covered by the flow test | Sample data only; no second sample hostel was added |
+| 2 | ~~Card "Rent on request · not confirmed lately"; page with a sentence~~ → **hub (F31 Rule A):** the card says only **"Rent on request"**; the page says "Rent on request" plus the button **Ask on WhatsApp** (the existing Ask Hostelzy number), no sentence | Hub decision, 2026-10-18 |
+| 3 | A stale listed hostel still answers the **Budget filter** by its old range (unchanged), and under Price ↑ it sorts after every priced card (fresh listed ones included), then by its old range among the stale ones | The number is kept back from the tenant, not thrown away |
+| 4 | The app **reads the server's view `listed_rent_visible`** (Build 3) when it exists: a listed hostel the view hides the rent of is treated as never confirmed (the server's clock decides); before the view exists the app applies the same 60-day rule to `rent_confirmed_at` itself | Hub, 2026-10-18 |
+
 ## Design
 **Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Note: the hub later assigned these boards to Design 2 (`design/f28-boards`); the set below already exists, see `docs/design/main-canvas/README.md` § v25.
 - **[S92]** addHostel light + dark: name, gate photo (1–3), pin (drag to fix, area from the pin), For, "What do you pay? · ₹/month", Sharing 1/2/3/4+, Food included, Owner's name + phone (required), I live here / I'm a Hostelzy partner, Add. [variant] partner: rent from–to + partner code.
@@ -210,3 +218,12 @@ the RPC names below. Handover: `docs/handover/w2-build.md`.
 7. The reward row in S22 comes from the same `my_added_hostel()` call (no change to the `Rewards` record / live rows).
 8. **Rule A (F31, hub message)** applied to S92 and S93: no helper lines; step subtitles are dates/states; toasts ≤ 6 words. The spec's honest line in S93 is kept as the one state sentence.
 9. `join_requests` / `add_hostel` are **not** in the Realtime publication (the F26 RLS test pins the publication's table list); S93 and Today reload when opened and after each action.
+
+## Build · Part 4, app side (wave 4, Build 4, 2026-10-18)
+Branch `feature/w4-drive-fresh`, not merged (`docs/handover/w4-build.md`). Console "To refresh" is Build 3's.
+| Piece | Where | State |
+|---|---|---|
+| `hostels.rent_confirmed_at` (`add column if not exists`, same as wave 2/3) | `supabase/migrations/20261018140000_f29_drive.sql` (+ a row in its SQL test) | Done |
+| `Hostel.rentConfirmedAt` from the row; `rentFresh` (60 days), `rentLine`, `rentFreshCompare`; `SupabaseRepo.listings()` overlays the view `listed_rent_visible` (`rent_visible = false` → stale) | `hostelzy/lib/data/hostels.dart`, `features/listings/rows.dart`, `features/listings/tiers.dart`, `supabase_repo.dart` | Done |
+| Explore card and T32 page say **"Rent on request"** after 60 days; the card sorts after every priced one (first sort step) | `features/explore/unverified_screen.dart`, `explore_screen.dart` | Done |
+| Tests | `hostelzy/test/w4_drive_test.dart` (28-90 unit + flow) | Green |

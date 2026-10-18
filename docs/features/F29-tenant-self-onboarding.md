@@ -103,6 +103,20 @@ one-time: Drive scope on the consent screen (wave 4). Everything ships with the 
 - "On the app" = an account on the stay (`stays.user_id`), so an owner-added resident who never signed up gets the text. decided.
 - Build lists extras here; the hub decides within the day. Known later items: OneDrive, OCR masking, police verification form export.
 
+**Part 3, decided by Build 4 (2026-10-18, wave 4; the hub can change any of them):**
+| # | What Build 4 did | Why |
+|---|---|---|
+| 1 | **Connect / Disconnect are the owner's only**; managers see the status line and can flip the Full copy switch | The token is the owner's Google account; `drive_status` / `set_full_copy` are for owner + managers as the spec says |
+| 2 | The **Full copy switch shows only once Drive is connected** (it lives on `owner_drive`) | Without Drive the tenant sends the ID on WhatsApp, so there is nothing to mask |
+| 3 | **Disconnect also revokes** Hostelzy's access at Google (`oauth2 /revoke`), then forgets the row; the files stay in the Drive | "Disconnect any time" should really end the access |
+| 4 | **`id-view` gives a 10-minute link served by the function itself** (it streams the bytes with the owner's token) plus the file's Drive page link, instead of Google's `webContentLink` | `webContentLink` only works in a browser signed in as the owner, so a manager (or the app's image widget) could never open it |
+| 5 | `id-upload` takes **JPEG / PNG / WebP up to 6 MB** (base64 JSON); the file is named `ID <date time>.jpg` | A limit the function can hold in memory |
+| 6 | **IdCapture uses the camera only** (no gallery), shrinks the photo to 1600 px on the phone, and the bar is a fixed size (half the width, 9 % of the height) that the tenant drags; it starts over the lower middle of an Aadhaar card | One job per screen; the spec's "drag a black bar" |
+| 7 | Reconnecting finds the same Drive folders and **starts the file count at 0** | The count is the app's own counter (`owner_drive.files`), not a Drive query |
+| 8 | **Three Edge Function secrets** are needed: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the Web client of the same Google Cloud project), `DRIVE_TOKEN_KEY` (random, encrypts the tokens and signs the links); the functions deploy with `--no-verify-jwt` because the gateway can't check Firebase tokens (PostgREST checks them inside) | Founder one-time step (handover) |
+| 9 | `id_upload_target` reads the token through a **hook function `join_hostel_for_token(text)`** that is a stub until wave 2's `join_requests` replaces it | Wave 4 was built apart from wave 2 (`docs/handover/w4-build.md`) |
+| 10 | **F31 Rule A applied from the start** (hub, 2026-10-18): H50 = status line ("Not connected" / "Connected · 12 files" / "Not available yet") + Connect or Disconnect + the Full copy switch, nothing else; "Not available yet" is one line, no button. IdCapture = the button, then the photo with the guide label "Cover the first 8 digits" (or "Full copy needed (police file)"), Retake / Upload, "Uploaded to <owner>'s Drive". IdThumb fallbacks "Loading…" / "Open in Drive" / "Not available yet". Toasts ≤ 3 words. Removed lines: H50 · "Keep tenant IDs in your own Google Drive. Hostelzy never stores them." · "Google asks you once. Hostelzy can see only the files it makes, in Hostelzy / <hostel> / Tenant IDs." · "Off: the tenant covers the first 8 digits of the ID number." / "On: the tenant sends the whole ID." · "Files stay in your Drive; Hostelzy keeps only a link to each one." · "Only the owner connects / disconnects Google Drive." · the Try again button and the two "Not available yet" explanations; Manage row · "In your own Google Drive" / "· IDs come on WhatsApp"; IdCapture · "It goes straight to <owner>'s own Google Drive; Hostelzy never stores it." · "Drag the black bar over the first 8 digits of the ID number. Only the last 4 stay visible." · "…Check the photo is sharp." · "…Nothing is kept on Hostelzy." · "Send your ID on WhatsApp instead." | Founder rule F31 |
+
 ## Design
 **Design approved** (Design, 2026-10-18). Canvas v25 on branch `design/f26-merge` (`docs/design/v25/`, hub publishes). Sample: bed 203-B · ₹8,000/month (room 203's rate) · advance ₹3,000 · Ravi Teja · owner Srinivas.
 - **[H48]** askJoin over Residents: free-bed chips, Monthly fee, Advance, Moves in, First name (optional), Send on WhatsApp.
@@ -147,3 +161,14 @@ with Build 4's three wiring points: `docs/handover/w2-build.md` §4.
 5. **Rule A (F31, hub message)**: no intro paragraphs in H48/H49, S94's explainer lines removed, toasts ≤ 6 words. Approve/Decline/Ask again pushes carry a fact only.
 6. Demo request has no sample ID image (the spec's placeholder image belongs to the Drive variant, wave 4).
 7. `join_requests` is not in the Realtime publication (see F28 note 9); the Joining tab reloads on open and after each decision.
+
+## Build · Part 3 (wave 4, Build 4, 2026-10-18)
+Branch `feature/w4-drive-fresh`, not merged; the integrator wires it after wave 2 (`docs/handover/w4-build.md`).
+| Piece | Where | State |
+|---|---|---|
+| `owner_drive` + RPCs `drive_status`, `set_full_copy`, `drive_role`, `id_upload_target`; service-role `drive_put` / `drive_token` / `drive_forget` / `drive_file_added`; pgcrypto with the server secret | `supabase/migrations/20261018140000_f29_drive.sql`, test `supabase/tests/f29_drive_test.sql` | Done, rerun-safe |
+| Edge Functions `drive-connect`, `id-upload`, `id-view` (shared `_shared/drive.ts`), 10 Node tests | `supabase/functions/…`, `supabase/functions/tests/drive.test.ts`, deploy lines in `.github/workflows/supabase-functions.yml` | Done |
+| Sheet **H50** `drive` (status line · Connect / Disconnect · Full copy switch; "Not available yet" = one line, F31), Manage › **Tenant IDs** row (subtitle = state) | `hostelzy/lib/features/drive/drive.dart`, `drive_sheets.dart`, `drive_auth.dart`; `owner_manage_screen.dart`; `ui/shell.dart` | Done, light + dark |
+| `IdCapture` (camera → "Cover the first 8 digits" bar → preview → `id-upload`) for S94; `IdThumb` (via `id-view`, tap opens Drive) for H49; repo `idTarget` / `idUpload` / `idView` / `idDelete` | `hostelzy/lib/features/drive/id_capture.dart`, `id_thumb.dart`; `features/listings/repo.dart` + both repos | Done; S94 / H49 wire them (wave 2) |
+| Flow tests (10) | `hostelzy/test/w4_drive_test.dart` | Green with `tools/check.sh` |
+| FOUNDER-TODO one-time line, SCREENS rows for H50, SQL bundle | In the handover; the integrator adds them (not edited here on purpose) | Open |

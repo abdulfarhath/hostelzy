@@ -406,6 +406,8 @@ class _ManageList extends StatelessWidget {
     void section(String t) => t == 'deals' ? s.openDeals() : t == 'rates' ? s.openRates() : t == 'menu' ? s.openMenu() : s.update(() => s.moreTab = t);
     final rows = <(String, String, String, int, VoidCallback)>[
       ('userPlus', 'Residents', '${s.residents.length}${waiting > 0 ? ' · $waiting waiting for you' : ''}', waiting, () => section('residents')),
+      // F29 Part 3: tenant IDs in the owner's own Google Drive (H50).
+      ('lock', 'Tenant IDs', switch (s.driveStatus) { null => '', (connected: true, :final files, fullCopy: _) => 'Google Drive · $files file${files == 1 ? '' : 's'}', _ => 'Not connected' }, 0, s.openDrive),
       ('wrench', 'Complaints', open + fixing == 0 ? 'None open' : [if (open > 0) '$open open', if (fixing > 0) '$fixing being fixed'].join(' · '), open, () => section('complaints')),
       // F24 item 17 (F14): deals, rates and the plan are the owner's.
       if (!s.managerHere) ('star', 'Deals', deals == 0 ? 'None yet' : '$deals active', 0, () => section('deals')),

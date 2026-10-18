@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../features/add_hostel/add_hostel_screens.dart';
 import '../features/amenities/amenities_screens.dart';
+import '../features/drive/drive_sheets.dart';
 import '../features/explore/explore_screen.dart';
 import '../features/explore/explore_sheets.dart';
 import '../features/explore/hostel_screen.dart';
@@ -664,6 +665,7 @@ class _Sheet extends StatelessWidget {
       // F29 Part 1: the Notify form of the same sheet.
       'wa' => s.waMode == 'notify' ? 'Notify ${s.waTo ?? ''}' : 'Message ${s.waTo ?? 'on WhatsApp'}',
       'claim' => 'Claim ${hostelById(s.claimHid ?? s.hid).name}',
+      'drive' => 'Tenant IDs in your Drive',
       'addR' => 'Add a resident',
       'rank' => 'How the ranking works',
       'revReport' => 'Report this review',
@@ -709,6 +711,7 @@ class _Sheet extends StatelessWidget {
       'payAdv' => 'Book bed ${s.pay?.bed ?? ''} · deal ${s.pay?.note ?? ''}',
       'payUtr' => '${s.pay?.what ?? ''} · ${fmt(s.pay?.amt ?? 0)} to ${s.pay != null ? hostelById(s.pay!.hid).owner : ''}',
       'manager' => '${hostelById(s.ownHid).name} · team',
+      'drive' => '${hostelById(s.ownHid).name} · Manage',
       'name' => 'Settings',
       'waNum' => 'Settings',
       'quickFix' => 'Quick fix · Room ${s.fixRoom}',
@@ -750,6 +753,7 @@ class _Sheet extends StatelessWidget {
       'hold' => const HoldSheet(),
       'wa' => const WaSheet(),
       'claim' => const ClaimSheet(),
+      'drive' => const DriveSheet(),
       'bed' => const BedSheet(),
       'addR' => const AddResidentSheet(),
       'rank' => const RankSheet(),

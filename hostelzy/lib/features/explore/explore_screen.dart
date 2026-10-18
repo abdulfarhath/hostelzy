@@ -62,6 +62,8 @@ List<Hostel> filtered(AppState s) {
 
   // F26 #2: the picked sort, then nearest, then the list order.
   final steps = <HostelOrder>[
+    // F28 Part 4: "Rent on request" (no confirmation in 60 days) after every priced card.
+    rentFreshCompare,
     ?listingTierStep(s),
     switch (s.sortBy) {
       'near' => km,

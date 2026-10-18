@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
+import 'features/drive/drive_auth.dart' show GoogleDriveAuth;
 import 'features/links/scan.dart' show CameraScanner;
 import 'features/listings/cache.dart';
 import 'features/listings/repo.dart';
@@ -77,6 +78,8 @@ class _HostelzyAppState extends State<HostelzyApp> with WidgetsBindingObserver {
     state.signIn = signIn;
     state.locator = platformLocator();
     state.picker = const GalleryPicker();
+    // F29 Part 3: Google's Drive consent needs Google sign-in on this device.
+    if (signIn.available) state.driveAuth = const GoogleDriveAuth();
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) state.scanner = const CameraScanner();
     state.store = store;
     // Dev start states (debug ?start=…) skip the saved login.
