@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../features/add_hostel/add_hostel_screens.dart';
 import '../features/amenities/amenities_screens.dart';
 import '../features/explore/explore_screen.dart';
 import '../features/explore/explore_sheets.dart';
@@ -14,6 +15,7 @@ import '../features/holds/holds_screens.dart';
 import '../features/holds/holds_sheets.dart';
 import '../features/holds/picker_screen.dart';
 import '../features/holds/saved_holds_screen.dart';
+import '../features/join/join_screens.dart';
 import '../features/layouts/admin_layout_screen.dart';
 import '../features/layouts/layout_fixes_screens.dart';
 import '../features/layouts/layout_map.dart';
@@ -479,6 +481,10 @@ class _AppBody extends StatelessWidget {
     // F27 Save food.
     'rMeals' => const WeekPlanScreen(),
     'oMeals' => const OwnerMealsScreen(),
+    // W2: F28 Part 2 (S92, S93) and F29 Part 2 (S94).
+    'addHostel' => const AddPgScreen(),
+    'myAdd' => const MyAddScreen(),
+    'joinForm' => const JoinFormScreen(),
     _ => const SizedBox(),
   };
 }
@@ -650,6 +656,8 @@ class _Sheet extends StatelessWidget {
       'signIn' => switch (s.afterSignIn) {
         'verify' => 'Sign in to hear when it’s verified',
         'claim' => 'Sign in to claim this hostel',
+        'add' => 'Sign in to add a hostel',
+        'join' => 'Sign in to join your hostel',
         'book' => 'Sign in to book this bed',
         _ => 'Sign in to hold this bed',
       },
@@ -687,6 +695,9 @@ class _Sheet extends StatelessWidget {
       'perks' => s.level == 'trusted' ? 'You’re a Trusted tenant' : 'What Trusted tenants get',
       'complaint' => 'Something wrong in your room?',
       'complaints' => 'Your complaints',
+      // W2: F29 Part 2.
+      'askJoin' => 'Ask to join',
+      'joinReview' => '${s.reviewReq?.first ?? 'Someone'} wants to join',
       _ => '',
     };
     final kicker = switch (s.sheet) {
@@ -723,6 +734,8 @@ class _Sheet extends StatelessWidget {
       'perks' => 'Stay Rewards',
       'complaint' || 'complaints' => 'Help · ${s.stayHostel.name}',
       'wa' => s.waMode == 'notify' && s.noteTo != null ? 'Residents · bed ${s.noteTo!.bed}' : null,
+      'askJoin' => '${hostelById(s.ownHid).name} · Residents',
+      'joinReview' => s.reviewReq == null ? null : 'Bed ${s.reviewReq!.bed} · moves in ${dayMon(s.reviewReq!.date)}',
       _ => null,
     };
     final body = switch (s.sheet) {
@@ -770,6 +783,8 @@ class _Sheet extends StatelessWidget {
       'perks' => const PerksSheet(),
       'complaint' => const ComplaintSheet(),
       'complaints' => const ComplaintsSheet(),
+      'askJoin' => const AskJoinSheet(),
+      'joinReview' => const JoinReviewSheet(),
       _ => const SizedBox(),
     };
     void close() => s.update(() {

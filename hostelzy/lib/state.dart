@@ -57,6 +57,9 @@ part 'features/session/play_store.dart';
 part 'features/session/tabs.dart';
 part 'features/team/team_members.dart';
 part 'features/team/team_mode.dart';
+// W2 (F28 Part 2 + F29 Part 2).
+part 'features/add_hostel/add_hostel.dart';
+part 'features/join/join.dart';
 
 /// App state and actions. Mirrors the prototype's single component state so
 /// the tenant, resident and owner roles share the same data.
@@ -81,7 +84,7 @@ Future<T> _settle<T>(Future<T> Function() f) {
   return out;
 }
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _SaveFoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _SaveFoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData, _AddHostelData, _JoinData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {
@@ -143,7 +146,7 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     });
   }
 
-  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'building', 'rStay', 'rRefund', 'oMeter', 'scan', 'savedHolds', 'rMeals', 'oMeals'];
+  static const screens = ['welcome', 'login', 'phone', 'roleGate', 'oCreate', 'oPublished', 'saved', 'otp', 'role', 'explore', 'map', 'holds', 'me', 'detail', 'picker', 'hold', 'rHome', 'rPay', 'move', 'rReview', 'rExit', 'reviews', 'oToday', 'oBeds', 'oRent', 'oMore', 'oInvite', 'oRank', 'oRules', 'oCase', 'oStrike', 'rewards', 'moveIn', 'oPlan', 'oInvoice', 'oPayStatus', 'compare', 'oLayout', 'aLayout', 'aAdd', 'aTrack', 'oTeam', 'settings', 'delAcc', 'delConfirm', 'delDone', 'perm', 'gate', 'aHome', 'oLayouts', 'oRooms', 'aTeam', 'oPhotos', 'oCrop', 'gallery', 'reminders', 'rRoom', 'rFix', 'oFix', 'oFixDone', 'where', 'building', 'rStay', 'rRefund', 'oMeter', 'scan', 'savedHolds', 'rMeals', 'oMeals', 'addHostel', 'myAdd', 'joinForm'];
   static const tabScreens = ['explore', 'map', 'saved', 'holds', 'savedHolds', 'me', 'rHome', 'rPay', 'rStay', 'oToday', 'oBeds', 'oRent', 'oMore'];
 
   Timer? _ticker, _toastTimer;
@@ -282,6 +285,8 @@ class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanDat
     for (final id in (m['saved'] as List? ?? const [])) {
       saved[id as String] = true;
     }
+    // W2 (F28): the partner code typed once in Add a hostel.
+    partnerCodeSaved = m['partnerCode'] as String? ?? '';
     holds = [
       for (final h in (m['holds'] as List? ?? const []).cast<Map<String, dynamic>>())
         Hold(id: h['id'] as String, hid: h['hid'] as String, bed: h['bed'] as String, room: h['room'] as int, opt: h['opt'] as String, start: h['start'] as int, status: h['status'] as String, ref: h['ref'] as String?, paid: h['paid'] as int? ?? 0, perks: (h['perks'] as List? ?? const []).cast<String>()),

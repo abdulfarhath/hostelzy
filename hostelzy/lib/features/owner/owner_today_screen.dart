@@ -104,6 +104,8 @@ class OwnerTodayScreen extends StatelessWidget {
           const _FairPlayCard(),
           // F27-3: tonight's headcount, under the Fair Play pin.
           OnShow(() => s.loadFood(s.ownHid), child: const HeadcountCard()),
+          // W2 (F29 Part 2): filled join requests for the Joining tab.
+          OnShow(s.loadJoins, child: const SizedBox.shrink()),
           // F21 W3: one list of what needs the owner, soonest first.
           const NeedsYouNow(),
           const Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 6), child: Kicker('This month')),
@@ -187,6 +189,9 @@ typedef NeedItem = ({String key, String icon, String title, String sub, String r
 
 /// The three Today tabs (F26 #18), in this order.
 const needGroups = [('holds', 'Holds'), ('payments', 'Payments'), ('fixes', 'Fixes')];
+
+/// W2 (F29 Part 2): plus Joining, only while someone is waiting to join.
+List<(String, String)> needGroupsOf(Map<String, List<NeedItem>> m) => [needGroups[0], needGroups[1], if ((m['joining'] ?? const []).isNotEmpty) ('joining', 'Joining'), needGroups[2]];
 
 /// F26 #18 owner Today: what needs the owner in three tabs with counts.
 /// Holds (hold requests, then notices and bed moves), Payments (payments to
@@ -305,18 +310,33 @@ Map<String, List<NeedItem>> needItems(AppState s, Pal p) {
           extra: null,
         ),
     ];
+  // W2 (F29 Part 2): tenants who filled the owner's join link.
+  for (final j in s.joinReqs) {
+    all.add((
+      key: 'join-${j.id}',
+      icon: 'userPlus',
+      title: '${j.first} wants to join',
+      sub: 'Bed ${j.bed} · moves in ${dayMon(j.date)} · ID ${j.idReceived == 'whatsapp' ? 'sent on WhatsApp' : j.idReceived == 'drive' ? 'in your Drive' : 'not sent yet'}',
+      right: j.at > 0 ? ago(s.now - j.at) : 'Today',
+      urgent: false,
+      btns: [('Review', 'arrow', () => s.openJoinReview(j))],
+      badge: null,
+      extra: null,
+    ));
+  }
   String group(NeedItem it) => switch (it.key.split('-').first) {
     'hold' || 'move' => 'holds',
     'pay' || 'refund' => 'payments',
+    'join' => 'joining',
     _ => 'fixes',
   };
-  return {for (final (g, _) in needGroups) g: [for (final it in all) if (group(it) == g) it]};
+  return {for (final (g, _) in [...needGroups, ('joining', 'Joining')]) g: [for (final it in all) if (group(it) == g) it]};
 }
 
 /// The tab that opens first: the first group with something urgent (a hold's
 /// countdown, a late refund), else the first with anything in it.
 String urgentGroup(Map<String, List<NeedItem>> m) =>
-    needGroups.map((g) => g.$1).where((g) => m[g]!.any((it) => it.urgent)).firstOrNull ?? needGroups.map((g) => g.$1).where((g) => m[g]!.isNotEmpty).firstOrNull ?? needGroups.first.$1;
+    needGroupsOf(m).map((g) => g.$1).where((g) => m[g]!.any((it) => it.urgent)).firstOrNull ?? needGroupsOf(m).map((g) => g.$1).where((g) => m[g]!.isNotEmpty).firstOrNull ?? needGroups.first.$1;
 
 class _NeedsYouNowState extends State<NeedsYouNow> {
   /// The tab the owner picked; null = the most urgent one.
@@ -347,7 +367,7 @@ class _NeedsYouNowState extends State<NeedsYouNow> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final (g, label) in needGroups)
+                for (final (g, label) in needGroupsOf(m))
                   Expanded(
                     child: Tap(
                       key: ValueKey('needTab-$g'),

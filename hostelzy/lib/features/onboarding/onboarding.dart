@@ -244,6 +244,7 @@ extension OnboardingActions on AppState {
   /// dropped, else on the area (to be moved to the gate).
   void openPin() => update(() {
     final d = draft;
+    pinFor = '';
     pinNow = d.pin ?? areaLatLng[d.area] ?? landmarkLatLng['Hitec City']!;
     pinTouched = d.pin != null;
     pinFocus++;
@@ -281,6 +282,8 @@ extension OnboardingActions on AppState {
   void savePin() {
     final c = pinNow;
     if (!pinTouched || c == null) return toastMsg('Move the map so the pin sits on the gate, or use your location.');
+    // W2 (F28 S92): the pin of a hostel being added by a tenant or partner.
+    if (pinFor == 'add') return saveAddPin(c);
     update(() {
       draft
         ..pin = c

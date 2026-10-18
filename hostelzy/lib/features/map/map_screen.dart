@@ -295,7 +295,8 @@ class PinScreen extends StatelessWidget {
             children: [
               BackBtn(onTap: s.back),
               const SizedBox(width: 12),
-              Expanded(child: PageHead(kicker: '${d.name.trim().isEmpty ? 'New hostel' : d.name.trim()}${d.area.isEmpty ? '' : ' · ${d.area}'}', title: 'Map pin', gap: 2)),
+              // W2 (F28 S92): the same map places the hostel a tenant or partner adds.
+              Expanded(child: PageHead(kicker: s.pinFor == 'add' ? (s.addDraft.name.trim().isEmpty ? 'Your hostel' : s.addDraft.name.trim()) : '${d.name.trim().isEmpty ? 'New hostel' : d.name.trim()}${d.area.isEmpty ? '' : ' · ${d.area}'}', title: 'Map pin', gap: 2)),
             ],
           ),
         ),

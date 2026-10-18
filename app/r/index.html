@@ -18,8 +18,19 @@
 <a class="cta ghost" href="https://github.com/abdulfarhath/hostelzy/releases/latest">Get the app (Android test build)</a>
 <p class="mu">Hostelzy doesn't take enquiries any more: owners' numbers show once you hold a bed. Old links and posters still open the app.</p>
 <script>
+  // W2 (F28 Part 2): r/?h=<id>&claim=1 is the claim link a resident sends their owner:
+  // the app opens the hostel's page with "Claim this hostel".
+  const q = new URLSearchParams(location.search);
+  const h = q.get('h') || '';
+  if (/^[0-9a-f-]{36}$/i.test(h)) {
+    document.getElementById('t').textContent = 'Your PG is on Hostelzy';
+    document.querySelector('main > p').textContent = 'A resident added your hostel as unverified. Agree to get it verified, free: open it in the app and tap “Claim this hostel”. The Hostelzy team calls you to check.';
+    const o = document.getElementById('open');
+    o.href = 'hostelzy://app/r?h=' + encodeURIComponent(h) + (q.get('claim') ? '&claim=1' : '');
+    setTimeout(() => { location.href = o.href; }, 400);
+  }
   // Old enquiry links (r/?c=HZ-…) still open the app; the code is shown only for reference.
-  const c = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
+  const c = (q.get('c') || '').toUpperCase();
   if (/^HZ-[0-9]{3,8}$/.test(c)) {
     const el = document.getElementById('code');
     el.textContent = 'Code ' + c;

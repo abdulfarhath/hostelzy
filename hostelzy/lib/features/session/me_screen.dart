@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_config.dart';
 import '../../data.dart';
 import '../../state.dart';
+import '../../ui/common.dart';
 import '../../ui/kit.dart';
 
 // ------------------------------------------------------------ me
@@ -20,6 +21,9 @@ class MeScreen extends StatelessWidget {
       // F24: an advance refund still open after moving out.
       if (s.myRefund case final r? when s.role != 'resident') ('Your refund', '${fmt(r.amt)} · ${r.status == 'sent' ? 'did it arrive?' : r.status == 'not_received' ? 'not received' : 'due ${dayMon(r.due)}'}', s.openMyRefund),
       if (!isOwner) ('Stay Rewards', const {'trusted': 'Trusted tenant', 'member': 'Member'}[s.level] ?? 'Not a member yet', () => s.go('rewards')),
+      // W2 (F28 Part 2): Add a hostel, or Your hostel once one exists.
+      if (!isOwner && s.myAdd != null) ('Your hostel', '${s.myAdd!.name} · ${const ['', 'added', 'owner asked', 'owner agreed', 'verified', 'paid'][s.myAdd!.step]}', s.openMyAdd)
+      else if (!isOwner) ('Add a hostel', '${fmt(addReward)} when verified', s.openAddPg),
       ('Reminders', s.remSummary[0].toUpperCase() + s.remSummary.substring(1), s.openReminders),
       ('Settings', 'Language, notifications, log out', () => s.go('settings')),
       ('Help on WhatsApp', 'Ask the Hostelzy team', () => s.whatsapp(supportWhatsApp, 'Hi Hostelzy, I need help with the app.')),
@@ -43,6 +47,8 @@ class MeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // W2 (F28 Part 2): the adder's hostel from the server, once.
+          OnShow(s.loadMyAdd, child: const SizedBox.shrink()),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             decoration: BoxDecoration(border: Border(bottom: bs(2, p.tx))),

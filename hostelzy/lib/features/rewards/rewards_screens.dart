@@ -112,6 +112,20 @@ class RewardsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // W2 (F28 Part 2): the ₹200 / ₹20 for a hostel this user added.
+                if (s.myAdd case final a? when a.reward != null || a.verified)
+                  Container(
+                    key: const ValueKey('addReward'),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(border: Border(bottom: bs(1, p.hl))),
+                    child: Row(
+                      children: [
+                        Container(width: 32, height: 32, alignment: Alignment.center, color: a.paidAt != null ? p.tx : p.sf, child: a.paidAt != null ? Ic('check', size: 16, color: p.bg) : Ic('building', size: 16, color: p.tx)),
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [T('${fmt(a.rewardDue)} · ${a.name} ${a.partner ? 'listed' : 'verified'}', w: 800, s: 16), T(a.paidAt != null ? 'Paid ${dayMon(a.paidAt!)} by UPI' : a.queued && a.payMonth != null ? 'Queued for ${monthYear(a.payMonth!)} (monthly cap)' : 'Paid by UPI on the 5th', s: 13, c: p.mu, lh: 1.35)])),
+                      ],
+                    ),
+                  ),
                 // F24 #16 (board `trustedPerks`): what Trusted tenants get.
                 Tap(
                   key: const ValueKey('perksOpen'),

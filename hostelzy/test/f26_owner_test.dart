@@ -46,6 +46,8 @@ String _count(WidgetTester tester, String g) => tester.widget<T>(find.byKey(Valu
 /// Nothing waits for the owner of [s]'s hostel.
 void _clear(AppState s) {
   s.reqs = [];
+  // W2 (F29): the demo join request would open a Joining tab.
+  s.joinReqs = [];
   s.holds = [];
   s.payments = [];
   s.fixes = [];

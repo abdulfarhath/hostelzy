@@ -355,6 +355,24 @@ abstract class HostelRepo {
   /// needs an account). Throws [UnsupportedError] on sample data, and until
   /// the server has the function.
   Future<void> notifyResident(String stayKey, String note);
+  /// W2 F28 Part 2: `add_hostel(p)` → {duplicate, hostel_id, name?}; the
+  /// adder's latest hostel (`my_added_hostel()`, null when none); "Send to
+  /// your owner" stamped; the adder's UPI id for the payout.
+  Future<Map<String, dynamic>> addHostel(Map<String, dynamic> p);
+  Future<Map<String, dynamic>?> myAddedHostel();
+  Future<void> askedOwner(String hid);
+  Future<void> setAdderUpi(String upi);
+
+  /// W2 F29 Part 2: Ask to join. The owner's link token for a free bed; what
+  /// a token is for (null when unknown); the tenant's form; the hostel's
+  /// filled requests (staff); approve / decline; "Ask again" (returns the
+  /// tenant's phone for the owner's WhatsApp text).
+  Future<String> newJoinRequest({required String bedKey, required int fee, required int advance, required DateTime movesIn, String name = ''});
+  Future<Map<String, dynamic>?> joinRequestInfo(String token);
+  Future<Map<String, dynamic>> fillJoinRequest({required String token, required String name, required String phone, required DateTime date, required String idReceived, String? idFileId});
+  Future<List<Map<String, dynamic>>> joinRequests(String hid);
+  Future<void> decideJoin(String id, bool approve, {String note = ''});
+  Future<String> askIdAgain(String id);
 }
 
 /// F24 item 29: one person on the Hostelzy team.
