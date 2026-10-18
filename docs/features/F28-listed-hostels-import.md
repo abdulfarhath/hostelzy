@@ -116,7 +116,7 @@ the RPC names below. Handover: `docs/handover/w2-build.md`.
 2. **Payout record**: `reward_payouts` + `payouts_due()` + `mark_payout_paid()` so "₹200 paid" (step 5) and the console's payouts list are real, not a promise. The ledger stays append-only.
 3. **`check_partner_hostel(h)`** (team): the C14 "checked" tick that grants the ₹20. Build 3's Partners segment can call it; until then the team runs it in SQL.
 4. The adder's own gate photos go to `hostel_photos` through two new policies (adder of a listed hostel, ≤ 3); `add_hostel` makes the row `listed` without a photo (the photos follow a moment later), unlike `list_hostel` which needs one first.
-5. S93 for a **partner** reuses the same 5 steps; its reward line reads "Paid ₹20 after the Hostelzy team checks the listing." The Me row / S93 show the **latest** hostel only (partners with many listed see the newest).
+5. S93 for a **partner** reuses the same 5 steps; its reward line reads "₹20 when checked" (hub copy). The Me row / S93 show the **latest** hostel only (partners with many listed see the newest).
 6. `my_added_hostel()` returns the owner's phone **to the adder only** (they typed it), so "Send to your owner" works after a reinstall. Nobody else ever gets it.
 7. The reward row in S22 comes from the same `my_added_hostel()` call (no change to the `Rewards` record / live rows).
 8. **Rule A (F31, hub message)** applied to S92 and S93: no helper lines; step subtitles are dates/states; toasts ≤ 6 words. The spec's honest line in S93 is kept as the one state sentence.

@@ -287,7 +287,7 @@ class MyAddScreen extends StatelessWidget {
                         ),
                       ),
                     // The one honest line the spec asks for (F28 Part 2 step 3).
-                    T(a.partner ? 'Paid ${fmt(partnerReward)} after the Hostelzy team checks the listing.' : 'Paid only when the owner agrees and Hostelzy verifies the hostel.', key: const ValueKey('honestLine'), s: 13, c: p.mu, lh: 1.45),
+                    T(a.partner ? '${fmt(partnerReward)} when checked' : 'Paid only when the owner agrees and Hostelzy verifies the hostel.', key: const ValueKey('honestLine'), s: 13, c: p.mu, lh: 1.45),
                   ],
                 ),
               ),

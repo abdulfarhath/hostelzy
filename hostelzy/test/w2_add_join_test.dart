@@ -325,7 +325,7 @@ void main() {
       expect(s.partnerCodeSaved, 'HZ-PART-3');
       expect(s.snapshot()['partnerCode'], 'HZ-PART-3');
       expect(s.myAdd!.partner, isTrue);
-      expect(find.textContaining('Paid ₹20 after the Hostelzy team checks'), findsOneWidget);
+      expect(find.text('₹20 when checked'), findsOneWidget);
       s.dispose();
     });
   });
