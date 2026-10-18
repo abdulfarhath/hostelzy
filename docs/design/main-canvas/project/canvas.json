@@ -44,26 +44,12 @@
    "x": 4230,
    "y": 17808
   },
-  "aCases.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] retired S77 aCases → console Fair Play (C3) · Removed",
-   "w": 390,
-   "x": 1410,
-   "y": 54123
-  },
   "aHome.dc.html": {
    "h": 844,
    "title": "[S66] aHome · Team tools · Updated",
    "w": 390,
    "x": 470,
    "y": 17808
-  },
-  "aPay.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] retired S76 aPay → team uses console Payments (C2) · Removed",
-   "w": 390,
-   "x": 940,
-   "y": 54123
   },
   "aTeam.dc.html": {
    "h": 844,
@@ -155,13 +141,6 @@
    "w": 390,
    "x": 3760,
    "y": 15280
-  },
-  "addTenant.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] retired H17 Add tenant → merged into H20 Add a resident · Removed",
-   "w": 390,
-   "x": 1880,
-   "y": 54123
   },
   "bedSheet.dc.html": {
    "h": 844,
@@ -305,7 +284,7 @@
   },
   "exploreEmpty.dc.html": {
    "h": 844,
-   "title": "[T4] explore · No hostels in this area yet · Redesigned",
+   "title": "[T4] explore · No hostels in this area yet · “Can’t find your PG? Add it” · Updated (F28)",
    "w": 390,
    "x": 1410,
    "y": 2528
@@ -930,7 +909,7 @@
   },
   "me.dc.html": {
    "h": 844,
-   "title": "[S79] me · No Saved / Holds rows; Log out in red · Updated (F26)",
+   "title": "[S79] me · No Saved / Holds rows; Log out in red; Add a hostel row · Updated (F28)",
    "w": 390,
    "x": 3290,
    "y": 5056
@@ -1014,14 +993,14 @@
   },
   "oRent-dark.dc.html": {
    "h": 844,
-   "title": "[dark] oRent · Rent (dark) · Updated (F26)",
+   "title": "[dark] oRent · Rent (dark) · Updated (F29)",
    "w": 390,
    "x": 5640,
    "y": 7584
   },
   "oRent.dc.html": {
    "h": 844,
-   "title": "[S38] oRent · Paid green, Late red, Due plain; Call + WhatsApp · Updated (F26)",
+   "title": "[S38] oRent · Paid green, Late red, Due plain; Call + WhatsApp on every row · Updated (F29)",
    "w": 390,
    "x": 2820,
    "y": 7584
@@ -1133,7 +1112,7 @@
   },
   "r-filters.dc.html": {
    "h": 844,
-   "title": "[H1] filters sheet · For, Room, Budget (Any), Food included; sort lives in Price ↑ / Distance · Updated (F26 revert)",
+   "title": "[H1] filters sheet · For, Room, Budget (Any), Food included, Verified only · Updated (F28)",
    "w": 390,
    "x": 940,
    "y": 2528
@@ -1252,7 +1231,7 @@
   },
   "residents.dc.html": {
    "h": 844,
-   "title": "[S40] oMore · Residents · Search, plain labels · Redesigned",
+   "title": "[S40] oMore · Residents · Call · WhatsApp · Notify on every row; Add resident · Ask to join · Updated (F29)",
    "w": 390,
    "x": 3290,
    "y": 7584
@@ -1714,7 +1693,7 @@
   },
   "w3-stayNotYet.dc.html": {
    "h": 844,
-   "title": "[T20] rStay · Not on Hostelzy yet · New · Updated (F26 tab bar)",
+   "title": "[T20] rStay · Your stay isn’t on Hostelzy yet · Add my hostel · Updated (F28)",
    "w": 390,
    "x": 4230,
    "y": 29520
@@ -1747,26 +1726,12 @@
    "x": 0,
    "y": 30840
   },
-  "w4-floorMap.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] F25 · Floor map with shared things → merged into NEW-1 (Building view)",
-   "w": 390,
-   "x": 0,
-   "y": 54123
-  },
   "w4-oBedsBuilding.dc.html": {
    "h": 844,
    "title": "[archive · not counted] retired by F26 · was [variant of S37] oBeds oBeds → S37 is the Building view now · Removed",
    "w": 390,
    "x": 14570,
    "y": 56651
-  },
-  "w4-oFloorPlan.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] F25 · Owner floor plan → replaced by the S37 Rooms · Building toggle",
-   "w": 390,
-   "x": 470,
-   "y": 54123
   },
   "w4-oMenuWeek.dc.html": {
    "h": 844,
@@ -3091,55 +3056,6 @@
    "x": 940,
    "y": 51539
   },
-  "z-old-back.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] OLD · back → not counted (toast)",
-   "w": 390,
-   "x": 470,
-   "y": 52803
-  },
-  "z-old-demo.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] OLD · demo → not counted (demo APK only)",
-   "w": 390,
-   "x": 0,
-   "y": 52803
-  },
-  "z-old-f12-Request.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] OLD · f12-Request → H23 (before)",
-   "w": 390,
-   "x": 1410,
-   "y": 52803
-  },
-  "z-old-f19-Console.dc.html": {
-   "h": 900,
-   "title": "[archive · not counted] OLD · f19-Console → C7",
-   "w": 1440,
-   "x": 1880,
-   "y": 52803
-  },
-  "z-old-f19-ConsoleDark.dc.html": {
-   "h": 900,
-   "title": "[archive · not counted] OLD · f19-ConsoleDark → C7 dark",
-   "w": 1440,
-   "x": 3400,
-   "y": 52803
-  },
-  "z-old-oCreate.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] OLD · oCreate → S56 (before shapes)",
-   "w": 390,
-   "x": 940,
-   "y": 52803
-  },
-  "z-old-room.dc.html": {
-   "h": 844,
-   "title": "[archive · not counted] OLD · room → S17 (before F23)",
-   "w": 390,
-   "x": 4920,
-   "y": 52803
-  },
   "f26-savedHolds.dc.html": {
    "x": 0,
    "y": 55387,
@@ -3264,7 +3180,7 @@
    "y": 55387,
    "w": 1440,
    "h": 900,
-   "title": "[C14] console · Listed: list a hostel as UNVERIFIED, photos, List it / Take off, waitlist · New (F26)"
+   "title": "[C14] console · Listed: segments Listed · To call · To refresh · Partners; list a hostel, List it / Take off · Updated (F28)"
   },
   "f26-c15.dc.html": {
    "x": 9510,
@@ -3307,6 +3223,258 @@
    "w": 390,
    "h": 844,
    "title": "[not counted · system notification] Dinner at 8 · Eating? with Eating / Skip · New (F27)"
+  },
+  "f30-wall.dc.html": {
+   "x": 0,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[T34] signInWall · Sign in to see all N hostels: 3 free hostels, Continue with Google, Not now · New (F30)"
+  },
+  "f30-wallDark.dc.html": {
+   "x": 470,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] signInWall · Sign in wall (dark) · New (F30)"
+  },
+  "f30-exploreHint.dc.html": {
+   "x": 940,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S8] explore · First visit: “3 hostels free to open, then sign in (free)”, once · New (F30)"
+  },
+  "f28-exploreEnd.dc.html": {
+   "x": 1410,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S8] explore · End of the list: last listed card, “Can’t find your PG? Add it” · New (F28)"
+  },
+  "f28-meYourHostel.dc.html": {
+   "x": 1880,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S79] me · “Your hostel · Owner asked” row → S93 · New (F28)"
+  },
+  "f28-rewardsAdded.dc.html": {
+   "x": 2350,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S22] rewards · “₹200 · <hostel> verified · paid by UPI on the 5th”, ₹20 partner row · New (F28)"
+  },
+  "f28-addHostel.dc.html": {
+   "x": 2820,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[S92] addHostel · Add a hostel: name, gate photo, pin, for, what you pay, sharing, food, owner’s name + phone, I live here · New (F28)"
+  },
+  "f28-addHostelDark.dc.html": {
+   "x": 3290,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] addHostel · Add a hostel (dark) · New (F28)"
+  },
+  "f28-addHostelPartner.dc.html": {
+   "x": 3760,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S92] addHostel · Partner: rent range + partner code · New (F28)"
+  },
+  "f28-myAdd.dc.html": {
+   "x": 4230,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[S93] myAdd · Your hostel on Hostelzy: the card, 5 steps, Send to your owner · New (F28)"
+  },
+  "f28-myAddDark.dc.html": {
+   "x": 4700,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] myAdd · Your hostel on Hostelzy (dark) · New (F28)"
+  },
+  "f28-myAddAsked.dc.html": {
+   "x": 5170,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner asked: Ask again after 3 days · New (F28)"
+  },
+  "f28-myAddAgreed.dc.html": {
+   "x": 5640,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Owner agreed: your UPI id for the ₹200, Hostelzy verifies next · New (F28)"
+  },
+  "f28-myAddVerified.dc.html": {
+   "x": 6110,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Verified: ₹200 by UPI on the 5th · New (F28)"
+  },
+  "f28-myAddPaid.dc.html": {
+   "x": 6580,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Paid: ₹200 by UPI · New (F28)"
+  },
+  "f28-myAddWaiting.dc.html": {
+   "x": 7050,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Still waiting (60 days): you can ask again, no payout · New (F28)"
+  },
+  "f28-myAddQueued.dc.html": {
+   "x": 7520,
+   "y": 57971,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S93] myAdd · Queued: this month’s ₹2,000 cap is reached, ₹200 next month · New (F28)"
+  },
+  "f29-askJoin.dc.html": {
+   "x": 0,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[H48] askJoin sheet · Ask to join: free bed, fee, advance, moves in, name, Send on WhatsApp · New (F29)"
+  },
+  "f29-joinForm.dc.html": {
+   "x": 470,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[S94] joinForm · Join <hostel>: name, phone, moves in, ID (Send ID on WhatsApp), Send to owner · New (F29)"
+  },
+  "f29-joinFormDark.dc.html": {
+   "x": 940,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] joinForm · Join <hostel> (dark) · New (F29)"
+  },
+  "f29-joinFormDone.dc.html": {
+   "x": 1410,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S94] joinForm · Done: “Sent · <owner> will approve · we’ll notify you” · New (F29)"
+  },
+  "f29-todayJoining.dc.html": {
+   "x": 1880,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of S36] oToday · Joining tab (only when non-empty): “Ravi wants to join · bed 203-B · moves in 1 Nov” → H49 · New (F29)"
+  },
+  "f29-joinReview.dc.html": {
+   "x": 2350,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[H49] joinReview sheet · Ravi wants to join: details, ID received on WhatsApp (tick), Approve / Ask again / Decline · New (F29)"
+  },
+  "f29-joinReviewDark.dc.html": {
+   "x": 2820,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[dark] joinReview · Ravi wants to join (dark) · New (F29)"
+  },
+  "f29-joinReviewTick.dc.html": {
+   "x": 3290,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H49] joinReview · ID received on WhatsApp ✓ · New (F29)"
+  },
+  "f29-joinReviewDrive.dc.html": {
+   "x": 3760,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H49] joinReview · ID in the owner’s Drive: masked image, Open in Drive, Delete from my Drive · New (F29)"
+  },
+  "f29-drive.dc.html": {
+   "x": 4230,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[H50] drive sheet · Tenant IDs in your Drive: Connect Google Drive, Full copy needed switch · New (F29)"
+  },
+  "f29-driveConnected.dc.html": {
+   "x": 4700,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H50] drive · Connected · 12 files, Disconnect · New (F29)"
+  },
+  "f29-driveNA.dc.html": {
+   "x": 5170,
+   "y": 59235,
+   "w": 390,
+   "h": 844,
+   "title": "[variant of H50] drive · Not available yet (Drive scope not approved) · New (F29)"
+  },
+  "f28-wList.dc.html": {
+   "x": 0,
+   "y": 60499,
+   "w": 390,
+   "h": 1240,
+   "title": "[W9] app/list/ · List your PG on Hostelzy, free: form, “We’ll call you within 2 days to confirm” · New (F28)"
+  },
+  "f28-wListSent.dc.html": {
+   "x": 470,
+   "y": 60499,
+   "w": 390,
+   "h": 900,
+   "title": "[variant of W9] app/list/ · Sent: “We’ll call you within 2 days to confirm” · New (F28)"
+  },
+  "f28-wPoster.dc.html": {
+   "x": 940,
+   "y": 60499,
+   "w": 794,
+   "h": 1123,
+   "title": "[W10] app/list/poster.html · A4 poster: “Get tenants from Hostelzy. Free listing.”, QR to app/list/ · New (F28)"
+  },
+  "f28-c14-tocall.dc.html": {
+   "x": 1814,
+   "y": 60499,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › To call: drafts from Places / OSM / web, call script, List / Not a PG / Call later, Export CSV · New (F28)"
+  },
+  "f28-c14-torefresh.dc.html": {
+   "x": 3334,
+   "y": 60499,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › To refresh: listed past 50 days, Rent confirmed today / Closed, Export CSV · New (F28)"
+  },
+  "f28-c14-partners.dc.html": {
+   "x": 4854,
+   "y": 60499,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C14] console · Listed › Partners: add partner (code), list, listed count, ₹ due · New (F28)"
+  },
+  "f28-c15-addedBy.dc.html": {
+   "x": 6374,
+   "y": 60499,
+   "w": 1440,
+   "h": 900,
+   "title": "[variant of C15] console · Claims: “added by Ravi (resident) · owner phone matches ✓ / ✗” · New (F28)"
   }
  },
  "createdOnFiles": {
@@ -3439,14 +3607,6 @@
    "x": 0,
    "y": 51239
   },
-  "arch_f25": {
-   "kind": "title1",
-   "maxW": 4000,
-   "text": "Archive · F25 drafts retired by the hub decision (merged into NEW-1 / Owner Beds toggle)",
-   "w": 240,
-   "x": 0,
-   "y": 53823
-  },
   "arch_h0": {
    "kind": "title1",
    "maxW": 8000,
@@ -3454,14 +3614,6 @@
    "w": 240,
    "x": 0,
    "y": 32984
-  },
-  "arch_old": {
-   "kind": "title1",
-   "maxW": 8000,
-   "text": "Archive · Old main canvas: boards retired from the main area",
-   "w": 240,
-   "x": 0,
-   "y": 52503
   },
   "r1": {
    "kind": "title1",
@@ -3654,6 +3806,30 @@
    "w": 240,
    "x": 0,
    "y": 56407
+  },
+  "r25A": {
+   "kind": "title1",
+   "maxW": 8000,
+   "text": "F30 · F28 (app): sign-in wall, Add a hostel, Your hostel on Hostelzy · founder GO 18 Oct",
+   "w": 240,
+   "x": 0,
+   "y": 57671
+  },
+  "r25B": {
+   "kind": "title1",
+   "maxW": 8000,
+   "text": "F29: Ask to join, join form, join review, Tenant IDs in your Drive",
+   "w": 240,
+   "x": 0,
+   "y": 58935
+  },
+  "r25C": {
+   "kind": "title1",
+   "maxW": 8000,
+   "text": "F28 web + console: app/list/, poster, Listed segments, Claims",
+   "w": 240,
+   "x": 0,
+   "y": 60199
   }
  },
  "order": [
@@ -3729,7 +3905,6 @@
   "bedSheet.dc.html",
   "oRent.dc.html",
   "residents.dc.html",
-  "addTenant.dc.html",
   "invite.dc.html",
   "r-todayDark.dc.html",
   "beds-dark.dc.html",
@@ -3831,8 +4006,6 @@
   "f24-aAddOwner.dc.html",
   "aAdd6.dc.html",
   "aTrack.dc.html",
-  "aPay.dc.html",
-  "aCases.dc.html",
   "f12-Admin.dc.html",
   "aAdd6-dark.dc.html",
   "cSignin.dc.html",
@@ -3911,8 +4084,6 @@
   "w3-wJNoCode.dc.html",
   "w3-wRoot.dc.html",
   "w4-building.dc.html",
-  "w4-floorMap.dc.html",
-  "w4-oFloorPlan.dc.html",
   "HostelzyApp.dc.html",
   "z-f03-Main.dc.html",
   "z-f03-Card.dc.html",
@@ -4092,13 +4263,6 @@
   "z-f23-Add.dc.html",
   "z-f23-Owner.dc.html",
   "z-f23-Filters.dc.html",
-  "z-old-demo.dc.html",
-  "z-old-back.dc.html",
-  "z-old-oCreate.dc.html",
-  "z-old-f12-Request.dc.html",
-  "z-old-f19-Console.dc.html",
-  "z-old-f19-ConsoleDark.dc.html",
-  "z-old-room.dc.html",
   "loc-dark.dc.html",
   "where-dark.dc.html",
   "r-holdSheetMember.dc.html",
@@ -4128,7 +4292,43 @@
   "f27-meals.dc.html",
   "f27-saved.dc.html",
   "f27-hostelChip.dc.html",
-  "f27-push.dc.html"
+  "f27-push.dc.html",
+  "f30-wall.dc.html",
+  "f30-wallDark.dc.html",
+  "f30-exploreHint.dc.html",
+  "f28-exploreEnd.dc.html",
+  "f28-meYourHostel.dc.html",
+  "f28-rewardsAdded.dc.html",
+  "f28-addHostel.dc.html",
+  "f28-addHostelDark.dc.html",
+  "f28-addHostelPartner.dc.html",
+  "f28-myAdd.dc.html",
+  "f28-myAddDark.dc.html",
+  "f28-myAddAsked.dc.html",
+  "f28-myAddAgreed.dc.html",
+  "f28-myAddVerified.dc.html",
+  "f28-myAddPaid.dc.html",
+  "f28-myAddWaiting.dc.html",
+  "f28-myAddQueued.dc.html",
+  "f29-askJoin.dc.html",
+  "f29-joinForm.dc.html",
+  "f29-joinFormDark.dc.html",
+  "f29-joinFormDone.dc.html",
+  "f29-todayJoining.dc.html",
+  "f29-joinReview.dc.html",
+  "f29-joinReviewDark.dc.html",
+  "f29-joinReviewTick.dc.html",
+  "f29-joinReviewDrive.dc.html",
+  "f29-drive.dc.html",
+  "f29-driveConnected.dc.html",
+  "f29-driveNA.dc.html",
+  "f28-wList.dc.html",
+  "f28-wListSent.dc.html",
+  "f28-wPoster.dc.html",
+  "f28-c14-tocall.dc.html",
+  "f28-c14-torefresh.dc.html",
+  "f28-c14-partners.dc.html",
+  "f28-c15-addedBy.dc.html"
  ],
  "pages": [],
  "title": "Hostelzy · Main design"
