@@ -103,3 +103,18 @@ Rule A (F31) applied: no helper lines. Not drawn: S9 map pins with the switch (s
 
 ## Id fix (hub, 2026-10-18 15:50)
 W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page is **W9** and the poster **W10** everywhere (spec, boards, SCREENS).
+
+## Hub decisions on Build 3's "Not in the spec" (2026-10-18 15:55)
+| # | Item | Decision |
+|---|---|---|
+| 1 | `removed_at`, `call_after`, `source_photos` columns | ✅ Keep |
+| 2 | Owner phone moved to `hostel_leads` by trigger; `hostel_owner_phone(h)` | ✅ Keep; Build 2 dedupes through it |
+| 3 | `list_draft` needs no photo | ✅ Keep; the card shows the Places photo or the neutral placeholder; `list_hostel` (F26) unchanged |
+| 4 | Private `self-list` bucket for web photos | ✅ Keep (3 files, ≤ 5 MB, images only; team copies into hostel photos when listing) |
+| 5 | Web dedupe by name + area; Indian mobile check | ✅ Keep |
+| 6 | Gender from the name, hotels/lodges skipped, nearest area | ✅ Keep as a hint; the call confirms |
+| 7 | A gone Google place keeps a listed/live row | ✅ Keep |
+| 8 | Partner RPC names | ✅ Build 2 defines exactly `new_partner(p_name, p_phone, p_upi)` and `partners_due()` |
+| 9 | Drafts and removed rows hidden from Listed | ✅ Keep |
+| 10 | F31 Rule A applied | ✅ |
+| 11 | TLS **without** certificate verification for the DB connection | ❌ Change: verify the certificate by default (Node's CA store + Supabase's CA; the pooler presents a public cert). `PGSSL_NO_VERIFY=1` is an explicit opt-out for local tests only, and the script prints one line when it is on |
