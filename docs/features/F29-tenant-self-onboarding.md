@@ -67,6 +67,30 @@ one-time: Drive scope on the consent screen (wave 4). Everything ships with the 
 ## Not in the spec
 Build lists extras here; the hub decides within the day. Known later items: OneDrive, OCR masking, police verification form export.
 
+**Part 3, decided by Build 4 (2026-10-18, wave 4; the hub can change any of them):**
+| # | What Build 4 did | Why |
+|---|---|---|
+| 1 | **Connect / Disconnect are the owner's only**; managers see the status line and can flip the Full copy switch | The token is the owner's Google account; `drive_status` / `set_full_copy` are for owner + managers as the spec says |
+| 2 | The **Full copy switch shows only once Drive is connected** (it lives on `owner_drive`) | Without Drive the tenant sends the ID on WhatsApp, so there is nothing to mask |
+| 3 | **Disconnect also revokes** Hostelzy's access at Google (`oauth2 /revoke`), then forgets the row; the files stay in the Drive | "Disconnect any time" should really end the access |
+| 4 | **`id-view` gives a 10-minute link served by the function itself** (it streams the bytes with the owner's token) plus the file's Drive page link, instead of Google's `webContentLink` | `webContentLink` only works in a browser signed in as the owner, so a manager (or the app's image widget) could never open it |
+| 5 | `id-upload` takes **JPEG / PNG / WebP up to 6 MB** (base64 JSON); the file is named `ID <date time>.jpg` | A limit the function can hold in memory |
+| 6 | **IdCapture uses the camera only** (no gallery), shrinks the photo to 1600 px on the phone, and the bar is a fixed size (half the width, 9 % of the height) that the tenant drags; it starts over the lower middle of an Aadhaar card | One job per screen; the spec's "drag a black bar" |
+| 7 | Reconnecting finds the same Drive folders and **starts the file count at 0** | The count is the app's own counter (`owner_drive.files`), not a Drive query |
+| 8 | **Three Edge Function secrets** are needed: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the Web client of the same Google Cloud project), `DRIVE_TOKEN_KEY` (random, encrypts the tokens and signs the links); the functions deploy with `--no-verify-jwt` because the gateway can't check Firebase tokens (PostgREST checks them inside) | Founder one-time step (handover) |
+| 9 | `id_upload_target` reads the token through a **hook function `join_hostel_for_token(text)`** that is a stub until wave 2's `join_requests` replaces it | Wave 4 was built apart from wave 2 (`docs/handover/w4-build.md`) |
+
 ## Design
 Boards H48, S94 (+ done variant), H49 (+ Drive and WhatsApp variants), H50 (+ not-available variant), S36 Joining tab variant,
 S38/S40 with buttons on every row. Light + dark for S94 and H49.
+
+## Build · Part 3 (wave 4, Build 4, 2026-10-18)
+Branch `feature/w4-drive-fresh`, not merged; the integrator wires it after wave 2 (`docs/handover/w4-build.md`).
+| Piece | Where | State |
+|---|---|---|
+| `owner_drive` + RPCs `drive_status`, `set_full_copy`, `drive_role`, `id_upload_target`; service-role `drive_put` / `drive_token` / `drive_forget` / `drive_file_added`; pgcrypto with the server secret | `supabase/migrations/20261018140000_f29_drive.sql`, test `supabase/tests/f29_drive_test.sql` | Done, rerun-safe |
+| Edge Functions `drive-connect`, `id-upload`, `id-view` (shared `_shared/drive.ts`), 10 Node tests | `supabase/functions/…`, `supabase/functions/tests/drive.test.ts`, deploy lines in `.github/workflows/supabase-functions.yml` | Done |
+| Sheet **H50** `drive` (Connect / Disconnect / status / Full copy switch / "Not available yet" variant), Manage › **Tenant IDs** row | `hostelzy/lib/features/drive/drive.dart`, `drive_sheets.dart`, `drive_auth.dart`; `owner_manage_screen.dart`; `ui/shell.dart` | Done, light + dark |
+| `IdCapture` (camera → "Cover the first 8 digits" bar → preview → `id-upload`) for S94; `IdThumb` (via `id-view`, tap opens Drive) for H49; repo `idTarget` / `idUpload` / `idView` / `idDelete` | `hostelzy/lib/features/drive/id_capture.dart`, `id_thumb.dart`; `features/listings/repo.dart` + both repos | Done; S94 / H49 wire them (wave 2) |
+| Flow tests (10) | `hostelzy/test/w4_drive_test.dart` | Green with `tools/check.sh` |
+| FOUNDER-TODO one-time line, SCREENS rows for H50, SQL bundle | In the handover; the integrator adds them (not edited here on purpose) | Open |

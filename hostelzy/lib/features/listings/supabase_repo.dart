@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -688,6 +689,75 @@ class SupabaseRepo implements HostelRepo {
       return null;
     }
   }
+
+  // ------------------------------------------------------------ F29 Part 3: Drive
+
+  static DriveStatus _driveRow(Map<String, dynamic> r) => (connected: r['connected'] as bool? ?? false, files: (r['files'] as num?)?.toInt() ?? 0, fullCopy: r['full_copy'] as bool? ?? false);
+
+  /// One of the three Drive Edge Functions, with the user's Firebase token
+  /// (the client adds it). A refusal becomes [DriveFail] with the function's
+  /// own code; a function that isn't deployed yet is `not_ready`.
+  Future<Map<String, dynamic>> _driveFn(String name, Map<String, dynamic> body) async {
+    try {
+      final r = await db.functions.invoke(name, body: body);
+      return (r.data as Map?)?.cast<String, dynamic>() ?? const {};
+    } on FunctionException catch (e) {
+      final d = e.details;
+      final m = d is Map ? d.cast<String, dynamic>() : d is String ? _json(d) : const <String, dynamic>{};
+      if (e.status == 404 && m['error'] == null) throw const DriveFail('not_ready', 'Not available yet');
+      throw DriveFail(m['error'] as String? ?? 'failed', m['message'] as String? ?? 'Couldn’t do that. Try again.');
+    }
+  }
+
+  static Map<String, dynamic> _json(String s) {
+    try {
+      return (jsonDecode(s) as Map).cast<String, dynamic>();
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  @override
+  Future<DriveStatus?> driveStatus(String hid) async {
+    try {
+      final rows = (await db.rpc('drive_status', params: {'h': hid}) as List).cast<Map<String, dynamic>>();
+      return rows.isEmpty ? (connected: false, files: 0, fullCopy: false) : _driveRow(rows.first);
+    } on PostgrestException catch (e) {
+      if (!_missingFn(e)) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<DriveStatus> driveConnect(String hid, String code) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'code': code}));
+  @override
+  Future<DriveStatus> driveDisconnect(String hid) async => _driveRow(await _driveFn('drive-connect', {'hostel_id': hid, 'action': 'disconnect'}));
+  @override
+  Future<void> setFullCopy(String hid, bool v) => db.rpc('set_full_copy', params: {'h': hid, 'v': v});
+  @override
+  Future<({String hid, bool fullCopy})?> idTarget(String token) async {
+    try {
+      final rows = (await db.rpc('id_upload_target', params: {'p_token': token}) as List).cast<Map<String, dynamic>>();
+      return rows.isEmpty ? null : (hid: rows.first['hostel_id'] as String, fullCopy: rows.first['full_copy'] as bool? ?? false);
+    } on PostgrestException catch (e) {
+      // Not connected, or the SQL isn't there yet: the WhatsApp path. A bad
+      // token is the tenant's problem to hear about.
+      if (_missingFn(e) || e.message.contains('connected Google Drive') || e.message.contains('isn’t ready yet')) return null;
+      throw DriveFail('bad_token', e.message);
+    }
+  }
+
+  @override
+  Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'}) async =>
+      (await _driveFn('id-upload', {'token': token, 'image': base64Encode(bytes), 'mime': mime}))['file_id'] as String;
+  @override
+  Future<({String url, String open})> idView(String hid, String fileId) async {
+    final r = await _driveFn('id-view', {'hostel_id': hid, 'file_id': fileId});
+    return (url: r['url'] as String? ?? '', open: r['open'] as String? ?? '');
+  }
+
+  @override
+  Future<void> idDelete(String hid, String fileId) => _driveFn('id-view', {'hostel_id': hid, 'file_id': fileId, 'action': 'delete'});
 }
 
 /// A function the app calls isn't on the server yet (its SQL hasn't run).

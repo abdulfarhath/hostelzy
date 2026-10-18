@@ -10,9 +10,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'app_config.dart';
 import 'data.dart';
+import 'features/drive/drive_auth.dart';
 import 'features/links/scan.dart';
 import 'features/listings/live.dart' show LiveRows, MeterRow, statsOf;
-import 'features/listings/repo.dart' show HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
+import 'features/listings/repo.dart' show DriveFail, DriveStatus, HostelFlags, HostelRepo, HostelSignals, Listings, RemoteSettings, SampleRepo, Standing;
 import 'features/photos/photo.dart';
 import 'features/photos/pick.dart';
 import 'l10n.dart';
@@ -24,6 +25,7 @@ import 'sign_in.dart';
 import 'store.dart';
 
 part 'features/amenities/amenities.dart';
+part 'features/drive/drive.dart';
 part 'features/fair_play/fair_play.dart';
 part 'features/food/food.dart';
 part 'features/food/save_food.dart';
@@ -81,7 +83,7 @@ Future<T> _settle<T>(Future<T> Function() f) {
   return out;
 }
 
-class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _SaveFoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData {
+class AppState extends ChangeNotifier with _FairPlayData, _RewardsData, _PlanData, _RoomLayoutsData, _TeamModeData, _OwnerLayoutsData, _RoomsLiveData, _TeamMembersData, _LayoutEditorData, _OnboardingData, _ReviewsData, _OnPhoneData, _MapAreaData, _HoldsData, _PaymentsData, _PlayStoreData, _LoginData, _SyncData, _LinksData, _PhotosData, _RemindersData, _MyStayData, _LayoutFixesData, _GuestData, _AmenityData, _FoodData, _SaveFoodData, _MoveData, _MeterData, _LaundryData, _ReviewRulesData, _TabsData, _TiersData, _DriveData {
   AppState({String? start, String? role, String? theme, String? mode, this.sheet, String? moveTab, String? moreTab, String? foodView, String? mView, String? plan, String? auth}) {
     resetSampleData();
     for (var i = 0; i < hostels.length; i++) {

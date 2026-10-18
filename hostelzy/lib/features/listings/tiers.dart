@@ -33,6 +33,21 @@ int tierCompare(Hostel a, Hostel b, int Function(Hostel) price, {bool byPrice = 
   return (a.listed ? 1 : 0).compareTo(b.listed ? 1 : 0);
 }
 
+/// F28 Part 4 (28-90): a listed hostel's rent is shown only while a person's
+/// confirmation is within 60 days; after that it is "Rent on request".
+const rentFreshDays = 60;
+bool rentFresh(Hostel h, {DateTime? now}) {
+  if (!h.listed) return true;
+  final at = h.rentConfirmedAt;
+  return at != null && (now ?? DateTime.now()).difference(at).inDays < rentFreshDays;
+}
+
+/// What the card and the page say for the rent: the range, or "Rent on request".
+String rentLine(Hostel h, {DateTime? now}) => rentFresh(h, now: now) ? rentRange(h) : 'Rent on request';
+
+/// F28 Part 4: priced listed hostels before "Rent on request" ones.
+int rentFreshCompare(Hostel a, Hostel b, {DateTime? now}) => (rentFresh(a, now: now) ? 0 : 1).compareTo(rentFresh(b, now: now) ? 0 : 1);
+
 /// "Around ₹7,000–9,000".
 String rentRange(Hostel h) => h.rentMax > h.rentMin ? 'Around ${fmt(h.rentMin)}–${fmt(h.rentMax).replaceFirst('₹', '')}' : 'Around ${fmt(h.rentMin)}';
 

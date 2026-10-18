@@ -91,6 +91,22 @@ ships with the SQL autorun. FOUNDER-TODO one-time: `GOOGLE_PLACES_KEY` secret (n
 Build lists extras here; the hub decides within the day. Kept out on purpose: OCR of rent from photos, scraping of any
 site, auto-rent from portals, tenants adding reviews for a hostel they added, college ambassadors (28-91, later).
 
+**Part 4, decided by Build 4 (2026-10-18, wave 4):**
+| # | What Build 4 did | Why |
+|---|---|---|
+| 1 | The demo's listed sample hostel (Sri Balaji) counts as **confirmed today**, so the demo APK shows a range; the "Rent on request" state is covered by the flow test | Sample data only; no second sample hostel was added |
+| 2 | Card wording: **"Rent on request · not confirmed lately"**; page: "Rent on request" with "Nobody has confirmed the rent in the last 60 days. Ask Hostelzy on WhatsApp." | Plain words for the spec's state |
+| 3 | A stale listed hostel still answers the **Budget filter** by its old range (unchanged), and under Price ↑ it sorts after every priced card (fresh listed ones included), then by its old range among the stale ones | The number is kept back from the tenant, not thrown away |
+
 ## Design
 Boards S92 (+ partner variant), S93 (+ 5 state variants), W8 (+ sent), W9, H1 with the switch, S8 with the end row,
 S79 row, T20 button, S22 variant, C14 segments (To call, To refresh, Partners), C15 variant. Light + dark for S92, S93.
+
+## Build · Part 4, app side (wave 4, Build 4, 2026-10-18)
+Branch `feature/w4-drive-fresh`, not merged (`docs/handover/w4-build.md`). Console "To refresh" is Build 3's.
+| Piece | Where | State |
+|---|---|---|
+| `hostels.rent_confirmed_at` (`add column if not exists`, same as wave 2/3) | `supabase/migrations/20261018140000_f29_drive.sql` (+ a row in its SQL test) | Done |
+| `Hostel.rentConfirmedAt` from the row; `rentFresh` (60 days), `rentLine`, `rentFreshCompare` | `hostelzy/lib/data/hostels.dart`, `features/listings/rows.dart`, `features/listings/tiers.dart` | Done |
+| Explore card and T32 page say **"Rent on request"** after 60 days; the card sorts after every priced one (first sort step) | `features/explore/unverified_screen.dart`, `explore_screen.dart` | Done |
+| Tests | `hostelzy/test/w4_drive_test.dart` (28-90 unit + flow) | Green |

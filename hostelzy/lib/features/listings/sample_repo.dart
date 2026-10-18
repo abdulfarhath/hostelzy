@@ -8,6 +8,11 @@ import 'repo.dart';
 
 class SampleRepo implements HostelRepo {
   const SampleRepo();
+
+  /// F29 Part 3 (demo): Drive "connections" kept in memory for the session.
+  static final Map<String, DriveStatus> _drive = {};
+  static void resetDrive() => _drive.clear();
+
   @override
   bool get remote => false;
   @override
@@ -274,4 +279,44 @@ class SampleRepo implements HostelRepo {
   Future<void> sendClaim(String hid, String name, String phone) async {}
   @override
   Future<Map<String, ({int verified, int listed})>?> areaCounts() async => null;
+  @override
+  Future<DriveStatus?> driveStatus(String hid) async => _drive[hid] ?? (connected: false, files: 0, fullCopy: false);
+  @override
+  Future<DriveStatus> driveConnect(String hid, String code) async => _drive[hid] = (connected: true, files: 0, fullCopy: false);
+  @override
+  Future<DriveStatus> driveDisconnect(String hid) async {
+    _drive.remove(hid);
+    return (connected: false, files: 0, fullCopy: false);
+  }
+
+  @override
+  Future<void> setFullCopy(String hid, bool v) async {
+    final d = _drive[hid];
+    if (d == null) throw const DriveFail('not_connected', 'Connect Google Drive first');
+    _drive[hid] = (connected: true, files: d.files, fullCopy: v);
+  }
+
+  @override
+  Future<({String hid, bool fullCopy})?> idTarget(String token) async {
+    final e = _drive.entries.firstOrNull;
+    return e == null ? null : (hid: e.key, fullCopy: e.value.fullCopy);
+  }
+
+  @override
+  Future<String> idUpload(String token, Uint8List bytes, {String mime = 'image/jpeg'}) async {
+    final hid = _drive.keys.firstOrNull;
+    if (hid == null) throw const DriveFail('not_connected', 'The owner hasn’t connected Google Drive');
+    final d = _drive[hid]!;
+    _drive[hid] = (connected: true, files: d.files + 1, fullCopy: d.fullCopy);
+    return 'sample-id-${d.files + 1}';
+  }
+
+  /// Demo: no real Drive; [IdThumb] draws a placeholder for an empty url.
+  @override
+  Future<({String url, String open})> idView(String hid, String fileId) async => (url: '', open: '');
+  @override
+  Future<void> idDelete(String hid, String fileId) async {
+    final d = _drive[hid];
+    if (d != null) _drive[hid] = (connected: true, files: d.files > 0 ? d.files - 1 : 0, fullCopy: d.fullCopy);
+  }
 }

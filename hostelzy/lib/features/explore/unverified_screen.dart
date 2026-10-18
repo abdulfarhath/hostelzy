@@ -78,7 +78,10 @@ class UnverifiedCard extends StatelessWidget {
             const SizedBox(height: 4),
             T('${h.gender} · ${h.area} · ${kmLabel(s.kmFor(h))} ${s.kmFrom}', s: 14, c: p.mu),
             const SizedBox(height: 4),
-            Rich([sp(context, '${rentRange(h)}/mo', w: 800, c: p.tx), sp(context, ' · expected, not confirmed')], s: 14, c: p.mu),
+            // F28 Part 4: the range only within 60 days of a person's confirmation.
+            rentFresh(h)
+                ? Rich([sp(context, '${rentRange(h)}/mo', w: 800, c: p.tx), sp(context, ' · expected, not confirmed')], s: 14, c: p.mu)
+                : Rich([sp(context, 'Rent on request', w: 800, c: p.tx), sp(context, ' · not confirmed lately')], s: 14, c: p.mu, key: const ValueKey('rentOnRequest')),
           ],
         ),
       ),
@@ -146,8 +149,9 @@ class UnverifiedScreen extends StatelessWidget {
                           gap: 2,
                           children: [
                             const Kicker('Rent per month'),
-                            T(rentRange(h), w: 800, s: 24, key: const ValueKey('rentRange')),
-                            T('Expected, not confirmed. The owner hasn’t joined Hostelzy yet.', s: 13, c: p.mu, lh: 1.4),
+                            T(rentLine(h), w: 800, s: 24, key: const ValueKey('rentRange')),
+                            // F28 Part 4: after 60 days without a confirmation the number is kept back.
+                            T(rentFresh(h) ? 'Expected, not confirmed. The owner hasn’t joined Hostelzy yet.' : 'Nobody has confirmed the rent in the last 60 days. Ask Hostelzy on WhatsApp.', s: 13, c: p.mu, lh: 1.4),
                           ],
                         ),
                       ),
