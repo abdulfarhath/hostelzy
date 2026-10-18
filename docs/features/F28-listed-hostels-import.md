@@ -126,3 +126,9 @@ W8 was already `app/delete-account/` in SCREENS §5. The owner self-serve page i
 | 2 | ❌ Change (F31 Rule A): card says **"Rent on request"** only; hostel page says **"Rent on request"** + the button **"Ask on WhatsApp"**, no sentence |
 | 3 | ✅ Stale rent still answers the Budget filter; sorts after priced cards |
 | 4 | ✅ App reads `listed_rent_visible`, falls back to the 60-day rule |
+
+## Hub decisions on Build 2's wave 2 extras (2026-10-18 20:50)
+F28 #1–4, #6–9 accepted as built (partner_code, owner_asked_at, `reward_payouts` + `payouts_due()` + `mark_payout_paid()`,
+`check_partner_hostel(h)` (integrator wires it to the C14 Partners "checked" tick and lists `payouts_due()` in console
+Payments), adder photos, adder-only owner phone, S22 row, Rule A, no Realtime for these tables).
+#5 accepted with one copy change (Rule A): the partner line in S93 reads **"₹20 when checked"**.
