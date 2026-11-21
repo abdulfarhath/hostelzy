@@ -255,3 +255,12 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **21:20 UTC**
 > what's the update
+
+
+## 2026-11-21
+
+**(UTC)**
+> what data does the app needs to fetch from internet, google places api to make it look filled, i want atmost data possible to be fetched from online
+>
+> plan the requirement
+> put the context ill ask some other ai to fetch it so it neds to have context write me the entire context in .md here
