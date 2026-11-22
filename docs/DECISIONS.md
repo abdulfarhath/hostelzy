@@ -353,6 +353,9 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   value, every value keeps its source, public pages only (no fake logins, no CAPTCHA breaking), exact pins required. Scraped
   rows enter as drafts and go live only after the team's call (unchanged); what shows publicly before that call is a hub
   decision still open.
+- **2026-11-22 (founder): collect all the data first, no legal review now.** "As of now I need all the data"; how it's used
+  (shown in the app, owner calls) and any legal checks are the founder's, later. Plan v5 in `docs/DATA-FETCH-BRIEF.md`
+  (Google Places API + Google Maps pages, portals, chains, Instagram/Facebook/YouTube, Telegram, own sites, OSM).
 
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.

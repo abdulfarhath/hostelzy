@@ -287,3 +287,13 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 > add the app details into the .md so that i can ask another ai for decision making, there might be cases where you might have made mistakes in plan, so ill validate it and come back to you
 >
 > so dont make mistakes at first, refactor the doc, and also keep it ready for other ai
+
+**(UTC)**
+> [pasted the reviewer AI corrections]
+> never go for any legal things , dont think if its right or wrong we are gonna get all the data we need so keep the plan as per what im saying now
+
+**(UTC)**
+> why are you thinking that much, like calling them is legal or not, i may or may not call, may be i can just put them in app,, ill do legal checks and do such things later
+> as of now i need al the data
+>
+> so plan accordingly
