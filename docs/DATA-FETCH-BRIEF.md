@@ -1,16 +1,20 @@
-# Hostelzy · Data fetch brief (for an outside AI)
+# Hostelzy · Data fetch brief v3: get everything (for an outside AI)
 
-**Written by:** Hostelzy hub, 2026-11-21, at the founder's request.
-**Who reads this:** an AI (or person) with internet access whose job is to **collect as much real, public data as possible
-about PGs / hostels in Hyderabad**, so the Hostelzy app looks full on day one.
-**You do not need any other context.** Everything you need is in this file. Read it top to bottom once before you start.
+**Written by:** Hostelzy hub, 2026-11-22, at the founder's request.
+**Founder (2026-11-22):** "Forget rules, we need as much data as possible, we can scrape from anywhere, get it from anywhere."
+This replaces v1/v2 of this brief and the 2026-10-18 "no scraping" decision.
+
+**Who reads this:** an AI (or person) with internet access whose job is to **collect every bit of public data about PGs /
+hostels / co-living in Hyderabad**, from every website, map, portal and listing you can reach, so the Hostelzy app looks full
+on day one. **You need no other context.** Read it once top to bottom, then start.
 
 ---
 
 ## 0. The job in one line
 
-Find **every PG / hostel / co-living place in Hyderabad** (target: 3,000+), plus the **places around them** (metro, IT parks,
-colleges, shops), and hand back clean files in the exact formats in section 6. Nothing invented, every row has a source.
+Find **every PG / hostel / co-living place in Hyderabad** (target **5,000+**), with **everything** known about each one
+(exact pin, phone, rents per sharing, food, AC, amenities, rules, photos, ratings), plus the places around them, from
+**every source**, merged into one clean set of files (section 7).
 
 ---
 
@@ -18,153 +22,149 @@ colleges, shops), and hand back clean files in the exact formats in section 6. N
 
 | | |
 |---|---|
-| Product | A phone app (Flutter + Supabase) for **Hyderabad PGs and hostels** |
-| Tenants | Search hostels on a list and a map, filter (Men / Women / Co-living, price, AC, food), open a hostel page, hold a bed |
+| Product | A phone app for **Hyderabad PGs and hostels** |
+| Tenants | Search on a list and a map, filter (Men / Women / Co-living, price, AC, food, sharing), open a hostel page, hold a bed |
 | Residents | Pay rent, see the week's food menu, raise complaints |
 | Owners | Run their hostel: beds, rooms, rent, residents, meals |
-| City | Hyderabad + Secunderabad + Cyberabad (the whole GHMC / HMDA urban area) |
-| Typical user | Student or IT employee, 18–30, looking near their college, coaching centre or office |
+| City | Hyderabad + Secunderabad + Cyberabad (whole GHMC / HMDA urban area) |
+| Typical tenant | Student or IT employee, 18–30, searching near a college, coaching centre or office |
 
-### Two kinds of listing in the app
-| Tier | Badge | What it shows | Where the data comes from |
-|---|---|---|---|
-| **✓ VERIFIED** | Navy | Rooms, beds, exact rent per room type, food menu, owner contact, 8 photos | The owner + a Hostelzy team visit. **Not your job.** |
-| **UNVERIFIED** (listed) | Grey outline | Name, Men/Women/Co-living, area, map pin, photos, rent range (only if a human confirmed it in the last 60 days, else "Rent on request") | **Your data** → the team phones each place → it becomes a listed card |
+### How your data is used
+| Step | What |
+|---|---|
+| 1 | Your rows go in as **drafts** (tenants don't see them yet) |
+| 2 | The Hostelzy team **calls the phone number**, confirms it's a real PG, confirms Men/Women, rent, food |
+| 3 | It goes live as an **UNVERIFIED** card (name, area, pin, photos, rent range). Owner signs up later → **✓ VERIFIED** |
 
-Your data first lands as a **draft** (not visible to tenants). The Hostelzy team calls the place, confirms it is a real PG,
-confirms Men/Women and rent, and then lists it. So: **more rows with a phone number = more hostels the team can list.**
+So the most valuable things are, in order: **exact pin → phone / WhatsApp → name → Men/Women → rents → everything else.**
 
 ---
 
-## 2. Hard rules (break one and the data is thrown away)
+## 2. The only lines (they protect the data, not slow you down)
 
-| # | Rule |
-|---|---|
-| 1 | **Real data only.** Never invent, estimate, average or "fill in" a value. Unknown = leave the field `null`. |
-| 2 | **Every row has a source**: `source` + `source_url` (or `place_id`) + `fetched_at` (ISO date-time, UTC). |
-| 3 | **Official APIs and open data only.** Allowed: Google **Places API (New)** with an API key, **OpenStreetMap** (Overpass API, Geofabrik extracts, Nominatim within its usage policy), **openrouteservice / self-hosted OSRM** for travel times, government open data (data.gov.in, Telangana Open Data, HMRL / L&T Metro published station lists), a hostel's **own** website or own Instagram page. |
-| 4 | **Forbidden (founder decision):** scraping Google Maps web pages, scraping listing portals (NoBroker, MagicBricks, 99acres, Housing.com, Justdial, Sulekha, Stanza/Zolo/Colive sites' search pages, OLX, Facebook groups), bought or leaked phone lists, personal social profiles. GHMC licence lists are dropped too. |
-| 5 | **Google terms.** Google content (name, address, phone, rating, photos…) may be stored **up to 30 days** and then must be refreshed or deleted; only `place_id` may be kept for ever. So every Google row carries `fetched_at`, and photos are delivered as **photo names + author attributions**, never downloaded image files. |
-| 6 | **OpenStreetMap is ODbL.** Fine to store for ever; keep `osm_id` and the credit line "© OpenStreetMap contributors". |
-| 7 | **No private people.** No personal names of tenants, no reviewers' names, no Aadhaar/ID anything. An owner's name only if the business itself publishes it (e.g. "Contact: Ravi" on its own website). |
-| 8 | **No secrets in files.** Never write an API key into any delivered file or log. |
-| 9 | **Spend cap.** Google Places costs money per request. Stay under the budget the founder gives you (default **US$ 100 total** unless told otherwise) and report what you spent. Use the cheap-first method in section 5. |
+| # | Line | Why |
+|---|---|---|
+| 1 | **Never invent a value.** Unknown = `null`. | A made-up rent or phone is worse than none: the team wastes calls and tenants lose trust |
+| 2 | **Every value says where it came from** (`source`, `url`, `seen_at`). | Merging, re-checking, removing a source later if needed |
+| 3 | **Public pages only.** Don't log in with fake accounts, don't break CAPTCHAs or paywalls, don't use leaked databases. | Getting past a login or CAPTCHA is "unauthorised access" under Indian law (IT Act s.43/66); public pages are fine |
+| 4 | **Go slow per site** (≈1 request / 2–3 s per domain, back off on 429/403, rotate nothing). | Not getting blocked halfway; not knocking a small site over |
+| 5 | **Never put an API key, cookie or password in a delivered file.** | Leaks |
+
+Everything else is open: Google Maps, every portal, every chain's site, social media public pages, classifieds, search results.
 
 ---
 
 ## 2b. Location must be exact (founder, 2026-11-22)
 
-The map pin is what tenants walk or ride to. A wrong pin = a wrong hostel page, wrong "Near me", wrong travel minutes.
-**Accurate `lat` / `lng` for every hostel is required, not optional.**
+The map pin is what tenants walk or ride to. **Accurate `lat` / `lng` for every hostel is required.**
 
 | Rule | Detail |
 |---|---|
-| Precision | At least **6 decimals** (`17.438123, 78.448710` ≈ 10 cm). Never round. |
-| Best source | The Google Places `location` of that business (the pin the owner or Google placed on the building). For OSM: the node, or the **centre of the building outline** for a way. |
-| Never use as a pin | The centre of the area, the pincode, the street, or a locality from geocoding the address text. These get `location_quality = "area_only"` and **must not** be shown as a pin (the team fixes them on the call). |
-| `location_quality` | `rooftop` = Google/OSM pin on a building outline (check against the OSM `building=*` polygon within 15 m) · `building` = business pin, no outline to check · `street` = pin on a road, not a building · `area_only` = no real pin |
-| Cross-check | If a Google row and an OSM row of the same place exist, write the distance between their pins as `pin_gap_m`. Over **75 m** → add it to the "check pins" list in `REPORT.md`. |
-| Inside the area | A pin more than 3 km from its `area` centre, or outside the city box → flag in `REPORT.md`, don't drop. |
-| Two hostels, one pin | Two different hostels within **5 m** of each other usually means one was pinned to a landmark: flag both. |
-| Don't move pins | Never "fix" a pin by guessing. Flag it; the team moves it in the app after the call or visit. |
-
-`REPORT.md` must show: how many hostels per `location_quality`, and the "check pins" list (key, name, both pins, gap).
+| Precision | At least **6 decimals** (`17.438123, 78.448710`). Never round. |
+| Best pins, in order | 1 Google Maps business pin · 2 portal listing's own map pin (most portals embed lat/lng in the page JSON) · 3 OSM node / building centre · 4 geocoded full address (house no. + street) |
+| Never a pin | Area centre, pincode centre, locality from geocoding only "Madhapur, Hyderabad". These get `location_quality = "area_only"` and are not shown as a pin |
+| `location_quality` | `rooftop` (pin on a building outline, check against OSM `building=*` within 15 m) · `building` (business pin, no outline to check) · `street` · `area_only` |
+| Many sources, one place | Keep every source's pin; pick the best by the order above as `lat`/`lng`; write the largest gap as `pin_gap_m`. Over **75 m** → "check pins" list in `REPORT.md` |
+| Flags | Pin > 3 km from its area centre, outside the city box, or two different hostels within 5 m → flag in `REPORT.md`, don't drop, don't "fix" by guessing |
 
 ---
 
-## 3. What to fetch, in priority order
+## 3. Sources: hit all of them
 
-"App shows it today" tells you how much it matters right now. **P1 = must have.**
+### A · Maps
+| Source | What to take | How |
+|---|---|---|
+| **Google Maps** | Name, exact pin, address, phone, website, rating, review count, category, open/closed, photos, popular review keywords ("food", "clean", "girls") | Places API (New) if a key is given (cheapest: IDs-only grid, then Details); otherwise the Google Maps search results pages with a headless browser, grid search (section 5) |
+| **OpenStreetMap** | Name, node/building pin, tags (`female=yes`, `phone`, `website`) | Overpass API / Geofabrik extract |
+| Bing Maps, Apple Maps (web), MapmyIndia / Mappls, HERE WeGo | Same as Google; catches places Google lacks; second pin to cross-check | Public search pages / free APIs |
 
-### P1 · Hostels (the main thing)
-One row per physical PG / hostel / co-living building.
+### B · PG and rental portals (richest for rent, sharing, food, amenities)
+| Source | Typical data |
+|---|---|
+| **NoBroker** (PG section) | Rent per sharing, deposit, food, AC, amenities, rules, gender, photos, map pin |
+| **MagicBricks** (PG/hostel) | Rent per sharing, gender, food, amenities, pin, sometimes owner name |
+| **99acres** (PG) | Rent, sharing, gender, amenities, pin |
+| **Housing.com** (PG) | Rent, sharing, gender, food, amenities, pin |
+| **Justdial** | Name, phone (often masked), address, rating, category "PG / hostel / ladies hostel" |
+| **Sulekha**, **Quikr**, **OLX** (rooms / PG) | Phone, rent, area, photos |
+| **CommonFloor**, **Makaan**, **SquareYards**, **NestAway**, **Flatmates/Facebook-mirror sites** | Rent, sharing, area |
+| **Google search** itself | `"PG in <area>" Hyderabad`, `"ladies hostel" <area>`, `site:instagram.com PG <area> Hyderabad` → find the long tail |
 
-| Field | Why the app needs it | App shows it today | Source |
-|---|---|---|---|
-| `name` | Card title | ✅ | Places `displayName` / OSM `name` |
-| `lat`, `lng` | Map pin, distance sort, "Near me", travel times. **Must be the building's own pin** (see section 2b) | ✅ | Places `location` / OSM |
-| `location_quality` | Which pins the app can trust | — | `rooftop`, `building`, `street`, `area_only` (rules in section 2b) |
-| `address` | Hostel page, team call | ✅ (page) | Places `formattedAddress` / OSM `addr:*` |
-| `area` | Area filter, card subtitle ("Madhapur") | ✅ | Nearest area from **your** `areas.json` (section 3·P2) |
-| `pincode` | Area matching | — | Address / OSM `addr:postcode` |
-| `gender_hint` | Men / Women / Co-living filter | ✅ (after the call) | Name words: ladies, women, girls, womens, working women → `Women`; boys, gents, men, mens → `Men`; co-living, coliving, unisex → `Co-living`; else `null`. Also OSM `female=yes` / `male=yes`. **Never guess beyond the name/tags.** |
-| `phone` | **Team calls the place to list it** (most important after the pin) | Team only (never public) | Places `nationalPhoneNumber` / OSM `phone`, `contact:phone` / own website |
-| `whatsapp` | Team messages the owner | Team only | Own website / own Instagram only |
-| `website`, `instagram` | Team call, later photos | — | Places `websiteUri` / OSM `website` |
-| `google_maps_uri` | Team opens it | — | Places `googleMapsUri` |
-| `business_status` | Drop closed places | — | Places `businessStatus` (keep only `OPERATIONAL`, mark the others) |
-| `photos` | Card + page photos | ✅ | Places `photos[].name` + `authorAttributions` (up to 10). Not the image bytes. |
-| `rating`, `rating_count` | Possible "Google ★ 4.1 · 230" line (**not shown yet, needs a hub decision**) | — | Places `rating`, `userRatingCount` |
-| `food_hint`, `ac_hint`, `wifi_hint`, `sharing_hint` | Pre-fill the team's call form | Team only | Only if the hostel's **own** website / own Instagram bio states it. With `source_url`. |
-| `rent_hint_min`, `rent_hint_max` | Pre-fill the team's call (the team confirms before anything shows) | Team only, never public | Only the hostel's **own** website / own post. With `source_url` and the date seen. |
-| `types` | Filter out hotels | — | Places `types`, `primaryType` |
-| `brand` | Group chains (Zolo, Stanza, Colive, Housr, Your-Space…) | — | Name / OSM `brand` |
-| `source`, `place_id` / `osm_id`, `source_url`, `fetched_at` | Dedupe, refresh, honesty | — | Always |
+### C · Branded chains (each has a full public catalogue with exact rents)
+Stanza Living · Zolo · Colive · Housr · Your-Space · Settl · Isthara · Hello World · Coho · Cove · Tribe · OYO Life /
+any other you find. Take every Hyderabad property: name, pin, rent per sharing and per AC/non-AC, food, amenities, gender,
+photos.
+
+### D · Social and the hostel's own pages
+| Source | What |
+|---|---|
+| Hostel's own website | Rent, food, menu, rules, WhatsApp, photos |
+| **Instagram** public business profiles (`#hyderabadpg`, `#ameerpetpg`, `#ladieshostelhyderabad`…) | Name, WhatsApp/phone in bio, rent in posts, photos |
+| **Facebook** public pages and public posts; **YouTube** room-tour videos (titles/descriptions give name, area, rent, phone) | Same |
+| Telegram / WhatsApp public channel directories that are open without joining | PG ads with phone + rent |
+
+### E · Around the hostel (for "Near metro", travel minutes, "Nearby")
+| Data | Source |
+|---|---|
+| All Hyderabad Metro + MMTS stations, bus stations | OSM, HMRL / L&T Metro site |
+| IT parks and big offices (Mindspace, DLF, Raheja, Waverock, Financial District…) | OSM, Google Maps, official sites |
+| Colleges, coaching centres (Ameerpet, Ashok Nagar, Dilsukhnagar), hospitals | OSM, Google Maps, AICTE/UGC lists |
+| Shops, ATM, gym, pharmacy, bus stops within 800 m | OSM |
+| **Travel minutes** from each hostel: walk to nearest metro + ride to 12 hubs | Self-hosted OSRM / openrouteservice on OSM (no limits); Google Routes if a key is given |
+| Area list with aliases and pincodes (target 80–120 areas) | OSM boundaries, India Post |
+
+---
+
+## 4. What to collect for each hostel (everything, every source)
+
+| Group | Fields |
+|---|---|
+| **Identity** | `name`, `aliases` (other spellings across sources), `brand` (chain), `kind` (pg / hostel / coliving / working_women / student / backpacker) |
+| **Location** | `lat`, `lng`, `location_quality`, `pin_gap_m`, `address`, `landmark` ("opp. Ameerpet metro"), `pincode`, `area` (from your `areas.json`) |
+| **Contact** | `phones[]`, `whatsapp`, `email`, `website`, `instagram`, `facebook`, `owner_or_manager_name` (only if a listing names them) |
+| **Who it's for** | `gender` (Men / Women / Co-living) + where it came from; `for` (students / working / both) |
+| **Rent** | `rents[]` = `{sharing: 1-6, ac: true/false, rent_month, food_included}` per source; `deposit`; `maintenance`; `electricity` (included / extra / per unit); `notice_days`; `min_stay` |
+| **Food** | `food` (yes/no), `meals` (breakfast/lunch/dinner), `veg_only`, `menu` text if published, meal times |
+| **Rooms** | `sharing_types[]`, `ac_rooms`, `attached_bath`, `total_beds` (only if stated), `floors` |
+| **Amenities** | WiFi, AC, geyser, washing machine, fridge, RO water, TV, power backup, lift, parking (bike/car), CCTV, biometric, warden, housekeeping, laundry, gym, study room, cupboard, mattress… as a list of the exact words seen, plus a normalised list |
+| **Rules** | Gate closing time, visitors, guests, smoking/drinking, pets |
+| **Media** | `photos[]` = `{url, source, label if any}` (all of them), `video_urls[]` (room tours) |
+| **Social proof** | `ratings[]` = `{source, stars, count}`; `review_keywords[]` (top words/phrases from reviews, e.g. "good food", "strict timings"); `review_count_total` |
+| **Freshness** | `listing_urls[]` (every page it appears on), `listed_on` / `updated_on` dates from portals, `business_status`, `first_seen`, `last_seen` |
+
+Keep the **raw per-source values** too: the merged row picks the best, the raw rows keep everything (section 7).
 
 **Keep:** PG, paying guest, hostel (students / working), co-living, ladies hostel, boys hostel, working women's hostel,
-service apartments rented per bed. **Drop:** hotels, lodges, OYO rooms, resorts, guest houses rented per night,
-student hostels inside a college campus that outsiders cannot join (mark `campus=true` instead of dropping if unsure),
-travellers' backpacker hostels (Zostel etc.: keep but mark `kind="backpacker"`).
-
-### P2 · Areas (the area list the app filters by)
-The app has 32 areas today (list in section 7). Make it **complete for Hyderabad (target 80–120)**.
-
-| Field | Why | Source |
-|---|---|---|
-| `name` | Area chip / filter, plain local spelling ("SR Nagar", "KPHB", "Hitech City") | OSM `place=suburb/neighbourhood/quarter`, admin boundaries |
-| `lat`, `lng`, `radius_m` | Search circle for the import, nearest-area match | Centre of the OSM polygon; radius covering it |
-| `polygon` (GeoJSON, optional) | Exact matching later | OSM boundary if it exists |
-| `aliases` | "Hitec City" = "HITEC City" = "Hi-Tech City"; "Kukatpally Housing Board" = "KPHB" | OSM `alt_name`, common spellings |
-| `pincodes` | Address → area | India Post open data |
-
-### P3 · Landmarks (what tenants search near)
-Tenants search "PG near Mindspace", "near Ameerpet metro", "near JNTU". The app today shows travel minutes to only 4 places,
-and those minutes are **rough per-area guesses** in the code. Real landmarks + real times replace them.
-
-| Group | Examples | Target count | Source |
-|---|---|---|---|
-| `metro` | All Hyderabad Metro stations (Red, Blue, Green lines) | all (~57) | OSM `railway=station` + `station=subway`/network "Hyderabad Metro", HMRL list |
-| `mmts` / `rail` | MMTS stations, Secunderabad, Nampally, Kacheguda, Lingampally | all | OSM |
-| `it_park` | Mindspace, DLF Cyber City, Raheja, Waverock, Phoenix, Financial District, Hitec City, Q City, Salarpuria Sattva Knowledge City, Cyber Towers, Cyber Gateway, Divyasree, RMZ Nexity, Kokapet SEZs | 60+ | OSM `landuse=commercial`/`office=*` named parks, official sites |
-| `college` | JNTU, OU, UoH (HCU), IIIT-H, ISB, NIFT, Vasavi, CBIT, CVR, VNR VJIET, MGIT, Gokaraju, St. Mary's, Villa Marie, Nizam College, Koti Women's College… | 150+ | OSM `amenity=university/college`, AICTE / UGC lists |
-| `coaching` | Ameerpet coaching cluster, Ashok Nagar / Chikkadpally (exam coaching), Dilsukhnagar | 30+ clusters | OSM `amenity=school` + name contains "academy/institute/coaching", own websites |
-| `hospital` | Big hospitals (also a big source of nurse / staff tenants) | 50+ | OSM `amenity=hospital` |
-| `bus_hub` | MGBS, JBS, Dilsukhnagar, Kukatpally, Lingampally bus stations | 20+ | OSM `amenity=bus_station` |
-
-Fields: `id`, `group`, `name`, `aliases`, `lat`, `lng`, `area`, `source`, `osm_id`/`source_url`, `fetched_at`.
-
-### P4 · Travel times (replace the guessed minutes)
-For **every hostel** in P1: minutes to the **nearest metro station (walking)** and to the **top hubs (two-wheeler / car)**.
-
-| Field | Method |
-|---|---|
-| `walk_to_metro`: station id + metres + minutes | OSRM / openrouteservice `foot` profile on OSM data |
-| `ride_to` : `{landmark_id: minutes}` for the 12 hubs: Hitec City, Gachibowli (Financial District), Madhapur (Mindspace), Kondapur, Ameerpet, Kukatpally/KPHB, JNTU, Secunderabad, Begumpet, Banjara Hills, Koti/Abids, Uppal | OSRM / openrouteservice `driving-car` profile, no traffic (state this in `method`) |
-
-**Do not** use Google Routes / Distance Matrix for this (its results can't be stored). Self-host OSRM with the Geofabrik
-`southern-zone` (or Telangana) extract, or use openrouteservice within its free quota. Write the profile and date in `method`.
-
-### P5 · Around each hostel (for a future "Nearby" row)
-Counts and the nearest one within **800 m walking**, from OSM only:
-`supermarket`, `pharmacy`, `hospital`/`clinic`, `atm`, `gym`, `bus_stop`, `restaurant`/`fast_food`, `laundry`, `police`.
-Fields per hostel: `{kind: {count, nearest_name, nearest_m}}`. Not shown in the app yet (would need a new feature spec);
-fetch it only after P1–P4 are done.
-
-### Not wanted (don't spend time on it)
-| Don't fetch | Why |
-|---|---|
-| Google review texts, reviewer names | App shows only reviews from verified residents |
-| Rents from portals or from Google reviews | Forbidden source / not reliable; rents come from the owner or the team's call |
-| Food menus, room counts, bed counts | Only the owner gives these (verified tier) |
-| Downloaded Google photos | Google terms; deliver photo names only |
-| Anything invented to "make it look full" | The founder's first rule: honest app, no fake numbers |
+per-bed service apartments. **Mark, don't drop:** college campus hostels (`campus=true`), backpacker hostels
+(`kind="backpacker"`). **Drop:** hotels, lodges, OYO rooms, resorts, per-night guest houses.
 
 ---
 
-## 4. Area coverage (where to look)
-Cover all of these zones; the PG density is highest in the first two rows.
+## 5. Method: don't miss any place
 
-| Zone | Areas (non-exhaustive) |
+1. **Areas first.** Build `areas.json` (80–120 areas, section 6 list) with centre, radius, aliases, pincodes.
+2. **Map grid.** Cover the box `lat 17.25–17.62, lng 78.20–78.70` with ~1 km cells (500 m in dense zones: Ameerpet, SR Nagar,
+   Madhapur, Kondapur, Gachibowli, KPHB, Dilsukhnagar). Google Maps / Places returns max ~60–120 per search, so for every
+   cell run all terms: `PG`, `paying guest`, `hostel`, `ladies hostel`, `boys hostel`, `mens PG`, `womens PG`, `co-living`,
+   `working women hostel`, `PG accommodation`, `girls hostel`, `gents PG`. If a cell returns the maximum, split it in 4 and
+   repeat.
+3. **Portals by area.** For every portal in 3B, walk every area's PG list page to the last page; open each listing; take the
+   embedded JSON (most of these sites ship the listing as JSON in the page, which is cleaner than the HTML).
+4. **Chains.** Walk each chain's Hyderabad city page and every property page.
+5. **Long tail.** Google search per area × term, Instagram hashtags, YouTube "PG in <area> Hyderabad", classifieds.
+6. **Own websites.** For every row with a website, read its own pages for rent, food, rules, WhatsApp, menu.
+7. **Merge** (section 7 checks): same phone → same place unless pins > 150 m apart; same normalised name within 150 m → same
+   place; chain + property name → same place.
+8. **Around + travel.** Landmarks, nearby counts, travel minutes for every merged hostel.
+9. **Report** (section 7).
+
+Run order if time is short: **2 → 3 (NoBroker, MagicBricks, Housing, 99acres, Justdial) → 4 → 1 → 6 → 5 → 8.**
+
+---
+
+## 6. Areas to cover
+
+| Zone | Areas |
 |---|---|
 | IT corridor West | Hitech City, Madhapur, Kondapur, Gachibowli, Financial District, Nanakramguda, Kokapet, Narsingi, Manikonda, Puppalaguda, Raidurg, Khajaguda, Botanical Garden, Kothaguda, Hafeezpet, Serilingampally, Lingampally, Chanda Nagar, Madinaguda, Miyapur, Gopanpally, Tellapur, Nallagandla |
 | Coaching / central | Ameerpet, SR Nagar, Yousufguda, Punjagutta, Erragadda, Borabanda, Begumpet, Somajiguda, Khairatabad, Lakdikapul, Himayatnagar, Narayanaguda, Ashok Nagar, Chikkadpally, RTC X Roads, Musheerabad, Vidyanagar |
@@ -173,150 +173,80 @@ Cover all of these zones; the PG density is highest in the first two rows.
 | South / East | Dilsukhnagar, Kothapet, LB Nagar, Chaitanyapuri, Malakpet, Saroornagar, Vanasthalipuram, Hayathnagar, Nagole, Koti, Abids, Nampally, Mehdipatnam, Tolichowki, Attapur, Rajendranagar, Shamshabad |
 | Others | Jubilee Hills, Banjara Hills, Film Nagar, Shaikpet, Madhura Nagar, Gandhi Nagar, Kavadiguda |
 
----
-
-## 5. How to fetch hostels without missing any (and without a big bill)
-
-**Google Text Search returns at most 60 results per query (3 pages × 20).** One query per area misses most PGs in dense
-areas like Ameerpet. So:
-
-1. **Grid.** Cover the city bounding box `lat 17.25–17.62, lng 78.20–78.70` with a grid of ~1 km cells (dense zones:
-   500 m cells). Use `locationRestriction` (rectangle) per cell, not a bias.
-2. **Search terms** (run each per cell): `PG`, `paying guest`, `hostel`, `ladies hostel`, `boys hostel`, `mens PG`,
-   `womens PG`, `co-living`, `working women hostel`, `PG accommodation`. If a cell returns the full 60 for a term,
-   split that cell into 4 and repeat.
-3. **Cheap first:** run the grid with an **IDs-only field mask** (`places.id`, `places.displayName` if allowed in that
-   tier, `nextPageToken`): the cheapest Places SKU. Collect unique `place_id`s.
-4. **Filter** obvious non-PGs by name (hotel, lodge, resort, OYO, inn, guest house, banquet) **unless** the name also says
-   PG / hostel.
-5. **Then Place Details** once per remaining id with the field mask:
-   `id,displayName,formattedAddress,addressComponents,location,nationalPhoneNumber,internationalPhoneNumber,websiteUri,googleMapsUri,businessStatus,types,primaryType,rating,userRatingCount,photos`.
-6. **OSM pass** (free): Overpass for `tourism=hostel`, `amenity=dormitory`, `building=dormitory`, `amenity=student_accommodation`,
-   and any node/way whose `name` matches `(?i)\b(pg|paying guest|hostel|co-?living)\b` inside the box.
-7. **Own websites** (only for rows that have a `websiteUri`): read the hostel's own pages for rent, food, AC, WiFi,
-   sharing, WhatsApp. One request per site, respect `robots.txt`, no crawling beyond the site's own pages.
-8. **Dedupe** (section 6·checks) and **report** counts and cost.
-
-Check Google's current price list before step 3 and step 5 and stop at the budget. Log every request count per SKU.
+The app's current 32 areas use these spellings, keep them: Ameerpet · SR Nagar · Madhapur · Hitech City · Kondapur ·
+Gachibowli · Nanakramguda · Manikonda · Jubilee Hills · Banjara Hills · Kukatpally · KPHB · Miyapur · Nizampet ·
+Chanda Nagar · Lingampally · Begumpet · Secunderabad · Bowenpally · Alwal (+12 more in `tools/import/areas.json`).
 
 ---
 
-## 6. What to hand back (exact files)
+## 7. What to hand back (exact files)
 
-Put everything in one folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip of it). UTF-8, one JSON object per line for `.jsonl`.
+One folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip). UTF-8. `.jsonl` = one JSON object per line.
 
 | File | Content |
 |---|---|
-| `hostels.jsonl` | P1, one hostel per line |
-| `areas.json` | P2, a JSON array |
-| `landmarks.json` | P3, a JSON array |
-| `travel.jsonl` | P4, one line per hostel `{ "hostel_key", "walk_to_metro": {...}, "ride_to": {...}, "method" }` |
-| `nearby.jsonl` | P5 (optional) |
-| `REPORT.md` | Counts per area and per source, how many have a phone, duplicates merged, places dropped and why, requests and money spent per Google SKU, what you could not do |
-| `ATTRIBUTION.md` | "© OpenStreetMap contributors (ODbL)", Google Places attribution note, any open-data licences used |
+| `raw/<source>.jsonl` | Everything you took from each source, one listing per line, untouched values + `url` + `seen_at` (e.g. `raw/google_maps.jsonl`, `raw/nobroker.jsonl`, `raw/stanza.jsonl`) |
+| `hostels.jsonl` | **Merged**: one line per real place, best value per field, `sources[]` listing every raw row it came from |
+| `areas.json` | Areas (array) |
+| `landmarks.json` | Metro, IT parks, colleges, coaching, hospitals, bus stations (array) |
+| `travel.jsonl` | Per hostel: walk to nearest metro + minutes to 12 hubs + `method` |
+| `nearby.jsonl` | Per hostel: counts + nearest within 800 m |
+| `photos.csv` | `hostel_key, url, source, label` (links, not files) |
+| `REPORT.md` | Counts per area and per source · how many have phone / rent / gender / exact pin · duplicates merged · dropped and why · "check pins" list · what you couldn't reach and why (blocked, login wall) · spot-check of 30 random rows against their pages |
 
-### `hostels.jsonl`: one line looks like this
+### `hostels.jsonl`: one merged line
 ```json
 {
-  "key": "g:ChIJN1t_tDeuEmsRUsoyG83frY4",
-  "source": "google_places",
-  "place_id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
-  "osm_id": null,
-  "source_url": "https://maps.google.com/?cid=…",
-  "fetched_at": "2026-11-22T10:15:00Z",
+  "key": "hz:000123",
   "name": "Sri Sai Ladies Hostel",
-  "kind": "pg",
+  "aliases": ["Sri Sai Womens PG", "Sai Ladies Hostel Ameerpet"],
   "brand": null,
-  "gender_hint": "Women",
-  "gender_hint_from": "name",
-  "lat": 17.438123,
-  "lng": 78.448710,
-  "location_quality": "rooftop",
-  "pin_gap_m": 12,
-  "address": "Plot 12, Lane 3, Ameerpet, Hyderabad, Telangana 500016",
-  "pincode": "500016",
+  "kind": "pg",
+  "gender": "Women", "gender_from": ["name", "nobroker"],
+  "for": "both",
+  "lat": 17.438123, "lng": 78.448710, "location_quality": "rooftop", "pin_from": "google_maps", "pin_gap_m": 12,
+  "address": "Plot 12, Lane 3, Ameerpet, Hyderabad 500016", "landmark": "Behind Ameerpet Metro", "pincode": "500016",
   "area": "Ameerpet",
-  "area_distance_m": 420,
-  "phone": "+91 98xxxxxxxx",
-  "whatsapp": null,
-  "website": null,
-  "instagram": null,
-  "google_maps_uri": "https://maps.google.com/?cid=…",
-  "business_status": "OPERATIONAL",
-  "types": ["lodging", "point_of_interest"],
-  "rating": 4.1,
-  "rating_count": 230,
-  "photos": [
-    { "name": "places/ChIJ…/photos/AUc7…", "width": 4032, "height": 3024,
-      "attribution": [{ "displayName": "…", "uri": "…" }] }
+  "phones": ["+91 98xxxxxxxx"], "whatsapp": "+91 98xxxxxxxx", "email": null,
+  "website": null, "instagram": "https://instagram.com/…", "facebook": null,
+  "owner_or_manager_name": null,
+  "rents": [
+    { "sharing": 2, "ac": false, "rent_month": 7500, "food_included": true, "source": "nobroker", "seen_at": "2026-11-22" },
+    { "sharing": 3, "ac": false, "rent_month": 6500, "food_included": true, "source": "nobroker", "seen_at": "2026-11-22" }
   ],
-  "hints": {
-    "food": null, "ac": null, "wifi": null, "sharing": null,
-    "rent_min": null, "rent_max": null,
-    "source_url": null, "seen_at": null
-  },
-  "campus": false,
-  "also_seen_in": ["osm:n123456789"]
+  "deposit": 5000, "maintenance": null, "electricity": "extra", "notice_days": 30, "min_stay": null,
+  "food": true, "meals": ["breakfast", "dinner"], "veg_only": null, "menu": null,
+  "sharing_types": [2, 3], "ac_rooms": false, "attached_bath": true, "total_beds": null,
+  "amenities": ["wifi", "geyser", "washing_machine", "ro_water", "cctv", "power_backup"],
+  "amenities_raw": ["Wi-Fi", "Hot water", "Washing Machine", "RO", "CCTV", "Power Backup"],
+  "rules": { "gate_close": "22:30", "visitors": "not allowed", "smoking": null },
+  "photos_count": 14,
+  "ratings": [{ "source": "google_maps", "stars": 4.1, "count": 230 }, { "source": "justdial", "stars": 4.3, "count": 51 }],
+  "review_keywords": ["good food", "clean", "strict timings"],
+  "business_status": "operational",
+  "listing_urls": ["https://www.google.com/maps/place/…", "https://www.nobroker.in/…"],
+  "sources": ["google_maps:ChIJ…", "nobroker:8a9f…", "justdial:…"],
+  "first_seen": "2026-11-22", "last_seen": "2026-11-22"
 }
 ```
-Rules for the fields:
-- `key` = `g:<place_id>` for Google rows, `osm:n<id>` / `osm:w<id>` for OSM-only rows. Unique in the file.
-- `kind` ∈ `pg`, `hostel`, `coliving`, `working_women`, `student`, `backpacker`, `unknown`.
-- `gender_hint` ∈ `Men`, `Women`, `Co-living`, `null`; `gender_hint_from` ∈ `name`, `osm_tag`, `own_website`, `null`.
-- Phone in E.164-ish `+91 XXXXXXXXXX`; landlines keep the 040 code (`+91 40 XXXXXXXX`).
-- `area` must be a `name` from your `areas.json`.
-- Unknown = `null`. Never `""`, never `0`, never a guess.
+Field rules: unknown = `null` (never `""`, `0` or a guess) · phones `+91 XXXXXXXXXX` (landlines `+91 40 XXXXXXXX`) ·
+`area` must be a name in your `areas.json` · `gender` ∈ Men / Women / Co-living / null · rents in ₹ per month per bed.
 
-### `areas.json` item
-```json
-{ "name": "Ameerpet", "aliases": ["Ameerpeta"], "lat": 17.4375, "lng": 78.4483, "radius_m": 1500,
-  "pincodes": ["500016", "500038"], "zone": "Coaching / central", "osm_id": "r1234567", "polygon": null }
-```
-
-### `landmarks.json` item
-```json
-{ "id": "metro-ameerpet", "group": "metro", "name": "Ameerpet Metro", "aliases": ["Ameerpet Interchange"],
-  "lat": 17.4374, "lng": 78.4482, "area": "Ameerpet", "lines": ["Red", "Blue"],
-  "source": "osm", "osm_id": "n987654321", "fetched_at": "2026-11-22T10:15:00Z" }
-```
-
-### `travel.jsonl` line
-```json
-{ "hostel_key": "g:ChIJ…",
-  "walk_to_metro": { "landmark_id": "metro-ameerpet", "metres": 650, "minutes": 9 },
-  "ride_to": { "hitec-city": 24, "gachibowli": 33, "ameerpet": 3, "jntu": 15 },
-  "method": "OSRM 5.x, Geofabrik southern-zone 2026-11-20, profiles foot + car, no traffic" }
-```
-
-### Checks before you hand it over
+### Checks before handing over
 | Check | Pass when |
 |---|---|
-| Inside Hyderabad | Every `lat`/`lng` inside the box in section 5 |
-| Exact pins | Every row has 6-decimal `lat`/`lng` and a `location_quality`; no `area_only` row has a pin shown as exact; the "check pins" list is in `REPORT.md` (section 2b) |
-| Duplicates | No two rows with the same `place_id`; Google + OSM rows of the same place merged when names match (case/space/punctuation-insensitive) within **150 m**, or same phone; merged ids go to `also_seen_in` |
-| Same phone, many rows | Allowed (chains, one owner with 3 buildings) only if pins are > 150 m apart; otherwise merge |
-| Closed | `business_status` ≠ `OPERATIONAL` → kept but listed separately in `REPORT.md` |
-| No invented values | Spot-check 30 random rows against their source; write the result in `REPORT.md` |
-| No key in files | `grep -ri "AIza" data/fetch/` returns nothing |
+| Inside Hyderabad | Every pin inside the box in section 5 |
+| Exact pins | 6 decimals + `location_quality` on every row; "check pins" list in `REPORT.md` |
+| No duplicates | Merge rules in section 5 step 7 applied; `sources[]` lists every merged raw row |
+| Nothing invented | 30 random rows spot-checked against their pages, result in `REPORT.md` |
+| No secrets | No key, cookie or password anywhere in the folder |
 
 ---
 
-## 7. Today's area list in the app (keep these names exactly, add the rest)
-Ameerpet · SR Nagar · Madhapur · Hitech City · Kondapur · Gachibowli · Nanakramguda · Manikonda · Jubilee Hills ·
-Banjara Hills · Kukatpally · KPHB · Miyapur · Nizampet · Chanda Nagar · Lingampally · Begumpet · Secunderabad ·
-Bowenpally · Alwal and ~12 more in `tools/import/areas.json` in the Hostelzy repo (name, lat, lng, radius in metres).
-If you can't see that file, start from section 4 and keep these spellings.
-
----
-
-## 8. What happens after you deliver (for the Hostelzy team, not for you)
+## 8. After you deliver (for the Hostelzy team, not for you)
 | Step | Who | What |
 |---|---|---|
-| 1 | Build | Small loader `tools/import/load-fetch.mjs`: reads `data/fetch/<date>/`, writes `hostels` rows as `status='draft'`, `source='places'`/`'osm'`, `place_id`, `source_photos`, `source_seen_at = fetched_at`; dedupes against existing hostels (same rules as `places.mjs`); phones go to `hostel_leads` (never the public row) |
-| 2 | Build | `areas.json` merged into `tools/import/areas.json` and the app's area list; landmarks + travel replace the guessed per-area minutes (`hostelzy/lib/data/onboarding.dart` `areaSpot`) — needs a small spec first |
-| 3 | Existing monthly job | `import-hostels.yml` refreshes Google fields within 30 days (Google terms), drops gone places |
-| 4 | Team | Console › Listed › **To call** shows every draft with a phone; call, confirm, **List** → UNVERIFIED card goes live |
-| 5 | Hub | Decide whether the app shows "Google ★ 4.1 · 230" on UNVERIFIED cards (with attribution) and the "Nearby" row. Until then those fields are stored, not shown |
-
-**Founder's part:** a Google Cloud project with **Places API (New)** enabled, billing on, a budget alert at the cap you
-choose, and the key given to whoever runs the fetch (never pasted into the repo).
+| 1 | Build | Loader `tools/import/load-fetch.mjs`: `hostels.jsonl` → `hostels` drafts (`source` = first source), phones → `hostel_leads` (team only), rents/food/amenities → the team's call form as pre-filled values, `photos.csv` → console for the team to pick from |
+| 2 | Build | Areas → the app's area list; landmarks + travel → replace the guessed per-area minutes (`hostelzy/lib/data/onboarding.dart` `areaSpot`) |
+| 3 | Team | Console › Listed › **To call**: call, confirm, **List** → live UNVERIFIED card |
+| 4 | Hub | Decide what shows publicly before the call: rating line, rent from portals, portal photos, Nearby row |

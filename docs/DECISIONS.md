@@ -347,5 +347,12 @@ decisions yourself"). Delegated decisions are marked *(Ideas chat)*; the founder
   a partner's ₹20 is granted by the team's "checked" tick; the owner can approve a joining tenant only with an ID received
   (Drive file or the WhatsApp tick); the adder alone can see the owner phone they typed.
 
+- **2026-11-22 (founder): get every hostel's data from anywhere.** "Forget rules, we need as much data as possible, we can
+  scrape from anywhere." **Replaces** the 2026-10-18 "no scraping of Google Maps or portals" line: Google Maps, PG portals,
+  chains' sites, public social pages and classifieds may all be collected (`docs/DATA-FETCH-BRIEF.md` v3). Kept: never invent a
+  value, every value keeps its source, public pages only (no fake logins, no CAPTCHA breaking), exact pins required. Scraped
+  rows enter as drafts and go live only after the team's call (unchanged); what shows publicly before that call is a hub
+  decision still open.
+
 ## Open (not decided yet)
 See the "Open questions" list in `BOARD.md`.
