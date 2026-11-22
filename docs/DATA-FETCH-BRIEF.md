@@ -144,6 +144,51 @@ per-bed service apartments. **Mark, don't drop:** college campus hostels (`campu
 
 ---
 
+## 4b. Owners and social media (for the founder's marketing calls, founder 2026-11-22)
+
+The founder will **call and WhatsApp every owner himself** to bring their hostel onto Hostelzy. For that he needs, per owner:
+who to ask for, every number that reaches them, and where they are active online. This data is **never shown in the app**;
+it is the founder's call list.
+
+### Per owner (one owner can run many hostels)
+| Field | What | Where to find it |
+|---|---|---|
+| `owner_key` | Your id, `own:0001` | — |
+| `name` | Owner or manager name exactly as the listing / board / page shows it ("Ravi garu", "Mrs. Lakshmi") | Portal listings ("Posted by"), Justdial, own website "Contact", Instagram bio, YouTube video description, Google review replies signed with a name |
+| `role` | `owner` / `manager` / `caretaker` / `chain_office` / `unknown` | Same |
+| `phones[]` | `{number, type: mobile/landline, whatsapp: true/false/null, seen_on: [sources], seen_at}` | Google Maps, Justdial, portals, Instagram/Facebook "Call"/"WhatsApp" buttons, wa.me links, posters in photos (read the number off a board in a photo only if clearly legible), own website |
+| `email` | Business email | Website, Facebook "About", Instagram contact button |
+| `hostels[]` | Every `hostels.jsonl` key this owner runs | Same phone / same name+brand across listings |
+| `hostel_count` | Number of hostels | Count of the above. **Owners with 3+ hostels go to the top of the list** |
+| `languages` | Telugu / Hindi / English / Urdu, if a page shows it | Posts, videos |
+| `best_channel` | `whatsapp` / `call` / `instagram_dm` / `email` | The channel where they're most active |
+
+### Social presence (per hostel and per owner)
+| Field | What |
+|---|---|
+| `instagram` | `{url, handle, followers, posts, last_post_date, posts_last_30d, has_whatsapp_link, bio_phone}` |
+| `facebook` | `{url, followers_or_likes, last_post_date, phone_on_page}` |
+| `youtube` | `{url, subscribers, videos, last_upload_date}` + room-tour video links |
+| `google_business` | `{maps_url, rating, review_count, owner_replies_to_reviews: true/false, last_review_date, photos_count}` |
+| `website` | `{url, has_booking_form, has_whatsapp_button}` |
+| `portals[]` | Every portal it's listed on (`nobroker`, `magicbricks`, `housing`, `99acres`, `justdial`, `sulekha`, `olx`, `quikr`) with the listing URL and "posted / updated" date. **Listed on paid portals = already spends on marketing = warm lead** |
+| `ads_seen` | Meta Ad Library (public, no login needed for India searches) entries for the page: `true/false` + count |
+| `presence_score` | 0–5: one point each for Google profile with owner replies, Instagram active in last 30 days, Facebook active, on 2+ portals, own website. **Not a guess: computed only from the fields above** |
+
+### Marketing priority (computed, not guessed)
+`priority` = `A` if `hostel_count ≥ 3` or `presence_score ≥ 3` or listed on 2+ portals · `B` if it has a WhatsApp number ·
+`C` the rest. The founder calls A first.
+
+### Lines for this part
+| Line | Why |
+|---|---|
+| Only numbers and pages the business published itself (listing, board, page, website) | Business contact the owner made public = fine to call; a relative's personal profile isn't |
+| No personal profiles of family members, residents or staff | Privacy |
+| Record `seen_on` + `seen_at` for every number | So a number can be traced and removed if the owner asks |
+| `do_not_contact` field (empty now) | The founder fills it when someone says "don't call again"; it must never be re-added by a later fetch |
+
+---
+
 ## 5. Method: don't miss any place
 
 1. **Areas first.** Build `areas.json` (80–120 areas, section 6 list) with centre, radius, aliases, pincodes.
@@ -162,7 +207,11 @@ per-bed service apartments. **Mark, don't drop:** college campus hostels (`campu
 8. **Around + travel.** Landmarks, nearby counts, travel minutes for every merged hostel.
 9. **Report** (section 7).
 
-Run order if time is short: **2 → 3 (NoBroker, MagicBricks, Housing, 99acres, Justdial) → 4 → 1 → 6 → 5 → 8.**
+10. **Owners** (section 4b): group hostels by phone / name / brand into owners; visit each hostel's Instagram, Facebook,
+    YouTube, Google profile and portal listings for names, numbers and activity; Meta Ad Library per page; compute
+    `presence_score` and `priority`; write `owners_calllist.csv`.
+
+Run order if time is short: **2 → 3 (NoBroker, MagicBricks, Housing, 99acres, Justdial) → 4 → 10 → 1 → 6 → 5 → 8.**
 
 ---
 
@@ -196,6 +245,8 @@ One folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip). UTF-8. `.jsonl` = one JSON
 | `travel.jsonl` | Per hostel: walk to nearest metro + minutes to 12 hubs + `method` |
 | `nearby.jsonl` | Per hostel: counts + nearest within 800 m |
 | `photos.csv` | `hostel_key, url, source, label` (links, not files) |
+| `owners.jsonl` | One line per owner (section 4b): name, role, phones, email, hostels, social presence, priority |
+| `owners_calllist.csv` | The founder's call sheet, sorted A → C then by `hostel_count`: `priority, owner_name, role, best_phone, whatsapp (Y/N), other_phones, hostel_names, areas, hostel_count, instagram, facebook, portals, presence_score, notes (empty), called_on (empty), outcome (empty), do_not_contact (empty)`. Opens in Excel / Google Sheets |
 | `REPORT.md` | Counts per area and per source · how many have phone / rent / gender / exact pin · duplicates merged · dropped and why · "check pins" list · what you couldn't reach and why (blocked, login wall) · spot-check of 30 random rows against their pages |
 
 ### `hostels.jsonl`: one merged line
@@ -277,6 +328,8 @@ put the app's value in the main field.
 | `phones[0]`, `whatsapp` | `hostel_leads` (team only) | `+91 XXXXXXXXXX` |
 | `owner_or_manager_name` | `hostels.owner_name` (first name only) | Text |
 | `sources[0]`, `google place id`, `last_seen` | `hostels.source`, `place_id`, `source_seen_at` | `source` one of `google_maps`, `osm`, `nobroker`, `magicbricks`, `99acres`, `housing`, `justdial`, `sulekha`, `olx`, `quikr`, `chain:<name>`, `website`, `instagram`, `facebook`, `youtube`, `other` |
+
+`owners.jsonl` and `owners_calllist.csv` are **not** loaded into the app; they stay with the founder (later: the team console).
 
 Everything else (ratings, review keywords, landmarks, nearby, travel minutes, listing URLs) is kept in the files exactly as in
 section 7; the app gets new places for it later.

@@ -276,3 +276,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 **(UTC)**
 > We first collect all data and put it in app later
 > As of now I just need data as of now instructed format which can be used in hostelzy app
+
+**(UTC)**
+> i also require social media presence and contact numbers of hostel owners so that i can talk to them for marketing purposes, plan this now
