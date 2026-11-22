@@ -279,3 +279,6 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **(UTC)**
 > i also require social media presence and contact numbers of hostel owners so that i can talk to them for marketing purposes, plan this now
+
+**(UTC)**
+> also add rent and reviews, give me downloadable .md

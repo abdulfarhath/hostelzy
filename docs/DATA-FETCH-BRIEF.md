@@ -144,6 +144,50 @@ per-bed service apartments. **Mark, don't drop:** college campus hostels (`campu
 
 ---
 
+## 4a. Rent and reviews in full (founder, 2026-11-22)
+
+### Rent: every price seen, from every source
+One line per price seen in `rents.jsonl` (the merged `rents[]` in `hostels.jsonl` is the latest per type).
+
+| Field | Allowed values |
+|---|---|
+| `hostel_key` | Key from `hostels.jsonl` |
+| `sharing` | Integer 1–8 (single = 1, double = 2 …); dormitory 6+ → the real number if stated, else 6 |
+| `ac` | `true` / `false` / `null` |
+| `food_included` | `true` / `false` / `null` |
+| `rent_month` | Integer ₹ per bed per month. Per-day or per-week prices → keep in `rent_raw`, don't convert unless stated "monthly" |
+| `rent_raw` | Exactly as written ("₹7,500/month incl. food") |
+| `deposit`, `maintenance`, `electricity`, `notice_days`, `min_stay` | As in section 7b |
+| `offer` | Discount or offer text if shown ("First month 50% off"), else `null` |
+| `source`, `url`, `seen_at`, `listed_on` | Where and when; `listed_on` = the portal's own posted/updated date |
+
+**Rent summary per area** in `rent_by_area.csv`: `area, sharing, ac, food_included, count, min, median, max` (computed only from
+`rents.jsonl`; no row when count < 3).
+
+### Reviews: every public review
+One line per review in `reviews.jsonl`.
+
+| Field | Allowed values |
+|---|---|
+| `hostel_key` | Key from `hostels.jsonl` |
+| `source` | `google_maps`, `justdial`, `nobroker`, `magicbricks`, `housing`, `sulekha`, `facebook`, `chain:<name>`, `other` |
+| `stars` | 1–5 (number) or `null` |
+| `text` | Full review text, as written (any language; add `lang`) |
+| `date` | ISO date if shown, else the relative text kept in `date_raw` ("3 months ago") |
+| `reviewer` | **Not collected.** Use `reviewer_type` only if stated: `resident`, `ex_resident`, `parent`, `visitor`, `unknown` |
+| `owner_reply` | Reply text + date, if any |
+| `topics[]` | Tags read from the text, only words it actually says: `food`, `cleanliness`, `water`, `wifi`, `safety`, `owner_behaviour`, `rent_hike`, `deposit_refund`, `timings`, `noise`, `location`, `ac`, `washroom`, `bugs` |
+| `sentiment` | `positive` / `mixed` / `negative`, from the text |
+| `url`, `seen_at` | Where and when |
+
+**Per-hostel summary** goes into `hostels.jsonl`: `ratings[]` per source, `review_count_total`, `top_praise[]` and
+`top_complaints[]` (the 3 most frequent `topics` in positive / negative reviews, with counts).
+
+Reviews stay in the files: the app's own reviews come only from verified residents, so these are **not** loaded as app
+reviews. They're for the founder (calls: "your reviews say food is great") and for the team.
+
+---
+
 ## 4b. Owners and social media (for the founder's marketing calls, founder 2026-11-22)
 
 The founder will **call and WhatsApp every owner himself** to bring their hostel onto Hostelzy. For that he needs, per owner:
@@ -207,11 +251,13 @@ it is the founder's call list.
 8. **Around + travel.** Landmarks, nearby counts, travel minutes for every merged hostel.
 9. **Report** (section 7).
 
+9b. **Rent and reviews** (section 4a): on every source page you open, take every price and every review (open "all
+    reviews", page to the end); then build `rent_by_area.csv` and the per-hostel review summary.
 10. **Owners** (section 4b): group hostels by phone / name / brand into owners; visit each hostel's Instagram, Facebook,
     YouTube, Google profile and portal listings for names, numbers and activity; Meta Ad Library per page; compute
     `presence_score` and `priority`; write `owners_calllist.csv`.
 
-Run order if time is short: **2 → 3 (NoBroker, MagicBricks, Housing, 99acres, Justdial) → 4 → 10 → 1 → 6 → 5 → 8.**
+Run order if time is short: **2 → 3 (NoBroker, MagicBricks, Housing, 99acres, Justdial) → 4 → 9b → 10 → 1 → 6 → 5 → 8.**
 
 ---
 
@@ -245,6 +291,9 @@ One folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip). UTF-8. `.jsonl` = one JSON
 | `travel.jsonl` | Per hostel: walk to nearest metro + minutes to 12 hubs + `method` |
 | `nearby.jsonl` | Per hostel: counts + nearest within 800 m |
 | `photos.csv` | `hostel_key, url, source, label` (links, not files) |
+| `rents.jsonl` | Every price seen, one line each (section 4a) |
+| `rent_by_area.csv` | Rent min / median / max per area, sharing, AC, food (section 4a) |
+| `reviews.jsonl` | Every public review, one line each, no reviewer names (section 4a) |
 | `owners.jsonl` | One line per owner (section 4b): name, role, phones, email, hostels, social presence, priority |
 | `owners_calllist.csv` | The founder's call sheet, sorted A → C then by `hostel_count`: `priority, owner_name, role, best_phone, whatsapp (Y/N), other_phones, hostel_names, areas, hostel_count, instagram, facebook, portals, presence_score, notes (empty), called_on (empty), outcome (empty), do_not_contact (empty)`. Opens in Excel / Google Sheets |
 | `REPORT.md` | Counts per area and per source · how many have phone / rent / gender / exact pin · duplicates merged · dropped and why · "check pins" list · what you couldn't reach and why (blocked, login wall) · spot-check of 30 random rows against their pages |
