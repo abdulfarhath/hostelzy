@@ -264,3 +264,8 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 >
 > plan the requirement
 > put the context ill ask some other ai to fetch it so it neds to have context write me the entire context in .md here
+
+## 2026-11-22
+
+**(UTC)**
+> We need accurate location right the latitude and longitude??

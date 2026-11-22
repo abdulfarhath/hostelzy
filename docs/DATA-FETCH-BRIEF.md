@@ -52,6 +52,26 @@ confirms Men/Women and rent, and then lists it. So: **more rows with a phone num
 
 ---
 
+## 2b. Location must be exact (founder, 2026-11-22)
+
+The map pin is what tenants walk or ride to. A wrong pin = a wrong hostel page, wrong "Near me", wrong travel minutes.
+**Accurate `lat` / `lng` for every hostel is required, not optional.**
+
+| Rule | Detail |
+|---|---|
+| Precision | At least **6 decimals** (`17.438123, 78.448710` ≈ 10 cm). Never round. |
+| Best source | The Google Places `location` of that business (the pin the owner or Google placed on the building). For OSM: the node, or the **centre of the building outline** for a way. |
+| Never use as a pin | The centre of the area, the pincode, the street, or a locality from geocoding the address text. These get `location_quality = "area_only"` and **must not** be shown as a pin (the team fixes them on the call). |
+| `location_quality` | `rooftop` = Google/OSM pin on a building outline (check against the OSM `building=*` polygon within 15 m) · `building` = business pin, no outline to check · `street` = pin on a road, not a building · `area_only` = no real pin |
+| Cross-check | If a Google row and an OSM row of the same place exist, write the distance between their pins as `pin_gap_m`. Over **75 m** → add it to the "check pins" list in `REPORT.md`. |
+| Inside the area | A pin more than 3 km from its `area` centre, or outside the city box → flag in `REPORT.md`, don't drop. |
+| Two hostels, one pin | Two different hostels within **5 m** of each other usually means one was pinned to a landmark: flag both. |
+| Don't move pins | Never "fix" a pin by guessing. Flag it; the team moves it in the app after the call or visit. |
+
+`REPORT.md` must show: how many hostels per `location_quality`, and the "check pins" list (key, name, both pins, gap).
+
+---
+
 ## 3. What to fetch, in priority order
 
 "App shows it today" tells you how much it matters right now. **P1 = must have.**
@@ -62,7 +82,8 @@ One row per physical PG / hostel / co-living building.
 | Field | Why the app needs it | App shows it today | Source |
 |---|---|---|---|
 | `name` | Card title | ✅ | Places `displayName` / OSM `name` |
-| `lat`, `lng` | Map pin, distance sort, "Near me" | ✅ | Places `location` / OSM |
+| `lat`, `lng` | Map pin, distance sort, "Near me", travel times. **Must be the building's own pin** (see section 2b) | ✅ | Places `location` / OSM |
+| `location_quality` | Which pins the app can trust | — | `rooftop`, `building`, `street`, `area_only` (rules in section 2b) |
 | `address` | Hostel page, team call | ✅ (page) | Places `formattedAddress` / OSM `addr:*` |
 | `area` | Area filter, card subtitle ("Madhapur") | ✅ | Nearest area from **your** `areas.json` (section 3·P2) |
 | `pincode` | Area matching | — | Address / OSM `addr:postcode` |
@@ -208,8 +229,10 @@ Put everything in one folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip of it). UT
   "brand": null,
   "gender_hint": "Women",
   "gender_hint_from": "name",
-  "lat": 17.43812,
-  "lng": 78.44871,
+  "lat": 17.438123,
+  "lng": 78.448710,
+  "location_quality": "rooftop",
+  "pin_gap_m": 12,
   "address": "Plot 12, Lane 3, Ameerpet, Hyderabad, Telangana 500016",
   "pincode": "500016",
   "area": "Ameerpet",
@@ -269,6 +292,7 @@ Rules for the fields:
 | Check | Pass when |
 |---|---|
 | Inside Hyderabad | Every `lat`/`lng` inside the box in section 5 |
+| Exact pins | Every row has 6-decimal `lat`/`lng` and a `location_quality`; no `area_only` row has a pin shown as exact; the "check pins" list is in `REPORT.md` (section 2b) |
 | Duplicates | No two rows with the same `place_id`; Google + OSM rows of the same place merged when names match (case/space/punctuation-insensitive) within **150 m**, or same phone; merged ids go to `also_seen_in` |
 | Same phone, many rows | Allowed (chains, one owner with 3 buildings) only if pins are > 150 m apart; otherwise merge |
 | Closed | `business_status` ≠ `OPERATIONAL` → kept but listed separately in `REPORT.md` |
