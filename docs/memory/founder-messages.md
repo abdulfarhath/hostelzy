@@ -282,3 +282,8 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **(UTC)**
 > also add rent and reviews, give me downloadable .md
+
+**(UTC)**
+> add the app details into the .md so that i can ask another ai for decision making, there might be cases where you might have made mistakes in plan, so ill validate it and come back to you
+>
+> so dont make mistakes at first, refactor the doc, and also keep it ready for other ai
