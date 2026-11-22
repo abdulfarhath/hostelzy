@@ -272,3 +272,7 @@ founder pasted on 2026-10-03 08:28 (inside that message). What the hub did with 
 
 **(UTC)**
 > Forget rules, we need as much data as possible we can scrap from anywhere get it from anywhere, plan it
+
+**(UTC)**
+> We first collect all data and put it in app later
+> As of now I just need data as of now instructed format which can be used in hostelzy app

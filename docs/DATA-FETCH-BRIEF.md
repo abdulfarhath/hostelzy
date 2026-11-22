@@ -8,6 +8,10 @@ This replaces v1/v2 of this brief and the 2026-10-18 "no scraping" decision.
 hostels / co-living in Hyderabad**, from every website, map, portal and listing you can reach, so the Hostelzy app looks full
 on day one. **You need no other context.** Read it once top to bottom, then start.
 
+**Phase 1 = data only (founder, 2026-11-22).** Collect everything now and deliver it in the format in sections 7 and 7b.
+Nothing goes into the app yet; Hostelzy loads it later. So **the format matters as much as the data**: use the exact
+field names and allowed values below, so the files load into the app with no cleaning.
+
 ---
 
 ## 0. The job in one line
@@ -217,7 +221,9 @@ One folder **`data/fetch/<YYYY-MM-DD>/`** (or a zip). UTF-8. `.jsonl` = one JSON
   "deposit": 5000, "maintenance": null, "electricity": "extra", "notice_days": 30, "min_stay": null,
   "food": true, "meals": ["breakfast", "dinner"], "veg_only": null, "menu": null,
   "sharing_types": [2, 3], "ac_rooms": false, "attached_bath": true, "total_beds": null,
-  "amenities": ["wifi", "geyser", "washing_machine", "ro_water", "cctv", "power_backup"],
+  "only_ac": false,
+  "amenities": ["wifi", "geyser", "washer", "ro"],
+  "amenities_other": ["CCTV", "Power backup"],
   "amenities_raw": ["Wi-Fi", "Hot water", "Washing Machine", "RO", "CCTV", "Power Backup"],
   "rules": { "gate_close": "22:30", "visitors": "not allowed", "smoking": null },
   "photos_count": 14,
@@ -243,7 +249,41 @@ Field rules: unknown = `null` (never `""`, `0` or a guess) · phones `+91 XXXXXX
 
 ---
 
-## 8. After you deliver (for the Hostelzy team, not for you)
+## 7b. Exact values the Hostelzy app accepts (use these, nothing else)
+
+Each field in `hostels.jsonl` lands in a real place in the Hostelzy database. Keep the raw words in the `*_raw` fields;
+put the app's value in the main field.
+
+| `hostels.jsonl` field | Goes into (Hostelzy) | Allowed values |
+|---|---|---|
+| `name` | `hostels.name` | Text, as written on the board/listing, no "PG in Ameerpet" SEO junk |
+| `gender` | `hostels.gender` | Exactly `Men`, `Women`, `Co-living`, or `null` |
+| `area` | `hostels.area` | Exactly a `name` from your `areas.json` |
+| `address` | `hostels.address` | Full text |
+| `lat`, `lng` | `hostels.lat`, `hostels.lng` | Decimal degrees, 6+ decimals |
+| `food` | `hostels.food` | `true` / `false` / `null` |
+| `ac_rooms` | `hostels.ac` | `true` if any AC room / `false` / `null` |
+| `only_ac` | `hostels.only_ac` | `true` only if every room is AC |
+| `rents[]` | `rate_cards` (one row per `ac` + `sharing`) | `sharing` integer **1–8** · `ac` `true`/`false` · `rent_month` integer ₹ per bed per month |
+| min / max of `rents[]` | `hostels.rent_min`, `rent_max` | Integers ₹ |
+| `deposit` | `hostels.terms.advance` | Integer ₹ |
+| `maintenance` | `hostels.terms.maintenance` | Integer ₹ (one-time) |
+| `notice_days` | `hostels.terms.noticeDays` | Integer days |
+| `electricity` | `hostels.terms.electricityExtra` | `"extra"` → true, `"included"` → false, `null` |
+| `amenities[]` | `amenities.kind` + `hostels.amenities` | Only these words: `wifi`, `fridge`, `washer` (washing machine), `ro` (RO / drinking water), `cooler`, `geyser` (hot water), `microwave`, `stove`, `iron`, `tv`, `drying` (drying area), `shoes` (shoe rack), `lift`, `dustbin`. Anything else (CCTV, power backup, parking, gym, housekeeping, biometric, warden…) → `amenities_other[]` as short plain words |
+| `rules` | `hostels.rules` | `{ "gate_close": "HH:MM" 24 h, "visitors": "allowed" / "not allowed" / "day only", "smoking": "allowed" / "not allowed", "drinking": "allowed" / "not allowed" }`, any key `null` if unknown |
+| `menu` | `menus` (one row per day) | `{ "Mon": {"breakfast": "...", "lunch": "...", "dinner": "..."}, … "Sun": {...} }` + `meal_times` `{ "breakfast": "07:30-09:30", … }` |
+| `photos.csv` | `hostel_photos` (label) | `label` one of `Front`, `Room`, `1 sharing` … `6 sharing`, `Washroom`, `Kitchen`, `Dining`, `Common area`, `Other` |
+| `phones[0]`, `whatsapp` | `hostel_leads` (team only) | `+91 XXXXXXXXXX` |
+| `owner_or_manager_name` | `hostels.owner_name` (first name only) | Text |
+| `sources[0]`, `google place id`, `last_seen` | `hostels.source`, `place_id`, `source_seen_at` | `source` one of `google_maps`, `osm`, `nobroker`, `magicbricks`, `99acres`, `housing`, `justdial`, `sulekha`, `olx`, `quikr`, `chain:<name>`, `website`, `instagram`, `facebook`, `youtube`, `other` |
+
+Everything else (ratings, review keywords, landmarks, nearby, travel minutes, listing URLs) is kept in the files exactly as in
+section 7; the app gets new places for it later.
+
+---
+
+## 8. After you deliver (for the Hostelzy team, later, not for you)
 | Step | Who | What |
 |---|---|---|
 | 1 | Build | Loader `tools/import/load-fetch.mjs`: `hostels.jsonl` → `hostels` drafts (`source` = first source), phones → `hostel_leads` (team only), rents/food/amenities → the team's call form as pre-filled values, `photos.csv` → console for the team to pick from |
